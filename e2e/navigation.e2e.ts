@@ -117,8 +117,12 @@ test("the sidebar restores each browser history entry's position", async ({ page
     column.scrollTop = 120;
     return Math.round(column.scrollTop);
   });
-  await page.locator('.sidebar a[href="/tabs/"]').click();
+  // A pointer click would scroll the offscreen link into view and change the position we're saving.
+  await page
+    .locator('.sidebar a[href="/tabs/"]')
+    .evaluate((link: HTMLAnchorElement) => link.click());
   await expect(page).toHaveURL(/\/tabs\/$/);
+  await expect(page.locator("h1")).toHaveText("Tabs");
   const second = await page.locator(".sidebar .pages").evaluate((column) => {
     column.scrollTop = column.scrollHeight;
     return Math.round(column.scrollTop);

@@ -34,6 +34,9 @@ export function enterSidebar(root: ParentNode) {
       requestAnimationFrame(restore);
       return;
     }
+    // A history entry restores exactly where the reader left it, even when its current-page
+    // link is out of view. The body's reveal script must not overwrite this position.
+    column.setAttribute("data-sidebar-restored", "");
     column.scrollTop = position.top;
   };
   restore();

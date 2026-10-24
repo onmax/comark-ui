@@ -865,8 +865,8 @@ const column = (section: Section, current: string) => {
     .join("")}</nav>`;
 };
 // Brings the current page's link into the column's view before the first paint, for a page low in a long column. The
-// app runs it again after a navigation, once it has put the column back where the last page left it.
-const revealCurrent = `<script>{const c=document.currentScript.previousElementSibling.querySelector(".pages"),a=c&&c.querySelector("[aria-current=page]");if(a){const b=c.getBoundingClientRect(),l=a.getBoundingClientRect();if(l.top<b.top||l.bottom>b.bottom)c.scrollTop+=l.top-b.top-(b.height-l.height)/2}}</script>`;
+// app runs it again after a navigation, unless a saved history position has already been restored.
+const revealCurrent = `<script>{const c=document.currentScript.previousElementSibling.querySelector(".pages"),a=c&&c.querySelector("[aria-current=page]");if(a&&!c.hasAttribute("data-sidebar-restored")){const b=c.getBoundingClientRect(),l=a.getBoundingClientRect();if(l.top<b.top||l.bottom>b.bottom)c.scrollTop+=l.top-b.top-(b.height-l.height)/2}}</script>`;
 // Previous and next page in the section.
 function pager(page: Page) {
   const list = pagesOf(page.section).flatMap((list) => list.pages);
