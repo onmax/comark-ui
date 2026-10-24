@@ -1,6 +1,6 @@
 {
   "name": "comark-keys",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "Keyboard keys in Comark: ++ctrl+shift+k++ renders each key as a <kbd>, with pymdownx.keys' names and aliases.",
   "keywords": [
     "comark",
