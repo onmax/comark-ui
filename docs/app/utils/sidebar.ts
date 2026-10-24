@@ -27,5 +27,9 @@ function entryOf() {
   // The URL fallback covers the initial document before the router has initialized its state.
   const state = history.state as { key?: string; position?: number } | null;
   if (state?.key) return `history:${state.key}`;
-  return state?.position === undefined ? location.href : `history:${state.position}`;
+  // The initial entry may be mounted before Vue Router has installed its key. Give it one now so the
+  // value captured on unmount is the same entry that a later Back navigation restores.
+  const key = crypto.randomUUID();
+  history.replaceState({ ...(state ?? {}), key }, "", location.href);
+  return `history:${key}`;
 }
