@@ -25,6 +25,9 @@ export interface Diff {
 /** What `:bound` props resolve against: the renderer's `state.renderData`, or the parsed document. */
 export type Data = Parameters<typeof resolveAttributes>[1];
 
+/** One problem: the comark-linter rule it falls under, and the sentence that names its block and the fix. */
+export type Issue = { rule: `comark/diff/${string}`; message: string };
+
 // What `check` calls each diff in its messages. The renderer reports nothing, so it needs no names.
 type Names = Map<ElementNode, string>;
 
@@ -76,13 +79,9 @@ function distance(a: string, b: string) {
   return row[b.length]!;
 }
 
-// Unknown props are dropped, and broken bindings would render at 0 or empty, so both are reported.
-function checkProps(
-  node: ElementNode,
-  attrs: Record<string, unknown>,
-  problems: string[],
-  data: Data,
-) {
+// Unknown props are dropped, and broken bindings would render at 0 or empty, so both are reported. None of the props is
+// a URL, so Comark never drops one as unsafe.
+function checkProps(node: ElementNode, attrs: Record<string, unknown>, problems: Issue[]) {
   const valid: readonly string[] = PROPS;
   // The raw keys, since resolving drops some: a bound `__proto__` would set the result's prototype instead.
   const keys = new Set(Object.keys(node[1]).map((key) => key.replace(/^:/, "")));
@@ -90,23 +89,12 @@ function checkProps(
   for (const key of keys) {
     if (NATIVE.test(key)) continue;
     if (valid.includes(key)) {
-      // Comark drops a bound `src` or `href` that resolves to an unsafe URL, such as javascript:. The binding is
-      // resolved alone, since a plain value next to it would still fill `attrs`.
-      const bound = `:${key}`;
-      if (
-        Object.hasOwn(node[1], bound) &&
-        !Object.hasOwn(props([node[0], { [bound]: node[1][bound] }], data), key)
-      ) {
-        problems.push(
-          `\`:${key}\` resolves to an unsafe URL, so it's left out. Use an http:// or https:// URL${key === "src" ? " or a path to the image file" : ""}.`,
-        );
-        continue;
-      }
       const path = text(node[1][`:${key}`]);
       if (unresolved(node, attrs, key) && !later(path))
-        problems.push(
-          `\`:${key}\` points at ${path}, which is undefined. Fix the path or set \`${key}\` directly.`,
-        );
+        problems.push({
+          rule: "comark/diff/undefined-binding",
+          message: `\`:${key}\` points at ${path}, which is undefined. Fix the path or set \`${key}\` directly.`,
+        });
       continue;
     }
     const lower = key.toLowerCase();
@@ -114,9 +102,10 @@ function checkProps(
       (name) => lower.length >= 3 && distance(lower, name) <= (lower.length >= 5 ? 2 : 1),
     );
     const hint = HINTS.get(lower) ?? (close ? `Did you mean \`${close}\`?` : "");
-    problems.push(
-      `\`${key}\` isn't a prop of \`::diff\`.${hint ? ` ${hint}` : ""} Valid props: ${valid.join(", ")}.`,
-    );
+    problems.push({
+      rule: "comark/diff/unknown-prop",
+      message: `\`${key}\` isn't a prop of \`::diff\`.${hint ? ` ${hint}` : ""} Valid props: ${valid.join(", ")}.`,
+    });
   }
 }
 
@@ -291,7 +280,7 @@ const fileOf = (node: ElementNode, attrs: Record<string, unknown>) =>
 /** Reads a `::diff` node: two fenced code blocks, before and after, as the rows of a suggested change. */
 export function readDiff(
   node: ElementNode,
-  issues: string[],
+  issues: Issue[],
   data: Data,
   names: Names = new Map(),
 ): Diff {
@@ -301,53 +290,71 @@ export function readDiff(
   const filenames = [text(first?.[1].filename), text(second?.[1].filename)];
   const file = fileOf(node, attrs);
   const where = names.get(node) ?? (file ? `diff ${quote(file)}` : "diff");
-  const problems: string[] = [];
-  checkProps(node, attrs, problems, data);
+  const problems: Issue[] = [];
+  checkProps(node, attrs, problems);
   for (const child of children(node))
     if (!(isElement(child) && child[0] === "pre") && (isElement(child) || text(child)))
-      problems.push(
-        `only two code blocks can go inside a diff (found ${isElement(child) && child[0] !== "p" ? `\`${child[0]}\`` : "text"}). Put explanations above or below it.`,
-      );
-  if (blocks.length !== 2)
-    problems.push(
-      `needs exactly two code blocks, before and after (got ${blocks.length}). ${blocks.length < 2 ? "Add the missing one; leave it empty for a file that's added or deleted" : "Put the rest in another diff"}.`,
-    );
+      problems.push({
+        rule: "comark/diff/stray-content",
+        message: `only two code blocks can go inside a diff (found ${isElement(child) && child[0] !== "p" ? `\`${child[0]}\`` : "text"}). Put explanations above or below it.`,
+      });
   const language = (block?: ElementNode) => text(block?.[1].language);
+  // Agents used to suggesting changes in review comments often paste a unified diff, which this would show as one
+  // added or removed file and then report the wrong fix.
+  const unified = blocks.some((block) => /^(?:diff|patch)$/i.test(language(block)));
+  if (unified)
+    problems.push({
+      rule: "comark/diff/unified-diff",
+      message:
+        "a ```diff block is a unified diff, and `::diff` draws the diff itself. Write the old lines in the first block and the new lines in the second, each in the file's language, like ```ts.",
+    });
+  else if (blocks.length !== 2)
+    problems.push({
+      rule: "comark/diff/block-count",
+      message: `needs exactly two code blocks, before and after (got ${blocks.length}). ${blocks.length < 2 ? "Add the missing one; leave it empty for a file that's added or deleted" : "Put the rest in another diff"}.`,
+    });
   if (first && !file && !unresolved(node, attrs, "file"))
-    problems.push(
-      `name the file in the first block (\`\`\`${language(first) || "ts"} [src/a.ts]) or with file="src/a.ts".`,
-    );
+    problems.push({
+      rule: "comark/diff/missing-file",
+      message: `name the file in the first block (\`\`\`${language(first) || "ts"} [src/a.ts]) or with file="src/a.ts".`,
+    });
   if (filenames[0] && filenames[1] && filenames[0] !== filenames[1])
-    problems.push(
-      `the before block names ${quote(filenames[0])} and the after block ${quote(filenames[1])}. A diff shows one file; split the other into its own diff.`,
-    );
-  if (first && second && language(first) !== language(second)) {
+    problems.push({
+      rule: "comark/diff/file-mismatch",
+      message: `the before block names ${quote(filenames[0])} and the after block ${quote(filenames[1])}. A diff shows one file; split the other into its own diff.`,
+    });
+  if (!unified && first && second && language(first) !== language(second)) {
     const is = (block: ElementNode) =>
       language(block) ? `is ${quote(language(block))}` : "has no language";
-    problems.push(
-      `the before block ${is(first)} and the after block ${is(second)}. Give both the same language, like \`\`\`${language(first) || language(second)}.`,
-    );
+    problems.push({
+      rule: "comark/diff/language-mismatch",
+      message: `the before block ${is(first)} and the after block ${is(second)}. Give both the same language, like \`\`\`${language(first) || language(second)}.`,
+    });
   }
   const raw = text(attrs.line);
   const line = /^\d+$/.test(raw) && Number(raw) >= 1 ? Number(raw) : undefined;
   if (raw && !line)
-    problems.push(
-      `\`line\` must be the file's line number for the first line, a whole number from 1 (got ${quote(raw)}).`,
-    );
+    problems.push({
+      rule: "comark/diff/invalid-line",
+      message: `\`line\` must be the file's line number for the first line, a whole number from 1 (got ${quote(raw)}).`,
+    });
 
   const old = first ? lines(first) : [];
   const next = second ? lines(second) : [];
   for (const [index, list] of [old, next].entries())
     if (list.length > MAX_DIFF_LINES)
-      problems.push(
-        `the ${index ? "after" : "before"} block has ${list.length} lines. Keep only the lines around the change, at most ${MAX_DIFF_LINES}.`,
-      );
+      problems.push({
+        rule: "comark/diff/too-many-lines",
+        message: `the ${index ? "after" : "before"} block has ${list.length} lines. Keep only the lines around the change, at most ${MAX_DIFF_LINES}.`,
+      });
   const steps = lcs(old.map(lineText), next.map(lineText));
   if (blocks.length === 2 && steps.every((step) => step[0] === "same"))
-    problems.push(
-      "before and after are the same, so there's no change to show. Edit the after block, or remove the diff.",
-    );
-  issues.push(...problems.map((problem) => `${where}: ${problem}`));
+    problems.push({
+      rule: "comark/diff/no-change",
+      message:
+        "before and after are the same, so there's no change to show. Edit the after block, or remove the diff.",
+    });
+  issues.push(...problems.map(({ rule, message }) => ({ rule, message: `${where}: ${message}` })));
 
   const rows: DiffRow[] = [];
   const at = (n: number) => (line === undefined ? undefined : line + n);
@@ -425,8 +432,8 @@ function name(nodes: Node[], data: Data): Names {
 }
 
 /** Every problem in a document's diffs, wherever they sit. */
-export function check(nodes: Node[], data: Data): string[] {
-  const issues: string[] = [];
+export function check(nodes: Node[], data: Data): Issue[] {
+  const issues: Issue[] = [];
   const names = name(nodes, data);
   const walk = (list: Node[]) => {
     for (const node of list) {

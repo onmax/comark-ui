@@ -179,6 +179,26 @@ export function createIcons(options: IconOptions = {}): Icons {
   };
 }
 
+/** The comark-linter rule of an icon problem. */
+export type IconRule =
+  | "comark/icon/invalid-name"
+  | "comark/icon/unknown-set"
+  | "comark/icon/unknown-icon"
+  | "comark/icon/download-failed";
+
+const RULES = {
+  name: "comark/icon/invalid-name",
+  set: "comark/icon/unknown-set",
+  missing: "comark/icon/unknown-icon",
+  load: "comark/icon/download-failed",
+} as const satisfies Record<IconProblem["problem"], IconRule>;
+
+/**
+ * The rule of the sentence `describeIconProblem` words, for `meta.issueRules`, so every plugin that draws icons reports
+ * a problem under the same rule.
+ */
+export const iconProblemRule = ({ problem }: IconProblem): IconRule => RULES[problem];
+
 /** The sentence for an icon that can't be drawn, with the fix. Plugins put where it is in front. */
 export function describeIconProblem(value: string, { problem, reason }: IconProblem): string {
   const name = parseIconName(value);

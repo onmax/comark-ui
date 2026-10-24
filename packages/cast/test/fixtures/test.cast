@@ -1,0 +1,9 @@
+{"version": 2, "width": 40, "height": 5, "timestamp": 1760000000, "title": "pnpm test"}
+[0.1, "o", "$ pnpm test\r\n"]
+[0.3, "o", "Running \u001b[33m0%\u001b[39m"]
+[0.5, "o", "\r\u001b[KRunning \u001b[33m50%\u001b[39m"]
+[0.7, "o", "\r\u001b[KRunning \u001b[32mdone\u001b[39m\r\n"]
+[0.8, "i", "q"]
+[0.9, "o", "\u001b[1;32m\u2713\u001b[0m cart \u001b[2m(4)\u001b[22m\r\n"]
+[1.0, "o", "\u001b[31m\u2717\u001b[39m checkout\r\n"]
+[1.1, "o", "\u001b]0;title\u001b\\\u001b[38;5;208mo\u001b[38;2;1;2;3mk\u001b[0m \u001b[7minv\u001b[27m\r\n"]

@@ -1,7 +1,8 @@
 import type { ElementNode, Node } from "comark";
 import { defineComarkPlugin } from "comark";
-import { createIcons, describeIconProblem, type Icons } from "comark-icon";
+import { createIcons, describeIconProblem, iconProblemRule, type Icons } from "comark-icon";
 import type { ActionButton } from "./client.ts";
+import { fromDiff, lines, nameOf, type Issue } from "./lines.ts";
 
 type Shown =
   | {
@@ -38,6 +39,13 @@ export type CodeOptions = {
   iconResolver?: Icons;
 };
 
+export type CodeMeta = {
+  /** One readable sentence per action whose icon can't be drawn. Other plugins add theirs too. */
+  issues: string[];
+  /** The comark-linter rule of each issue, by its sentence, so the linter reports it under its own code. */
+  issueRules: Record<string, string>;
+};
+
 const isElement = (node: Node): node is ElementNode => Array.isArray(node) && node[0] !== null;
 // SAFETY: an element node is [tag, attributes, ...children], so everything after index 1 is a child node.
 const childrenOf = (node: ElementNode) => node.slice(2) as Node[];
@@ -64,44 +72,84 @@ function mark(nodes: Node[], actions: CodeAction[], used: Set<CodeAction>, block
   }
 }
 
+async function act(nodes: Node[], actions: CodeAction[], resolver: Icons, issues: Issue[]) {
+  if (!actions.length) return;
+  const used = new Set<CodeAction>();
+  const blocks: ElementNode[] = [];
+  mark(nodes, actions, used, blocks);
+  const icons = [...used].flatMap((action) => (action.icon ? [action.icon] : []));
+  const resolved = icons.length ? await resolver.resolve(icons) : new Map();
+  const buttons = new Map<CodeAction, ActionButton>();
+  for (const action of used) {
+    const title = action.title || action.label || action.id;
+    const icon = action.icon ? resolved.get(action.icon) : undefined;
+    if (action.icon && icon && "problem" in icon)
+      issues.push({
+        rule: iconProblemRule(icon),
+        message: `The comark-code action "${action.id}" shows "${title}" as text on its code blocks, because it can't draw its icon "${action.icon}": ${describeIconProblem(action.icon, icon)}`,
+      });
+    const drawn = icon && !("problem" in icon) ? icon : undefined;
+    buttons.set(action, {
+      id: action.id,
+      label: action.label || (drawn ? "" : title),
+      title,
+      ...(drawn && { icon: { src: drawn.src, ratio: drawn.ratio, mask: drawn.mask } }),
+    });
+  }
+  for (const block of blocks)
+    // SAFETY: `mark` wrote the matched actions on every block it pushed.
+    block[1].actions = (block[1].actions as CodeAction[]).map((action) => buttons.get(action));
+}
+
+function blocksOf(nodes: Node[], found: ElementNode[] = []) {
+  for (const node of nodes) {
+    if (!isElement(node)) continue;
+    // Raw HTML's `pre` is the author's own markup, not a fence.
+    // SAFETY: Comark marks a node that came from raw HTML with `$: { html: 1 }`.
+    if (node[0] === "pre" && (node[1].$ as { html?: number } | undefined)?.html !== 1)
+      found.push(node);
+    else blocksOf(childrenOf(node), found);
+  }
+  return found;
+}
+
 /**
- * Puts your own buttons on code blocks, by language. Copy and Wrap come from the renderer's components alone; this
- * plugin is what tells every renderer which blocks get which of your actions. An icon it can't draw is added to
- * `meta.issues`, and its button shows the title instead.
+ * Reads each fence's line markers, collapsed ranges, line numbers, title, frame, and wrap, as Expressive Code writes
+ * them, and puts your own buttons on code blocks, by language. Copy and Wrap come from the renderer's components alone;
+ * this plugin is what tells every renderer which blocks get which of your actions. A range it can't read, and an icon it
+ * can't draw, are added to `meta.issues`; the icon's button shows the title instead. List it after `shiki`, which
+ * redraws every block it highlights.
  */
-export default defineComarkPlugin<CodeOptions>((options = {}) => {
+export default defineComarkPlugin<CodeOptions, CodeMeta>((options = {}) => {
   const resolver = options.iconResolver ?? createIcons();
   return {
     name: "comark-code",
-    async post(state) {
-      const actions = options.actions ?? [];
-      if (!actions.length) return;
-      const used = new Set<CodeAction>();
-      const blocks: ElementNode[] = [];
-      mark(state.tree.nodes, actions, used, blocks);
-      const icons = [...used].flatMap((action) => (action.icon ? [action.icon] : []));
-      const resolved = icons.length ? await resolver.resolve(icons) : new Map();
-      const issues: string[] = [];
-      const buttons = new Map<CodeAction, ActionButton>();
-      for (const action of used) {
-        const title = action.title || action.label || action.id;
-        const icon = action.icon ? resolved.get(action.icon) : undefined;
-        if (action.icon && icon && "problem" in icon)
-          issues.push(
-            `The comark-code action "${action.id}" shows "${title}" as text on its code blocks, because it can't draw its icon "${action.icon}": ${describeIconProblem(action.icon, icon)}`,
-          );
-        const drawn = icon && !("problem" in icon) ? icon : undefined;
-        buttons.set(action, {
-          id: action.id,
-          label: action.label || (drawn ? "" : title),
-          title,
-          ...(drawn && { icon: { src: drawn.src, ratio: drawn.ratio, mask: drawn.mask } }),
-        });
+    // Before any `post`, so Shiki highlights the code without its signs.
+    markdownItPost(state) {
+      for (const token of state.tokens) {
+        if (token.type !== "fence") continue;
+        const diff = fromDiff(token.info, token.content);
+        if (diff) Object.assign(token, diff);
       }
-      for (const block of blocks)
-        // SAFETY: `mark` wrote the matched actions on every block it pushed.
-        block[1].actions = (block[1].actions as CodeAction[]).map((action) => buttons.get(action));
-      if (issues.length) state.tree.meta.issues = [...(state.tree.meta.issues ?? []), ...issues];
+    },
+    async post(state) {
+      const issues: Issue[] = [];
+      const order = (state.options.plugins ?? []).map((plugin) => plugin.name);
+      const early = order.indexOf("shiki") > order.indexOf("comark-code");
+      const unread = blocksOf(state.tree.nodes).filter((pre) => lines(pre, !early, issues));
+      if (early && unread.length)
+        issues.push({
+          rule: "comark/code/listed-before-shiki",
+          message: `${nameOf(unread[0]!)}${unread.length > 1 ? ` and ${unread.length - 1} more` : ""} can't have line markers, numbers, or collapsed ranges, because comark-code is listed before shiki in plugins, and Shiki redraws every block it highlights. List shiki() before comark-code.`,
+        });
+      await act(state.tree.nodes, options.actions ?? [], resolver, issues);
+      if (!issues.length) return;
+      const { meta } = state.tree;
+      meta.issues = [...(meta.issues ?? []), ...issues.map((issue) => issue.message)];
+      meta.issueRules = {
+        ...meta.issueRules,
+        ...Object.fromEntries(issues.map((issue) => [issue.message, issue.rule])),
+      };
     },
   };
 });

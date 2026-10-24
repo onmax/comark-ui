@@ -1,11 +1,12 @@
 ---
 title: A review document
 description: A decision, before/after screenshots, a code change, and a link to try it, in one review.
+keywords: PR, pull request, evidence, code review, visual review
 tagline: Put a pull request's evidence in one Markdown file. The reviewer reads the decision first, then sees it, then reads the code.
-install: pnpm add comark @comark/html comark-annotate comark-github comark-embed comark-zoom
+install: pnpm add comark @comark/html comark-ui
 ---
 
-::example
+::example{label="Review document"}
 ````md
 > [!IMPORTANT] Decision
 > Moon phase and vibes collapse into **+2 filters**, so the toolbar stays on one row at 640px.
@@ -52,7 +53,7 @@ A reviewer decides whether to approve, so give them the decision first and the e
 
 1. A callout states what changed and why, in a sentence or two. `IMPORTANT` fits a decision, `WARNING` a risk the reviewer should weigh.
 2. A `::compare` shows the change. Mark the problem in red on the before side and the fix on the after side, so the two sets of notes read as one story.
-3. A `::diff` shows the lines that matter. Keep it to a few lines around the change; the pull request already has the full diff.
+3. A `::diff` shows the lines that matter. Keep it to a few lines around the change, since the pull request already has the full diff.
 4. A table of numbers goes in `::zoom`, so a wide one opens at full size.
 5. A link card points to where the reviewer can try it.
 
@@ -66,4 +67,4 @@ Run [comark-linter](/lint/) on the file before you post it, and open the rendere
 
 ## Share it
 
-[Sharing a review](/recipes/share/) puts the document in front of reviewers: on Drop, where they comment on the exact spot, or on a page you host.
+[Sharing a review](/recipes/share/) puts the document in front of reviewers, either on Drop, where they comment on the exact spot, or on a page you host.

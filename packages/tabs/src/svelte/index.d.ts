@@ -2,7 +2,7 @@ import type { Component, Snippet } from "svelte";
 import type { IconData } from "comark-icon";
 
 export { default } from "comark-tabs";
-export type { TabsMeta, TabsOptions } from "comark-tabs";
+export type { PackageManager, TabsMeta, TabsOptions } from "comark-tabs";
 
 export declare const Tabs: Component<{
   labels?: string[];

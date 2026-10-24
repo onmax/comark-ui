@@ -1,6 +1,5 @@
-// Renders docs/pages and each package's docs/ with the plugins themselves into docs/dist, a static site served by Cloudflare at comark.onmax.me.
-import { createHash } from "node:crypto";
-import { existsSync } from "node:fs";
+// Renders docs/pages and each package's docs/ with the plugins themselves into docs/dist, a static site served by Cloudflare at comark-ui.onmax.me.
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { cp, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { deflateRawSync } from "node:zlib";
@@ -13,10 +12,13 @@ import { icons as lucide } from "@iconify-json/lucide";
 import dark from "shiki/themes/vitesse-dark.mjs";
 import light from "shiki/themes/vitesse-light.mjs";
 import { build } from "vite";
+import { css as criticCss } from "../packages/critic/src/index.ts";
 import { createIcons, css as iconCss, iconHtml } from "../packages/icon/src/html.ts";
 import include from "../packages/include/src/index.ts";
-import { lint } from "../packages/lint/src/index.ts";
+import { lint, type Diagnostic } from "../packages/lint/src/index.ts";
 import { defaultConfig } from "./config.ts";
+import { loadExamples, pageOrder, recipeOrder, thirdParty } from "./examples.ts";
+import { checkExample, doctorRule, doctorRules } from "./doctor.ts";
 import { highlight } from "./highlight.ts";
 import { browserPlugins, components } from "./plugins.ts";
 import { colorTokens, themePresets } from "./play-theme.ts";
@@ -25,20 +27,25 @@ import { previewDocument } from "./preview.ts";
 const root = new URL("./", import.meta.url);
 const dist = new URL("dist/", root);
 const fonts = new URL("../node_modules/geist/dist/fonts/", root);
-const site = "https://comark.onmax.me";
+const site = "https://comark-ui.onmax.me";
 // `#123` on the site links to this repository's issues.
 const sitePlugins = () =>
-  browserPlugins({ "comark-github": { references: { repo: "onmax/comark-plugins" } } });
+  browserPlugins({ "comark-github": { references: { repo: "onmax/comark-ui" } } });
 // Only comark-include's examples include files, so includes resolve from its docs, where their partials sit.
 const contentPlugins = () => [
   include({ root: fileURLToPath(new URL("../packages/include/docs/", root)) }),
   ...sitePlugins(),
 ];
 // The site's own links stay plain; chips show in the examples and the playground.
-const plugins = [
-  ...contentPlugins().filter((plugin) => plugin.name !== "comark-chips"),
-  shiki({ themes: { light, dark } }),
-];
+// Shiki goes before comark-code, which marks the lines Shiki drew. Keep this
+// tied to the plugin name so adding a renderer-only plugin after code doesn't
+// change the ordering required by code's line-marker validation.
+const highlighted = (list: ReturnType<typeof contentPlugins>) => {
+  const code = list.findIndex((plugin) => plugin.name === "comark-code");
+  if (code < 0) return list;
+  return [...list.slice(0, code), shiki({ themes: { light, dark } }), ...list.slice(code)];
+};
+const plugins = highlighted(contentPlugins().filter((plugin) => plugin.name !== "comark-chips"));
 
 // The site's own icons, drawn the way `:icon` draws them: Lucide's, and annotate's, a hand-drawn loop like its marks.
 const ownIcons = {
@@ -46,13 +53,19 @@ const ownIcons = {
 };
 // The site's chrome draws these; each package's own comes from its docs' frontmatter.
 const lucideNames = [
+  "code-xml",
   "arrow-left",
   "arrow-right",
   "arrow-up-right",
+  "blocks",
   "book-open",
+  "circle-check",
+  "circle-x",
   "flask-conical",
   "search",
+  "stethoscope",
   "tv-minimal-play",
+  "type",
 ];
 const iconId = (name: string) => (name in ownIcons ? `site:${name}` : `lucide:${name}`);
 const str = (value: unknown) =>
@@ -61,33 +74,96 @@ const str = (value: unknown) =>
     : // SAFETY: undefined, null, objects, and arrays returned above, so only a string, number, or boolean is left.
       String(value as string | number | boolean);
 
-// The rail, in order: the docs, the playground, then one section per package. Each package's pages sit in its own
-// docs/ folder, and its index's frontmatter gives its group, icon, blurb, and credits. A package with no docs yet is
-// left out.
+const plain = (text: string) => text.replaceAll("`", "");
+const inlineCode = (text: string) => escapeHtml(text).replace(/`([^`]+)`/g, "<code>$1</code>");
+
+// The packages in the order their sections list them. Each package's page sits in its own docs/ folder, and its
+// frontmatter gives its group, icon, blurb, and credits; the group picks the section. A package with no docs yet is
+// left out. A third-party plugin in `thirdParty` takes a place too, with its page in docs/pages/<slug>/.
 const packageOrder = [
   "annotate",
+  "cast",
   "charts",
+  "diagrams",
+  "mermaid",
   "chips",
+  "colors",
   "diff",
   "embed",
+  "media",
+  "metrics",
+  "table",
+  "tests",
   "github",
+  "properties",
+  "sources",
   "icon",
+  "qr",
+  "links",
   "zoom",
   "carousel",
   "tabs",
   "code",
+  "details",
+  "file-tree",
+  "fields",
+  "badge",
+  "code-notes",
+  "cards",
+  "steps",
+  "quiz",
+  "cjk",
+  "figure",
+  "mark",
+  "critic",
+  "deflist",
+  "footnotes",
+  "keys",
   "include",
+  "outline",
+  "xref",
+  "reading-time",
   "lint",
 ];
 const repo = new URL("../", root);
 // Paths from the repository's root, so an error names the file.
 const fileOf = (slug: string) => {
   const [first = "", ...rest] = slug.split("/");
-  return packageOrder.includes(first)
+  return packageOrder.includes(first) && !(first in thirdParty)
     ? `packages/${first}/docs/${rest.join("/") || "index"}.md`
-    : `docs/pages/${slug || "index"}.md`;
+    : existsSync(new URL(`docs/pages/${slug}/index.md`, repo))
+      ? `docs/pages/${slug}/index.md`
+      : `docs/pages/${slug || "index"}.md`;
 };
 const exists = (file: string) => existsSync(new URL(file, repo));
+// A package with several rich components gives each its own page in docs/components/, listed after its page in the
+// order that page links to them.
+function componentPages(slug: string) {
+  const folder = new URL(`packages/${slug}/docs/components/`, repo);
+  if (!existsSync(folder)) return [];
+  const linked = [
+    ...readFileSync(new URL("../index.md", folder), "utf8").matchAll(
+      new RegExp(`\\(/${slug}/components/([\\w-]+)/\\)`, "g"),
+    ),
+  ].map(([, name]) => name);
+  const pages = readdirSync(folder).map((file) => file.replace(/\.md$/, ""));
+  const unlisted = pages.filter((page) => !linked.includes(page));
+  if (unlisted.length)
+    throw new Error(
+      `packages/${slug}/docs/index.md needs a link to each page in components/: ${unlisted.join(", ")}.`,
+    );
+  return [...new Set(linked)].map((name) => `components/${name}`);
+}
+// A package's group picks its section and its heading there: blocks under Components, syntax under Typography, the
+// authoring tools under the docs' Utilities, and the linter on its own. comark-ui has no page: Getting started is it.
+const groups = [
+  "Review blocks",
+  "Docs blocks",
+  "Page behavior",
+  "Markdown syntax",
+  "Authoring tools",
+  "Linter",
+];
 for (const folder of await readdir(new URL("packages/", repo))) {
   // A branch from before the move would add its pages where nothing reads them.
   for (const stale of [`docs/pages/${folder}`, `docs/pages/${folder}.md`])
@@ -104,16 +180,28 @@ const packages = await Promise.all(
       const { frontmatter } = await parseMarkdown(
         await readFile(new URL(fileOf(slug), repo), "utf8"),
       );
-      const manifest: unknown = JSON.parse(
-        await readFile(new URL(`packages/${slug}/package.json`, repo), "utf8"),
-      );
-      const [group, icon, blurb, credits] = ["group", "icon", "blurb", "credits"].map((key) =>
-        str(frontmatter[key]),
-      );
-      if (!group || !icon || !blurb)
-        throw new Error(`${fileOf(slug)} needs a group, an icon, and a blurb in its frontmatter.`);
+      const manifest: unknown =
+        slug in thirdParty
+          ? { name: thirdParty[slug] }
+          : JSON.parse(await readFile(new URL(`packages/${slug}/package.json`, repo), "utf8"));
+      const [title, group, icon, blurb, credits] = [
+        "title",
+        "group",
+        "icon",
+        "blurb",
+        "credits",
+      ].map((key) => str(frontmatter[key]));
+      if (!title || !group || !icon || !blurb)
+        throw new Error(
+          `${fileOf(slug)} needs a title, a group, an icon, and a blurb in its frontmatter.`,
+        );
+      if (!groups.includes(group))
+        throw new Error(
+          `${fileOf(slug)}: group "${group}" has no section; use one of ${groups.join(", ")}.`,
+        );
       return {
         slug,
+        label: title,
         group,
         icon,
         blurb,
@@ -133,52 +221,88 @@ const siteIcon = (name: string, size = 18) => {
   if (!found || "problem" in found) throw new Error(`docs/build.ts: no icon "${name}".`);
   return iconHtml(found).replace('style="', `style="--comark-icon-size:${size}px;`);
 };
+type Package = (typeof packages)[number];
 type Section = {
   slug: string;
   label: string;
-  group: string;
   icon: string;
-  npm?: string;
-  // What the index's grid says under the package's name.
-  blurb?: string;
-  // What the footer credits besides Comark, as HTML.
-  credits?: string;
-  lists: { title?: string; slugs: string[] }[];
+  lists: { title?: string; icon?: string; slugs: string[] }[];
 };
+// A package's page, then its components' pages.
+const pagesOfPackage = (pkg: Package) =>
+  pageOrder
+    .flatMap((page) =>
+      page === "components" ? ["components", ...componentPages(pkg.slug)] : [page],
+    )
+    .map((page) => (page ? `${pkg.slug}/${page}` : pkg.slug))
+    .filter((slug) => exists(fileOf(slug)));
+// By name, as ui.nuxt.com lists its components, so a block is found without knowing the order.
+const inGroup = (group: string) =>
+  packages
+    .filter((pkg) => pkg.group === group)
+    .toSorted((a, b) => a.label.localeCompare(b.label))
+    .flatMap(pagesOfPackage);
+// The rail, as on ui.nuxt.com: a few kinds of page, each a column of its pages. Blocks are documented for comark-ui,
+// and each page ends with its own package for anyone who installs fewer.
 const sections: Section[] = [
   {
     slug: "",
     label: "Docs",
-    group: "Comark plugins",
     icon: "book-open",
     // The index is the landing page, outside every section's column.
     lists: [
       {
-        title: "Guides",
-        slugs: ["guide/renderers", "guide/theming", "guide/validation", "guide/agents"],
+        slugs: [
+          "getting-started",
+          "guide/renderers",
+          "guide/theming",
+          "guide/validation",
+          "guide/agents",
+        ],
       },
       {
         title: "Recipes",
-        slugs: ["recipes/review", "recipes/share", "recipes/zoom", "recipes/carousel"],
+        slugs: recipeOrder.map((recipe) => `recipes/${recipe}`),
       },
+      { title: "Utilities", slugs: inGroup("Authoring tools") },
       { title: "Compared", slugs: ["compare/charts"] },
     ],
   },
-  // Its column lists the presets, which come from the pages' examples.
-  { slug: "play", label: "Playground", group: "Comark plugins", icon: "flask-conical", lists: [] },
-  ...packages.map((pkg) => ({
-    ...pkg,
-    label: pkg.slug,
-    // A package's pages, in this order when it has them.
+  {
+    slug: "components",
+    label: "Components",
+    icon: "blocks",
+    lists: ["Review blocks", "Docs blocks", "Page behavior"].map((group) => ({
+      title: group,
+      slugs: inGroup(group),
+    })),
+  },
+  {
+    slug: "typography",
+    label: "Typography",
+    icon: "type",
+    lists: [{ slugs: inGroup("Markdown syntax") }],
+  },
+  // comark-linter's pages, then one page per rule: the core rules, then each package's.
+  {
+    slug: "lint",
+    label: "Linter",
+    icon: "stethoscope",
     lists: [
-      {
-        slugs: ["", "getting-started", "components", "syntax", "guides", "theming", "vite-doctor"]
-          .map((page) => (page ? `${pkg.slug}/${page}` : pkg.slug))
-          .filter((slug) => exists(fileOf(slug))),
-      },
+      { slugs: inGroup("Linter") },
+      { title: "Rules", slugs: ["doctor"] },
+      ...[...new Set(doctorRules.map((entry) => entry.group))].map((group) => ({
+        title: group === "core" ? "Core" : group,
+        icon: packages.find((pkg) => pkg.slug === (group === "core" ? "lint" : group))?.icon,
+        slugs: doctorRules.filter((entry) => entry.group === group).map((entry) => entry.slug),
+      })),
     ],
-  })),
+  },
+  // Its column lists the presets, which come from the pages' examples.
+  { slug: "play", label: "Playground", icon: "flask-conical", lists: [] },
 ];
+// The package a page documents, if any.
+const packageOf = (slug: string) => packages.find((pkg) => pkg.slug === slug.split("/")[0]);
 
 const isElement = (node: Node): node is ElementNode => Array.isArray(node) && node[0] !== null;
 const isPre = (node: Node): node is ElementNode => isElement(node) && node[0] === "pre";
@@ -197,10 +321,7 @@ const exampleWithout =
     const source = textContent(pre);
     // Highlighted like the page, so a diff in an example keeps its colors.
     const preview = await parseMarkdown(source, {
-      plugins: [
-        ...contentPlugins().filter((plugin) => !without.includes(plugin.name)),
-        shiki({ themes: { light, dark } }),
-      ],
+      plugins: highlighted(contentPlugins().filter((plugin) => !without.includes(plugin.name))),
     });
     if (preview.meta.issues.length)
       throw new Error(`Example "${str(attrs.label)}":\n${preview.meta.issues.join("\n")}`);
@@ -216,7 +337,7 @@ const exampleWithout =
   };
 
 // The examples at the top of each page. Not comark-tabs: each example's Preview/Code switch shares the tab row.
-const examples: NodeHandler = async ([, , ...children], state) => {
+const exampleTabs: NodeHandler = async ([, , ...children], state) => {
   const panels = children.filter(isElement);
   const labels = panels.map((panel, i) => {
     const label = escapeHtml(str(panel[1].label) || `Example ${i + 1}`);
@@ -236,8 +357,8 @@ const matrix: NodeHandler = async ([, , ...children], state) =>
 
 // The index's studio: the agent's draft of the Markdown typed out a line at a time beside the page the plugins render,
 // each block appearing once its lines are typed. Then the plugins' first issue on the draft, the one value the fixed
-// Markdown changes, and the fixed block drawn. The script plays it once the studio scrolls into view; without it, or
-// with reduced motion, the studio shows the fixed Markdown and page.
+// Markdown changes, and the fixed block drawn. It rests on the fixed Markdown and page with the issue it fixed, and the
+// script plays it while the pointer is on it or on Play; without the script, or with reduced motion, it only rests.
 const hero: NodeHandler = async ([, , ...children], state) => {
   const [draftPre, pre] = children.filter(isPre);
   if (!draftPre || !pre)
@@ -356,10 +477,10 @@ const hero: NodeHandler = async ([, , ...children], state) => {
     `<div class="studio" style="--typed:${typed}ms"><div class="studio-bar">` +
     `<span class="studio-file">${siteIcon("file-input", 13)}review.md</span>` +
     `<ol class="studio-steps" aria-label="Steps">${steps.map((step) => `<li data-step="${step.toLowerCase()}">${step}</li>`).join("")}</ol>` +
-    `<button type="button" class="studio-replay" hidden>${resetIcon}<span>Replay</span></button>` +
+    `<button type="button" class="studio-replay" hidden>${resetIcon}<span>Play</span></button>` +
     `<a class="window-play" href="${escapeHtml(playLink(source))}">${siteIcon("flask-conical", 13)}<span>Open in playground</span></a></div>` +
     `<div class="studio-body"><div class="studio-source"><div class="studio-code"><div class="studio-gutter" aria-hidden="true">${gutter}</div>${highlighted}</div>` +
-    `<div class="studio-problems"><p class="studio-issue" aria-hidden="true"><span class="studio-dot" aria-hidden="true"></span><span><strong>${escapeHtml(issue.slice(0, issue.indexOf(": ") + 1))}</strong>${escapeHtml(issue.slice(issue.indexOf(": ") + 1))}</span></p>` +
+    `<div class="studio-problems"><p class="studio-issue" aria-hidden="true"><span class="studio-dot" aria-hidden="true"></span><span><span class="studio-fixed">Fixed</span><strong>${escapeHtml(issue.slice(0, issue.indexOf(": ") + 1))}</strong>${escapeHtml(issue.slice(issue.indexOf(": ") + 1))}</span></p>` +
     `<p class="studio-ok">${checkIcon}No problems</p></div></div>` +
     `<div class="studio-page"><div>${blocks.join("")}</div></div></div></div></section>`
   );
@@ -379,29 +500,39 @@ async function parsePage(slug: string, section: Section) {
   const file = fileOf(slug);
   const document = await parseMarkdown(await readFile(new URL(file, repo), "utf8"), { plugins });
   if (document.meta.issues.length) throw new Error(`${file}:\n${document.meta.issues.join("\n")}`);
-  const [title, description, tagline, install, headline] = [
+  // A rule page is named by its rule, and the catalog says what it asks for.
+  const rule = doctorRule(slug);
+  if (rule && Object.keys(document.frontmatter).length)
+    throw new Error(
+      `${file} takes its title from the rule's catalog entry; remove its frontmatter.`,
+    );
+  const [title, description, tagline, install, headline, label] = [
     "title",
     "description",
     "tagline",
     "install",
     "headline",
+    "label",
   ].map((key) => str(document.frontmatter[key]));
-  const skill =
-    section.npm &&
-    existsSync(new URL(`../packages/${section.slug}/skills/${section.npm}/SKILL.md`, root))
-      ? section.npm
-      : "";
+  const pkg = packageOf(slug);
+  if (pkg && pkg.slug !== "lint" && install)
+    throw new Error(
+      `${file}: a block's page has no installer; Getting started installs comark-ui, and the page's Package section installs it alone.`,
+    );
   return {
     slug,
     section,
     document,
-    title,
-    description,
-    tagline: tagline || description,
+    rule,
+    title: rule?.rule ?? title,
+    description: rule ? plain(rule.title) : description,
+    tagline: rule ? plain(rule.title) : tagline || description,
     install,
     headline,
-    skill,
-    label: slug === section.slug ? "Overview" : title,
+    pkg,
+    // Words that find the page in search that it doesn't say itself, such as other tools' names for its blocks.
+    keywords: [document.frontmatter.keywords].flat().map(str).filter(Boolean).join(", "),
+    label: rule?.name ?? (label || title),
     toc: toc(document),
   };
 }
@@ -418,34 +549,49 @@ const pagesOf = (section: Section) =>
     pages: list.slugs.flatMap((slug) => parsed.filter((page) => page.slug === slug)),
   }));
 
-// The playground's presets: every page's top examples, under the section they come from.
-const presets = parsed.flatMap((page) =>
-  page.document.nodes
-    .filter(isElement)
-    .filter(([tag]) => tag === "examples")
-    .flatMap(([, , ...panels]) => panels.filter(isElement))
-    .map(([, attrs, ...children]) => ({
-      id: `${page.section.slug || "docs"}-${str(attrs.label)
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-|-$/g, "")}`,
-      label: str(attrs.label),
-      group: page.section.label,
-      npm: page.section.npm ?? "",
-      source: textContent(children.find(isPre) ?? ["pre", {}]),
-    }))
-    .filter((preset) => playable(preset.source)),
+// Every example on the site, in one list from docs/examples.ts: the playground lists the ones it can run, a
+// package's column shows its own, and the landing's canvas draws a card for each.
+const examples = await loadExamples(packageOrder);
+const slugify = (text: string) =>
+  text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+const pageOf = (slug: string) => parsed.find((page) => page.slug === slug)!;
+const presets = examples
+  .filter((example) => example.playable)
+  .map(({ id, label, group, source }) => {
+    const pkg = packages.find((pkg) => pkg.slug === group);
+    return { id, label, group: pkg?.label ?? "Recipes", npm: pkg?.npm ?? "", source };
+  });
+// The size of each PNG the pages show, read from its header, so a still reserves its room before the image loads.
+const publicDir = new URL("public/", root);
+const imageSizes = new Map(
+  await Promise.all(
+    (await readdir(publicDir))
+      .filter((file) => file.endsWith(".png"))
+      .map(async (file) => {
+        const head = await readFile(new URL(file, publicDir));
+        return [file, [head.readUInt32BE(16), head.readUInt32BE(20)]] as const;
+      }),
+  ),
 );
 // A still of a rendered document: no scripts, its plugins' styles collected into `styles` to go in the page once,
-// no ids, since a page holds many, and a chart without its data table, so the still is all plot.
+// no ids, since a page holds many, and a chart without its data table, so the still is all plot. Nothing in it zooms
+// or takes focus, so the page's zoom never adds a still to a gallery or a group.
 const stillOf = (html: string, styles: Set<string>) =>
   html
     .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, (style) => (styles.add(style), ""))
     .replace(/<script>[\s\S]*?<\/script>/g, "")
     .replace(/<details class="cch-data">[\s\S]*?<\/details>/g, "")
-    .replace(/\s(id|for|aria-controls|aria-labelledby)="[^"]*"/g, "")
+    .replace(/\s(id|for|aria-controls|aria-labelledby|tabindex|data-zoom[\w-]*)="[^"]*"/g, "")
+    .replace(/(<[a-z][^>]*?)\sdata-zoom(?=[\s>])/g, "$1")
+    .replace(/<img\b([^>]*?) src="\/([\w-]+\.png)"/g, (tag, rest: string, file: string) => {
+      const size = imageSizes.get(file);
+      return size && !/\swidth=/.test(rest) ? `${tag} width="${size[0]}" height="${size[1]}"` : tag;
+    })
     .replace(/<img\b/g, '<img loading="lazy" draggable="false"');
-// A small still of each preset for the playground's column, with a gray box for each embedded player, so the column
+// A small still of each preset for the playground's column, with a gray box for each player, so the column
 // loads nothing but the pages' own images. The playground scales each still to its card.
 const thumbnailStyles = new Set<string>();
 const thumbnails = new Map(
@@ -453,7 +599,7 @@ const thumbnails = new Map(
     presets.map(async (preset) => {
       const document = await parseMarkdown(preset.source, { plugins: sitePlugins() });
       const html = (await renderHtmlFromDocument(document, { components })).replace(
-        /<iframe\b[^>]*><\/iframe>/g,
+        /<iframe\b[^>]*><\/iframe>|<(video|audio) class="cm"[^>]*>.*?<\/\1>|<span class="cm cm-(?:audio|video)"[^>]*>.*?<\/button><\/span><\/span>/g,
         `<span class="preset-player">${siteIcon("tv-minimal-play", 128)}</span>`,
       );
       return [preset.id, stillOf(html, thumbnailStyles)] as const;
@@ -462,70 +608,155 @@ const thumbnails = new Map(
 );
 
 const playIcon = `<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 5.14v13.72a1 1 0 0 0 1.5.86l11-6.86a1 1 0 0 0 0-1.72l-11-6.86A1 1 0 0 0 8 5.14"/></svg>`;
-const pauseIcon = `<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M7 4h3.5v16H7zM13.5 4H17v16h-3.5z"/></svg>`;
 const canvasIcon = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>`;
 const listIcon = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="13" width="18" height="7" rx="1.5"/></svg>`;
 
 // What lint-comark prints for a demo's Markdown, a line at a time, as its command line would.
-async function lintReport(source: string) {
-  const found = await lint(source, { plugins: browserPlugins(), components });
-  if (!found.length) throw new Error("The lint demo's Markdown needs a problem to report.");
+// What lint-comark prints for a file, drawn as a terminal. With `fixes`, each problem's fix follows its message.
+function terminal(file: string, found: Diagnostic[], fixes = false) {
   const lines = [
-    `<span class="term-cmd"><span aria-hidden="true">$</span> lint-comark review.md</span>`,
+    `<span class="term-cmd"><span aria-hidden="true">$</span> lint-comark ${file}</span>`,
     ...found.flatMap((d) => [
-      `<span class="term-where">review.md:${d.line}:${d.column ?? 1} <span>${escapeHtml(d.rule)}</span></span>`,
-      `<span class="term-message">${escapeHtml(d.message).replace(/`([^`]+)`/g, "<code>$1</code>")}</span>`,
+      `<span class="term-where">${file}:${d.line}:${d.column ?? 1} <span>${escapeHtml(d.rule)}</span></span>`,
+      `<span class="term-message">${inlineCode(d.message)}</span>`,
+      ...(fixes ? [`<span class="term-fix">${inlineCode(d.fix)}</span>`] : []),
     ]),
-    `<span class="term-sum">✖ ${found.length} problem${found.length === 1 ? "" : "s"}</span>`,
+    found.length
+      ? `<span class="term-sum">✖ ${found.length} problem${found.length === 1 ? "" : "s"}</span>`
+      : `<span class="term-ok">✔ No problems</span>`,
   ];
   return `<div class="term">${lines.map((line, i) => `<span class="term-line" style="--i:${i}">${line}</span>`).join("")}</div>`;
 }
-
-// The index's packages, twice over: a canvas of cards, each drawn live by the plugins from the Markdown in its `demo`
-// and animated by the stylesheet, and the list it replaces without the script, for keyboards, and on request.
-const demoStyles = new Set<string>();
-const packageGrid: NodeHandler = async ([, , ...children]) => {
-  const demos = await Promise.all(
-    children.filter(isElement).map(async ([, attrs, ...content]) => {
-      const pkg = sections.find((section) => section.npm && section.slug === str(attrs.package));
-      if (!pkg?.npm) throw new Error(`A demo names no package: "${str(attrs.package)}".`);
-      const pre = content.find(isPre);
-      if (!pre) throw new Error(`The ${pkg.slug} demo needs a fenced code block.`);
-      const source = textContent(pre);
-      let html: string;
-      if (pkg.slug === "lint") html = await lintReport(source);
-      else {
-        const document = await parseMarkdown(source, { plugins: contentPlugins() });
-        if (document.meta.issues.length)
-          throw new Error(`The ${pkg.slug} demo:\n${document.meta.issues.join("\n")}`);
-        html = (await renderHtmlFromDocument(document, { components })).replace(
-          /<iframe\b[^>]*><\/iframe>/g,
-          `<span class="demo-player"><span class="demo-play">${playIcon}</span><span class="demo-progress"></span></span>`,
-        );
-      }
-      // The canvas stacks cards in columns from their heights, so it never measures one.
-      const height = Number(attrs.height);
-      if (!height) throw new Error(`The ${pkg.slug} demo needs a \`height\` in pixels.`);
-      const label = str(attrs.label);
-      // An include shows what it reads, since the page alone doesn't say.
-      // Tabs show their strip once their script runs, which a card doesn't have.
-      html = html.replaceAll('<div class="ct"', '<div class="ct" data-tabs-ready');
-      if (pkg.slug === "include")
-        html = `<p class="demo-directive"><code>${escapeHtml(source.trim())}</code></p>${html}`;
-      return (
-        `<article class="demo demo-${pkg.slug}${label ? ` demo-${pkg.slug}-${label}` : ""}" data-h="${height}" style="height:${height}px">` +
-        `<a class="demo-link" href="${href(pkg.slug)}" draggable="false" tabindex="-1">${siteIcon(pkg.icon, 15)}<strong>${escapeHtml(pkg.label)}</strong>${label ? `<span>${escapeHtml(label)}</span>` : ""}${siteIcon("arrow-up-right", 14)}</a>` +
-        `<button type="button" class="demo-copy" data-copy="pnpm add ${escapeHtml(pkg.npm)}" tabindex="-1" title="Copy pnpm add ${escapeHtml(pkg.npm)}">${copyIcon}${checkIcon}</button>` +
-        // Hovering a card shows the Markdown it was drawn from.
-        `<div class="demo-screen" inert><div class="demo-page">${stillOf(html, demoStyles)}</div><div class="demo-source">${highlight(source.trimEnd())}</div></div></article>`
-      );
-    }),
-  );
-  const list = sections
-    .filter((section) => section.npm)
+async function lintReport(source: string) {
+  const found = await lint(source, { plugins: browserPlugins(), components });
+  if (!found.length) throw new Error("The lint demo's Markdown needs a problem to report.");
+  return terminal("review.md", found);
+}
+// A rule page's examples: Markdown the rule reports, with what lint-comark prints for it, and the same Markdown fixed.
+// test/doctor.test.ts checks them the same way, so the build fails only on a page the tests let through.
+const ruleExample =
+  (page: Page, kind: "incorrect" | "correct"): NodeHandler =>
+  async ([, , ...children], state) => {
+    const pre = children.find(isPre);
+    const { rule } = page;
+    if (!rule) throw new Error(`${fileOf(page.slug)}: ::${kind} goes only on a Doctor rule page.`);
+    const { found, problem } = await checkExample(rule.rule, kind, pre ? textContent(pre) : "");
+    if (problem || !pre) throw new Error(`${fileOf(page.slug)}: ${problem}`);
+    const label = kind === "correct" ? "Correct" : "Incorrect";
+    return (
+      `<div class="rule-example rule-${kind}"><p class="rule-verdict">${siteIcon(kind === "correct" ? "circle-check" : "circle-x", 15)}${label}</p>` +
+      `${await state.one(pre, state)}${terminal("example.md", found, true)}</div>`
+    );
+  };
+// The Doctor overview's table of every rule, with its code and severity.
+const ruleTable: NodeHandler = () =>
+  `<div class="table-scroll"><table><thead><tr><th>Code</th><th>Rule</th><th>What it asks</th><th>Severity</th></tr></thead><tbody>${doctorRules
     .map(
-      (section) =>
-        `<li><a href="${href(section.slug)}">${siteIcon(section.icon, 24)}<strong>${escapeHtml(section.label)}</strong><span>${escapeHtml(section.blurb ?? "")}</span></a><button type="button" class="grid-copy" data-copy="pnpm add ${escapeHtml(section.npm!)}" aria-label="Copy pnpm add ${escapeHtml(section.npm!)}">${copyIcon}</button></li>`,
+      (entry) =>
+        `<tr><td><code>${entry.code}</code></td><td><a href="${href(entry.slug)}"><code>${escapeHtml(entry.rule)}</code></a></td><td>${inlineCode(entry.title)}</td><td>${entry.severity ?? "warning"}</td></tr>`,
+    )
+    .join("")}</tbody></table></div>`;
+const demoStyles = new Set<string>();
+async function renderDemo(slug: string, source: string) {
+  if (slug === "lint") return lintReport(source);
+  const document = await parseMarkdown(source, { plugins: contentPlugins() });
+  if (document.meta.issues.length)
+    throw new Error(`The ${slug} demo:\n${document.meta.issues.join("\n")}`);
+  let html = (await renderHtmlFromDocument(document, { components })).replace(
+    /<iframe\b[^>]*><\/iframe>/g,
+    `<span class="demo-player"><span class="demo-play">${playIcon}</span></span>`,
+  );
+  // Tabs show their strip, code blocks their buttons, and players their controls, once their script runs, which a card
+  // doesn't have. A video there drops the browser's controls, which would otherwise show over its own.
+  html = html
+    .replaceAll('<div class="ct"', '<div class="ct" data-tabs-ready')
+    .replace(/<div class="ck"(?![\w-])/g, '<div class="ck" data-code-ready')
+    .replace(
+      /<span class="cm cm-video"([^>]*)><video([^>]*?) controls/g,
+      '<span class="cm cm-video" data-media-ready$1><video$2',
+    )
+    .replaceAll('<span class="cm cm-audio"', '<span class="cm cm-audio" data-media-ready');
+  // An include shows what it reads, since the page alone doesn't say.
+  if (slug === "include")
+    html = `<p class="demo-directive"><code>${escapeHtml(source.trim())}</code></p>${html}`;
+  return stillOf(html, demoStyles);
+}
+interface Demo {
+  /** The example's id, the same as its playground preset's. */
+  id: string;
+  pkg: Pick<Package, "slug" | "label" | "icon" | "npm">;
+  /** The page the card opens. */
+  page: string;
+  label: string;
+  source: string;
+}
+async function demoCard({ id, pkg, page, label, source }: Demo) {
+  const still = await renderDemo(pkg.slug, source);
+  return (
+    `<article class="demo demo-${slugify(pkg.slug)}" data-package="${pkg.slug}" data-example="${id}">` +
+    `<a class="demo-link" href="${href(page)}" draggable="false" tabindex="-1">${siteIcon(pkg.icon, 15)}<strong>${escapeHtml(pkg.label === "recipe" ? pkg.label : pkg.npm!)}</strong>${label ? `<span>${escapeHtml(label.toLowerCase())}</span>` : ""}</a>` +
+    `<button type="button" class="demo-copy" data-copy="pnpm add ${escapeHtml(pkg.npm!)}" tabindex="-1" title="Copy pnpm add ${escapeHtml(pkg.npm!)}" aria-label="Copy pnpm add ${escapeHtml(pkg.npm!)}">${copyIcon}${checkIcon}</button>` +
+    `<div class="demo-screen" inert><div class="demo-page">${still}</div></div></article>`
+  );
+}
+// The cards in a fixed shuffle, so neighbours on the canvas are mostly of different packages, and never two of one
+// package in a row.
+function deal(demos: Demo[]) {
+  let seed = 7;
+  const random = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const deck = demos
+    .map((demo) => ({ demo, key: random() }))
+    .sort((a, b) => a.key - b.key)
+    .map(({ demo }) => demo);
+  const dealt: Demo[] = [];
+  while (deck.length) {
+    const at = deck.findIndex((demo) => demo.pkg.slug !== dealt.at(-1)?.pkg.slug);
+    dealt.push(...deck.splice(Math.max(0, at), 1));
+  }
+  return dealt;
+}
+
+// The index's packages, twice over: a canvas with a card for every example, drawn by the plugins as the playground
+// draws it, and the list it replaces without the script, for keyboards, and on request. A `demo` in the block adds a
+// card for a package with no examples, such as lint's report.
+const packageGrid: NodeHandler = async ([, , ...children]) => {
+  const extra: Demo[] = children.filter(isElement).map(([, attrs, ...content]) => {
+    const pkg = packages.find((pkg) => pkg.slug === str(attrs.package));
+    if (!pkg) throw new Error(`A demo names no package: "${str(attrs.package)}".`);
+    const pre = content.find(isPre);
+    if (!pre) throw new Error(`The ${pkg.slug} demo needs a fenced code block.`);
+    return { id: pkg.slug, pkg, page: pkg.slug, label: str(attrs.label), source: textContent(pre) };
+  });
+  const cards: Demo[] = examples.map((example) => {
+    const pkg = packages.find((pkg) => pkg.slug === example.group);
+    if (pkg)
+      return {
+        id: example.id,
+        pkg,
+        page: example.page,
+        label: example.label,
+        source: example.source,
+      };
+    // A recipe links to its page and copies its install command.
+    const recipe = pageOf(example.page);
+    return {
+      id: example.id,
+      pkg: {
+        slug: recipe.slug,
+        label: "recipe",
+        icon: "book-open",
+        npm: recipe.install.replace(/^pnpm add /, ""),
+      },
+      page: recipe.slug,
+      label: recipe.slug.slice("recipes/".length),
+      source: example.source,
+    };
+  });
+  const demos = await Promise.all(deal([...cards, ...extra]).map(demoCard));
+  const list = packages
+    .map(
+      (pkg) =>
+        `<li><a href="${href(pkg.slug)}"><span class="grid-icon">${siteIcon(pkg.icon, 20)}</span><strong>${escapeHtml(pkg.label)}</strong><span>${escapeHtml(pkg.blurb)}</span><span class="grid-arrow">${siteIcon("arrow-up-right", 16)}</span></a></li>`,
     )
     .join("");
   return (
@@ -534,7 +765,7 @@ const packageGrid: NodeHandler = async ([, , ...children]) => {
     `<template class="canvas-cards">${demos.join("")}</template>` +
     `<ul class="grid">${list}</ul>` +
     `<div class="canvas-bar" hidden><div class="seg" role="group" aria-label="View"><button type="button" data-view="canvas" aria-pressed="false" aria-label="Canvas" title="Canvas">${canvasIcon}</button><button type="button" data-view="list" aria-pressed="true" aria-label="List" title="List">${listIcon}</button></div>` +
-    `<button type="button" class="canvas-pause" aria-pressed="false" aria-label="Pause the animations" title="Pause">${pauseIcon}${playIcon}</button></div>` +
+    `</div>` +
     // Before the first paint, so the list doesn't flash before the canvas.
     `<script>{const c=document.currentScript.parentElement;let v;try{v=localStorage.getItem("comark-view")}catch{}c.dataset.view=v==="list"?"list":"canvas"}</script></section>`
   );
@@ -554,7 +785,7 @@ const drop: NodeHandler = async ([, , ...children], state) => {
 const github = `<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>`;
 const starIcon = `<svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>`;
 // The repository's stars, read once per build. Offline or rate-limited, the button just says GitHub.
-const stars = await fetch("https://api.github.com/repos/onmax/comark-plugins", {
+const stars = await fetch("https://api.github.com/repos/onmax/comark-ui", {
   headers: { accept: "application/vnd.github+json" },
   signal: AbortSignal.timeout(5000),
 })
@@ -567,23 +798,22 @@ const stars = await fetch("https://api.github.com/repos/onmax/comark-plugins", {
   .then((repo) => repo?.stargazers_count)
   .catch(() => undefined);
 // GitHub, as on drop.vitehub.dev, with the stars after a divider.
-const githubLink = `<a class="github" href="https://github.com/onmax/comark-plugins" aria-label="comark-plugins on GitHub${stars === undefined ? "" : `, ${stars} stars`}">${github}<span class="github-label">GitHub</span>${stars === undefined ? "" : `<span class="github-stars">${starIcon}${new Intl.NumberFormat("en", { notation: "compact" }).format(stars)}</span>`}</a>`;
+const githubLink = `<a class="github" href="https://github.com/onmax/comark-ui" aria-label="comark-ui on GitHub${stars === undefined ? "" : `, ${stars} stars`}">${github}<span class="github-label">GitHub</span>${stars === undefined ? "" : `<span class="github-stars">${starIcon}${new Intl.NumberFormat("en", { notation: "compact" }).format(stars)}</span>`}</a>`;
 const userIcon = `<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8"/></svg>`;
 const botIcon = `<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 8V4H8M4 8h16v12H4zM2 14h2M20 14h2M15 13v2M9 13v2"/></svg>`;
 const copyIcon = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="14" height="14" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>`;
 const resetIcon = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>`;
 const checkIcon = `<svg class="check" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M20 6 9 17l-5-5"/></svg>`;
-// Humans install the package with their package manager; agents install the skill from this site, the package's
-// own when it has one.
-function installerFor(install: string, skill: string) {
+// Humans install the packages with their package manager; agents install the comark-ui skill.
+function installerFor(install: string) {
   const packages = install.replace(/^pnpm add /, "");
   const commands = {
     pnpm: `pnpm add ${packages}`,
     npm: `npm install ${packages}`,
     yarn: `yarn add ${packages}`,
     bun: `bun add ${packages}`,
-    agents: `npx skills add ${site}${skill ? ` --skill ${skill}` : ""}`,
-  } satisfies Record<string, string>;
+    agents: "npx skills add onmax/comark-ui",
+  };
   return `<div class="installer" data-commands='${escapeHtml(JSON.stringify(commands))}'>
 <div class="installer-bar"><div class="seg" role="group" aria-label="Audience"><button type="button" data-audience="humans" aria-pressed="true">${userIcon}For humans</button><button type="button" data-audience="agents" aria-pressed="false">${botIcon}For agents</button></div>
 <div class="seg installer-pm" role="group" aria-label="Package manager">${["pnpm", "npm", "yarn", "bun"].map((pm, i) => `<button type="button" data-pm="${pm}" aria-pressed="${i === 0}">${pm}</button>`).join("")}</div></div>
@@ -597,47 +827,42 @@ function installerFor(install: string, skill: string) {
 const rail = (current: Section) =>
   `<nav class="rail" aria-label="Sections">${sections
     .map(
-      (section, i) =>
-        `${i && section.group !== sections[i - 1].group ? "<hr>" : ""}<a href="${href(section.lists[0]?.slugs[0] ?? section.slug)}"${section === current ? ' aria-current="true"' : ""}>${siteIcon(section.icon)}<span class="rail-label">${escapeHtml(section.label)}</span></a>`,
+      (section) =>
+        `${section.slug === "play" ? "<hr>" : ""}<a href="${href(section.lists[0]?.slugs[0] ?? section.slug)}"${section === current ? ' aria-current="true"' : ""}>${siteIcon(section.icon)}<span class="rail-label">${escapeHtml(section.label)}</span></a>`,
     )
     .join(
       "",
-    )}<a class="rail-drop" href="https://drop.vitehub.dev/?utm_source=comark-plugins&amp;utm_medium=sidebar"><img src="/drop.svg" alt="" width="18" height="18"><span class="rail-label"><strong>Review on Drop</strong><span>Comment on the exact spot</span></span></a></nav>`;
+    )}<a class="rail-drop" href="https://drop.vitehub.dev/?utm_source=comark-ui&amp;utm_medium=sidebar"><img src="/drop.svg" alt="" width="18" height="18"><span class="rail-label"><strong>Review on Drop</strong><span>Comment on the exact spot</span></span></a></nav>`;
 // The second column: the current section's pages, or the playground's presets.
 const column = (section: Section, current: string) => {
+  const presetCard = (preset: (typeof presets)[number], href: string) =>
+    `<div class="preset"><div class="preset-thumb" aria-hidden="true" inert><div class="preset-page">${thumbnails.get(preset.id) ?? ""}</div></div><a data-preset="${preset.id}" href="${href}">${escapeHtml(preset.label)}</a></div>`;
   const lists =
     section.slug === "play"
       ? [...new Set(presets.map((preset) => preset.group))].map((group) => ({
           title: group,
-          icon: sections.find((section) => section.label === group)?.icon,
+          icon: packages.find((pkg) => pkg.label === group)?.icon,
           links: [
             `<div class="presets">${presets
               .filter((preset) => preset.group === group)
-              .map(
-                (preset) =>
-                  `<div class="preset"><div class="preset-thumb" aria-hidden="true" inert><div class="preset-page">${thumbnails.get(preset.id) ?? ""}</div></div><a data-preset="${preset.id}" href="#preset=${preset.id}">${escapeHtml(preset.label)}</a></div>`,
-              )
+              .map((preset) => presetCard(preset, `#preset=${preset.id}`))
               .join("")}</div>`,
           ],
         }))
       : pagesOf(section).map((list) => ({
           title: list.title,
-          icon: undefined,
+          icon: list.icon,
           links: list.pages.map(
             (page) =>
-              `<a${page.slug === current ? ' aria-current="page"' : ""} href="${href(page.slug)}">${escapeHtml(page.label)}</a>`,
+              `<a${page.slug.includes("/components/") ? ' class="nav-sub"' : ""}${page.slug === current ? ' aria-current="page"' : ""} href="${href(page.slug)}">${escapeHtml(page.label)}</a>`,
           ),
         }));
-  // A package with examples opens its first one in the playground.
-  const preset = presets.find((preset) => preset.group === section.label);
-  return `<nav class="pages" aria-label="${escapeHtml(section.label)}"><p class="pages-title">${escapeHtml(section.npm ?? section.label)}</p>${lists
+  return `<nav class="pages" aria-label="${escapeHtml(section.label)}"><p class="pages-title">${escapeHtml(section.label)}</p>${lists
     .map(
       (list) =>
         `${list.title ? `<p class="nav-group">${list.icon ? siteIcon(list.icon, 14) : ""}${escapeHtml(list.title)}</p>` : ""}${list.links.join("")}`,
     )
-    .join(
-      "",
-    )}${section.npm && preset ? `<a class="pages-play" href="/play/#preset=${preset.id}">${siteIcon("flask-conical", 15)}Open in playground</a>` : ""}</nav>`;
+    .join("")}</nav>`;
 };
 // Previous and next page in the section.
 function pager(page: Page) {
@@ -657,15 +882,15 @@ const npmx = `<svg viewBox="0 0 153 153" width="16" height="16" aria-hidden="tru
 const npmxLink = (npm?: string) =>
   `<a class="npmx" href="https://npmx.dev/${npm ? `package/${npm}` : "~onmax_"}" title="${npm ? `${npm} on npmx` : "Every package on npmx"}">${npmx}<span>${npm || "npmx"}</span></a>`;
 // Markdown's # in a hand-drawn loop, the mark comark-annotate draws around what a reviewer should look at.
-const logo = `<svg class="logo" viewBox="0 0 32 32" width="24" height="24" aria-hidden="true"><g fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="currentColor" stroke-width="2.6" d="M13.6 9.5 11.8 22.5M20.2 9.5 18.4 22.5M9.6 13.6H23.2M8.8 18.4H22.4"/><path stroke="#e5484d" stroke-width="2.2" d="M9.3 7.3C15.3 3.7 27.1 4.5 28.7 11.5 30.4 19.1 22 26.7 12.8 27.2 5.9 27.6 2 23.5 3.5 18.1 4.8 13.3 11.1 9.7 18.1 9.6"/></g></svg>`;
+const logo = `<svg class="logo" viewBox="0 0 32 32" width="24" height="24" aria-hidden="true"><rect stroke="currentColor" x="6.5" y="11.4" width="19" height="10.2" fill="none" stroke-width="1.3"/><path fill="currentColor" d="M7.87 20.24V12.76H10.07L12.26 15.51 14.46 12.76H16.66V20.24H14.46V15.95L12.26 18.7 10.07 15.95V20.24ZM18.64 12.98h2.19v2.12h-2.19ZM18.64 17.9h2.19v2.12h-2.19ZM21.94 12.98h2.19v2.12h-2.19ZM21.94 17.9h2.19v2.12h-2.19Z"/><path d="M9.3 7.3C15.3 3.7 27.1 4.5 28.7 11.5 30.4 19.1 22 26.7 12.8 27.2 5.9 27.6 2 23.5 3.5 18.1 4.8 13.3 11.1 9.7 18.1 9.6" fill="none" stroke="#e5484d" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const menuIcon = `<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16"/></svg>`;
 
 // The example tabs, the Preview/Code switch, the install command's copy button, and the active sidebar link. Without it the page still reads top to bottom.
 // A block, so the docs app can run it again for each page it navigates to.
 const script = `{
 const reduce = matchMedia("(prefers-reduced-motion: reduce)");
-// One indicator per tab row or switch slides to the chosen item. A hidden row measures zero, so it's placed again,
-// without sliding, whenever its size changes.
+// One indicator per tab row or switch slides to the chosen item, however it gets chosen. A hidden row measures zero,
+// so it's placed again, without sliding, whenever its size changes.
 const indicate = (group, selector) => {
   const bar = group.appendChild(Object.assign(document.createElement("span"), { className: "indicator" }));
   bar.setAttribute("aria-hidden", "true");
@@ -674,23 +899,20 @@ const indicate = (group, selector) => {
     bar.dataset.still = ""; place(); requestAnimationFrame(() => delete bar.dataset.still);
     group.toggleAttribute("data-overflow", group.scrollWidth > group.clientWidth + 1);
   }).observe(group);
+  new MutationObserver(place).observe(group, { subtree: true, attributeFilter: ["aria-pressed", "aria-selected"] });
   group.dataset.indicator = "";
-  return place;
 };
 const reveal = el => { if (!reduce.matches) el.animate({ opacity: [0, 1] }, { duration: 200, easing: "ease-out" }) };
 for (const t of document.querySelectorAll(".examples")) {
-  const row = t.querySelector(".tablist"), place = indicate(row, "[aria-selected=true]");
+  const row = t.querySelector(".tablist");
+  indicate(row, "[aria-selected=true]");
   row.addEventListener("click", e => {
     const b = e.target.closest("[role=tab]"); if (!b || b.getAttribute("aria-selected") === "true") return;
     for (const x of t.querySelectorAll(":scope > .tablist > [role=tab]")) x.setAttribute("aria-selected", x === b);
     for (const p of t.querySelectorAll(":scope > [role=tabpanel]")) { p.hidden = p.dataset.tab !== b.dataset.tab; if (!p.hidden) reveal(p) }
-    place();
   });
 }
-for (const seg of document.querySelectorAll(".seg")) {
-  const place = indicate(seg, "[aria-pressed=true]");
-  seg.addEventListener("click", () => requestAnimationFrame(place));
-}
+for (const seg of document.querySelectorAll(".seg")) indicate(seg, "[aria-pressed=true]");
 for (const ex of document.querySelectorAll(".example")) ex.querySelector(".seg").addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b || b.getAttribute("aria-pressed") === "true") return;
   for (const x of ex.querySelectorAll(".seg button")) x.setAttribute("aria-pressed", x === b);
@@ -698,7 +920,7 @@ for (const ex of document.querySelectorAll(".example")) ex.querySelector(".seg")
 });
 for (const box of document.querySelectorAll(".installer")) {
   const commands = JSON.parse(box.dataset.commands); const field = box.querySelector(".install"); let audience = "humans", pm = "pnpm";
-  const update = () => { const cmd = commands[audience === "agents" ? "agents" : pm]; field.dataset.copy = cmd; field.querySelector("code").textContent = cmd; box.querySelector(".installer-pm").hidden = audience === "agents"; for (const b of box.querySelectorAll("[data-audience]")) b.setAttribute("aria-pressed", b.dataset.audience === audience); for (const b of box.querySelectorAll("[data-pm]")) b.setAttribute("aria-pressed", b.dataset.pm === pm) };
+  const update = () => { const cmd = audience === "agents" ? commands.agents : commands[pm]; field.dataset.copy = cmd; field.querySelector("code").textContent = cmd; box.querySelector(".installer-pm").hidden = audience === "agents"; for (const b of box.querySelectorAll("[data-audience]")) b.setAttribute("aria-pressed", b.dataset.audience === audience); for (const b of box.querySelectorAll("[data-pm]")) b.setAttribute("aria-pressed", b.dataset.pm === pm) };
   box.addEventListener("click", e => { const b = e.target.closest("[data-audience],[data-pm]"); if (!b) return; if (b.dataset.audience) audience = b.dataset.audience; if (b.dataset.pm) pm = b.dataset.pm; update() });
   field.addEventListener("click", async () => { await navigator.clipboard.writeText(field.dataset.copy); field.classList.add("copied"); setTimeout(() => field.classList.remove("copied"), 1200) });
 }
@@ -713,25 +935,49 @@ const copied = async button => {
     if (copyTokens.get(button) === token) button.classList.remove("copied");
   }, 1200);
 };
-for (const button of document.querySelectorAll(".grid-copy")) button.addEventListener("click", () => copied(button));
 // The index's canvas: columns of package cards without end, each running through every card from its own start, so
 // neighbours differ from column to column. Only the cards in view are in the page, cloned from the template as they
-// come in, and each card's height is in its markup, so nothing is measured. It drifts, follows a drag and coasts
-// after it, pans sideways with a trackpad, and stops while the pointer is on a card or it's out of view.
+// come in, at heights known before any is shown. It holds still: it follows a drag and coasts to rest after it, and
+// pans sideways with a trackpad.
 const mod = (a, n) => ((a % n) + n) % n;
 for (const canvas of document.querySelectorAll(".canvas")) {
   const viewport = canvas.querySelector(".canvas-viewport"), stage = canvas.querySelector(".canvas-stage"), dots = canvas.querySelector(".canvas-dots");
-  const pause = canvas.querySelector(".canvas-pause"), list = canvas.querySelector(".grid");
+  const list = canvas.querySelector(".grid");
   const cards = [...canvas.querySelector(".canvas-cards").content.children];
-  const n = cards.length, heights = cards.map(c => Number(c.dataset.h)), gap = 20, pitch = 300 + gap, pad = 160;
-  const period = heights.reduce((sum, h) => sum + h + gap, 0);
+  const n = cards.length, gap = 20, pitch = 300 + gap, pad = 160;
+  let heights = [], period = 0;
+  // A card without a height in its markup is measured off screen at the canvas's first draw, once per visit, so
+  // coming back to the page measures nothing. Its images carry their size, so it measures as it will show.
+  const measured = window.comarkCardHeights ??= [];
+  const measure = () => {
+    const probe = document.createElement("div");
+    probe.className = "canvas-probe";
+    const unsized = cards.flatMap((c, i) => c.dataset.h || measured[i] ? [] : [i]);
+    const clones = unsized.map(i => probe.appendChild(cards[i].cloneNode(true)));
+    stage.append(probe);
+    unsized.forEach((i, j) => measured[i] = Math.ceil(clones[j].getBoundingClientRect().height));
+    probe.remove();
+    // A card taller than the tallest the canvas shows is cut, and fades out where it's cut.
+    cards.forEach((card, i) => {
+      if (card.dataset.h) return;
+      card.dataset.h = Math.min(420, Math.max(120, measured[i])); card.style.height = card.dataset.h + "px";
+      card.toggleAttribute("data-cut", measured[i] > 420);
+    });
+    heights = cards.map(c => Number(c.dataset.h));
+    period = heights.reduce((sum, h) => sum + h + gap, 0);
+  };
+  // Each column starts \`step\` cards on from the one before, so a card shows again in the columns k over, k*step cards
+  // away. The step that keeps those farthest apart over the columns a screen holds keeps copies off one screen.
   const gcd = (a, b) => b ? gcd(b, a % b) : a;
-  let step = Math.max(1, Math.round(n * 0.4));
-  while (gcd(step, n) !== 1) step++;
+  const apart = s => Math.min(...[1, 2, 3, 4, 5, 6].map(k => { const d = mod(k * s, n); return Math.min(d, n - d) }));
+  let step = 1;
+  for (let s = 2; s < n; s++) if (gcd(s, n) === 1 && apart(s) > apart(step)) step = s;
   const live = new Map(), pools = cards.map(() => []);
-  let x = 0, y = -48, vw = 0, vh = 0, vx = 0, vy = 0, last = 0, frame = 0, hovering = false, visible = false, down, dragging = false, moved = false, samples = [];
+  let x = 0, y = -48, vw = 0, vh = 0, vx = 0, vy = 0, last = 0, frame = 0, down, dragging = false, moved = false, samples = [];
   let placed = false;
   const draw = () => {
+    if (!vw) return;
+    if (!period) measure();
     // Centered on the first column, once there's a width to center in.
     if (!placed && vw) { x = -mod(vw - 300, pitch) / 2; placed = true }
     stage.style.transform = "translate3d(" + -x + "px," + -y + "px,0)";
@@ -759,42 +1005,31 @@ for (const canvas of document.querySelectorAll(".canvas")) {
     }
     for (const [key, slot] of live) if (!seen.has(key)) { slot.el.remove(); pools[slot.i].push(slot.el); live.delete(key) }
   };
-  // The velocity eases toward the drift, or toward rest, so a fling coasts into it. The loop stops once at rest.
+  // A fling's velocity eases to rest, and the loop stops there.
   const tick = now => {
     const dt = Math.min(64, now - (last || now)); last = now;
-    const still = canvas.hasAttribute("data-paused") || hovering || !visible, k = 1 - Math.exp(-dt / 450);
-    vx += ((still ? 0 : 0.016) - vx) * k; vy += ((still ? 0 : 0.011) - vy) * k;
+    const k = 1 - Math.exp(-dt / 450);
+    vx -= vx * k; vy -= vy * k;
     x += vx * dt; y += vy * dt; draw();
-    if (still && Math.abs(vx) + Math.abs(vy) < 0.003) { vx = vy = 0; frame = last = 0; return }
+    if (Math.abs(vx) + Math.abs(vy) < 0.003) { vx = vy = 0; frame = last = 0; return }
     frame = requestAnimationFrame(tick);
   };
-  const run = () => { if (!frame && !dragging && canvas.dataset.view === "canvas") frame = requestAnimationFrame(tick) };
+  const run = () => { if (!frame && !dragging && (vx || vy) && canvas.dataset.view === "canvas") frame = requestAnimationFrame(tick) };
   const halt = () => { cancelAnimationFrame(frame); frame = last = 0 };
   const view = (name, keep) => {
     canvas.dataset.view = name;
     for (const b of canvas.querySelectorAll(".canvas-bar [data-view]")) b.setAttribute("aria-pressed", b.dataset.view === name);
     if (keep) try { localStorage.setItem("comark-view", name) } catch {}
-    if (name === "canvas") { draw(); run() } else halt();
-  };
-  const paused = on => {
-    canvas.toggleAttribute("data-paused", on);
-    pause.setAttribute("aria-pressed", on);
-    pause.title = on ? "Play" : "Pause";
-    run();
+    // Measure during view activation so navigation can draw with the viewport size before its first paint.
+    if (name === "canvas") { vw = viewport.clientWidth; vh = viewport.clientHeight; draw(); run() } else halt();
   };
   new ResizeObserver(([e]) => { vw = e.contentRect.width; vh = e.contentRect.height; draw() }).observe(viewport);
-  new IntersectionObserver(([e]) => {
-    visible = e.isIntersecting;
-    canvas.toggleAttribute("data-offscreen", !visible);
-    run();
-  }).observe(viewport);
   viewport.addEventListener("pointerdown", e => {
     if (e.button !== 0 || e.target.closest(".demo-copy")) return;
     down = { id: e.pointerId, px: e.clientX, py: e.clientY, x, y }; moved = false;
     samples = [[e.timeStamp, e.clientX, e.clientY]];
   });
   viewport.addEventListener("pointermove", e => {
-    if (e.pointerType === "mouse") { const over = !!e.target.closest(".demo"); if (over !== hovering) { hovering = over; run() } }
     if (!down || e.pointerId !== down.id) return;
     const dx = e.clientX - down.px, dy = e.clientY - down.py;
     if (!dragging) {
@@ -818,7 +1053,6 @@ for (const canvas of document.querySelectorAll(".canvas")) {
   };
   viewport.addEventListener("pointerup", release);
   viewport.addEventListener("pointercancel", e => { release(e); moved = false });
-  viewport.addEventListener("pointerleave", e => { if (e.pointerType === "mouse" && hovering) { hovering = false; run() } });
   // A drag that ends on a card isn't a click on it.
   viewport.addEventListener("click", e => {
     if (moved) { e.preventDefault(); e.stopPropagation(); moved = false; return }
@@ -826,26 +1060,25 @@ for (const canvas of document.querySelectorAll(".canvas")) {
     if (copy) copied(copy);
   }, true);
   viewport.addEventListener("dragstart", e => e.preventDefault());
+  viewport.addEventListener("selectstart", e => e.preventDefault());
   viewport.addEventListener("wheel", e => {
     if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
     e.preventDefault(); x += e.deltaX * (e.deltaMode ? 16 : 1); canvas.dataset.dragged = ""; draw();
   }, { passive: false });
   canvas.querySelector(".canvas-bar").hidden = false;
   canvas.querySelector(".canvas-bar .seg").addEventListener("click", e => { const b = e.target.closest("[data-view]"); if (b) view(b.dataset.view, true) });
-  pause.addEventListener("click", () => paused(!canvas.hasAttribute("data-paused")));
   // The canvas is for pointers; a keyboard reaching the list shows it.
   list.addEventListener("focusin", () => { if (canvas.dataset.view === "canvas") view("list") });
-  paused(reduce.matches);
   view(canvas.dataset.view);
 }
-// The index's studio plays once it's in view: data-phase steps through writing, checking, fixing, and rendering, and
-// the stylesheet animates each. Replay plays it again.
+// The index's studio plays while the pointer is on it, or on Play: data-phase steps through writing, checking, fixing,
+// and rendering, and the stylesheet animates each.
 for (const studio of document.querySelectorAll(".studio")) {
   if (reduce.matches) continue;
   const typed = parseFloat(getComputedStyle(studio).getPropertyValue("--typed")), replay = studio.querySelector(".studio-replay");
   const steps = [...studio.querySelectorAll(".studio-steps li")], issue = studio.querySelector(".studio-issue"), ok = studio.querySelector(".studio-ok");
   for (const el of studio.querySelectorAll("[data-at]:not([data-fixed])")) el.style.setProperty("--at", el.dataset.at + "ms");
-  let timers = [];
+  let timers = [], playing = false;
   const phase = name => {
     studio.dataset.phase = name;
     // Only the line that shows is read out.
@@ -857,13 +1090,12 @@ for (const studio of document.querySelectorAll(".studio")) {
     for (const t of timers) clearTimeout(t);
     studio.dataset.phase = "waiting"; void studio.offsetWidth;
     phase("write");
-    timers = [[typed + 500, "check"], [typed + 2900, "fix"], [typed + 3700, "render"]].map(([ms, name]) => setTimeout(() => phase(name), ms));
+    playing = true;
+    timers = [[typed + 500, "check"], [typed + 2900, "fix"], [typed + 3700, "render"], [typed + 5200, ""]].map(([ms, name]) => setTimeout(() => name ? phase(name) : (playing = false), ms));
   };
-  studio.dataset.phase = "waiting";
   replay.hidden = false;
   replay.addEventListener("click", play);
-  const seen = new IntersectionObserver(([e]) => { if (e.isIntersecting) { seen.disconnect(); play() } }, { threshold: 0.35 });
-  seen.observe(studio);
+  studio.addEventListener("pointerenter", e => { if (e.pointerType === "mouse" && !playing) play() });
 }
 
 const links = [...document.querySelectorAll(".toc a")];
@@ -888,8 +1120,105 @@ window.comarkSearch = true;
 // On <html>, which the docs app leaves alone when it takes over the header.
 document.documentElement.dataset.search = "";
 if (/Mac|iP(hone|ad)/.test(navigator.platform)) document.documentElement.dataset.mac = "";
-let entries, results = [], active = 0, restoreMenuFocus = false;
-const load = () => entries ??= fetch("/search.json").then(r => r.json());
+let index, results = [], active = 0, restoreMenuFocus = false;
+// Words in lowercase, without accents or a plural s, so "Gantts" finds "gantt".
+const wordRe = /[\\p{L}\\p{M}\\p{N}]+/gu;
+const norm = w => { w = w.normalize("NFD").replace(/\\p{M}/gu, "").toLowerCase(); return w.length > 3 && w.endsWith("s") && !w.endsWith("ss") ? w.slice(0, -1) : w };
+const words = text => text?.match(wordRe)?.map(norm) ?? [];
+// Words too common to narrow a search: left out of one unless they're all there is, and matched only as they are.
+const common = new Set(["a", "an", "and", "are", "be", "by", "can", "do", "does", "for", "from", "how", "i", "if", "in", "is", "it", "its", "my", "of", "on", "or", "so", "than", "that", "the", "their", "them", "then", "there", "these", "they", "this", "to", "what", "when", "with", "you", "your"]);
+// What a word found in each field counts: the title, the page's keywords, where it sits, its description, and its text.
+const fields = [["t", 10], ["w", 6], ["p", 3], ["d", 3], ["x", 1]];
+// Each word in the index, with the entries and fields it's in.
+const load = () => index ??= fetch("/search.json").then(r => r.json()).then(all => {
+  const postings = new Map();
+  all.forEach((e, i) => fields.forEach(([key], f) => { for (const w of new Set(words(e[key]))) { if (!postings.has(w)) postings.set(w, []); postings.get(w).push(i, f) } }));
+  return { all, postings, titles: all.map(e => words(e.t)) };
+});
+// Edits between two words, a swap of neighbours counting as one, given up past max.
+const distance = (a, b, max) => {
+  if (Math.abs(a.length - b.length) > max) return max + 1;
+  let before = [], prev = [...Array(b.length + 1).keys()];
+  for (let i = 1; i <= a.length; i++) {
+    const row = [i];
+    for (let j = 1; j <= b.length; j++) {
+      row[j] = Math.min(prev[j] + 1, row[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) row[j] = Math.min(row[j], before[j - 2] + 1);
+    }
+    if (Math.min(...row) > max) return max + 1;
+    before = prev; prev = row;
+  }
+  return prev[b.length];
+};
+// Endings that leave a word the same word, so "theme" finds "Theming" and "sorting" finds "sort".
+const endings = new Set(["", "e", "ed", "er", "es", "ing", "ion", "ation", "ly"]);
+// How well a typed word matches one in the index: the same word, the start of one, the same word with another ending,
+// or one a typo or two away. A short word gets no typos, and neither does a first letter, since allowing them matches
+// nearly everything.
+const close = (q, w) => {
+  if (w === q) return 1;
+  if (common.has(q)) return 0;
+  if (common.has(w)) return 0;
+  if (w.startsWith(q)) return 0.6 + 0.3 * q.length / w.length;
+  let same = 0;
+  while (same < q.length && q[same] === w[same]) same++;
+  if (same >= 4 && endings.has(q.slice(same)) && endings.has(w.slice(same))) return 0.7;
+  const typos = q.length < 4 ? 0 : q.length < 8 ? 1 : 2;
+  if (!typos || w[0] !== q[0]) return 0;
+  if (distance(q, w, typos) <= typos) return 0.5;
+  // A word still being typed, with a typo in it.
+  return w.length > q.length && distance(q, w.slice(0, q.length), typos) <= typos ? 0.3 : 0;
+};
+const found = new Map();
+const matches = (q, postings) => {
+  if (!found.has(q)) {
+    const m = new Map();
+    for (const w of postings.keys()) { const c = close(q, w); if (c) m.set(w, c) }
+    // A word the index has, or starts one, isn't a typo, so "video" doesn't find "Vimeo".
+    if ([...m.values()].some(c => c >= 0.6)) for (const [w, c] of m) if (c < 0.6) m.delete(w);
+    found.set(q, m);
+  }
+  return found.get(q);
+};
+// Each entry scores its best match for each word, by field, and more when the words make up most of its title. A rule
+// page scores less than the page about its block. The entries that match the most words are kept, so one word nothing
+// has doesn't empty the list.
+const search = ({ all, postings, titles }, qs) => {
+  const rows = new Map();
+  qs.forEach((q, n) => {
+    for (const [w, c] of matches(q, postings)) {
+      const list = postings.get(w);
+      for (let j = 0; j < list.length; j += 2) {
+        if (!rows.has(list[j])) rows.set(list[j], qs.map(() => 0));
+        const row = rows.get(list[j]), s = c * fields[list[j + 1]][1];
+        if (s > row[n]) row[n] = s;
+      }
+    }
+  });
+  const ranked = [...rows].map(([i, row]) => {
+    const title = titles[i], named = title.filter(w => qs.some(q => matches(q, postings).has(w))).length;
+    const score = row.reduce((a, b) => a + b, 0) + (title.length ? 4 * named / title.length : 0) + (all[i].k === "page" ? 0.5 : 0);
+    return { i, score: all[i].k === "rule" ? score * 0.6 : score, covered: row.filter(Boolean).length };
+  });
+  const most = Math.max(0, ...ranked.map(r => r.covered));
+  return ranked.filter(r => r.covered === most).sort((a, b) => b.score - a.score || a.i - b.i).map(r => all[r.i]);
+};
+// A text as nodes, with the words that matched in <mark>.
+const marked = (text, hit) => {
+  const out = []; let at = 0;
+  for (const m of text.matchAll(wordRe)) if (hit(m[0])) {
+    out.push(text.slice(at, m.index), Object.assign(document.createElement("mark"), { textContent: m[0] }));
+    at = m.index + m[0].length;
+  }
+  return [...out, text.slice(at)];
+};
+// The part of a text from just before its first match.
+const excerpt = (text, hit) => {
+  for (const m of text?.matchAll(wordRe) ?? []) if (hit(m[0])) {
+    const start = m.index < 60 ? 0 : Math.min(m.index, text.indexOf(" ", m.index - 50) + 1);
+    return (start ? "…" : "") + text.slice(start, start + 200);
+  }
+};
 const parts = () => { const dialog = document.querySelector("dialog.search"); return { dialog, input: dialog.querySelector("input"), list: dialog.querySelector("[role=listbox]"), empty: dialog.querySelector(".search-empty") } };
 const select = i => {
   const { input, list } = parts();
@@ -899,15 +1228,22 @@ const select = i => {
   if (a) { input.setAttribute("aria-activedescendant", a.id); a.scrollIntoView({ block: "nearest" }) } else input.removeAttribute("aria-activedescendant");
 };
 const update = async () => {
-  const all = await load(), { dialog, input, list, empty } = parts(), q = input.value.trim().toLowerCase(), words = q.split(/\\s+/).filter(Boolean);
-  const rank = e => [e.t.toLowerCase().startsWith(q) ? 0 : e.t.toLowerCase().includes(q) ? 1 : 2, e.k === "page" ? 0 : 1];
-  results = (q ? all.filter(e => words.every(w => (e.t + " " + e.p + " " + (e.d ?? "")).toLowerCase().includes(w)))
-    .map((e, i) => [...rank(e), i, e]).sort((a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2]).map(x => x[3])
-    : all.filter(e => e.k === "page")).slice(0, 12);
+  const idx = await load(), { dialog, input, list, empty } = parts();
+  const typed = input.value.toLowerCase().match(wordRe) ?? [], kept = typed.filter(w => !common.has(w));
+  const qs = [...new Set((kept.length ? kept : typed).map(norm))];
+  const hit = w => qs.some(q => matches(q, idx.postings).has(norm(w)));
+  results = (qs.length ? search(idx, qs) : idx.all.filter(e => e.k === "page")).slice(0, 20);
   list.replaceChildren(...results.map((e, i) => {
-    const a = Object.assign(document.createElement("a"), { id: "search-" + i, href: e.h, tabIndex: -1 });
+    const a = Object.assign(document.createElement("a"), { id: "search-" + i, href: e.h, tabIndex: -1 }), title = document.createElement("span");
     a.setAttribute("role", "option");
-    a.append(Object.assign(document.createElement("small"), { textContent: e.p }), Object.assign(document.createElement("span"), { textContent: e.t }));
+    title.append(...marked(e.t, hit));
+    a.append(Object.assign(document.createElement("small"), { textContent: e.p }), title);
+    // When the title doesn't hold every word, the text that does says why it's here.
+    const named = words(e.t);
+    if (qs.some(q => !named.some(w => matches(q, idx.postings).has(w)))) {
+      const said = excerpt(e.x, hit) ?? excerpt(e.d, hit) ?? e.d;
+      if (said) { const p = document.createElement("p"); p.append(...marked(said, hit)); a.append(p) }
+    }
     return a;
   }));
   empty.hidden = results.length > 0;
@@ -944,40 +1280,78 @@ document.addEventListener("keydown", e => {
 });
 }
 `;
-// One entry per page and per heading: its title, where it sits, and its link.
+// What a page or a heading says, in one line, so search finds it by its words and not only its title. Code blocks
+// are left out: an example's Markdown is made-up data, and the prose names what it shows.
+const inlineTags = new Set([
+  "a",
+  "code",
+  "del",
+  "em",
+  "ins",
+  "kbd",
+  "mark",
+  "s",
+  "span",
+  "strong",
+  "sub",
+  "sup",
+]);
+const prose = (nodes: Node[]): string =>
+  nodes
+    .map((node) => {
+      if (typeof node === "string") return node;
+      if (!isElement(node) || node[0] === "pre") return " ";
+      const [tag, , ...children] = node;
+      return inlineTags.has(tag) ? prose(children) : ` ${prose(children)} `;
+    })
+    .join("")
+    .replace(/\s+/g, " ")
+    .trim();
+// A page's nodes cut at each h2 and h3: what comes before the first, then each heading with what follows it.
+const sectionsOf = (nodes: Node[]) => {
+  const parts: { heading?: ElementNode; nodes: Node[] }[] = [{ nodes: [] }];
+  for (const node of nodes)
+    if (isElement(node) && (node[0] === "h2" || node[0] === "h3"))
+      parts.push({ heading: node, nodes: [] });
+    else parts.at(-1)!.nodes.push(node);
+  return parts;
+};
+// One entry per page and per heading: its title, where it sits, its link, and the words that find it. The rule pages
+// go last, so a package's own pages come before the rules about its blocks.
 const searchIndex = [
-  ...[landing, ...parsed].flatMap((page) => {
-    const where =
-      page.section.slug === page.slug
-        ? page.section.label
-        : `${page.section.label} › ${page.label}`;
-    const title =
-      page.section.npm && page.slug === page.section.slug ? page.section.npm : page.title;
-    return [
-      {
-        k: "page",
-        t: title,
-        p: page.section.npm ? page.section.label : "Docs",
-        h: href(page.slug),
-        d: page.description,
-      },
-      ...page.document.nodes
-        .filter(isElement)
-        .filter(([tag]) => tag === "h2" || tag === "h3")
-        .map((heading) => ({
+  ...[landing, ...parsed]
+    .toSorted((a, b) => Number(Boolean(a.rule)) - Number(Boolean(b.rule)))
+    .flatMap((page) => {
+      const where = page.slug ? `${page.section.label} › ${page.label}` : page.section.label;
+      const [intro, ...headed] = sectionsOf(page.document.nodes);
+      return [
+        {
+          k: page.rule ? "rule" : "page",
+          t: page.title,
+          p: page.section.label,
+          h: href(page.slug),
+          d: page.description,
+          w: page.keywords || undefined,
+          x:
+            `${page.tagline === page.description ? "" : page.tagline} ${prose(intro!.nodes)}`.trim() ||
+            undefined,
+        },
+        ...headed.map(({ heading, nodes }) => ({
           k: "heading",
-          t: textContent(heading),
+          t: textContent(heading!),
           p: where,
-          h: `${href(page.slug)}#${str(heading[1].id)}`,
+          h: `${href(page.slug)}#${str(heading![1].id)}`,
+          x: prose(nodes) || undefined,
         })),
-    ];
-  }),
+      ];
+    }),
   {
     k: "page",
     t: "Playground",
     p: "Docs",
     h: "/play/",
     d: "Edit any example with every plugin and share a link to it.",
+    w: "editor, sandbox, repl, try it, live preview",
   },
 ];
 
@@ -986,7 +1360,8 @@ await mkdir(new URL("fonts/", dist), { recursive: true });
 await cp(new URL("public/", root), dist, { recursive: true });
 for (const font of ["geist-sans/Geist-Variable.woff2", "geist-mono/GeistMono-Variable.woff2"])
   await cp(new URL(font, fonts), new URL(`fonts/${font.split("/")[1]}`, dist));
-const style = await readFile(new URL("style.css", root), "utf8");
+// comark-critic has no component to add its styles, so the site carries them.
+const style = (await readFile(new URL("style.css", root), "utf8")) + criticCss;
 await writeFile(new URL("search.json", dist), JSON.stringify(searchIndex));
 // Pages inline the styles; the playground's preview loads them.
 await writeFile(new URL("style.css", dist), style);
@@ -999,43 +1374,6 @@ await build({
     lib: { entry: fileURLToPath(new URL("play.ts", root)), formats: ["es"], fileName: "play" },
   },
 });
-
-// The packages' agent skills, served for Agent Skills Discovery: v0.2 with a digest, and v0.1, which `npx skills add` reads.
-const skills = await Promise.all(
-  ["annotate/skills/comark-annotate", "charts/skills/comark-charts"].map(async (folder) => {
-    const text = await readFile(new URL(`../packages/${folder}/SKILL.md`, root), "utf8");
-    const meta = (await parseMarkdown(text)).frontmatter;
-    return { text, name: str(meta.name), description: str(meta.description) };
-  }),
-);
-for (const skill of skills)
-  for (const base of ["agent-skills", "skills"]) {
-    await mkdir(new URL(`.well-known/${base}/${skill.name}/`, dist), { recursive: true });
-    await writeFile(new URL(`.well-known/${base}/${skill.name}/SKILL.md`, dist), skill.text);
-  }
-await writeFile(
-  new URL(".well-known/agent-skills/index.json", dist),
-  JSON.stringify({
-    $schema: "https://schemas.agentskills.io/discovery/0.2.0/schema.json",
-    skills: skills.map((skill) => ({
-      name: skill.name,
-      type: "skill-md",
-      description: skill.description,
-      url: `/.well-known/agent-skills/${skill.name}/SKILL.md`,
-      digest: `sha256:${createHash("sha256").update(skill.text).digest("hex")}`,
-    })),
-  }),
-);
-await writeFile(
-  new URL(".well-known/skills/index.json", dist),
-  JSON.stringify({
-    skills: skills.map((skill) => ({
-      name: skill.name,
-      description: skill.description,
-      files: ["SKILL.md"],
-    })),
-  }),
-);
 
 // The page around the content: header, rail, the section's column, and a menu that holds both on narrow screens. The
 // landing page has no sidebar, so its header links to the docs and the playground instead.
@@ -1053,14 +1391,15 @@ function shell(options: {
   description: string;
   head?: string;
   body: string;
-  // The package the npmx link opens; the section's by default.
+  // The package the npmx link opens; every package when it's none.
   npm?: string;
   landing?: boolean;
 }) {
   const { slug, section } = options;
-  const npm = options.npm ?? section.npm;
+  const { npm } = options;
+  const pageHead = options.head ?? "";
   const nav = rail(section) + column(section, slug);
-  const header = `<div class="top-start"><a class="name" href="/">${logo}comark plugins</a>${options.landing ? `<nav class="top-links" aria-label="Site"><a href="/guide/renderers/">Docs</a><a href="/play/">Playground</a><a href="https://drop.vitehub.dev">Drop</a></nav>` : ""}</div>
+  const header = `<div class="top-start"><a class="name" href="/">${logo}comark ui</a>${options.landing ? `<nav class="top-links" aria-label="Site"><a href="/guide/renderers/">Docs</a><a href="/play/">Playground</a><a href="https://drop.vitehub.dev">Drop</a></nav>` : ""}</div>
 <button type="button" class="search-open" aria-haspopup="dialog">${siteIcon("search", 15)}<span class="search-label">Search docs</span><kbd><span class="kbd-mac">⌘K</span><span class="kbd-other">Ctrl K</span></kbd></button>
 <div class="top-end">
 <nav>${npmxLink(npm)}${githubLink}</nav>
@@ -1085,17 +1424,17 @@ ${options.landing ? options.body : `<div class="layout">\n<aside class="sidebar"
 <meta property="og:description" content="${escapeHtml(options.description)}">
 <meta property="og:type" content="website">
 <meta property="og:url" content="${site}${href(slug)}">
-<meta property="og:site_name" content="comark plugins">
+<meta property="og:site_name" content="comark ui">
 <meta property="og:image" content="${site}/og/home.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Review documents, written in Markdown: comark plugins">
+<meta property="og:image:alt" content="Review documents, written in Markdown: comark ui">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="${site}/og/home.png">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preload" href="/fonts/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/GeistMono-Variable.woff2" as="font" type="font/woff2" crossorigin>
-<style>${style}${iconCss}</style>${options.head ?? ""}
+<style>${style}${iconCss}</style>${pageHead}
 </head>
 <body>
 ${body}
@@ -1105,7 +1444,7 @@ ${body}
 }
 
 const footer = (credits?: string) =>
-  `<footer><span>Built on <a href="https://comark.dev">Comark</a> by the <a href="https://github.com/comarkdown">Comark team</a>.${credits ? ` ${credits}` : ""}</span><span>Made by <a href="https://onmax.me">Maxi García</a></span></footer>`;
+  `<footer><span>Built on <a href="https://comark.dev">Comark</a>.${credits ? ` ${credits}` : ""}</span><span>Made by <a href="https://onmax.me">Maxi García</a></span></footer>`;
 
 // The landing page, as on vitehub.dev: the headline beside the install command, the packages, the example, and Drop.
 await writeFile(
@@ -1118,7 +1457,7 @@ await writeFile(
     description: landing.tagline,
     body: `<div class="landing">
 <div class="landing-hero enter"><div><h1>${escapeHtml(landing.headline)}</h1><p>${escapeHtml(landing.tagline)}</p></div>
-<div>${installerFor(landing.install, "")}<div class="actions"><a class="button primary" href="/play/">${siteIcon("flask-conical", 15)}Open the playground</a><a class="button" href="/guide/renderers/">Read the docs${siteIcon("arrow-right", 15)}</a></div></div></div>
+<div>${installerFor(landing.install)}<div class="actions"><a class="button primary" href="/play/">${siteIcon("flask-conical", 15)}Open the playground</a><a class="button" href="/guide/renderers/">Read the docs${siteIcon("arrow-right", 15)}</a></div></div></div>
 <main class="enter" style="--i:1">${await renderHtmlFromDocument(landing.document, { components: { ...components, packages: packageGrid, drop, hero } })}</main>
 ${footer()}
 </div>
@@ -1129,29 +1468,37 @@ console.log("docs/dist/index.html written");
 
 for (const page of parsed) {
   const out = new URL(`${page.slug}/`, dist);
-  const { npm } = page.section;
-  const subpage = npm && page.slug !== page.section.slug;
+  // Getting started is comark-ui's page.
+  const npm = page.pkg?.npm ?? (page.slug === "getting-started" ? "comark-ui" : undefined);
+  // A block's name, and the package it comes in above it, unless the page is named for its package.
+  const eyebrow = npm && npm !== page.title ? npm : "";
   await mkdir(out, { recursive: true });
   await writeFile(
     new URL("index.html", out),
     shell({
       slug: page.slug,
       section: page.section,
-      title: subpage ? `${page.title} · ${npm}` : `${page.title} · ${page.description}`,
+      npm,
+      title: eyebrow ? `${page.title} · ${eyebrow}` : `${page.title} · ${page.description}`,
       description: page.tagline,
       body: `<div class="page">
 <div class="content">
-<div class="hero enter">${subpage ? `<p class="eyebrow mono">${npm}</p>` : ""}<h1>${escapeHtml(page.title)}</h1><p>${escapeHtml(page.tagline)}</p>
-${page.install ? installerFor(page.install, page.skill) : ""}</div>
+<div class="hero enter">${eyebrow ? `<p class="eyebrow mono">${eyebrow}</p>` : ""}${page.rule ? `<p class="eyebrow mono">${page.rule.code} · ${page.rule.severity ?? "warning"}</p>` : ""}<h1>${escapeHtml(page.title)}</h1><p>${page.rule ? inlineCode(page.rule.title) : escapeHtml(page.tagline)}</p>
+${page.install ? installerFor(page.install) : ""}</div>
 <main class="enter" style="--i:1">${(
         await renderHtmlFromDocument(page.document, {
           components: {
             ...components,
-            // comark-chips would take the `@user` that comark-github's references draw, so GitHub's pages show them
-            // as GitHub does.
-            example: exampleWithout(page.section.slug === "github" ? ["comark-chips"] : []),
-            examples,
+            // comark-chips would take the `@user` that comark-github's references draw, and the links comark-links
+            // marks, so those pages show plain links.
+            example: exampleWithout(
+              ["github", "links"].includes(page.pkg?.slug ?? "") ? ["comark-chips"] : [],
+            ),
+            examples: exampleTabs,
             matrix,
+            incorrect: ruleExample(page, "incorrect"),
+            correct: ruleExample(page, "correct"),
+            rules: ruleTable,
           },
         })
       ).replace(
@@ -1159,7 +1506,7 @@ ${page.install ? installerFor(page.install, page.skill) : ""}</div>
         (table) => `<div class="table-scroll">${table}</div>`,
       )}</main>
 ${pager(page)}
-${footer(page.section.credits)}
+${footer(page.pkg?.credits)}
 </div>
 ${page.toc ? `<aside class="toc"><nav aria-label="On this page"><p class="nav-group">On this page</p>${page.toc}</nav></aside>` : ""}
 </div>
@@ -1182,7 +1529,7 @@ ${colorTokens.map((token) => tokenRow(token, capitalize(token), `<input type="co
 ${tokenRow("radius", "Radius", `<input type="range" data-slider="radius" min="0" max="1.5" step="0.125" value="0.625" aria-label="Radius in rem">`)}
 ${tokenRow("font", "Font", "<span></span>")}
 </div>
-<div class="play-theme-field play-theme-extra"><label for="play-theme-css">Extra CSS</label><p>Each plugin's own variables, like <code>--cc-*</code> or <code>--ck-*</code>, or any rule, applied to the preview.</p><textarea id="play-theme-css" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder=":root { --cc-gap: 2rem; --ck-inset: 0.5rem }"></textarea></div>
+<details class="play-theme-field play-theme-extra"><summary>Extra CSS</summary><p>Each plugin's own variables, like <code>--cc-*</code> or <code>--ck-*</code>, or any rule, applied to the preview.</p><textarea id="play-theme-css" aria-label="Extra CSS" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder=":root { --cc-gap: 2rem; --ck-inset: 0.5rem }"></textarea></details>
 </div>`;
 
 // The playground opens on the first preset, rendered here so it shows before the script loads.
@@ -1224,7 +1571,7 @@ ${themePane}
 const generatedPages = new URL(".generated/pages/", root);
 await rm(generatedPages, { recursive: true, force: true });
 await mkdir(generatedPages, { recursive: true });
-await writeFile(new URL("site.json", generatedPages), JSON.stringify({ css: iconCss }));
+await writeFile(new URL("site.json", generatedPages), JSON.stringify({ css: iconCss + criticCss }));
 for (const [slug, fragment] of fragments)
   await writeFile(
     new URL(`${slug.replaceAll("/", "~") || "index"}.json`, generatedPages),

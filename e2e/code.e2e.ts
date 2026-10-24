@@ -72,23 +72,66 @@ test("an action sends the block's code and language to the page", async ({ page 
 test("the header sits above the first line, so its buttons never cover the code", async ({
   page,
 }) => {
-  await open(page, sh);
+  // A terminal's header shows its title, not its language.
+  const titled = sh.replace("```sh", '```sh title="Install"');
+  await open(page, titled);
   const [copy, line] = await Promise.all(
     [".ck-copy", ".ck pre code"].map((selector) =>
       page.locator(selector).evaluate((element) => element.getBoundingClientRect()),
     ),
   );
   expect(copy.bottom).toBeLessThanOrEqual(line.top);
-  await expect(page.locator(".ck-title")).toHaveText("sh");
+  await expect(page.locator(".ck-title")).toHaveText("Install");
   await expect(page.getByRole("button", { name: "Copy code" })).toBeVisible();
   // Chromium focuses a block that scrolls before the buttons that follow it.
   await page.keyboard.press("Tab");
   await page.keyboard.press("Tab");
   await expect(page.getByRole("button", { name: "Run" })).toBeFocused();
   // Without the script the title stays and the buttons, which wouldn't work, are hidden.
-  await open(page, sh, { script: false });
+  await open(page, titled, { script: false });
   await expect(page.locator(".ck-title")).toBeVisible();
   await expect(page.getByRole("button", { name: "Copy code" })).toBeHidden();
+});
+
+test("a diff copies as the code after it, and a collapsed range opens on a click", async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await open(
+    page,
+    '```diff lang="ts" collapse={2-3}\n function close() {\n   dialog.close();\n   scroll.restore();\n-  history.back();\n+  if (opened) history.back();\n }\n```',
+  );
+  const fold = page.locator(".ck-fold");
+  await expect(fold.locator("summary")).toHaveText("2 collapsed lines");
+  await expect(page.getByText("dialog.close();")).toBeHidden();
+  await fold.locator("summary").click();
+  await expect(page.getByText("dialog.close();")).toBeVisible();
+  await expect(fold.locator("summary")).toBeHidden();
+  await page.getByRole("button", { name: "Copy code" }).click();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
+    "function close() {\n  dialog.close();\n  scroll.restore();\n  if (opened) history.back();\n}",
+  );
+  // Each line is one row: no empty rows between them, and a marked one is as tall as the rest.
+  const heights = await page
+    .locator(".ck .line")
+    .evaluateAll((lines) => lines.map((line) => line.getBoundingClientRect().height));
+  expect(new Set(heights).size).toBe(1);
+});
+
+test("a numbered line wraps under its own code", async ({ page }) => {
+  await open(page, `\`\`\`ts wrap showLineNumbers\nconst a = "${"word ".repeat(30)}"\n\`\`\``);
+  await expect(page.getByRole("button", { name: "Wrap lines" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  const line = page.locator(".ck .line");
+  const [box, padding] = await line.evaluate((element) => [
+    element.getBoundingClientRect().height,
+    Number.parseFloat(getComputedStyle(element).paddingLeft),
+  ]);
+  expect(box).toBeGreaterThan(40);
+  expect(padding).toBeGreaterThan(0);
 });
 
 test("a block in a code group still hangs from the group's header", async ({ page }) => {

@@ -4,13 +4,21 @@ import { iconStyle } from "./client.ts";
 import { ICON_TAG } from "./index.ts";
 import { css } from "./styles.ts";
 
-export { createIcons, default, describeIconProblem, ICON_TAG, parseIconName } from "./index.ts";
+export {
+  createIcons,
+  default,
+  describeIconProblem,
+  ICON_TAG,
+  iconProblemRule,
+  parseIconName,
+} from "./index.ts";
 export type {
   IconCollection,
   IconData,
   IconMeta,
   IconOptions,
   IconProblem,
+  IconRule,
   Icons,
 } from "./index.ts";
 export { css };

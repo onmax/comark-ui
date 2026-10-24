@@ -1,12 +1,20 @@
 import type { Component } from "svelte";
 
-export { createIcons, default, describeIconProblem, ICON_TAG, parseIconName } from "comark-icon";
+export {
+  createIcons,
+  default,
+  describeIconProblem,
+  ICON_TAG,
+  iconProblemRule,
+  parseIconName,
+} from "comark-icon";
 export type {
   IconCollection,
   IconData,
   IconMeta,
   IconOptions,
   IconProblem,
+  IconRule,
   Icons,
 } from "comark-icon";
 

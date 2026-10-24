@@ -1,19 +1,21 @@
 #!/usr/bin/env node
-import { glob, readFile } from "node:fs/promises";
+import { glob } from "node:fs/promises";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
-import { lint, resolveConfig, type Config, type Diagnostic } from "./index.ts";
+import { lintFiles, resolveConfig, type Config, type Diagnostic } from "./index.ts";
 
-const USAGE = `Usage: lint-comark <file or glob>... [--format text|json] [--config lint-comark.config.ts]
+const USAGE = `Usage: lint-comark <file or glob>... [--format text|json] [--config lint-comark.config.ts] [--check-urls]
 
-Checks Comark documents with every comark-plugins package installed. Exits with 1 if there are problems.`;
+Checks Comark documents with every comark-ui package installed. Exits with 1 if there are problems.
+--check-urls also requests every external URL and reports dead ones.`;
 
 const { positionals, values } = parseArgs({
   allowPositionals: true,
   options: {
     format: { type: "string", default: "text" },
     config: { type: "string", short: "c" },
+    "check-urls": { type: "boolean" },
     help: { type: "boolean", short: "h" },
   },
 });
@@ -43,6 +45,7 @@ if (values.config) {
   }
 }
 const options = await resolveConfig(config);
+if (values["check-urls"]) options.links = { ...options.links, urls: options.links?.urls || true };
 
 const files: string[] = [];
 for (const input of positionals) {
@@ -60,15 +63,9 @@ for (const input of positionals) {
 }
 
 const results: (Diagnostic & { file: string })[] = [];
-for (const file of new Set(files)) {
-  let markdown: string;
-  try {
-    markdown = await readFile(file, "utf8");
-  } catch {
-    fail(`can't read ${file}`);
-    continue;
-  }
-  for (const diagnostic of await lint(markdown, options)) results.push({ file, ...diagnostic });
+for (const { file, text, diagnostics } of await lintFiles([...new Set(files)], options)) {
+  if (text === undefined) fail(`can't read ${file}`);
+  for (const diagnostic of diagnostics) results.push({ file, ...diagnostic });
 }
 
 if (values.format === "json") console.log(JSON.stringify(results, null, 2));

@@ -41,6 +41,38 @@ export function preAttributes<T extends Record<string, unknown>>(attributes: T):
   return toNativeAttributes("pre", ["pre", {}], attributes);
 }
 
+// What the parse plugin writes on a block for the wrapper rather than the `pre`.
+const own = new Set(["actions", "frame", "wrap", "lines", "numbers"]);
+
+/** The block's attributes without the ones the parse plugin wrote for the wrapper. */
+export const withoutOwn = <T extends Record<string, unknown>>(attributes: T): T =>
+  // SAFETY: only keys are dropped, and the callers read the rest as the same record.
+  Object.fromEntries(Object.entries(attributes).filter(([key]) => !own.has(key))) as T;
+
+/**
+ * Splits a block's attributes into the `.ck` wrapper's, the `pre`'s, and the header's markup, the same in every renderer:
+ * the frame, Wrap's starting state, and line numbers go on the wrapper, where the styles and the script read them.
+ */
+export function parts(attributes: Record<string, unknown>): {
+  wrapper: Record<string, string>;
+  pre: Record<string, unknown>;
+  bar: string;
+} {
+  return {
+    wrapper: {
+      class: "ck",
+      ...(attributes.frame === "terminal" && { "data-code-frame": "terminal" }),
+      ...(attributes.lines === true && { "data-code-lines": "" }),
+      ...(Number(attributes.numbers) > 0 && {
+        "data-code-numbers": `${Number(attributes.numbers)}`,
+      }),
+      ...(attributes.wrap === true && { "data-code-wrap": "" }),
+    },
+    pre: preAttributes(withoutOwn(attributes)),
+    bar: buttons(attributes.actions, attributes),
+  };
+}
+
 /**
  * Starts the buttons of every `.ck` code block on the page and returns a function that stops them. Every caller shares
  * one set of listeners, which stop with the last caller. The function is self-contained: the HTML renderer inlines its
@@ -81,15 +113,32 @@ export function start(css: string): () => void {
     );
   };
 
+  // The code as it reads after the change: without the lines marked deleted or the collapsed ranges' summaries.
+  const textOf = (code: Element) => {
+    // SAFETY: a deep clone of an element is an element of the same kind.
+    const copy = code.cloneNode(true) as Element;
+    for (const skipped of copy.querySelectorAll(".ck-del,.diff.remove,.ck-fold>summary"))
+      skipped.remove();
+    return copy.textContent ?? "";
+  };
+
   // Without clipboard access, on a page served over plain http or in a frame that isn't allowed it, the code is
   // selected instead, so the reader's own copy keys take it.
   function copy(root: Element, code: Element) {
-    const text = code.textContent ?? "";
+    const text = textOf(code);
     const failed = () => {
-      const range = document.createRange();
-      range.selectNodeContents(code);
-      getSelection()?.removeAllRanges();
-      getSelection()?.addRange(range);
+      // Select the filtered text in a temporary control so the keyboard fallback
+      // has the same contents as the Clipboard API path.
+      const field = document.createElement("textarea");
+      field.value = text;
+      field.setAttribute("readonly", "");
+      field.setAttribute("aria-hidden", "true");
+      field.style.position = "fixed";
+      field.style.inset = "-9999px auto auto -9999px";
+      field.style.opacity = "0";
+      document.body.append(field);
+      field.select();
+      document.addEventListener("copy", () => field.remove(), { once: true, signal });
       say(root, "Couldn't copy, so the code is selected. Press Ctrl+C or ⌘C.", "failed");
     };
     // SAFETY: `clipboard` is missing outside secure contexts, whatever the DOM types say.
@@ -117,7 +166,7 @@ export function start(css: string): () => void {
       } else {
         const detail: CodeActionDetail = {
           action: button.getAttribute("data-code-action") ?? "",
-          code: code.textContent ?? "",
+          code: textOf(code),
           language: pre.getAttribute("data-language") ?? "",
         };
         root.dispatchEvent(new CustomEvent("comark-code-action", { bubbles: true, detail }));
@@ -187,14 +236,17 @@ function action({ id, label, title, icon: image }: ActionButton) {
  * nothing works without it.
  */
 export function buttons(actions: unknown, attributes: Record<string, unknown> = {}): string {
+  // A terminal's window needs no language to say it's a shell.
+  const language = attributes.frame === "terminal" ? "" : attributes.language;
   // SAFETY: Comark writes a fence's filename and language as strings.
-  const title = `${(attributes.filename || attributes.language || "") as string}`;
+  const title = `${(attributes.filename || language || "") as string}`;
+  const wrap = attributes.wrap === true;
   // SAFETY: the parse plugin is the only writer of `actions`, always as `ActionButton`s.
   const own = (Array.isArray(actions) ? (actions as ActionButton[]) : []).map(action);
   return (
     (title ? `<span class="ck-title">${escape(title)}</span>` : "") +
     own.join("") +
-    `<button type="button" class="ck-wrap" aria-label="Wrap lines" aria-pressed="false" title="Wrap lines">` +
+    `<button type="button" class="ck-wrap" aria-label="Wrap lines" aria-pressed="${wrap}" title="Wrap lines">` +
     icon(
       "wrap-icon",
       '<path d="m16 16-3 3 3 3"/><path d="M3 12h14.5a1 1 0 0 1 0 7H13"/><path d="M3 19h6"/><path d="M3 5h18"/>',

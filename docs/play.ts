@@ -97,35 +97,55 @@ panes.addEventListener("click", (event) => {
 // shows it largest, so a sentence wraps narrow and stays legible. A chart or a screenshot, whose height follows its
 // width, gains nothing narrower and keeps the page's width.
 const NARROWER = [448, 320, 224];
-function fit(thumb: HTMLElement) {
-  const page = thumb.firstElementChild;
-  if (!(page instanceof HTMLElement) || !thumb.clientWidth || !page.offsetWidth) return;
-  const { clientWidth: width, clientHeight: height } = thumb;
-  const whole = (pageWidth: number) => {
-    page.style.width = `${pageWidth}px`;
-    return Math.min(width / pageWidth, height / page.offsetHeight);
+// Reading a page's height lays out the whole playground, a few hundred stills, so every still takes a width before any
+// is read: one layout per width, not one per width per still, which took seconds.
+function fit(thumbs: Set<HTMLElement>) {
+  const stills = [...thumbs].flatMap((thumb) => {
+    const page = thumb.firstElementChild;
+    return page instanceof HTMLElement && thumb.clientWidth && page.offsetWidth
+      ? [{ page, width: thumb.clientWidth, height: thumb.clientHeight, best: 640, largest: 0 }]
+      : [];
+  });
+  const whole = (pageWidth: (still: (typeof stills)[number]) => number) => {
+    for (const still of stills) still.page.style.width = `${pageWidth(still)}px`;
+    return stills.map((still) =>
+      Math.min(still.width / pageWidth(still), still.height / still.page.offsetHeight),
+    );
   };
-  let best = 640;
-  let largest = whole(best);
+  for (const [index, scale] of whole(({ best }) => best).entries()) stills[index]!.largest = scale;
   // Only a clearly larger still is worth a narrower layout.
-  for (const pageWidth of NARROWER) {
-    const scale = whole(pageWidth);
-    if (scale > largest * 1.15) [best, largest] = [pageWidth, scale];
+  for (const pageWidth of NARROWER)
+    for (const [index, scale] of whole(() => pageWidth).entries()) {
+      const still = stills[index]!;
+      if (scale > still.largest * 1.15) [still.best, still.largest] = [pageWidth, scale];
+    }
+  for (const still of stills) still.page.style.width = `${still.best}px`;
+  const sizes = stills.map(({ page }) => ({
+    pageWidth: page.offsetWidth,
+    pageHeight: page.offsetHeight,
+  }));
+  for (const [index, { page, width, height }] of stills.entries()) {
+    const { pageWidth, pageHeight } = sizes[index]!;
+    const scale = Math.min(
+      width / pageWidth,
+      Math.max(height / pageHeight, (width * 0.7) / pageWidth),
+    );
+    const x = (width - pageWidth * scale) / 2;
+    const y = Math.max(0, (height - pageHeight * scale) / 2);
+    page.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
   }
-  whole(best);
-  const scale = Math.min(
-    width / page.offsetWidth,
-    Math.max(height / page.offsetHeight, (width * 0.7) / page.offsetWidth),
-  );
-  const x = (width - page.offsetWidth * scale) / 2;
-  const y = Math.max(0, (height - page.offsetHeight * scale) / 2);
-  page.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
 }
-const fitting = new ResizeObserver((entries) => {
-  for (const { target } of entries)
-    if (target instanceof HTMLElement)
-      fit(target.classList.contains("preset-thumb") ? target : (target.parentElement ?? target));
-});
+const fitting = new ResizeObserver((entries) =>
+  fit(
+    new Set(
+      entries.flatMap(({ target }) =>
+        target instanceof HTMLElement
+          ? [target.classList.contains("preset-thumb") ? target : (target.parentElement ?? target)]
+          : [],
+      ),
+    ),
+  ),
+);
 for (const thumb of document.querySelectorAll(".preset-thumb")) {
   fitting.observe(thumb);
   if (thumb.firstElementChild) fitting.observe(thumb.firstElementChild);
@@ -141,6 +161,18 @@ function showIssues(list: string[]) {
 function markPreset(id?: string) {
   for (const link of document.querySelectorAll<HTMLAnchorElement>(".pages a[data-preset]"))
     link.toggleAttribute("aria-current", link.dataset.preset === id);
+}
+
+// A package's "Open in playground" lands on its example, which can sit far down the presets' column, so the column
+// scrolls to center it. One already in view stays put, so a click in the column doesn't move it.
+function revealPreset(id?: string) {
+  const card = document.querySelector(`.sidebar .pages a[data-preset="${id}"]`)?.closest(".preset");
+  const column = card?.closest(".pages");
+  if (!(card instanceof HTMLElement) || !(column instanceof HTMLElement) || !column.clientHeight)
+    return;
+  const top = card.getBoundingClientRect().top - column.getBoundingClientRect().top;
+  if (top >= 0 && top + card.offsetHeight <= column.clientHeight) return;
+  column.scrollTop += top - (column.clientHeight - card.offsetHeight) / 2;
 }
 
 // The example the Markdown started from. Once the Markdown differs from it, Reset appears and brings it back.
@@ -286,6 +318,8 @@ function setTheme(next: Theme) {
   for (const input of tokenFields)
     input.value = theme.tokens[(input.dataset.token ?? "") as keyof Theme["tokens"]] ?? "";
   extraCss.value = theme.css;
+  // Extra CSS stays folded until there is some to show.
+  extraCss.closest("details")?.toggleAttribute("open", Boolean(theme.css));
   showTheme();
   markTheme();
 }
@@ -445,6 +479,7 @@ async function load() {
   if (markdown !== undefined) editor.value = markdown;
   base = preset;
   markPreset(preset?.id);
+  revealPreset(preset?.id);
   reset.hidden = true;
   pointNpmx(preset?.npm);
   repaint(editor);

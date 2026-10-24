@@ -4,7 +4,7 @@
 [![npm downloads](https://npmx.dev/api/registry/badge/downloads-month/comark-code)](https://npmx.dev/package/comark-code)
 [![install size](https://npmx.dev/api/registry/badge/size/comark-code)](https://npmx.dev/package/comark-code)
 [![license](https://npmx.dev/api/registry/badge/license/comark-code)](https://npmx.dev/package/comark-code)
-[![docs](https://img.shields.io/badge/docs-comark.onmax.me-14b8a6?labelColor=0a0a0a)](https://comark.onmax.me/code/)
+[![docs](https://img.shields.io/badge/docs-comark--ui.onmax.me-14b8a6?labelColor=0a0a0a)](https://comark-ui.onmax.me/code/)
 
 Copy and Wrap buttons on every Markdown code block, plus buttons of your own, such as Run, that hand the block's code to your app. Without a script the block shows as it would without the plugin. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
 
@@ -22,6 +22,22 @@ const render = createHtmlRenderer({ plugins: [code()], components });
 The components replace how `pre` renders, and keep the block's own markup inside a wrapper, so Shiki's highlighting and your `pre` styles still apply. Each block gets a header above its first line, with the file's name or the language and the buttons, so they never cover the code. They work in a `comark-tabs` code group whichever plugin comes first.
 
 Copy writes the code to the clipboard and shows a check. When the page can't write to it, such as over plain http, it selects the code and says to press Ctrl+C or ⌘C. Wrap breaks long lines in that block until it's pressed again.
+
+## Lines
+
+Words after the fence's language, written the way [Expressive Code](https://expressive-code.com) writes them, mark lines, fold them, and frame the block:
+
+````md
+```ts title="src/zoom.ts" del={3} ins={4} mark={1} showLineNumbers
+function close() {
+  dialog.close();
+  history.back();
+  if (opened) history.back();
+}
+```
+````
+
+`ins`, `del`, and `mark` tint lines green, red, or gray; `collapse` folds a range into a `<details>`; `showLineNumbers` and `startLineNumber=120` number the lines; `title` names the block like `[file]`; `wrap` starts it wrapped. Shell blocks are drawn as a terminal, and `frame="none"` turns that off. A ```` ```diff lang="ts" ```` fence takes pasted `git diff` output, highlights it as TypeScript, and marks its `+` and `-` lines. Comark's Shiki plugin redraws every block, so list `shiki()` before `code()`. A range the plugin can't read goes in `meta.issues`.
 
 ## Actions
 
@@ -62,4 +78,4 @@ A click sends a `comark-code-action` event from the block that bubbles up to the
 
 Each entry exports the parse plugin as `default` and the renderer's `components`.
 
-The buttons read shadcn's CSS variables, such as `--background` and `--border`, when the page has them, and use its neutral theme otherwise. Set the `--comark-*` tokens to theme every comark plugin at once. The rules sit in a `comark` CSS layer, so any plain rule of your own wins, except the two that make room for the header and wrap lines. `--ck-inset` sets how far the buttons sit from the corner and `--ck-button-size` sizes them, and the header grows to fit. `--ck-title-font` sets the title's font; see the code's [Theming page](https://comark.onmax.me/code/theming/).
+The buttons read shadcn's CSS variables, such as `--background` and `--border`, when the page has them, and use its neutral theme otherwise. Set the `--comark-*` tokens to theme every comark plugin at once. The rules sit in a `comark` CSS layer, so any plain rule of your own wins, except the two that make room for the header and wrap lines. `--ck-inset` sets how far the buttons sit from the corner and `--ck-button-size` sizes them, and the header grows to fit. `--ck-title-font` sets the title's font; see the code's [Theming page](https://comark-ui.onmax.me/code/#theme).

@@ -1,6 +1,6 @@
 {
   "name": "comark-embed",
-  "version": "0.3.0",
+  "version": "0.5.0",
   "description": "Video, audio, and tool embeds from a link: YouTube, Vimeo, Loom, Spotify, CodePen, StackBlitz, and Figma, with no network fetch. A Comark plugin.",
   "keywords": [
     "comark",
@@ -12,13 +12,13 @@
     "video",
     "youtube"
   ],
-  "homepage": "https://comark.onmax.me/embed",
-  "bugs": "https://github.com/onmax/comark-plugins/issues",
+  "homepage": "https://comark-ui.onmax.me/embed",
+  "bugs": "https://github.com/onmax/comark-ui/issues",
   "license": "MIT",
   "author": "onmax",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/onmax/comark-plugins.git",
+    "url": "git+https://github.com/onmax/comark-ui.git",
     "directory": "packages/embed"
   },
   "files": [

@@ -2,7 +2,7 @@
 import { docsPath, slugOf } from "~/utils/body";
 import { runScripts } from "~/utils/scripts";
 
-const site = "https://comark.onmax.me";
+const site = "https://comark-ui.onmax.me";
 const route = useRoute();
 const slug = computed(() => slugOf(route));
 const nuxtApp = useNuxtApp();
@@ -27,13 +27,13 @@ useHead(() => ({
     { property: "og:description", content: page.value!.description },
     { property: "og:type", content: "website" },
     { property: "og:url", content: url },
-    { property: "og:site_name", content: "comark plugins" },
+    { property: "og:site_name", content: "comark ui" },
     { property: "og:image", content: `${site}/og/home.png` },
     { property: "og:image:width", content: "1200" },
     { property: "og:image:height", content: "630" },
     {
       property: "og:image:alt",
-      content: "Review documents, written in Markdown: comark plugins",
+      content: "Review documents, written in Markdown: comark ui",
     },
     { name: "twitter:card", content: "summary_large_image" },
     { name: "twitter:image", content: `${site}/og/home.png` },

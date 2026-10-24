@@ -36,7 +36,7 @@ test("a carousel pages with its arrows, and its zoomed view keeps the carousel i
   page,
 }) => {
   await page.goto("/carousel/");
-  const carousel = page.locator(".cc").first();
+  const carousel = page.locator("main .cc").first();
   const current = carousel.locator(".cc-count");
 
   await expect(current).toHaveText("1 / 3");

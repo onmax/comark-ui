@@ -1,6 +1,6 @@
 {
   "name": "comark-zoom",
-  "version": "0.3.0",
+  "version": "0.5.0",
   "description": "Zoom images and any block like medium-zoom, with Escape, Back, and click-outside to close. A Comark plugin.",
   "keywords": [
     "comark",
@@ -11,13 +11,13 @@
     "plugin",
     "zoom"
   ],
-  "homepage": "https://comark.onmax.me/zoom",
-  "bugs": "https://github.com/onmax/comark-plugins/issues",
+  "homepage": "https://comark-ui.onmax.me/zoom",
+  "bugs": "https://github.com/onmax/comark-ui/issues",
   "license": "MIT",
   "author": "onmax",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/onmax/comark-plugins.git",
+    "url": "git+https://github.com/onmax/comark-ui.git",
     "directory": "packages/zoom"
   },
   "files": [

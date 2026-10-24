@@ -1,6 +1,6 @@
 {
   "name": "comark-icon",
-  "version": "0.3.0",
+  "version": "0.5.0",
   "description": "Iconify icons in Markdown, as :icon{name=\"lucide:apple\"}, drawn as CSS in every renderer with no script. A shared resolver for other plugins' icons. A Comark plugin.",
   "keywords": [
     "comark",
@@ -11,13 +11,13 @@
     "mdc",
     "plugin"
   ],
-  "homepage": "https://comark.onmax.me/icon",
-  "bugs": "https://github.com/onmax/comark-plugins/issues",
+  "homepage": "https://comark-ui.onmax.me/icon",
+  "bugs": "https://github.com/onmax/comark-ui/issues",
   "license": "MIT",
   "author": "onmax",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/onmax/comark-plugins.git",
+    "url": "git+https://github.com/onmax/comark-ui.git",
     "directory": "packages/icon"
   },
   "files": [

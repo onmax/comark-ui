@@ -1,5 +1,6 @@
 // A new package has to be registered in several places that nothing else checks: its manifest's shared fields, the
-// linter that loads it, the docs that render it, and the README that lists it. This fails on the first one missed.
+// linter that loads it, the docs that render it, the README that lists it, and the agent skill that teaches it. This
+// fails on the first one missed.
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vite-plus/test";
 
@@ -20,6 +21,7 @@ type Manifest = {
   files: string[];
   engines?: { node: string };
   scripts: Record<string, string>;
+  dependencies?: Record<string, string>;
   peerDependencies?: Record<string, string>;
   peerDependenciesMeta?: Record<string, { optional?: boolean }>;
 };
@@ -39,8 +41,10 @@ describe.each(folders)("packages/%s", (folder) => {
       license: "MIT",
       author: "onmax",
       type: "module",
-      homepage: `https://comark.onmax.me/${folder}`,
-      bugs: "https://github.com/onmax/comark-plugins/issues",
+      // comark-ui is what the whole site documents, so its home is the site.
+      homepage:
+        folder === "ui" ? "https://comark-ui.onmax.me" : `https://comark-ui.onmax.me/${folder}`,
+      bugs: "https://github.com/onmax/comark-ui/issues",
       repository: { directory: `packages/${folder}` },
       engines: { node: ">=22.12.0" },
     });
@@ -58,10 +62,29 @@ describe.each(folders)("packages/%s", (folder) => {
     expect(read(`packages/${folder}/LICENSE`).startsWith(read("LICENSE").trimEnd())).toBe(true);
   });
 
+  // A package with no renderer runs from the preset's core, so it works in every renderer.
+  it("comes with the preset", () => {
+    if (folder === "ui" || folder === "lint") return;
+    expect(manifest("ui").dependencies?.[pkg.name]).toBe("workspace:^");
+    if (!withRenderer.includes(folder))
+      expect(read("packages/ui/src/index.ts")).toContain(`from "${pkg.name}"`);
+  });
+
   it("has docs with a place in the site, and a row in the README", () => {
+    expect(read("README.md")).toContain(`[\`${pkg.name}\`](./packages/${folder})`);
+    if (folder === "ui") return;
     expect(existsSync(new URL(`packages/${folder}/docs/index.md`, repo))).toBe(true);
     expect(read("docs/build.ts")).toContain(`"${folder}",`);
-    expect(read("README.md")).toContain(`[\`${pkg.name}\`](./packages/${folder})`);
+  });
+
+  // Agents write most documents, and they learn a package from the skill rather than the site. Hosts whose agents only
+  // write Markdown, such as Drop, cut each reference at its Register section, so it comes last.
+  it("has a reference in the agent skill, linked from SKILL.md, that ends with Register", () => {
+    const skill = "skills/comark-ui/";
+    expect(existsSync(new URL(`${skill}references/${folder}.md`, repo))).toBe(true);
+    expect(read(`${skill}SKILL.md`)).toContain(`](references/${folder}.md)`);
+    const reference = read(`${skill}references/${folder}.md`);
+    expect(reference.match(/^## .*/gm)?.at(-1)).toBe("## Register");
   });
 });
 
@@ -75,25 +98,13 @@ describe.each(withRenderer)("the renderer of packages/%s", (folder) => {
     expect(read("packages/lint/src/config.ts")).toContain(`import("${name}/html")`);
   });
 
-  it("renders the docs and the playground", () => {
-    const plugins = read("docs/plugins.ts");
-    expect(plugins).toContain(`from "../packages/${folder}/src/html.ts"`);
-
-    // Keep the import and both runtime registries in sync. The import alone can
-    // remain present after a plugin is accidentally removed from the site.
-    const imported =
-      folder === "github"
-        ? { plugin: "githubHtml", components: "githubComponents" }
-        : {
-            plugin: folder,
-            components: `${folder}Components`,
-          };
-    const browser = plugins.slice(
-      plugins.indexOf("export const browserPlugins"),
-      plugins.indexOf("export const components"),
-    );
-    const componentMap = plugins.slice(plugins.indexOf("export const components"));
-    expect(browser).toMatch(new RegExp(`${imported.plugin}\\s*\\(`));
-    expect(componentMap).toContain(`...${imported.components}`);
+  // The site renders through the preset, so a package in it is on the site and in the playground.
+  it("is in the preset, which renders the docs and the playground", () => {
+    expect(read("docs/plugins.ts")).toContain('from "../packages/ui/src/html.ts"');
+    if (folder === "ui") return;
+    const preset = read("packages/ui/src/html.ts");
+    const local = folder.replace(/-([a-z])/g, (_, letter: string) => letter.toUpperCase());
+    expect(preset).toContain(`import * as ${local} from "${name}/html"`);
+    expect(preset.slice(preset.indexOf("preset<"))).toMatch(new RegExp(`\\b${local}\\b`));
   });
 });

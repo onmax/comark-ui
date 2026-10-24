@@ -1,5 +1,6 @@
 import type { ElementNode, Node } from "comark";
 import { defineComarkPlugin } from "comark";
+import { type GitHubMeta, report } from "./meta.ts";
 
 export interface ReferencesOptions {
   /** The repository a bare `#123` points into, as `owner/name`. Without it, `#123` stays text. */
@@ -53,17 +54,19 @@ function walk(nodes: Node[], start: number, repo: string | undefined) {
  * GitHub's references as links: `@user` to the profile, and `#123` or `owner/name#123` to the issue or pull request.
  * Text in links and code stays as written.
  */
-export const references = defineComarkPlugin<ReferencesOptions>((options) => ({
+export const references = defineComarkPlugin<ReferencesOptions, GitHubMeta>((options) => ({
   name: "comark-github-references",
   post(state) {
     const { tree } = state;
     const repo = options?.repo;
     const valid = repo === undefined || REPO.test(repo);
     if (!valid)
-      tree.meta.issues = [
-        ...(tree.meta.issues ?? []),
-        `references: \`repo\` must be owner/name, such as "onmax/comark-plugins", not "${repo}"; until then #123 stays text.`,
-      ];
+      report(tree.meta, [
+        {
+          rule: "comark/github/invalid-repo",
+          message: `references: \`repo\` must be owner/name, such as "onmax/comark-ui", not "${repo}"; until then #123 stays text.`,
+        },
+      ]);
     walk(tree.nodes, 0, valid ? repo : undefined);
   },
 }));

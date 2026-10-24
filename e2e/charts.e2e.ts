@@ -90,6 +90,30 @@ function chart(type: string, x: string[], series: number, kind: number, n: numbe
   ].join("\n");
 }
 
+// Each gantt bar runs one to three steps from its own row's, so bars overlap, with a milestone every fifth row, a column
+// of groups on every other chart, and marks on the first and last rows of every third.
+function gantt(tasks: string[], times: string[], n: number) {
+  const grouped = n % 2 === 0;
+  const rows = tasks.map((task, row) => {
+    const end = row % 5 === 4 ? row : row + 1 + (row % 3);
+    return `| ${task} |${grouped ? ` ${SERIES[row % 3]} |` : ""} ${times[row]} | ${times[end]} |`;
+  });
+  const marks =
+    n % 3
+      ? []
+      : [tasks[0]!, tasks.at(-1)!].map(
+          (at, i) => `:::annotation{at="${at}" ${MARKS[(n + i) % 3]}}\nA note about ${at}.\n:::`,
+        );
+  return [
+    `::chart{type="gantt" title="gantt, case ${n}"}`,
+    `| task |${grouped ? " group |" : ""} start | end |`,
+    `| --- |${grouped ? " --- |" : ""} --: | --: |`,
+    ...rows,
+    ...marks,
+    "::",
+  ].join("\n");
+}
+
 const cases: string[] = [];
 for (const type of ["bar", "stacked", "dumbbell", "waterfall", "pie"])
   for (const names of NAMES)
@@ -125,6 +149,25 @@ for (const rows of [2, 5, 20, 60])
         n,
       ),
     );
+  }
+
+for (const [kind, names] of NAMES.entries())
+  for (const rows of [1, 8, 60]) {
+    const tasks = Array.from({ length: rows }, (_, i) =>
+      i < names.length
+        ? names[i]!
+        : `${names[i % names.length]} ${Math.floor(i / names.length) + 1}`,
+    );
+    const step = [0.001, 1.5, 120_000][(kind + rows) % 3]!;
+    const times = Array.from({ length: rows + 3 }, (_, i) =>
+      format(Number((i * step).toPrecision(6))),
+    );
+    cases.push(gantt(tasks, times, cases.length));
+  }
+for (const dates of DATES)
+  for (const rows of [2, 7, 24]) {
+    const tasks = Array.from({ length: rows }, (_, i) => `${NAMES[0]![i % 8]} ${i + 1}`);
+    cases.push(gantt(tasks, dates(rows + 3), cases.length));
   }
 
 test("hundreds of worst-case charts draw with no text colliding, clipped, or past the column", async ({

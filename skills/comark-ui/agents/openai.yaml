@@ -1,0 +1,3 @@
+interface:
+  display_name: "comark-ui"
+  short_description: "Write review documents and docs with every comark plugin"

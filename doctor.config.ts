@@ -1,14 +1,40 @@
+import { existsSync } from "node:fs";
 import comark from "comark-linter/doctor";
 import { defineDoctorConfig } from "vite-doctor/config";
 
-// The packages run their own Doctor configs; this one only lints the docs pages with comark-linter.
+const repo = new URL("./", import.meta.url);
+
+// The packages run their own Doctor configs; this one only lints the docs pages and the agent skill with comark-linter.
 export default defineDoctorConfig({
   extends: ["comark/recommended"],
   extensions: [
     comark({
       include: "{docs/pages,packages/*/docs}/**/*.md",
       // docs/build.ts renders these itself.
-      components: ["demo", "drop", "example", "examples", "hero", "matrix", "packages"],
+      components: [
+        "correct",
+        "demo",
+        "drop",
+        "example",
+        "examples",
+        "hero",
+        "incorrect",
+        "matrix",
+        "packages",
+        "rules",
+        "usage",
+      ],
+      links: {
+        // fileOf in docs/build.ts: a package's pages come from its docs/, the rest from docs/pages, and files from
+        // docs/public. The playground is built by docs/play.ts and has no page.
+        routes(path) {
+          const [first = "", ...rest] = path.split("/").filter(Boolean);
+          if (first === "play") return true;
+          if (existsSync(new URL(`packages/${first}/docs/index.md`, repo)))
+            return `packages/${first}/docs/${rest.join("/")}`;
+          return /\.\w+$/.test(path) ? `docs/public${path}` : `docs/pages${path}`;
+        },
+      },
     }),
   ],
 });

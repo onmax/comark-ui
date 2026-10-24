@@ -1,0 +1,52 @@
+{
+  "name": "comark-deflist",
+  "version": "0.5.0",
+  "description": "Definition lists in Comark: a term, then `: definition` lines, rendered as native <dl>, <dt>, and <dd>.",
+  "keywords": [
+    "comark",
+    "definition-list",
+    "deflist",
+    "dl",
+    "markdown",
+    "mdc",
+    "plugin"
+  ],
+  "homepage": "https://comark-ui.onmax.me/deflist",
+  "bugs": "https://github.com/onmax/comark-ui/issues",
+  "license": "MIT",
+  "author": "onmax",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/onmax/comark-ui.git",
+    "directory": "packages/deflist"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "doctor": "vite-doctor . --no-cache --max-warnings 0 --format text",
+    "prepack": "pnpm --filter comark-deflist build"
+  },
+  "devDependencies": {
+    "@comark/html": "catalog:",
+    "comark": "catalog:"
+  },
+  "peerDependencies": {
+    "comark": "^0.8.0"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}

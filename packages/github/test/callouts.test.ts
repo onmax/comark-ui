@@ -1,6 +1,7 @@
 import { createHtmlRenderer } from "@comark/html";
+import { parseMarkdown } from "comark";
 import { describe, expect, it } from "vite-plus/test";
-import { callouts, components } from "../src/html.ts";
+import { callouts, components, references } from "../src/html.ts";
 
 type Options = Parameters<typeof callouts>[0];
 const render = (markdown: string, options?: Options, registerDefaultPlugins = true) =>
@@ -69,6 +70,26 @@ describe("comark-github callouts", () => {
     expect(html).not.toContain('class="cgc"');
     expect(html.match(/<blockquote>/g)).toHaveLength(2);
     expect(html).not.toContain("<style");
+  });
+
+  it("reports a marker that isn't a GitHub type, and names each issue's rule", async () => {
+    for (const defaults of [true, false]) {
+      const { meta } = await parseMarkdown(
+        "> [!INFO]\n> Ducks.\n\n> [!tip]\n> Pigeons.\n\n> [x] Done.",
+        {
+          plugins: [callouts(), references({ repo: "pond" })],
+          registerDefaultPlugins: defaults,
+        },
+      );
+      expect(meta.issues).toEqual([
+        'The quote marked "[!INFO]" isn\'t a GitHub callout, so it renders as a plain quote with the marker as text. Use `[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`, or `[!CAUTION]`.',
+        expect.stringMatching(/^references: `repo` must be owner\/name/),
+      ]);
+      expect(meta.issues.map((issue) => meta.issueRules[issue])).toEqual([
+        "comark/github/unknown-callout-type",
+        "comark/github/invalid-repo",
+      ]);
+    }
   });
 
   it("finds callouts nested in lists and other blocks", async () => {

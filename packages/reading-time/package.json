@@ -1,0 +1,51 @@
+{
+  "name": "comark-reading-time",
+  "version": "0.5.0",
+  "description": "A document's word count and reading time in meta.readingTime, with code blocks left out and CJK counted by character. A Comark plugin.",
+  "keywords": [
+    "comark",
+    "markdown",
+    "mdc",
+    "plugin",
+    "reading-time",
+    "word-count"
+  ],
+  "homepage": "https://comark-ui.onmax.me/reading-time",
+  "bugs": "https://github.com/onmax/comark-ui/issues",
+  "license": "MIT",
+  "author": "onmax",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/onmax/comark-ui.git",
+    "directory": "packages/reading-time"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "doctor": "vite-doctor . --no-cache --max-warnings 0 --format text",
+    "prepack": "pnpm --filter comark-reading-time build"
+  },
+  "devDependencies": {
+    "@comark/html": "catalog:",
+    "comark": "catalog:"
+  },
+  "peerDependencies": {
+    "comark": "^0.8.0"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}

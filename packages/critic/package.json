@@ -1,0 +1,59 @@
+{
+  "name": "comark-critic",
+  "version": "0.5.0",
+  "description": "CriticMarkup in Comark: insertions, deletions, substitutions, highlights, and comments as native <ins>, <del>, and <mark>, shown, accepted, or rejected.",
+  "keywords": [
+    "comark",
+    "critic",
+    "criticmarkup",
+    "del",
+    "ins",
+    "markdown",
+    "mdc",
+    "plugin",
+    "review",
+    "track-changes"
+  ],
+  "homepage": "https://comark-ui.onmax.me/critic",
+  "bugs": "https://github.com/onmax/comark-ui/issues",
+  "license": "MIT",
+  "author": "onmax",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/onmax/comark-ui.git",
+    "directory": "packages/critic"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "sideEffects": [
+    "*.css"
+  ],
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./style.css": "./dist/style.css",
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "doctor": "vite-doctor . --no-cache --max-warnings 0 --format text",
+    "prepack": "pnpm --filter comark-zoom build && pnpm --filter comark-critic build"
+  },
+  "devDependencies": {
+    "@comark/html": "catalog:",
+    "comark": "catalog:",
+    "comark-zoom": "workspace:*"
+  },
+  "peerDependencies": {
+    "comark": "^0.8.0"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}

@@ -1,25 +1,25 @@
 import { defineComponent, h, onBeforeUnmount, onMounted } from "vue";
-import { buttons, css, preAttributes, start } from "./client.ts";
+import { css, parts, start } from "./client.ts";
 
 export { default } from "./index.ts";
 
 /** Code blocks for `@comark/vue`. */
 export const Pre = defineComponent({
   name: "Pre",
-  // Everything but `actions` belongs to the `pre` itself, such as Shiki's class and the block's language.
+  // Everything the parse plugin didn't write for the wrapper belongs to the `pre` itself, such as Shiki's class and the
+  // block's language.
   inheritAttrs: false,
-  props: {
-    actions: { type: Array, default: () => [] },
-  },
-  setup(props, { attrs, slots }) {
+  setup(_, { attrs, slots }) {
     let stop = () => {};
     onMounted(() => (stop = start(css)));
     onBeforeUnmount(() => stop());
-    return () =>
-      h("div", { class: "ck" }, [
-        h("pre", preAttributes(attrs), slots.default?.()),
-        h("div", { class: "ck-bar", innerHTML: buttons(props.actions, attrs) }),
+    return () => {
+      const { wrapper, pre, bar } = parts(attrs);
+      return h("div", wrapper, [
+        h("pre", pre, slots.default?.()),
+        h("div", { class: "ck-bar", innerHTML: bar }),
       ]);
+    };
   },
 });
 

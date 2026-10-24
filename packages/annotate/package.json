@@ -1,6 +1,6 @@
 {
   "name": "comark-annotate",
-  "version": "0.3.0",
+  "version": "0.5.0",
   "description": "Hand-drawn marks, numbered notes, and arrows on screenshots, written in Markdown. A Comark plugin.",
   "keywords": [
     "annotation",
@@ -10,29 +10,27 @@
     "plugin",
     "screenshot"
   ],
-  "homepage": "https://comark.onmax.me/annotate",
-  "bugs": "https://github.com/onmax/comark-plugins/issues",
+  "homepage": "https://comark-ui.onmax.me/annotate",
+  "bugs": "https://github.com/onmax/comark-ui/issues",
   "license": "MIT",
   "author": "onmax",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/onmax/comark-plugins.git",
+    "url": "git+https://github.com/onmax/comark-ui.git",
     "directory": "packages/annotate"
   },
   "bin": {
     "comark-annotate": "./dist/cli.mjs"
   },
   "files": [
-    "dist",
-    "skills"
+    "dist"
   ],
   "type": "module",
   "sideEffects": false,
   "exports": {
     ".": "./dist/index.mjs",
     "./html": "./dist/html.mjs",
-    "./package.json": "./package.json",
-    "./skills/*": "./skills/*"
+    "./package.json": "./package.json"
   },
   "publishConfig": {
     "access": "public",

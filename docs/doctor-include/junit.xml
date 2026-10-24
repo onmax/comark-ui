@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="pond.test.ts" tests="2" time="0.4">
+  <testcase classname="pond.test.ts" name="counts the ducks" time="0.1"/>
+  <testcase classname="pond.test.ts" name="feeds the pigeons" time="0.3"/>
+</testsuite>

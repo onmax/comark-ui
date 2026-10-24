@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Written by Vitest's junit reporter. -->
+<testsuites name="vitest tests" tests="5" failures="1" errors="1" time="4.213">
+  <testsuite name="pond.test.ts" tests="3" failures="1" skipped="1" time="1.5">
+    <testcase classname="pond.test.ts" name="counts the ducks" time="0.012"/>
+    <testcase classname="pond.test.ts" name="counts the geese &amp; swans" time="0.020">
+      <failure message="expected 3 to be 4" type="AssertionError"><![CDATA[AssertionError: expected 3 to be 4
+    at pond.test.ts:12:20]]></failure>
+    </testcase>
+    <testcase classname="pond.test.ts" name="maps the herons" time="0">
+      <skipped/>
+    </testcase>
+  </testsuite>
+  <testsuite name="plaza.test.ts" tests="2" errors="1" time="2.7">
+    <testcase classname="plaza.test.ts" name="loads the plaza" time="2.6">
+      <error message="fetch failed">TypeError: fetch failed &lt;plaza&gt;</error>
+    </testcase>
+    <testcase classname="plaza.test.ts" name="draws the pigeons" time="0.1"/>
+  </testsuite>
+</testsuites>

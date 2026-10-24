@@ -1,24 +1,24 @@
 {
-  "name": "comark-plugins",
+  "name": "comark-ui",
   "private": true,
   "description": "Comark plugins by onmax: annotated screenshots, zoom, carousels, tabs and code groups, copy and wrap buttons on code, GitHub callouts, includes, embeds, and a linter. One version for every package.",
-  "homepage": "https://comark.onmax.me",
+  "homepage": "https://comark-ui.onmax.me",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/onmax/comark-plugins.git"
+    "url": "git+https://github.com/onmax/comark-ui.git"
   },
   "type": "module",
   "scripts": {
     "build": "pnpm -r --filter \"./packages/*\" run build",
-    "docs:build": "pnpm build && node docs/build.ts && pnpm --filter comark-plugins-docs generate",
+    "docs:build": "pnpm build && node docs/build.ts && pnpm --filter comark-ui-docs generate",
     "docs:images": "node docs/images.ts",
     "lint": "vp lint",
     "typecheck": "tsc --noEmit",
     "test": "vp test",
     "doctor": "pnpm -r --filter \"./packages/*\" run doctor && pnpm run lint:docs",
     "lint:docs": "vite-doctor . --config doctor.config.ts --no-cache --max-warnings 0 --format text",
-    "check": "vp check && pnpm --filter comark-plugins-docs typecheck",
+    "check": "vp check && pnpm --filter comark-ui-docs typecheck",
     "ready": "vp fmt && pnpm build && pnpm check && pnpm test && pnpm run doctor",
     "release:check": "pnpm build && pnpm check && pnpm test && pnpm run doctor",
     "prepare": "vp config",

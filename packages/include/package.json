@@ -1,6 +1,6 @@
 {
   "name": "comark-include",
-  "version": "0.3.0",
+  "version": "0.5.0",
   "description": "Include Markdown partials and code snippets from files, by lines or by region, with :include{src=\"./part.md\"}. A Comark plugin.",
   "keywords": [
     "comark",
@@ -11,13 +11,13 @@
     "plugin",
     "snippets"
   ],
-  "homepage": "https://comark.onmax.me/include",
-  "bugs": "https://github.com/onmax/comark-plugins/issues",
+  "homepage": "https://comark-ui.onmax.me/include",
+  "bugs": "https://github.com/onmax/comark-ui/issues",
   "license": "MIT",
   "author": "onmax",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/onmax/comark-plugins.git",
+    "url": "git+https://github.com/onmax/comark-ui.git",
     "directory": "packages/include"
   },
   "files": [

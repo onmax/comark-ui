@@ -1,23 +1,35 @@
 import type { ElementNode, Node } from "comark";
 import { defineComarkPlugin } from "comark";
 import { resolveAttributes } from "comark/render";
-import { createIcons, describeIconProblem, type IconOptions, type Icons } from "./resolve.ts";
+import {
+  createIcons,
+  describeIconProblem,
+  iconProblemRule,
+  type IconOptions,
+  type Icons,
+} from "./resolve.ts";
 
 export {
   createIcons,
   describeIconProblem,
+  iconProblemRule,
   parseIconName,
   type IconData,
   type IconCollection,
   type IconOptions,
   type IconProblem,
+  type IconRule,
   type Icons,
 } from "./resolve.ts";
 
 export type IconMeta = {
   /** One readable sentence per problem with an `:icon`. Other plugins add theirs too. */
   issues: string[];
+  /** The comark-linter rule of each issue, by its sentence, so the linter reports it under its own code. */
+  issueRules: Record<string, string>;
 };
+
+type Issue = { rule: `comark/icon/${string}`; message: string };
 
 /** The node an icon is. After parsing, its attributes are `name`, `src`, `ratio`, `mask`, and `label`. */
 export const ICON_TAG = "icon";
@@ -29,6 +41,8 @@ const text = (value: unknown) =>
     ? ""
     : // SAFETY: undefined, null, objects, and arrays returned above, so only a string, number, or boolean is left.
       String(value as string | number | boolean).trim();
+
+const PROPS = ["name", "label", "id", "class"];
 
 function collect(nodes: Node[], found: { node: ElementNode; parent: Node[] }[]) {
   for (const node of nodes) {
@@ -55,15 +69,29 @@ export default defineComarkPlugin<IconOptions | Icons, IconMeta>((options) => {
       const data = { frontmatter: tree.frontmatter, meta: tree.meta, data: {}, props: {} };
       const props = found.map(({ node }) => resolveAttributes(node[1], data, { parseJson: true }));
       const resolved = await icons.resolve(props.map((attrs) => text(attrs.name)));
-      const issues: string[] = [];
+      const issues: Issue[] = [];
       for (const [index, { node, parent }] of found.entries()) {
         const name = text(props[index].name);
         const icon = resolved.get(name);
         const where = `\`:icon\` ${index + 1}`;
+        for (const key of Object.keys(node[1])) {
+          const prop = key.replace(/^:/, "");
+          if (!PROPS.includes(prop))
+            issues.push({
+              rule: "comark/icon/unknown-prop",
+              message: `${where}: \`${prop}\` isn't a prop of \`:icon\`, so it's ignored. Use \`name\` or \`label\`.`,
+            });
+        }
         if (!name)
-          issues.push(`${where}: \`name\` is required. Write \`:icon{name="lucide:apple"}\`.`);
+          issues.push({
+            rule: "comark/icon/missing-name",
+            message: `${where}: \`name\` is required. Write \`:icon{name="lucide:apple"}\`.`,
+          });
         else if (icon && "problem" in icon)
-          issues.push(`${where} ("${name}"): ${describeIconProblem(name, icon)}`);
+          issues.push({
+            rule: iconProblemRule(icon),
+            message: `${where} ("${name}"): ${describeIconProblem(name, icon)}`,
+          });
         if (!name || !icon || "problem" in icon) {
           parent.splice(parent.indexOf(node), 1);
           continue;
@@ -78,7 +106,11 @@ export default defineComarkPlugin<IconOptions | Icons, IconMeta>((options) => {
         };
         node.splice(2);
       }
-      tree.meta.issues = [...(tree.meta.issues ?? []), ...issues];
+      tree.meta.issues = [...(tree.meta.issues ?? []), ...issues.map((issue) => issue.message)];
+      tree.meta.issueRules = {
+        ...tree.meta.issueRules,
+        ...Object.fromEntries(issues.map((issue) => [issue.message, issue.rule])),
+      };
     },
   };
 });

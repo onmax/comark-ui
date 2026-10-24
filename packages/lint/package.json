@@ -1,7 +1,7 @@
 {
   "name": "comark-linter",
-  "version": "0.3.0",
-  "description": "Finds unclosed blocks, unknown components, broken anchors, and plugin issues in Comark documents. A library, a CLI, and a Vite Doctor extension.",
+  "version": "0.5.0",
+  "description": "Finds unclosed blocks, unknown components, broken links and anchors, local URLs, and plugin issues in Comark documents. A library, a CLI, and a Vite Doctor extension.",
   "keywords": [
     "comark",
     "lint",
@@ -9,13 +9,13 @@
     "mdc",
     "vite-doctor"
   ],
-  "homepage": "https://comark.onmax.me/lint",
-  "bugs": "https://github.com/onmax/comark-plugins/issues",
+  "homepage": "https://comark-ui.onmax.me/lint",
+  "bugs": "https://github.com/onmax/comark-ui/issues",
   "license": "MIT",
   "author": "onmax",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/onmax/comark-plugins.git",
+    "url": "git+https://github.com/onmax/comark-ui.git",
     "directory": "packages/lint"
   },
   "bin": {
@@ -44,30 +44,92 @@
   "devDependencies": {
     "comark": "catalog:",
     "comark-annotate": "workspace:*",
+    "comark-badge": "workspace:*",
+    "comark-cards": "workspace:*",
     "comark-carousel": "workspace:*",
+    "comark-cast": "workspace:*",
     "comark-charts": "workspace:*",
     "comark-chips": "workspace:*",
+    "comark-cjk": "workspace:*",
     "comark-code": "workspace:*",
+    "comark-code-notes": "workspace:*",
+    "comark-colors": "workspace:*",
+    "comark-critic": "workspace:*",
+    "comark-deflist": "workspace:*",
+    "comark-details": "workspace:*",
+    "comark-diagrams": "workspace:*",
     "comark-diff": "workspace:*",
     "comark-embed": "workspace:*",
+    "comark-fields": "workspace:*",
+    "comark-figure": "workspace:*",
+    "comark-file-tree": "workspace:*",
+    "comark-footnotes": "workspace:*",
     "comark-github": "workspace:*",
     "comark-icon": "workspace:*",
+    "comark-keys": "workspace:*",
+    "comark-links": "workspace:*",
+    "comark-mark": "workspace:*",
+    "comark-media": "workspace:*",
+    "comark-metrics": "workspace:*",
+    "comark-outline": "workspace:*",
+    "comark-pele": "catalog:",
+    "comark-properties": "workspace:*",
+    "comark-qr": "workspace:*",
+    "comark-quiz": "workspace:*",
+    "comark-reading-time": "workspace:*",
+    "comark-sources": "workspace:*",
+    "comark-steps": "workspace:*",
+    "comark-table": "workspace:*",
     "comark-tabs": "workspace:*",
+    "comark-tests": "workspace:*",
+    "comark-ui": "workspace:*",
+    "comark-xref": "workspace:*",
     "comark-zoom": "workspace:*",
     "vite-doctor": "catalog:"
   },
   "peerDependencies": {
     "comark": "^0.8.0",
     "comark-annotate": "workspace:^",
+    "comark-badge": "workspace:^",
+    "comark-cards": "workspace:^",
     "comark-carousel": "workspace:^",
+    "comark-cast": "workspace:^",
     "comark-charts": "workspace:^",
     "comark-chips": "workspace:^",
+    "comark-cjk": "workspace:^",
     "comark-code": "workspace:^",
+    "comark-code-notes": "workspace:^",
+    "comark-colors": "workspace:^",
+    "comark-critic": "workspace:^",
+    "comark-deflist": "workspace:^",
+    "comark-details": "workspace:^",
+    "comark-diagrams": "workspace:^",
     "comark-diff": "workspace:^",
     "comark-embed": "workspace:^",
+    "comark-fields": "workspace:^",
+    "comark-figure": "workspace:^",
+    "comark-file-tree": "workspace:^",
+    "comark-footnotes": "workspace:^",
     "comark-github": "workspace:^",
     "comark-icon": "workspace:^",
+    "comark-keys": "workspace:^",
+    "comark-links": "workspace:^",
+    "comark-mark": "workspace:^",
+    "comark-media": "workspace:^",
+    "comark-metrics": "workspace:^",
+    "comark-outline": "workspace:^",
+    "comark-pele": "^1.1.0",
+    "comark-properties": "workspace:^",
+    "comark-qr": "workspace:^",
+    "comark-quiz": "workspace:^",
+    "comark-reading-time": "workspace:^",
+    "comark-sources": "workspace:^",
+    "comark-steps": "workspace:^",
+    "comark-table": "workspace:^",
     "comark-tabs": "workspace:^",
+    "comark-tests": "workspace:^",
+    "comark-ui": "workspace:^",
+    "comark-xref": "workspace:^",
     "comark-zoom": "workspace:^",
     "vite-doctor": "^0.1.0"
   },
@@ -75,7 +137,16 @@
     "comark-annotate": {
       "optional": true
     },
+    "comark-badge": {
+      "optional": true
+    },
+    "comark-cards": {
+      "optional": true
+    },
     "comark-carousel": {
+      "optional": true
+    },
+    "comark-cast": {
       "optional": true
     },
     "comark-charts": {
@@ -84,7 +155,28 @@
     "comark-chips": {
       "optional": true
     },
+    "comark-cjk": {
+      "optional": true
+    },
     "comark-code": {
+      "optional": true
+    },
+    "comark-code-notes": {
+      "optional": true
+    },
+    "comark-colors": {
+      "optional": true
+    },
+    "comark-critic": {
+      "optional": true
+    },
+    "comark-deflist": {
+      "optional": true
+    },
+    "comark-details": {
+      "optional": true
+    },
+    "comark-diagrams": {
       "optional": true
     },
     "comark-diff": {
@@ -93,13 +185,76 @@
     "comark-embed": {
       "optional": true
     },
+    "comark-fields": {
+      "optional": true
+    },
+    "comark-figure": {
+      "optional": true
+    },
+    "comark-file-tree": {
+      "optional": true
+    },
+    "comark-footnotes": {
+      "optional": true
+    },
     "comark-github": {
       "optional": true
     },
     "comark-icon": {
       "optional": true
     },
+    "comark-keys": {
+      "optional": true
+    },
+    "comark-links": {
+      "optional": true
+    },
+    "comark-mark": {
+      "optional": true
+    },
+    "comark-media": {
+      "optional": true
+    },
+    "comark-metrics": {
+      "optional": true
+    },
+    "comark-outline": {
+      "optional": true
+    },
+    "comark-properties": {
+      "optional": true
+    },
+    "comark-qr": {
+      "optional": true
+    },
+    "comark-quiz": {
+      "optional": true
+    },
+    "comark-reading-time": {
+      "optional": true
+    },
+    "comark-sources": {
+      "optional": true
+    },
+    "comark-steps": {
+      "optional": true
+    },
+    "comark-table": {
+      "optional": true
+    },
     "comark-tabs": {
+      "optional": true
+    },
+    "comark-tests": {
+      "optional": true
+    },
+    "comark-ui": {
+      "optional": true
+    },
+    "comark-xref": {
+      "optional": true
+    },
+    "comark-pele": {
       "optional": true
     },
     "comark-zoom": {

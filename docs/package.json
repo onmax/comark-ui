@@ -1,5 +1,5 @@
 {
-  "name": "comark-plugins-docs",
+  "name": "comark-ui-docs",
   "private": true,
   "type": "module",
   "scripts": {
@@ -26,10 +26,12 @@
     "comark-zoom": "workspace:*",
     "geist": "catalog:",
     "nuxt": "^4.6.2",
+    "nuxt-agent-discovery": "catalog:",
     "shiki": "catalog:",
     "vue": "catalog:"
   },
   "devDependencies": {
+    "@vite-hub/source": "catalog:",
     "typescript": "catalog:",
     "vue-tsc": "^3.2.0"
   }

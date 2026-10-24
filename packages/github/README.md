@@ -4,7 +4,7 @@
 [![npm downloads](https://npmx.dev/api/registry/badge/downloads-month/comark-github)](https://npmx.dev/package/comark-github)
 [![install size](https://npmx.dev/api/registry/badge/size/comark-github)](https://npmx.dev/package/comark-github)
 [![license](https://npmx.dev/api/registry/badge/license/comark-github)](https://npmx.dev/package/comark-github)
-[![docs](https://img.shields.io/badge/docs-comark.onmax.me-14b8a6?labelColor=0a0a0a)](https://comark.onmax.me/github/)
+[![docs](https://img.shields.io/badge/docs-comark--ui.onmax.me-14b8a6?labelColor=0a0a0a)](https://comark-ui.onmax.me/github/)
 
 The parts of GitHub's Markdown that [Comark](https://comark.dev) doesn't render like GitHub: alerts as callouts, `@user` and `#123` as links, and raw HTML limited to what GitHub allows. For HTML, Vue, React, and Svelte.
 
@@ -17,7 +17,7 @@ import { createHtmlRenderer } from "@comark/html";
 import { callouts, components, html, references } from "comark-github/html";
 
 const render = createHtmlRenderer({
-  plugins: [callouts(), references({ repo: "onmax/comark-plugins" }), html()],
+  plugins: [callouts(), references({ repo: "onmax/comark-ui" }), html()],
   components,
 });
 ```
@@ -56,8 +56,8 @@ Each entry exports the three parse plugins and the renderer's `components`, whic
 
 ## Customize
 
-The callout styles follow shadcn/ui's Alert: they read its CSS variables, such as `--background`, `--border`, `--muted-foreground`, and `--destructive`, when the page has them, and use its neutral theme otherwise. Set the shared `--comark-*` tokens to theme callouts with zoom, carousel, and annotate, or `--cgc-note` through `--cgc-caution` to recolor one type. The rules sit in a `comark` CSS layer, so any plain rule of your own wins; see the callouts' [Theming page](https://comark.onmax.me/github/theming/).
+The callout styles follow shadcn/ui's Alert: they read its CSS variables, such as `--background`, `--border`, `--muted-foreground`, and `--destructive`, when the page has them, and use its neutral theme otherwise. Set the shared `--comark-*` tokens to theme callouts with zoom, carousel, and annotate, or `--cgc-note` through `--cgc-caution` to recolor one type. The rules sit in a `comark` CSS layer, so any plain rule of your own wins; see the callouts' [Theming page](https://comark-ui.onmax.me/github/#theme).
 
 The icons are [Lucide](https://lucide.dev)'s, under its license (see `LICENSE`).
 
-Docs and live demos: [comark.onmax.me/github](https://comark.onmax.me/github/).
+Docs and live demos: [comark-ui.onmax.me/github](https://comark-ui.onmax.me/github/).

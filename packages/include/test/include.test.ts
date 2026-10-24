@@ -253,6 +253,30 @@ describe("comark-include", () => {
     ]);
   });
 
+  it("names each issue's rule in meta.issueRules", async () => {
+    const read = files({ "loop.md": ':include{src="loop.md"}', "deploy.sh": "pnpm build" });
+    const { meta } = await parse(
+      [
+        ':include{path="ducks.md"}',
+        ':include{src="ducks.md"}',
+        ':include{src="deploy.sh" line="1:1"}',
+        ':include{src="../ducks.md"}',
+        ':include{src="loop.md"}',
+        ':include{src="deploy.sh" region="ship"}',
+      ].join("\n\n"),
+      { read, base: "../.." },
+    );
+    expect(meta.issues.map((issue) => meta.issueRules[issue])).toEqual([
+      "comark/include/path-outside-root",
+      "comark/include/missing-src",
+      "comark/include/file-not-found",
+      "comark/include/unknown-option",
+      "comark/include/path-outside-root",
+      "comark/include/include-cycle",
+      "comark/include/missing-region",
+    ]);
+  });
+
   it("reads from disk under `root` by default", async () => {
     const root = fileURLToPath(new URL("fixtures", import.meta.url));
     const document = await parse(':include{src="/setup.md"}', { root });

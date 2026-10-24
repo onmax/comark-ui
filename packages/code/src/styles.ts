@@ -1,6 +1,16 @@
 import { css as icons } from "comark-icon/client";
 import { theme } from "comark-zoom/theme";
 
+// Lucide's chevrons-up-down, drawn as a mask in the text's color.
+const chevrons = `url("data:image/svg+xml,${encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg>',
+)}")`;
+const lines = ".ck[data-code-lines]";
+const light = "--ck-red:#ee3533;--ck-green:#259f56;--ck-yellow:#d49b00";
+const dark = "--ck-red:#fd736d;--ck-green:#59d38c;--ck-yellow:#f5c84b";
+// In a comark-tabs code group the tab names the block, so a terminal there draws no window.
+const terminal = ".ck[data-code-frame=terminal]:not([data-tabs-code] .ck)";
+
 /**
  * The header's styles, on the shared `--comark-*` tokens, with `--ck-inset` and `--ck-button-size` for how far the
  * buttons sit from the block's top right corner and how big they are, and `--ck-title-font` for the title. The script adds them to the page once. The rules sit in the
@@ -32,8 +42,54 @@ export const css = `${icons}@layer comark{${[
   ".ck-status{position:absolute;top:calc(100% + .25rem);right:var(--_ck-inset);z-index:1;width:max-content;max-width:18rem;padding:.25rem .5rem;border-radius:calc(var(--_comark-radius) - 4px);background:var(--_comark-foreground);color:var(--_comark-background);font:.75rem/1.25rem var(--_comark-font);pointer-events:none}",
   ".ck-status:empty{display:none}",
   "@media (pointer:coarse){.ck{--_ck-size:max(var(--ck-button-size,1.5rem),2.25rem)}}",
+  // A terminal is a window: three dots on the left and its title in the middle, over a line.
+  `${terminal}>.ck-bar{border-bottom:1px solid var(--_comark-border)}`,
+  `${terminal}>.ck-bar::before{content:'';flex:none;width:.625rem;height:.625rem;margin:0 auto 0 .125rem;border-radius:50%;background:currentColor;box-shadow:1rem 0,2rem 0;color:color-mix(in srgb,var(--_comark-muted) 45%,transparent)}`,
+  `${terminal} .ck-title{position:absolute;left:50%;max-width:calc(100% - 12rem);margin:0;translate:-50%}`,
+  // Red and green lighten in dark mode, like comark-diff's, whether the system or a `.dark` class above sets it.
+  `:where(.ck){${light};--_ck-digits:2}`,
+  `@media (prefers-color-scheme:dark){:where(.ck){${dark}}}`,
+  `:where(.light .ck){${light}}`,
+  `:where(.dark .ck){${dark}}`,
+  ...[3, 4, 5, 6].map((digits) => `.ck[data-code-numbers="${digits}"]{--_ck-digits:${digits}}`),
+  // Each line is a block, its newline inside it, so a marked one can be tinted. The tint is a border image that reaches
+  // past the line to the block's edges, which clip it, so it covers the padding whatever the host sets.
+  `${lines} .line{display:block;position:relative}`,
+  `${lines} .line:empty::after{content:' '}`,
+  `${lines} :is(.ck-ins,.diff.add){--_ck-tint:color-mix(in srgb,var(--ck-green) 14%,transparent)}`,
+  `${lines} :is(.ck-del,.diff.remove){--_ck-tint:color-mix(in srgb,var(--ck-red) 12%,transparent)}`,
+  `${lines} :is(.ck-mark,.highlight,.highlighted){--_ck-tint:color-mix(in srgb,var(--_comark-foreground) 7%,transparent)}`,
+  `${lines} .highlighted.error{--_ck-tint:color-mix(in srgb,var(--ck-red) 16%,transparent)}`,
+  `${lines} .highlighted.warning{--_ck-tint:color-mix(in srgb,var(--ck-yellow) 18%,transparent)}`,
+  `${lines} :is(.ck-ins,.ck-del,.ck-mark,.highlight,.highlighted,.diff.add,.diff.remove){border-image:conic-gradient(var(--_ck-tint) 0 0) fill 0//0 100vw}`,
+  // The sign sits in the block's padding, or between the number and the code.
+  `${lines} :is(.ck-ins,.ck-del,.diff.add,.diff.remove)::after{position:absolute;top:0;left:-1.5ch;width:1.5ch;text-align:center;user-select:none}`,
+  `${lines} :is(.ck-ins,.diff.add)::after{content:'+';color:color-mix(in oklab,var(--ck-green) 70%,var(--_comark-foreground))}`,
+  `${lines} :is(.ck-del,.diff.remove)::after{content:'−';color:color-mix(in oklab,var(--ck-red) 75%,var(--_comark-foreground))}`,
+  `${lines}[data-code-numbers] .line{padding-left:calc(var(--_ck-digits) * 1ch + 2ch)}`,
+  `${lines}[data-code-numbers] .line::before{content:attr(data-line);position:absolute;left:0;width:calc(var(--_ck-digits) * 1ch);color:var(--_comark-muted);text-align:right;user-select:none}`,
+  `${lines}[data-code-numbers] .line::after{left:calc(var(--_ck-digits) * 1ch + .25ch)}`,
+  `${lines} .ck-fold{display:block}`,
+  // A page's own `details` and `summary` rules are unlayered and would box a fold or shift it off the lines' grid, so
+  // only `!important` keeps its margins, padding, and border.
+  `${lines} .ck-fold{margin:0!important;padding:0!important;border:0!important}`,
+  `${lines} .ck-fold>summary{margin:0!important;padding:0!important;border-block:0!important;border-inline:0!important}`,
+  `${lines}[data-code-numbers] .ck-fold>summary{padding-left:calc(var(--_ck-digits) * 1ch + 2ch)!important}`,
+  `${lines} .ck-fold>summary{display:block;color:var(--_comark-muted);cursor:pointer;list-style:none;border-image:conic-gradient(color-mix(in srgb,var(--_comark-foreground) 5%,transparent) 0 0) fill 0//0 100vw}`,
+  `${lines} .ck-fold>summary::-webkit-details-marker{display:none}`,
+  `${lines} .ck-fold>summary::before{content:'';display:inline-block;width:1em;height:1em;margin-right:.75ch;background:currentColor;vertical-align:-.15em;mask:${chevrons} center/contain no-repeat}`,
+  `@media (hover:hover){${lines} .ck-fold>summary:hover{color:var(--_comark-foreground)}}`,
+  `${lines} .ck-fold>summary:focus-visible{outline:none;box-shadow:inset 0 0 0 3px color-mix(in srgb,var(--_comark-ring) 50%,transparent)}`,
+  // Like GitHub's, an opened range stays open.
+  `${lines} .ck-fold[open]>summary{display:none}`,
+  `${lines} .highlighted-word{border-radius:calc(var(--_comark-radius) - 6px);background:color-mix(in srgb,var(--_comark-foreground) 12%,transparent)}`,
+  ".ck>pre.has-focused .line:not(.focused){opacity:.7;filter:blur(.095rem);transition:filter .3s,opacity .3s}",
+  ".ck>pre.has-focused:hover .line:not(.focused){opacity:1;filter:none}",
 ].join("")}}${
-  // Pages set a code block's padding and `white-space` with plain rules, which beat any layered one.
+  // Pages set a code block's padding, overflow, and `white-space` with plain rules, which beat any layered one. A tinted
+  // line reaches past the block, which must clip it.
   "div.ck>pre{padding-top:var(--_ck-bar)}" +
+  `div${terminal}>pre{padding-top:calc(var(--_ck-bar) + .625rem)}` +
+  "div.ck[data-code-lines]>pre{overflow-x:auto}" +
   ".ck[data-code-wrap]>pre,.ck[data-code-wrap]>pre>code{white-space:pre-wrap;overflow-wrap:anywhere}"
 }`;

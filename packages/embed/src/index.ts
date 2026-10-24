@@ -8,7 +8,11 @@ export type { Size } from "./providers.ts";
 export type EmbedMeta = {
   /** One readable sentence per problem with an `::embed`. Empty when the document has none. Other plugins add theirs too. */
   issues: string[];
+  /** The comark-linter rule of each issue, by its sentence, so the linter reports it under its own code. */
+  issueRules: Record<string, string>;
 };
+
+type Issue = { rule: `comark/embed/${string}`; message: string };
 
 /**
  * What an `::embed` becomes, and all its renderers read. A player has `provider`, `src`, `label`, and `size`; a link
@@ -37,6 +41,8 @@ const text = (value: unknown) =>
     : // SAFETY: undefined, null, objects, and arrays returned above, so only a string, number, or boolean is left.
       String(value as string | number | boolean).trim();
 
+const PROPS = ["url", "title", "start"];
+
 function readUrl(value: string) {
   try {
     const url = new URL(value);
@@ -46,27 +52,43 @@ function readUrl(value: string) {
   }
 }
 
-function embed(node: ElementNode, number: number, data: Data, issues: string[]): EmbedAttributes {
+function embed(node: ElementNode, number: number, data: Data, issues: Issue[]): EmbedAttributes {
   const name = `\`::embed\` ${number}`;
   const attrs = resolveAttributes(node[1], data, { parseJson: true });
   if (childrenOf(node).some(isContent))
-    issues.push(
-      `${name} drops the content inside it. Close the block with \`::\` on the line after it, and write text outside it.`,
-    );
+    issues.push({
+      rule: "comark/embed/content-dropped",
+      message: `${name} drops the content inside it. Close the block with \`::\` on the line after it, and write text outside it.`,
+    });
+  for (const key of Object.keys(node[1])) {
+    const prop = key.replace(/^:/, "");
+    if (!PROPS.includes(prop) && prop !== "id" && prop !== "class")
+      issues.push({
+        rule: "comark/embed/unknown-prop",
+        message: `${name}: \`${prop}\` isn't a prop of \`::embed\`, so it's ignored. Use \`url\`, \`title\`, or \`start\`.`,
+      });
+  }
   const raw = text(attrs.url);
   if (!raw) {
-    issues.push(`${name}: \`url\` is required. Write \`::embed{url="https://..."}\`.`);
+    issues.push({
+      rule: "comark/embed/missing-url",
+      message: `${name}: \`url\` is required. Write \`::embed{url="https://..."}\`.`,
+    });
     return {};
   }
   const url = readUrl(raw);
   if (!url) {
-    issues.push(`${name}: \`url\` must start with https://.`);
+    issues.push({
+      rule: "comark/embed/insecure-url",
+      message: `${name}: \`url\` must start with https://.`,
+    });
     return {};
   }
   if (url.username || url.password) {
-    issues.push(
-      `${name}: \`url\` has a user name or password before the host. Remove the part up to and including \`@\`.`,
-    );
+    issues.push({
+      rule: "comark/embed/credentials-in-url",
+      message: `${name}: \`url\` has a user name or password before the host. Remove the part up to and including \`@\`.`,
+    });
     return {};
   }
   const provider = providerOf(url);
@@ -76,22 +98,32 @@ function embed(node: ElementNode, number: number, data: Data, issues: string[]):
       ? Number(startText)
       : undefined;
   if (startText && start === undefined)
-    issues.push(`${name}: \`start\` must be a whole number of seconds, such as \`start=90\`.`);
+    issues.push({
+      rule: "comark/embed/invalid-start",
+      message: `${name}: \`start\` must be a whole number of seconds, such as \`start=90\`.`,
+    });
   else if (startText && !provider?.seeks)
-    issues.push(`${name}: \`start\` only works for YouTube and Vimeo videos. Remove it.`);
+    issues.push({
+      rule: "comark/embed/start-unsupported",
+      message: `${name}: \`start\` only works for YouTube and Vimeo videos. Remove it.`,
+    });
   const host = hostOf(url);
   const title = text(attrs.title);
   const card = { href: url.href, title: title || host, host };
   if (!provider) {
     if (!title)
-      issues.push(
-        `${name}: ${host} has no player, so this renders as a link card. Add \`title\` so readers know what it links to.`,
-      );
+      issues.push({
+        rule: "comark/embed/card-without-title",
+        message: `${name}: ${host} has no player, so this renders as a link card. Add \`title\` so readers know what it links to.`,
+      });
     return card;
   }
   const player = provider.read(url, start);
   if ("hint" in player) {
-    issues.push(`${name}: can't read ${provider.holds} from ${url.href}. ${player.hint}`);
+    issues.push({
+      rule: "comark/embed/unreadable-link",
+      message: `${name}: can't read ${provider.holds} from ${url.href}. ${player.hint}`,
+    });
     return card;
   }
   return { ...player, label: title || player.label, ...card };
@@ -106,7 +138,7 @@ export default defineComarkPlugin<void, EmbedMeta>(() => ({
   post(state) {
     const { tree } = state;
     const data: Data = { frontmatter: tree.frontmatter, meta: tree.meta, data: {}, props: {} };
-    const issues: string[] = [];
+    const issues: Issue[] = [];
     let count = 0;
     const walk = (nodes: Node[]) => {
       for (const node of nodes) {
@@ -120,6 +152,10 @@ export default defineComarkPlugin<void, EmbedMeta>(() => ({
       }
     };
     walk(tree.nodes);
-    tree.meta.issues = [...(tree.meta.issues ?? []), ...issues];
+    tree.meta.issues = [...(tree.meta.issues ?? []), ...issues.map((issue) => issue.message)];
+    tree.meta.issueRules = {
+      ...tree.meta.issueRules,
+      ...Object.fromEntries(issues.map((issue) => [issue.message, issue.rule])),
+    };
   },
 }));
