@@ -144,6 +144,7 @@ describe("comark-embed", () => {
     for (const url of [
       "https://stackblitz.com/github/vitejs/vite/tree/main",
       "https://stackblitz.com/github/remix-run/react-router/tree/main/examples/basic",
+      "https://stackblitz.com/github/owner/repo/tree/feature%2Fbranch/my%20app",
     ]) {
       expect(await issues(block(url)), url).toEqual([]);
       expect(await render(block(url)), url).toContain('data-provider="stackblitz"');

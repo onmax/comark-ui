@@ -129,7 +129,7 @@ const PROVIDERS = {
     holds: "a project",
     read(url) {
       if (
-        !/^\/(?:edit\/[\w.-]+|github\/[\w.-]+\/[\w.-]+(?:\/[\w.@~-]+)*)\/?$/.test(
+        !/^\/(?:edit\/(?:[\w.-]|%[0-9A-Fa-f]{2})+|github\/(?:[\w.-]|%[0-9A-Fa-f]{2})+\/(?:[\w.-]|%[0-9A-Fa-f]{2})+(?:\/(?:[\w.@~-]|%[0-9A-Fa-f]{2})+)*)\/?$/.test(
           url.pathname,
         )
       )
