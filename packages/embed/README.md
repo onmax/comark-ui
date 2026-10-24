@@ -36,7 +36,7 @@ const render = createHtmlRenderer({ plugins: [embed()], components });
 | Loom | `loom.com/share/<id>`, `/embed/<id>` |
 | Spotify | `open.spotify.com/` track, album, playlist, episode, show, and artist |
 | CodePen | `codepen.io/<user>/pen/<id>` (also `full`, `details`, or `embed`) |
-| StackBlitz | `stackblitz.com/edit/<project>`, `stackblitz.com/github/<owner>/<repo>` |
+| StackBlitz | `stackblitz.com/edit/<project>`, `stackblitz.com/github/<owner>/<repo>[/<path>]` |
 | Figma | `figma.com/design`, `file`, `proto`, `board`, `slides`, and `deck` |
 
 Any other `https://` link renders as a card with its `title` and host. Cards don't fetch the page's title yet, so give each one a `title`.

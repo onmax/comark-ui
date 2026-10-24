@@ -23,7 +23,7 @@ Close the block with `::` on the next line; anything inside it is dropped.
 | Loom | `loom.com/share/<id>`, `/embed/<id>` | Loom's embed player. |
 | Spotify | `open.spotify.com/` track, album, playlist, episode, show, and artist links | A compact player for a track or an episode, a full one for the rest. |
 | CodePen | `codepen.io/<user>/pen/<id>` (also `full`, `details`, or `embed`) | The pen's result. |
-| StackBlitz | `stackblitz.com/edit/<project>`, `stackblitz.com/github/<owner>/<repo>` | The project, keeping options such as `file` and `view`. |
+| StackBlitz | `stackblitz.com/edit/<project>`, `stackblitz.com/github/<owner>/<repo>[/<path>]` | The project or GitHub branch, tag, commit, or directory, keeping options such as `file` and `view`. |
 | Figma | `figma.com/design`, `file`, `proto`, `board`, `slides`, and `deck` links | Figma's embed, keeping `node-id`. |
 
 The parser checks the path as well as the hostname. A link with a supported host but the wrong path becomes a link card and adds a problem, so it stays followable without pretending to be a player.
@@ -33,7 +33,8 @@ The parser checks the path as well as the hostname. A link with a supported host
 | `https://stackblitz.com/edit/typescript?file=index.ts` | StackBlitz player. Query options such as `file` stay on the player URL. |
 | `https://www.figma.com/file/<key>/Example` | Figma player. `/file/` is the older spelling of `/design/`. |
 | `https://open.spotify.com/artist/<id>` | Spotify list player. |
-| `https://stackblitz.com/edit/typescript/extra` | Link card and a `meta.issues` entry. Extra path segments are not a StackBlitz project URL. |
+| `https://stackblitz.com/github/remix-run/react-router/tree/main/examples/basic` | StackBlitz player for a GitHub directory import; the path stays on the player URL. |
+| `https://stackblitz.com/edit/typescript/extra` | Link card and a `meta.issues` entry. Extra path segments are not valid for an `/edit/<project>` URL. |
 | `https://example.com/docs` | Link card. Add `title` so the card names the page instead of using `example.com`. |
 | `http://example.com/docs`, `javascript:...`, or a URL with `user:password@` | Nothing is rendered. The parser reports the unsafe URL. |
 

@@ -128,9 +128,13 @@ const PROVIDERS = {
     hosts: ["stackblitz.com"],
     holds: "a project",
     read(url) {
-      if (!/^\/(?:edit\/[\w.-]+|github\/[\w.-]+\/[\w.-]+)\/?$/.test(url.pathname))
+      if (
+        !/^\/(?:edit\/[\w.-]+|github\/[\w.-]+\/[\w.-]+(?:\/[\w.@~-]+)*)\/?$/.test(
+          url.pathname,
+        )
+      )
         return {
-          hint: "Use a stackblitz.com/edit/<project> or stackblitz.com/github/<owner>/<repo> link.",
+          hint: "Use a stackblitz.com/edit/<project> or stackblitz.com/github/<owner>/<repo>[/<path>] link.",
         };
       // Options such as `file` and `view` stay on the link.
       const src = new URL(url.href);

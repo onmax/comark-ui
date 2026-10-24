@@ -126,7 +126,7 @@ describe("comark-embed", () => {
     );
   });
 
-  it("accepts the documented provider shapes and rejects extra StackBlitz path segments", async () => {
+  it("accepts the documented provider shapes and rejects malformed StackBlitz paths", async () => {
     const players = [
       ["youtube", "https://www.youtube.com/watch?v=dQw4w9WgXcQ"],
       ["vimeo", "https://player.vimeo.com/video/76979871"],
@@ -142,11 +142,20 @@ describe("comark-embed", () => {
     }
 
     for (const url of [
-      "https://stackblitz.com/edit/vitejs-vite/extra",
       "https://stackblitz.com/github/vitejs/vite/tree/main",
+      "https://stackblitz.com/github/remix-run/react-router/tree/main/examples/basic",
+    ]) {
+      expect(await issues(block(url)), url).toEqual([]);
+      expect(await render(block(url)), url).toContain('data-provider="stackblitz"');
+    }
+
+    for (const url of [
+      "https://stackblitz.com/edit/vitejs-vite/extra",
+      "https://stackblitz.com/github/vitejs/vite//tree/main",
+      "https://stackblitz.com/github/vitejs",
     ]) {
       expect(await issues(block(url)), url).toEqual([
-        `\`::embed\` 1: can't read a project from ${url}. Use a stackblitz.com/edit/<project> or stackblitz.com/github/<owner>/<repo> link.`,
+        `\`::embed\` 1: can't read a project from ${url}. Use a stackblitz.com/edit/<project> or stackblitz.com/github/<owner>/<repo>[/<path>] link.`,
       ]);
       const html = await render(block(url));
       expect(html, url).toContain('class="ce-card"');
@@ -236,7 +245,7 @@ describe("comark-embed", () => {
       "`::embed` 1: can't read a pen from https://codepen.io/chriscoyier. Use a codepen.io/<user>/pen/<id> link.",
     ]);
     expect(await issues(block("https://stackblitz.com/"))).toEqual([
-      "`::embed` 1: can't read a project from https://stackblitz.com/. Use a stackblitz.com/edit/<project> or stackblitz.com/github/<owner>/<repo> link.",
+      "`::embed` 1: can't read a project from https://stackblitz.com/. Use a stackblitz.com/edit/<project> or stackblitz.com/github/<owner>/<repo>[/<path>] link.",
     ]);
     expect(await issues(block("https://www.figma.com/files/recents"))).toEqual([
       "`::embed` 1: can't read a file from https://www.figma.com/files/recents. Use a figma.com/design, proto, board, slides, or deck link.",
