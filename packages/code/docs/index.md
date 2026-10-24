@@ -254,8 +254,8 @@ A collapsed range's margins, padding, and border are `!important`, so a page's o
 
 | Token | Used for |
 | --- | --- |
-| `--comark-muted` | The title, the buttons' icons and labels, line numbers, a collapsed range's line, and a terminal's dots |
-| `--comark-foreground` | Hovered buttons' icons and labels, the status line's background, and the tint of `mark` lines, highlighted words, and collapsed ranges |
+| `--comark-muted` | The buttons' icons and labels, line numbers, a collapsed range's line, and a terminal's dots |
+| `--comark-foreground` | The title, at 72%, hovered buttons' icons and labels, the status line's background, and the tint of `mark` lines, highlighted words, and collapsed ranges |
 | `--comark-background` | The status line's text |
 | `--comark-border` | The line under a terminal's header |
 | `--comark-accent` | Hovered buttons, and Wrap while it's on |
@@ -269,7 +269,7 @@ Set these on `.ck` or any ancestor, such as `:root`:
 
 | Variable | Default | Used for |
 | --- | --- | --- |
-| `--ck-inset` | `0.375rem` | How far the buttons sit from the block's top right corner, and the gap under them |
+| `--ck-inset` | `0.375rem` | How far the buttons sit from the block's top right corner |
 | `--ck-button-size` | `1.5rem` | The buttons' height and least width, at least `2.25rem` on touch screens |
 | `--ck-title-font` | `ui-monospace, SFMono-Regular, Menlo, monospace` | The title. Set it to your code's font so the title matches the block. |
 | `--ck-green` | `#259f56`, `#59d38c` in dark mode | Lines marked `ins`, and their `+` |
@@ -278,7 +278,7 @@ Set these on `.ck` or any ancestor, such as `:root`:
 
 The dark shades follow the system's dark mode, or a `.dark` class on any ancestor, and a `.light` class keeps the light ones.
 
-The header is the button size plus the inset above and below, and the block's `padding-top` matches it. A marked line is tinted from edge to edge, past the block's padding, so the block clips its overflow. Its sign sits in the block's left padding, which needs to be at least `1.5ch` wide. On a numbered block, the sign sits between the number and the code.
+The block's `padding-top` is the button size, the inset above the buttons, and `0.75rem` more, so the code starts that far below the header. A marked line is tinted from edge to edge, past the block's padding, so the block clips its overflow. Its sign sits in the block's left padding, which needs to be at least `1.5ch` wide. On a numbered block, the sign sits between the number and the code.
 
 ### Classes and attributes
 
