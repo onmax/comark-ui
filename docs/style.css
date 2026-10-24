@@ -20,6 +20,7 @@
   --faint: oklch(0.62 0 0);
   --line: oklch(0.92 0 0);
   --soft: oklch(0.975 0 0);
+  --pre-line: var(--line);
   --max: 82rem;
   --sans: "Geist", ui-sans-serif, system-ui, sans-serif;
   --mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -34,6 +35,7 @@
     --faint: oklch(0.56 0 0);
     --line: oklch(0.26 0 0);
     --soft: oklch(0.185 0 0);
+    --pre-line: transparent;
   }
 
   .shiki span {
@@ -51,6 +53,7 @@
   --faint: oklch(0.62 0 0);
   --line: oklch(0.92 0 0);
   --soft: oklch(0.975 0 0);
+  --pre-line: var(--line);
 }
 
 :root.dark {
@@ -61,6 +64,7 @@
   --faint: oklch(0.56 0 0);
   --line: oklch(0.26 0 0);
   --soft: oklch(0.185 0 0);
+  --pre-line: transparent;
 }
 
 :where(.light) {
@@ -2873,14 +2877,15 @@ code {
   margin: 0;
 }
 
+/* Like T3 Code's: outlined in light mode, a flat panel in dark mode. */
 pre {
   position: relative;
   margin: 1.25rem 0;
-  padding: 0.9rem 1rem;
+  padding: 0.8rem 0.9rem;
   overflow-x: auto;
-  border-radius: 6px;
+  border-radius: 0.625rem;
   background: var(--soft) !important;
-  box-shadow: inset 0 0 0 1px var(--line);
+  box-shadow: inset 0 0 0 1px var(--pre-line);
 }
 
 /* comark-cast's terminal draws its own border. */
