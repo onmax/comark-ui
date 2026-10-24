@@ -196,6 +196,21 @@ describe("comark/broken-anchor", () => {
       },
     ]);
   });
+
+  it("keeps positions in order across a large generated document", async () => {
+    const count = 2_000;
+    const markdown = Array.from(
+      { length: count },
+      (_, index) => `[item ${index}](#missing-${index})`,
+    ).join("\n");
+    const found = await lint(markdown);
+
+    expect(found).toHaveLength(count);
+    expect(found.every(({ rule }) => rule === "comark/broken-anchor")).toBe(true);
+    expect(found.map(({ line }) => line)).toEqual(
+      Array.from({ length: count }, (_, index) => index + 1),
+    );
+  });
 });
 
 describe("comark/invalid-frontmatter", () => {
