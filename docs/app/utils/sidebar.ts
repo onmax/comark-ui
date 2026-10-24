@@ -15,23 +15,28 @@ export function leaveSidebar(root: ParentNode) {
 }
 
 export function enterSidebar(root: ParentNode) {
-  const column = columnOf(root);
   activeEntry = entryOf();
   const position = positions.get(activeEntry);
-  if (column && position?.list === column.getAttribute("aria-label")) {
-    // The page body can arrive just after this component mounts. Restore once more on the
-    // first frame so setting scrollTop is not clamped while the column is still empty.
-    let frames = 0;
-    const restore = () => {
-      if (position.top > 0 && column.scrollHeight <= column.clientHeight && frames++ < 30) {
-        requestAnimationFrame(restore);
-        return;
-      }
-      column.scrollTop = position.top;
-    };
-    restore();
-    requestAnimationFrame(restore);
-  }
+  if (!position) return;
+
+  // The page body can arrive just after this component mounts. Wait for its sidebar before
+  // restoring; otherwise a Back navigation can leave the replacement column at the old page's
+  // position because there was no element to update on the first frame.
+  let frames = 0;
+  const restore = () => {
+    const column = columnOf(root);
+    if (!column) {
+      if (frames++ < 60) requestAnimationFrame(restore);
+      return;
+    }
+    if (position.list !== column.getAttribute("aria-label")) return;
+    if (position.top > 0 && column.scrollHeight <= column.clientHeight && frames++ < 60) {
+      requestAnimationFrame(restore);
+      return;
+    }
+    column.scrollTop = position.top;
+  };
+  restore();
 }
 
 function entryOf() {
