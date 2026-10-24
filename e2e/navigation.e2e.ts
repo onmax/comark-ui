@@ -85,3 +85,33 @@ test("a page change jumps to its scroll position instead of sliding there", asyn
   expect(await frames(true)).toEqual([0, 1200]);
   await expect(page).toHaveURL(/\/charts\/$/);
 });
+
+test("the sidebar stays where it was when one of its links opens another page", async ({
+  page,
+}) => {
+  await page.goto("/annotate/");
+  // Every scroll position of the sidebar's column from the click until the next page has been in for a while.
+  const { before, seen } = await page.evaluate(async () => {
+    const column = () => document.querySelector<HTMLElement>(".sidebar .pages")!;
+    column().scrollTop = column().scrollHeight;
+    const before = Math.round(column().scrollTop);
+    const seen = new Set([before]);
+    document.querySelector<HTMLAnchorElement>('.sidebar a[href="/tabs/"]')!.click();
+    const start = performance.now();
+    let frames = 0;
+    while (frames < 30 && performance.now() - start < 5000) {
+      await new Promise(requestAnimationFrame);
+      seen.add(Math.round(column().scrollTop));
+      if (document.querySelector("h1")?.textContent === "Tabs") frames++;
+    }
+    return { before, seen: [...seen] };
+  });
+  expect(before).toBeGreaterThan(0);
+  expect(seen).toEqual([before]);
+  await expect(page.locator("h1")).toHaveText("Tabs");
+});
+
+test("the sidebar shows the current page's link on a first load", async ({ page }) => {
+  await page.goto("/zoom/");
+  await expect(page.locator('.sidebar .pages a[aria-current="page"]')).toBeInViewport();
+});
