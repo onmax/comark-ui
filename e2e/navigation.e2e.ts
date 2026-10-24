@@ -111,6 +111,31 @@ test("the sidebar stays where it was when one of its links opens another page", 
   await expect(page.locator("h1")).toHaveText("Tabs");
 });
 
+test("the sidebar restores each browser history entry's position", async ({ page }) => {
+  await page.goto("/annotate/");
+  const first = await page.locator(".sidebar .pages").evaluate((column) => {
+    column.scrollTop = 120;
+    return Math.round(column.scrollTop);
+  });
+  await page.locator('.sidebar a[href="/tabs/"]').click();
+  await expect(page).toHaveURL(/\/tabs\/$/);
+  const second = await page.locator(".sidebar .pages").evaluate((column) => {
+    column.scrollTop = column.scrollHeight;
+    return Math.round(column.scrollTop);
+  });
+  expect(second).toBeGreaterThan(first);
+  await page.goBack();
+  await expect(page).toHaveURL(/\/annotate\/$/);
+  await expect
+    .poll(() => page.locator(".sidebar .pages").evaluate((column) => Math.round(column.scrollTop)))
+    .toBe(first);
+  await page.goForward();
+  await expect(page).toHaveURL(/\/tabs\/$/);
+  await expect
+    .poll(() => page.locator(".sidebar .pages").evaluate((column) => Math.round(column.scrollTop)))
+    .toBe(second);
+});
+
 test("the sidebar shows the current page's link on a first load", async ({ page }) => {
   await page.goto("/zoom/");
   await expect(page.locator('.sidebar .pages a[aria-current="page"]')).toBeInViewport();
