@@ -47,4 +47,4 @@ A `javascript:`, `vbscript:`, or `data:` URL in an `href` or `src`. `data:` imag
 
 ## Positions
 
-Comark gives parsed nodes no source positions. lint-comark takes block components' lines from the parser's tokens and finds everything else by searching the source, so a component inside a paragraph gets its line and the first matching column, a URL is matched where it starts an attribute or link rather than in prose, and a repeated value is matched in order.
+Comark gives parsed nodes no source positions. lint-comark takes block components' lines from the parser's tokens and finds everything else by searching the source, so a component inside a paragraph gets its line and the first matching column, a URL is matched where it starts an attribute or link rather than in prose, and a repeated value is matched in order. Broken-anchor links are indexed in one pass, so generated documents with thousands of links keep their source locations without rescanning the whole document for each one.
