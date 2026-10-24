@@ -59,7 +59,7 @@ Close the block with `::` on the next line. The plugin drops anything inside it.
 | Loom | `loom.com/share/<id>` | Loom's embed player. |
 | Spotify | `open.spotify.com/` track, album, playlist, episode, show, and artist links | A compact player for a track or an episode, a full one for the rest. |
 | CodePen | `codepen.io/<user>/pen/<id>` | The pen's result. |
-| StackBlitz | `stackblitz.com/edit/<project>`, `stackblitz.com/github/<owner>/<repo>` | The project, keeping options such as `file` and `view`. |
+| StackBlitz | `stackblitz.com/edit/<project>`, `stackblitz.com/github/<owner>/<repo>[/<path>]` | The project or GitHub branch, tag, commit, or directory, keeping options such as `file` and `view`. |
 | Figma | `figma.com/design`, `proto`, `board`, `slides`, and `deck` links | Figma's embed, keeping `node-id`. |
 
 A StackBlitz project that runs in WebContainers, such as a Node or Vite starter, needs a cross-origin-isolated page and a supported browser. Without them, its preview may fail with "Unable to run Embedded Project". StackBlitz lists the [supported browsers](https://developer.stackblitz.com/platform/webcontainers/browser-support) and the [browser configuration](https://developer.stackblitz.com/platform/webcontainers/browser-config).
