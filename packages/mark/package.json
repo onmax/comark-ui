@@ -1,6 +1,6 @@
 {
   "name": "comark-mark",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "Highlights and superscripts in Comark: ==marked text== as <mark> and ^sup^ as <sup>.",
   "keywords": [
     "comark",

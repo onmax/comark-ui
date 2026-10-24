@@ -1,6 +1,6 @@
 {
   "name": "comark-diagrams",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "PlantUML, Graphviz, D2, DBML, and ASCII diagrams drawn as inline SVG while parsing, through a Kroki server. A Comark plugin.",
   "keywords": [
     "comark",

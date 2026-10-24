@@ -1,6 +1,6 @@
 {
   "name": "comark-xref",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "Numbered figures and tables, and :ref{#fig-x} references that read \"Figure 1\". A Comark plugin.",
   "keywords": [
     "comark",
