@@ -90,7 +90,7 @@ const PROVIDERS = {
   },
   spotify: {
     hosts: ["open.spotify.com"],
-    holds: "a track, album, playlist, episode, or show",
+    holds: "a track, album, playlist, episode, show, or artist",
     read(url) {
       const [, type, id] =
         match(
@@ -98,7 +98,9 @@ const PROVIDERS = {
           url.pathname,
         ) ?? [];
       if (!type || !id)
-        return { hint: "Use an open.spotify.com/track, album, playlist, episode, or show link." };
+        return {
+          hint: "Use an open.spotify.com/track, album, playlist, episode, show, or artist link.",
+        };
       return {
         provider: "spotify",
         src: `https://open.spotify.com/embed/${type}/${id}`,
@@ -126,7 +128,7 @@ const PROVIDERS = {
     hosts: ["stackblitz.com"],
     holds: "a project",
     read(url) {
-      if (!/^\/(?:edit\/[\w.-]+|github\/[\w.-]+\/[\w.-]+)/.test(url.pathname))
+      if (!/^\/(?:edit\/[\w.-]+|github\/[\w.-]+\/[\w.-]+)\/?$/.test(url.pathname))
         return {
           hint: "Use a stackblitz.com/edit/<project> or stackblitz.com/github/<owner>/<repo> link.",
         };

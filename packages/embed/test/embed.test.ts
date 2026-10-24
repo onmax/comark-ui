@@ -126,6 +126,34 @@ describe("comark-embed", () => {
     );
   });
 
+  it("accepts the documented provider shapes and rejects extra StackBlitz path segments", async () => {
+    const players = [
+      ["youtube", "https://www.youtube.com/watch?v=dQw4w9WgXcQ"],
+      ["vimeo", "https://player.vimeo.com/video/76979871"],
+      ["loom", "https://www.loom.com/embed/e5b8c04bca094dd8a5507925ab887002"],
+      ["spotify", "https://open.spotify.com/artist/0OdUWJ0sBjDrqHygGUXeCF"],
+      ["codepen", "https://codepen.io/chriscoyier/details/gfdDu"],
+      ["stackblitz", "https://stackblitz.com/edit/vitejs-vite/"],
+      ["figma", "https://www.figma.com/file/BAZsTPbh6W1r66Bdo/Example"],
+    ] as const;
+    for (const [provider, url] of players) {
+      expect(await issues(block(url)), url).toEqual([]);
+      expect(await render(block(url)), url).toContain(`data-provider="${provider}"`);
+    }
+
+    for (const url of [
+      "https://stackblitz.com/edit/vitejs-vite/extra",
+      "https://stackblitz.com/github/vitejs/vite/tree/main",
+    ]) {
+      expect(await issues(block(url)), url).toEqual([
+        `\`::embed\` 1: can't read a project from ${url}. Use a stackblitz.com/edit/<project> or stackblitz.com/github/<owner>/<repo> link.`,
+      ]);
+      const html = await render(block(url));
+      expect(html, url).toContain('class="ce-card"');
+      expect(html, url).not.toContain('data-provider="stackblitz"');
+    }
+  });
+
   it("renders any other https link as a card, and escapes what it prints", async () => {
     // The space keeps the title and host apart where the styles don't load, such as a feed reader.
     expect(await render(block("https://example.com/docs", ' title="Setup guide"'))).toContain(
@@ -202,7 +230,7 @@ describe("comark-embed", () => {
       "`::embed` 1: can't read a video ID from https://www.loom.com/looms/videos. Use a loom.com/share/<id> link.",
     ]);
     expect(await issues(block("https://open.spotify.com/user/spotify"))).toEqual([
-      "`::embed` 1: can't read a track, album, playlist, episode, or show from https://open.spotify.com/user/spotify. Use an open.spotify.com/track, album, playlist, episode, or show link.",
+      "`::embed` 1: can't read a track, album, playlist, episode, show, or artist from https://open.spotify.com/user/spotify. Use an open.spotify.com/track, album, playlist, episode, show, or artist link.",
     ]);
     expect(await issues(block("https://codepen.io/chriscoyier"))).toEqual([
       "`::embed` 1: can't read a pen from https://codepen.io/chriscoyier. Use a codepen.io/<user>/pen/<id> link.",
