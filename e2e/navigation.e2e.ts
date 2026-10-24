@@ -136,6 +136,25 @@ test("the sidebar restores each browser history entry's position", async ({ page
     .toBe(second);
 });
 
+test("the sidebar does not reuse a discarded forward entry's position", async ({ page }) => {
+  await page.goto("/annotate/");
+  await page.locator(".sidebar .pages").evaluate((column) => {
+    column.scrollTop = 120;
+  });
+  await page.locator('.sidebar a[href="/tabs/"]').click();
+  await expect(page).toHaveURL(/\/tabs\/$/);
+  await page.locator(".sidebar .pages").evaluate((column) => {
+    column.scrollTop = column.scrollHeight;
+  });
+  await page.goBack();
+  await expect(page).toHaveURL(/\/annotate\/$/);
+  await page.locator('.sidebar a[href="/charts/"]').click();
+  await expect(page).toHaveURL(/\/charts\/$/);
+  await expect
+    .poll(() => page.locator(".sidebar .pages").evaluate((column) => Math.round(column.scrollTop)))
+    .toBe(0);
+});
+
 test("the sidebar shows the current page's link on a first load", async ({ page }) => {
   await page.goto("/zoom/");
   await expect(page.locator('.sidebar .pages a[aria-current="page"]')).toBeInViewport();

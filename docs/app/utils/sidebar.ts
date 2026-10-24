@@ -18,12 +18,14 @@ export function enterSidebar(root: ParentNode) {
   const column = columnOf(root);
   activeEntry = entryOf();
   const position = positions.get(activeEntry);
-  if (column && position?.list === column.getAttribute("aria-label")) column.scrollTop = position.top;
+  if (column && position?.list === column.getAttribute("aria-label"))
+    column.scrollTop = position.top;
 }
 
 function entryOf() {
-  // Vue Router records a monotonic position for each browser history entry. The URL fallback covers the initial
-  // document before the router has initialized its state.
-  const position = (history.state as { position?: number } | null)?.position;
-  return position === undefined ? location.href : `history:${position}`;
+  // Vue Router's key is unique to the entry, unlike its numeric position, which can be reused after Back then push.
+  // The URL fallback covers the initial document before the router has initialized its state.
+  const state = history.state as { key?: string; position?: number } | null;
+  if (state?.key) return `history:${state.key}`;
+  return state?.position === undefined ? location.href : `history:${state.position}`;
 }
