@@ -540,7 +540,7 @@ function locations(
   attribute: boolean,
 ): Map<string, Location[]> {
   const unique = [...new Set(needles)].filter(Boolean).sort((a, b) => b.length - a.length);
-  const found = new Map(unique.map((needle) => [needle, [] as Location[]]));
+  const found = new Map(unique.map((needle): [string, Location[]] => [needle, []]));
   if (!unique.length) return found;
 
   const trie: NeedleNode[] = [{ next: new Map(), fail: 0, outputs: [] }];
