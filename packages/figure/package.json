@@ -1,0 +1,53 @@
+{
+  "name": "comark-figure",
+  "version": "0.5.0",
+  "description": "Image captions in Comark: an image alone in its paragraph with a title becomes a native <figure> with a <figcaption>.",
+  "keywords": [
+    "caption",
+    "comark",
+    "figcaption",
+    "figure",
+    "image",
+    "markdown",
+    "mdc",
+    "plugin"
+  ],
+  "homepage": "https://comark-ui.onmax.me/figure",
+  "bugs": "https://github.com/onmax/comark-ui/issues",
+  "license": "MIT",
+  "author": "onmax",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/onmax/comark-ui.git",
+    "directory": "packages/figure"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "doctor": "vite-doctor . --no-cache --max-warnings 0 --format text",
+    "prepack": "pnpm --filter comark-figure build"
+  },
+  "devDependencies": {
+    "@comark/html": "catalog:",
+    "comark": "catalog:"
+  },
+  "peerDependencies": {
+    "comark": "^0.8.0"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}

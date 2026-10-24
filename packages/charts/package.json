@@ -1,7 +1,7 @@
 {
   "name": "comark-charts",
-  "version": "0.2.0",
-  "description": "Charts from a Markdown table, drawn to SVG with no script: bars, stacked bars, lines, areas, scatter plots, dumbbells, waterfalls, and pies. The table stays in the page, so people see the chart and agents read the numbers. A Comark plugin.",
+  "version": "0.5.0",
+  "description": "Charts from a Markdown table, drawn to SVG while parsing, with no script: bars, stacked bars, lines, areas, scatter plots, dumbbells, waterfalls, pies, and gantt charts. The table stays in the page, so people see the chart and agents read the numbers. A Comark plugin.",
   "keywords": [
     "chart",
     "comark",
@@ -12,18 +12,17 @@
     "svg",
     "vega"
   ],
-  "homepage": "https://comark.onmax.me/charts",
-  "bugs": "https://github.com/onmax/comark-plugins/issues",
+  "homepage": "https://comark-ui.onmax.me/charts",
+  "bugs": "https://github.com/onmax/comark-ui/issues",
   "license": "MIT",
   "author": "onmax",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/onmax/comark-plugins.git",
+    "url": "git+https://github.com/onmax/comark-ui.git",
     "directory": "packages/charts"
   },
   "files": [
-    "dist",
-    "skills"
+    "dist"
   ],
   "type": "module",
   "main": "./dist/index.mjs",
@@ -31,9 +30,17 @@
   "types": "./dist/index.d.mts",
   "exports": {
     ".": "./dist/index.mjs",
+    "./client": "./dist/client.mjs",
     "./html": "./dist/html.mjs",
-    "./package.json": "./package.json",
-    "./skills/*": "./skills/*"
+    "./react": "./dist/react.mjs",
+    "./style.css": "./dist/style.css",
+    "./svelte": {
+      "types": "./dist/svelte/index.d.ts",
+      "svelte": "./dist/svelte/index.js",
+      "default": "./dist/svelte/index.js"
+    },
+    "./vue": "./dist/vue.mjs",
+    "./package.json": "./package.json"
   },
   "publishConfig": {
     "access": "public",
@@ -54,15 +61,35 @@
   },
   "devDependencies": {
     "@comark/html": "catalog:",
+    "@comark/react": "catalog:",
+    "@comark/vue": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "comark": "catalog:",
-    "comark-zoom": "workspace:*"
+    "comark-zoom": "workspace:*",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "svelte": "catalog:",
+    "vue": "catalog:"
   },
   "peerDependencies": {
     "@comark/html": "^0.8.0",
-    "comark": "^0.8.0"
+    "comark": "^0.8.0",
+    "react": ">=18",
+    "svelte": ">=5",
+    "vue": ">=3.5"
   },
   "peerDependenciesMeta": {
     "@comark/html": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    },
+    "svelte": {
+      "optional": true
+    },
+    "vue": {
       "optional": true
     }
   },

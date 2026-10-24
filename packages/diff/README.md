@@ -4,7 +4,7 @@
 [![npm downloads](https://npmx.dev/api/registry/badge/downloads-month/comark-diff)](https://npmx.dev/package/comark-diff)
 [![install size](https://npmx.dev/api/registry/badge/size/comark-diff)](https://npmx.dev/package/comark-diff)
 [![license](https://npmx.dev/api/registry/badge/license/comark-diff)](https://npmx.dev/package/comark-diff)
-[![docs](https://img.shields.io/badge/docs-comark.onmax.me-14b8a6?labelColor=0a0a0a)](https://comark.onmax.me/diff/)
+[![docs](https://img.shields.io/badge/docs-comark--ui.onmax.me-14b8a6?labelColor=0a0a0a)](https://comark-ui.onmax.me/diff/)
 
 A code change in Markdown, shown the way a pull request review shows a suggested change: the file and its counts in a header, removed lines red, added lines green, and the changed words marked within a pair of lines. A [Comark](https://comark.dev) plugin for HTML, with no script.
 
@@ -40,8 +40,8 @@ One diff shows one file and a few lines around the change; it takes no unified d
 
 ## Customize
 
-The styles follow shadcn/ui's Card: they read its CSS variables, such as `--background`, `--border`, and `--accent`, when the page has them, and use its neutral theme otherwise. Set the shared `--comark-*` tokens to theme the diff with the other comark plugins, `--cd-red` and `--cd-green` to recolor the lines, and `--cd-font` for the code's font. The rules sit in a `comark` CSS layer, so any plain rule of your own wins; see the diff's [Theming page](https://comark.onmax.me/diff/theming/).
+The styles follow shadcn/ui's Card: they read its CSS variables, such as `--background`, `--border`, and `--accent`, when the page has them, and use its neutral theme otherwise. Set the shared `--comark-*` tokens to theme the diff with the other comark plugins, `--cd-red` and `--cd-green` to recolor the lines, and `--cd-font` for the code's font. The rules sit in a `comark` CSS layer, so any plain rule of your own wins; see the diff's [Theming page](https://comark-ui.onmax.me/diff/#theme).
 
 The icon is [Lucide](https://lucide.dev)'s, under its license (see `LICENSE`).
 
-Docs and live demos: [comark.onmax.me/diff](https://comark.onmax.me/diff).
+Docs and live demos: [comark-ui.onmax.me/diff](https://comark-ui.onmax.me/diff).

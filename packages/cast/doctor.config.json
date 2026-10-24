@@ -1,0 +1,3 @@
+{
+  "extends": ["auto", "vite-doctor/typescript/strict"]
+}

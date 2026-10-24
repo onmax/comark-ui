@@ -1,0 +1,60 @@
+{
+  "name": "comark-xref",
+  "version": "0.5.0",
+  "description": "Numbered figures and tables, and :ref{#fig-x} references that read \"Figure 1\". A Comark plugin.",
+  "keywords": [
+    "comark",
+    "cross-reference",
+    "figures",
+    "markdown",
+    "mdc",
+    "plugin",
+    "tables",
+    "xref"
+  ],
+  "homepage": "https://comark-ui.onmax.me/xref",
+  "bugs": "https://github.com/onmax/comark-ui/issues",
+  "license": "MIT",
+  "author": "onmax",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/onmax/comark-ui.git",
+    "directory": "packages/xref"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "doctor": "vite-doctor . --no-cache --max-warnings 0 --format text",
+    "prepack": "pnpm --filter comark-xref build"
+  },
+  "devDependencies": {
+    "@comark/html": "catalog:",
+    "@comark/react": "catalog:",
+    "@comark/vue": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "comark": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "vue": "catalog:"
+  },
+  "peerDependencies": {
+    "comark": "^0.8.0"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}

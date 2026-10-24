@@ -1,11 +1,15 @@
 import { expect, test } from "@playwright/test";
 
-test("the index's studio types the agent's draft, reports its problem, fixes it, and renders the page", async ({
+test("the index's studio rests on the fixed page with its issue, and plays while the pointer is on it", async ({
   page,
 }) => {
   await page.goto("/");
   const studio = page.locator(".studio");
   await studio.scrollIntoViewIfNeeded();
+  await expect(studio).not.toHaveAttribute("data-phase");
+  await expect(page.locator(".studio-issue")).toBeVisible();
+  await expect(page.locator(".studio-issue")).toContainText("runs past the image edge");
+  await studio.hover();
   await expect(studio).toHaveAttribute("data-phase", "check", { timeout: 8000 });
   await expect(page.locator(".studio-issue")).toContainText("runs past the image edge");
   await expect(page.locator(".studio-fix del")).toHaveText("92.5");
@@ -14,7 +18,7 @@ test("the index's studio types the agent's draft, reports its problem, fixes it,
   await expect(page.locator(".studio-page .ca-mark[data-fixed]")).toBeVisible();
   await expect(page.locator(".studio-steps [aria-current=step]")).toHaveText("Render");
 
-  await page.getByRole("button", { name: "Replay" }).click();
+  await page.getByRole("button", { name: "Play" }).click();
   await expect(studio).toHaveAttribute("data-phase", "write");
 });
 
@@ -32,9 +36,11 @@ test("the index's canvas drags, coasts, and opens the card it was clicked on", a
   await page.goto("/");
   const viewport = page.locator(".canvas-viewport");
   await viewport.scrollIntoViewIfNeeded();
-  await page.getByRole("button", { name: "Pause the animations" }).click();
   const stage = page.locator(".canvas-stage");
   const before = await stage.evaluate((el) => el.style.transform);
+  // It holds still until someone moves it.
+  await page.waitForTimeout(600);
+  expect(await stage.evaluate((el) => el.style.transform)).toBe(before);
   const box = (await viewport.boundingBox())!;
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   await page.mouse.down();
@@ -66,15 +72,70 @@ test("the index's canvas drags, coasts, and opens the card it was clicked on", a
   await expect(page).toHaveURL(card!.href);
 });
 
+test("the index's canvas has a card for every playground example, each once on screen and at its own height", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.locator(".canvas-viewport").scrollIntoViewIfNeeded();
+  const { cards, onScreen, unsized } = await page.evaluate(() => {
+    const view = document.querySelector(".canvas-viewport")!.getBoundingClientRect();
+    const live = [...document.querySelectorAll<HTMLElement>(".canvas-stage .demo")];
+    const seen = live.filter((demo) => {
+      const r = demo.getBoundingClientRect();
+      return (
+        r.right > view.left && r.left < view.right && r.bottom > view.top && r.top < view.bottom
+      );
+    });
+    return {
+      cards: [
+        ...document.querySelector<HTMLTemplateElement>("template.canvas-cards")!.content.children,
+      ].map((demo) => (demo as HTMLElement).dataset.example!),
+      onScreen: seen.map((demo) => demo.dataset.example),
+      unsized: live.filter((demo) => !demo.style.height).length,
+    };
+  });
+  await page.goto("/play/");
+  const presets = await page.evaluate(() =>
+    [...document.querySelectorAll<HTMLAnchorElement>(".pages [data-preset]")].map(
+      (link) => link.dataset.preset!,
+    ),
+  );
+  expect(presets.length).toBeGreaterThan(40);
+  expect(presets.filter((id) => !cards.includes(id))).toEqual([]);
+  expect(onScreen.length).toBeGreaterThan(8);
+  expect(new Set(onScreen).size).toBe(onScreen.length);
+  expect(unsized).toBe(0);
+});
+
+test("the index's canvas holds still under the pointer", async ({ page }) => {
+  await page.goto("/");
+  await page.locator(".canvas-viewport").scrollIntoViewIfNeeded();
+  const box = (await page.locator(".canvas-viewport").boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.move(box.x + box.width / 2 + 40, box.y + box.height / 2 + 20, { steps: 4 });
+  const running = await page.evaluate(() =>
+    document
+      .getAnimations()
+      .filter((animation) =>
+        (animation.effect as KeyframeEffect | null)?.target?.closest?.(".canvas-stage"),
+      )
+      .map((animation) => {
+        const target = (animation.effect as KeyframeEffect).target!;
+        return `${target.tagName}.${target.getAttribute("class")} ${animation instanceof CSSTransition ? animation.transitionProperty : animation instanceof CSSAnimation ? animation.animationName : "script"}`;
+      }),
+  );
+  expect(running).toEqual([]);
+});
+
 test("the index's canvas switches to the list, and remembers it", async ({ page }) => {
   await page.goto("/");
   const canvas = page.locator(".canvas");
   await expect(canvas).toHaveAttribute("data-view", "canvas");
-  await page.getByRole("button", { name: "List" }).click();
-  await expect(page.getByRole("link", { name: /annotate/ }).first()).toBeVisible();
+  await page.getByRole("button", { name: "List", exact: true }).click();
+  await expect(page.getByRole("link", { name: /Annotate/ }).first()).toBeVisible();
   await page.reload();
   await expect(canvas).toHaveAttribute("data-view", "list");
-  await page.getByRole("button", { name: "Canvas" }).click();
+  await page.getByRole("button", { name: "Canvas", exact: true }).click();
   await expect(canvas).toHaveAttribute("data-view", "canvas");
 });
 
@@ -90,7 +151,7 @@ test("hovering the rail shows every section's name over the pages, without movin
   page,
 }) => {
   await page.goto("/lint/");
-  const label = page.locator(".sidebar .rail-label", { hasText: "carousel" });
+  const label = page.locator(".sidebar .rail-label", { hasText: "Components" });
   const pages = page.locator(".sidebar .pages");
   await page.mouse.move(500, 0);
   const left = (await pages.boundingBox())?.x;
@@ -104,12 +165,27 @@ test("hovering the rail shows every section's name over the pages, without movin
   await expect(label).toHaveCSS("opacity", "0");
 });
 
-test("a package's card copies its install command", async ({ page, context }) => {
-  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+test("a package's card links to its docs without a copy control", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "List" }).click();
-  await page.getByRole("button", { name: "Copy pnpm add comark-github" }).click();
-  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("pnpm add comark-github");
+  await page.getByRole("button", { name: "List", exact: true }).click();
+  const card = page.locator(".grid a", { has: page.getByText("GitHub", { exact: true }) });
+  await expect(card).toHaveAttribute("href", "/github/");
+  await expect(page.getByRole("button", { name: "Copy pnpm add comark-github" })).toHaveCount(0);
+});
+
+test("Getting started installs comark-ui, and a block's page ends with its own package instead", async ({
+  page,
+}) => {
+  await page.goto("/getting-started/");
+  const command = page.locator(".install code");
+  await expect(command).toHaveText("pnpm add comark @comark/html comark-ui");
+  await page.getByRole("button", { name: "npm", exact: true }).click();
+  await expect(command).toHaveText("npm install comark @comark/html comark-ui");
+
+  await page.goto("/carousel/");
+  await expect(page.locator(".installer")).toHaveCount(0);
+  await expect(page.locator(".sidebar .rail a[aria-current]")).toHaveText("Components");
+  await expect(page.locator("main")).toContainText("pnpm add comark @comark/html comark-carousel");
 });
 
 test("no page scrolls sideways on a phone", async ({ page }) => {
@@ -118,10 +194,11 @@ test("no page scrolls sideways on a phone", async ({ page }) => {
     "/",
     "/guide/renderers/",
     "/guide/theming/",
-    "/annotate/guides/",
-    "/charts/guides/",
-    "/embed/syntax/",
-    "/github/getting-started/",
+    "/getting-started/",
+    "/annotate/",
+    "/charts/",
+    "/embed/",
+    "/github/",
     "/lint/vite-doctor/",
   ]) {
     await page.goto(path);

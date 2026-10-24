@@ -4,7 +4,7 @@
 [![npm downloads](https://npmx.dev/api/registry/badge/downloads-month/comark-include)](https://npmx.dev/package/comark-include)
 [![install size](https://npmx.dev/api/registry/badge/size/comark-include)](https://npmx.dev/package/comark-include)
 [![license](https://npmx.dev/api/registry/badge/license/comark-include)](https://npmx.dev/package/comark-include)
-[![docs](https://img.shields.io/badge/docs-comark.onmax.me-14b8a6?labelColor=0a0a0a)](https://comark.onmax.me/include/)
+[![docs](https://img.shields.io/badge/docs-comark--ui.onmax.me-14b8a6?labelColor=0a0a0a)](https://comark-ui.onmax.me/include/)
 
 Include Markdown partials and code snippets from files, with `:include{src="./part.md"}`. A [Comark](https://comark.dev) parse plugin: the included text renders as the rest of the document does, in any renderer.
 

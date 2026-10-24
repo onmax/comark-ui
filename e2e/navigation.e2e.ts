@@ -1,19 +1,30 @@
 import { expect, test } from "@playwright/test";
 
 test("client navigation preserves the app and reinitializes page scripts", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/zoom/");
   const marker = await page.evaluate(() => {
     const w = window as typeof window & { __comarkNavigation?: number };
     return (w.__comarkNavigation ??= Math.random());
   });
-  await page.getByRole("banner").getByRole("link", { name: "tabs", exact: true }).click();
+  await page.locator(".sidebar").getByRole("link", { name: "Tabs", exact: true }).click();
   await expect(page).toHaveURL(/\/tabs\/$/);
-  await expect(page.locator("h1")).toHaveText("comark-tabs");
-  await page.getByRole("banner").getByRole("link", { name: "annotate", exact: true }).click();
+  await expect(page.locator("h1")).toHaveText("Tabs");
+  await page.locator(".sidebar").getByRole("link", { name: "Annotate", exact: true }).click();
   await expect(page).toHaveURL(/\/annotate\/$/);
-  await expect(page.locator("h1")).toHaveText("comark-annotate");
+  await expect(page.locator("h1")).toHaveText("Annotate");
+  // The npmx chip's view transition holds the pointer until it ends.
+  await page.waitForFunction(
+    () =>
+      !document
+        .getAnimations()
+        .some((animation) =>
+          (animation.effect as KeyframeEffect | null)?.pseudoElement?.startsWith(
+            "::view-transition",
+          ),
+        ),
+  );
   // The body came as island JSON, so its zoom script had to run again for a mark to open the zoom.
-  await page.locator(".ca-compare .ca-mark").first().click({ force: true });
+  await page.locator("main .ca-compare .ca-mark").first().click({ force: true });
   await expect(page.locator(".cz-dialog")).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.locator(".cz-dialog")).toHaveCount(0);
@@ -24,4 +35,53 @@ test("client navigation preserves the app and reinitializes page scripts", async
       () => (window as typeof window & { __comarkNavigation?: number }).__comarkNavigation,
     ),
   ).toBe(marker);
+});
+
+test("the landing canvas paints its cards centered after a client navigation", async ({ page }) => {
+  await page.goto("/zoom/");
+  // Every frame's position of the first card, from the click until the canvas has settled.
+  const positions = await page.evaluate(async () => {
+    const seen: number[] = [];
+    document.querySelector<HTMLAnchorElement>('header a[href="/"]')!.click();
+    const start = performance.now();
+    while (performance.now() - start < 1500) {
+      await new Promise(requestAnimationFrame);
+      const view = document.querySelector<HTMLElement>(".canvas-viewport");
+      if (!view) continue;
+      const card = [...document.querySelectorAll<HTMLElement>(".canvas-stage .demo")].find(
+        (card) => Number.parseFloat(card.style.left) === 0,
+      );
+      if (card)
+        seen.push(Math.round(card.getBoundingClientRect().x - view.getBoundingClientRect().x));
+    }
+    const view = document.querySelector<HTMLElement>(".canvas-viewport")!;
+    const expected = ((((view.clientWidth - 300) % 320) + 320) % 320) / 2;
+    return { seen, expected: Math.round(expected) };
+  });
+  expect(positions.seen.length).toBeGreaterThan(0);
+  expect(new Set(positions.seen).size).toBe(1);
+  expect(positions.seen[0]).toBe(positions.expected);
+});
+
+test("a page change jumps to its scroll position instead of sliding there", async ({ page }) => {
+  // Both pages are taller than the position, so the browser doesn't clamp it while the next one comes in.
+  await page.goto("/charts/");
+  await page.evaluate(() => window.scrollTo({ top: 1200, behavior: "instant" }));
+  // Every scroll position from the link's click, or going back, until the page has settled.
+  const frames = (back: boolean) =>
+    page.evaluate(async (back) => {
+      const seen = new Set([Math.round(scrollY)]);
+      if (back) history.back();
+      else document.querySelector<HTMLAnchorElement>('.sidebar a[href="/zoom/"]')!.click();
+      const start = performance.now();
+      while (performance.now() - start < 1500) {
+        await new Promise(requestAnimationFrame);
+        seen.add(Math.round(scrollY));
+      }
+      return [...seen];
+    }, back);
+  expect(await frames(false)).toEqual([1200, 0]);
+  await expect(page).toHaveURL(/\/zoom\/$/);
+  expect(await frames(true)).toEqual([0, 1200]);
+  await expect(page).toHaveURL(/\/charts\/$/);
 });

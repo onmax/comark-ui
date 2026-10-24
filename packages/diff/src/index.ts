@@ -6,6 +6,8 @@ export type { Diff, DiffRow } from "./read.ts";
 export type DiffMeta = {
   /** One readable sentence per problem, naming its block and the fix. Empty when the document is valid. Other plugins add theirs too. */
   issues: string[];
+  /** The comark-linter rule of each issue, by its sentence, so the linter reports it under its own code. */
+  issueRules: Record<string, string>;
 };
 
 /**
@@ -23,6 +25,10 @@ export default defineComarkPlugin<void, DiffMeta>(() => ({
       props: {},
     });
     // Several plugins report into the same list, so each one appends.
-    tree.meta.issues = [...(tree.meta.issues ?? []), ...found];
+    tree.meta.issues = [...(tree.meta.issues ?? []), ...found.map((issue) => issue.message)];
+    tree.meta.issueRules = {
+      ...tree.meta.issueRules,
+      ...Object.fromEntries(found.map((issue) => [issue.message, issue.rule])),
+    };
   },
 }));

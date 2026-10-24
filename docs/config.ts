@@ -2,11 +2,13 @@
 // options are listed; the build writes this text into the tab and the playground reads every edit of it.
 import type { CodeOptions } from "../packages/code/src/index.ts";
 import type { CalloutsOptions, ReferencesOptions } from "../packages/github/src/index.ts";
+import type { AnchorsOptions, ExternalOptions } from "../packages/links/src/index.ts";
 import type { ZoomOptions } from "../packages/zoom/src/index.ts";
 
 export interface PlayConfig {
   "comark-code"?: CodeOptions;
   "comark-github"?: { callouts?: CalloutsOptions; references?: ReferencesOptions };
+  "comark-links"?: { external?: ExternalOptions; anchors?: AnchorsOptions };
   "comark-zoom"?: ZoomOptions;
 }
 
@@ -22,7 +24,11 @@ const defaults: Required<PlayConfig> = {
         caution: "Caution",
       },
     },
-    references: { repo: "onmax/comark-plugins" },
+    references: { repo: "onmax/comark-ui" },
+  },
+  "comark-links": {
+    external: { target: false, rel: [], hosts: [] },
+    anchors: { levels: [2, 3, 4] },
   },
   "comark-zoom": { images: true },
 };

@@ -6,5 +6,5 @@ const data = await $fetch(`/api/pages/${props.slug || "index"}`);
 </script>
 
 <template>
-  <div v-html="data?.html" />
+  <div class="app" v-html="data?.body" />
 </template>

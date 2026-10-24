@@ -1,0 +1,59 @@
+{
+  "name": "comark-quiz",
+  "version": "0.5.0",
+  "description": "Questions, polls, and recall cards for lessons written in Markdown: check an answer, see why each option is right or wrong, and vote. They read without a script. A Comark plugin.",
+  "keywords": [
+    "comark",
+    "lesson",
+    "markdown",
+    "mdc",
+    "plugin",
+    "poll",
+    "quiz"
+  ],
+  "homepage": "https://comark-ui.onmax.me/quiz",
+  "bugs": "https://github.com/onmax/comark-ui/issues",
+  "license": "MIT",
+  "author": "onmax",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/onmax/comark-ui.git",
+    "directory": "packages/quiz"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./html": "./dist/html.mjs",
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "doctor": "vite-doctor . --no-cache --max-warnings 0 --format text",
+    "prepack": "pnpm --filter comark-zoom build && pnpm --filter comark-quiz build"
+  },
+  "devDependencies": {
+    "@comark/html": "catalog:",
+    "comark": "catalog:",
+    "comark-zoom": "workspace:*"
+  },
+  "peerDependencies": {
+    "@comark/html": "^0.8.0",
+    "comark": "^0.8.0"
+  },
+  "peerDependenciesMeta": {
+    "@comark/html": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}

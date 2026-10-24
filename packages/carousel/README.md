@@ -4,7 +4,7 @@
 [![npm downloads](https://npmx.dev/api/registry/badge/downloads-month/comark-carousel)](https://npmx.dev/package/comark-carousel)
 [![install size](https://npmx.dev/api/registry/badge/size/comark-carousel)](https://npmx.dev/package/comark-carousel)
 [![license](https://npmx.dev/api/registry/badge/license/comark-carousel)](https://npmx.dev/package/comark-carousel)
-[![docs](https://img.shields.io/badge/docs-comark.onmax.me-14b8a6?labelColor=0a0a0a)](https://comark.onmax.me/carousel/)
+[![docs](https://img.shields.io/badge/docs-comark--ui.onmax.me-14b8a6?labelColor=0a0a0a)](https://comark-ui.onmax.me/carousel/)
 
 A carousel of any Markdown content, written in Markdown. Slides scroll and snap without a script, with a scrollbar to reach the others; the script swaps it for arrows, a slide counter, and arrow keys that follow the reading direction, and zooms a slide with the others in a strip at the bottom. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
 
@@ -60,4 +60,4 @@ The plugin adds every problem to `meta.issues`, so a host can reject a document 
 
 Each entry exports the parse plugin as `default` and the renderer's `components`. 
 
-The styles follow shadcn/ui: they read its CSS variables, such as `--background` and `--border`, when the page has them, and use its neutral theme otherwise. Set `--comark-background`, `--comark-foreground`, `--comark-muted`, `--comark-border`, `--comark-accent`, `--comark-ring`, `--comark-radius`, or `--comark-font` to theme zoom, carousel, and annotate at once; the rules sit in a `comark` CSS layer, so any plain rule of your own wins. See [Theming](https://comark.onmax.me/guide/theming/#nuxt-ui) for the Nuxt UI mapping. Set `--cc-gap`, `--cc-surface`, `--cc-padding`, and `--cc-button-size` for the space between slides, the panel behind each one, and the arrows; see the carousel's [Theming page](https://comark.onmax.me/carousel/theming/).
+The styles follow shadcn/ui: they read its CSS variables, such as `--background` and `--border`, when the page has them, and use its neutral theme otherwise. Set `--comark-background`, `--comark-foreground`, `--comark-muted`, `--comark-border`, `--comark-accent`, `--comark-ring`, `--comark-radius`, or `--comark-font` to theme zoom, carousel, and annotate at once; the rules sit in a `comark` CSS layer, so any plain rule of your own wins. See [Theming](https://comark-ui.onmax.me/guide/theming/) for the Nuxt UI mapping. Set `--cc-gap`, `--cc-surface`, `--cc-padding`, and `--cc-button-size` for the space between slides, the panel behind each one, and the arrows; see the carousel's [Theming page](https://comark-ui.onmax.me/carousel/#theme).

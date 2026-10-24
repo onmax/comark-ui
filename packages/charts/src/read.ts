@@ -11,7 +11,8 @@ export type ChartType =
   | "scatter"
   | "dumbbell"
   | "waterfall"
-  | "pie";
+  | "pie"
+  | "gantt";
 
 /** How the x values read: dates and numbers sit on a scale, anything else is a name. */
 export type XKind = "year" | "month" | "date" | "time" | "number" | "name";
@@ -25,19 +26,48 @@ export interface Chart {
   xKind: XKind;
   /** The headers of the columns drawn as series, in table order. */
   series: string[];
-  /** One row per table row: its x value and one number per series, or undefined for an empty or unreadable cell. */
-  rows: { x: string; values: (number | undefined)[] }[];
+  /**
+   * One row per table row: its x value and one number per series, or undefined for an empty or unreadable cell. A
+   * gantt's are its start and end, and its group when it has a column of them.
+   */
+  rows: { x: string; values: (number | undefined)[]; group?: string }[];
   marks: ChartMark[];
+  /** Whether each bar or segment prints its value, from `labels`. Only bar and stacked bar charts take it. */
+  labels?: boolean;
+  /** How a gantt's starts and ends read: numbers, or dates kept as milliseconds since 1970 in UTC. */
+  scale?: Exclude<XKind, "name">;
+  /** The column of names a gantt colors its bars by. */
+  group?: string;
 }
 
 /**
- * A comark-annotate annotation that points at data: the row whose x it names, and the series when it names one. The
- * renderer finds the box from the drawn chart.
+ * A comark-annotate annotation that points at data: the row whose x it names, and the series when it names one, or
+ * for a `line`, the number on the value axis it crosses at. The renderer finds the box from the drawn chart.
  */
 export interface ChartMark extends Omit<Annotation, "x" | "y" | "w" | "h"> {
-  row: number;
+  row?: number;
   series?: string;
+  value?: number;
 }
+
+/** A chart drawn from a Vega-Lite spec over the table: any chart Vega-Lite draws, with the table as its data. */
+export interface SpecChart {
+  type: "vega-lite";
+  title: string;
+  /** The table's headers, in order. */
+  columns: string[];
+  /** One object per row, keyed by header: a number where the cell reads as one, else its text, and null when empty. */
+  values: Record<string, number | string | null>[];
+  spec: Record<string, unknown>;
+}
+
+/**
+ * One problem with a chart, and the comark-linter rule it falls under. comark-annotate checks an annotation's mark,
+ * color, side, and note, so those come under its rules, as they do on a screenshot.
+ */
+export type Issue =
+  | { rule: `comark/charts/${string}`; message: string }
+  | Parameters<typeof readMark>[2][number];
 
 export const TYPES: readonly ChartType[] = [
   "bar",
@@ -48,9 +78,22 @@ export const TYPES: readonly ChartType[] = [
   "dumbbell",
   "waterfall",
   "pie",
+  "gantt",
 ];
-const PROPS = new Set(["type", "x", "y", "title", "class", "id"]);
-const MARK_PROPS = new Set(["at", "series", "mark", "color", "side", "class", "id"]);
+// A bare `{labels}` arrives as `:labels="true"`, Comark's spelling of a prop with no value.
+const PROPS = new Set(["type", "x", "y", "title", "labels", ":labels", "class", "id"]);
+const MARK_PROPS = new Set(["at", "series", "value", "mark", "color", "side", "class", "id"]);
+const A: Record<ChartType, string> = {
+  bar: "a bar chart",
+  stacked: "a stacked bar chart",
+  line: "a line",
+  area: "an area",
+  scatter: "a scatter plot",
+  dumbbell: "a dumbbell",
+  waterfall: "a waterfall",
+  pie: "a pie",
+  gantt: "a gantt",
+};
 
 const KINDS: [XKind, RegExp][] = [
   ["year", /^\d{4}$/],
@@ -64,6 +107,8 @@ const NUMBER = /^[+-]?(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d+)?$/;
 const isElement = (node: Node): node is ElementNode => Array.isArray(node) && node[0] !== null;
 const childrenOf = ([, , ...rest]: ElementNode): Node[] => rest;
 const isContent = (node: Node) => (Array.isArray(node) ? node[0] !== null : node.trim() !== "");
+const isSpec = (node: Node): node is ElementNode =>
+  isElement(node) && node[0] === "pre" && node[1].language === "vega-lite";
 const elements = (node: ElementNode, tag: string) =>
   childrenOf(node).filter((child): child is ElementNode => isElement(child) && child[0] === tag);
 const text = (value: unknown) =>
@@ -90,32 +135,43 @@ function kindOf(values: string[]): XKind {
  * Reads a `::chart` node, its props and the Markdown table inside it. Returns undefined when there's nothing to draw;
  * every problem goes to `issues` as one sentence that names the block and the fix.
  */
-export function readChart(node: ElementNode, number: number, issues: string[]): Chart | undefined {
+export function readChart(
+  node: ElementNode,
+  number: number,
+  issues: Issue[],
+): Chart | SpecChart | undefined {
   const name = `\`::chart\` ${number}`;
   const attrs = node[1];
+  // A chart drawn from a spec checks its props itself.
+  const spec = childrenOf(node).find(isSpec);
   for (const key of Object.keys(attrs))
-    if (!PROPS.has(key))
-      issues.push(
-        `${name}: ${code(key)} isn't a prop of \`::chart\`. Valid props: type, x, y, title.`,
-      );
+    if (!spec && !PROPS.has(key))
+      issues.push({
+        rule: "comark/charts/unknown-prop",
+        message: `${name}: ${code(key)} isn't a prop of \`::chart\`. Valid props: type, x, y, title, labels.`,
+      });
 
   const content = childrenOf(node).filter(isContent);
   const table = content.find(
     (child): child is ElementNode => isElement(child) && child[0] === "table",
   );
   if (!table) {
-    issues.push(
-      `${name} has no table to draw. Put a Markdown table between \`::chart\` and \`::\`: a header row, then one row per point.`,
-    );
+    issues.push({
+      rule: "comark/charts/missing-table",
+      message: `${name} has no table to draw. Put a Markdown table between \`::chart\` and \`::\`: a header row, then one row per point.`,
+    });
     return;
   }
   const annotations = content.filter(
     (child): child is ElementNode => isElement(child) && child[0] === "annotation",
   );
+  if (spec)
+    return readSpec(name, attrs, table, spec, content.length - 2, annotations.length, issues);
   if (content.length > 1 + annotations.length)
-    issues.push(
-      `${name} drops everything inside it but its table and annotations. Name the chart with \`title\`, and write other text outside the block.`,
-    );
+    issues.push({
+      rule: "comark/charts/content-dropped",
+      message: `${name} drops everything inside it but its table and annotations. Name the chart with \`title\`, and write other text outside the block.`,
+    });
 
   const [head] = elements(table, "thead");
   const [body] = elements(table, "tbody");
@@ -125,27 +181,33 @@ export function readChart(node: ElementNode, number: number, issues: string[]): 
     elements(row, "td").map((cell) => textContent(cell).trim()),
   );
   if (columns.length < 2) {
-    issues.push(
-      `${name}: its table needs at least two columns, the x values first and then the numbers.`,
-    );
+    issues.push({
+      rule: "comark/charts/too-few-columns",
+      message: `${name}: its table needs at least two columns, the x values first and then the numbers.`,
+    });
     return;
   }
   const unnamed = columns.findIndex((column) => !column);
   if (unnamed !== -1) {
-    issues.push(
-      `${name}: column ${unnamed + 1} of its table has no header. Name it, since the name labels the chart.`,
-    );
+    issues.push({
+      rule: "comark/charts/unnamed-column",
+      message: `${name}: column ${unnamed + 1} of its table has no header. Name it, since the name labels the chart.`,
+    });
     return;
   }
   const repeated = columns.find((column, index) => columns.indexOf(column) !== index);
   if (repeated) {
-    issues.push(
-      `${name}: its table has two columns named ${code(repeated)}. Give each column its own name.`,
-    );
+    issues.push({
+      rule: "comark/charts/duplicate-column",
+      message: `${name}: its table has two columns named ${code(repeated)}. Give each column its own name.`,
+    });
     return;
   }
   if (!cells.length) {
-    issues.push(`${name}: its table has a header but no rows. Add one row per point.`);
+    issues.push({
+      rule: "comark/charts/empty-table",
+      message: `${name}: its table has a header but no rows. Add one row per point.`,
+    });
     return;
   }
   const known = list(columns.map(code));
@@ -153,7 +215,10 @@ export function readChart(node: ElementNode, number: number, issues: string[]): 
   const x = text(attrs.x) || columns[0]!;
   const xIndex = columns.indexOf(x);
   if (xIndex === -1) {
-    issues.push(`${name}: \`x\` names column ${code(x)}, but its table has ${known}.`);
+    issues.push({
+      rule: "comark/charts/unknown-column",
+      message: `${name}: \`x\` names column ${code(x)}, but its table has ${known}.`,
+    });
     return;
   }
   const y = text(attrs.y);
@@ -165,30 +230,43 @@ export function readChart(node: ElementNode, number: number, issues: string[]): 
     : columns.filter((column) => column !== x);
   const missing = named.filter((column) => !columns.includes(column));
   if (missing.length) {
-    issues.push(
-      `${name}: \`y\` names ${missing.length > 1 ? "columns" : "column"} ${list(missing.map(code))}, but its table has ${known}. Separate several with commas, as in \`y="before, after"\`.`,
-    );
+    issues.push({
+      rule: "comark/charts/unknown-column",
+      message: `${name}: \`y\` names ${missing.length > 1 ? "columns" : "column"} ${list(missing.map(code))}, but its table has ${known}. Separate several with commas, as in \`y="before, after"\`.`,
+    });
     return;
   }
   if (named.includes(x)) {
-    issues.push(`${name}: column ${code(x)} is both \`x\` and \`y\`. Remove it from \`y\`.`);
+    issues.push({
+      rule: "comark/charts/x-in-y",
+      message: `${name}: column ${code(x)} is both \`x\` and \`y\`. Remove it from \`y\`.`,
+    });
     return;
+  }
+  if (text(attrs.type) === "gantt") {
+    readLabels(name, "gantt", attrs, issues);
+    return readGantt(name, attrs, columns, cells, x, y ? named : undefined, annotations, issues);
   }
 
   const rows = cells.map((row, index) => {
     const xValue = row[xIndex] ?? "";
     if (!xValue)
-      issues.push(`${name}: row ${index + 1} has no ${code(x)}. Fill it in, or remove the row.`);
+      issues.push({
+        rule: "comark/charts/missing-x",
+        message: `${name}: row ${index + 1} has no ${code(x)}. Fill it in, or remove the row.`,
+      });
+    const blank = named.map((column) => !row[columns.indexOf(column)]);
     const values = named.map((column) => {
       const cell = row[columns.indexOf(column)] ?? "";
       const value = readNumber(cell);
       if (cell && value === undefined)
-        issues.push(
-          `${name}: row ${index + 1} has ${code(cell)} in ${code(column)}, which isn't a number. Write the number alone, such as \`1200\` or \`1,200\`, and put the unit in the header, such as \`${column} (ms)\`.`,
-        );
+        issues.push({
+          rule: "comark/charts/non-numeric-value",
+          message: `${name}: row ${index + 1} has ${code(cell)} in ${code(column)}, which isn't a number. Write the number alone, such as \`1200\` or \`1,200\`, and put the unit in the header, such as \`${column} (ms)\`.`,
+        });
       return value;
     });
-    return { x: xValue, values };
+    return { x: xValue, values, blank };
   });
   const points = rows.filter((row) => row.x);
   // A scatter plot may repeat an x; elsewhere a repeat is a copy-paste slip that bars would quietly add up.
@@ -198,9 +276,10 @@ export function readChart(node: ElementNode, number: number, issues: string[]): 
     const first = firstOf.get(row.x);
     if (first === undefined) firstOf.set(row.x, index);
     else if (text(attrs.type) !== "scatter") {
-      issues.push(
-        `${name}: rows ${first + 1} and ${index + 1} both have ${code(row.x)} in ${code(x)}. Give each row its own ${code(x)}, or add the rows up into one.`,
-      );
+      issues.push({
+        rule: "comark/charts/duplicate-x",
+        message: `${name}: rows ${first + 1} and ${index + 1} both have ${code(row.x)} in ${code(x)}. Give each row its own ${code(x)}, or add the rows up into one.`,
+      });
       break;
     }
   }
@@ -210,89 +289,55 @@ export function readChart(node: ElementNode, number: number, issues: string[]): 
   const fallback: ChartType = xKind === "name" ? "bar" : "line";
   let type = TYPES.find((type) => type === typeText) ?? fallback;
   if (typeText && type !== typeText)
-    issues.push(
-      `${name}: \`type="${typeText}"\` isn't a chart type. Use ${list(
+    issues.push({
+      rule: "comark/charts/unknown-type",
+      message: `${name}: \`type="${typeText}"\` isn't a chart type. Use ${list(
         TYPES.map((type) => `\`${type}\``),
         "or",
       )}.`,
-    );
+    });
   if (type === "scatter" && xKind !== "number") {
-    issues.push(
-      `${name}: a scatter plot needs numbers in ${code(x)}, its \`x\`. Use \`type="${fallback}"\`, or make \`x\` a column of numbers.`,
-    );
+    issues.push({
+      rule: "comark/charts/non-numeric-x",
+      message: `${name}: a scatter plot needs numbers in ${code(x)}, its \`x\`. Use \`type="${fallback}"\`, or make \`x\` a column of numbers.`,
+    });
     type = fallback;
   }
   if (type === "dumbbell" && named.length < 2) {
-    issues.push(
-      `${name}: a dumbbell joins two or more columns of numbers per row, such as \`before\` and \`after\`, and this one has ${code(named[0]!)}. Add a column, or use \`type="bar"\`.`,
-    );
+    issues.push({
+      rule: "comark/charts/too-few-series",
+      message: `${name}: a dumbbell joins two or more columns of numbers per row, such as \`before\` and \`after\`, and this one has ${code(named[0]!)}. Add a column, or use \`type="bar"\`.`,
+    });
     type = "bar";
   }
   if ((type === "line" || type === "area") && points.length < 2) {
-    issues.push(
-      `${name}: ${type === "area" ? "an area" : "a line"} needs at least two rows to draw, and this one has one. Add a row, or use \`type="bar"\`.`,
-    );
+    issues.push({
+      rule: "comark/charts/too-few-rows",
+      message: `${name}: ${type === "area" ? "an area" : "a line"} needs at least two rows to draw, and this one has one. Add a row, or use \`type="bar"\`.`,
+    });
     type = "bar";
   }
   let series = named;
   if ((type === "pie" || type === "waterfall") && named.length > 1) {
-    issues.push(
-      `${name}: a ${type} shows one column of numbers, and this one has ${list(named.map(code))}. Name one with \`y\`, or use \`type="bar"\`.`,
-    );
+    issues.push({
+      rule: "comark/charts/too-many-series",
+      message: `${name}: a ${type} shows one column of numbers, and this one has ${list(named.map(code))}. Name one with \`y\`, or use \`type="bar"\`.`,
+    });
     series = named.slice(0, 1);
   }
   if (type === "pie" && points.every((row) => !row.values[0])) {
-    issues.push(
-      `${name}: a pie of ${code(series[0]!)} has nothing to divide, since every number is 0 or empty. Use \`type="bar"\`, or check the numbers.`,
-    );
+    issues.push({
+      rule: "comark/charts/invalid-pie-values",
+      message: `${name}: a pie of ${code(series[0]!)} has nothing to divide, since every number is 0 or empty. Use \`type="bar"\`, or check the numbers.`,
+    });
     type = "bar";
   }
   if (type === "pie" && points.some((row) => (row.values[0] ?? 0) < 0)) {
-    issues.push(
-      `${name}: a pie can't show negative numbers. Use \`type="bar"\` for ${code(series[0]!)}.`,
-    );
-    type = "bar";
-  }
-  const marks: ChartMark[] = [];
-  let stamp = 1;
-  for (const [index, child] of annotations.entries()) {
-    const where = `${name}, annotation ${index + 1}`;
-    const found: string[] = [];
-    const markAttrs = child[1];
-    for (const key of Object.keys(markAttrs))
-      if (!MARK_PROPS.has(key))
-        found.push(
-          `${code(key)} isn't a prop of an annotation in a chart. Point at a row with \`at\`, and a column with \`series\`.`,
-        );
-    const mark = readMark(child, markAttrs, found);
-    const at = text(markAttrs.at);
-    const row = points.findIndex((point) => point.x === at);
-    const sample = points
-      .slice(0, 3)
-      .map((point) => code(point.x))
-      .join(", ");
-    if (!at)
-      found.push(
-        `\`at\` is required: the ${code(x)} of the row it marks, one of ${sample}${points.length > 3 ? "…" : ""}.`,
-      );
-    else if (row === -1)
-      found.push(
-        `\`at="${at}"\` isn't a ${code(x)} in the table. Copy it from the table, such as ${sample}.`,
-      );
-    const seriesName = text(markAttrs.series);
-    if (seriesName && !series.includes(seriesName))
-      found.push(
-        `\`series="${seriesName}"\` isn't a column the chart draws. Use ${list(series.map(code), "or")}, or leave it out to mark the whole row.`,
-      );
-    issues.push(...found.map((problem) => `${where}: ${problem}`));
-    if (row === -1) continue;
-    marks.push({
-      ...mark,
-      n: index + 1,
-      number: mark.side ? undefined : stamp++,
-      row,
-      series: series.includes(seriesName) ? seriesName : undefined,
+    issues.push({
+      rule: "comark/charts/invalid-pie-values",
+      message: `${name}: a pie can't show negative numbers. Use \`type="bar"\` for ${code(series[0]!)}.`,
     });
+    type = "bar";
   }
   return {
     type,
@@ -301,6 +346,446 @@ export function readChart(node: ElementNode, number: number, issues: string[]): 
     xKind,
     series,
     rows: points.map((row) => ({ x: row.x, values: row.values.slice(0, series.length) })),
+    marks: readMarks(name, type, x, annotations, points, series, issues),
+    ...(readLabels(name, type, attrs, issues) && { labels: true }),
+  };
+}
+
+/** Reads `labels`, which writes each value on its bar: true when it's on and the chart has bars to write on. */
+function readLabels(name: string, type: ChartType, attrs: ElementNode[1], issues: Issue[]) {
+  const raw = attrs.labels ?? attrs[":labels"];
+  if (raw === undefined) return false;
+  const value = text(raw);
+  if (value === "false") return false;
+  if (value !== "" && value !== "true")
+    issues.push({
+      rule: "comark/charts/invalid-labels",
+      message: `${name}: \`labels\` takes no value. Write \`labels\` alone, as in \`::chart{type="stacked" labels}\`.`,
+    });
+  else if (type === "dumbbell" || type === "waterfall" || type === "gantt")
+    issues.push({
+      rule: "comark/charts/invalid-labels",
+      message: `${name}: ${A[type]} prints its numbers itself, so \`labels\` changes nothing. Remove it.`,
+    });
+  else if (type !== "bar" && type !== "stacked")
+    issues.push({
+      rule: "comark/charts/invalid-labels",
+      message: `${name}: \`labels\` writes each value on its bar, and ${A[type]} has no bars. Remove it, or use \`type="bar"\`.`,
+    });
+  else return true;
+  return false;
+}
+
+/**
+ * Reads the annotations after a chart's table into marks on the rows they name. A gantt passes its `groups`, since
+ * it may repeat a task across them, and an annotation's `series` names the group rather than a column.
+ */
+function readMarks(
+  name: string,
+  type: ChartType,
+  x: string,
+  annotations: ElementNode[],
+  points: { x: string; blank: boolean[]; group?: string }[],
+  series: string[],
+  issues: Issue[],
+  groups?: { column?: string; names: string[] },
+): ChartMark[] {
+  const marks: ChartMark[] = [];
+  let stamp = 1;
+  for (const [index, child] of annotations.entries()) {
+    const where = `${name}, annotation ${index + 1}`;
+    const found: Issue[] = [];
+    const markAttrs = child[1];
+    for (const key of Object.keys(markAttrs))
+      if (!MARK_PROPS.has(key))
+        found.push({
+          rule: "comark/charts/unknown-prop",
+          message: `${code(key)} isn't a prop of an annotation in a chart. Point at a row with \`at\`, and ${groups ? "its group" : "a column"} with \`series\`${groups ? "" : ', or cross the plot with `mark="line"` at a number with `value`'}.`,
+        });
+    const markProblems: Parameters<typeof readMark>[2] = [];
+    const mark = readMark(child, markAttrs, markProblems);
+    found.push(...markProblems);
+    const at = text(markAttrs.at);
+    const seriesName = text(markAttrs.series);
+    const valueText = text(markAttrs.value);
+    if (mark.mark === "line") {
+      const value = readNumber(valueText);
+      const axis = type !== "pie" && type !== "gantt";
+      if (!axis)
+        found.push({
+          rule: "comark/charts/invalid-line",
+          message: `\`mark="line"\` crosses the plot at a number on its value axis, and ${A[type]} has none. Mark a ${type === "pie" ? "slice" : "bar"} with \`at\` and another mark, such as \`box\`.`,
+        });
+      else if (!valueText)
+        found.push({
+          rule: "comark/charts/invalid-line",
+          message: `\`mark="line"\` needs \`value\`, the number on the value axis it crosses at, such as \`value="200"\`.`,
+        });
+      else if (value === undefined)
+        found.push({
+          rule: "comark/charts/invalid-line",
+          message: `\`value="${valueText}"\` isn't a number. Write the number alone, such as \`200\` or \`1,200\`, in the unit of the chart's numbers.`,
+        });
+      const extra = [at && "`at`", seriesName && "`series`"].filter(Boolean).join(" and ");
+      if (axis && extra)
+        found.push({
+          rule: "comark/charts/invalid-line",
+          message: `a line crosses the whole plot at its \`value\`, so ${extra} ${at && seriesName ? "don't" : "doesn't"} apply. Remove ${at && seriesName ? "them" : "it"}.`,
+        });
+      issues.push(
+        ...found.map((problem) => ({ ...problem, message: `${where}: ${problem.message}` })),
+      );
+      if (axis && value !== undefined)
+        marks.push({ ...mark, n: index + 1, number: mark.side ? undefined : stamp++, value });
+      continue;
+    }
+    if (valueText)
+      found.push({
+        rule: "comark/charts/invalid-line",
+        message: `\`value\` places a line across the plot. Add \`mark="line"\`, or remove \`value\` and mark a row with \`at\`.`,
+      });
+    const group = groups?.names.includes(seriesName) ? seriesName : undefined;
+    const among = points.flatMap((point, row) =>
+      group === undefined || point.group === group ? [{ ...point, row }] : [],
+    );
+    const matches = among.filter((point) => point.x === at);
+    const row = matches[0]?.row ?? -1;
+    const sample = among
+      .slice(0, 3)
+      .map((point) => code(point.x))
+      .join(", ");
+    if (!at)
+      found.push({
+        rule: "comark/charts/invalid-at",
+        message: `\`at\` is required: the ${code(x)} of the row it marks, one of ${sample}${among.length > 3 ? "…" : ""}.`,
+      });
+    else if (row === -1)
+      found.push({
+        rule: "comark/charts/invalid-at",
+        message: `\`at="${at}"\` isn't a ${code(x)} ${group === undefined ? "in the table" : `of the ${code(group)} rows`}. Copy it from the table, such as ${sample}.`,
+      });
+    else if (groups?.column && !seriesName && matches.length > 1)
+      found.push({
+        rule: "comark/charts/invalid-at",
+        message: `\`at="${at}"\` names a row in ${list(matches.map((point) => code(point.group ?? "")))}. Add \`series\` with the ${code(groups.column)} of the one it marks.`,
+      });
+    if (seriesName && groups && group === undefined)
+      found.push({
+        rule: "comark/charts/unknown-series",
+        message: groups.column
+          ? `\`series="${seriesName}"\` isn't a ${code(groups.column)} in the table. Use ${list(groups.names.map(code), "or")}, or leave it out.`
+          : `\`series\` names the group of the row a gantt annotation marks, and this table has no column of groups. Leave \`series\` out.`,
+      });
+    else if (seriesName && !groups && !series.includes(seriesName))
+      found.push({
+        rule: "comark/charts/unknown-series",
+        message: `\`series="${seriesName}"\` isn't a column the chart draws. Use ${list(series.map(code), "or")}, or leave it out to mark the whole row.`,
+      });
+    const blank = points[row]?.blank;
+    const column = groups ? -1 : series.indexOf(seriesName);
+    if (blank && groups && blank.some(Boolean))
+      found.push({
+        rule: "comark/charts/marks-empty-cell",
+        message: `\`at="${at}"\` marks a row with no start or no end, so the mark isn't drawn. Fill in both, or mark another row.`,
+      });
+    else if (blank && column !== -1 && blank[column])
+      found.push({
+        rule: "comark/charts/marks-empty-cell",
+        message: `\`at="${at}"\` marks an empty ${code(seriesName)} cell, so the mark isn't drawn. Fill in the cell, or mark another row.`,
+      });
+    else if (blank && !groups && !seriesName && series.every((_, index) => blank[index]))
+      found.push({
+        rule: "comark/charts/marks-empty-cell",
+        message: `\`at="${at}"\` marks a row with no numbers, so the mark isn't drawn. Fill in the row, or mark another one.`,
+      });
+    issues.push(
+      ...found.map((problem) => ({ ...problem, message: `${where}: ${problem.message}` })),
+    );
+    if (row === -1) continue;
+    marks.push({
+      ...mark,
+      n: index + 1,
+      number: mark.side ? undefined : stamp++,
+      row,
+      series: !groups && series.includes(seriesName) ? seriesName : undefined,
+    });
+  }
+  return marks;
+}
+
+const dated = (cell: string) => KINDS.some(([, pattern]) => pattern.test(cell));
+
+/** Milliseconds since 1970 for a date as a table writes it, in UTC, so a chart reads the same wherever it's drawn. */
+function readDate(cell: string) {
+  if (!dated(cell)) return;
+  // Date.parse moves a day the month doesn't have, such as `2026-02-31`, into the next month.
+  const [year, month, day] = cell.slice(0, 10).split("-").map(Number);
+  if (day !== undefined && new Date(Date.UTC(year!, month! - 1, day)).getUTCDate() !== day) return;
+  // A time with no zone would read in the zone of the machine drawing the chart.
+  const iso = cell.replace(" ", "T");
+  const time = Date.parse(
+    /T.*(?:Z|[+-]\d{2}:?\d{2})$/.test(iso) || !iso.includes("T") ? iso : `${iso}Z`,
+  );
+  return Number.isNaN(time) ? undefined : time;
+}
+
+/**
+ * Reads a gantt's table: a bar per row from its start to its end, two columns of numbers or of dates, and a column of
+ * names, when there is one, that groups the bars by color.
+ */
+function readGantt(
+  name: string,
+  attrs: ElementNode[1],
+  columns: string[],
+  cells: string[][],
+  x: string,
+  named: string[] | undefined,
+  annotations: ElementNode[],
+  issues: Issue[],
+): Chart | undefined {
+  const cellsOf = (column: string) => cells.flatMap((row) => row[columns.indexOf(column)] || []);
+  // A column is of times when most of its cells are, so a typo in one is reported rather than taking the column.
+  const times = (column: string) => {
+    const filled = cellsOf(column);
+    return (
+      filled.filter((cell) => readNumber(cell) !== undefined || dated(cell)).length * 2 >=
+      filled.length
+    );
+  };
+  const others = columns.filter((column) => column !== x && !named?.includes(column));
+  const span = named ?? others.filter(times);
+  if (span.length !== 2) {
+    issues.push({
+      rule: "comark/charts/start-and-end",
+      message: named
+        ? `${name}: \`y\` names a gantt's start and end columns, and it names ${span.length === 1 ? "one" : span.length}, ${list(span.map(code))}. Name two, as in \`y="start, end"\`.`
+        : `${name}: a gantt draws each row from its start to its end, two columns of numbers or dates, and its table has ${span.length ? `${span.length === 1 ? "one" : span.length}, ${list(span.map(code))}` : "none"}. ${span.length > 2 ? 'Name the two with `y`, as in `y="start, end"`. To color the bars by one of the others, such as a shard, write it as names, like `shard 1`.' : "Add a column for where each row starts and one for where it ends."}`,
+    });
+    return;
+  }
+  // SAFETY: span holds exactly two columns, since every other length returned above.
+  const [startColumn, endColumn] = span as [string, string];
+  // Numbers and dates left out of `y`, such as a duration, are left out of the chart too.
+  const names = others.filter((column) => !span.includes(column) && !times(column));
+  if (names.length > 1)
+    issues.push({
+      rule: "comark/charts/too-many-groups",
+      message: `${name}: a gantt colors its bars by one column of names, and its table has ${list(names.map(code))}. Keep ${code(names[0]!)}, and move the others out of the table.`,
+    });
+  const group = names[0];
+
+  // Dates and numbers don't share an axis, so the starts and ends take the kind most of them are.
+  const filled = [...cellsOf(startColumn), ...cellsOf(endColumn)];
+  const kind = kindOf(filled);
+  const scale =
+    kind !== "name"
+      ? kind
+      : filled.filter((cell) => readNumber(cell) !== undefined).length > filled.filter(dated).length
+        ? "number"
+        : "time";
+  const read = (cell: string) => (scale === "number" ? readNumber(cell) : readDate(cell));
+  const example =
+    "Write every start and end as a number, such as `1.5` or `1,200`, or every one as a date, such as `2026-04-15` or `2026-04-15T09:30`.";
+
+  const rows = cells.map((row, index) => {
+    const xValue = row[columns.indexOf(x)] ?? "";
+    if (!xValue)
+      issues.push({
+        rule: "comark/charts/missing-x",
+        message: `${name}: row ${index + 1} has no ${code(x)}. Fill it in, or remove the row.`,
+      });
+    const blank = span.map((column) => !row[columns.indexOf(column)]);
+    const values = span.map((column) => {
+      const cell = row[columns.indexOf(column)] ?? "";
+      const value = cell ? read(cell) : undefined;
+      if (cell && value === undefined)
+        issues.push({
+          rule: "comark/charts/non-numeric-value",
+          message: `${name}: row ${index + 1} has ${code(cell)} in ${code(column)}, which isn't ${scale === "number" ? "a number" : "a date"} like the other starts and ends. ${example}`,
+        });
+      return value;
+    });
+    const missing = span.filter((_, column) => blank[column]);
+    if (xValue && missing.length)
+      issues.push({
+        rule: "comark/charts/start-and-end",
+        message: `${name}: row ${index + 1} has no ${list(missing.map(code), "or")}, so its bar isn't drawn. Fill ${missing.length > 1 ? "them" : "it"} in; for a milestone, give it the same ${code(endColumn)} as its ${code(startColumn)}.`,
+      });
+    const [start, end] = values;
+    const reversed = start !== undefined && end !== undefined && end < start;
+    if (reversed)
+      issues.push({
+        rule: "comark/charts/end-before-start",
+        message: `${name}: row ${index + 1} ends at ${code(row[columns.indexOf(endColumn)]!)}, before it starts at ${code(row[columns.indexOf(startColumn)]!)}. Swap them, or fix the ${code(endColumn)}.`,
+      });
+    return {
+      x: xValue,
+      // A bar that ends before it starts isn't drawn, as one with no end isn't.
+      values: reversed ? [undefined, undefined] : values,
+      blank,
+      ...(group !== undefined && { group: row[columns.indexOf(group)] ?? "" }),
+    };
+  });
+  const points = rows.filter((row) => row.x);
+  // A task may repeat in another group, such as the same step in two runs, but not within its own.
+  const firstOf = new Map<string, number>();
+  for (const [index, row] of rows.entries()) {
+    if (!row.x) continue;
+    const key = JSON.stringify([row.x, row.group]);
+    const first = firstOf.get(key);
+    if (first === undefined) firstOf.set(key, index);
+    else {
+      issues.push({
+        rule: "comark/charts/duplicate-x",
+        message: `${name}: rows ${first + 1} and ${index + 1} both have ${code(row.x)} in ${code(x)}${group === undefined ? "" : ` and ${code(row.group ?? "")} in ${code(group)}`}. Give each row its own ${code(x)}${group === undefined ? "" : ` within a ${code(group)}`}.`,
+      });
+      break;
+    }
+  }
+  const groups = [...new Set(points.map((row) => row.group ?? ""))];
+  const marks = readMarks(name, "gantt", x, annotations, points, span, issues, {
+    column: group,
+    names: group === undefined ? [] : groups,
+  });
+  // With no bar to draw, the table shows as it is, as for any chart that can't be drawn.
+  if (!points.some(({ values: [start, end] }) => start !== undefined && end !== undefined)) return;
+  return {
+    type: "gantt",
+    title: text(attrs.title),
+    x,
+    xKind: "name",
+    series: span,
+    rows: points.map(({ x, values, group }) => ({
+      x,
+      values,
+      ...(group !== undefined && { group }),
+    })),
     marks,
+    scale,
+    ...(group !== undefined && { group }),
+  };
+}
+
+/** Every value of `key` in an object, however deep: the fields a spec reads, or the ones its transforms make. */
+function collect(value: unknown, key: string, found: string[] = []): string[] {
+  if (Array.isArray(value)) for (const item of value) collect(item, key, found);
+  else if (value instanceof Object)
+    for (const [name, item] of Object.entries(value)) {
+      if (name === key)
+        for (const part of [item].flat()) {
+          const field = text(part);
+          if (field) found.push(field);
+        }
+      collect(item, key, found);
+    }
+  return found;
+}
+
+function readSpec(
+  name: string,
+  attrs: ElementNode[1],
+  table: ElementNode,
+  pre: ElementNode,
+  others: number,
+  annotations: number,
+  issues: Issue[],
+): SpecChart | undefined {
+  for (const key of Object.keys(attrs))
+    if (key !== "title" && key !== "class" && key !== "id")
+      issues.push({
+        rule: "comark/charts/spec-with-props",
+        message: `${name}: ${code(key)} doesn't apply to a chart drawn from a Vega-Lite spec. Name the columns in the spec's \`encoding\` instead.`,
+      });
+  if (annotations)
+    issues.push({
+      rule: "comark/charts/spec-with-annotations",
+      message: `${name}: annotations mark charts comark-charts lays out, not one drawn from a Vega-Lite spec. Remove them, or draw the note with a \`text\` or \`rule\` layer in the spec.`,
+    });
+  if (others > annotations)
+    issues.push({
+      rule: "comark/charts/content-dropped",
+      message: `${name} drops everything inside it but its table and its Vega-Lite spec. Name the chart with \`title\`, and write other text outside the block.`,
+    });
+  let spec: unknown;
+  try {
+    spec = JSON.parse(textContent(pre));
+  } catch (error) {
+    issues.push({
+      rule: "comark/charts/invalid-spec-json",
+      message: `${name}: its Vega-Lite spec isn't valid JSON (${error instanceof Error ? error.message : String(error)}). Fix it, or remove the \`vega-lite\` block to let comark-charts choose the chart.`,
+    });
+    return;
+  }
+  if (!(spec instanceof Object) || Array.isArray(spec)) {
+    issues.push({
+      rule: "comark/charts/invalid-spec-json",
+      message: `${name}: its Vega-Lite spec must be one JSON object, such as \`{"mark": "bar", "encoding": {...}}\`.`,
+    });
+    return;
+  }
+  const head = elements(table, "thead")[0];
+  const body = elements(table, "tbody")[0];
+  const columns = (head ? elements(head, "tr").flatMap((row) => elements(row, "th")) : []).map(
+    (cell) => textContent(cell).trim(),
+  );
+  const rows = (body ? elements(body, "tr") : []).map((row) =>
+    elements(row, "td").map((cell) => textContent(cell).trim()),
+  );
+  const unnamed = columns.findIndex((column) => !column);
+  const repeated = columns.find((column, index) => columns.indexOf(column) !== index);
+  if (unnamed !== -1 || repeated || !rows.length) {
+    issues.push(
+      unnamed !== -1
+        ? {
+            rule: "comark/charts/unnamed-column",
+            message: `${name}: column ${unnamed + 1} of its table has no header. Name it, since the spec reads columns by name.`,
+          }
+        : repeated
+          ? {
+              rule: "comark/charts/duplicate-column",
+              message: `${name}: its table has two columns named ${code(repeated)}. Give each column its own name.`,
+            }
+          : {
+              rule: "comark/charts/empty-table",
+              message: `${name}: its table has no rows. Add one row per data point; the spec draws the table.`,
+            },
+    );
+    return;
+  }
+  if ("data" in spec)
+    issues.push({
+      rule: "comark/charts/spec-with-data",
+      message: `${name}: its Vega-Lite spec has \`data\`, but a chart's data is its table, so the table replaces it. Remove \`data\` from the spec.`,
+    });
+  // Fields made by transforms, such as a fold's `key` and `value`, are as real as the table's.
+  const made = new Set([
+    ...collect(spec, "as"),
+    ...(collect(spec, "fold").length ? ["key", "value"] : []),
+  ]);
+  // A dot or a bracket reaches into nested data, which a table has none of, so only plain names are checked.
+  const unknown = [...new Set(collect(spec, "field"))].filter(
+    (field) => !columns.includes(field) && !made.has(field) && !/[.[\\]/.test(field),
+  );
+  if (unknown.length)
+    issues.push({
+      rule: "comark/charts/unknown-spec-field",
+      message: `${name}: its Vega-Lite spec reads ${unknown.length > 1 ? "fields" : "field"} ${list(unknown.map(code))}, but its table has ${list(columns.map(code))}. Use the table's headers as field names.`,
+    });
+  // SAFETY: JSON.parse returned an object that isn't an array, so its keys are strings.
+  const rest = { ...(spec as Record<string, unknown>) };
+  delete rest.data;
+  return {
+    type: "vega-lite",
+    title: text(attrs.title),
+    columns,
+    values: rows.map((row) =>
+      Object.fromEntries(
+        columns.map((column, index) => {
+          const cell = row[index] ?? "";
+          return [column, cell ? (readNumber(cell) ?? cell) : null];
+        }),
+      ),
+    ),
+    spec: rest,
   };
 }

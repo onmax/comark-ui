@@ -1,15 +1,12 @@
-import { createHash } from "node:crypto";
-import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { cp, mkdir, rm } from "node:fs/promises";
 import { existsSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { parseMarkdown } from "comark";
 import { defineNuxtConfig } from "nuxt/config";
 
 const root = new URL("./", import.meta.url);
 const generated = new URL(".generated/public/", root);
-const str = (value: unknown) => (typeof value === "string" ? value : "");
 
-// Fonts and the agent skill keep the paths the old static build gave them, which `npx skills add` and old links read.
+// Fonts keep the paths the old static build gave them, which old links read.
 async function writeAssets() {
   await rm(generated, { recursive: true, force: true });
   await mkdir(new URL("fonts/", generated), { recursive: true });
@@ -23,37 +20,6 @@ async function writeAssets() {
     ),
     new URL("fonts/Caveat-Variable.woff2", generated),
   );
-  const skills = await Promise.all(
-    ["annotate/skills/comark-annotate", "charts/skills/comark-charts"].map(async (folder) => {
-      const text = await readFile(new URL(`../packages/${folder}/SKILL.md`, root), "utf8");
-      const meta = (await parseMarkdown(text)).frontmatter;
-      return { text, name: str(meta.name), description: str(meta.description) };
-    }),
-  );
-  for (const skill of skills)
-    for (const base of ["agent-skills", "skills"]) {
-      await mkdir(new URL(`.well-known/${base}/${skill.name}/`, generated), { recursive: true });
-      await writeFile(new URL(`.well-known/${base}/${skill.name}/SKILL.md`, generated), skill.text);
-    }
-  await writeFile(
-    new URL(".well-known/agent-skills/index.json", generated),
-    JSON.stringify({
-      $schema: "https://schemas.agentskills.io/discovery/0.2.0/schema.json",
-      skills: skills.map(({ text, name, description }) => ({
-        name,
-        type: "skill-md",
-        description,
-        url: `/.well-known/agent-skills/${name}/SKILL.md`,
-        digest: `sha256:${createHash("sha256").update(text).digest("hex")}`,
-      })),
-    }),
-  );
-  await writeFile(
-    new URL(".well-known/skills/index.json", generated),
-    JSON.stringify({
-      skills: skills.map(({ name, description }) => ({ name, description, files: ["SKILL.md"] })),
-    }),
-  );
 
   // The playground is a standalone browser app. Keep its generated HTML and
   // script under Nitro's public root so `/play/` remains available alongside
@@ -61,6 +27,11 @@ async function writeAssets() {
   const playground = new URL("dist/play/", root);
   if (existsSync(playground))
     await cp(playground, new URL("play/", generated), { recursive: true });
+  // The playground's preview is its own document and links the site's styles, so they keep their own URL too.
+  for (const file of ["search.json", "style.css"]) {
+    const built = new URL(`dist/${file}`, root);
+    if (existsSync(built)) await cp(built, new URL(file, generated));
+  }
 }
 
 // Every page, so one that nothing links to still prerenders: docs/pages, and each package's docs/ under its name.
@@ -86,11 +57,12 @@ export default defineNuxtConfig({
     componentIslands: true,
     // Nuxt 5's default: the first load reads the payload inlined in the HTML, and client navigations fetch `_payload.json`.
     payloadExtraction: "client",
+    // Lets the header's npmx chip move from one package's name to the next; docs/style.css animates only that.
+    viewTransition: true,
   },
   css: ["~~/style.css"],
   runtimeConfig: {
-    pagesDir: fileURLToPath(new URL("pages/", root)),
-    packagesDir: fileURLToPath(new URL("../packages/", root)),
+    generatedPagesDir: fileURLToPath(new URL(".generated/pages/", root)),
   },
   app: {
     head: {
@@ -108,12 +80,23 @@ export default defineNuxtConfig({
     },
   },
   modules: [
+    "nuxt-agent-discovery",
     async (_, nuxt) => {
       await writeAssets();
       nuxt.options.nitro.publicAssets ??= [];
       nuxt.options.nitro.publicAssets.push({ dir: fileURLToPath(generated), maxAge: 0 });
     },
   ],
+  // Only the agent skill at the repository's root, under /.well-known/skills/; the pages are built by docs/build.ts.
+  agentDiscovery: {
+    siteUrl: "https://comark-ui.onmax.me",
+    source: false,
+    discovery: { link: false, apiCatalog: false, sitemapXml: false },
+    errors: false,
+    sitemap: { markdown: false },
+    robots: { aiPolicy: false },
+    skills: { dir: "../skills" },
+  },
   nitro: {
     output: { dir: fileURLToPath(new URL("dist/", root)) },
     // The playground is a static app copied into the output, not a Nuxt page.

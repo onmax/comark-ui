@@ -6,7 +6,11 @@ import { textContent } from "comark/utils";
 export type CarouselMeta = {
   /** One readable sentence per problem with a `::carousel` or `:::slide`. Empty when the document has none. */
   issues: string[];
+  /** The comark-linter rule of each issue, by its sentence, so the linter reports it under its own code. */
+  issueRules: Record<string, string>;
 };
+
+type Issue = { rule: `comark/carousel/${string}`; message: string };
 
 type Data = Parameters<typeof resolveAttributes>[1];
 
@@ -71,10 +75,17 @@ function standalone(nodes: Node[]): Node[] {
 }
 
 const COLUMNS = new Set<unknown>([1, 2, 3, "1", "2", "3"]);
+const CAROUSEL_PROPS = ["title", "columns", "zoom", "id", "class"];
+const SLIDE_PROPS = ["title", "id", "class"];
+
+const unknownProps = (attrs: ElementNode[1], props: string[]) =>
+  Object.keys(attrs)
+    .map((key) => key.replace(/^:/, ""))
+    .filter((prop) => !props.includes(prop));
 
 interface Walk {
   data: Data;
-  issues: string[];
+  issues: Issue[];
   carousels: number;
   strays: number;
 }
@@ -83,31 +94,48 @@ function carousel(node: ElementNode, walk: Walk) {
   const attrs = resolveAttributes(node[1], walk.data, { parseJson: true });
   const title = text(attrs.title);
   const name = `carousel ${++walk.carousels}${title ? ` ("${title}")` : ""}`;
+  for (const prop of unknownProps(node[1], CAROUSEL_PROPS))
+    walk.issues.push({
+      rule: "comark/carousel/unknown-prop",
+      message: `${name}: \`${prop}\` isn't a prop of ::carousel, so it's ignored. Use \`title\`, \`columns\`, or \`zoom\`.`,
+    });
   const content = childrenOf(node).filter(isContent);
   const explicit = content.some(isSlide);
   if (explicit)
     for (const child of content.filter((child) => !isSlide(child)))
-      walk.issues.push(
-        `${name} drops ${describe(child)} because it sits outside every :::slide; move it into a :::slide.`,
-      );
+      walk.issues.push({
+        rule: "comark/carousel/content-outside-slide",
+        message: `${name} drops ${describe(child)} because it sits outside every :::slide; move it into a :::slide.`,
+      });
   const slides: ElementNode[] = explicit
     ? content.filter(isSlide)
     : content.map((child) => ["slide", {}, child]);
   if (!slides.length)
-    walk.issues.push(
-      `${name} has no slides; put blocks or :::slide blocks inside it, or remove it.`,
-    );
+    walk.issues.push({
+      rule: "comark/carousel/empty-carousel",
+      message: `${name} has no slides; put blocks or :::slide blocks inside it, or remove it.`,
+    });
+  for (const [index, slide] of slides.entries())
+    for (const prop of unknownProps(slide[1], SLIDE_PROPS))
+      walk.issues.push({
+        rule: "comark/carousel/unknown-prop",
+        message: `${name}, slide ${index + 1}: \`${prop}\` isn't a prop of :::slide, so it's ignored. Use \`title\`.`,
+      });
   if (attrs.columns !== undefined && !COLUMNS.has(attrs.columns))
-    walk.issues.push(`${name} has columns=${text(attrs.columns)}; use 1, 2, or 3.`);
+    walk.issues.push({
+      rule: "comark/carousel/invalid-columns",
+      message: `${name} has columns=${text(attrs.columns)}; use 1, 2, or 3.`,
+    });
   // The renderers resolve these on the carousel, but the parse plugin passes them on to each slide.
   for (const key of ["zoom", "title"]) {
     const path = text(node[1][`:${key}`]).trim();
     if (attrs[key] !== undefined || !path) continue;
-    walk.issues.push(
-      /^(?:data|props)\b/.test(path)
+    walk.issues.push({
+      rule: "comark/carousel/unresolved-binding",
+      message: /^(?:data|props)\b/.test(path)
         ? `${name}: \`:${key}\` reads render-time data, which the slides can't follow; set it in the document or frontmatter.`
         : `${name}: \`:${key}\` points at ${path}, which is undefined. Fix the path or set \`${key}\` directly.`,
-    );
+    });
   }
   const zoom = attrs.zoom !== false && attrs.zoom !== "false";
   for (const [index, slide] of slides.entries()) {
@@ -129,9 +157,10 @@ function normalize(nodes: Node[], walk: Walk, inCarousel = false) {
     if (!isElement(node)) continue;
     if (node[0] === "slide" && !inCarousel) {
       const title = text(resolveAttributes(node[1], walk.data, { parseJson: true }).title);
-      walk.issues.push(
-        `:::slide ${++walk.strays}${title ? ` ("${title}")` : ""} sits outside a ::carousel, so it renders as plain content; wrap it in a ::carousel or remove the :::slide fence.`,
-      );
+      walk.issues.push({
+        rule: "comark/carousel/slide-outside-carousel",
+        message: `:::slide ${++walk.strays}${title ? ` ("${title}")` : ""} sits outside a ::carousel, so it renders as plain content; wrap it in a ::carousel or remove the :::slide fence.`,
+      });
       // A plain div, so no renderer gives it a position or a zoom that belongs to a carousel.
       node[0] = "div";
       node[1] = {};
@@ -157,6 +186,10 @@ export default defineComarkPlugin<void, CarouselMeta>(() => ({
       strays: 0,
     };
     normalize(tree.nodes, walk);
-    tree.meta.issues = [...(tree.meta.issues ?? []), ...walk.issues];
+    tree.meta.issues = [...(tree.meta.issues ?? []), ...walk.issues.map((issue) => issue.message)];
+    tree.meta.issueRules = {
+      ...tree.meta.issueRules,
+      ...Object.fromEntries(walk.issues.map((issue) => [issue.message, issue.rule])),
+    };
   },
 }));

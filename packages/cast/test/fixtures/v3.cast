@@ -1,0 +1,8 @@
+{"version": 3, "term": {"cols": 20, "rows": 3, "type": "xterm-256color"}, "timestamp": 1760000000}
+# a comment
+[0.1, "o", "one\r\n"]
+[0.1, "o", "two\r\n"]
+[0.1, "o", "three\r\n"]
+[0.1, "o", "four"]
+[0.2, "m", ""]
+[0.1, "x", "0"]

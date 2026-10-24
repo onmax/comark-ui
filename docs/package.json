@@ -1,5 +1,5 @@
 {
-  "name": "comark-plugins-docs",
+  "name": "comark-ui-docs",
   "private": true,
   "type": "module",
   "scripts": {
@@ -12,13 +12,11 @@
     "@comark/html": "catalog:",
     "@fontsource-variable/caveat": "catalog:",
     "@iconify-json/lucide": "catalog:",
-    "@vite-hub/content": "https://pkg.pr.new/vite-hub/vitehub/@vite-hub/content@9c545f7",
     "comark": "catalog:",
     "comark-annotate": "workspace:*",
     "comark-carousel": "workspace:*",
     "comark-charts": "workspace:*",
     "comark-code": "workspace:*",
-    "comark-content": "0.4.1",
     "comark-diff": "workspace:*",
     "comark-embed": "workspace:*",
     "comark-github": "workspace:*",
@@ -28,10 +26,12 @@
     "comark-zoom": "workspace:*",
     "geist": "catalog:",
     "nuxt": "^4.6.2",
+    "nuxt-agent-discovery": "catalog:",
     "shiki": "catalog:",
     "vue": "catalog:"
   },
   "devDependencies": {
+    "@vite-hub/source": "catalog:",
     "typescript": "catalog:",
     "vue-tsc": "^3.2.0"
   }

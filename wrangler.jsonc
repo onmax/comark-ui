@@ -3,9 +3,10 @@
   "name": "comark-annotate",
   "main": "docs/worker.ts",
   "compatibility_date": "2026-10-01",
-  // The Worker runs first so the old host can redirect before an asset answers.
+  // The Worker runs first so the old hosts can redirect before an asset answers.
   "assets": { "directory": "./docs/dist/public", "binding": "ASSETS", "run_worker_first": true },
   "routes": [
+    { "pattern": "comark-ui.onmax.me", "custom_domain": true },
     { "pattern": "comark.onmax.me", "custom_domain": true },
     { "pattern": "comark-annotate.onmax.me", "custom_domain": true },
   ],

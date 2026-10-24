@@ -144,6 +144,27 @@ describe("comark-icon", () => {
     ]);
   });
 
+  it("names each issue's rule in meta.issueRules", async () => {
+    vi.stubGlobal("fetch", async (url: string) =>
+      url.includes("/down.") ? new Response("", { status: 503 }) : new Response("404"),
+    );
+    const { meta } = await parseMarkdown(
+      ':icon{name="lucide:aple"} :icon{name="apple"} :icon{name="gone:x"} :icon{name="down:x"} :icon :icon{name="lucide:apple" alt="Apple"}',
+      { plugins: [icon({ collections })] },
+    );
+    expect(meta.issues.map((issue: string) => meta.issueRules[issue])).toEqual([
+      "comark/icon/unknown-icon",
+      "comark/icon/invalid-name",
+      "comark/icon/unknown-set",
+      "comark/icon/download-failed",
+      "comark/icon/missing-name",
+      "comark/icon/unknown-prop",
+    ]);
+    expect(meta.issues.at(-1)).toBe(
+      "`:icon` 6: `alt` isn't a prop of `:icon`, so it's ignored. Use `name` or `label`.",
+    );
+  });
+
   it("adds its issues to the ones other plugins found", async () => {
     const before = defineComarkPlugin(() => ({
       name: "before",

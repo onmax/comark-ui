@@ -1,14 +1,15 @@
 ---
 title: Chart plugins compared
 description: comark-charts next to comark-vega and comark-flint-chart, the other chart plugins for Comark.
+keywords: Vega, Vega-Lite, Flint, alternatives, comparison, vs
 tagline: Three Comark plugins draw charts with Vega. In comark-charts you write a Markdown table, so one block serves the people who look at the chart and the agents who read its numbers.
 ---
 
 ## One block, two readers
 
-A review document has two readers. People look at the chart. Agents read the numbers: in the Markdown when they write it, and in the page when they check it. A drawing is a poor place to read them: bars are paths, labels show only the values that fit, and whatever numbers it holds are spread across its attributes.
+A review document has two readers. People look at the chart. Agents read the numbers, in the Markdown when they write it and in the page when they check it. A drawing is a poor place to read numbers from. Its bars are paths, its labels show only the values that fit, and the rest are spread across its attributes.
 
-So a `::chart` holds a Markdown table. The renderer draws the chart from it and keeps the table in the page, in the **Data** toggle under the chart. An agent writes a table it already knows how to write, a person sees the chart, and either can check a number against the other.
+So a `::chart` holds a Markdown table. The renderer draws the chart from it and keeps the table in the page, in the **Data** toggle under the chart. An agent writes a table it already knows how to write. A person sees the chart. Either one can check a number against the other.
 
 ::example
 ```md
@@ -78,11 +79,11 @@ The other two plugins draw the same chart from a JSON spec, and the page holds o
 | Frontmatter data *A spec bound with `:spec`* | — | ✓ | ✓ |
 | **Drawing** | | | |
 | Layout *Who picks the axes, scales, and labels* | Flint | You | Flint |
-| Chart types | Eight common ones | Any Vega chart | Flint's templates |
+| Chart types | Eight common ones, or any Vega-Lite chart over the table | Any Vega chart | Flint's templates |
 | Engine | Vega | Vega | Vega or ECharts |
 | **Output** | | | |
 | Format | SVG | SVG, image, or Vue component | SVG, image, or Vue component |
-| Renderers *SVG renders in any of them* | `@comark/html` | Any, or `@comark/vue` | Any, or `@comark/vue` |
+| Renderers *SVG renders in any of them* | HTML, Vue, React, and Svelte; marks in HTML | Any, or `@comark/vue` | Any, or `@comark/vue` |
 | **Checks** | | | |
 | Errors *What a broken block does* | ✓ An issue that says how to fix it | A `<pre>` for parse-time invalid JSON/assembly | `.flint-error` for Vue render failures; `<pre>` for parse-time invalid JSON/assembly |
 | Cloudflare Workers *Vega needs `vega-interpreter` there* | ✓ | — | Vega/Vega-Lite SVG path: —; ECharts SSR: ✓ |
@@ -90,8 +91,8 @@ The other two plugins draw the same chart from a JSON spec, and the page holds o
 
 ## Which to use
 
-Use comark-charts for documents that agents write or check, such as pull request evidence and reports: the table is the source, and it stays in the page. It draws the common chart types and nothing else.
+Use comark-charts for documents that agents write or check, such as pull request evidence and reports. The table is the source, and it stays in the page. comark-charts lays out the common chart types itself, and draws any other type from a Vega-Lite spec over the same table.
 
-Use [comark-vega](https://github.com/miguelrk/comark-packages/tree/main/packages/comark-vega) for charts those types don't cover, such as box plots, maps, and error bands, or for interactive charts in a Vue app.
+Use [comark-vega](https://github.com/miguelrk/comark-packages/tree/main/packages/comark-vega) for full Vega specs, data that isn't a table, such as maps, or interactive charts in a Vue app.
 
 Use [comark-flint-chart](https://github.com/miguelrk/comark-packages/tree/main/packages/comark-flint-chart) for Flint's layouts in a Vue app, or for charts drawn with ECharts.

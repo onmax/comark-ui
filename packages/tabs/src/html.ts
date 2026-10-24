@@ -6,7 +6,7 @@ import { iconHtml, iconStyles } from "comark-icon/html";
 import { css } from "./styles.ts";
 
 export { default } from "./index.ts";
-export type { TabsMeta, TabsOptions } from "./index.ts";
+export type { PackageManager, TabsMeta, TabsOptions } from "./index.ts";
 
 // Each render gets a fresh `state.context`, so a document carries the script once.
 const started = new WeakSet<object>();

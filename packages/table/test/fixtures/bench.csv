@@ -1,0 +1,3 @@
+Benchmark,Before (ms),After (ms)
+parse,"1,204",980
+"render, cold",88,91

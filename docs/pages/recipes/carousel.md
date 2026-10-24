@@ -2,10 +2,10 @@
 title: Screenshots in a carousel
 description: A walkthrough of annotated screenshots, one step per slide.
 tagline: Put each step of a flow on its own slide, with its marks and notes, and the reader pages through them in place or zoomed.
-install: pnpm add comark @comark/html comark-annotate comark-carousel
+install: pnpm add comark @comark/html comark-ui
 ---
 
-::example
+::example{label="Carousel walkthrough"}
 ```md
 ::carousel{title="Exporting the pigeon data"}
 :::screenshot{src="/dashboard.png" alt="Office correlations dashboard" title="1. Find the export"}
@@ -33,7 +33,7 @@ Each screenshot is a slide. Its `title` heads the slide, so the reader knows whi
 
 ## When to use it
 
-Use a carousel for a sequence: the steps of a flow, or one view at several sizes. For one view before and after a change, use [`::compare`](/annotate/components/#compare), which is a two-column carousel already and continues the note numbers from one side to the other.
+Use a carousel for a sequence, such as the steps of a flow or one view at several sizes. For one view before and after a change, use [`::compare`](/annotate/components/compare/), which is a two-column carousel already and continues the note numbers from one side to the other.
 
 ## Two at a time
 
@@ -49,4 +49,4 @@ Use a carousel for a sequence: the steps of a flow, or one view at several sizes
 ::
 ```
 
-Each slide sits on a soft panel as tall as the tallest one, so screenshots of different heights line up. Set `--cc-surface: transparent` and `--cc-padding: 0` to drop the panel, as the carousel's [Theming](/carousel/theming/) page shows.
+Each slide sits on a soft panel as tall as the tallest one, so screenshots of different heights line up. Set `--cc-surface: transparent` and `--cc-padding: 0` to drop the panel, as the carousel's [Theming](/carousel/#theme) page shows.

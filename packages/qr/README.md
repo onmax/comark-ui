@@ -1,0 +1,39 @@
+# comark-qr
+
+[![npm version](https://npmx.dev/api/registry/badge/version/comark-qr)](https://npmx.dev/package/comark-qr)
+[![npm downloads](https://npmx.dev/api/registry/badge/downloads-month/comark-qr)](https://npmx.dev/package/comark-qr)
+[![install size](https://npmx.dev/api/registry/badge/size/comark-qr)](https://npmx.dev/package/comark-qr)
+[![license](https://npmx.dev/api/registry/badge/license/comark-qr)](https://npmx.dev/package/comark-qr)
+[![docs](https://img.shields.io/badge/docs-comark--ui.onmax.me-14b8a6?labelColor=0a0a0a)](https://comark-ui.onmax.me/qr/)
+
+QR codes drawn as inline SVG while parsing, for opening a preview link on a phone. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
+
+```sh
+pnpm add comark comark-qr
+```
+
+```ts
+import { createHtmlRenderer } from "@comark/html";
+import qr, { components } from "comark-qr/html";
+
+const render = createHtmlRenderer({ plugins: [qr()], components });
+```
+
+```md
+Open the preview on your phone: :qr{value="https://pr-123.preview.example.com"}
+```
+
+The parse plugin encodes `value` with [uqr](https://github.com/unjs/uqr), Anthony Fu's zero-dependency ES module from his [QR Toolkit](https://qrcode.antfu.me), and writes the code as one SVG path, so no renderer encodes anything and the page needs no script. Codes are black on white in both color schemes; set `--cqr-size` to resize them.
+
+The plugin adds every problem to `meta.issues`: a `:qr` with no `value`, one too long to encode, text in its brackets, and a prop it doesn't read. Each issue names its block and says how to fix it.
+
+## Renderers
+
+| Renderer | Import |
+| --- | --- |
+| `@comark/html` | `comark-qr/html`: the styles are inlined once per document |
+| `@comark/vue` | `comark-qr/vue` |
+| `@comark/react` | `comark-qr/react` |
+| `@comark/svelte` | `comark-qr/svelte` |
+
+Each entry exports the parse plugin as `default` and the renderer's `components`. The Vue, React, and Svelte components add the styles when they mount; import `comark-qr/style.css` with your styles so a server-rendered page doesn't shift.

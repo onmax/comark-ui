@@ -1,29 +1,32 @@
-import type { ComarkPlugin, ElementNode, MarkdownDocument, Node } from "comark";
+import { resolve } from "node:path";
+import type { ComarkPlugin, ElementNode, HeadingIdsOption, MarkdownDocument, Node } from "comark";
 import { parseMarkdown } from "comark";
 import { htmlTags } from "./html-tags.ts";
-import { find, read, type Source } from "./source.ts";
+import {
+  checkLinks,
+  checkPending,
+  type Context,
+  type Files,
+  type Link,
+  type LinkOptions,
+  type Pending,
+} from "./links.ts";
+import { catalog } from "./rules/index.ts";
+import { find, findAny, read, type Source } from "./source.ts";
+import { closest, decode, listIds } from "./words.ts";
 
 export { defineConfig, resolveConfig, type Config } from "./config.ts";
+export type { LinkOptions, Pattern, Routes } from "./links.ts";
+export type { UrlOptions } from "./urls.ts";
 
-export type Rule =
-  | "comark/unclosed-block"
-  | "comark/unknown-component"
-  | "comark/malformed-attributes"
-  | "comark/broken-anchor"
-  | "comark/invalid-frontmatter"
-  | "comark/plugin-issue"
-  | "comark/unsafe-url";
+/** Every rule: the core ones, then one per kind of issue each comark-ui package reports. */
+export type Rule = keyof typeof catalog;
 
 /** Every rule, with what it checks. */
-export const rules: Record<Rule, string> = {
-  "comark/unclosed-block": "Close every `::` block",
-  "comark/unknown-component": "Use only known components",
-  "comark/malformed-attributes": "Close `{` attributes and set each key once",
-  "comark/broken-anchor": "Link `#fragments` to a heading or id in the document",
-  "comark/invalid-frontmatter": "Write valid YAML frontmatter",
-  "comark/plugin-issue": "Fix the problems Comark plugins report",
-  "comark/unsafe-url": "Keep script URLs out of `href` and `src`",
-};
+// SAFETY: built from every entry of the catalog, whose keys are exactly the rules.
+export const rules = Object.fromEntries(
+  Object.entries(catalog).map(([rule, { title }]) => [rule, title]),
+) as Record<Rule, string>;
 
 export type Diagnostic = {
   rule: Rule;
@@ -38,7 +41,10 @@ export type Diagnostic = {
 };
 
 export type LintOptions = {
-  /** The parse plugins the document is rendered with. Their `meta.issues` become `comark/plugin-issue`. */
+  /**
+   * The parse plugins the document is rendered with. Each of their `meta.issues` is reported under the rule the plugin
+   * names for it in `meta.issueRules`, or as `comark/plugin-issue` when it names none.
+   */
   // oxlint-disable-next-line no-explicit-any -- each plugin types its own meta, as in Comark's ParserOptions.
   plugins?: readonly ComarkPlugin<any, any>[];
   /**
@@ -46,6 +52,32 @@ export type LintOptions = {
    * always known. Without it, `comark/unknown-component` is off, since any name could be valid.
    */
   components?: Record<string, unknown> | readonly string[];
+  /**
+   * The document's path, absolute or from `root`. Relative links resolve from it; without it, links to files
+   * aren't checked.
+   */
+  file?: string;
+  /** Where root-relative links and the URL cache resolve from. Default the working directory. */
+  root?: string;
+  /** Reads a file by absolute path, or returns undefined when it can't. Default node:fs. */
+  read?(path: string): string | undefined | Promise<string | undefined>;
+  /** Whether a file or folder exists, by absolute path. Default node:fs. */
+  exists?(path: string): boolean | Promise<boolean>;
+  /** The names in a folder, for "did you mean" on a missing file. Default node:fs. */
+  list?(path: string): readonly string[] | undefined | Promise<readonly string[] | undefined>;
+  /** The `headingIds` you render with, so anchors are checked against the ids readers get. Default Comark's. */
+  headingIds?: HeadingIdsOption;
+  /** How links to files and other sites are checked. */
+  links?: LinkOptions;
+};
+
+/** One file's result from `lintFiles()`. */
+export type LintedFile = {
+  /** The path as given. */
+  file: string;
+  /** Its text, or undefined when it couldn't be read. */
+  text?: string;
+  diagnostics: Diagnostic[];
 };
 
 type Token = {
@@ -60,8 +92,140 @@ type Block = { name: string; line: number; column: number };
 
 /** Checks a Comark document and returns every problem, sorted by position. It never throws. */
 export async function lint(markdown: string, options: LintOptions = {}): Promise<Diagnostic[]> {
+  const [result] = await lintAll([{ path: options.file, text: markdown }], options);
+  return result!.diagnostics;
+}
+
+/**
+ * Checks many documents in one run: each is read and parsed once, links between them share one heading index, and
+ * each external URL is requested once. A file that can't be read comes back with no `text`. It never throws.
+ */
+export async function lintFiles(
+  paths: readonly string[],
+  options: Omit<LintOptions, "file"> = {},
+): Promise<LintedFile[]> {
+  const results = await lintAll(
+    paths.map((path) => ({ path })),
+    options,
+  );
+  return results.map(({ path, text, diagnostics }) => ({ file: path!, text, diagnostics }));
+}
+
+type Parsed = { document: MarkdownDocument; tokens: Token[]; offset: number };
+
+type Document = { file?: string; source: Source; found: Diagnostic[]; parsed?: Parsed };
+
+const sorted = (found: Diagnostic[]) =>
+  found.sort((a, b) => a.line - b.line || (a.column ?? 0) - (b.column ?? 0));
+
+async function lintAll(
+  inputs: readonly { path?: string; text?: string }[],
+  options: LintOptions,
+): Promise<{ path?: string; text?: string; diagnostics: Diagnostic[] }[]> {
+  const context = createContext(options);
+  // Every document is parsed before any link is checked, so a link to another one finds its ids in the index.
+  const documents = await Promise.all(
+    inputs.map(async ({ path, text }) => {
+      const file = path === undefined ? undefined : resolve(context.root, path);
+      const markdown = text ?? (file === undefined ? undefined : await context.files.read(file));
+      if (markdown === undefined) return undefined;
+      const document = await prepare(markdown, options);
+      if (file !== undefined && document.parsed)
+        context.index.set(file, Promise.resolve(idsOf(document.parsed.document.nodes)));
+      return { ...document, file, markdown };
+    }),
+  );
+  const pending: Pending[] = [];
+  for (const document of documents) {
+    if (!document) continue;
+    checkDocument(document, options);
+    if (!document.parsed) continue;
+    const { nodes } = document.parsed.document;
+    try {
+      await checkLinks(
+        linksOf(nodes, document.source),
+        document.file,
+        context,
+        document.found,
+        pending,
+      );
+    } catch (error) {
+      document.found.push(crashed("comark/broken-link", error));
+    }
+  }
+  const { urls } = context.links;
+  if (urls)
+    try {
+      await checkPending(pending, urls, context.root);
+    } catch (error) {
+      documents.find(Boolean)?.found.push(crashed("comark/dead-url", error));
+    }
+  return inputs.map(({ path }, index) => {
+    const document = documents[index];
+    return { path, text: document?.markdown, diagnostics: document ? sorted(document.found) : [] };
+  });
+}
+
+function createContext(options: LintOptions): Context & {
+  index: Map<string, Promise<Set<string> | undefined>>;
+} {
+  const root = resolve(options.root ?? process.cwd());
+  const disk = import("node:fs/promises");
+  const remember = <T>(get: (path: string) => Promise<T>) => {
+    const seen = new Map<string, Promise<T>>();
+    return (path: string) => {
+      let value = seen.get(path);
+      if (!value) seen.set(path, (value = get(path)));
+      return value;
+    };
+  };
+  const files: Files = {
+    read: remember(async (path) =>
+      options.read
+        ? await options.read(path)
+        : (await disk).readFile(path, "utf8").catch(() => undefined),
+    ),
+    exists: remember(async (path) =>
+      options.exists
+        ? await options.exists(path)
+        : (await disk).access(path).then(
+            () => true,
+            () => false,
+          ),
+    ),
+    list: remember(async (path) =>
+      options.list ? await options.list(path) : (await disk).readdir(path).catch(() => undefined),
+    ),
+  };
+  const index = new Map<string, Promise<Set<string> | undefined>>();
+  return {
+    root,
+    files,
+    links: options.links ?? {},
+    index,
+    ids(path) {
+      let ids = index.get(path);
+      if (!ids) {
+        ids = files.read(path).then(async (markdown) => {
+          if (markdown === undefined) return undefined;
+          const { parsed } = await prepare(markdown, options);
+          return parsed && idsOf(parsed.document.nodes);
+        });
+        index.set(path, ids);
+      }
+      return ids;
+    },
+  };
+}
+
+async function prepare(markdown: string, options: LintOptions): Promise<Document> {
   const source = read(markdown);
   const found: Diagnostic[] = [];
+  const parsed = await parse(source, options, found);
+  return { source, found, parsed };
+}
+
+function checkDocument({ source, found, parsed }: Document, options: LintOptions): void {
   const check = (rule: Rule, run: () => Diagnostic[]) => {
     try {
       found.push(...run());
@@ -69,7 +233,6 @@ export async function lint(markdown: string, options: LintOptions = {}): Promise
       found.push(crashed(rule, error));
     }
   };
-  const parsed = await parse(source, options.plugins ?? [], found);
   const raw = parsed ? rawLines(parsed.tokens, parsed.offset) : new Set<number>();
   check("comark/unclosed-block", () => unclosedBlocks(source, raw));
   check("comark/malformed-attributes", () => malformedAttributes(source, raw));
@@ -83,16 +246,18 @@ export async function lint(markdown: string, options: LintOptions = {}): Promise
       );
     check("comark/broken-anchor", () => brokenAnchors(document.nodes, source));
     check("comark/unsafe-url", () => unsafeUrls(document.nodes, source));
+    check("comark/duplicate-id", () => duplicateIds(document.nodes, source, options.headingIds));
+    check("comark/missing-alt", () => missingAlts(document.nodes, source));
+    check("comark/empty-link", () => emptyLinks(document.nodes, source));
     check("comark/plugin-issue", () => pluginIssues(document.meta, source, blocks()));
   }
-  return found.sort((a, b) => a.line - b.line || (a.column ?? 0) - (b.column ?? 0));
 }
 
 async function parse(
   source: Source,
-  plugins: NonNullable<LintOptions["plugins"]>,
+  { plugins = [], headingIds }: LintOptions,
   found: Diagnostic[],
-): Promise<{ document: MarkdownDocument; tokens: Token[]; offset: number } | undefined> {
+): Promise<Parsed | undefined> {
   let tokens: Token[] = [];
   const probe: ComarkPlugin = {
     name: "lint-comark",
@@ -102,7 +267,7 @@ async function parse(
     },
   };
   const run = async (markdown: string, offset: number) => ({
-    document: await parseMarkdown(markdown, { plugins: [...plugins, probe] }),
+    document: await parseMarkdown(markdown, { plugins: [...plugins, probe], headingIds }),
     tokens,
     offset,
   });
@@ -151,7 +316,7 @@ const crashed = (rule: Rule, error: unknown): Diagnostic => ({
   rule,
   line: 1,
   message: `lint-comark crashed while checking \`${rule}\`: ${error instanceof Error ? error.message : String(error)}.`,
-  fix: "The other rules still ran. Report this with the document at https://github.com/onmax/comark-plugins/issues.",
+  fix: "The other rules still ran. Report this with the document at https://github.com/onmax/comark-ui/issues.",
 });
 
 // Comark reads code, comments, and `<pre>`, `<script>`, `<style>`, and `<textarea>` blocks as text, so a `::` or `{`
@@ -341,31 +506,6 @@ function unknownComponents(
   });
 }
 
-function closest(word: string, candidates: readonly string[]): string | undefined {
-  let best: string | undefined;
-  let bestDistance = Math.max(1, Math.floor(word.length / 3)) + 1;
-  for (const candidate of candidates) {
-    const distance = levenshtein(word, candidate);
-    if (distance < bestDistance) [best, bestDistance] = [candidate, distance];
-  }
-  return best;
-}
-
-function levenshtein(a: string, b: string): number {
-  let row = Array.from({ length: b.length + 1 }, (_, index) => index);
-  for (let i = 1; i <= a.length; i++) {
-    const next = [i];
-    for (let j = 1; j <= b.length; j++)
-      next[j] = Math.min(
-        next[j - 1]! + 1,
-        row[j]! + 1,
-        row[j - 1]! + (a[i - 1] === b[j - 1] ? 0 : 1),
-      );
-    row = next;
-  }
-  return row[b.length]!;
-}
-
 // Comark text nodes are strings, elements are arrays, and comments are arrays with a null tag.
 const isElement = (node: Node): node is ElementNode => Array.isArray(node) && node[0] !== null;
 
@@ -400,8 +540,6 @@ function locator(source: Source, attribute = false) {
   };
 }
 
-const LISTED = 20;
-
 function brokenAnchors(nodes: Node[], source: Source): Diagnostic[] {
   const ids = new Set<string>();
   const links: string[] = [];
@@ -412,10 +550,7 @@ function brokenAnchors(nodes: Node[], source: Source): Diagnostic[] {
     if (href.startsWith("#") && href.length > 1) links.push(href);
   }
   const locate = locator(source, true);
-  const list = [...ids].map((id) => `\`#${id}\``);
-  const available = list.length
-    ? `Ids here: ${list.slice(0, LISTED).join(", ")}${list.length > LISTED ? `, and ${list.length - LISTED} more` : ""}.`
-    : "This document has no headings or ids.";
+  const available = listIds(ids, "Ids here", "This document has no headings or ids.");
   return links.flatMap((href) => {
     const fragment = decode(href.slice(1));
     if (ids.has(fragment) || ids.has(href.slice(1))) {
@@ -436,12 +571,40 @@ function brokenAnchors(nodes: Node[], source: Source): Diagnostic[] {
   });
 }
 
-function decode(value: string): string {
+// A plugin can leave a tree the walk can't read; then other documents' anchors into this one go unchecked.
+function idsOf(nodes: Node[]): Set<string> | undefined {
   try {
-    return decodeURIComponent(value);
+    const ids = new Set<string>();
+    for (const [, attributes] of elements(nodes)) {
+      const id = text(attributes.id);
+      if (id) ids.add(id);
+    }
+    return ids;
   } catch {
-    return value;
+    return undefined;
   }
+}
+
+// A plugin can derive a URL the writer never wrote, such as an embed's player or a chip's avatar; those aren't
+// found in the source and aren't checked. A web URL is matched in prose too, since Comark links a bare one.
+function linksOf(nodes: Node[], source: Source): Link[] {
+  const counts = new Map<string, number>();
+  const links: Link[] = [];
+  for (const [, attributes] of elements(nodes))
+    for (const key of ["href", "src"]) {
+      const value = text(attributes[key]);
+      if (!value || value.startsWith("#") || value.startsWith("data:")) continue;
+      const attribute = !/^https?:/i.test(value);
+      for (const needle of new Set([value, decode(value)])) {
+        const nth = counts.get(needle) ?? 0;
+        const at = find(source, needle, { nth, from: source.body, attribute });
+        if (!at) continue;
+        counts.set(needle, nth + 1);
+        links.push({ key, value, ...at });
+        break;
+      }
+    }
+  return links;
 }
 
 // A browser reads a reference past U+10FFFF as U+FFFD.
@@ -515,6 +678,135 @@ function unsafeUrls(nodes: Node[], source: Source): Diagnostic[] {
   return found;
 }
 
+function duplicateIds(nodes: Node[], source: Source, headingIds?: HeadingIdsOption): Diagnostic[] {
+  const tagged = [...elements(nodes)].flatMap(([tag, attributes]) => {
+    const id = text(attributes.id);
+    return id ? [{ tag, id }] : [];
+  });
+  const seen = new Map<string, number>();
+  const found: Diagnostic[] = [];
+  const locations = (id: string): { line: number; column: number }[] => {
+    const matches: { line: number; column: number }[] = [];
+    const explicit = [
+      `{#${id}`,
+      `{id="${id}"}`,
+      `{id='${id}'}`,
+      `{id=${id}}`,
+      `id="${id}"`,
+      `id='${id}'`,
+      `id=${id}`,
+    ];
+    let ancestors: { level: number; text: string }[] = [];
+    const slug = (value: string) => {
+      const clean = value
+        .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+        .replace(/`([^`]*)`/g, "$1")
+        .replace(/[*_~]/g, "")
+        .replace(/[^\p{L}\p{M}\p{N}\s-]/gu, "")
+        .trim()
+        .replace(/\s+/g, "-")
+        .toLowerCase();
+      return /^\d/.test(clean) ? `_${clean}` : clean;
+    };
+    for (let line = source.body; line < source.prose.length; line++) {
+      const value = source.prose[line]!;
+      for (const needle of explicit) {
+        const at = value.indexOf(needle);
+        if (at !== -1) matches.push({ line: line + 1, column: at + 1 });
+      }
+      const heading = /^( {0,3})(#{1,6})\s+(.+?)\s*$/.exec(value);
+      if (!heading) continue;
+      const level = heading[2]!.length;
+      const explicitId = /\s+\{#([^}]+)\}\s*$/.exec(heading[3]!)?.[1];
+      const content = heading[3]!.replace(/\s+\{#[^}]+\}\s*$/, "");
+      while (ancestors.at(-1) && ancestors.at(-1)!.level >= level) ancestors.pop();
+      let headingText = content;
+      if (headingIds === "nested" && level >= 3) {
+        const parts: string[] = [];
+        for (const item of ancestors) {
+          if (item.level >= 2) parts.push(item.text);
+        }
+        parts.push(content);
+        headingText = parts.join(" ");
+      }
+      const generated = slug(headingText);
+      // An explicit heading label is the parser's sole source for this ID when it
+      // matches the generated slug; do not count that heading twice.
+      if (generated === id && explicitId !== id)
+        matches.push({ line: line + 1, column: heading[0].indexOf(heading[3]!) + 1 });
+      ancestors.push({ level, text: content });
+    }
+    return matches.sort((a, b) => a.line - b.line || a.column - b.column);
+  };
+  const byId = new Map<string, { line: number; column: number }[]>();
+  for (const { tag, id } of tagged) {
+    const index = seen.get(id) ?? 0;
+    seen.set(id, index + 1);
+    if (!index) continue;
+    // IDs may come from heading labels, Comark attributes, or raw HTML. Keep all forms in
+    // source order so a mixed document points at the duplicate element itself.
+    const at = (byId.get(id) ?? (byId.set(id, locations(id)), byId.get(id)!))[index];
+    const { line, column } = at ?? { line: source.body + 1, column: undefined };
+    found.push({
+      rule: "comark/duplicate-id",
+      line,
+      column,
+      message: `The \`${tag}\` on line ${line} has the id \`${id}\`, which an element before it already has, so links to \`#${id}\` go to that one.`,
+      fix: `Give it an id of its own, such as \`{#${id}-2}\`.`,
+    });
+  }
+  return found;
+}
+
+function missingAlts(nodes: Node[], source: Source): Diagnostic[] {
+  const locate = locator(source);
+  const found: Diagnostic[] = [];
+  const occurrences = new Map<string, number>();
+  for (const [tag, attributes] of elements(nodes)) {
+    const src = text(attributes.src);
+    const nth = occurrences.get(src) ?? 0;
+    if (src) occurrences.set(src, nth + 1);
+    // An empty `alt`, written `{alt=""}` or in HTML, marks an image as decoration on purpose.
+    if (tag !== "img" || !src || attributes.alt !== undefined) continue;
+    const at = findAny(source, [`](${src}`, `src="${src}"`, `src='${src}'`, `src=${src}`], { nth });
+    const { line, column } = at ?? locate(`](${src}`, src);
+    found.push({
+      rule: "comark/missing-alt",
+      line,
+      column,
+      message: `The image \`${src}\` on line ${line} has no alt text, so screen readers skip it or read its file name.`,
+      fix: `Describe what it shows between the brackets, as in \`![Pigeons on the roof](${src})\`, or add \`{alt=""}\` after it if it's only decoration.`,
+    });
+  }
+  return found;
+}
+
+function emptyLinks(nodes: Node[], source: Source): Diagnostic[] {
+  const locate = locator(source);
+  const found: Diagnostic[] = [];
+  const occurrences = new Map<string, number>();
+  for (const [tag, attributes, ...children] of elements(nodes)) {
+    const href = text(attributes.href);
+    const nth = occurrences.get(href) ?? 0;
+    if (href) occurrences.set(href, nth + 1);
+    const named = text(attributes["aria-label"]);
+    if (tag !== "a" || !href || named || children.some((child) => isElement(child) || text(child)))
+      continue;
+    const at = findAny(source, [`](${href}`, `href="${href}"`, `href='${href}'`, `href=${href}`], {
+      nth,
+    });
+    const { line, column } = at ?? locate(`](${href}`, href);
+    found.push({
+      rule: "comark/empty-link",
+      line,
+      column,
+      message: `The link to \`${href}\` on line ${line} has no text, so readers can't see it and screen readers read out its URL.`,
+      fix: `Write what it links to between the brackets, as in \`[The pigeon census](${href})\`.`,
+    });
+  }
+  return found;
+}
+
 function pluginIssues(
   meta: Record<string, unknown>,
   source: Source,
@@ -523,12 +815,18 @@ function pluginIssues(
   const issues = Array.isArray(meta.issues)
     ? meta.issues.flatMap((issue) => text(issue) || [])
     : [];
+  const named: Record<string, unknown> =
+    meta.issueRules instanceof Object ? { ...meta.issueRules } : {};
   const locate = locator(source);
   return issues.map((issue) => {
+    const rule = text(named[issue]);
+    const known = Object.hasOwn(catalog, rule);
     const { line, column } = place(issue, blocks, locate);
     const sentences = issue.split(/(?<=[.!?])\s+(?=[A-Z`])/);
     return {
-      rule: "comark/plugin-issue",
+      // A rule this version doesn't know, from a newer plugin, still reports.
+      // SAFETY: `known` says the catalog, whose keys are exactly the rules, has it.
+      rule: known ? (rule as Rule) : "comark/plugin-issue",
       line,
       column,
       message: sentences.length > 1 ? sentences.slice(0, -1).join(" ") : issue,

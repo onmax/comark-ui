@@ -1,0 +1,47 @@
+# comark-fields
+
+[![npm version](https://npmx.dev/api/registry/badge/version/comark-fields)](https://npmx.dev/package/comark-fields)
+[![npm downloads](https://npmx.dev/api/registry/badge/downloads-month/comark-fields)](https://npmx.dev/package/comark-fields)
+[![install size](https://npmx.dev/api/registry/badge/size/comark-fields)](https://npmx.dev/package/comark-fields)
+[![license](https://npmx.dev/api/registry/badge/license/comark-fields)](https://npmx.dev/package/comark-fields)
+[![docs](https://img.shields.io/badge/docs-comark--ui.onmax.me-14b8a6?labelColor=0a0a0a)](https://comark-ui.onmax.me/fields/)
+
+Props, options, and parameters in Nuxt UI's `::field` syntax: each with its type, whether it's required, and its default, with an object's properties nested under it. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
+
+```sh
+pnpm add comark comark-fields
+```
+
+```ts
+import { createHtmlRenderer } from "@comark/html";
+import fields, { components } from "comark-fields/html";
+
+const render = createHtmlRenderer({ plugins: [fields()], components });
+```
+
+```md
+::field-group
+:::field{name="options" type="object" required default="{}"}
+What the plugin takes.
+
+::::field{name="sync" type="string"}
+A key shared by blocks that switch together.
+::::
+:::
+::
+```
+
+`::field` takes `name`, `type`, `required` (Comark writes it as `:required="true"`), `default`, and `description`; its content is its description, and `:::field` blocks inside describe an object's properties. The plugin adds a problem to `meta.issues` for a field without a `name`, so a host can reject a document before publishing it.
+
+## Renderers
+
+| Renderer | Import |
+| --- | --- |
+| `@comark/html` | `comark-fields/html`: the styles are inlined once per document |
+| `@comark/vue` | `comark-fields/vue` |
+| `@comark/react` | `comark-fields/react` |
+| `@comark/svelte` | `comark-fields/svelte` |
+
+Each entry exports the parse plugin as `default` and the renderer's `components`. The Vue, React, and Svelte components add the styles when they mount; import `comark-fields/style.css` with your styles so a server-rendered page doesn't shift.
+
+The styles follow shadcn/ui: they read its CSS variables, such as `--muted-foreground` and `--border`, when the page has them, and use its neutral theme otherwise. Set the shared `--comark-*` tokens to theme every plugin at once; the rules sit in a `comark` CSS layer, so any plain rule of your own wins, except the top and bottom margins of a field's description, which are `!important`, because a page's own paragraph and list margins are almost always unlayered and would open a gap under the name. To override those margins, use `!important` in a cascade layer declared before `comark`; an unlayered important rule loses because important declarations reverse layer order.

@@ -263,6 +263,127 @@ describe("comark-annotate", () => {
     expect(html).toContain('title="Start with what failed."');
   });
 
+  it("points from a note below the image, and keeps a compare level when one side has one", async () => {
+    const { issues, html } = await run(
+      `::compare\n:::screenshot{src="a.png" alt="A"}\n::::annotation{x=40 y=50 w=20 h=10 mark="underline" side="bottom"}\nBelow.\n::::\n:::\n\n:::screenshot{src="b.png" alt="B"}\n:::\n::`,
+    );
+    expect(issues).toEqual([]);
+    expect(html.match(/class="ca-screenshot ca-bottom"/g)).toHaveLength(2);
+    expect(html).toMatch(
+      /class="ca-arrow ca-arrow-bottom" data-n="1" style="left:50%;top:60%;bottom:calc\(-1 \* var\(--ca-gap\)\)"/,
+    );
+    expect(html).toMatch(/class="ca-callout ca-callout-bottom" id="ca-[a-z0-9]+-1"/);
+    expect(css).toContain(".ca-bottom .ca-stage{--ca-pb:var(--ca-bottom-gutter)");
+  });
+
+  it("sets a note off to one side with `at` and sweeps its arrow into the `to` point", async () => {
+    const { issues, html } = await run(
+      `::screenshot{src="a.png" alt="A"}\n:::annotation{x=10 y=20 w=10 h=5 mark="none" side="top" at=40 to="12,21"}\nThe type gets the headline.\n:::\n:::annotation{x=60 y=70 w=10 h=5 side="bottom" at=30}\nOpen it here.\n:::\n:::annotation{x=10 y=40 w=10 h=10 mark="bracket" side="right" at=20}\nThree rows.\n:::\n::`,
+    );
+    expect(issues).toEqual([]);
+    // The point lies left of the note, so the note reads rightward from where its leader leaves it.
+    expect(html).toMatch(
+      /class="ca-arrow ca-arrow-top ca-curve" data-n="1" style="left:12%;right:60%;top:calc\(-1 \* var\(--ca-lead\)\);bottom:79%"[^>]*><svg class="ca-arrow-line" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M100 0C55 0 0 20 0 100"/,
+    );
+    expect(html).toMatch(
+      /class="ca-callout ca-callout-top ca-callout-east" id="ca-[a-z0-9]+-1" data-n="1" style="left:calc\(var\(--ca-pl,0px\) \+ \(100% - var\(--ca-pl,0px\) - var\(--ca-pr,0px\)\) \* 0.4\)"/,
+    );
+    // Without `to`, the arrow meets the edge of the mark that faces the note; this one lies right of its note.
+    expect(html).toMatch(
+      /class="ca-arrow ca-arrow-bottom ca-curve" data-n="2" style="left:30%;right:35%;top:75%;bottom:calc\(-1 \* var\(--ca-lead\)\)"[^>]*>.*?<path d="M0 100C45 100 100 80 100 0"/,
+    );
+    expect(html).toMatch(/class="ca-callout ca-callout-bottom ca-callout-west"/);
+    // A right note above its point drops into it and lands level.
+    expect(html).toMatch(
+      /class="ca-arrow ca-arrow-right ca-curve" data-n="3" style="top:20%;bottom:55%;left:20%;right:calc\(-1 \* var\(--ca-gap\)\)"[^>]*>.*?<path d="M100 0C40 0 60 100 0 100"/,
+    );
+    expect(html).toMatch(
+      /class="ca-callout ca-callout-right" id="ca-[a-z0-9]+-3" data-n="3" style="top:calc\(var\(--ca-pt,0px\) \+ \(100% - var\(--ca-pt,0px\) - var\(--ca-pb,0px\)\) \* 0.2\)"/,
+    );
+  });
+
+  it("runs the arrow straight when the note sits level with its point", async () => {
+    const { html } = await run(
+      `::screenshot{src="a.png" alt="A"}\n:::annotation{x=40 y=50 w=20 h=10 side="top" at=51}\nAbove.\n:::\n::`,
+    );
+    expect(html).toContain('class="ca-arrow ca-arrow-top" data-n="1" style="left:50%;');
+    expect(html).toMatch(/class="ca-callout ca-callout-top" id=/);
+  });
+
+  it("draws a bracket on the edge that faces its note", async () => {
+    const shot = (side: string) =>
+      run(
+        `::screenshot{src="a.png" alt="A"}\n:::annotation{x=10 y=10 w=20 h=40 mark="bracket"${side ? ` side="${side}"` : ""}}\nRows.\n:::\n::`,
+      ).then(
+        ({ html }) =>
+          /ca-mark ca-bracket"[^>]*><svg viewBox="[^"]+"[^>]*><path d="M([\d.-]+) /.exec(html)![1],
+      );
+    // The reference width is 420px, so this box is 84px wide: a left bracket starts near 0, a right one near 84.
+    expect(Number(await shot(""))).toBeLessThan(10);
+    expect(Number(await shot("left"))).toBeLessThan(10);
+    expect(Number(await shot("right"))).toBeGreaterThan(70);
+  });
+
+  it("draws a line along the longer side of its box, through the middle", async () => {
+    const shot = (w: number, h: number) =>
+      run(
+        `::screenshot{src="a.png" alt="A"}\n:::annotation{x=10 y=10 w=${w} h=${h} mark="line"}\nThe fold.\n:::\n::`,
+      ).then(({ issues, html }) => {
+        expect(issues).toEqual([]);
+        const [, x, y] = /ca-mark ca-line"[^>]*><svg [^>]*><path d="M([\d.-]+) ([\d.-]+)Q/.exec(
+          html,
+        )!;
+        return [Number(x), Number(y)];
+      });
+    // The reference width is 420px: an 80% wide box is 336px across, and a 4% high one about 10px down.
+    const [x, y] = await shot(80, 4);
+    expect(Math.abs(x!)).toBeLessThan(2);
+    expect(Math.abs(y! - 5.25)).toBeLessThan(2);
+    const [down, along] = await shot(2, 80);
+    expect(Math.abs(down! - 4.2)).toBeLessThan(2);
+    expect(Math.abs(along!)).toBeLessThan(2);
+  });
+
+  it("colors every mark without its own color in the figure's `ink`", async () => {
+    const { issues, html } = await run(
+      `::compare{ink="violet"}\n:::screenshot{src="a.png" alt="A"}\n::::annotation{x=10 y=10 w=10 h=10}\nInked.\n::::\n::::annotation{x=40 y=10 w=10 h=10 color="red"}\nOwn color.\n::::\n:::\n\n:::screenshot{src="b.png" alt="B" ink="#16a34a"}\n::::annotation{x=10 y=10 w=10 h=10}\nOwn ink.\n::::\n:::\n::`,
+    );
+    expect(issues).toEqual([]);
+    expect(html).toMatch(/data-n="1"[^>]*style="--ca-color:var\(--ca-violet\);/);
+    expect(html).toMatch(/data-n="2"[^>]*style="--ca-color:var\(--ca-red\);/);
+    expect(html).toMatch(/data-n="3"[^>]*style="--ca-color:#16a34a;/);
+    expect(css).toContain("--ca-violet:#8b5cf6");
+    // Violet is also the default, so marks without a color or an ink take it.
+    expect(css).toContain("--ca-color:var(--ca-violet);--ca-solid:var(--ca-violet-solid)");
+  });
+
+  it("reports `at` and `to` without a side, out of range, or written wrong, and a bad ink", async () => {
+    const { issues, document } = await run(
+      `::screenshot{src="a.png" alt="A" ink="purple"}\n:::annotation{x=10 y=10 w=10 h=10 at=40}\nNo side.\n:::\n:::annotation{x=10 y=40 w=10 h=10 side="top" at=140 to="12"}\nOut.\n:::\n::`,
+    );
+    expect(issues).toEqual([
+      'screenshot "a.png": `ink` must be red, amber, green, blue, violet, gray, or a 3- or 6-digit hex color like #8b5cf6 (got "purple").',
+      'screenshot "a.png", annotation 1: `at` places a side note and its arrow, so it needs a `side`. Add `side="top"`, `"bottom"`, `"left"`, or `"right"`.',
+      'screenshot "a.png", annotation 2 (top note): `at` must be where the note sits along its margin, a percentage of the image from 0 to 100 (got "140").',
+      'screenshot "a.png", annotation 2 (top note): `to` must be the point the arrow lands on, as two percentages of the image from 0 to 100, like to="42,18" (got "12").',
+    ]);
+    expect(Object.values(document.meta.issueRules)).toEqual([
+      "comark/annotate/invalid-color",
+      "comark/annotate/needs-side",
+      "comark/annotate/invalid-position",
+      "comark/annotate/invalid-position",
+    ]);
+  });
+
+  it("checks for crowded notes where they sit, at their `at`", async () => {
+    const { issues } = await run(
+      `::screenshot{src="a.png" alt="A"}\n:::annotation{x=10 y=10 w=10 h=10 side="top" at=50}\nOne.\n:::\n:::annotation{x=70 y=10 w=10 h=10 side="top" at=60}\nTwo.\n:::\n::`,
+    );
+    expect(issues).toEqual([
+      'screenshot "a.png": the top notes for annotations 1 and 2 would overlap. Move one along with `at`, to another side, or under the image.',
+    ]);
+  });
+
   it("maps named colors to the palette and passes hex through", async () => {
     const { html } = await run(
       `::screenshot{src="a.png" alt="A"}\n:::annotation{x=0 y=0 w=10 h=10 color="amber"}\nA\n:::\n:::annotation{x=50 y=50 w=10 h=10 color="#123456"}\nB\n:::\n::`,
@@ -292,6 +413,20 @@ describe("comark-annotate", () => {
       data: { box: { x: 30, y: 40 } },
     });
     expect(html).toContain("left:30%;top:40%;width:10%;height:10%");
+  });
+
+  it("does not throw when bound position and ink values are revoked proxies", async () => {
+    const document = await parseMarkdown(
+      `::screenshot{src="a.png" alt="A" :ink="data.value"}\n:::annotation{x=10 y=10 w=10 h=10 side="top" :at="data.value" :to="data.value"}\nNote\n:::\n::`,
+      { plugins: [annotate()] },
+    );
+    const value = Proxy.revocable({}, {}).proxy;
+    // Revoke after the binding is set up so each reader sees the same hostile object.
+    const revoked = Proxy.revocable(value, {});
+    revoked.revoke();
+    await expect(
+      renderHtmlFromDocument(document, { components, data: { value: revoked.proxy } }),
+    ).resolves.toContain("a.png");
   });
 
   it("reports inherited object keys as marks instead of crashing", async () => {
@@ -347,7 +482,7 @@ describe("comark-annotate", () => {
     ],
     [
       `::screenshot{src="a.png" alt="A"}\n:::annotation{x=0 y=0 w=10 h=10 side="up"}\nNote\n:::\n::`,
-      "`side` must be left, right, or top",
+      "`side` must be left, right, top, or bottom",
     ],
     [
       `::screenshot{src="a.png" alt="A"}\n:::annotation{x=0 y=10 w=10 h=10 side="left"}\nA\n:::\n:::annotation{x=0 y=15 w=10 h=10 side="left"}\nB\n:::\n::`,
@@ -489,13 +624,13 @@ describe("comark-annotate", () => {
       `::compare{label="Toolbar"}\n:::screenshot{src="a.png" alt="A" label="Before" url="https://x.com" caption="Hi"}\n::::annotation{x=1 y=1 width=5 h=5 sid="left" colour="red"}\nNote\n::::\n:::\n\n:::screenshot{src="b.png" alt="B"}\n:::\n::`,
     );
     expect(issues).toEqual([
-      "compare 1: `label` isn't a prop of `::compare`. Did you mean `title`? Valid props: title, mode.",
-      'screenshot "a.png": `label` isn\'t a prop of `::screenshot`. Did you mean `title`? Valid props: src, alt, title, href, viewport.',
-      'screenshot "a.png": `url` isn\'t a prop of `::screenshot`. Did you mean `href`? Valid props: src, alt, title, href, viewport.',
-      'screenshot "a.png": `caption` isn\'t a prop of `::screenshot`. Write the caption as Markdown inside the block, after the annotations. Valid props: src, alt, title, href, viewport.',
-      'screenshot "a.png", annotation 1: `width` isn\'t a prop of `::annotation`. Did you mean `w`? Valid props: x, y, w, h, mark, color, side.',
-      'screenshot "a.png", annotation 1: `sid` isn\'t a prop of `::annotation`. Did you mean `side`? Valid props: x, y, w, h, mark, color, side.',
-      'screenshot "a.png", annotation 1: `colour` isn\'t a prop of `::annotation`. Did you mean `color`? Valid props: x, y, w, h, mark, color, side.',
+      "compare 1: `label` isn't a prop of `::compare`. Did you mean `title`? Valid props: title, mode, ink.",
+      'screenshot "a.png": `label` isn\'t a prop of `::screenshot`. Did you mean `title`? Valid props: src, alt, title, href, viewport, ink.',
+      'screenshot "a.png": `url` isn\'t a prop of `::screenshot`. Did you mean `href`? Valid props: src, alt, title, href, viewport, ink.',
+      'screenshot "a.png": `caption` isn\'t a prop of `::screenshot`. Write the caption as Markdown inside the block, after the annotations. Valid props: src, alt, title, href, viewport, ink.',
+      'screenshot "a.png", annotation 1: `width` isn\'t a prop of `::annotation`. Did you mean `w`? Valid props: x, y, w, h, mark, color, side, at, to.',
+      'screenshot "a.png", annotation 1: `sid` isn\'t a prop of `::annotation`. Did you mean `side`? Valid props: x, y, w, h, mark, color, side, at, to.',
+      'screenshot "a.png", annotation 1: `colour` isn\'t a prop of `::annotation`. Did you mean `color`? Valid props: x, y, w, h, mark, color, side, at, to.',
       'screenshot "a.png", annotation 1: `w` is required: a percentage of the image, a number without %, above 0 and up to 100.',
     ]);
   });
@@ -517,7 +652,7 @@ describe("comark-annotate", () => {
     expect(html).toContain("--ca-color:#fde047;--ca-solid:#fde047;--ca-ink:#1c1917;");
     expect(html).toContain("--ca-color:#FF0;--ca-solid:#FF0;--ca-ink:#1c1917;");
     expect(issues).toEqual([
-      'screenshot "a.png", annotation 2: `color` must be red, amber, green, blue, gray, or a 3- or 6-digit hex color like #e5484d (got "#e11d4800").',
+      'screenshot "a.png", annotation 2: `color` must be red, amber, green, blue, violet, gray, or a 3- or 6-digit hex color like #e5484d (got "#e11d4800").',
     ]);
   });
 
@@ -577,8 +712,8 @@ describe("comark-annotate", () => {
       `::screenshot{src="a.png" alt="A" constructor="x" :__proto__="y"}\n::`,
     );
     expect(issues).toEqual([
-      'screenshot "a.png": `constructor` isn\'t a prop of `::screenshot`. Valid props: src, alt, title, href, viewport.',
-      'screenshot "a.png": `__proto__` isn\'t a prop of `::screenshot`. Valid props: src, alt, title, href, viewport.',
+      'screenshot "a.png": `constructor` isn\'t a prop of `::screenshot`. Valid props: src, alt, title, href, viewport, ink.',
+      'screenshot "a.png": `__proto__` isn\'t a prop of `::screenshot`. Valid props: src, alt, title, href, viewport, ink.',
     ]);
   });
 
@@ -586,6 +721,30 @@ describe("comark-annotate", () => {
     const { issues } = await run(`::screenshot{src='a"b.png'}\n::`);
     expect(issues).toEqual([
       'screenshot "a\\"b.png": `alt` is required. Describe what the screenshot shows.',
+    ]);
+  });
+
+  it("names each issue's rule for the linter", async () => {
+    const { document } = await run(
+      `::compare
+:::screenshot{src="a.png" alt="A" colour="red"}
+::::annotation{x=0.2 y=0.3 w=0.15 h=0.1}
+Duck
+::::
+:::
+:::screenshot{src="a.png" alt="B"}
+:::
+::`,
+    );
+    expect(document.meta.issues).toEqual([
+      'screenshot 1 ("A"): `colour` isn\'t a prop of `::screenshot`. Valid props: src, alt, title, href, viewport, ink.',
+      'screenshot 1 ("A"), annotation 1: `x`, `y`, `w`, and `h` are all 1 or less, so the box is a speck in the top left corner. They\'re percentages: multiply each by 100, so x=0.25 becomes x=25.',
+      'compare 1: both screenshots show "a.png", so there\'s no change to see. Point the after screenshot at the new capture.',
+    ]);
+    expect(Object.values(document.meta.issueRules)).toEqual([
+      "comark/annotate/unknown-prop",
+      "comark/annotate/box-as-fraction",
+      "comark/annotate/compare-same-image",
     ]);
   });
 });

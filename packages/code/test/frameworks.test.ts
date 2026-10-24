@@ -71,6 +71,35 @@ describe("comark-code renderers", () => {
     }
   });
 
+  it("renders the same line markers, numbers, folds, frames, and wrap in every renderer", async () => {
+    const value = await parseMarkdown(
+      [
+        "```ts [a.ts] ins={1} del={2} collapse={3-4} startLineNumber=9 wrap",
+        "const a = 1\nconst b = 2\nconst c = 3\nconst d = 4\nconst e = 5",
+        "```",
+        "",
+        "```sh\nls\n```",
+      ].join("\n"),
+      { plugins: [code()] },
+    );
+    const expected = normalize(await renderers.html(value));
+    expect(expected).toContain(
+      '<div class="ck" data-code-lines data-code-numbers="2" data-code-wrap><pre data-language="ts" data-filename="a.ts"><code class="language-ts"><span class="line ck-ins" data-line="9">const a = 1 </span>',
+    );
+    expect(expected).toContain(
+      '<details class="ck-fold"><summary>2 collapsed lines</summary><span class="line" data-line="11">',
+    );
+    expect(expected).toContain('aria-pressed="true"');
+    expect(expected).toContain(
+      '<div class="ck" data-code-frame="terminal"><pre data-language="sh">',
+    );
+    for (const name of ["vue", "react"] as const) {
+      const html = normalize(await renderers[name](value));
+      expect(html, name).toContain(expected);
+      expect(html, name).not.toMatch(/ (frame|wrap|lines|numbers)=|undefined|\[object/);
+    }
+  });
+
   it("ships a Svelte component that compiles", async () => {
     const source = await readFile(new URL("../src/svelte/Pre.svelte", import.meta.url), "utf8");
     expect(() => compile(source, { filename: "Pre.svelte", generate: "server" })).not.toThrow();

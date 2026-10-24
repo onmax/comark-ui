@@ -81,26 +81,25 @@ test("the playground puts comark-code's buttons on code blocks, and actions from
   await expect(preview.getByRole("button", { name: "Run" })).toBeAttached();
 });
 
-test("a package's Open in playground link opens its first example", async ({ page }) => {
-  await page.goto("/annotate/");
-  await page
-    .getByRole("navigation", { name: "Pages" })
-    .getByRole("link", { name: "Open in playground" })
-    .click();
-  await expect(page).toHaveURL(/\/play\/#preset=annotate-/);
-  await expect(page.locator(".sidebar .pages a[aria-current]")).toHaveText("Before / after");
-});
-
 test("search opens with Ctrl+K and goes to the heading you pick", async ({ page }) => {
   await page.goto("/");
   await page.keyboard.press("Control+k");
   const field = page.getByRole("combobox", { name: "Search the docs" });
   await expect(field).toBeFocused();
   await field.fill("side notes");
-  await expect(page.getByRole("option").first()).toContainText("annotate › Guides");
+  await expect(page.getByRole("option").first()).toContainText("Components › Annotate");
   await field.press("Enter");
-  await expect(page).toHaveURL(/\/annotate\/guides\/#side-notes$/);
+  await expect(page).toHaveURL(/\/annotate\/#side-notes$/);
   await page.keyboard.press("Control+k");
+  // A typo, a word only a page's keywords say, and a word only a section's text says.
+  const first = page.getByRole("option").first();
+  await field.fill("gannt");
+  await expect(first).toHaveAttribute("href", "/charts/#gantts");
+  await field.fill("lightbox");
+  await expect(first).toHaveAttribute("href", "/zoom/");
+  await field.fill("heatmap");
+  await expect(first).toHaveAttribute("href", "/charts/#any-chart");
+  await expect(first.locator("p mark")).toHaveText("heatmap");
   await field.fill("zzzz");
   await expect(page.getByRole("status")).toHaveText("No page or heading matches.");
   await page.keyboard.press("Escape");

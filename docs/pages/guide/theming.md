@@ -1,6 +1,7 @@
 ---
 title: Theming
 description: One set of --comark-* tokens themes every plugin, on top of shadcn/ui's variables.
+keywords: CSS, colors, dark mode, light mode, CSS variables, custom properties, shadcn, Tailwind, styles, theme, Nuxt UI
 tagline: The plugins follow shadcn/ui. On a site that uses its variables they match with no setup; elsewhere, eight tokens theme them all at once.
 ---
 
@@ -58,4 +59,4 @@ The rules sit in a `comark` CSS layer, so any plain rule of your own wins withou
 
 ## Each plugin's own
 
-Each package's own variables and class names are on its Theming page: [annotate](/annotate/theming/), [carousel](/carousel/theming/), [charts](/charts/theming/), [chips](/chips/theming/), [code](/code/theming/), [diff](/diff/theming/), [embed](/embed/theming/), [github](/github/theming/), [icon](/icon/theming/), [tabs](/tabs/theming/), and [zoom](/zoom/theming/).
+Each package's own variables and class names are on its Theming page: [annotate](/annotate/#theme), [carousel](/carousel/#theme), [charts](/charts/#theme), [chips](/chips/#theme), [code](/code/#theme), [diff](/diff/#theme), [embed](/embed/#theme), [github](/github/#theme), [icon](/icon/#theme), [tabs](/tabs/#theme), and [zoom](/zoom/#theme).

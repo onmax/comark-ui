@@ -1,6 +1,6 @@
 {
   "name": "comark-chips",
-  "version": "0.2.0",
+  "version": "0.5.0",
   "description": "Links as chips with the site's favicon, and @user as a chip with their avatar, downloaded while parsing so readers ask no one. A Comark plugin.",
   "keywords": [
     "avatar",
@@ -13,13 +13,13 @@
     "mention",
     "plugin"
   ],
-  "homepage": "https://comark.onmax.me/chips",
-  "bugs": "https://github.com/onmax/comark-plugins/issues",
+  "homepage": "https://comark-ui.onmax.me/chips",
+  "bugs": "https://github.com/onmax/comark-ui/issues",
   "license": "MIT",
   "author": "onmax",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/onmax/comark-plugins.git",
+    "url": "git+https://github.com/onmax/comark-ui.git",
     "directory": "packages/chips"
   },
   "files": [

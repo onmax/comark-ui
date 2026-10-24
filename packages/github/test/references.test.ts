@@ -10,10 +10,10 @@ describe("comark-github references", () => {
   it("links mentions, issues in the repo, and issues in another repo", async () => {
     const html = await render(
       "Thanks @onmax, this fixes #12 and onmax/comark#3.",
-      "onmax/comark-plugins",
+      "onmax/comark-ui",
     );
     expect(html).toContain('<a href="https://github.com/onmax">@onmax</a>,');
-    expect(html).toContain('<a href="https://github.com/onmax/comark-plugins/issues/12">#12</a>');
+    expect(html).toContain('<a href="https://github.com/onmax/comark-ui/issues/12">#12</a>');
     expect(html).toContain(
       '<a href="https://github.com/onmax/comark/issues/3">onmax/comark#3</a>.',
     );
@@ -29,24 +29,22 @@ describe("comark-github references", () => {
   it("leaves emails, npm scopes, code, links, and words with a # alone", async () => {
     const html = await render(
       "Mail me@onmax.dev about `@onmax` and @comark/html, see [#4](https://x.dev) or C#9 and #4a.",
-      "onmax/comark-plugins",
+      "onmax/comark-ui",
     );
     expect(html).not.toContain("github.com");
   });
 
   it("finds references in nested inline content", async () => {
-    const html = await render("- **Ask @onmax** about _#7_", "onmax/comark-plugins");
+    const html = await render("- **Ask @onmax** about _#7_", "onmax/comark-ui");
     expect(html).toContain('<strong>Ask <a href="https://github.com/onmax">@onmax</a></strong>');
-    expect(html).toContain(
-      '<em><a href="https://github.com/onmax/comark-plugins/issues/7">#7</a></em>',
-    );
+    expect(html).toContain('<em><a href="https://github.com/onmax/comark-ui/issues/7">#7</a></em>');
   });
 
   it("reports a repo that isn't owner/name, and leaves #123 as text", async () => {
     const { meta } = await parseMarkdown("See #12.", {
-      plugins: [references({ repo: "https://github.com/onmax/comark-plugins" })],
+      plugins: [references({ repo: "https://github.com/onmax/comark-ui" })],
     });
     expect(meta.issues).toEqual([expect.stringMatching(/^references: `repo` must be owner\/name/)]);
-    expect(await render("See #12.", "comark-plugins")).not.toContain("<a");
+    expect(await render("See #12.", "comark-ui")).not.toContain("<a");
   });
 });

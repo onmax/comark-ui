@@ -23,13 +23,17 @@ export type IncludeMeta = {
   includes: string[];
   /** One readable sentence per problem, naming its include and the fix. Other plugins add theirs too. */
   issues: string[];
+  /** The comark-linter rule of each issue, by its sentence, so the linter reports it under its own code. */
+  issueRules: Record<string, string>;
 };
+
+type Issue = { rule: `comark/include/${string}`; message: string };
 
 interface Run {
   read: IncludeReader;
   depth: number;
   includes: Set<string>;
-  issues: string[];
+  issues: Issue[];
 }
 
 const LINE = /^([ \t]*):include\{(.*)\}\s*$/;
@@ -163,32 +167,47 @@ function region(lines: string[], name: string) {
 const trimBlankLines = (text: string) => text.replace(/^(?:[ \t]*\n)+/, "").replace(/\s+$/, "");
 
 async function include(source: string, folder: string, chain: string[], run: Run) {
-  const fail = (issue: string) => void run.issues.push(issue);
+  const fail = (rule: Issue["rule"], message: string) => void run.issues.push({ rule, message });
   const args = attributes(source);
   const src = args.get("src")?.trim();
-  if (!src) return fail('include: `src` is required, like :include{src="./part.md"}.');
+  if (!src)
+    return fail(
+      "comark/include/missing-src",
+      'include: `src` is required, like :include{src="./part.md"}.',
+    );
   const name = `include "${src}"`;
   let invalidOption = false;
   for (const key of args.keys())
     if (!OPTIONS.has(key)) {
       invalidOption = true;
-      fail(`${name}: \`${key}\` isn't an include option; use src, lines, region, code, or lang.`);
+      fail(
+        "comark/include/unknown-option",
+        `${name}: \`${key}\` isn't an include option; use src, lines, region, code, or lang.`,
+      );
     }
   if (invalidOption) return;
-  if (/^[a-z][a-z\d+.-]*:/i.test(src)) return fail(`${name}: only local files can be included.`);
+  if (/^[a-z][a-z\d+.-]*:/i.test(src))
+    return fail("comark/include/remote-file", `${name}: only local files can be included.`);
   const path = resolve(src.startsWith("/") ? "" : folder, src);
   const leaves = `${name}: the path leaves the root. Move the file under the root or widen \`root\`.`;
-  if (path === undefined) return fail(leaves);
+  if (path === undefined) return fail("comark/include/path-outside-root", leaves);
   const lines = args.get("lines");
   const regionName = args.get("region");
   if (lines !== undefined && regionName !== undefined)
-    return fail(`${name}: use \`lines\` or \`region\`, not both.`);
+    return fail(
+      "comark/include/lines-and-region",
+      `${name}: use \`lines\` or \`region\`, not both.`,
+    );
   if (chain.includes(path)) {
     const loop = [...chain.slice(chain.indexOf(path)), path].join(" -> ");
-    return fail(`${name}: ${path} includes itself (${loop}). Remove one of the includes.`);
+    return fail(
+      "comark/include/include-cycle",
+      `${name}: ${path} includes itself (${loop}). Remove one of the includes.`,
+    );
   }
   if (chain.length >= run.depth)
     return fail(
+      "comark/include/too-deep",
       `${name}: includes nest more than ${run.depth} deep (${[...chain, path].join(" -> ")}). Flatten them or raise \`depth\`.`,
     );
 
@@ -197,13 +216,15 @@ async function include(source: string, folder: string, chain: string[], run: Run
   try {
     text = await run.read(path);
   } catch (error) {
-    if (error instanceof OutsideRoot) return fail(leaves);
+    if (error instanceof OutsideRoot) return fail("comark/include/path-outside-root", leaves);
     return fail(
+      "comark/include/read-failed",
       `${name}: reading "${path}" failed: ${errorText(error)}. Check the file or the \`read\` option.`,
     );
   }
   if (text === undefined)
     return fail(
+      "comark/include/file-not-found",
       `${name}: file not found. It resolved to "${path}" under the root; check the path or base.`,
     );
 
@@ -220,10 +241,12 @@ async function include(source: string, folder: string, chain: string[], run: Run
     const [start, end] = [Number(from || 1), Number(to || body.length)];
     if ((!from && !to) || start < 1 || end < start)
       return fail(
+        "comark/include/invalid-lines",
         `${name}: lines="${lines}" isn't a range; write lines="10:24", 1-based and inclusive.`,
       );
     if (end > body.length)
       return fail(
+        "comark/include/invalid-lines",
         `${name}: lines="${lines}" runs past the end of ${path}, which has ${body.length} lines. End the range at ${body.length} or earlier.`,
       );
     body = dedent(body.slice(Math.max(start - 1, frontmatter), end));
@@ -232,10 +255,12 @@ async function include(source: string, folder: string, chain: string[], run: Run
     const found = region(body, regionName);
     if (found === "missing")
       return fail(
+        "comark/include/missing-region",
         `${name}: region "${regionName}" isn't in ${path}. Mark it with #region ${regionName} and #endregion ${regionName} comments, or fix the name.`,
       );
     if (found === "unclosed")
       return fail(
+        "comark/include/unclosed-region",
         `${name}: region "${regionName}" in ${path} never ends. Add a #endregion ${regionName} comment after it.`,
       );
     body = found;
@@ -257,6 +282,7 @@ async function include(source: string, folder: string, chain: string[], run: Run
   const open = openBlocks(pasted);
   if (open.length) {
     fail(
+      "comark/include/open-block-in-partial",
       `${name}: ${path} leaves ${open.map((block) => `${block.colons}${block.name}`).join(", ")} open, so it was closed at the end of the include. Close it in the partial.`,
     );
     pasted.push(...open.reverse().map((block) => block.colons));
@@ -309,7 +335,7 @@ function diskReader(root: string): IncludeReader {
 }
 
 /** Removes the includes the text splice couldn't expand, keeping whatever a `::include` took in. */
-function strays(list: Node[], start: number, issues: string[]) {
+function strays(list: Node[], start: number, issues: Issue[]) {
   const inline = list.slice(start).some((node) => !Array.isArray(node));
   for (let index = start; index < list.length; index++) {
     const node = list[index];
@@ -326,11 +352,13 @@ function strays(list: Node[], start: number, issues: string[]) {
         : // SAFETY: undefined, null, objects, and arrays returned above, so only a string, number, or boolean is left.
           String(attrs.src as string | number | boolean);
     const name = src ? `include "${src}"` : "include";
-    issues.push(
-      children.length || !inline
-        ? `${name}: \`::include\` takes in the rest of the document. Write it with one colon, :include{src="${src}"}, alone on its own line.`
-        : `${name} isn't on its own line, so it was dropped. Put it on a line of its own with nothing else.`,
-    );
+    issues.push({
+      rule: "comark/include/misplaced-include",
+      message:
+        children.length || !inline
+          ? `${name}: \`::include\` takes in the rest of the document. Write it with one colon, :include{src="${src}"}, alone on its own line.`
+          : `${name} isn't on its own line, so it was dropped. Put it on a line of its own with nothing else.`,
+    });
     list.splice(index, 1, ...children);
     index--;
   }
@@ -357,9 +385,10 @@ export default defineComarkPlugin<IncludeOptions, IncludeMeta>((options = {}) =>
       runs.set(state, run);
       const base = resolve("", options.base ?? "");
       if (base === undefined)
-        run.issues.push(
-          `include: \`base\` "${options.base ?? ""}" leaves the root. Set it to the document's folder under \`root\`.`,
-        );
+        run.issues.push({
+          rule: "comark/include/path-outside-root",
+          message: `include: \`base\` "${options.base ?? ""}" leaves the root. Set it to the document's folder under \`root\`.`,
+        });
       state.markdown = await expand(state.markdown.replace(/\r\n?/g, "\n"), base ?? "", [], run);
     },
     post(state) {
@@ -367,7 +396,12 @@ export default defineComarkPlugin<IncludeOptions, IncludeMeta>((options = {}) =>
       const { tree } = state;
       strays(tree.nodes, 0, run.issues);
       tree.meta.includes = [...run.includes];
-      tree.meta.issues = [...(tree.meta.issues ?? []), ...run.issues];
+      tree.meta.issues = [...(tree.meta.issues ?? []), ...run.issues.map((issue) => issue.message)];
+      if (run.issues.length)
+        tree.meta.issueRules = {
+          ...tree.meta.issueRules,
+          ...Object.fromEntries(run.issues.map((issue) => [issue.message, issue.rule])),
+        };
     },
   };
 });

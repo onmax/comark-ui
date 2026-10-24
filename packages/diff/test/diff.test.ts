@@ -220,4 +220,19 @@ describe("::diff", () => {
       'diff "b.ts": before and after are the same, so there\'s no change to show. Edit the after block, or remove the diff.',
     ]);
   });
+
+  it("names each issue's rule for the linter", async () => {
+    const document = await parseMarkdown(
+      `${diff("a", "b", ' {title="Fix"}')}\n::diff{file="b.ts"}\n${fence}diff\n-a\n+b\n${fence}\n::\n`,
+      { plugins: [diffPlugin()] },
+    );
+    expect(document.meta.issues).toEqual([
+      'diff "src/a.ts": `title` isn\'t a prop of `::diff`. Did you mean `label`? Valid props: file, line, label.',
+      'diff "b.ts": a ```diff block is a unified diff, and `::diff` draws the diff itself. Write the old lines in the first block and the new lines in the second, each in the file\'s language, like ```ts.',
+    ]);
+    expect(Object.values(document.meta.issueRules)).toEqual([
+      "comark/diff/unknown-prop",
+      "comark/diff/unified-diff",
+    ]);
+  });
 });

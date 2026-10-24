@@ -1,15 +1,16 @@
-<!-- Code blocks for `@comark/svelte`. Everything but `actions` belongs to the `pre` itself. -->
+<!-- Code blocks for `@comark/svelte`. Everything the parse plugin didn't write for the wrapper belongs to the `pre`. -->
 <script>
   import { onMount } from "svelte";
-  import { buttons, css, preAttributes, start } from "comark-code/client";
+  import { css, parts, start } from "comark-code/client";
 
-  let { actions = [], children, ...attrs } = $props();
+  let { children, ...attrs } = $props();
+  const block = $derived(parts(attrs));
 
   onMount(() => start(css));
 </script>
 
-<div class="ck">
-  <pre {...preAttributes(attrs)}>{@render children?.()}</pre>
+<div {...block.wrapper}>
+  <pre {...block.pre}>{@render children?.()}</pre>
   <!-- Static markup built from escaped text, the same string every renderer uses. -->
-  <div class="ck-bar">{@html buttons(actions, attrs)}</div>
+  <div class="ck-bar">{@html block.bar}</div>
 </div>

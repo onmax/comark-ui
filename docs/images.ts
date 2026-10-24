@@ -141,7 +141,7 @@ async function shoot(browser: Browser, screen: Screen, dark: boolean) {
 
 const underlineMark = draw("underline", 200, 60, 0);
 const underline = `<svg viewBox="${underlineMark.viewBox}" preserveAspectRatio="none" aria-hidden="true">${underlineMark.paths.map((d) => `<path d="${d}"/>`).join("")}</svg>`;
-const logo = `<svg viewBox="0 0 32 32" aria-hidden="true"><g fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="#f5f5f5" stroke-width="2.6" d="M13.6 9.5 11.8 22.5M20.2 9.5 18.4 22.5M9.6 13.6H23.2M8.8 18.4H22.4"/><path stroke="${red}" stroke-width="2.2" d="M9.3 7.3C15.3 3.7 27.1 4.5 28.7 11.5 30.4 19.1 22 26.7 12.8 27.2 5.9 27.6 2 23.5 3.5 18.1 4.8 13.3 11.1 9.7 18.1 9.6"/></g></svg>`;
+const logo = `<svg viewBox="0 0 32 32" aria-hidden="true"><rect stroke="#f5f5f5" x="6.5" y="11.4" width="19" height="10.2" fill="none" stroke-width="1.3"/><path fill="#f5f5f5" d="M7.87 20.24V12.76H10.07L12.26 15.51 14.46 12.76H16.66V20.24H14.46V15.95L12.26 18.7 10.07 15.95V20.24ZM18.64 12.98h2.19v2.12h-2.19ZM18.64 17.9h2.19v2.12h-2.19ZM21.94 12.98h2.19v2.12h-2.19ZM21.94 17.9h2.19v2.12h-2.19Z"/><path d="M9.3 7.3C15.3 3.7 27.1 4.5 28.7 11.5 30.4 19.1 22 26.7 12.8 27.2 5.9 27.6 2 23.5 3.5 18.1 4.8 13.3 11.1 9.7 18.1 9.6" fill="none" stroke="${red}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
 const browser = await chromium.launch();
 try {
@@ -256,7 +256,7 @@ body{--fg:#f5f5f5;--muted:#a3a3a3;--line:#262626;background:#0a0a0a;color:var(--
 .page img{max-width:100%}
 .page>:first-child{margin-top:0}`,
     `<div class="copy">
-<div class="brand">${logo}comark plugins</div>
+<div class="brand">${logo}comark ui</div>
 <h1>Review documents,<br>written in <span class="marked">Markdown.${underline}</span></h1>
 <p>Annotated screenshots, charts, tabs, icons,<br>and more. Plugins for Comark.</p>
 <div class="install"><span>+</span>${plugins} plugins</div>

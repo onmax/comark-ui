@@ -168,6 +168,7 @@ body {
 
 /* npmx, labeled with the package it opens, since on the playground that changes with the preset. */
 .top-end .npmx {
+  view-transition-name: npmx;
   height: 2rem;
   margin-right: 0.25rem;
   padding: 0 0.625rem;
@@ -218,6 +219,12 @@ body {
 }
 
 /* Search: a field-shaped button in the middle of the header, and a dialog under it. */
+html:not([data-search]) .search-open,
+html[data-mac] .kbd-other,
+html:not([data-mac]) .kbd-mac {
+  display: none !important;
+}
+
 .search-open {
   display: flex;
   align-items: center;
@@ -350,6 +357,23 @@ kbd {
   font-size: 0.75rem;
 }
 
+.search-results p {
+  display: -webkit-box;
+  margin: 0.125rem 0 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.search-results mark {
+  background: none;
+  color: var(--fg);
+  font-weight: 600;
+}
+
 /* Phones have no Escape key, so they get a Cancel button in its place. */
 .search-close {
   display: none;
@@ -396,7 +420,7 @@ kbd {
   position: relative;
 }
 
-.menu summary {
+.menu > summary {
   display: grid;
   place-items: center;
   width: 2.5rem;
@@ -407,12 +431,12 @@ kbd {
   cursor: pointer;
 }
 
-.menu summary::-webkit-details-marker {
+.menu > summary::-webkit-details-marker {
   display: none;
 }
 
-.menu summary:hover,
-.menu[open] summary {
+.menu > summary:hover,
+.menu[open] > summary {
   background: var(--soft);
   color: var(--fg);
 }
@@ -640,90 +664,15 @@ kbd {
   translate: -50% 0;
 }
 
-.canvas-bar .seg {
-  padding: 0;
-  box-shadow: none;
-  background: none;
-}
-
-.canvas-bar .seg button,
-.canvas-pause {
+.canvas-bar .seg button {
   display: grid;
   place-items: center;
   width: 2.25rem;
-  height: 2.25rem;
+  height: 2rem;
   padding: 0;
-  border-radius: 9px;
 }
 
-.canvas-bar .seg .indicator {
-  border-radius: 9px;
-}
-
-.canvas-pause {
-  position: relative;
-  border: 0;
-  background: none;
-  color: var(--muted);
-  cursor: pointer;
-  transition:
-    color 150ms ease,
-    background-color 150ms ease,
-    scale 160ms var(--ease-out);
-}
-
-.canvas-pause::before {
-  content: "";
-  position: absolute;
-  left: -0.25rem;
-  top: 0.5rem;
-  bottom: 0.5rem;
-  width: 1px;
-  background: var(--line);
-}
-
-.canvas-pause:hover {
-  background: var(--soft);
-  color: var(--fg);
-}
-
-.canvas-pause:active {
-  scale: 0.96;
-}
-
-.canvas-pause:focus-visible {
-  outline: 2px solid var(--fg);
-  outline-offset: -2px;
-}
-
-/* The pause and play icons swap with a blur, in one place. */
-.canvas-pause svg {
-  grid-area: 1 / 1;
-  transition:
-    opacity 200ms cubic-bezier(0.2, 0, 0, 1),
-    scale 200ms cubic-bezier(0.2, 0, 0, 1),
-    filter 200ms cubic-bezier(0.2, 0, 0, 1);
-}
-
-.canvas-pause svg:last-child,
-.canvas-pause[aria-pressed="true"] svg:first-child {
-  opacity: 0;
-  scale: 0.25;
-  filter: blur(4px);
-}
-
-.canvas-pause[aria-pressed="true"] svg:last-child {
-  opacity: 1;
-  scale: 1;
-  filter: none;
-}
-
-.canvas-pause svg:last-child {
-  width: 15px;
-  height: 15px;
-}
-
-.canvas[data-view="list"] :is(.canvas-viewport, .canvas-pause) {
+.canvas[data-view="list"] .canvas-viewport {
   display: none;
 }
 
@@ -747,9 +696,11 @@ kbd {
   display: flex;
   position: static;
   width: fit-content;
-  margin: 1rem auto 0;
+  margin: 1.5rem auto 0;
+  padding: 0;
+  background: none;
+  box-shadow: none;
   translate: none;
-  box-shadow: 0 0 0 1px var(--line);
   backdrop-filter: none;
 }
 
@@ -766,7 +717,22 @@ kbd {
     0 0 0 1px var(--line),
     0 1px 2px rgb(0 0 0 / 0.05),
     0 16px 32px -16px rgb(0 0 0 / 0.18);
-  transition: box-shadow 200ms ease;
+  /* Its size is in its markup, so adding a card to the stage lays out and paints that card alone. */
+  contain: strict;
+}
+
+/* Cards without a height are measured once in here, at their content's height. */
+.canvas-probe {
+  position: absolute;
+  width: 300px;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.canvas-probe .demo {
+  position: relative;
+  height: auto;
+  contain: none;
 }
 
 .demo-link {
@@ -775,27 +741,30 @@ kbd {
   align-items: center;
   gap: 0.5rem;
   height: 2.5rem;
-  padding: 0 2.5rem 0 0.5rem;
+  padding: 0 2.75rem 0 0.5rem;
   color: var(--fg);
   font: 500 0.8125rem/1 var(--mono);
   text-decoration: none;
   -webkit-user-drag: none;
+  transition: none;
 }
 
 .demo-link .ci {
   color: var(--faint);
 }
 
-.demo-link span {
-  color: var(--faint);
+/* The package's name stays whole; the example's label gives way. */
+.demo-link strong {
+  flex: none;
+  white-space: nowrap;
 }
 
-.demo-link .ci:last-child {
-  opacity: 0;
-  translate: -0.25rem 0.25rem;
-  transition:
-    opacity 200ms ease,
-    translate 200ms var(--ease-out);
+.demo-link span {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--faint);
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .demo-link::after {
@@ -805,6 +774,7 @@ kbd {
   border-radius: inherit;
 }
 
+/* The canvas holds still under the pointer: only the copy button answers it, and only with its color. */
 .demo-copy {
   position: absolute;
   top: 0.25rem;
@@ -819,12 +789,6 @@ kbd {
   background: none;
   color: var(--faint);
   cursor: pointer;
-  opacity: 0;
-  transition:
-    opacity 150ms ease,
-    color 150ms ease,
-    background-color 150ms ease,
-    scale 160ms var(--ease-out);
 }
 
 .demo-copy svg {
@@ -854,29 +818,8 @@ kbd {
   color: var(--fg);
 }
 
-.demo-copy:active {
-  scale: 0.96;
-}
-
-@media (hover: hover) {
-  .demo:hover {
-    box-shadow:
-      0 0 0 1px var(--faint),
-      0 1px 2px rgb(0 0 0 / 0.05),
-      0 24px 40px -16px rgb(0 0 0 / 0.26);
-  }
-
-  .demo:hover .demo-copy,
-  .demo:hover .demo-link .ci:last-child {
-    opacity: 1;
-    translate: 0;
-  }
-}
-
-@media (hover: none) {
-  .demo-copy {
-    opacity: 1;
-  }
+.demo[data-cut] .demo-screen {
+  mask-image: linear-gradient(#000 calc(100% - 3rem), transparent);
 }
 
 .demo-screen {
@@ -906,6 +849,15 @@ kbd {
   margin-bottom: 0;
 }
 
+/* Headings at a card's size, not the landing's. */
+.demo-page :is(h1, h2, h3, h4) {
+  margin: 0 0 0.5rem;
+  padding: 0;
+  border: 0;
+  font: 600 1.0625rem/1.35 var(--sans);
+  letter-spacing: -0.01em;
+}
+
 .demo-page img {
   -webkit-user-drag: none;
 }
@@ -915,9 +867,32 @@ kbd {
   display: none;
 }
 
-/* The card is the frame, so a chart or a diff drops its own. */
-.demo-page :is(.cch, .cd) {
+/* The card is the frame, so a block that draws its own drops it when it's all the card shows. */
+.demo-page
+  > :is(
+    .cch,
+    .cd,
+    .ce,
+    .ce-card,
+    .cgc,
+    .ck,
+    .cft,
+    .ct,
+    .cc,
+    .ccr,
+    .ccr-group,
+    .cdg,
+    .pele-diagram,
+    .cca,
+    .cdt,
+    .cdt-accordion,
+    .ctr,
+    .cfm,
+    .cmt-tiles,
+    .cqz
+  ):only-child {
   margin: 0;
+  padding: 0;
   border: 0;
   border-radius: 0;
   background: none;
@@ -926,6 +901,10 @@ kbd {
 
 .demo-page .cch {
   --cch-padding: 0;
+  padding: 0;
+}
+
+.demo-page > .cft:only-child {
   padding: 0;
 }
 
@@ -940,24 +919,18 @@ kbd {
   height: auto;
 }
 
-/* Paused by the bar, and whenever no one can see them. */
-.canvas:is([data-paused], [data-offscreen]) .demo *,
-.canvas:is([data-paused], [data-offscreen]) .demo *::before,
-.canvas:is([data-paused], [data-offscreen]) .demo *::after {
-  animation-play-state: paused !important;
+/* A card is a still of the page as rendered: the plugins' own entrances and transitions don't run in it. */
+.demo-page *,
+.demo-page *::before,
+.demo-page *::after {
+  animation: none !important;
+  transition: none !important;
 }
 
-/* The Markdown a card was drawn from, over its screen while the pointer is on the card. */
-.demo-source {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  background: var(--card);
-  opacity: 0;
-  filter: blur(4px);
-  transition:
-    opacity 200ms ease,
-    filter 200ms ease;
+/* A selection would only fight the drag. */
+.canvas-viewport * {
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .demo-source pre {
@@ -973,7 +946,8 @@ kbd {
 }
 
 @media (hover: hover) {
-  .demo:hover .demo-source {
+  .demo:has(.demo-md:hover) .demo-source {
+    content-visibility: visible;
     opacity: 1;
     filter: none;
   }
@@ -983,25 +957,17 @@ kbd {
    renders, so a still frame never hides anything. */
 .demo-annotate .ca-mark,
 .demo-carousel .cc-track,
-.demo-chips .cp,
-.demo-icon .ci,
-.demo-github .cgc,
 .demo-lint .term-line,
 .demo-zoom img,
 .demo-embed .demo-progress,
 .demo-embed .demo-play,
 .demo-code .ck-copy svg,
 .demo-code .ck-copy,
-.demo-tabs .ct-tab,
-.demo-tabs .ct-panel,
 .demo-include .ck,
 .demo-include .ck ~ *,
 .demo-include .demo-directive + p,
 .demo-diff tr,
 .demo-diff ins,
-.demo-charts .mark-rect path,
-.demo-charts .layer_1_marks text,
-.demo-charts-line .mark-line path,
 .demo-github-references a {
   animation-duration: 7s;
   animation-timing-function: var(--ease-out);
@@ -1009,69 +975,48 @@ kbd {
   animation-fill-mode: both;
 }
 
-/* annotate: the marks draw themselves in, one after the other, and the notes follow. */
+/* annotate: the marks redraw themselves one after the other, so only one is ever being drawn. */
 .demo-annotate .ca-mark {
   animation-name: demo-draw;
   animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1);
 }
 
 .demo-annotate .ca-mark[data-n="2"] {
-  animation-delay: 300ms;
+  animation-delay: 450ms;
 }
 
-.demo-annotate .ca-notes li {
-  animation: demo-rise 7s var(--ease-out) infinite both;
+.demo-annotate .ca-mark[data-n="3"] {
+  animation-delay: 900ms;
 }
 
-.demo-annotate .ca-notes li[data-n="2"] {
-  animation-delay: 300ms;
+.demo-annotate .ca-mark[data-n="4"] {
+  animation-delay: 1350ms;
+}
+
+.demo-annotate .ca-mark[data-n="5"] {
+  animation-delay: 1800ms;
+}
+
+.demo-annotate .ca-mark[data-n="6"] {
+  animation-delay: 2250ms;
 }
 
 @keyframes demo-draw {
-  0%,
-  6% {
+  0% {
     clip-path: inset(-150% -150% -150% -150%);
   }
 
-  10% {
+  4% {
     clip-path: inset(-150% -150% -150% 100%);
   }
 
-  11% {
+  5% {
     clip-path: inset(-150% 100% -150% -150%);
   }
 
-  22%,
+  16%,
   100% {
     clip-path: inset(-150% -150% -150% -150%);
-  }
-}
-
-@keyframes demo-rise {
-  0%,
-  6% {
-    opacity: 1;
-    translate: 0;
-    filter: none;
-  }
-
-  10% {
-    opacity: 0;
-    translate: 0 6px;
-    filter: blur(4px);
-  }
-
-  18% {
-    opacity: 0;
-    translate: 0 6px;
-    filter: blur(4px);
-  }
-
-  26%,
-  100% {
-    opacity: 1;
-    translate: 0;
-    filter: none;
   }
 }
 
@@ -1080,239 +1025,91 @@ kbd {
   --z: 0.72;
 }
 
-.demo-diff tr.cd-del {
-  animation-name: demo-strike;
-}
-
-.demo-diff tr.cd-add {
-  animation-name: demo-slide;
-}
-
-.demo-diff ins {
-  background-size: 200% 100%;
-  animation-name: demo-light;
-}
-
-@keyframes demo-strike {
-  0%,
-  12%,
-  100% {
-    opacity: 1;
-  }
-
-  22%,
-  30% {
-    opacity: 0.35;
-  }
-}
-
-@keyframes demo-slide {
-  0%,
-  20% {
-    opacity: 1;
-    translate: 0;
-  }
-
-  24% {
-    opacity: 0;
-    translate: -12px 0;
-  }
-
-  34%,
-  100% {
-    opacity: 1;
-    translate: 0;
-  }
-}
-
-@keyframes demo-light {
-  0%,
-  30%,
-  60%,
-  100% {
-    filter: none;
-  }
-
-  40% {
-    filter: brightness(1.35) saturate(1.3);
-  }
-}
-
-/* charts: the bars grow from the axis in turn, then their labels; the line draws itself. */
 .demo-charts {
   --z: 0.62;
 }
 
-.demo-charts .mark-rect path {
-  transform-box: fill-box;
-  transform-origin: 50% 100%;
-  animation-name: demo-grow;
+.demo-variants {
+  display: grid;
+  align-items: start;
 }
 
-.demo-charts .layer_1_marks text {
-  animation-name: demo-fade;
+.demo-variant {
+  grid-area: 1 / 1;
+  transition:
+    opacity 450ms ease,
+    translate 450ms var(--ease-out);
 }
 
-.demo-charts .mark-rect path:nth-child(2),
-.demo-charts .layer_1_marks text:nth-child(2) {
-  animation-delay: 90ms;
+.demo-variant:not([data-on]) {
+  opacity: 0;
+  translate: 0 8px;
 }
 
-.demo-charts .mark-rect path:nth-child(3),
-.demo-charts .layer_1_marks text:nth-child(3) {
-  animation-delay: 180ms;
+/* chips and icons: the chips hold still and each one's favicon or avatar nudges in turn, as icons do. Only the
+   page's icons: the card's own header icon stays put. */
+.demo-chips .cp-img,
+.demo-icon .demo-page .ci {
+  animation: demo-nudge 3.5s var(--ease-out) infinite both;
 }
 
-.demo-charts .mark-rect path:nth-child(4),
-.demo-charts .layer_1_marks text:nth-child(4) {
-  animation-delay: 270ms;
+.demo-chips .cp:nth-of-type(2) .cp-img,
+.demo-icon .demo-page .ci:nth-of-type(2) {
+  animation-delay: 150ms;
 }
 
-.demo-charts .mark-rect path:nth-child(5),
-.demo-charts .layer_1_marks text:nth-child(5) {
-  animation-delay: 360ms;
+.demo-chips .cp:nth-of-type(3) .cp-img,
+.demo-icon .demo-page .ci:nth-of-type(3) {
+  animation-delay: 300ms;
 }
 
-@keyframes demo-grow {
+.demo-chips .cp:nth-of-type(4) .cp-img,
+.demo-icon .demo-page .ci:nth-of-type(4) {
+  animation-delay: 450ms;
+}
+
+.demo-icon .demo-page .ci:nth-of-type(5) {
+  animation-delay: 600ms;
+}
+
+/* github: each callout's icon nudges in turn, and the references light up in turn. The callout itself stays, so
+   the card never goes blank. */
+.demo-github .cgc-icon {
+  animation: demo-nudge 3.5s var(--ease-out) infinite both;
+}
+
+.demo-github .cgc + .cgc .cgc-icon {
+  animation-delay: 300ms;
+}
+
+@keyframes demo-nudge {
   0%,
-  6% {
-    scale: 1 1;
-  }
-
-  10%,
-  12% {
-    scale: 1 0;
-  }
-
-  24%,
+  18%,
   100% {
-    scale: 1 1;
-  }
-}
-
-@keyframes demo-fade {
-  0%,
-  6% {
-    opacity: 1;
-  }
-
-  9%,
-  20% {
-    opacity: 0;
-  }
-
-  28%,
-  100% {
-    opacity: 1;
-  }
-}
-
-.demo-charts-line .mark-line path {
-  stroke-dasharray: 1200;
-  animation-name: demo-line;
-  animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1);
-}
-
-.demo-charts-line .mark-line + .mark-line path,
-.demo-charts-line .mark-line:nth-of-type(2) path {
-  animation-delay: 250ms;
-}
-
-@keyframes demo-line {
-  0%,
-  6% {
-    stroke-dashoffset: 0;
-  }
-
-  9%,
-  12% {
-    stroke-dashoffset: 1200;
-  }
-
-  40%,
-  100% {
-    stroke-dashoffset: 0;
-  }
-}
-
-/* chips: each link turns into its chip in turn. */
-.demo-chips .cp,
-.demo-icon .ci {
-  animation-name: demo-pop;
-}
-
-.demo-chips .cp:nth-of-type(2),
-.demo-icon .ci:nth-of-type(2) {
-  animation-delay: 120ms;
-}
-
-.demo-chips .cp:nth-of-type(3),
-.demo-icon .ci:nth-of-type(3) {
-  animation-delay: 240ms;
-}
-
-.demo-chips .cp:nth-of-type(4),
-.demo-icon .ci:nth-of-type(4) {
-  animation-delay: 360ms;
-}
-
-.demo-icon .ci:nth-of-type(5) {
-  animation-delay: 480ms;
-}
-
-@keyframes demo-pop {
-  0%,
-  6% {
-    opacity: 1;
     scale: 1;
-    filter: none;
   }
 
-  9%,
-  12% {
-    opacity: 0;
-    scale: 0.6;
-    filter: blur(4px);
+  6% {
+    scale: 1.25;
   }
-
-  20%,
-  100% {
-    opacity: 1;
-    scale: 1;
-    filter: none;
-  }
-}
-
-/* icon: a row of logos, large enough to read as icons. */
-.demo-icon {
-  --z: 1;
-}
-
-.demo-icon p {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.875rem 1rem;
-  margin: 0;
-  font-size: 0;
-}
-
-.demo-icon .ci {
-  --comark-icon-size: 2.25rem;
-  font-size: 1rem;
-}
-
-/* github: the callouts land one after the other; the references light up in turn. */
-.demo-github .cgc {
-  animation-name: demo-rise;
-}
-
-.demo-github .cgc + .cgc {
-  animation-delay: 160ms;
 }
 
 .demo-github-references a {
-  animation-name: demo-pop;
+  border-radius: 4px;
+  animation-name: demo-tint;
+}
+
+@keyframes demo-tint {
+  0%,
+  16%,
+  100% {
+    background-color: transparent;
+  }
+
+  5%,
+  10% {
+    background-color: color-mix(in oklch, #3b82f6 20%, transparent);
+  }
 }
 
 .demo-github-references a:nth-of-type(2) {
@@ -1321,83 +1118,6 @@ kbd {
 
 .demo-github-references a:nth-of-type(3) {
   animation-delay: 280ms;
-}
-
-/* tabs: the code group steps through its tabs. */
-.demo-tabs .ct .ct-panel[data-inactive] {
-  display: block;
-}
-
-.demo-tabs .ct {
-  display: grid;
-}
-
-.demo-tabs .ct-list {
-  grid-area: 1 / 1;
-}
-
-.demo-tabs .ct-panel {
-  grid-area: 2 / 1;
-  animation-name: demo-panel;
-  animation-duration: 6s;
-  animation-timing-function: ease;
-}
-
-.demo-tabs .ct-tab {
-  animation-name: demo-tab;
-  animation-duration: 6s;
-  animation-timing-function: ease;
-}
-
-/* Started part of the way through, so each tab waits its turn off. The list is the group's first child, so the
-   second tab's panel is its third. */
-.demo-tabs .ct-tab:nth-child(2),
-.demo-tabs .ct-panel:nth-child(3) {
-  animation-delay: -4s;
-}
-
-.demo-tabs .ct-tab:nth-child(3),
-.demo-tabs .ct-panel:nth-child(4) {
-  animation-delay: -2s;
-}
-
-@keyframes demo-tab {
-  0%,
-  31% {
-    background: var(--_comark-background);
-    color: var(--_comark-foreground);
-    box-shadow: inset 0 0 0 1px
-      color-mix(in srgb, var(--_comark-border), var(--_comark-foreground) 8%);
-  }
-
-  35%,
-  100% {
-    background: transparent;
-    color: var(--_comark-muted);
-    box-shadow: inset 0 0 0 1px transparent;
-  }
-}
-
-@keyframes demo-panel {
-  0%,
-  31% {
-    opacity: 1;
-    translate: 0;
-    filter: none;
-  }
-
-  35%,
-  97% {
-    opacity: 0;
-    translate: 0 4px;
-    filter: blur(2px);
-  }
-
-  100% {
-    opacity: 1;
-    translate: 0;
-    filter: none;
-  }
 }
 
 /* zoom: the image lifts out of the page and settles back. */
@@ -1425,17 +1145,14 @@ kbd {
 
 @keyframes demo-zoom {
   0%,
-  14%,
-  58%,
+  48%,
   100% {
     scale: 1;
-    box-shadow: 0 0 0 0 rgb(0 0 0 / 0);
   }
 
-  24%,
-  46% {
+  12%,
+  36% {
     scale: 1.28;
-    box-shadow: 0 18px 40px -12px rgb(0 0 0 / 0.45);
   }
 }
 
@@ -1451,21 +1168,21 @@ kbd {
 }
 
 @keyframes demo-slides {
-  0%,
-  28% {
+  0% {
     translate: 0;
   }
 
-  33%,
-  61% {
+  5%,
+  30% {
     translate: -100% 0;
   }
 
-  66%,
-  94% {
+  35%,
+  60% {
     translate: -200% 0;
   }
 
+  65%,
   100% {
     translate: 0;
   }
@@ -1477,12 +1194,16 @@ kbd {
   opacity: 1;
 }
 
-.demo-code .ck-copy {
-  animation-name: demo-press;
+/* A card is too narrow to scroll, so its code wraps. */
+.demo-page pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
-.demo-code .ck-copy svg:first-child {
-  animation-name: demo-icon-out;
+/* embed: a still of the player, playing. The still fills whatever frame the embed's size gives it. */
+.demo-page .ce-frame:has(.demo-player) {
+  aspect-ratio: 16 / 9;
+  height: auto;
 }
 
 .demo-code .ck-copy svg:last-child {
@@ -1491,50 +1212,45 @@ kbd {
 
 @keyframes demo-press {
   0%,
-  20%,
-  26%,
+  9%,
   100% {
     scale: 1;
   }
 
-  23% {
+  4% {
     scale: 0.9;
   }
 }
 
 @keyframes demo-icon-out {
   0%,
-  23%,
-  60%,
+  4%,
+  43%,
   100% {
     opacity: 1;
     scale: 1;
-    filter: none;
   }
 
-  27%,
-  56% {
+  8%,
+  39% {
     opacity: 0;
     scale: 0.25;
-    filter: blur(4px);
   }
 }
 
 @keyframes demo-icon-in {
   0%,
-  23%,
-  60%,
+  4%,
+  43%,
   100% {
     opacity: 0;
     scale: 0.25;
-    filter: blur(4px);
   }
 
-  27%,
-  56% {
+  8%,
+  39% {
     opacity: 1;
     scale: 1;
-    filter: none;
   }
 }
 
@@ -1551,7 +1267,7 @@ kbd {
 .demo-directive code {
   padding: 0;
   background: none;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
 .demo-include .demo-directive + p,
@@ -1564,26 +1280,36 @@ kbd {
 }
 
 @keyframes demo-unfold {
-  0%,
-  6% {
+  0% {
     opacity: 1;
     clip-path: inset(0);
   }
 
-  10%,
-  14% {
+  4%,
+  8% {
     opacity: 0;
     clip-path: inset(0 0 100% 0);
   }
 
-  26%,
+  20%,
   100% {
     opacity: 1;
     clip-path: inset(0);
   }
 }
 
-/* embed: a still of the player, playing. */
+/* A card is too narrow to scroll, so its code wraps. */
+.demo-page pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* embed: a still of the player, playing. The still fills whatever frame the embed's size gives it. */
+.demo-page .ce-frame:has(.demo-player) {
+  aspect-ratio: 16 / 9;
+  height: auto;
+}
+
 .demo-player {
   position: relative;
   display: grid;
@@ -1605,35 +1331,6 @@ kbd {
   border-radius: 10px;
   background: #e5484d;
   color: #fff;
-  animation-name: demo-pulse;
-  animation-timing-function: ease-in-out;
-}
-
-.demo-progress {
-  position: absolute;
-  inset: auto 0 0 0;
-  height: 3px;
-  background: #e5484d;
-  transform-origin: 0 50%;
-  animation-name: demo-progress;
-  animation-timing-function: linear;
-}
-
-@keyframes demo-pulse {
-  0%,
-  100% {
-    scale: 1;
-  }
-
-  50% {
-    scale: 1.08;
-  }
-}
-
-@keyframes demo-progress {
-  from {
-    scale: 0 1;
-  }
 }
 
 /* lint: lint-comark's report, a line at a time, as a terminal prints it. */
@@ -1655,8 +1352,6 @@ kbd {
 
 .term-line {
   display: block;
-  animation-name: demo-print;
-  animation-delay: calc(var(--i) * 140ms);
 }
 
 .term-cmd {
@@ -1689,21 +1384,53 @@ kbd {
   font-weight: 600;
 }
 
-@keyframes demo-print {
-  0%,
-  4% {
-    opacity: 1;
-  }
+.term-fix {
+  color: oklch(0.72 0.12 150);
+}
 
-  6%,
-  10% {
-    opacity: 0;
-  }
+.term-fix code,
+.term-ok code {
+  padding: 0;
+  background: none;
+  color: inherit;
+}
 
-  11%,
-  100% {
-    opacity: 1;
-  }
+.term-ok {
+  display: block;
+  color: #16a34a;
+  font-weight: 600;
+}
+
+/* A Doctor rule's examples: the Markdown, then what lint-comark prints for it. */
+.rule-example {
+  margin: 1.25rem 0;
+}
+
+.rule-verdict {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin: 0 0 0.5rem;
+  font-weight: 600;
+}
+
+.rule-incorrect .rule-verdict {
+  color: #e5484d;
+}
+
+.rule-correct .rule-verdict {
+  color: #16a34a;
+}
+
+.rule-example .term {
+  margin-top: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  background: oklch(0.17 0 0);
+}
+
+.rule-example .term-where:first-of-type {
+  margin-top: 0.25rem;
 }
 
 /* With reduced motion the cards hold still, as rendered. */
@@ -1715,31 +1442,32 @@ kbd {
   }
 }
 
-/* The packages as a list: tiles sharing their borders, each one link. */
+/* The packages as a list: tiles sharing their borders, each one link, with an arrow that comes in on hover. */
 .grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   margin: 0;
   padding: 0;
-  border-top: 1px solid var(--line);
-  border-left: 1px solid var(--line);
+  overflow: hidden;
+  border-radius: 16px;
+  box-shadow: 0 0 0 1px var(--line);
   list-style: none;
 }
 
 .grid li {
   display: flex;
-  position: relative;
-  border-right: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
+  box-shadow:
+    1px 0 0 var(--line),
+    0 1px 0 var(--line);
 }
 
 .grid a {
   display: grid;
   flex: 1;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 0.125rem 1rem;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.125rem 0.875rem;
   align-items: center;
-  padding: 1.5rem;
+  padding: 1.25rem 1.25rem 1.25rem 1rem;
   color: var(--muted);
   font-size: 0.875rem;
   line-height: 1.5;
@@ -1747,14 +1475,38 @@ kbd {
   transition: background-color 150ms ease;
 }
 
-.grid .ci {
+.grid-icon {
+  display: grid;
   grid-row: span 2;
-  color: var(--faint);
-  transition: color 150ms ease;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 10px;
+  background: var(--soft);
+  color: var(--fg);
+  transition: background-color 150ms ease;
 }
 
 .grid strong {
+  grid-column: 2;
+  color: var(--fg);
   font: 500 0.875rem/1.4 var(--mono);
+}
+
+.grid a > span:not([class]) {
+  grid-column: 2;
+  text-wrap: pretty;
+}
+
+.grid-arrow {
+  display: flex;
+  grid-area: 1 / 3 / span 2;
+  color: var(--faint);
+  opacity: 0;
+  translate: -0.25rem 0.25rem;
+  transition:
+    opacity 200ms ease,
+    translate 200ms var(--ease-out);
 }
 
 .grid a:focus-visible {
@@ -1762,42 +1514,18 @@ kbd {
   outline-offset: -2px;
 }
 
-.grid-copy {
-  position: absolute;
-  right: 0.75rem;
-  bottom: 0.75rem;
-  display: grid;
-  place-items: center;
-  width: 2rem;
-  height: 2rem;
-  border: 0;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--muted);
-  cursor: pointer;
-}
-
-.grid-copy:hover {
-  background: var(--soft);
-  color: var(--fg);
-}
-
-.grid-copy:focus-visible {
-  outline: 2px solid var(--fg);
-  outline-offset: -2px;
-}
-
-.grid-copy.copied {
-  color: #16a34a;
-}
-
 @media (hover: hover) {
   .grid a:hover {
     background: var(--soft);
   }
 
-  .grid a:hover .ci {
-    color: var(--fg);
+  .grid a:hover .grid-icon {
+    background: var(--bg);
+  }
+
+  .grid a:hover .grid-arrow {
+    opacity: 1;
+    translate: 0;
   }
 }
 
@@ -1971,7 +1699,10 @@ kbd {
   inset: 0 auto 0 0;
   z-index: 5;
   width: 3.25rem;
-  overflow: hidden;
+  /* More sections than a short screen holds: it scrolls on its own, without a bar in its narrow column. */
+  overflow: hidden auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
   border-right: 1px solid var(--line);
   background: var(--bg);
   transition:
@@ -2109,23 +1840,6 @@ kbd {
   font-weight: 500;
 }
 
-/* Opens the section's first example in the playground. */
-.pages a.pages-play {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-top: 1.25rem;
-  padding: 0.5rem 0.625rem;
-  box-shadow: inset 0 0 0 1px var(--line);
-  color: var(--muted);
-  font-weight: 500;
-}
-
-.pages a.pages-play:hover {
-  background: var(--soft);
-  color: var(--fg);
-}
-
 /* Not the links inside a preset's still, which keep the look the plugins give them. */
 .pages a:not(.preset-page *) {
   margin: 0 -0.5rem;
@@ -2147,6 +1861,20 @@ kbd {
   background: var(--soft);
 }
 
+/* A component's own page sits under Components, on a guide line, in the name it has in Markdown. */
+.pages a.nav-sub {
+  margin-left: 0.25rem;
+  padding-left: 0.875rem;
+  border-radius: 0 6px 6px 0;
+  box-shadow: inset 1px 0 0 var(--line);
+  font-family: var(--mono);
+  font-size: 0.75rem;
+}
+
+.pages a.nav-sub[aria-current] {
+  box-shadow: inset 1px 0 0 var(--fg);
+}
+
 .page {
   display: grid;
   grid-template-columns: minmax(0, 48rem) 10rem;
@@ -2163,7 +1891,7 @@ kbd {
   flex-direction: column;
   max-height: calc(100dvh - 3.5rem);
   overflow-y: auto;
-  padding: 3.5rem 0 2rem;
+  padding: 2.5rem 0 2rem;
   font-size: 0.8125rem;
 }
 
@@ -2194,7 +1922,7 @@ nav > .nav-group:first-child {
 
 .content {
   min-width: 0;
-  padding: 3.5rem 0 4rem;
+  padding: 2.5rem 0 2rem;
 }
 
 .hero .eyebrow {
@@ -2207,7 +1935,7 @@ nav > .nav-group:first-child {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
-  margin-top: 4rem;
+  margin-top: 3rem;
 }
 
 .pager a {
@@ -2247,8 +1975,11 @@ nav > .nav-group:first-child {
   text-align: right;
 }
 
+/* The pager's cards already close the page, so the footer drops its rule under them. */
 .pager + footer {
-  margin-top: 3rem;
+  margin-top: 2rem;
+  padding-top: 0;
+  border-top: 0;
 }
 
 .hero p {
@@ -2707,8 +2438,9 @@ a.window-play:hover {
   font-weight: 500;
 }
 
-/* Out of view until its step; the page shows the fixed state, so it's the one without the script. */
+/* Out of view until its step. At rest, before anything plays, the issue shows, fixed. */
 .studio-issue,
+.studio:not([data-phase]) .studio-ok,
 .studio[data-phase]:is([data-phase="fix"], [data-phase="render"]) .studio-issue,
 .studio:is([data-phase="waiting"], [data-phase="write"], [data-phase="check"]) .studio-ok {
   opacity: 0;
@@ -2717,6 +2449,7 @@ a.window-play:hover {
   pointer-events: none;
 }
 
+.studio:not([data-phase]) .studio-issue,
 .studio[data-phase="check"] .studio-issue {
   opacity: 1;
   translate: 0;
@@ -2750,6 +2483,32 @@ a.window-play:hover {
 
 .studio-ghost {
   display: none;
+}
+
+/* At rest: the issue the plugins reported, marked fixed, and the value the agent changed for it. */
+.studio:not([data-phase]) .studio-dot {
+  background: #16a34a;
+  box-shadow: 0 0 0 3px color-mix(in oklch, #16a34a 22%, transparent);
+}
+
+.studio-fixed {
+  display: none;
+}
+
+.studio:not([data-phase]) .studio-fixed {
+  display: inline;
+  margin-right: 0.5rem;
+  color: #16a34a;
+  font-weight: 500;
+}
+
+.studio:not([data-phase]) .studio-fix ins {
+  background: color-mix(in oklch, #16a34a 18%, transparent);
+}
+
+.studio:not([data-phase]) .studio-gutter [data-fix] {
+  color: #16a34a;
+  opacity: 1;
 }
 
 /* Waiting to scroll into view: nothing typed, nothing drawn. */
@@ -3015,7 +2774,7 @@ a.window-play:hover {
 }
 
 main {
-  margin-top: 3rem;
+  margin-top: 2rem;
 }
 
 main > :first-child {
@@ -3027,8 +2786,9 @@ li {
   text-wrap: pretty;
 }
 
-/* Unlayered, these would beat the embed's and the chips' own link styles, which the page shows off. */
-a:where(:not(.ce-card, .ce a, .cp)) {
+/* Unlayered, these would beat the embed's, the chips', the table of contents', and the sources' own link styles, which
+   the page shows off. */
+a:where(:not(.ce-card, .ce a, .cp, .cto a, .cso a, .cso-cite a)) {
   color: var(--fg);
   text-decoration: underline;
   text-decoration-color: var(--line);
@@ -3037,7 +2797,7 @@ a:where(:not(.ce-card, .ce a, .cp)) {
   transition: text-decoration-color 150ms ease;
 }
 
-a:where(:not(.ce-card, .ce a, .cp)):hover {
+a:where(:not(.ce-card, .ce a, .cp, .cto a, .cso a, .cso-cite a)):hover {
   text-decoration-color: var(--fg);
 }
 
@@ -3063,6 +2823,29 @@ h3 {
   margin: 2.25rem 0 0.5rem;
   color: var(--fg);
   font: 500 0.875rem/1.5 var(--mono);
+}
+
+/* comark-links puts each heading in a flex row with its # link, so the row takes the heading's rule and spacing. */
+:where(.cl-heading):has(> h2) {
+  margin: 3.5rem 0 1rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--line);
+}
+
+:where(.cl-heading):has(> h3) {
+  margin: 2.25rem 0 0.5rem;
+}
+
+.cl-heading > :is(h2, h3),
+.landing .cl-heading {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+/* The row's rule sits above the heading now, so a jump to it stops that much higher. */
+.cl-heading > h2 {
+  scroll-margin-top: 5.75rem;
 }
 
 code {
@@ -3100,7 +2883,13 @@ pre {
   box-shadow: inset 0 0 0 1px var(--line);
 }
 
-pre .line {
+/* comark-cast's terminal draws its own border. */
+pre.cca-term {
+  box-shadow: none;
+}
+
+/* Not comark-code's numbered or marked lines, which are blocks with their newline inside, so a tint covers its row. */
+pre:not(.ck[data-code-lines] > pre) .line {
   display: inline !important;
 }
 
@@ -3250,10 +3039,40 @@ blockquote {
   border-left: 2px solid var(--line);
 }
 
+/* A definition list: each term in the text's weight, and its definitions under it, muted beside a guide line. Only
+   comark-deflist's, which carry no class; a component's own `dl`, such as comark-properties', keeps its styles. */
+dl:not([class]) {
+  margin: 1.25rem 0;
+}
+
+dl:not([class]) > dt {
+  margin-top: 0.75rem;
+  color: var(--fg);
+  font-weight: 500;
+}
+
+dl:not([class]) > dt:first-child {
+  margin-top: 0;
+}
+
+dl:not([class]) > dd {
+  margin: 0.25rem 0 0 0.25rem;
+  padding-left: 0.875rem;
+  border-left: 1px solid var(--line);
+}
+
+dl:not([class]) > dd > :first-child {
+  margin-top: 0;
+}
+
+dl:not([class]) > dd > :last-child {
+  margin-bottom: 0;
+}
+
 /* One line per edge: the tabs carry only the selected underline, the Preview/Code switch shares their row, and the frame is a single soft ring. */
 .examples {
   position: relative;
-  margin: 2.5rem 0 1rem;
+  margin: 2.5rem 0 1.5rem;
 }
 
 .tablist {
@@ -3314,13 +3133,13 @@ blockquote {
 }
 
 .seg .indicator {
-  top: 2px;
-  bottom: 2px;
-  border-radius: 6px;
+  top: 3px;
+  bottom: 3px;
+  border-radius: 7px;
   background: var(--bg);
   box-shadow:
-    0 0 0 1px var(--line),
-    0 1px 2px rgb(0 0 0 / 0.06);
+    0 0 0 0.5px rgb(0 0 0 / 0.06),
+    0 1px 3px rgb(0 0 0 / 0.1);
 }
 
 .seg button {
@@ -3354,56 +3173,236 @@ blockquote {
   margin: 0;
 }
 
-.example-body {
-  border: 1px solid transparent;
-  border-radius: 6px;
-  box-shadow: 0 0 0 1px var(--line);
-}
-
+/* A switch: one soft track and a raised thumb on the choice, with no lines between them. */
 .seg {
   display: inline-flex;
-  padding: 2px;
-  border-radius: 8px;
+  padding: 3px;
+  border-radius: 10px;
   background: var(--soft);
-  box-shadow: inset 0 0 0 1px var(--line);
 }
 
 .seg button {
   padding: 0.2rem 0.65rem;
   border: 0;
-  border-radius: 6px;
+  border-radius: 7px;
   background: none;
   color: var(--muted);
   font: 500 0.75rem/1.5 var(--sans);
   cursor: pointer;
+  transition: color 150ms ease;
+}
+
+.seg button:hover,
+.seg [aria-pressed="true"] {
+  color: var(--fg);
 }
 
 .seg [aria-pressed="true"] {
   background: var(--bg);
   box-shadow:
-    0 0 0 1px var(--line),
-    0 1px 2px rgb(0 0 0 / 0.06);
-  color: var(--fg);
+    0 0 0 0.5px rgb(0 0 0 / 0.06),
+    0 1px 3px rgb(0 0 0 / 0.1);
+}
+
+.seg button:focus-visible {
+  outline: 2px solid var(--fg);
+  outline-offset: -2px;
+}
+
+/* The code sits in one soft ring, and so does a preview of text, with the content's own margins trimmed at its edges. */
+.example-preview,
+.example-code {
+  border-radius: 10px;
+  box-shadow: 0 0 0 1px var(--line);
 }
 
 .example-preview {
-  padding: 1.75rem 1.5rem;
+  padding: 1.25rem 1.5rem;
+}
+
+.example-preview > :nth-child(1 of :not(style, script)) {
+  margin-top: 0;
+}
+
+.example-preview > :nth-last-child(1 of :not(style, script)) {
+  margin-bottom: 0;
 }
 
 .example-preview > :is(.ca, .cd, .ce, .ce-card, .cch) {
   margin: 0;
 }
 
-/* A chart, a link card, or a diff draws its own card, so a preview of only that, after its styles, drops the frame rather than nest one card in another. */
-.example-body:has(
-  > .example-preview:not([hidden])
-    > :is(.cch, .ce-card, .cd):last-child:not(:not(style, script) ~ *)
+/* A block that draws its own frame (a chart, a diff, a diagram, a code block and its notes, a file tree, callouts,
+   tabs, a carousel, a card, a test report, a properties box) isn't framed again: a preview that holds one drops its
+   ring and padding. */
+.example-preview:has(
+  > :is(
+    .cch,
+    .cd,
+    .ce,
+    .ce-card,
+    .cgc,
+    .ck,
+    .cft,
+    .ct,
+    .cc,
+    .ccr,
+    .ccr-group,
+    .cdg,
+    .pele-diagram,
+    .cca,
+    .cdt,
+    .cdt-accordion,
+    .ctr,
+    .cfm,
+    .cmt-tiles,
+    .cqz,
+    .cm-video,
+    video.cm,
+    .cn-notes
+  )
 ) {
+  padding: 0;
+  border-radius: 0;
   box-shadow: none;
 }
 
-.example-preview:has(> :is(.cch, .ce-card, .cd):last-child:not(:not(style, script) ~ *)) {
-  padding: 0;
+/* Only such blocks stack with a gap. */
+.example-preview:not(
+  :has(
+    > :not(
+      style,
+      script,
+      .cch,
+      .cd,
+      .ce,
+      .ce-card,
+      .cgc,
+      .ck,
+      .cft,
+      .ct,
+      .cc,
+      .ccr,
+      .ccr-group,
+      .cdg,
+      .pele-diagram,
+      .cca,
+      .cdt,
+      .cdt-accordion,
+      .ctr,
+      .cfm,
+      .cmt-tiles,
+      .cqz,
+      .cm-video,
+      video.cm,
+      .cn-notes
+    )
+  )
+) {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.example-preview:not(
+    :has(
+      > :not(
+        style,
+        script,
+        .cch,
+        .cd,
+        .ce,
+        .ce-card,
+        .cgc,
+        .ck,
+        .cft,
+        .ct,
+        .cc,
+        .ccr,
+        .ccr-group,
+        .cdg,
+        .pele-diagram,
+        .cca,
+        .cdt,
+        .cdt-accordion,
+        .ctr,
+        .cfm,
+        .cmt-tiles,
+        .cqz,
+        .cm-video,
+        video.cm,
+        .cn-notes
+      )
+    )
+  )
+  > * {
+  margin-block: 0;
+}
+
+/* With text among them, a rule under the example keeps its last lines from reading as the page's. */
+.example-preview:has(
+    > :is(
+      .cch,
+      .cd,
+      .ce,
+      .ce-card,
+      .cgc,
+      .ck,
+      .cft,
+      .ct,
+      .cc,
+      .ccr,
+      .ccr-group,
+      .cdg,
+      .pele-diagram,
+      .cca,
+      .cdt,
+      .cdt-accordion,
+      .ctr,
+      .cfm,
+      .cmt-tiles,
+      .cqz,
+      .cm-video,
+      video.cm,
+      .cn-notes
+    )
+  ):has(
+    > :not(
+      style,
+      script,
+      .cch,
+      .cd,
+      .ce,
+      .ce-card,
+      .cgc,
+      .ck,
+      .cft,
+      .ct,
+      .cc,
+      .ccr,
+      .ccr-group,
+      .cdg,
+      .pele-diagram,
+      .cca,
+      .cdt,
+      .cdt-accordion,
+      .ctr,
+      .cfm,
+      .cmt-tiles,
+      .cqz,
+      .cm-video,
+      video.cm,
+      .cn-notes
+    )
+  ) {
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--line);
+}
+
+/* A heading after the example draws its own rule. */
+:is(.example, .examples):has(+ :is(h2, hr)) .example-preview {
+  padding-bottom: 0;
+  border-bottom: 0;
 }
 
 .example-code pre {
@@ -3436,7 +3435,7 @@ footer {
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 0.5rem 1rem;
-  margin-top: 6rem;
+  margin-top: 3rem;
   padding-top: 1.5rem;
   border-top: 1px solid var(--line);
   color: var(--faint);
@@ -3461,6 +3460,27 @@ footer a {
 }
 
 /* After the first load, a page only fades in: the entrance above took 670 ms to settle on every click. */
+/* A navigation swaps the page at once and keeps its own fade-in; only the npmx chip animates across it. The two
+   chips stay at their own width, right-aligned as in the header, so the text never stretches: they cross-fade, and
+   the pill seems to grow or shrink into the next package's name. The same chip on both pages cross-fades into
+   itself, which shows nothing. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
+
+::view-transition-group(npmx) {
+  animation-duration: 250ms;
+  animation-timing-function: var(--ease-out);
+}
+
+::view-transition-old(npmx),
+::view-transition-new(npmx) {
+  inset: 0 0 auto auto;
+  width: auto;
+  height: 100%;
+}
+
 [data-navigated] .enter {
   animation: fade 120ms ease-out both;
 }
@@ -3512,20 +3532,26 @@ footer a {
   }
 }
 
-/* Too narrow to share the tab row: the switch gets its own row and the tabs scroll. */
+/* The tabs stop well short of the Playground link and the switch beside them, and scroll when there are more. */
+.examples .tablist {
+  margin-right: 15.5rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.examples .tablist button {
+  flex: none;
+}
+
+/* Too narrow to share the tab row: the switch gets its own row. */
 @media (max-width: 40rem) {
   .examples .example-bar {
     position: static;
     margin-bottom: 0.5rem;
   }
 
-  .tablist {
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-
-  .tablist button {
-    flex: none;
+  .examples .tablist {
+    margin-right: 0;
   }
 }
 
@@ -3898,6 +3924,36 @@ main img {
   gap: 0.375rem;
 }
 
+.play-theme-extra summary {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  width: fit-content;
+  color: var(--fg);
+  font-weight: 500;
+  cursor: pointer;
+  list-style: none;
+}
+
+.play-theme-extra summary::-webkit-details-marker {
+  display: none;
+}
+
+.play-theme-extra summary::after {
+  content: "";
+  width: 0.375rem;
+  height: 0.375rem;
+  border: solid currentColor;
+  border-width: 0 1.5px 1.5px 0;
+  color: var(--muted);
+  rotate: -45deg;
+  transition: rotate 150ms var(--ease-out);
+}
+
+.play-theme-extra[open] summary::after {
+  rotate: 45deg;
+}
+
 .play-theme-extra p {
   margin: 0;
   color: var(--muted);
@@ -3958,11 +4014,6 @@ main img {
   color: var(--faint);
 }
 
-/* Two to a row, so the playground's column is wider than a section's. */
-.sidebar:has(.presets) {
-  grid-template-columns: 3.25rem 21rem;
-}
-
 .presets {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3972,13 +4023,22 @@ main img {
 .preset {
   position: relative;
   border-radius: 10px;
-  box-shadow: inset 0 0 0 1px var(--line);
-  transition:
-    box-shadow 150ms ease,
-    scale 150ms ease;
+  transition: scale 150ms ease;
 }
 
-.preset:hover {
+/* The frame sits over the still and the name's divider, so neither covers its edge. */
+.preset::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px var(--line);
+  pointer-events: none;
+  transition: box-shadow 150ms ease;
+}
+
+.preset:hover::before {
   box-shadow: inset 0 0 0 1px var(--faint);
 }
 
@@ -3986,15 +4046,14 @@ main img {
   scale: 0.98;
 }
 
-.preset:has(a[aria-current]) {
+.preset:has(a[aria-current])::before {
   box-shadow: inset 0 0 0 1.5px var(--fg);
 }
 
 .preset-thumb {
   height: 6rem;
-  margin: 1px 1px 0;
   overflow: hidden;
-  border-radius: 9px 9px 0 0;
+  border-radius: 10px 10px 0 0;
   background: var(--bg);
   pointer-events: none;
 }
@@ -4089,4 +4148,9 @@ main img {
 /* A tab row that scrolls fades at its end, so the tabs past it read as more. */
 .tablist[data-overflow] {
   mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent);
+}
+
+/* The docs app's wrappers around the generated header, search, and body, which the layout above doesn't expect. */
+.app {
+  display: contents;
 }

@@ -1,6 +1,6 @@
 {
   "name": "comark-carousel",
-  "version": "0.2.0",
+  "version": "0.5.0",
   "description": "A carousel of any Markdown content that scrolls and snaps, with arrows, a counter, keys, and zoom. A Comark plugin.",
   "keywords": [
     "carousel",
@@ -11,13 +11,13 @@
     "plugin",
     "slider"
   ],
-  "homepage": "https://comark.onmax.me/carousel",
-  "bugs": "https://github.com/onmax/comark-plugins/issues",
+  "homepage": "https://comark-ui.onmax.me/carousel",
+  "bugs": "https://github.com/onmax/comark-ui/issues",
   "license": "MIT",
   "author": "onmax",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/onmax/comark-plugins.git",
+    "url": "git+https://github.com/onmax/comark-ui.git",
     "directory": "packages/carousel"
   },
   "files": [

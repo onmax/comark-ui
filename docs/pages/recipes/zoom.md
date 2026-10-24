@@ -2,10 +2,10 @@
 title: Screenshots in a zoom group
 description: Annotated screenshots spread across a page, paged through in one zoomed view.
 tagline: Wrap screenshots in ::zoom blocks with one group, and the reader pages through all of them, marks and notes included, without scrolling back.
-install: pnpm add comark @comark/html comark-annotate comark-zoom
+install: pnpm add comark @comark/html comark-ui
 ---
 
-::example
+::example{label="Zoom group"}
 ```md
 At 640px, moon phase and vibes push the filters onto a second row.
 
@@ -29,15 +29,17 @@ With moon phase and vibes behind **+2 filters**, everything fits on one row.
 ```
 ::
 
-Click either screenshot: the zoomed view shows both, with arrows, a strip at the bottom, and the arrow keys to move between them.
+Click either screenshot. The zoomed view shows both, and you move between them with its arrows, the strip at the bottom, or the arrow keys.
 
 ## When to use it
 
-A screenshot zooms on its own, with its notes beside it. A group is for screenshots that belong together but sit apart, with text between them, such as the steps of a bug report. For two screenshots of the same view side by side, use [`::compare`](/annotate/components/#compare) instead: it zooms as one gallery already.
+A screenshot zooms on its own, with its notes beside it. A group is for screenshots that belong together but sit apart, with text between them, such as the steps of a bug report. For two screenshots of the same view side by side, use [`::compare`](/annotate/components/compare/) instead, which already zooms as one gallery.
 
 ## How it works
 
-`::zoom` zooms the whole block, so the zoomed view shows the screenshot with its marks and its numbered notes under it. Its `title` names the item in the zoomed view's header and in the strip. Items with the same `group` page through one zoomed view, in the order they appear on the page, and a group can mix screenshots with plain images, tables, or code:
+`::zoom` zooms the whole block, so the zoomed view shows the screenshot with its marks and its numbered notes under it. Its `title` names the item in the zoomed view's header and in the strip.
+
+Items with the same `group` page through one zoomed view, in the order they appear on the page. A group can mix screenshots with plain images, tables, or code:
 
 ```md
 ::zoom{group="toolbar" title="The design"}

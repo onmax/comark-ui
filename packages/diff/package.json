@@ -1,6 +1,6 @@
 {
   "name": "comark-diff",
-  "version": "0.2.0",
+  "version": "0.5.0",
   "description": "A code change in Markdown, shown like a suggested change in a pull request review: the file, red and green lines, and the words that changed. A Comark plugin.",
   "keywords": [
     "code-review",
@@ -11,13 +11,13 @@
     "plugin",
     "suggested-change"
   ],
-  "homepage": "https://comark.onmax.me/diff",
-  "bugs": "https://github.com/onmax/comark-plugins/issues",
+  "homepage": "https://comark-ui.onmax.me/diff",
+  "bugs": "https://github.com/onmax/comark-ui/issues",
   "license": "MIT",
   "author": "onmax",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/onmax/comark-plugins.git",
+    "url": "git+https://github.com/onmax/comark-ui.git",
     "directory": "packages/diff"
   },
   "files": [

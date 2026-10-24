@@ -36,8 +36,8 @@ The plugin adds every problem to `meta.issues` and leaves the icon out: an icon 
 
 Each entry exports the parse plugin as `default` and the renderer's `components`. Import `comark-icon/style.css` with your styles when you render on a server.
 
-An icon is a `.ci`, `1em` tall; set `--comark-icon-size` to change it. The rules sit in a `comark` CSS layer, so any plain rule of your own wins; see the icon's [Theming page](https://comark.onmax.me/icon/theming/).
+An icon is a `.ci`, `1em` tall; set `--comark-icon-size` to change it. The rules sit in a `comark` CSS layer, so any plain rule of your own wins; see the icon's [Theming page](https://comark-ui.onmax.me/icon/#theme).
 
 ## For other plugins
 
-`createIcons(options)` returns a resolver with `resolve(names)`, which never throws and maps each name to its icon or its problem; `describeIconProblem()` words a problem the way this plugin does. Pass one resolver to every plugin that draws icons, so a page sets its options once, and draw with `iconHtml()` and `iconStyles(state)` from `comark-icon/html` or the `Icon` component. See [Guides](https://comark.onmax.me/icon/guides/).
+`createIcons(options)` returns a resolver with `resolve(names)`, which never throws and maps each name to its icon or its problem; `describeIconProblem()` words a problem the way this plugin does. Pass one resolver to every plugin that draws icons, so a page sets its options once, and draw with `iconHtml()` and `iconStyles(state)` from `comark-icon/html` or the `Icon` component. See [Guides](https://comark-ui.onmax.me/icon/#examples).

@@ -4,7 +4,7 @@
 [![npm downloads](https://npmx.dev/api/registry/badge/downloads-month/comark-embed)](https://npmx.dev/package/comark-embed)
 [![install size](https://npmx.dev/api/registry/badge/size/comark-embed)](https://npmx.dev/package/comark-embed)
 [![license](https://npmx.dev/api/registry/badge/license/comark-embed)](https://npmx.dev/package/comark-embed)
-[![docs](https://img.shields.io/badge/docs-comark.onmax.me-14b8a6?labelColor=0a0a0a)](https://comark.onmax.me/embed/)
+[![docs](https://img.shields.io/badge/docs-comark--ui.onmax.me-14b8a6?labelColor=0a0a0a)](https://comark-ui.onmax.me/embed/)
 
 Video, audio, and live code from a link: YouTube, Vimeo, Loom, Spotify, CodePen, StackBlitz, and Figma players, read from the link alone with no network fetch. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
 
@@ -54,4 +54,4 @@ The plugin adds every problem to `meta.issues`, so a host can reject a document 
 
 Each entry exports the parse plugin as `default` and the renderer's `components`. The Vue, React, and Svelte components add the styles when they mount; import `comark-embed/style.css` with your styles so a server-rendered page doesn't shift.
 
-The styles follow shadcn/ui: they read its CSS variables, such as `--background` and `--border`, when the page has them, and use its neutral theme otherwise. Set the shared `--comark-*` tokens to theme every plugin at once; the rules sit in a `comark` CSS layer, so any plain rule of your own wins. Override `--ce-app-height` to change the height of CodePen, StackBlitz, and Figma; see the embed's [Theming page](https://comark.onmax.me/embed/theming/).
+The styles follow shadcn/ui: they read its CSS variables, such as `--background` and `--border`, when the page has them, and use its neutral theme otherwise. Set the shared `--comark-*` tokens to theme every plugin at once; the rules sit in a `comark` CSS layer, so any plain rule of your own wins. Override `--ce-app-height` to change the height of CodePen, StackBlitz, and Figma; see the embed's [Theming page](https://comark-ui.onmax.me/embed/#theme).

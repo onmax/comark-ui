@@ -140,6 +140,21 @@ describe("comark-carousel", () => {
     ]);
   });
 
+  it("names each issue's rule in meta.issueRules", async () => {
+    const { meta } = await parseMarkdown(
+      '::carousel{cols=2}\n::\n\n::carousel{columns=5}\n:::slide{titel="Ducks"}\nOne\n:::\n\nStray\n::\n\n:::slide\nLost\n:::',
+      { plugins: [carousel()] },
+    );
+    expect(meta.issues.map((issue) => meta.issueRules[issue])).toEqual([
+      "comark/carousel/unknown-prop",
+      "comark/carousel/empty-carousel",
+      "comark/carousel/content-outside-slide",
+      "comark/carousel/unknown-prop",
+      "comark/carousel/invalid-columns",
+      "comark/carousel/slide-outside-carousel",
+    ]);
+  });
+
   it("adds its issues to the ones other plugins found", async () => {
     const before = defineComarkPlugin(() => ({
       name: "before",
