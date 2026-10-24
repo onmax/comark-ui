@@ -136,8 +136,8 @@ const fileOf = (slug: string) => {
       : `docs/pages/${slug || "index"}.md`;
 };
 const exists = (file: string) => existsSync(new URL(file, repo));
-// A package with several rich components gives each its own page in docs/components/, listed after its page in the
-// order that page links to them.
+// A package with several rich components, or parts with syntax of their own, gives each its own page in
+// docs/components/, listed after its page in the order that page links to them.
 function componentPages(slug: string) {
   const folder = new URL(`packages/${slug}/docs/components/`, repo);
   if (!existsSync(folder)) return [];

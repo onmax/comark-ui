@@ -1,7 +1,7 @@
 ---
 title: Charts
 description: Charts from a Markdown table, drawn to SVG with no script.
-keywords: graph, plot, bar chart, line chart, pie chart, scatter plot, area chart, gantt, timeline, roadmap, schedule, benchmark, data visualization, dataviz, Vega
+keywords: graph, plot, bar chart, line chart, pie chart, scatter plot, area chart, benchmark, data visualization, dataviz, Vega
 tagline: Write a table and get a chart drawn to SVG, with no script. The table stays under it, so people see the chart and agents read the numbers.
 group: Review blocks
 icon: chart-column
@@ -146,6 +146,12 @@ Cells hold plain numbers, with commas between thousands if you like, such as `1,
 
 x values in the form `2026`, `2026-04`, `2026-04-15`, or an ISO date and time sit on a time axis, and numbers sit on a number axis. Bars, steps, and dumbbells are the exception, and give each value its own row.
 
+Marks, gantts, and Vega-Lite specs each have their own page:
+
+- [`annotation`](/charts/components/annotation/) marks a row or one of its values with a note, or draws a line across the chart at a target.
+- [`gantt`](/charts/components/gantt/) is the type with its own table: each bar's name, then where it starts and where it ends.
+- [`vega-lite`](/charts/components/vega-lite/) draws any chart the types don't cover, from a spec that reads the table.
+
 ### Chart types
 
 | `type` | Use it for | Table |
@@ -158,50 +164,11 @@ x values in the form `2026`, `2026-04`, `2026-04-15`, or an ISO date and time si
 | `dumbbell` | Before and after for several metrics. | Metric names, then two or more columns, such as `before` and `after`. |
 | `waterfall` | How changes add up to a total. | The starting total, then each change, negative for a drop, then the end total, all in one column. |
 | `pie` | Shares of one whole. | Names, then one column of numbers that aren't negative. |
-| `gantt` | Steps or tasks over time, such as a build, a deploy, or a plan. | One row per bar: its name, then where it starts and where it ends, as numbers or dates. See [Gantts](#gantts). |
+| `gantt` | Steps or tasks over time, such as a build, a deploy, or a plan. | One row per bar: its name, then where it starts and where it ends, as numbers or dates. See [`gantt`](/charts/components/gantt/). |
 
 Bars turn sideways when their labels are long or there are many of them, so file paths and test names stay whole.
 
 In a waterfall, the first row is a total, and so is the last when it equals the running sum. The other rows are changes, green up and red down.
-
-### Values on the bars
-
-```md
-::chart{type="stacked" labels title="Standup by topic (min)"}
-| day | work | weekend | pigeons |
-| --- | --: | --: | --: |
-| Monday | 4 | 11 | 2 |
-| Friday | 2 | 14 | 7 |
-::
-```
-
-Without `labels`, bars print their values past their ends when there's room, and crowded bars, stacked bars, and bars with negative numbers print none. With `labels`, every bar and segment writes its value inside itself, in white. A bar too short or too thin for its value writes it just past its end instead. The value axis goes, since every value is on the chart.
-
-A stack has one end, so its first series, drawn at the end, is the only part that writes its value past it. A thinner part elsewhere in the stack, or a value that would cover another bar's, leaves its value to the **Data** table.
-
-`labels` applies to `bar` and `stacked` charts. Other types have no bars to write on, or print their numbers already: a dumbbell its ends, a waterfall each step, and a gantt each duration. The plugin reports it there.
-
-### Gantts
-
-```md
-::chart{type="gantt" title="nuxt build, before and after the worker (s)"}
-| step | run | start | end |
-| --- | --- | --: | --: |
-| compile client | before | 0 | 3.7 |
-| compile server | before | 3.7 | 7.8 |
-| compile client | after | 0 | 3.7 |
-| compile server | after | 0.2 | 4.6 |
-| ready | after | 4.6 | 4.6 |
-::
-```
-
-A gantt draws one bar per row, top to bottom in table order. The first column names the bar, and two columns of numbers or of dates say where it starts and where it ends. When the table has other numbers too, such as a duration, name the two with `y`, as in `y="start, end"`.
-
-A column of names, such as a phase, an owner, or a run, colors the bars, one color per name, with a legend over the chart. A task may then repeat in another group, like the same step in two runs. A column of numbers reads as times, so write numbered groups as names, like `shard 1`.
-
-A row that ends where it starts is a milestone, and draws as a diamond. Every other bar prints how long it lasts past its end. For numbers that's the difference, and for dates it's a span in the table's unit, such as `3y`, `2mo`, `7d`, or `1.5h`.
-
-Dates take the forms x does: `2026`, `2026-04`, `2026-04-15`, or an ISO date and time. A time without a zone is UTC, and the axis shows UTC, so the chart reads the same wherever it's drawn.
 
 ::examples
 :::example{label="Sideways bars"}
@@ -298,84 +265,22 @@ Team goal: 45 min.
 :::
 ::
 
-### Any chart
-
-For a chart the types don't cover, such as a box plot, a heatmap, or error bands, put a [Vega-Lite](https://vega.github.io/vega-lite/) spec after the table in a `vega-lite` block. The table is still its data, so it stays in the page. Each row becomes one data point, with a field per column named by its header.
-
-````md
-::chart{title="Latency per request (ms)"}
-| endpoint | ms |
-| --- | --: |
-| /search | 120 |
-| /search | 410 |
-| /login | 40 |
-| /login | 61 |
-
-```vega-lite
-{
-  "mark": "boxplot",
-  "encoding": {
-    "x": { "field": "endpoint", "type": "nominal" },
-    "y": { "field": "ms", "type": "quantitative" }
-  }
-}
-```
-::
-````
-
-Leave `data` out of the spec, because the table replaces it. Cells that read as numbers become numbers, empty ones become null, and the rest stay text.
-
-The chart takes the same colors and type as the other charts wherever the spec sets none, and the spec's own `config` wins. `type`, `x`, `y`, and marks don't apply. Name the columns in the spec's `encoding` instead, and draw notes with a `text` or `rule` layer.
-
-The plugin reports a spec that isn't JSON, a `data` it replaced, and a field that's neither a column nor made by a transform. The spec can't load files or URLs, and the plugin drops links in it.
-
-### Marks
-
-Point at data with [comark-annotate](/annotate/)'s marks. Put an `::annotation` inside the chart, after the table, and name the row it marks with `at`, the row's x value as the table writes it. Add `series` to mark one column's value rather than the whole row.
+### Values on the bars
 
 ```md
-::chart{title="Rubber ducks bought, by team"}
-| team | ducks |
-| --- | --: |
-| backend | 41 |
-| frontend | 18 |
-:::annotation{at="backend" color="red"}
-Bought in bulk after the Tuesday incident.
-:::
+::chart{type="stacked" labels title="Standup by topic (min)"}
+| day | work | weekend | pigeons |
+| --- | --: | --: | --: |
+| Monday | 4 | 11 | 2 |
+| Friday | 2 | 14 | 7 |
 ::
 ```
 
-| Prop | What it does |
-| --- | --- |
-| `at` | The x value of the row to mark, copied from the table. Required, except on a line. |
-| `series` | The column to mark in that row. Without it, the mark covers every series in the row. On a gantt, it names the group of the bar instead, for a task that repeats across groups. |
-| `value` | With `mark="line"`, the number on the value axis the line crosses at. See [Lines](#lines). |
-| `mark`, `color`, `side` | As on a [screenshot](/annotate/components/annotation/): `box`, `circle`, `underline`, `line`, `highlight`, `bracket`, `cross`, `check`, or `none`; a named or hex color; and `left`, `right`, or `top` for a side note with an arrow. |
+Without `labels`, bars print their values past their ends when there's room, and crowded bars, stacked bars, and bars with negative numbers print none. With `labels`, every bar and segment writes its value inside itself, in white. A bar too short or too thin for its value writes it just past its end instead. The value axis goes, since every value is on the chart.
 
-The renderer finds the shape it draws for that value, such as a bar, a point, a slice, or a step, and draws the mark around it. Marks stay on their data when the numbers change.
+A stack has one end, so its first series, drawn at the end, is the only part that writes its value past it. A thinner part elsewhere in the stack, or a value that would cover another bar's, leaves its value to the **Data** table.
 
-Notes are numbered under the chart, as under a screenshot, and a marked chart zooms like a screenshot. comark-annotate comes with comark-charts, and checks the marks the same way.
-
-### Lines
-
-Draw a target, a budget, or a limit as a line across the plot: an `::annotation` with `mark="line"`, and `value`, the number on the value axis where it crosses, written as the table writes its numbers.
-
-```md
-::chart{title="p95 per endpoint (ms)"}
-| endpoint | p95 |
-| --- | --: |
-| /search | 410 |
-| /login | 61 |
-| /feed | 140 |
-:::annotation{mark="line" value="200" color="red" side="right"}
-The 200 ms budget.
-:::
-::
-```
-
-The line runs across an upright chart and down a sideways one, wherever its values run. The value axis grows to reach a value past the data, so a target nobody has met yet still shows. Its note is numbered under the chart, or sits in the margin with `side`, like any other mark's.
-
-A line crosses every row and series, so it takes no `at` or `series`. Pies and gantts have no value axis, so the plugin reports a line on them. On a [screenshot](/annotate/components/annotation/), `line` draws a straight stroke through the middle of its box, along its longer side.
+`labels` applies to `bar` and `stacked` charts. Other types have no bars to write on, or print their numbers already: a dumbbell its ends, a waterfall each step, and a gantt each duration. The plugin reports it there.
 
 ## Examples
 
@@ -406,16 +311,14 @@ It reports:
 - An x value that appears twice.
 - Content besides the table and its annotations.
 - Data that doesn't fit the type, such as a line or an area of one row, a scatter without numbers on x, a dumbbell with one column, a pie or a waterfall with several, and a pie with a negative number or nothing but zeros.
-- A gantt without one start and one end column, a row missing either, a bar that ends before it starts, and two columns of names to color by.
 
-Annotations are checked too: a missing or unknown `at`, a `series` the chart doesn't draw, a mark on an empty cell, a line without a number in `value` or on a chart without a value axis, and the mark, color, and side, as comark-annotate checks them on screenshots.
+[Marks](/charts/components/annotation/#validation), [gantts](/charts/components/gantt/#validation), and [Vega-Lite specs](/charts/components/vega-lite/#validation) have checks of their own, on their pages.
 
 Rendering never throws. A chart with a problem draws what it can:
 
-- A cell that isn't a number is left out, and so is a mark the plugin can't place.
+- A cell that isn't a number is left out.
 - A type that doesn't fit falls back to the default.
 - A pie or a waterfall draws only its first column.
-- A gantt row without a start or an end isn't drawn, and a gantt colors by its first column of names.
 - A chart with nothing to draw shows its content as it is.
 
 [comark-linter](/lint/) reports the same issues with their line numbers. Each one has its own rule in [Doctor](/doctor/).
