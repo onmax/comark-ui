@@ -45,3 +45,4 @@ Comark gives parsed nodes no source positions. lint-comark takes block component
 - A component inside a paragraph gets its line and the first matching column.
 - A URL matches where it starts an attribute or link, not in prose.
 - A repeated value matches in order.
+- Broken-anchor links are indexed in one pass, so generated documents with thousands of links keep their source locations without rescanning the source for each one.

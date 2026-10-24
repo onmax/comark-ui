@@ -526,12 +526,77 @@ function* elements(nodes: Node[]): Generator<ElementNode> {
 }
 
 // Repeated values are matched in order, so the second bad link is placed on the second one in the source.
-function locator(source: Source, attribute = false) {
+type Location = { line: number; column: number };
+
+type NeedleNode = { next: Map<string, number>; fail: number; outputs: number[] };
+
+/**
+ * Indexes the needles a rule will look up in one pass over prose. Rules often locate hundreds of links or issues;
+ * calling `find` for each one would rescan the same source from the beginning each time.
+ */
+function locations(
+  source: Source,
+  needles: readonly string[],
+  attribute: boolean,
+): Map<string, Location[]> {
+  const unique = [...new Set(needles)].filter(Boolean).sort((a, b) => b.length - a.length);
+  const found = new Map(unique.map((needle): [string, Location[]] => [needle, []]));
+  if (!unique.length) return found;
+
+  const trie: NeedleNode[] = [{ next: new Map(), fail: 0, outputs: [] }];
+  for (const [index, needle] of unique.entries()) {
+    let node = 0;
+    for (let at = 0; at < needle.length; at++) {
+      const char = needle[at]!;
+      const next = trie[node]!.next.get(char);
+      if (next === undefined) {
+        trie[node]!.next.set(char, trie.length);
+        trie.push({ next: new Map(), fail: 0, outputs: [] });
+        node = trie.length - 1;
+      } else node = next;
+    }
+    trie[node]!.outputs.push(index);
+  }
+  const queue: number[] = [];
+  for (const child of trie[0]!.next.values()) queue.push(child);
+  for (let at = 0; at < queue.length; at++) {
+    const node = queue[at]!;
+    for (const [char, child] of trie[node]!.next) {
+      let fallback = trie[node]!.fail;
+      while (fallback && !trie[fallback]!.next.has(char)) fallback = trie[fallback]!.fail;
+      trie[child]!.fail = trie[fallback]!.next.get(char) ?? 0;
+      queue.push(child);
+    }
+  }
+
+  for (let index = source.body; index < source.prose.length; index++) {
+    const line = source.prose[index]!;
+    let node = 0;
+    for (let at = 0; at < line.length; at++) {
+      const char = line[at]!;
+      while (node && !trie[node]!.next.has(char)) node = trie[node]!.fail;
+      node = trie[node]!.next.get(char) ?? 0;
+      for (let match = node; match; match = trie[match]!.fail)
+        for (const needleIndex of trie[match]!.outputs) {
+          const needle = unique[needleIndex]!;
+          const start = at - needle.length + 1;
+          if (/[\w-]/.test(line[at + 1] ?? "") && /[\w-]$/.test(needle)) continue;
+          if (attribute && !/["'=(<]/.test(line[start - 1] ?? "")) continue;
+          found.get(needle)!.push({ line: index + 1, column: start + 1 });
+        }
+    }
+  }
+  return found;
+}
+
+function locator(source: Source, attribute = false, needles: readonly string[] = []) {
+  const indexed = locations(source, needles, attribute);
   const counts = new Map<string, number>();
   return (...needles: string[]) => {
     for (const needle of needles) {
       const nth = counts.get(needle) ?? 0;
-      const at = find(source, needle, { nth, from: source.body, attribute });
+      const at =
+        indexed.get(needle)?.[nth] ?? find(source, needle, { nth, from: source.body, attribute });
       if (!at) continue;
       counts.set(needle, nth + 1);
       return at;
@@ -549,7 +614,11 @@ function brokenAnchors(nodes: Node[], source: Source): Diagnostic[] {
     const href = text(attributes.href);
     if (href.startsWith("#") && href.length > 1) links.push(href);
   }
-  const locate = locator(source, true);
+  const locate = locator(
+    source,
+    true,
+    links.flatMap((href) => [href, decode(href.slice(1)) && `#${decode(href.slice(1))}`]),
+  );
   const available = listIds(ids, "Ids here", "This document has no headings or ids.");
   return links.flatMap((href) => {
     const fragment = decode(href.slice(1));
