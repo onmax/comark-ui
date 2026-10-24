@@ -18,18 +18,28 @@ export function enterSidebar(root: ParentNode) {
   const column = columnOf(root);
   activeEntry = entryOf();
   const position = positions.get(activeEntry);
-  if (column && position?.list === column.getAttribute("aria-label"))
-    column.scrollTop = position.top;
+  if (column && position?.list === column.getAttribute("aria-label")) {
+    // The page body can arrive just after this component mounts. Restore once more on the
+    // first frame so setting scrollTop is not clamped while the column is still empty.
+    let frames = 0;
+    const restore = () => {
+      if (position.top > 0 && column.scrollHeight <= column.clientHeight && frames++ < 30) {
+        requestAnimationFrame(restore);
+        return;
+      }
+      column.scrollTop = position.top;
+    };
+    restore();
+    requestAnimationFrame(restore);
+  }
 }
 
 function entryOf() {
-  // Vue Router's key is unique to the entry, unlike its numeric position, which can be reused after Back then push.
-  // The URL fallback covers the initial document before the router has initialized its state.
-  const state = history.state as { key?: string; position?: number } | null;
-  if (state?.key) return `history:${state.key}`;
-  // The initial entry may be mounted before Vue Router has installed its key. Give it one now so the
-  // value captured on unmount is the same entry that a later Back navigation restores.
+  // Keep our own identifier on every entry. Vue Router may replace its state while a navigation is in
+  // flight, whereas this value remains attached to the exact browser entry being revisited.
+  const state = history.state as { sidebarKey?: string } | null;
+  if (state?.sidebarKey) return `sidebar:${state.sidebarKey}`;
   const key = crypto.randomUUID();
-  history.replaceState({ ...(state ?? {}), key }, "", location.href);
-  return `history:${key}`;
+  history.replaceState({ ...(state ?? {}), sidebarKey: key }, "", location.href);
+  return `sidebar:${key}`;
 }
