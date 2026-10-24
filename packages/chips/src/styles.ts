@@ -4,8 +4,9 @@ import { theme } from "comark-zoom/theme";
  * A favicon chip is a faint tint of the text color with a hairline inset ring, so it reads on any surface without a
  * border that would add to its box. An avatar chip, such as a mention, is only the round avatar and the name, since
  * a pill around a face is noise. Both stay inside the line's height, with the image at the text's size. Every value a
- * site would change is a `--cp-*` variable. The rules sit in the `comark` layer, so any unlayered rule of the host's
- * wins.
+ * site would change is a `--cp-*` variable. The image sets every margin, since prose styles give images a top margin
+ * meant for block images, and on an inline image that margin pushes it below the text. The rules sit in the `comark`
+ * layer, so any unlayered rule of the host's wins.
  */
 export const css = `@layer comark{${[
   theme(".cp"),
@@ -14,7 +15,7 @@ export const css = `@layer comark{${[
   ".cp:not(:has(.cp-img)){padding-left:.375em}",
   ".cp:hover{background:var(--_cp-hover)}",
   ".cp:focus-visible{outline:2px solid var(--_comark-ring);outline-offset:2px}",
-  ".cp-img{display:inline-block;width:min(var(--cp-image-size,1em),1em);height:min(var(--cp-image-size,1em),1em);margin-right:.3125em;border-radius:.1875em;outline:1px solid color-mix(in oklab,var(--_comark-foreground) 10%,transparent);outline-offset:-1px;vertical-align:middle;object-fit:cover}",
+  ".cp-img{display:inline-block;width:min(var(--cp-image-size,1em),1em);height:min(var(--cp-image-size,1em),1em);margin:0 .3125em 0 0;border-radius:.1875em;outline:1px solid color-mix(in oklab,var(--_comark-foreground) 10%,transparent);outline-offset:-1px;vertical-align:middle;object-fit:cover}",
   '.cp[data-kind="avatar"]{padding:0;background:none;box-shadow:none;text-decoration:underline;text-decoration-color:transparent;text-underline-offset:.2em;transition:text-decoration-color .15s ease-out}',
   '.cp[data-kind="avatar"]:hover{background:none;text-decoration-color:currentColor}',
   '.cp[data-kind="avatar"] .cp-img{border-radius:50%;outline:none}',

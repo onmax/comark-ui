@@ -40,6 +40,12 @@ describe("comark-chips", () => {
     expect(requests).toContain("https://www.google.com/s2/favicons?domain=vite.dev&sz=64");
   });
 
+  // Prose styles give every image a top margin, and outside a paragraph, as in a list item, nothing takes it back.
+  it("sets every margin of the image, so a prose style's image margin can't push it below the text", async () => {
+    const html = await render("- Listed on [Vite](https://vite.dev).");
+    expect(html).toMatch(/\.cp-img\{[^}]*margin:0 \.3125em 0 0;/);
+  });
+
   it("turns @user into a chip with their GitHub avatar, and a link into an account shows it too", async () => {
     const html = await render(
       "Thanks @onmax, see [the repo](https://github.com/onmax/comark-ui) and [issues](https://github.com/issues).",
