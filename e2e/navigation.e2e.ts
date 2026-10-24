@@ -85,3 +85,81 @@ test("a page change jumps to its scroll position instead of sliding there", asyn
   expect(await frames(true)).toEqual([0, 1200]);
   await expect(page).toHaveURL(/\/charts\/$/);
 });
+
+test("the sidebar stays where it was when one of its links opens another page", async ({
+  page,
+}) => {
+  await page.goto("/annotate/");
+  // Every scroll position of the sidebar's column from the click until the next page has been in for a while.
+  const { before, seen } = await page.evaluate(async () => {
+    const column = () => document.querySelector<HTMLElement>(".sidebar .pages")!;
+    column().scrollTop = column().scrollHeight;
+    const before = Math.round(column().scrollTop);
+    const seen = new Set([before]);
+    document.querySelector<HTMLAnchorElement>('.sidebar a[href="/tabs/"]')!.click();
+    const start = performance.now();
+    let frames = 0;
+    while (frames < 30 && performance.now() - start < 5000) {
+      await new Promise(requestAnimationFrame);
+      seen.add(Math.round(column().scrollTop));
+      if (document.querySelector("h1")?.textContent === "Tabs") frames++;
+    }
+    return { before, seen: [...seen] };
+  });
+  expect(before).toBeGreaterThan(0);
+  expect(seen).toEqual([before]);
+  await expect(page.locator("h1")).toHaveText("Tabs");
+});
+
+test("the sidebar restores each browser history entry's position", async ({ page }) => {
+  await page.goto("/annotate/");
+  const first = await page.locator(".sidebar .pages").evaluate((column) => {
+    column.scrollTop = 120;
+    return Math.round(column.scrollTop);
+  });
+  // A pointer click would scroll the offscreen link into view and change the position we're saving.
+  await page
+    .locator('.sidebar a[href="/tabs/"]')
+    .evaluate((link: HTMLAnchorElement) => link.click());
+  await expect(page).toHaveURL(/\/tabs\/$/);
+  await expect(page.locator("h1")).toHaveText("Tabs");
+  const second = await page.locator(".sidebar .pages").evaluate((column) => {
+    column.scrollTop = column.scrollHeight;
+    return Math.round(column.scrollTop);
+  });
+  expect(second).toBeGreaterThan(first);
+  await page.goBack();
+  await expect(page).toHaveURL(/\/annotate\/$/);
+  await expect
+    .poll(() => page.locator(".sidebar .pages").evaluate((column) => Math.round(column.scrollTop)))
+    .toBe(first);
+  await page.goForward();
+  await expect(page).toHaveURL(/\/tabs\/$/);
+  await expect
+    .poll(() => page.locator(".sidebar .pages").evaluate((column) => Math.round(column.scrollTop)))
+    .toBe(second);
+});
+
+test("the sidebar does not reuse a discarded forward entry's position", async ({ page }) => {
+  await page.goto("/annotate/");
+  await page.locator(".sidebar .pages").evaluate((column) => {
+    column.scrollTop = 120;
+  });
+  await page.locator('.sidebar a[href="/tabs/"]').click();
+  await expect(page).toHaveURL(/\/tabs\/$/);
+  await page.locator(".sidebar .pages").evaluate((column) => {
+    column.scrollTop = column.scrollHeight;
+  });
+  await page.goBack();
+  await expect(page).toHaveURL(/\/annotate\/$/);
+  await page.locator('.sidebar a[href="/charts/"]').click();
+  await expect(page).toHaveURL(/\/charts\/$/);
+  await expect
+    .poll(() => page.locator(".sidebar .pages").evaluate((column) => Math.round(column.scrollTop)))
+    .toBe(0);
+});
+
+test("the sidebar shows the current page's link on a first load", async ({ page }) => {
+  await page.goto("/zoom/");
+  await expect(page.locator('.sidebar .pages a[aria-current="page"]')).toBeInViewport();
+});

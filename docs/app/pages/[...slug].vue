@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { docsPath, slugOf } from "~/utils/body";
 import { runScripts } from "~/utils/scripts";
+import { enterSidebar, leaveSidebar } from "~/utils/sidebar";
 
 const site = "https://comark-ui.onmax.me";
 const route = useRoute();
@@ -45,8 +46,16 @@ useHead(() => ({
 // The body's scripts run once its HTML is in. On a first load the browser already ran them.
 const root = useTemplateRef<HTMLElement>("root");
 let stop: (() => void) | undefined;
-onMounted(() => (stop = runScripts(root.value!, !hydrating)));
-onBeforeUnmount(() => stop?.());
+onMounted(() => {
+  // Before the new page's first frame, and before its scripts: the sidebar's own brings the current page's link into
+  // view, from where the last page left the column.
+  enterSidebar(root.value!);
+  stop = runScripts(root.value!, !hydrating);
+});
+onBeforeUnmount(() => {
+  leaveSidebar(root.value!);
+  stop?.();
+});
 
 // Links in the generated HTML are plain anchors; same-site ones navigate in the app.
 const router = useRouter();

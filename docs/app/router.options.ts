@@ -12,16 +12,21 @@ export default {
     }
     const nuxtApp = useNuxtApp();
     const router = useRouter();
+    // Until it's placed, the new page sits where the old one was left. Scroll anchoring would move it in between, such
+    // as when the sidebar scrolls its column to the current page's link.
+    const root = document.documentElement;
+    root.style.overflowAnchor = "none";
     // The new page is in once it has loaded; scrolling before would move the old one.
     return new Promise((resolve) => {
       nuxtApp.hooks.hookOnce("page:loading:end", () => {
-        requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          root.style.overflowAnchor = "";
           resolve(
             router.currentRoute.value.fullPath === to.fullPath
               ? { ...position(to, savedPosition), behavior: "instant" }
               : false,
-          ),
-        );
+          );
+        });
       });
     });
   },
