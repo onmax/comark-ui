@@ -1,8 +1,8 @@
 ---
 title: Zoom
-description: Zoom images and any block like medium-zoom, written in Markdown.
+description: Zoom images and any block out of the page, like medium-zoom, written in Markdown.
 keywords: lightbox, medium-zoom, image zoom, enlarge, fullscreen, gallery, popup, modal, magnify
-tagline: Click an image or any block to zoom it out of its place. Escape, Back, or a click around it closes it.
+tagline: A view that zooms an image or any block out of the page, and pages through a group of them.
 group: Page behavior
 icon: zoom-in
 blurb: Zoom images and any block
@@ -41,23 +41,41 @@ credits: 'Modeled on <a href="https://github.com/francoischalifour/medium-zoom">
 :::
 ::
 
-Click an item to zoom it; Escape, Back, or a click around it closes it. Enter or Space opens a focused item, and focus returns to it when the view closes.
+## Features
+
+- Content images zoom with no markup.
+- `::zoom` zooms any block: a table, a code block, a diagram.
+- Items in one group page through a single view, with a strip of thumbnails.
+- An image grows no larger than its natural size, so it stays sharp.
+- Escape, Back, or a click around the item closes the view, and focus returns to the item.
 
 ## Usage
 
-### Images
-
-Content images zoom on their own, except images inside links, which keep their link. The zoomed view shows the image's `alt` text as its title, and an image grows no larger than its natural size, so it stays sharp.
-
-Give an image a `data-zoom-src` to load a larger file when it opens. The zoom shows the page's image until the larger file has loaded, and the strip of a group keeps the page's images. To keep one image from zooming, give it `zoom=false`:
+Content images zoom on their own. The zoomed view shows the image's `alt` text as its title.
 
 ```md
-![Company logo](/logo.png){zoom=false}
+![Office correlations dashboard](/dashboard.png)
 ```
 
-### zoom
+### Any block
 
-Zooms any block: a table, a code block, a diagram, or several of them together.
+Use `::zoom` to zoom any other block, or several blocks together.
+
+::example
+```md
+::zoom
+| Attempt | Wait |
+| --- | --- |
+| 1 | 1 s |
+| 2 | 4 s |
+| 3 | 16 s |
+::
+```
+::
+
+### Title
+
+Use the `title` prop to set the heading of the zoomed view.
 
 ::example
 ```md
@@ -71,17 +89,9 @@ Zooms any block: a table, a code block, a diagram, or several of them together.
 ```
 ::
 
-| Prop | |
-| --- | --- |
-| `title` | Heading of the zoomed view. |
-| `group` | Items with the same group page through one zoomed view. |
-| `#id`, `.class` | Go on the block, as on any other. |
+### Group
 
-## Examples
-
-### Groups
-
-Items in one `group` page through a single zoomed view with a strip of them at the bottom. Arrow keys and the strip move between them. Items that are hidden when the view opens, such as those in a closed tab, are left out.
+Use the `group` prop to page through several items in one zoomed view. Arrow keys and the strip of thumbnails move between them.
 
 ::example
 ```md
@@ -95,11 +105,30 @@ Items in one `group` page through a single zoomed view with a strip of them at t
 ```
 ::
 
-### Captions beside the zoom
+> [!NOTE]
+> Items hidden when the view opens, such as those in a closed tab, are left out of the group.
 
-`data-zoom-aside` names an element, by selector, that the zoomed view shows beside the item at its own size. A caption stays readable however far the item zooms. On a narrow screen it sits below. comark-annotate uses it for a screenshot's notes.
+### Larger image
 
-The zoom takes the first match that neither holds the item nor sits in it. It looks in the item's innermost [`data-zoom-context`](#styles-from-ancestors), or else in its parent.
+Use the `data-zoom-src` attribute to load a larger file when the view opens. The view shows the page's image until the larger file has loaded.
+
+```md
+![Office correlations dashboard](/dashboard.png){data-zoom-src="/dashboard@2x.png"}
+```
+
+### Turn zoom off
+
+Use `zoom=false` to keep one image from zooming. Images inside links never zoom, so they keep their link.
+
+```md
+![Company logo](/logo.png){zoom=false}
+```
+
+## Examples
+
+### Caption beside the zoom
+
+Use the `data-zoom-aside` attribute to show an element beside the zoomed item at its own size, so a caption stays readable however far the item zooms. It takes a selector. On a narrow screen the caption sits below.
 
 ```html
 <figure>
@@ -108,19 +137,11 @@ The zoom takes the first match that neither holds the item nor sits in it. It lo
 </figure>
 ```
 
-## API
+The zoom takes the first match that neither holds the item nor sits in it. It looks in the item's innermost [`data-zoom-context`](#styles-from-ancestors), or else in its parent. comark-annotate uses it for a screenshot's notes.
 
-The options go under `zoom` in `comarkUi()`, or to `zoom()` when you use it alone. `zoom: false` in `comarkUi()` turns zoom off.
+### Pins over the zoomed view
 
-| Option | Default | |
-| --- | --- | --- |
-| `images` | `true` | `false` leaves images alone, so only `::zoom` blocks and images you mark with `{data-zoom}` zoom. |
-
-### Events
-
-The zoomed view fires `comark-zoom:open`, `comark-zoom:change`, and `comark-zoom:close` on the item. `open` and `change` carry the dialog's `header` and `footer`, and a `layer` over the zoomed content, sized to it, where a host can draw its own pins or controls.
-
-`copyOf(element)` finds the copy of a page element in the zoomed view, and `originalOf(element)` goes back, so a pin can follow what it points at. Both return `null` for anything the zoom doesn't show.
+Listen for `comark-zoom:open` to draw your own pins or controls on the zoomed item. The event's `layer` sits over the zoomed content and has its size.
 
 ```ts
 document.addEventListener("comark-zoom:open", (event) => {
@@ -130,6 +151,82 @@ document.addEventListener("comark-zoom:open", (event) => {
   event.detail.layer.append(pin);
 });
 ```
+
+Inside an open or change event listener, use `event.detail.copyOf(element)` to find the copy of a page element in the zoomed view, and `event.detail.originalOf(element)` to go back, so a pin can follow what it points at.
+
+## Accessibility
+
+Each item is a tab stop that opens a modal dialog, labelled by its title. Focus stays in the dialog while it is open and returns to the item when it closes. An item inside another one, such as a screenshot in a slide, zooms with it, so only the outer one is a tab stop.
+
+### Keyboard interactions
+
+| Key | Description |
+| --- | --- |
+| `Enter`, `Space` | Opens the focused item. |
+| `Escape` | Closes the zoomed view. |
+| `ArrowLeft`, `ArrowRight` | Moves to the previous or next item in a group. |
+| `Tab`, `Shift+Tab` | Moves focus between the dialog's buttons and thumbnails, and wraps around inside the dialog. |
+
+## API
+
+### Props
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| `title` | — | Heading of the zoomed view. |
+| `group` | — | Items with the same group page through one zoomed view. |
+| `#id`, `.class` | — | Go on the block, as on any other. |
+
+### Image attributes
+
+| Attribute | Default | Description |
+| --- | --- | --- |
+| `zoom` | `true` | `false` keeps the image from zooming. |
+| `data-zoom` | — | Makes an image zoom when the `images` option is `false`. |
+| `data-zoom-src` | — | A larger file to load when the view opens. |
+| `data-zoom-aside` | — | A selector for an element to show beside the zoomed item. |
+| `data-zoom-context` | — | A selector for ancestors whose styles the zoomed copy keeps. |
+
+### Options
+
+The options go under `zoom` in `comarkUi()`, or to `zoom()` when you use it alone. `zoom: false` in `comarkUi()` turns zoom off.
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `images` | `true` | `false` leaves images alone, so only `::zoom` blocks and images with `data-zoom` zoom. |
+
+### Events
+
+Each event fires on the item.
+
+| Event | Detail | Description |
+| --- | --- | --- |
+| `comark-zoom:open` | `ZoomDetail` | The view opened. |
+| `comark-zoom:change` | `ZoomDetail` | The view moved to another item in its group. |
+| `comark-zoom:close` | `{ item }` | The view closed. |
+
+### Event detail
+
+The open and change events expose these `ZoomDetail` fields and methods through `event.detail`:
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `dialog` | `HTMLElement` | The zoom dialog. |
+| `header` | `HTMLElement` | The header for controls above the content. |
+| `footer` | `HTMLElement` | The footer for controls below the content. |
+| `layer` | `HTMLElement` | An overlay sized to the zoomed content for pins and outlines. |
+| `content` | `HTMLElement` | The zoomed copy of the item. |
+| `aside` | `HTMLElement \| null` | The column holding a copy of the item's aside, or `null` when absent. |
+| `item` | `HTMLElement` | The original item on the page. |
+| `index` | `number` | The zero-based position of the current item in `items`. |
+| `items` | `HTMLElement[]` | The items in the current group. |
+
+| Method | Returns | Description |
+| --- | --- | --- |
+| `event.detail.copyOf(element)` | `Element \| null` | The zoomed copy of an element in the item or its aside. |
+| `event.detail.originalOf(element)` | `Element \| null` | The original page element for a copy in the zoomed item or aside. |
+
+Both methods return `null` for anything the zoom doesn't show. The close event exposes only `event.detail.item`, the original item that closed.
 
 ### Package
 
@@ -193,7 +290,7 @@ The zoomed view sits at the end of `body`, so set these on `:root`, `body`, or `
 
 ### Styles from ancestors
 
-The zoomed copy leaves the page, so it loses rules that match through its ancestors, such as `.post img`. An item that needs them names those ancestors with `data-zoom-context`, a selector. The copy then goes inside empty copies of every ancestor that matches:
+The zoomed copy leaves the page, so it loses rules that match through its ancestors, such as `.post img`. Use the `data-zoom-context` attribute to name those ancestors by selector. The copy then goes inside empty copies of every ancestor that matches:
 
 ```html
 <article class="post">
