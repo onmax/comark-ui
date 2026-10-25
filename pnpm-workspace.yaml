@@ -39,6 +39,14 @@ catalog:
   vite: npm:@voidzero-dev/vite-plus-core@^1.1.0
   vite-plus: ^1.1.0
   "@vite-hub/source": 0.0.4
+  "@tiptap/core": ^3.31.4
+  "@tiptap/extension-image": ^3.31.4
+  "@tiptap/extension-list": ^3.31.4
+  "@tiptap/extension-table": ^3.31.4
+  "@tiptap/pm": ^3.31.4
+  "@tiptap/starter-kit": ^3.31.4
+  "@tiptap/y-tiptap": ^3.0.9
+  yjs: ^13.6.33
   nuxt-agent-discovery: ^0.8.0
 
 overrides:
