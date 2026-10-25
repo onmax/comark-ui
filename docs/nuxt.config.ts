@@ -28,6 +28,9 @@ async function writeAssets() {
   if (existsSync(playground))
     await cp(playground, new URL("play/", generated), { recursive: true });
   // The playground's preview is its own document and links the site's styles, so they keep their own URL too.
+  // Each page's Markdown copy and llms.txt, at the site's root.
+  const markdown = new URL("dist/markdown/", root);
+  if (existsSync(markdown)) await cp(markdown, generated, { recursive: true });
   for (const file of ["search.json", "style.css"]) {
     const built = new URL(`dist/${file}`, root);
     if (existsSync(built)) await cp(built, new URL(file, generated));

@@ -2109,6 +2109,45 @@ nav > .nav-group:first-child {
   color: #16a34a;
 }
 
+/* Copy page and View as Markdown, under the tagline, as on ui.nuxt.com. */
+.page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.page-actions .button {
+  height: 2rem;
+  padding: 0 0.75rem;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.copy-page-icon {
+  display: grid;
+  color: var(--muted);
+}
+
+.copy-page-icon svg {
+  grid-area: 1 / 1;
+  transition:
+    opacity 200ms var(--ease-out),
+    scale 200ms var(--ease-out);
+}
+
+.copy-page-icon .check,
+.copy-page.copied .copy-page-icon svg:not(.check) {
+  opacity: 0;
+  scale: 0.25;
+}
+
+.copy-page.copied .copy-page-icon .check {
+  opacity: 1;
+  scale: 1;
+  color: #16a34a;
+}
+
 .hero h1 {
   margin: 0 0 0.5rem;
   color: var(--fg);
