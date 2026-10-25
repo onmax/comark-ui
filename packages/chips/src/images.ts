@@ -22,11 +22,30 @@ function base64(bytes: Uint8Array) {
 
 async function download(url: string) {
   const response = await fetch(url, { signal: AbortSignal.timeout(10_000) });
-  if (!response.ok) throw new Missing(response.status);
-  const type = response.headers.get("content-type")?.split(";", 1)[0]?.trim() ?? "";
-  const bytes = new Uint8Array(await response.arrayBuffer());
-  if (!type.startsWith("image/") || bytes.length > LIMIT) throw new Error("not a small image");
-  return `data:${type};base64,${base64(bytes)}`;
+  let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
+  try {
+    if (!response.ok) throw new Missing(response.status);
+    const type = response.headers.get("content-type")?.split(";", 1)[0]?.trim() ?? "";
+    if (!type.startsWith("image/") || Number(response.headers.get("content-length")) > LIMIT)
+      throw new Error("not a small image");
+    reader = response.body?.getReader();
+    const bytes = new Uint8Array(LIMIT);
+    let size = 0;
+    while (reader) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      // Content-Length can be missing, compressed, or wrong; bound the bytes we actually receive.
+      if (value.length > LIMIT - size) throw new Error("not a small image");
+      bytes.set(value, size);
+      size += value.length;
+    }
+    return `data:${type};base64,${base64(bytes.subarray(0, size))}`;
+  } finally {
+    if (reader) {
+      await reader.cancel().catch(() => {});
+      reader.releaseLock();
+    } else await response.body?.cancel().catch(() => {});
+  }
 }
 
 // Each image by URL, kept across parses and instances, so a site that builds many pages downloads each once. A failed

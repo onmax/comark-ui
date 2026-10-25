@@ -111,36 +111,58 @@ function checkProps(node: ElementNode, attrs: Record<string, unknown>, problems:
 
 // A suggested change is a few lines around the edit; past this it stops being reviewable.
 export const MAX_DIFF_LINES = 200;
-// Above this many cells the line diff would hold too much memory, so every line counts as changed.
+// Line matching and every word pair share this budget; after it runs out, changes stay whole lines.
 const MAX_CELLS = 4_000_000;
+type Budget = { cells: number };
 
 type Step = ["same", number, number] | ["del", number] | ["add", number];
 
 // The longest common subsequence of two lists, as the steps that turn `a` into `b`; a run of changes lists its
 // removals before its additions.
-function lcs(a: readonly string[], b: readonly string[]): Step[] {
-  if (a.length * b.length > MAX_CELLS)
-    return [...a.map((_, i): Step => ["del", i]), ...b.map((_, j): Step => ["add", j])];
-  const width = b.length + 1;
-  const table = new Uint32Array((a.length + 1) * width);
-  for (let i = a.length - 1; i >= 0; i--)
-    for (let j = b.length - 1; j >= 0; j--)
-      table[i * width + j] =
-        a[i] === b[j]
-          ? table[(i + 1) * width + j + 1]! + 1
-          : Math.max(table[(i + 1) * width + j]!, table[i * width + j + 1]!);
+function lcs(a: readonly string[], b: readonly string[], budget: Budget): Step[] {
   const steps: Step[] = [];
-  let i = 0;
-  let j = 0;
-  while (i < a.length || j < b.length) {
-    if (i < a.length && j < b.length && a[i] === b[j]) steps.push(["same", i++, j++]);
-    else if (
-      j >= b.length ||
-      (i < a.length && table[(i + 1) * width + j]! >= table[i * width + j + 1]!)
-    )
-      steps.push(["del", i++]);
-    else steps.push(["add", j++]);
+  let start = 0;
+  while (start < a.length && start < b.length && a[start] === b[start]) {
+    steps.push(["same", start, start]);
+    start++;
   }
+  let endA = a.length;
+  let endB = b.length;
+  while (endA > start && endB > start && a[endA - 1] === b[endB - 1]) {
+    endA--;
+    endB--;
+  }
+  const countA = endA - start;
+  const countB = endB - start;
+  const cells = countA * countB;
+  if (!cells || cells > budget.cells) {
+    if (cells > budget.cells) budget.cells = 0;
+    for (let i = start; i < endA; i++) steps.push(["del", i]);
+    for (let j = start; j < endB; j++) steps.push(["add", j]);
+  } else {
+    budget.cells -= cells;
+    const width = countB + 1;
+    const table = new Uint32Array((countA + 1) * width);
+    for (let i = countA - 1; i >= 0; i--)
+      for (let j = countB - 1; j >= 0; j--)
+        table[i * width + j] =
+          a[start + i] === b[start + j]
+            ? table[(i + 1) * width + j + 1]! + 1
+            : Math.max(table[(i + 1) * width + j]!, table[i * width + j + 1]!);
+    let i = 0;
+    let j = 0;
+    while (i < countA || j < countB) {
+      if (i < countA && j < countB && a[start + i] === b[start + j])
+        steps.push(["same", start + i++, start + j++]);
+      else if (
+        j >= countB ||
+        (i < countA && table[(i + 1) * width + j]! >= table[i * width + j + 1]!)
+      )
+        steps.push(["del", start + i++]);
+      else steps.push(["add", start + j++]);
+    }
+  }
+  for (let i = endA, j = endB; i < a.length; i++, j++) steps.push(["same", i, j]);
   return steps;
 }
 
@@ -257,10 +279,12 @@ function cut(nodes: Node[], ranges: [number, number][], tag: "del" | "ins", star
 
 // Marks the words that changed between a removed line and the added line paired with it, unless they share too
 // little for the marks to help: then the whole line is the change.
-function pair(before: DiffRow, after: DiffRow) {
+function pair(before: DiffRow, after: DiffRow, budget: Budget) {
+  if (!budget.cells) return;
   const a = words(lineText(before.nodes));
   const b = words(lineText(after.nodes));
-  const steps = lcs(a, b);
+  const steps = lcs(a, b, budget);
+  if (!budget.cells) return;
   let shared = 0;
   for (const step of steps) if (step[0] === "same") shared += a[step[1]]!.length;
   const total = a.join("").length + b.join("").length;
@@ -277,13 +301,7 @@ const codeBlocks = (node: ElementNode) =>
 const fileOf = (node: ElementNode, attrs: Record<string, unknown>) =>
   text(attrs.file) || text(codeBlocks(node)[0]?.[1].filename) || "";
 
-/** Reads a `::diff` node: two fenced code blocks, before and after, as the rows of a suggested change. */
-export function readDiff(
-  node: ElementNode,
-  issues: Issue[],
-  data: Data,
-  names: Names = new Map(),
-): Diff {
+function read(node: ElementNode, issues: Issue[], data: Data, names: Names = new Map()) {
   const attrs = props(node, data);
   const blocks = codeBlocks(node);
   const [first, second] = blocks;
@@ -347,8 +365,11 @@ export function readDiff(
         rule: "comark/diff/too-many-lines",
         message: `the ${index ? "after" : "before"} block has ${list.length} lines. Keep only the lines around the change, at most ${MAX_DIFF_LINES}.`,
       });
-  const steps = lcs(old.map(lineText), next.map(lineText));
-  if (blocks.length === 2 && steps.every((step) => step[0] === "same"))
+  if (
+    blocks.length === 2 &&
+    old.length === next.length &&
+    old.every((nodes, index) => lineText(nodes) === lineText(next[index]!))
+  )
     problems.push({
       rule: "comark/diff/no-change",
       message:
@@ -356,13 +377,33 @@ export function readDiff(
     });
   issues.push(...problems.map(({ rule, message }) => ({ rule, message: `${where}: ${message}` })));
 
+  const code = first?.[1] ?? {};
+  return {
+    old,
+    next,
+    first,
+    second,
+    file,
+    label: text(attrs.label) || undefined,
+    line,
+    code: { class: text(code.class) || undefined, style: text(code.style) || undefined },
+  };
+}
+
+/** Reads a `::diff` node: two fenced code blocks, before and after, as the rows of a suggested change. */
+export function readDiff(node: ElementNode, issues: Issue[], data: Data): Diff {
+  const { old, next, first, second, ...diff } = read(node, issues, data);
+  const { line } = diff;
+  const budget: Budget = { cells: MAX_CELLS };
+  const steps = lcs(old.map(lineText), next.map(lineText), budget);
   const rows: DiffRow[] = [];
   const at = (n: number) => (line === undefined ? undefined : line + n);
   const [litBefore, litAfter] = [highlights(first), highlights(second)];
   let removed: DiffRow[] = [];
   let added: DiffRow[] = [];
   const flush = () => {
-    for (let k = 0; k < Math.min(removed.length, added.length); k++) pair(removed[k]!, added[k]!);
+    for (let k = 0; k < Math.min(removed.length, added.length); k++)
+      pair(removed[k]!, added[k]!, budget);
     rows.push(...removed, ...added);
     removed = [];
     added = [];
@@ -394,14 +435,7 @@ export function readDiff(
     }
   }
   flush();
-  const code = first?.[1] ?? {};
-  return {
-    file,
-    label: text(attrs.label) || undefined,
-    line,
-    rows,
-    code: { class: text(code.class) || undefined, style: text(code.style) || undefined },
-  };
+  return { ...diff, rows };
 }
 
 // A diff is named by its file, the way a review names a suggestion, and by its position when that's not enough.
@@ -438,7 +472,7 @@ export function check(nodes: Node[], data: Data): Issue[] {
   const walk = (list: Node[]) => {
     for (const node of list) {
       if (!isElement(node)) continue;
-      if (node[0] === "diff") readDiff(node, issues, data, names);
+      if (node[0] === "diff") read(node, issues, data, names);
       else walk(children(node));
     }
   };
