@@ -46,6 +46,28 @@ const name = (attribute: string) => ({
   renderHTML: (attrs: Record<string, unknown>) => ({ [attribute]: attrs.name }),
 });
 
+// The extensions comark-media plays, so a dropped video shows as one while it's edited.
+function mediaKind(src: string | null) {
+  const path = (src ?? "").replace(/[?#].*$/, "");
+  return /\.(?:mp4|webm|mov|m4v)$/i.test(path)
+    ? "video"
+    : /\.(?:mp3|wav|ogg|m4a)$/i.test(path)
+      ? "audio"
+      : undefined;
+}
+
+/** Markdown's image, inline as Comark parses it, drawn as a player when comark-media would play it. */
+export const ComarkImage = Image.extend({
+  renderHTML({ node, HTMLAttributes }) {
+    const kind = mediaKind(node.attrs.src);
+    if (!kind) return this.parent?.({ node, HTMLAttributes }) ?? ["img", HTMLAttributes];
+    return [
+      kind,
+      { src: node.attrs.src, title: node.attrs.title, controls: "", preload: "metadata" },
+    ];
+  },
+}).configure({ inline: true });
+
 /** A block component, `::name`, or a block of raw HTML. Its children are blocks and its `#slot`s. */
 export const ComarkBlock = Node.create({
   name: "comarkBlock",
@@ -108,7 +130,7 @@ export const ComarkKit = Extension.create<ComarkKitOptions>({
       StarterKit.configure({ ...this.options.starterKit, underline: false }),
       TaskList,
       TaskItem.configure({ nested: true }),
-      Image.configure({ inline: true }),
+      ComarkImage,
       TableKit.configure({ table: { resizable: false } }),
       ComarkBlock,
       ComarkSlot,

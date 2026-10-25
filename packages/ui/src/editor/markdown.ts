@@ -11,34 +11,36 @@ type Mark = { type: string; attrs?: Record<string, unknown> };
 // (`:badge`). Only the heading ids an author wrote are kept: an id derived from the text would go stale on an edit.
 const parseOptions = { autoUnwrap: false, headingIds: false } as const;
 
-const marks: Record<string, string> = {
-  strong: "bold",
-  em: "italic",
-  del: "strike",
-  code: "code",
-  a: "link",
-};
-const markTags: Record<string, string> = {
-  bold: "strong",
-  italic: "em",
-  strike: "del",
-  code: "code",
-  link: "a",
-};
-const inlineTags = new Set([...Object.keys(marks), "br", "img", "span", "input"]);
+const marks = new Map([
+  ["strong", "bold"],
+  ["em", "italic"],
+  ["del", "strike"],
+  ["code", "code"],
+  ["a", "link"],
+]);
+const markTags = new Map([...marks].map(([tag, mark]) => [mark, tag]));
+const inlineTags = new Set([...marks.keys(), "br", "img", "span", "input"]);
 const headings = new Set(["h1", "h2", "h3", "h4", "h5", "h6"]);
 // Comark's writer prints these tags as Markdown, so a component that shares the name, such as `::table`, can't be
 // written back as one.
 const builtIn = new Set([...headings, "p", "blockquote", "hr", "pre", "table", "ul", "ol", "li"]);
 
-const isElement = (node: AstNode): node is ElementNode =>
-  Array.isArray(node) && typeof node[0] === "string";
-const isComment = (node: AstNode) => Array.isArray(node) && node[0] === null;
+// A text node is a string and every other node an array, so the array check tells them apart.
+const isText = (node: AstNode): node is string => !Array.isArray(node);
+const isElement = (node: AstNode): node is ElementNode => Array.isArray(node) && node[0] !== null;
+// SAFETY: an element node is [tag, attributes, ...children], so everything after index 1 is a child node.
+const childrenOf = (element: ElementNode) => element.slice(2) as AstNode[];
+/** A prop as text. Comark props are strings, numbers, and booleans, or parsed JSON for `:prop` bindings. */
+const textOf = (value: unknown) =>
+  value === undefined || value === null || value instanceof Object
+    ? undefined
+    : // SAFETY: undefined, null, objects, and arrays returned above, so only a string, number, or boolean is left.
+      String(value as string | number | boolean);
 // Raw HTML carries `$: { html, block }`; an inline tag such as `<kbd>` belongs in a paragraph.
+const inlineHtml = ({ $: meta }: Props) =>
+  meta instanceof Object && "block" in meta && meta.block === 0;
 const isInline = (node: AstNode) =>
-  typeof node === "string" ||
-  (isElement(node) &&
-    (inlineTags.has(node[0]) || (node[1].$ as { block?: number } | undefined)?.block === 0));
+  isText(node) || (isElement(node) && (inlineTags.has(node[0]) || inlineHtml(node[1])));
 
 /** The props a node has no field for, or `undefined` when none are left. */
 function rest(props: Props, ...keys: string[]) {
@@ -46,7 +48,7 @@ function rest(props: Props, ...keys: string[]) {
   return Object.keys(left).length ? left : undefined;
 }
 
-const classes = (props: Props) => (typeof props.class === "string" ? props.class.split(/\s+/) : []);
+const classes = (props: Props) => textOf(props.class)?.split(/\s+/) ?? [];
 function withoutClass(props: Props, name: string): Props {
   const left = classes(props).filter((value) => value && value !== name);
   const { class: _, ...others } = props;
@@ -65,11 +67,12 @@ const node = (
   type: string,
   attrs: Record<string, unknown>,
   content?: JSONContent[],
-): JSONContent => ({
-  type,
-  ...(Object.keys(attrs).length ? { attrs } : {}),
-  ...(content?.length ? { content } : {}),
-});
+): JSONContent => {
+  const json: JSONContent = { type };
+  if (Object.keys(attrs).length) json.attrs = attrs;
+  if (content?.length) json.content = content;
+  return json;
+};
 
 /** Set when the document holds something the schema can't keep, so writing it back would change it. */
 interface Reading {
@@ -80,7 +83,7 @@ function readBlocks(children: AstNode[], reading: Reading): JSONContent[] {
   const out: JSONContent[] = [];
   let run: AstNode[] = [];
   const flush = () => {
-    if (run.some((child) => typeof child !== "string" || child.trim()))
+    if (run.some((child) => !isText(child) || child.trim()))
       out.push(node("paragraph", {}, readInline(run, [], reading)));
     run = [];
   };
@@ -96,11 +99,10 @@ function readBlocks(children: AstNode[], reading: Reading): JSONContent[] {
 }
 
 function readBlock(child: AstNode, reading: Reading): JSONContent[] {
-  if (!isElement(child)) {
-    if (isComment(child)) return [node("comarkComment", { text: child[2] })];
-    return [];
-  }
-  const [tag, props, ...children] = child;
+  if (isText(child)) return [];
+  if (!isElement(child)) return [node("comarkComment", { text: child[2] })];
+  const [tag, props] = child;
+  const children = childrenOf(child);
   if (tag === "p")
     return [node("paragraph", withProps({}, rest(props)), readInline(children, [], reading))];
   if (headings.has(tag))
@@ -117,7 +119,7 @@ function readBlock(child: AstNode, reading: Reading): JSONContent[] {
   if (tag === "pre") return [readCode(props, children)];
   if (
     tag === "table" &&
-    children.every((child) => isElement(child) && ["thead", "tbody", "tr"].includes(child[0]))
+    children.every((part) => isElement(part) && ["thead", "tbody", "tr"].includes(part[0]))
   )
     return [readTable(props, children, reading)];
   if (tag === "ul" || tag === "ol") return [readList(tag, props, children, reading)];
@@ -142,8 +144,8 @@ function readComponent(children: AstNode[], reading: Reading): JSONContent[] {
       out.push(
         node(
           "comarkSlot",
-          withProps({ name: typeof name === "string" ? name : "default" }, rest(props)),
-          readBlocks(child.slice(2) as AstNode[], reading),
+          withProps({ name: textOf(name) ?? "default" }, rest(props)),
+          readBlocks(childrenOf(child), reading),
         ),
       );
     } else run.push(child);
@@ -154,10 +156,8 @@ function readComponent(children: AstNode[], reading: Reading): JSONContent[] {
 
 function readCode(props: Props, children: AstNode[]): JSONContent {
   const code = children.find(isElement);
-  const text = (code ? code.slice(2) : children)
-    .filter((child) => typeof child === "string")
-    .join("");
-  const language = typeof props.language === "string" ? props.language : null;
+  const text = (code ? childrenOf(code) : children).filter(isText).join("");
+  const language = textOf(props.language) ?? null;
   return node(
     "codeBlock",
     withProps(language ? { language } : {}, rest(props, "language")),
@@ -167,8 +167,8 @@ function readCode(props: Props, children: AstNode[]): JSONContent {
 
 const isTaskItem = (child: AstNode) =>
   isElement(child) && child[0] === "li" && classes(child[1]).includes("task-list-item");
-const isCheckbox = (child: AstNode | undefined) =>
-  child !== undefined && isElement(child) && child[0] === "input" && child[1].type === "checkbox";
+const isCheckbox = (child: AstNode): child is ElementNode =>
+  isElement(child) && child[0] === "input" && child[1].type === "checkbox";
 
 function readList(
   tag: "ul" | "ol",
@@ -183,11 +183,11 @@ function readList(
       withProps({}, rest(withoutClass(props, "contains-task-list"))),
       items.map((item) => readTaskItem(item, reading)),
     );
-  const listItems = items.map(([, itemProps, ...content]) => {
-    const blocks = readBlocks(content, reading);
+  const listItems = items.map((item) => {
+    const blocks = readBlocks(childrenOf(item), reading);
     // A list item opens with a paragraph; an empty one writes nothing.
     if (blocks[0]?.type !== "paragraph") blocks.unshift({ type: "paragraph" });
-    return node("listItem", withProps({}, rest(itemProps)), blocks);
+    return node("listItem", withProps({}, rest(item[1])), blocks);
   });
   if (tag === "ul") return node("bulletList", withProps({}, rest(props)), listItems);
   const start = Number(props.start ?? 1);
@@ -198,29 +198,27 @@ function readList(
   );
 }
 
-function readTaskItem([, props, ...children]: ElementNode, reading: Reading): JSONContent {
+function readTaskItem(item: ElementNode, reading: Reading): JSONContent {
   let checked = false;
   // The checkbox opens the item's first paragraph, or the item itself in a tight list.
-  const strip = (content: AstNode[]) => {
-    if (!isCheckbox(content[0])) return content;
-    const [box, next, ...after] = content as [ElementNode, ...AstNode[]];
+  const strip = (content: AstNode[]): AstNode[] => {
+    const [box, next, ...after] = content;
+    if (box === undefined || !isCheckbox(box)) return content;
     checked = box[1][":checked"] === "true" || box[1].checked === true;
-    return typeof next === "string"
-      ? [next.replace(/^\s+/, ""), ...after]
-      : next === undefined
-        ? after
-        : [next, ...after];
+    if (next === undefined) return after;
+    return isText(next) ? [next.replace(/^\s+/, ""), ...after] : [next, ...after];
   };
-  const [first, ...others] = children;
-  const content =
-    first !== undefined && isElement(first) && first[0] === "p"
-      ? [[first[0], first[1], ...strip(first.slice(2) as AstNode[])] as ElementNode, ...others]
-      : strip(children);
+  const [first, ...others] = childrenOf(item);
+  let content: AstNode[];
+  if (first !== undefined && isElement(first) && first[0] === "p") {
+    const paragraph: ElementNode = [first[0], first[1], ...strip(childrenOf(first))];
+    content = [paragraph, ...others];
+  } else content = strip(childrenOf(item));
   const blocks = readBlocks(content, reading);
   if (blocks[0]?.type !== "paragraph") blocks.unshift({ type: "paragraph" });
   return node(
     "taskItem",
-    withProps({ checked }, rest(withoutClass(props, "task-list-item"))),
+    withProps({ checked }, rest(withoutClass(item[1], "task-list-item"))),
     blocks,
   );
 }
@@ -229,20 +227,20 @@ function readTable(props: Props, children: AstNode[], reading: Reading): JSONCon
   const rows = children
     .filter(isElement)
     .flatMap((section) =>
-      section[0] === "tr" ? [section] : (section.slice(2) as AstNode[]).filter(isElement),
+      section[0] === "tr" ? [section] : childrenOf(section).filter(isElement),
     );
   return node(
     "table",
     withProps({}, rest(props)),
-    rows.map(([, rowProps, ...cells]) =>
+    rows.map((row) =>
       node(
         "tableRow",
-        withProps({}, rest(rowProps)),
-        cells
+        withProps({}, rest(row[1])),
+        childrenOf(row)
           .filter(isElement)
-          .map(([tag, cellProps, ...content]) =>
-            node(tag === "th" ? "tableHeader" : "tableCell", withProps({}, rest(cellProps)), [
-              node("paragraph", {}, readInline(content, [], reading)),
+          .map((cell) =>
+            node(cell[0] === "th" ? "tableHeader" : "tableCell", withProps({}, rest(cell[1])), [
+              node("paragraph", {}, readInline(childrenOf(cell), [], reading)),
             ]),
           ),
       ),
@@ -255,7 +253,7 @@ function readInline(children: AstNode[], active: Mark[], reading: Reading): JSON
   const marked = (json: JSONContent): JSONContent =>
     active.length ? { ...json, marks: active } : json;
   for (const child of children) {
-    if (typeof child === "string") {
+    if (isText(child)) {
       // A soft break stays a line break: a callout's title is its first line.
       if (child) out.push(marked({ type: "text", text: child }));
       continue;
@@ -265,9 +263,10 @@ function readInline(children: AstNode[], active: Mark[], reading: Reading): JSON
       reading.lossy = true;
       continue;
     }
-    const [tag, props, ...content] = child;
-    const mark = marks[tag];
-    if (mark && !(tag === "code" && content.some((part) => typeof part !== "string"))) {
+    const [tag, props] = child;
+    const content = childrenOf(child);
+    const mark = marks.get(tag);
+    if (mark && !(tag === "code" && !content.every(isText))) {
       const attrs =
         mark === "link"
           ? withProps(
@@ -304,15 +303,17 @@ function readInline(children: AstNode[], active: Mark[], reading: Reading): JSON
   return out;
 }
 
-const propsOf = (json: JSONContent): Props => (json.attrs?.props as Props | null | undefined) ?? {};
-const textOf = (content: JSONContent[] = []) => content.map((child) => child.text ?? "").join("");
+// Tiptap types attributes as `any`; the codec wrote `props` as a plain object or left it out.
+const propsOf = (attrs: JSONContent["attrs"]): Props => attrs?.props ?? {};
+const plainText = (content: JSONContent[] = []) =>
+  content.map((child) => child.text ?? "").join("");
 
 function writeBlocks(content: JSONContent[] = []): AstNode[] {
   return content.flatMap(writeBlock);
 }
 
 function writeBlock(json: JSONContent): AstNode[] {
-  const props = propsOf(json);
+  const props = propsOf(json.attrs);
   const attrs = json.attrs ?? {};
   switch (json.type) {
     case "paragraph":
@@ -325,13 +326,12 @@ function writeBlock(json: JSONContent): AstNode[] {
     case "horizontalRule":
       return [["hr", props]];
     case "codeBlock": {
-      const language =
-        typeof attrs.language === "string" && attrs.language ? attrs.language : undefined;
+      const language = textOf(attrs.language) || undefined;
       return [
         [
           "pre",
           language ? { ...props, language } : props,
-          ["code", language ? { class: `language-${language}` } : {}, textOf(json.content)],
+          ["code", language ? { class: `language-${language}` } : {}, plainText(json.content)],
         ],
       ];
     }
@@ -350,7 +350,8 @@ function writeBlock(json: JSONContent): AstNode[] {
       // wrapped and followed by a nested list.
       const [first, ...others] = json.content ?? [];
       const text = writeInline(first?.content);
-      if (typeof text[0] === "string") text[0] = ` ${text[0]}`;
+      const [head] = text;
+      if (head !== undefined && isText(head)) text[0] = ` ${head}`;
       else text.unshift(" ");
       const box: Props = {
         class: "task-list-item-checkbox",
@@ -374,7 +375,7 @@ function writeBlock(json: JSONContent): AstNode[] {
               ? [
                   [
                     "template",
-                    { ...propsOf(child), name: child.attrs?.name },
+                    { ...propsOf(child.attrs), name: child.attrs?.name },
                     ...writeBlocks(child.content),
                   ],
                 ]
@@ -383,7 +384,7 @@ function writeBlock(json: JSONContent): AstNode[] {
         ],
       ];
     case "comarkComment":
-      return [[null, {}, String(attrs.text ?? "")]];
+      return [[null, {}, textOf(attrs.text) ?? ""]];
     default:
       return [];
   }
@@ -400,65 +401,75 @@ function writeTable(json: JSONContent, props: Props): ElementNode {
     (tag: "th" | "td") =>
     (json: JSONContent): ElementNode => [
       "tr",
-      propsOf(json),
+      propsOf(json.attrs),
       ...(json.content ?? []).map((cell): ElementNode => [
         tag,
-        propsOf(cell),
+        propsOf(cell.attrs),
         // A Markdown cell holds one line.
         ...(cell.content ?? []).flatMap((paragraph, index): AstNode[] => [
-          ...(index ? [["br", {}] as ElementNode] : []),
+          ...(index ? [["br", {}] satisfies ElementNode] : []),
           ...writeInline(paragraph.content),
         ]),
       ]),
     ];
   const body = rows.slice(split).map(row("td"));
+  const thead: ElementNode = ["thead", {}, ...rows.slice(0, split).map(row("th"))];
   return [
     "table",
     props,
-    ["thead", {}, ...rows.slice(0, split).map(row("th"))],
-    ...(body.length ? [["tbody", {}, ...body] as ElementNode] : []),
+    thead,
+    ...(body.length ? [["tbody", {}, ...body] satisfies ElementNode] : []),
   ];
 }
 
 const sameMark = (a: Mark, b: Mark) =>
   a.type === b.type && JSON.stringify(a.attrs ?? {}) === JSON.stringify(b.attrs ?? {});
 
-function writeMark(mark: Mark): ElementNode {
-  const props = (mark.attrs?.props as Props | null | undefined) ?? {};
-  if (mark.type !== "link") return [markTags[mark.type] ?? "span", props];
-  const { href, title } = mark.attrs ?? {};
-  return ["a", { ...props, href, ...(title ? { title } : {}) }];
+function writeMark(mark: Mark, children: AstNode[]): ElementNode {
+  const props = propsOf(mark.attrs);
+  if (mark.type !== "link") return [markTags.get(mark.type) ?? "span", props, ...children];
+  const href = textOf(mark.attrs?.href);
+  const title = textOf(mark.attrs?.title);
+  const link: Props = { ...props, href };
+  if (title) link.title = title;
+  return ["a", link, ...children];
+}
+
+// Adjacent text joins into one node, as Comark's parser would have read it.
+function append(children: AstNode[], child: AstNode) {
+  const last = children.at(-1);
+  if (last !== undefined && isText(last) && isText(child))
+    children[children.length - 1] = last + child;
+  else children.push(child);
 }
 
 function writeInline(content: JSONContent[] = []): AstNode[] {
+  // The marks open around the current text, outermost first, each with the children written inside it so far.
+  const open: Array<{ mark: Mark; children: AstNode[] }> = [];
   const root: AstNode[] = [];
-  const open: Array<{ mark: Mark; element: ElementNode }> = [];
-  // An element's children start after its tag and props.
-  const push = (target: unknown[], child: AstNode) => {
-    const last = target.length > (target === root ? 0 : 2) ? target.at(-1) : undefined;
-    if (typeof child === "string" && typeof last === "string")
-      target[target.length - 1] = last + child;
-    else target.push(child);
+  const close = (depth: number) => {
+    for (let frame = open.pop(); frame; frame = open.length > depth ? open.pop() : undefined)
+      append(open.at(-1)?.children ?? root, writeMark(frame.mark, frame.children));
   };
   for (const json of content) {
-    const active = (json.marks ?? []) as Mark[];
+    const active: Mark[] = json.marks ?? [];
+    const same = (index: number) => {
+      const frame = open[index];
+      const mark = active[index];
+      return frame !== undefined && mark !== undefined && sameMark(frame.mark, mark);
+    };
     let keep = 0;
-    while (keep < open.length && keep < active.length && sameMark(open[keep]!.mark, active[keep]!))
-      keep++;
-    open.length = keep;
-    for (const mark of active.slice(keep)) {
-      const element = writeMark(mark);
-      push(open.at(-1)?.element ?? root, element);
-      open.push({ mark, element });
-    }
-    const target = open.at(-1)?.element ?? root;
-    for (const child of writeLeaf(json)) push(target, child);
+    while (same(keep)) keep++;
+    if (open.length > keep) close(keep);
+    for (const mark of active.slice(keep)) open.push({ mark, children: [] });
+    for (const child of writeLeaf(json)) append(open.at(-1)?.children ?? root, child);
   }
+  if (open.length) close(0);
   return root;
 }
 
 function writeLeaf(json: JSONContent): AstNode[] {
-  const props = propsOf(json);
+  const props = propsOf(json.attrs);
   const attrs = json.attrs ?? {};
   if (json.type === "text") return json.text ? [json.text] : [];
   if (json.type === "hardBreak") return [["br", props]];
@@ -475,15 +486,13 @@ function writeLeaf(json: JSONContent): AstNode[] {
 
 function equal(a: unknown, b: unknown): boolean {
   if (a === b) return true;
-  if (typeof a !== "object" || typeof b !== "object" || a === null || b === null) return false;
-  if (Array.isArray(a) !== Array.isArray(b)) return false;
-  const keys = Object.keys(a).filter((key) => (a as Record<string, unknown>)[key] !== undefined);
-  const other = Object.keys(b).filter((key) => (b as Record<string, unknown>)[key] !== undefined);
+  if (!(a instanceof Object) || !(b instanceof Object) || Array.isArray(a) !== Array.isArray(b))
+    return false;
+  const left = Object.entries(a).filter(([, value]) => value !== undefined);
+  const right = new Map(Object.entries(b).filter(([, value]) => value !== undefined));
   return (
-    keys.length === other.length &&
-    keys.every((key) =>
-      equal((a as Record<string, unknown>)[key], (b as Record<string, unknown>)[key]),
-    )
+    left.length === right.size &&
+    left.every(([key, value]) => right.has(key) && equal(value, right.get(key)))
   );
 }
 
@@ -542,9 +551,10 @@ export async function checkMarkdown(
   if (again.lossy || !equal(first.doc, again.doc) || !equal(first.frontmatter, again.frontmatter))
     return { editable: false };
   // Only the text: plugins such as comark-tabs derive ids from a hash of the source, which any rewrite changes.
-  if (options.plugins?.length) {
+  const { plugins = [] } = options;
+  if (plugins.length) {
     const read = async (source: string) => {
-      const tree = await parseMarkdown(source, { ...parseOptions, plugins: [...options.plugins!] });
+      const tree = await parseMarkdown(source, { ...parseOptions, plugins: [...plugins] });
       return tree.nodes
         .map((child) => textContent(child))
         .join("")

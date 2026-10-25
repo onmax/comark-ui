@@ -5,7 +5,13 @@ import { prosemirrorJSONToYDoc, yDocToProsemirrorJSON } from "@tiptap/y-tiptap";
 import { describe, expect, it } from "vite-plus/test";
 import { loadExamples } from "../../../docs/examples.ts";
 import html from "../src/html.ts";
-import { checkMarkdown, ComarkKit, fromMarkdown, toMarkdown } from "../src/editor.ts";
+import {
+  checkMarkdown,
+  ComarkKit,
+  createEditorCodec,
+  fromMarkdown,
+  toMarkdown,
+} from "../src/editor.ts";
 
 const schema = getSchema([ComarkKit]);
 const roundTrip = async (markdown: string) => toMarkdown((await fromMarkdown(markdown)).doc);
@@ -139,4 +145,30 @@ describe("the docs examples", async () => {
       if (check.editable) expect(await checkMarkdown(check.markdown, { plugins })).toEqual(check);
     },
   );
+});
+
+describe("createEditorCodec", () => {
+  const codec = createEditorCodec();
+
+  it("reads and writes a room's body", async () => {
+    const doc = await codec.fromMarkdown("# Title\n\n- [x] Done\n");
+    expect(await codec.toMarkdown(doc)).toBe("# Title\n\n- [x] Done\n");
+  });
+
+  it("lets a room save what it writes back unchanged, and says what the first save writes", async () => {
+    expect(await codec.verify("| a | b |\n| - | - |\n| 1 | 2 |\n")).toEqual({
+      writable: true,
+      canonical: "| a   | b   |\n| --- | --- |\n| 1   | 2   |\n",
+    });
+  });
+
+  // A room stores the body alone, so a save would drop the front matter.
+  it("opens a document with front matter read-only", async () => {
+    expect(await codec.verify("---\ntitle: Hi\n---\n\nBody\n")).toEqual({ writable: false });
+  });
+
+  it("has the same schema as the kit, without the history a room keeps itself", () => {
+    const shared = getSchema(codec.extensions());
+    expect(Object.keys(shared.nodes)).toEqual(Object.keys(schema.nodes));
+  });
 });

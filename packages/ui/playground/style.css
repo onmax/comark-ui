@@ -89,3 +89,25 @@ textarea {
   border-radius: 4px;
   padding: 0 4px;
 }
+.cue-upload {
+  display: inline-grid;
+  position: relative;
+  max-width: 240px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #f4f4f5;
+  vertical-align: middle;
+}
+.cue-upload > img,
+.cue-upload > video {
+  grid-area: 1 / 1;
+  width: 100%;
+  opacity: 0.5;
+}
+.cue-upload-label {
+  grid-area: 1 / 1;
+  align-self: end;
+  padding: 4px 8px;
+  font-size: 12px;
+  background: linear-gradient(to right, #18181b22 var(--cue-upload), transparent var(--cue-upload));
+}

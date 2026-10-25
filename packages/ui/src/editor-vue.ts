@@ -89,10 +89,12 @@ export const ComarkEditor = defineComponent({
   name: "ComarkEditor",
   props: {
     modelValue: { type: String, required: true },
+    // SAFETY: Vue's runtime constructor cannot express the array's element type.
     extensions: { type: Array as PropType<AnyExtension[]>, default: undefined },
+    // SAFETY: Vue's runtime constructor cannot express the array's element type.
     plugins: { type: Array as PropType<ComarkPlugin<any, any>[]>, default: undefined },
   },
-  emits: { "update:modelValue": (value: string) => typeof value === "string" },
+  emits: ["update:modelValue"],
   setup(props, { emit }) {
     const markdown = ref(props.modelValue);
     watch(
