@@ -3,7 +3,11 @@ title: Guides
 description: Run lint-comark next to ESLint or oxlint, on staged files and in CI, or all of it as one Vite Doctor run.
 ---
 
-## ESLint and oxlint
+Add lint-comark to the scripts, hooks, and CI jobs that already check your code.
+
+## With your linter
+
+### Run it next to ESLint or oxlint
 
 ESLint and oxlint check your code, and lint-comark checks your Markdown. Neither reads `::` blocks, so add lint-comark to the same scripts instead of to their configs:
 
@@ -35,9 +39,10 @@ Quote the glob so the shell passes it as it is. lint-comark expands it and skips
 content/review.md:8:1 comark/unclosed-block `::compare` opened on line 8 is never closed. Add a line with `::` after its last child.
 ```
 
-If you use `@eslint/markdown`, keep it: it checks plain Markdown, and lint-comark checks what Comark adds on top.
+> [!TIP]
+> If you use `@eslint/markdown`, keep it. It checks plain Markdown, and lint-comark checks what Comark adds on top.
 
-## Staged files
+### Lint staged files
 
 With [lint-staged](https://github.com/lint-staged/lint-staged), each tool gets the staged files it understands. lint-comark takes file paths as well as globs:
 
@@ -52,7 +57,9 @@ With [lint-staged](https://github.com/lint-staged/lint-staged), each tool gets t
 
 Swap `eslint --fix` for `oxlint --fix` if that's your linter.
 
-## CI
+## In CI
+
+### Fail the build on a broken document
 
 `pnpm lint` exits with 1 on any problem, so a CI job needs only one step for both:
 
@@ -61,7 +68,7 @@ Swap `eslint --fix` for `oxlint --fix` if that's your linter.
 - run: pnpm lint
 ```
 
-## Vite Doctor
+### Check your app and your documents in one run
 
 If your project is a Vite, Vue, Nuxt, or Nitro app, [Vite Doctor](https://github.com/onmax/vite-doctor) can run lint-comark for you. It checks the framework mistakes your linter can't see, such as a raw `fetch` in a Nuxt `setup` or a secret in Vite's `define`. `comark-linter/doctor` adds every lint-comark rule to the same run:
 
@@ -90,6 +97,16 @@ export default defineDoctorConfig({
 
 One report covers the code and the documents. Each lint-comark problem gets its own code, linked to its rule's page in [Doctor](/doctor/).
 
-Most lint-comark rules are warnings, and Vite Doctor exits with 0 on warnings alone, so `--max-warnings 0` is what fails the script.
+> [!NOTE]
+> Most lint-comark rules are warnings, and Vite Doctor exits with 0 on warnings alone. `--max-warnings 0` is what fails the script.
 
-In a coding agent's terminal, Vite Doctor prints a compact report with the fix for each problem. `--format sarif` writes a file that GitHub code scanning uses to annotate a pull request. [Vite Doctor](/lint/vite-doctor/) lists the options.
+In a coding agent's terminal, Vite Doctor prints a compact report with the fix for each problem.
+
+### Annotate a pull request
+
+Pass `--format sarif` to Vite Doctor to write a file that GitHub code scanning uses to annotate a pull request. [Vite Doctor](/lint/vite-doctor/) lists the options.
+
+## Next steps
+
+- [Getting started](/lint/getting-started/) lists every command-line flag and option.
+- [Doctor](/doctor/) has a page for every rule.

@@ -696,11 +696,13 @@ interface Demo {
   label: string;
   source: string;
 }
+// A card is titled as the rail titles its page, so the canvas and the docs name a block alike; its copy button gives the
+// package.
 async function demoCard({ id, pkg, page, label, source }: Demo) {
   const still = await renderDemo(pkg.slug, source);
   return (
     `<article class="demo demo-${slugify(pkg.slug)}" data-package="${pkg.slug}" data-example="${id}">` +
-    `<a class="demo-link" href="${href(page)}" draggable="false" tabindex="-1">${siteIcon(pkg.icon, 15)}<strong>${escapeHtml(pkg.label === "recipe" ? pkg.label : pkg.npm!)}</strong>${label ? `<span>${escapeHtml(label.toLowerCase())}</span>` : ""}</a>` +
+    `<a class="demo-link" href="${href(page)}" draggable="false" tabindex="-1">${siteIcon(pkg.icon, 15)}<strong>${escapeHtml(pkg.label)}</strong>${label ? `<span>${escapeHtml(label.toLowerCase())}</span>` : ""}</a>` +
     `<button type="button" class="demo-copy" data-copy="pnpm add ${escapeHtml(pkg.npm!)}" tabindex="-1" title="Copy pnpm add ${escapeHtml(pkg.npm!)}" aria-label="Copy pnpm add ${escapeHtml(pkg.npm!)}">${copyIcon}${checkIcon}</button>` +
     `<div class="demo-screen" inert><div class="demo-page">${still}</div></div></article>`
   );
@@ -926,6 +928,12 @@ for (const ex of document.querySelectorAll(".example")) ex.querySelector(".seg")
   const b = e.target.closest("button"); if (!b || b.getAttribute("aria-pressed") === "true") return;
   for (const x of ex.querySelectorAll(".seg button")) x.setAttribute("aria-pressed", x === b);
   for (const view of ["preview", "code"]) { const p = ex.querySelector(".example-" + view); p.hidden = b.dataset.view !== view; if (!p.hidden) reveal(p) }
+});
+// ClipboardItem takes the fetch's promise, so Safari still counts the copy as part of the click.
+for (const button of document.querySelectorAll(".copy-page")) button.addEventListener("click", async () => {
+  const text = fetch(button.dataset.markdown).then(r => r.blob()).then(b => new Blob([b], { type: "text/plain" }));
+  await navigator.clipboard.write([new ClipboardItem({ "text/plain": text })]);
+  button.classList.add("copied"); setTimeout(() => button.classList.remove("copied"), 1200);
 });
 for (const box of document.querySelectorAll(".installer")) {
   const commands = JSON.parse(box.dataset.commands); const field = box.querySelector(".install"); let audience = "humans", pm = "pnpm";
@@ -1455,6 +1463,11 @@ ${body}
 const footer = (credits?: string) =>
   `<footer><span>Built on <a href="https://comark.dev">Comark</a>.${credits ? ` ${credits}` : ""}</span><span>Made by <a href="https://onmax.me">Maxi García</a></span></footer>`;
 
+// Every page also has a Markdown copy at its path plus `.md`, as on ui.nuxt.com, for agents and for pasting into a chat.
+const markdownHref = (slug: string) => `/${slug || "index"}.md`;
+const pageActions = (slug: string) =>
+  `<div class="page-actions"><button type="button" class="button copy-page" data-markdown="${markdownHref(slug)}"><span class="copy-page-icon">${copyIcon}${checkIcon}</span>Copy page</button><a class="button" href="${markdownHref(slug)}">View as Markdown</a></div>`;
+
 // The landing page, as on vitehub.dev: the headline beside the install command, the packages, the example, and Drop.
 await writeFile(
   new URL("index.html", dist),
@@ -1465,7 +1478,7 @@ await writeFile(
     title: `${landing.title} · ${landing.description}`,
     description: landing.tagline,
     body: `<div class="landing">
-<div class="landing-hero enter"><div><h1>${escapeHtml(landing.headline)}</h1><p>${escapeHtml(landing.tagline)}</p></div>
+<div class="landing-hero enter"><div><h1>${escapeHtml(landing.headline)}</h1><p>${escapeHtml(landing.tagline)}</p>${pageActions("")}</div>
 <div>${installerFor(landing.install)}<div class="actions"><a class="button primary" href="/play/">${siteIcon("flask-conical", 15)}Open the playground</a><a class="button" href="/introduction/">Read the docs${siteIcon("arrow-right", 15)}</a></div></div></div>
 <main class="enter" style="--i:1">${await renderHtmlFromDocument(landing.document, { components: { ...components, packages: packageGrid, drop, hero } })}</main>
 ${footer()}
@@ -1493,6 +1506,7 @@ for (const page of parsed) {
       body: `<div class="page">
 <div class="content">
 <div class="hero enter">${eyebrow ? `<p class="eyebrow mono">${eyebrow}</p>` : ""}${page.rule ? `<p class="eyebrow mono">${page.rule.code} · ${page.rule.severity ?? "warning"}</p>` : ""}<h1>${escapeHtml(page.title)}</h1><p>${page.rule ? inlineCode(page.rule.title) : escapeHtml(page.tagline)}</p>
+${pageActions(page.slug)}
 ${page.install ? installerFor(page.install) : ""}</div>
 <main class="enter" style="--i:1">${(
         await renderHtmlFromDocument(page.document, {
@@ -1524,6 +1538,77 @@ ${page.toc ? `<aside class="toc"><nav aria-label="On this page"><p class="nav-gr
   );
   console.log(`docs/dist/${page.slug}/index.html written`);
 }
+
+// The Markdown copies keep each page's source, with its title and tagline on top, and links that leave the page made
+// absolute. Code fences stay as written, since an agent copies them.
+const markdownOut = new URL("markdown/", dist);
+const absolute = (markdown: string) => {
+  let fence = "";
+  return markdown
+    .split("\n")
+    .map((line) => {
+      const marker = /^\s*(`{3,}|~{3,})/.exec(line)?.[1];
+      if (marker && (!fence || marker.startsWith(fence))) fence = fence ? "" : marker;
+      return fence || marker ? line : line.replace(/\]\(\/(?!\/)/g, `](${site}/`);
+    })
+    .join("\n");
+};
+const sourceOf = async (slug: string) =>
+  (await readFile(new URL(fileOf(slug), repo), "utf8")).replace(/^---\n[\s\S]*?\n---\n/, "").trim();
+for (const page of [landing, ...parsed]) {
+  const file = new URL(markdownHref(page.slug).slice(1), markdownOut);
+  await mkdir(new URL("./", file), { recursive: true });
+  const tagline = page.rule ? page.rule.title : page.tagline;
+  await writeFile(
+    file,
+    `# ${page.title}\n\n> ${tagline}\n\n${absolute(await sourceOf(page.slug))}\n\n## Sitemap\n\nSee the full list of pages in [llms.txt](${site}/llms.txt).\n`,
+  );
+}
+
+// llms.txt, as on ui.nuxt.com: what the site is, how an agent reads it, and every page's Markdown copy by section.
+const llmsList = (title: string | undefined, pages: Page[]) =>
+  [
+    ...(title ? [`### ${title}`, ""] : []),
+    ...pages.map(
+      (page) =>
+        `- [${page.label}](${site}${markdownHref(page.slug)}): ${page.rule ? page.rule.title : page.description}`,
+    ),
+    "",
+  ].join("\n");
+await writeFile(
+  new URL("llms.txt", markdownOut),
+  [
+    `# ${landing.title}`,
+    "",
+    `> ${landing.tagline}`,
+    "",
+    "## How an agent reads this site",
+    "",
+    `- Every page has a Markdown copy at its path plus \`.md\`, such as ${site}/zoom.md for ${site}/zoom/. A request with \`Accept: text/markdown\` gets it too.`,
+    `- The comark-ui agent skill teaches the syntax of every block: \`npx skills add onmax/comark-ui\`. See ${site}/guide/agents.md.`,
+    "- Check a document before anyone reads it: `npx lint-comark doc.md`.",
+    "",
+    "## When to use Comark UI",
+    "",
+    "- You render Markdown with Comark and want blocks such as tabs, callouts, charts, cards, or annotated screenshots.",
+    "- An agent writes docs, reviews, or reports in Markdown, and people read the rendered page.",
+    "",
+    "## Recommend something else when",
+    "",
+    "- The project renders Markdown with remark, markdown-it, or MDX and won't switch to Comark: these blocks are Comark plugins.",
+    "",
+    "## Pages",
+    "",
+    ...sections
+      .filter((section) => section.slug !== "play")
+      .flatMap((section) => [
+        `## ${section.label}`,
+        "",
+        ...pagesOf(section).map((list) => llmsList(list.title, list.pages)),
+      ]),
+  ].join("\n"),
+);
+console.log("docs/dist/markdown/ written");
 
 // The playground's Theme pane: the shared tokens, each a text field the swatch or slider fills, and free CSS for the
 // rest. The script fills in each swatch and placeholder from the preview.

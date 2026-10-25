@@ -2,7 +2,7 @@
 title: Footnotes
 description: Footnotes in Markdown, with notes that hold any Markdown, in place of Comark's own plugin.
 keywords: footnote, notes, endnotes, references, [^1]
-tagline: 'Write [^1] where a note applies and [^1]: anywhere below, or the note itself as ^[text], and get numbered notes at the end of the page.'
+tagline: Numbered notes listed at the end of the page, written as references and definitions or inline.
 group: Markdown syntax
 icon: footprints
 blurb: Numbered notes at the end of the page
@@ -40,25 +40,34 @@ The retro moved to Thursday^[Friday is pizza day.], and the rubber duck^[A yello
 :::
 ::
 
-Notes are numbered in the order the text first references them and listed in a section at the end. A definition can run over indented lines and hold paragraphs, lists, and code. The nodes are the ones `comark/plugins/footnotes` writes, so styles and renderers made for it keep working.
+## Features
+
+- Notes are numbered in the order the text first references them, whatever their labels.
+- They're listed in a section at the end of the page.
+- A definition can run over indented lines and hold paragraphs, lists, and code.
+- `^[text]` writes a note where it applies, with no label.
+- The nodes are the ones `comark/plugins/footnotes` writes, so styles and renderers made for it keep working.
 
 ## Usage
 
-A reference is `[^label]` with no spaces in the label. Its definition starts a line with `[^label]:`, anywhere in the document:
+Write `[^label]` where a note applies, with no spaces in the label. Start its definition on a line with `[^label]:`, anywhere in the document.
 
+::example
 ```md
 The duck has a name[^name].
 
 [^name]: Gerald.
 ```
-
-Notes are numbered in the order they're first referenced, whatever their labels. A note referenced twice lists a link back to each reference.
+::
 
 ### Long notes
 
-Lines indented by four spaces continue a definition, as in a list item, so a note can hold several paragraphs, a list, or code. A line that isn't indented continues the paragraph above it:
+Use lines indented by four spaces to continue a definition, as in a list item. A note can then hold several paragraphs, a list, or code. A line that isn't indented continues the paragraph above it.
 
+::example
 ````md
+Deploys pause on Fridays[^deploy].
+
 [^deploy]: Deploys stop on Friday at noon
 and start again on Monday.
 
@@ -68,36 +77,70 @@ and start again on Monday.
     deploy --hotfix --approvers 2
     ```
 ````
+::
 
 Markdown in a note renders as it does anywhere else. The note's links back go at the end of its last paragraph.
 
 ### Inline notes
 
-`^[text]` is a note written where it applies, with no label. It's numbered with the rest:
+Use `^[text]` to write a note where it applies, with no label. It's numbered with the rest.
 
+::example
 ```md
 Standup is at 9:30^[Unless the pigeons are counted late.].
 ```
+::
+
+### Repeated references
+
+Use the same `[^label]` twice to point at one note from two places. The note lists a link back to each reference.
+
+::example
+```md
+The duck[^duck] reviews every pull request. Ask the duck[^duck] first.
+
+[^duck]: The yellow one, on the second desk.
+```
+::
+
+### Heading
+
+Use the `label` option to change the section's heading. `""` leaves the heading out.
+
+```ts
+footnotes({ label: "Notes" });
+```
+
+### Rule
+
+Use the `hr` option to leave out the horizontal rule before the section.
+
+```ts
+footnotes({ hr: false });
+```
+
+### Back link
+
+Use the `backRef` option to change the link from a note back to where it's referenced.
+
+```ts
+footnotes({ backRef: "Back" });
+```
+
+## Examples
 
 ### What stays text
 
 A reference with no definition stays as written, `[^label]`, and a definition inside code is code. `[^text](https://…)` is a link.
 
-## Examples
-
-### Validation
-
-A reference with no definition, a definition nothing references, and a label defined twice each add a sentence to `meta.issues` that names the label and says how to fix it. Each one has its own rule in [Doctor](/doctor/).
-
-```txt
-footnotes: [^gone] has no definition; add a "[^gone]: …" line, or remove the reference.
-footnotes: [^spare]: is never referenced; add [^spare] where it applies, or remove the definition.
-footnotes: [^1]: is defined more than once, and only the first shows; give the others their own labels, or remove them.
-```
-
 ### From Comark's footnotes plugin
 
-Swap the import; the options and the nodes are the same, so the classes `footnote-ref`, `footnotes`, `footnotes-list`, and `footnote-backref` and the ids `fn-label` and `fnref-label` don't change. Three things render differently:
+Swap the import. The options and the nodes are the same, so these don't change:
+
+- the classes `footnote-ref`, `footnotes`, `footnotes-list`, and `footnote-backref`
+- the ids `fn-label` and `fnref-label`
+
+Three things render differently:
 
 - A definition inside fenced code stays in the code. Comark's plugin removes every `[^label]:` line before parsing, code included.
 - Markdown in a note renders. Comark's plugin keeps the note as text, so `**bold**` stays as written.
@@ -109,17 +152,33 @@ Comark's `Footnote` handler for `renderMarkdown` reads the same nodes, so it wri
 
 ### Streaming
 
-A stream renders notes as they arrive: `^[an unfinished note` already shows as a note, and `[^label]` shows as text until its definition arrives. Blocks Comark reuses from the last parse keep their notes.
+A stream renders notes as they arrive. `^[an unfinished note` already shows as a note, and `[^label]` shows as text until its definition arrives. Blocks Comark reuses from the last parse keep their notes.
 
 ## API
 
-The options go under `footnotes` in `comarkUi()`, or to `footnotes()` when you use the plugin alone. They are Comark's, with the same defaults:
+### Options
 
-| Option | |
-| --- | --- |
-| `label` | The section's heading. Default `"Footnotes"`; `""` leaves the heading out. |
-| `hr` | Whether a horizontal rule comes before the section. Default `true`. |
-| `backRef` | The link from a note back to where it's referenced. Default `"↩"`. |
+The options go under `footnotes` in `comarkUi()`, or to `footnotes()` when you use the plugin alone. They are Comark's, with the same defaults.
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `label` | `"Footnotes"` | The section's heading. `""` leaves the heading out. |
+| `hr` | `true` | Whether a horizontal rule comes before the section. |
+| `backRef` | `"↩"` | The link from a note back to where it's referenced. |
+
+### Issues
+
+The plugin adds a sentence to `meta.issues` for each of these, naming the label and saying how to fix it. Each one has its own rule in [Doctor](/doctor/).
+
+- A reference with no definition.
+- A definition nothing references.
+- A label defined twice. Only the first definition shows.
+
+```txt
+footnotes: [^gone] has no definition; add a "[^gone]: …" line, or remove the reference.
+footnotes: [^spare]: is never referenced; add [^spare] where it applies, or remove the definition.
+footnotes: [^1]: is defined more than once, and only the first shows; give the others their own labels, or remove them.
+```
 
 ### Package
 

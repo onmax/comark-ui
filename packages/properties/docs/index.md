@@ -2,7 +2,7 @@
 title: Properties
 description: A document's frontmatter as a box of properties, written in Markdown.
 keywords: frontmatter, front matter, metadata, YAML, header, status, author, date, tags, document properties, Obsidian properties
-tagline: Keep a review document's status, pull request, author, date, and tags in its frontmatter, and readers see them in a box at the top.
+tagline: A box that shows a document's status, pull request, author, date, and tags from its frontmatter.
 group: Review blocks
 icon: list-collapse
 blurb: Frontmatter as a properties box
@@ -41,18 +41,55 @@ The loft moves to the roof in spring.
 :::
 ::
 
-Only the keys you choose are shown, so the rest of the frontmatter, such as a layout or a slug, stays out of the page. A pull request or issue link reads as `owner/repo#123`, any other link as its address, and a list as badges.
+## Features
+
+- The box shows the frontmatter keys you choose, so the rest, such as a layout or a slug, stays out of the page.
+- A pull request or issue link reads as `owner/repo#123`, any other link as its address, and a list as badges.
+- The box goes first in the document, or wherever `::properties` sits.
+- A key that's missing or empty is skipped, and a document with none of the keys gets no box.
+- The facts stay in the frontmatter, where a script can read them too.
 
 ## Usage
 
-The box goes at the top of the document, before anything else. To put it somewhere else, such as under the title, write `::properties` there:
+Write the keys in the frontmatter. The box shows them at the top of the document, before anything else.
 
+::example
 ```md
+---
+status: Draft
+author: onmax
+---
+
+The loft moves to the roof in spring.
+```
+::
+
+### Placement
+
+Use `::properties` to put the box somewhere else, such as under the title.
+
+::example
+```md
+---
+status: Draft
+author: onmax
+---
+
 # Loft redesign
 
 ::properties
 ::
+
+The loft moves to the roof in spring.
 ```
+::
+
+> [!NOTE]
+> `::properties` takes no props and no content. Close it with `::` on the next line.
+
+### Values
+
+Each value shows by its kind:
 
 | Value | Shows as |
 | --- | --- |
@@ -61,15 +98,25 @@ The box goes at the top of the document, before anything else. To put it somewhe
 | Any other `http(s)` link | Its host and path, linked |
 | A list | One badge per item |
 
-A key that's missing or empty is skipped, and a document with none of the keys gets no box.
+::example
+```md
+---
+pr: https://github.com/onmax/comark-ui/pull/111
+tags: [colors, docs]
+---
 
-The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation/) describes: a value that's an object or a list of lists (it isn't shown), a `::properties` with nothing to show, content inside it (it's dropped), and a prop on it (it's ignored). Each issue names the key or block and says how to fix it, and each has its own rule in [Doctor](/doctor/).
+The palette page now shows every token.
+```
+::
+
+> [!NOTE]
+> An object, or a list of lists, isn't shown.
 
 ## Examples
 
 ### Review documents with a status
 
-Agents that write review documents can keep the facts a reviewer scans for in the frontmatter, where a script can read them too, and the box shows them on the page:
+Agents that write review documents can keep the facts a reviewer scans for in the frontmatter. A script can read them there too, and the box shows them on the page:
 
 ```md
 ---
@@ -81,7 +128,13 @@ tags: [colors, docs]
 ---
 ```
 
-Choose the keys with the `keys` option, so the same frontmatter can carry fields that only your tooling reads.
+### Your own keys and labels
+
+Use the `keys` option to choose the keys, so the same frontmatter can carry fields that only your tooling reads. Use `labels` to name them:
+
+```ts
+properties({ keys: ["status", "owner", "due"], labels: { due: "Due date" } });
+```
 
 ### Icons beside the labels
 
@@ -110,19 +163,30 @@ A key with no icon gets a transparent mask, so its room stays empty and the labe
 
 ## API
 
-These options go under `properties` in `comarkUi()`, or to `properties()` when you use the plugin alone.
+### Props
+
+`::properties` takes no props. The `keys` option chooses what it shows.
 
 ### Options
 
-| Option | Default | What it does |
+The options go under `properties` in `comarkUi()`, or to `properties()` when you use the plugin alone.
+
+| Option | Default | Description |
 | --- | --- | --- |
 | `keys` | `["status", "pr", "author", "date", "tags"]` | The frontmatter keys to show, in this order. A key the frontmatter doesn't have is skipped. |
-| `labels` | `{}` | A label per key, such as `{ pr: "Pull request" }`. Without one a key shows capitalized, and `pr` as "PR". |
-| `top` | `true` | Puts the box at the top of a document that has no `::properties`. Set it to `false` to show the box only where `::properties` sits. |
+| `labels` | `{}` | A label per key, such as `{ pr: "Pull request" }`. Without one, a key shows capitalized, with dashes and underscores as spaces, and `pr` and `url` show as "PR" and "URL". |
+| `top` | `true` | Puts the box at the top of a document that has no `::properties`. `false` shows the box only where `::properties` sits. |
 
-```ts
-properties({ keys: ["status", "owner", "due"], labels: { due: "Due date" } });
-```
+### Issues
+
+The plugin adds these problems to `meta.issues`, as [Validation](/guide/validation/) describes:
+
+- A value that's an object or a list of lists. It isn't shown.
+- A `::properties` with nothing to show.
+- Content inside `::properties`. It's dropped.
+- A prop on `::properties`. It's ignored.
+
+Each issue names the key or block and says how to fix it, and each has its own rule in [Doctor](/doctor/).
 
 ### Package
 
@@ -141,11 +205,26 @@ import properties, { components } from "comark-properties/html";
 const render = createHtmlRenderer({ plugins: [properties()], components });
 ```
 
-For Vue, React, or Svelte, import from `comark-properties/vue`, `comark-properties/react`, or `comark-properties/svelte`; the components add the styles when they mount. Import `comark-properties/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-properties/vue`, `comark-properties/react`, or `comark-properties/svelte`. The components add the styles when they mount. Import `comark-properties/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
 
 ## Theme
 
-The box reads the [shared tokens](/guide/theming/): `--comark-background`, `--comark-foreground`, and `--comark-border` for the box, `--comark-muted` for the labels, `--comark-accent` behind badges, `--comark-ring` for focus rings, `--comark-radius` for corners, and `--comark-font`. The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
+The box reads the [shared tokens](/guide/theming/). The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
+
+### Shared tokens
+
+| Token | Used for |
+| --- | --- |
+| `--comark-background` | The box |
+| `--comark-foreground` | The values |
+| `--comark-border` | The box's border and the badges' borders |
+| `--comark-muted` | The labels |
+| `--comark-accent` | Behind badges |
+| `--comark-ring` | Focus rings on links |
+| `--comark-radius` | Corners |
+| `--comark-font` | The box's text |
+
+### Classes
 
 | Class | Element |
 | --- | --- |

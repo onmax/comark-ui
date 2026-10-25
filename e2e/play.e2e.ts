@@ -98,7 +98,7 @@ test("search opens with Ctrl+K and goes to the heading you pick", async ({ page 
   await field.fill("lightbox");
   await expect(first).toHaveAttribute("href", "/zoom/");
   await field.fill("diamond");
-  await expect(first).toHaveAttribute("href", "/charts/components/gantt/#milestones-and-durations");
+  await expect(first).toHaveAttribute("href", "/charts/components/gantt/#features");
   await expect(first.locator("p mark")).toHaveText("diamond");
   await field.fill("zzzz");
   await expect(page.getByRole("status")).toHaveText("No page or heading matches.");

@@ -2,7 +2,7 @@
 title: Definition lists
 description: Definition lists in Markdown, rendered as native dl, dt, and dd.
 keywords: definition list, description list, glossary, terms, dictionary, dl, dt, dd
-tagline: Write a term, then its definition on a line that starts with a colon, and get a glossary with no component and no styles.
+tagline: A list of terms and their definitions, written as a term and a line that starts with a colon.
 group: Markdown syntax
 icon: book-a
 blurb: Terms and their definitions
@@ -37,24 +37,70 @@ Pizza vote
 :::
 ::
 
-A term sits on one line and each definition starts with `:` or `~` and a space. Indented lines continue a definition, so it can hold paragraphs, lists, and code. The list renders as plain `<dl>`, `<dt>`, and `<dd>`, which your page's styles already cover.
+## Features
+
+- A term on one line, its definition on a line that starts with `:` or `~`.
+- A term can have several definitions, and a list several terms.
+- Indented lines continue a definition, so it can hold paragraphs, lists, and code.
+- The list renders as native `<dl>`, `<dt>`, and `<dd>`, which your page's styles already cover.
+- No classes, no styles, and no components.
 
 ## Usage
 
-A term is one line. The line after it, or the one after a blank line, starts with `:` or `~` and at least one space:
+Write a term on one line. Start the line after it with `:` and at least one space.
 
+::example
+```md
+Retro
+: A meeting about the sprint that just ended.
+```
+::
+
+### Tilde marker
+
+Use `~` instead of `:` to start a definition. Both render the same.
+
+::example
+```md
+Retro
+~ A meeting about the sprint that just ended.
+```
+::
+
+### Several definitions
+
+Use one marker line per definition to give a term several meanings.
+
+::example
 ```md
 Retro
 : A meeting about the sprint that just ended.
 ~ A font that looks like 1984.
 ```
+::
 
-A term can have several definitions, and a list several terms. Separate terms with a blank line, or a line right after a definition is read as more of that definition.
+### Several terms
+
+Use a blank line between terms to put several in one list.
+
+::example
+```md
+Retro
+: A meeting about the sprint that just ended.
+
+Stand-up
+: A meeting held standing, so it stays short.
+```
+::
+
+> [!NOTE]
+> A line right after a definition is read as more of that definition. Leave a blank line before the next term.
 
 ### Long definitions
 
-Lines indented past the marker continue the definition. Leave a blank line between its blocks, as in a list item:
+Use lines indented past the marker to continue a definition. Leave a blank line between its blocks, as in a list item.
 
+::example
 ````md
 Deploy freeze
 :   No deploys from Friday noon to Monday.
@@ -65,16 +111,34 @@ Deploy freeze
     deploy --hotfix --approvers 2
     ```
 ````
+::
+
+### Empty definition
+
+Use a marker with nothing after it to leave a definition empty. Keep another term after it; a lone `:` at the end of the document requires Comark's `autoClose: false`.
+
+```md
+TBD
+:
+
+Ready
+: Approved for the next deploy.
+```
+
+## Examples
 
 ### Tight and loose
 
-A definition holding one paragraph renders its text straight inside `<dd>`. With more blocks, each paragraph keeps its `<p>`. With Comark's `autoUnwrap: false`, a loose list keeps `<p>` in every definition. A list is loose when a blank line sits inside a definition or between a term and its definition.
+A definition holding one paragraph renders its text straight inside `<dd>`. With more blocks, each paragraph keeps its `<p>`. A list is loose when a blank line sits inside a definition or between a term and its definition. With Comark's `autoUnwrap: false`, a loose list keeps `<p>` in every definition.
 
 ### What isn't a definition
 
-A colon with no space after it, such as `:3 to 1` or a `:component`, stays text, and so does a `: line` with no term above it or one indented four spaces past the term. A marker with nothing after it is an empty definition.
+A colon with no space after it stays text, such as `:3 to 1` or a `:component`. So does a `: line` with no term above it, or one indented four spaces past the term.
 
-## Examples
+```md
+The odds were
+:3 to 1
+```
 
 ### Styling
 
@@ -95,11 +159,22 @@ A definition list reads better than a two-column table when definitions run long
 
 ### How it parses
 
-The parser is markdown-it-deflist, ported so its tokens reach Comark's tree: Comark drops block tokens it doesn't know, so the plugin pushes ones it builds with any tag.
+The parser is markdown-it-deflist, ported so its tokens reach Comark's tree. Comark drops block tokens it doesn't know, so the plugin pushes ones it builds with any tag.
 
 ## API
 
-The plugin takes no options. In `comarkUi()`, `deflist: false` turns it off.
+### Syntax
+
+| Form | Markdown | Renders as |
+| --- | --- | --- |
+| Term | A line followed by a definition | `<dt>` |
+| Definition | `: text` or `~ text`, with at least one space after the marker | `<dd>` |
+| Continuation | Lines indented past the marker | More of the `<dd>` |
+| List | Terms and definitions in a row | `<dl>` |
+
+### Options
+
+The plugin takes no options. `deflist: false` in `comarkUi()` turns it off.
 
 ### Package
 
