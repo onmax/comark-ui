@@ -1104,7 +1104,7 @@ importers:
       comark-mark:
         specifier: workspace:*
         version: link:../mark
-      comark-math:
+      comark-mathml:
         specifier: workspace:*
         version: link:../math
       comark-media:
@@ -1713,7 +1713,7 @@ importers:
       comark-mark:
         specifier: workspace:^
         version: link:../mark
-      comark-math:
+      comark-mathml:
         specifier: workspace:^
         version: link:../math
       comark-media:
