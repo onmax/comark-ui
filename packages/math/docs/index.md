@@ -88,7 +88,7 @@ comarkUi({ math: { macros: { "\\R": "\\mathbb{R}" } } });
 
 - `$5 and $10`, `US$20`, and `$ x $`: a `$` followed by a digit or a space doesn't open a formula.
 - `\[1\]` and `\[2, 3\]`: brackets around numbers are citations.
-- A formula left open, as in a stream that hasn't sent its closing `$$` yet, shows its TeX until the rest arrives, with no issue.
+- Invalid formulas show their TeX and report an issue, including at the end of a document. Comark auto-closes dollar delimiters before plugins run, so incomplete streaming formulas may also report an issue until the rest arrives.
 
 ### From Comark's math plugin
 

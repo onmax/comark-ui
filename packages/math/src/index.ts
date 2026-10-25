@@ -5,8 +5,8 @@ import {
   type MarkdownExit,
   type StateBlock,
   type StateInline,
+  type Token,
 } from "../../../shared/markdown-it.ts";
-import { text } from "./text.ts";
 import { type MathOutput, typesetter } from "./typeset.ts";
 
 export type { MathOutput } from "./typeset.ts";
@@ -138,10 +138,12 @@ const markdownIt = (md: MarkdownExit) => {
   });
 };
 
-// Comark closes a `$` or `$$` left open at the end of the document, as in a stream, so the formula that ends it may be
-// cut off, and when it fails it renders its TeX without an issue. A `$$` line Comark adds has no newline after it,
-// unlike a file's last line, so a display formula that ends a file is still reported; an inline one isn't.
-const unfinished = new WeakMap<object, string>();
+// A private tag per parse distinguishes generated tokens from authored HTML and components.
+let nextParse = 0;
+const generated = new WeakMap<
+  object,
+  { tag: string; formulas: { tex: string; display: boolean }[] }
+>();
 
 const isElement = (node: Node): node is ElementNode => Array.isArray(node) && node[0] !== null;
 const MAX_QUOTED = 60;
@@ -162,35 +164,41 @@ export default defineComarkPlugin<MathOptions | undefined, MathMeta>((options = 
     name: "math",
     markdownItPlugins: [markdownIt],
     markdownItPost(state) {
-      // The token the document's content ends with.
-      let tail: (typeof state.tokens)[number] | undefined;
-      for (const token of state.tokens) {
-        if (token.type === "fence" && token.info.trim().split(/\s/)[0] === "math") {
-          token.type = "math_block";
-          token.tag = "math";
-          token.content = token.content.trim();
+      const tag = `comark-math-${nextParse++}`;
+      const formulas: { tex: string; display: boolean }[] = [];
+      const visit = (tokens: Token[]) => {
+        for (const token of tokens) {
+          if (token.children) visit(token.children);
+          const fence = token.type === "fence" && token.info.trim().split(/\s/)[0] === "math";
+          if (!fence && token.type !== "math_inline" && token.type !== "math_block") continue;
+          const index =
+            formulas.push({
+              tex: token.content.trim(),
+              display: fence || token.type === "math_block",
+            }) - 1;
+          // This single-node token preserves our tag and attributes through Comark's tree builder.
+          token.type = "mdc_block_shorthand";
+          token.tag = tag;
+          token.attrs = [["index", String(index)]];
         }
-        if (token.type === "math_block") tail = token;
-        if (token.type === "inline")
-          tail = token.children?.findLast((child) => child.type !== "text" || child.content.trim());
-      }
-      if (!tail || tail.tag !== "math" || !["$", "$$"].includes(tail.markup)) return;
-      const closed = tail.block
-        ? /(?:^|\n)\$\$$/.test(state.markdown)
-        : state.markdown.trimEnd().endsWith(tail.markup);
-      if (closed) unfinished.set(state, tail.content);
+      };
+      visit(state.tokens);
+      generated.set(state, { tag, formulas });
     },
     async post(state) {
       const { tree } = state;
+      const source = generated.get(state);
+      if (!source) return;
       const found: { list: Node[]; index: number; tex: string; display: boolean }[] = [];
       const walk = (nodes: Node[], start: number) => {
         for (let index = start; index < nodes.length; index++) {
           const node = nodes[index];
           if (!node || !isElement(node)) continue;
           const [tag, attrs] = node;
-          if (tag === "math") {
-            const tex = text(attrs.content);
-            found.push({ list: nodes, index, tex, display: text(attrs.class).includes("block") });
+          if (attrs.$?.html) continue;
+          if (tag === source.tag) {
+            const formula = source.formulas[Number(attrs.index)];
+            if (formula) found.push({ list: nodes, index, ...formula });
             continue;
           }
           // SAFETY: an element node is [tag, attributes, ...children], so its items from index 2 are nodes.
@@ -207,12 +215,11 @@ export default defineComarkPlugin<MathOptions | undefined, MathMeta>((options = 
           rule: "comark/math/katex-missing",
           message: `Math: \`output: "${output}"\` needs KaTeX, which isn't installed, so formulas render as MathML. Install \`katex\`, or drop the \`output\` option.`,
         });
-      const cutOff = unfinished.get(state);
-      for (const [at, { list, index, tex, display }] of found.entries()) {
+      for (const { list, index, tex, display } of found) {
         const result = typeset(tex, display);
         const attrs: FormulaAttributes = display ? { tex, display } : { tex };
         if ("html" in result) attrs.html = result.html;
-        else if (!(at === found.length - 1 && tex === cutOff))
+        else
           issues.push({
             rule: "comark/math/invalid-tex",
             message: `Math \`${quoted(tex)}\` failed to typeset: ${result.reason}. Fix the TeX or wrap it in code.`,

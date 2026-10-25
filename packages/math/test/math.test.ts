@@ -69,7 +69,7 @@ describe("comark-math", () => {
     expect(await formulas("From $a$ to $b$, and $x + y = 2$.")).toEqual(["a", "b", "x + y = 2"]);
   });
 
-  it("shows an unclosed formula as its source, with no issue", async () => {
+  it("shows an unclosed formula as its source", async () => {
     for (const markdown of [
       "Say $\\frac{a",
       "Say \\(\\frac{a",
@@ -77,14 +77,32 @@ describe("comark-math", () => {
       "\\[\n\\frac{a",
     ]) {
       const tree = await parse(markdown);
-      expect(tree.meta.issues ?? [], markdown).toEqual([]);
+      expect(tree.meta.issues ?? [], markdown).toHaveLength(markdown.includes("$") ? 1 : 0);
       expect(await render(markdown), markdown).not.toContain("<math");
     }
     expect(await render("$$\n\\frac{a}{")).toContain(
       '<span class="cmh cmh-display cmh-source">\\frac{a}{</span>',
     );
-    // A file ends with a newline after its last `$$`, which a stream that Comark closed doesn't have.
     expect((await parse("$$\n\\frac{a}\n$$\n")).meta.issues).toHaveLength(1);
+  });
+
+  it("reports closed invalid formulas at EOF, including with auto-close disabled", async () => {
+    for (const markdown of ["Bad $\\frac{a}$", "$$\n\\frac{a}\n$$", "Bad $$\\frac{a}$$"]) {
+      for (const autoClose of [true, false]) {
+        const tree = await parseMarkdown(markdown, { plugins: [math()], autoClose });
+        expect(tree.meta.issues, markdown).toHaveLength(1);
+        expect(Object.values(tree.meta.issueRules ?? {})).toEqual(["comark/math/invalid-tex"]);
+      }
+    }
+  });
+
+  it("preserves authored MathML and unrelated math components", async () => {
+    for (const markdown of ["<math><mi>x</mi></math>", "::math\nHello\n::"]) {
+      const original = await parseMarkdown(markdown);
+      expect((await parse(markdown)).nodes).toEqual(original.nodes);
+      expect(await render(markdown)).toEqual(await createHtmlRenderer()(markdown));
+    }
+    expect(await render("<math><mi>x</mi></math>")).toContain("<mi>x</mi>");
   });
 
   it("renders invalid TeX as its source and reports it", async () => {
