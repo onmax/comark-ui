@@ -117,6 +117,36 @@ describe("chip downloads", () => {
     expect(image.cancel).toHaveBeenCalledOnce();
   });
 
+  it.each(["oversized", "non-image", "missing"])(
+    "settles and retries when %s body cancellation never settles",
+    async (failure) => {
+      const url = `https://images.example/pending-cancel-${failure}.png`;
+      const image = stream(
+        [100_001],
+        failure === "non-image" ? { "content-type": "text/html" } : {},
+        failure === "missing" ? 404 : 200,
+      );
+      image.cancel.mockImplementation(() => new Promise<void>(() => {}));
+      vi.mocked(fetch)
+        .mockResolvedValueOnce(image.response)
+        .mockResolvedValueOnce(new Response(PNG, { headers: { "content-type": "image/png" } }));
+      const { html, meta } = await render(url);
+      if (failure === "missing") {
+        expect(html).not.toContain("<img");
+        expect(meta.issues[0]).toContain("HTTP 404");
+      } else {
+        expect(html).toContain(`src="${url}"`);
+        expect(meta.issues).toEqual([]);
+      }
+      expect(image.cancel).toHaveBeenCalledOnce();
+      expect(image.response.body?.locked).toBe(false);
+      expect(image.chunks()).toBe(failure === "oversized" ? 1 : 0);
+      expect((await render(url)).html).toContain(`src="${DATA}"`);
+      expect(fetch).toHaveBeenCalledTimes(2);
+    },
+    1_000,
+  );
+
   it("retries an oversized image on the next parse and shares the successful download", async () => {
     const url = "https://images.example/retry.png";
     const image = stream([100_001]);

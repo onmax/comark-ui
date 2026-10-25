@@ -41,10 +41,11 @@ async function download(url: string) {
     }
     return `data:${type};base64,${base64(bytes.subarray(0, size))}`;
   } finally {
+    // Cancellation can remain pending; it must not hold up the result or keep the reader locked.
     if (reader) {
-      await reader.cancel().catch(() => {});
+      void reader.cancel().catch(() => {});
       reader.releaseLock();
-    } else await response.body?.cancel().catch(() => {});
+    } else void response.body?.cancel().catch(() => {});
   }
 }
 
