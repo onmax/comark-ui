@@ -149,7 +149,7 @@ Use the `icon` prop to add a built-in symbol, or `none` to remove it.
 
 ### Label color
 
-Use the `labelColor` prop to change the label background. Image colors accept semantic names or six-digit hex values and do not inherit CSS tokens. CI chooses the value's color from its status.
+Use the `labelColor` prop to change the label background in subtle and solid styles. Image colors accept semantic names or six-digit hex values and do not inherit CSS tokens. CI chooses the value's color from its status.
 
 ::example
 ```md
@@ -159,7 +159,7 @@ Use the `labelColor` prop to change the label background. Image colors accept se
 
 ### Style
 
-Use the `style` prop to choose solid backgrounds instead of tints. Solid badges choose black or white text for contrast.
+Use the `style` prop to choose shadcn outlines, subtle tints, or solid backgrounds. shadcn is the default. Solid badges choose black or white text for contrast.
 
 ::example
 ```md
@@ -193,7 +193,7 @@ The heading's `id` takes the badge's words too, as Comark builds ids from all of
 
 ### Build a README badge
 
-Open the [badge builder](/badges/), choose Custom, npm version, Downloads, or GitHub Actions, and edit the options. Copy Markdown for a README, Comark for a document, or the image URL. Copy builder link preserves the configuration. Download SVG saves the current result as a snapshot.
+Open the [badge builder](/badges/), choose Custom, npm version, Downloads, GitHub Actions, License, or Docs, and edit the options. Copy Markdown for a README, Comark for a document, or the image URL. Copy builder link preserves the configuration and export format in the URL. Download SVG saves the current result as a snapshot.
 
 The hosted endpoint accepts the same image options as query parameters:
 
@@ -240,9 +240,9 @@ A missing package, missing workflow, no runs, rate limit, or failed request disp
 | `repository` | — | Public GitHub repository as `owner/repo`. |
 | `workflow` | — | Workflow filename, such as `ci.yml`. |
 | `branch` | — | Optional workflow branch filter. |
-| `icon` | Source icon | `none`, `package`, `npm`, `github`, or `check`. `github` draws a branch symbol. |
-| `labelColor` | `neutral` | Semantic or six-digit hex color for the label background. |
-| `style` | `subtle` | `subtle` or `solid`. Solid automatically chooses black or white text for contrast. |
+| `icon` | Source icon | `none`, `package`, `npm`, `github`, `comark`, `shadcn`, or `check`. Brand marks are embedded in the SVG. |
+| `labelColor` | `neutral` | Semantic or six-digit hex color for the label background in subtle and solid styles. |
+| `style` | `shadcn` | `shadcn`, `subtle`, or `solid`. shadcn uses an outline and neutral text. Solid automatically chooses black or white text for contrast. |
 | `theme` | `light` | `light` or `dark`, embedded in the image. |
 
 ### Options
@@ -255,7 +255,7 @@ In `comarkUi()`, `badge: false` turns it off, and `badge: { endpoint }` configur
 
 ### Functions
 
-`comark-badge/svg` exports `readBadge(options)`, returning `{ ok, value }` or `{ ok, error, field }`; `badgeSvg(image)` renders resolved text as SVG; `badgeParams(spec)` writes canonical query parameters. This entry has no framework or server dependency. `comark-badge/server` exports `createBadgeHandler(options?)` separately.
+`comark-badge/svg` exports `readBadge(options)`, returning `{ ok, value }` or `{ ok, error, field }`; `badgeSvg(image)` renders resolved text as SVG; `badgeParams(spec)` writes canonical query parameters; `badgeIcon(name)` renders a built-in logo or symbol for option controls. This entry has no framework or server dependency. `comark-badge/server` exports `createBadgeHandler(options?)` separately.
 
 ### Your own renderer
 

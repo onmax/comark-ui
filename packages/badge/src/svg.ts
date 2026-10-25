@@ -8,7 +8,7 @@ export const badgeColors = {
   error: "#b91c1c",
   neutral: "#525252",
 };
-export const icons = ["none", "package", "npm", "github", "check"] as const;
+export const icons = ["none", "package", "npm", "github", "comark", "shadcn", "check"] as const;
 export type BadgeSource = (typeof sources)[number];
 export type BadgeSpec = {
   source: BadgeSource;
@@ -18,7 +18,7 @@ export type BadgeSpec = {
   labelColor: string;
   icon: (typeof icons)[number];
   theme: "light" | "dark";
-  style: "subtle" | "solid";
+  style: "shadcn" | "subtle" | "solid";
   package: string;
   repository: string;
   workflow: string;
@@ -94,14 +94,18 @@ export function readBadge(
     };
   const icon = field("icon", defaults[1]);
   if (!oneOf(icons, icon))
-    return { ok: false, field: "icon", error: "Use icon none, package, npm, github, or check." };
+    return {
+      ok: false,
+      field: "icon",
+      error: "Use icon none, package, npm, github, comark, shadcn, or check.",
+    };
   const theme = field("theme", "light");
-  const style = field("style", "subtle");
+  const style = field("style", "shadcn");
   const period = field("period", "month");
   if (theme !== "light" && theme !== "dark")
     return { ok: false, field: "theme", error: "Use theme light or dark." };
-  if (style !== "subtle" && style !== "solid")
-    return { ok: false, field: "style", error: "Use style subtle or solid." };
+  if (style !== "shadcn" && style !== "subtle" && style !== "solid")
+    return { ok: false, field: "style", error: "Use style shadcn, subtle, or solid." };
   if (period !== "day" && period !== "week" && period !== "month")
     return { ok: false, field: "period", error: "Use period day, week, or month." };
   const pkg = field("package");
@@ -165,7 +169,7 @@ export function badgeParams(spec: BadgeSpec): URLSearchParams {
     color: "primary",
     labelColor: "neutral",
     theme: "light",
-    style: "subtle",
+    style: "shadcn",
     period: "month",
   };
   return new URLSearchParams(
@@ -186,9 +190,16 @@ const paths: Record<BadgeSpec["icon"], string> = {
   check: '<path d="m3 8 3 3 7-7"/>',
   package: '<path d="m8 1 6 3v8l-6 3-6-3V4Z M2 4l6 3 6-3 M8 7v8 M5 2.5l6 3"/>',
   github:
-    '<circle cx="5" cy="3" r="2"/><circle cx="11" cy="5" r="2"/><circle cx="5" cy="13" r="2"/><path d="M5 5v6m0-2c6 0 6-2 6-2"/>',
-  npm: '<path d="M1 4h14v8H8V6H5v6H1Z M11 6v6"/>',
+    '<path fill="currentColor" stroke="none" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>',
+  npm: '<path fill="currentColor" stroke="none" transform="translate(0 5) scale(.8889)" d="M0 0v6h5v1h4V6h9V0H0zm5 5H4V2H3v3H1V1h4v4zm4 0H8v1H6V1h4v4H9zm0-3H8v2h1V2zm8 3h-1V2h-1v3h-1V2h-1v3h-2V1h6v4z"/>',
+  comark:
+    '<g transform="scale(.5)"><rect stroke="currentColor" x="6.5" y="11.4" width="19" height="10.2" fill="none" stroke-width="1.3"/><path fill="currentColor" d="M7.87 20.24V12.76H10.07L12.26 15.51 14.46 12.76H16.66V20.24H14.46V15.95L12.26 18.7 10.07 15.95V20.24ZM18.64 12.98h2.19v2.12h-2.19ZM18.64 17.9h2.19v2.12h-2.19ZM21.94 12.98h2.19v2.12h-2.19ZM21.94 17.9h2.19v2.12h-2.19Z"/><path d="M9.3 7.3C15.3 3.7 27.1 4.5 28.7 11.5 30.4 19.1 22 26.7 12.8 27.2 5.9 27.6 2 23.5 3.5 18.1 4.8 13.3 11.1 9.7 18.1 9.6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></g>',
+  shadcn: '<path d="m9 2-7 7m12-7L2 14"/>',
 };
+/** A built-in logo or symbol for interfaces that offer the same badge options. */
+export function badgeIcon(name: BadgeSpec["icon"]): string {
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${paths[name] ?? ""}</svg>`;
+}
 const textColor = (hex: string) => {
   const rgb = [1, 3, 5]
     .map((start) => Number.parseInt(hex.slice(start, start + 2), 16) / 255)
@@ -211,9 +222,21 @@ export function badgeSvg(input: BadgeImage): string {
   const bg = dark ? "#171717" : "#ffffff";
   const fg = dark ? "#fafafa" : "#171717";
   const solid = input.style === "solid";
+  if (input.style === "shadcn") {
+    const border =
+      input.color === "primary" || input.color === "neutral"
+        ? dark
+          ? "#404040"
+          : "#e5e5e5"
+        : color;
+    const muted = dark ? "#a3a3a3" : "#737373";
+    const text = (content: string, x: number, fill: string) =>
+      `<text x="${x}" y="17" fill="${fill}" font-family="Arial,Helvetica,sans-serif" font-size="12" font-weight="500" textLength="${Array.from(content).length * 7.2}" lengthAdjust="spacingAndGlyphs">${xml(content)}</text>`;
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="26" viewBox="0 0 ${width} 26" role="img" aria-label="${xml(label ? `${label}: ${value}` : value)}"><title>${xml(label ? `${label}: ${value}` : value)}</title><rect x=".5" y=".5" width="${width - 1}" height="25" rx="6" fill="${bg}" stroke="${border}"/>${icon ? `<g transform="translate(9 5)" color="${fg}" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${icon}</g>` : ""}${label ? text(label, 10 + iconSpace, muted) : ""}${text(value, left + 10 + (label ? 0 : iconSpace), fg)}</svg>`;
+  }
   const labelFg = solid ? textColor(labelColor) : fg;
   const valueFg = solid ? textColor(color) : fg;
   const text = (content: string, x: number, fill: string) =>
     `<text x="${x}" y="17" fill="${fill}" font-family="DejaVu Sans Mono,monospace" font-size="12" textLength="${Array.from(content).length * 7.2}" lengthAdjust="spacingAndGlyphs">${xml(content)}</text>`;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="26" viewBox="0 0 ${width} 26" role="img" aria-label="${xml(label ? `${label}: ${value}` : value)}"><title>${xml(label ? `${label}: ${value}` : value)}</title><rect width="${width}" height="26" rx="6" fill="${bg}"/><svg width="${width}" height="26" viewBox="0 0 ${width} 26"><defs><clipPath id="badge"><rect width="${width}" height="26" rx="6"/></clipPath></defs><g clip-path="url(#badge)"><path d="M0 0h${left}v26H0Z" fill="${labelColor}" fill-opacity="${solid ? 1 : 0.12}"/><path d="M${left} 0h${right}v26H${left}Z" fill="${color}" fill-opacity="${solid ? 1 : 0.14}"/></g></svg>${left ? `<path d="M${left} 1v24" stroke="${fg}" stroke-opacity=".12"/>` : ""}${icon ? `<g transform="translate(9 5)" fill="none" stroke="${label ? labelFg : valueFg}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${icon}</g>` : ""}${label ? text(label, 10 + iconSpace, labelFg) : ""}${text(value, left + 10 + (label ? 0 : iconSpace), valueFg)}<rect x=".5" y=".5" width="${width - 1}" height="25" rx="5.5" fill="none" stroke="${fg}" stroke-opacity=".18"/></svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="26" viewBox="0 0 ${width} 26" role="img" aria-label="${xml(label ? `${label}: ${value}` : value)}"><title>${xml(label ? `${label}: ${value}` : value)}</title><rect width="${width}" height="26" rx="6" fill="${bg}"/><svg width="${width}" height="26" viewBox="0 0 ${width} 26"><defs><clipPath id="badge"><rect width="${width}" height="26" rx="6"/></clipPath></defs><g clip-path="url(#badge)"><path d="M0 0h${left}v26H0Z" fill="${labelColor}" fill-opacity="${solid ? 1 : 0.12}"/><path d="M${left} 0h${right}v26H${left}Z" fill="${color}" fill-opacity="${solid ? 1 : 0.14}"/></g></svg>${left ? `<path d="M${left} 1v24" stroke="${fg}" stroke-opacity=".12"/>` : ""}${icon ? `<g transform="translate(9 5)" color="${label ? labelFg : valueFg}" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${icon}</g>` : ""}${label ? text(label, 10 + iconSpace, labelFg) : ""}${text(value, left + 10 + (label ? 0 : iconSpace), valueFg)}<rect x=".5" y=".5" width="${width - 1}" height="25" rx="5.5" fill="none" stroke="${fg}" stroke-opacity=".18"/></svg>`;
 }

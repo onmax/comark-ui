@@ -12,6 +12,7 @@ export default defineDoctorConfig({
       include: "{docs/pages,packages/*/docs}/**/*.md",
       // docs/build.ts renders these itself.
       components: [
+        "badge-builder",
         "correct",
         "demo",
         "drop",
@@ -33,7 +34,7 @@ export default defineDoctorConfig({
           const markdown = /^(\/.+)\.md$/.exec(path)?.[1];
           if (markdown) path = `${markdown}/`;
           const [first = "", ...rest] = path.split("/").filter(Boolean);
-          if (first === "play" || first === "badges" || path === "/badge.svg") return true;
+          if (first === "play" || path === "/badge.svg") return true;
           if (existsSync(new URL(`packages/${first}/docs/index.md`, repo)))
             return `packages/${first}/docs/${rest.join("/")}`;
           return /\.\w+$/.test(path) ? `docs/public${path}` : `docs/pages${path}`;

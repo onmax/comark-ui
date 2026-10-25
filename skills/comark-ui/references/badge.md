@@ -37,11 +37,11 @@ Use image mode for README-style label/value badges. Static images embed their SV
 
 - `source`: `static`, `npm-version`, `npm-downloads`, or `github-actions`. A static image needs `value` or bracket text. npm needs `package`; GitHub needs a public `repository` and a YAML `workflow` filename. Set `branch` to select a branch; otherwise GitHub returns the latest run across branches.
 - `label` and `value` hold at most 80 characters. Use bound JSON string attributes when text contains quotes or braces; the builder produces these for you.
-- `icon`: `none`, `package`, `npm`, `github` for a branch symbol, or `check`. Live sources pick an icon by default.
-- `style`: `subtle` or `solid`; `theme`: `light` or `dark`. `color` and `labelColor` accept the semantic names or six-digit hex colors. CI chooses its own status color. Images embed colors and do not inherit the document's CSS.
+- `icon`: `none`, `package`, `npm`, `github`, `comark`, `shadcn`, or `check`. Live sources pick an icon by default.
+- `style`: `shadcn` by default, `subtle`, or `solid`; `theme`: `light` or `dark`. `color` and `labelColor` accept semantic names or six-digit hex colors. shadcn draws an outline with neutral text; `labelColor` applies to subtle and solid backgrounds. CI chooses its own status color. Images embed colors and do not inherit the document's CSS.
 - `period`: `day`, `week`, or `month` for downloads. Hosted values cache for five minutes for versions, one hour for downloads, and one minute for CI. Failures display `unavailable` for 30 seconds. Downloaded SVGs are snapshots.
 
-The builder at `/badges/` exports Comark, Markdown, an image URL, and SVG. The image endpoint is `/badge.svg`, with the same props as query parameters. Preserve the existing prose syntax for inline tags that should follow the page's theme.
+The builder at `/badges/` lives in the docs layout, shares its configuration and export format in the query string, and exports Comark, Markdown, an image URL, and SVG. The image endpoint is `/badge.svg`, with the same props as query parameters. Preserve the existing prose syntax for inline tags that should follow the page's theme.
 
 ## Register
 

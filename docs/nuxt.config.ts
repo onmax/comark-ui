@@ -27,8 +27,6 @@ async function writeAssets() {
   const playground = new URL("dist/play/", root);
   if (existsSync(playground))
     await cp(playground, new URL("play/", generated), { recursive: true });
-  const badges = new URL("dist/badges/", root);
-  if (existsSync(badges)) await cp(badges, new URL("badges/", generated), { recursive: true });
   // The playground's preview is its own document and links the site's styles, so they keep their own URL too.
   // Each page's Markdown copy and llms.txt, at the site's root.
   const markdown = new URL("dist/markdown/", root);
@@ -109,7 +107,7 @@ export default defineNuxtConfig({
       crawlLinks: true,
       failOnError: true,
       routes: pageRoutes(),
-      ignore: ["/play", "/badges"],
+      ignore: ["/play"],
     },
   },
 });
