@@ -23,7 +23,9 @@ export const css = `@layer comark{${[
   ".ctr-failure>summary{padding:.5rem 1rem;font-size:.875rem;font-weight:500;cursor:pointer;overflow-wrap:anywhere}",
   ".ctr-failure>summary:hover{background:var(--_comark-accent)}",
   ".ctr-failure>summary:focus-visible{outline:none;box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--_comark-ring) 60%,transparent)}",
-  ".ctr-message{margin:0;padding:0 1rem .5rem;color:var(--ctr-fail);font-size:.875rem;white-space:pre-wrap;overflow-wrap:anywhere}",
-  ".ctr-stack{margin:0 1rem 1rem;overflow-x:auto;font-size:.8125rem}",
+  ".ctr-message{margin:0!important;padding:0 1rem .5rem;color:var(--ctr-fail);font-size:.875rem;white-space:pre-wrap;overflow-wrap:anywhere}",
+  // A page's plain `pre` margins are unlayered and would run the stack to the card's edges, so only `!important` keeps it
+  // inset under the message.
+  ".ctr-stack{margin:0 1rem 1rem!important;overflow-x:auto;font-size:.8125rem}",
   "@media print{.ctr-failure:not([open])>:not(summary){display:block}}",
 ].join("")}}`;
