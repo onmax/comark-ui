@@ -4,7 +4,7 @@ import { css } from "./styles.ts";
 export function addStyles(): void {
   if (document.querySelector("style[data-comark-mathml]")) return;
   const style = document.createElement("style");
-  style.dataset.comarkMath = "";
+  style.dataset.comarkMathml = "";
   style.textContent = css;
   document.head.append(style);
 }
