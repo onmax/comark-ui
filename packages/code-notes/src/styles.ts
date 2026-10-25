@@ -16,6 +16,9 @@ export const css = `@layer comark{${[
   "a.cn-marker:hover{background:color-mix(in srgb,var(--cn-marker) 18%,var(--_comark-background))}",
   "a.cn-marker:focus-visible{outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--_comark-ring) 50%,transparent)}",
   ".cn-marker:target{box-shadow:0 0 0 3px color-mix(in srgb,var(--_comark-ring) 60%,transparent)}",
+  // Following a marker either way tints its line: the target when a note links back, the focused marker on a click. The
+  // tint is a border image past the line's ends, which the block clips, so the lines keep their layout.
+  ".line:has(>.cn-marker:is(:target,:focus)){border-image:conic-gradient(color-mix(in srgb,var(--cn-marker,var(--primary,currentColor)) 14%,transparent) 0 0) fill 0//.25em 100vw}",
   ".cn-notes{margin:.75rem 0 1.5rem}",
   // A page's plain `ol` and `p` rules would indent the notes past the code and push a note's text below its marker.
   ".cn-notes{padding:0!important;list-style:none!important}",
