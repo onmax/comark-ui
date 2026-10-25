@@ -36,8 +36,8 @@ include "./ducks.md": file not found. It resolved to "guide/ducks.md" under the 
 
 | Plugin | Reports |
 | --- | --- |
-| [charts](/charts/#validation) | Invalid chart tables and marks |
-| [annotate](/annotate/#validation) | Missing or unknown props, marks outside the image, side notes that would overlap, compares whose viewports differ, and diffs that are too long, mix files, or change nothing |
+| [charts](/charts/#issues) | Invalid chart tables and marks |
+| [annotate](/annotate/#issues) | Missing or unknown props, marks outside the image, side notes that would overlap, compares whose viewports differ, and diffs that are too long, mix files, or change nothing |
 | [carousel](/carousel/#issues) | Content outside every `:::slide`, empty carousels, bad `columns`, stray slides, and props bound to render-time data |
 | [embed](/embed/) | Missing or non-https links, links it can't read, cards without a `title`, and a bad `start` |
 | [tabs](/tabs/#issues) | Tabs without a label or with the same label, content outside every tab, anything but code blocks in a code group, empty blocks, and stray `:::tabs-item` |
