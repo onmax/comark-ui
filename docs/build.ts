@@ -1527,7 +1527,7 @@ function asFields(nodes: Node[]): Node[] {
         return [
           "field-group",
           {},
-          ...body.slice(2).flatMap((row): Node[] => {
+          ...(body.slice(2) as Node[]).flatMap((row): Node[] => {
             const [name, fallback, description] = cellsOf(row);
             if (!name || !description) return [];
             const value = fallback ? textContent(fallback).trim() : "";
