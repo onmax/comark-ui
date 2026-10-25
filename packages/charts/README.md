@@ -54,7 +54,7 @@ The plugin adds every problem to `meta.issues`, so a host can reject a document 
 
 [Flint](https://github.com/microsoft/flint-chart) turns the table into a Vega-Lite spec with a house theme, and [Vega](https://vega.github.io) draws it to SVG while parsing, on the server or at build time, so the browser runs no chart code. `comark-charts/vue`, `/react`, and `/svelte` place the same SVG; marks, which come from comark-annotate, show only in `@comark/html`.
 
-The page holds a `figure.cch` with the title, the SVG, and the table folded into **Data**. Text, axes, and grid follow shadcn/ui's variables and the shared `--comark-*` tokens, so charts switch with the page's dark mode. Series take `--comark-chart-1` to `-6`, then shadcn/ui's `--chart-1` to `-6`. The rules sit in a `comark` CSS layer, so any plain rule of your own wins; see the charts' [Theming page](https://comark-ui.onmax.me/charts/#theme).
+The page holds a `figure.cch` with the title, the SVG, and the table folded into **Data**. Text, axes, and grid follow Nuxt UI's or shadcn/ui's variables and the shared `--comark-*` tokens, so charts switch with the page's dark mode. Series take `--comark-chart-1` to `-6`, then Nuxt UI's `--ui-chart-1` to `-6`, then shadcn/ui's `--chart-1` to `-6`. The rules sit in a `comark` CSS layer, so any plain rule of your own wins; see the charts' [Theming page](https://comark-ui.onmax.me/charts/#theme).
 
 Only `@comark/html` has a renderer: Vega draws on the server, and a framework component would ship it to the browser.
 
