@@ -129,6 +129,7 @@ const packages = [
     [],
   ],
   ["comark-mark/html", () => import("comark-mark/html"), []],
+  ["comark-math/html", () => import("comark-math/html"), []],
   ["comark-media/html", () => import("comark-media/html"), []],
   ["comark-metrics/html", () => import("comark-metrics/html"), ["stats"]],
   ["comark-steps/html", () => import("comark-steps/html"), []],

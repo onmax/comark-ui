@@ -19,6 +19,7 @@ import * as github from "comark-github/html";
 import * as icon from "comark-icon/html";
 import * as links from "comark-links/html";
 import * as mark from "comark-mark/html";
+import * as math from "comark-math/html";
 import * as media from "comark-media/html";
 import pele, { Pele } from "comark-pele/html";
 import * as metrics from "comark-metrics/html";
@@ -78,6 +79,7 @@ export default (options?: PresetOptions): Preset<NodeHandler> =>
       icon,
       links,
       mark,
+      math,
       media,
       mermaid,
       metrics,

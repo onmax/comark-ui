@@ -103,6 +103,7 @@ Read the reference for each block you use before you write it. Mix the blocks fr
 | A suggested edit or a comment inside the text | `{++ ++}`, `{-- --}`, `{~~ ~> ~~}`, `{== ==}`, `{>> <<}` | [critic](references/critic.md) |
 | Terms and their definitions, such as a glossary | `Term`, then `: definition` | [deflist](references/deflist.md) |
 | A numbered note at the end of the page, such as a source or a caveat | `[^label]`, `^[note]` | [footnotes](references/footnotes.md) |
+| A formula, such as a complexity bound or how a number was computed | `$…$`, `$$…$$` | [math](references/math.md) |
 | A keyboard shortcut | `++ctrl+k++` | [keys](references/keys.md) |
 
 ### Authoring tools

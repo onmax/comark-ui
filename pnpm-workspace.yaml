@@ -23,6 +23,8 @@ catalog:
   comark: ^0.8.1
   comark-pele: ^1.1.0
   flint-chart: ^0.5.1
+  katex: ^0.19.1
+  temml: ^0.14.0
   vega: ^6.4.0
   vega-interpreter: ^2.3.2
   vega-lite: ^6.5.0

@@ -122,6 +122,7 @@ const packageOrder = [
   "critic",
   "deflist",
   "footnotes",
+  "math",
   "keys",
   "include",
   "outline",

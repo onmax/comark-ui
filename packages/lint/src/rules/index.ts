@@ -20,6 +20,7 @@ import fileTree from "./file-tree.ts";
 import github from "./github.ts";
 import icon from "./icon.ts";
 import include from "./include.ts";
+import math from "./math.ts";
 import media from "./media.ts";
 import outline from "./outline.ts";
 import qr from "./qr.ts";
@@ -72,4 +73,5 @@ export const catalog = {
   ...table,
   ...xref,
   ...quiz,
+  ...math,
 } satisfies Record<string, RuleInfo>;
