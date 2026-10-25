@@ -61,7 +61,7 @@ describe("read()", () => {
     });
   });
 
-  it("marks the last reasoning and text as streaming while the message arrives", () => {
+  it("uses message streaming for legacy parts without a state", () => {
     const blocks = read(
       [
         { type: "reasoning", text: "Hmm" },
@@ -71,6 +71,50 @@ describe("read()", () => {
     );
     expect(blocks[0]).toMatchObject({ steps: [{ title: "Thinking", status: "running" }] });
     expect(blocks[1]).toMatchObject({ kind: "text", streaming: true });
+  });
+
+  it.each([false, true])(
+    "respects explicit part states when message streaming is %s",
+    (streaming) => {
+      const parts: UIMessage["parts"] = [
+        { type: "reasoning", text: "Finished thought", state: "done" },
+        { type: "text", text: "Finished answer", state: "done" },
+        { type: "reasoning", text: "Next thought", state: "streaming" },
+        { type: "text", text: "Next answer", state: "streaming" },
+      ];
+      expect(read(parts, streaming)).toMatchObject([
+        { steps: [{ title: "Thought", status: "done" }] },
+        { kind: "text", streaming: false },
+        { steps: [{ title: "Thinking", status: "running" }] },
+        { kind: "text", streaming: true },
+      ]);
+    },
+  );
+
+  it("renders reasoning files with the same URL safety as files and preserves the part", () => {
+    const parts: UIMessage["parts"] = [
+      { type: "reasoning-file", mediaType: "image/png", url: "https://example.com/thought.png" },
+      {
+        type: "reasoning-file",
+        mediaType: "application/pdf",
+        url: "https://example.com/thought.pdf",
+      },
+      { type: "reasoning-file", mediaType: "image/png", url: "data:image/png;base64,YQ==" },
+      { type: "reasoning-file", mediaType: "image/png", url: "javascript:alert(1)" },
+      { type: "reasoning-file", mediaType: "text/plain", url: "data:text/plain,hi" },
+    ];
+    const blocks = read(parts);
+    expect(blocks).toMatchObject([
+      { kind: "file", image: "https://example.com/thought.png" },
+      { kind: "file", href: "https://example.com/thought.pdf" },
+      { kind: "file", image: "data:image/png;base64,YQ==", href: undefined },
+      { kind: "file", href: undefined },
+      { kind: "file", href: undefined },
+    ]);
+    for (const [index, part] of parts.entries()) {
+      expect(blocks[index]).toHaveProperty("part", part);
+      expect(blocks[index]).toEqual({ ...read([{ ...part, type: "file" }])[0], index, part });
+    }
   });
 
   it("names each tool state", () => {

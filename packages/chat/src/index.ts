@@ -142,7 +142,7 @@ function step<Part extends MessagePart>(
   const data = fields(part);
   if (isTool(part)) return toolStep(part, index);
   if (part.type === "reasoning") {
-    const running = streaming || data.state === "streaming";
+    const running = data.state === "streaming" || (data.state == null && streaming);
     const text = string(data.text) ?? "";
     return {
       kind: "reasoning",
@@ -199,7 +199,7 @@ function file<Part extends MessagePart>(part: Part, index: number): Block<Part> 
 
 /**
  * Reads a message's parts into what it shows: text, files, and traces of the turn's reasoning, tool calls, and sources.
- * Every renderer goes through it, so they can't disagree. `streaming` marks the whole message as still arriving. It
+ * Every renderer goes through it, so they can't disagree. `streaming` marks parts without an explicit state as still arriving. It
  * never throws, whatever the parts hold.
  */
 export function read<Part extends MessagePart>(
@@ -227,9 +227,9 @@ export function read<Part extends MessagePart>(
         index,
         part,
         text: string(data.text) ?? "",
-        streaming: streaming || data.state === "streaming",
+        streaming: data.state === "streaming" || (data.state == null && streaming),
       });
-    else if (part.type === "file") blocks.push(file(part, index));
+    else if (part.type === "file" || part.type === "reasoning-file") blocks.push(file(part, index));
     else if (part.type === "step-start") blocks.push({ kind: "step-start", index, part });
     else blocks.push({ kind: "other", index, part });
   });
