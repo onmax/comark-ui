@@ -7,6 +7,7 @@ export default definePackage({
     "src/editor.ts",
     "src/editor-vue.ts",
     "src/html.ts",
+    "src/nuxt-ui.ts",
     "src/vue.ts",
     "src/react.ts",
   ],

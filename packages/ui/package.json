@@ -30,6 +30,7 @@
     "./editor": "./dist/editor.mjs",
     "./editor/vue": "./dist/editor-vue.mjs",
     "./html": "./dist/html.mjs",
+    "./nuxt-ui": "./dist/nuxt-ui.mjs",
     "./react": "./dist/react.mjs",
     "./svelte": {
       "types": "./dist/svelte/index.d.ts",
@@ -79,7 +80,7 @@
     "comark-keys": "workspace:^",
     "comark-links": "workspace:^",
     "comark-mark": "workspace:^",
-    "comark-math": "workspace:^",
+    "comark-mathml": "workspace:^",
     "comark-media": "workspace:^",
     "comark-metrics": "workspace:^",
     "comark-outline": "workspace:^",

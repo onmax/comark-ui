@@ -39,7 +39,7 @@ const render = createHtmlRenderer({ plugins: [annotate()], components });
 
 Each reference ends with a Register section that says how its package registers alone and which options it needs.
 
-Either way, the HTML renderer inlines the styles once per document, and the Vue, React, and Svelte components add them on mount. On a server-rendered page, import each package's `style.css`, such as `comark-cards/style.css`, so the page doesn't shift. The `--comark-*` tokens in https://comark-ui.onmax.me/guide/theming/ theme every plugin at once.
+Either way, the HTML renderer inlines the styles once per document, and the Vue, React, and Svelte components add them on mount. On a server-rendered page, import each package's `style.css`, such as `comark-cards/style.css`, so the page doesn't shift. The `--comark-*` tokens in https://comark-ui.onmax.me/guide/theming/ theme every plugin at once. In a Nuxt UI app the plugins follow its `--ui-*` variables with no setup; for a page rendered outside the app, such as review evidence, put the CSS from `nuxtUiTheme({ colors: appConfig.ui?.colors, css: mainCss })` in `comark-ui/nuxt-ui` in a `<style>`, so the page matches the app.
 
 Problems land in `meta.issues` after `parseMarkdown`, one sentence each, and a host can refuse a document while any remain. For untrusted input, add Comark's `security` plugin with `blockedTags` such as `script`, `style`, and `iframe`; it cleans the Markdown inside blocks too.
 
