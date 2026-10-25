@@ -28,6 +28,10 @@ export default defineDoctorConfig({
         // fileOf in docs/build.ts: a package's pages come from its docs/, the rest from docs/pages, and files from
         // docs/public. The playground is built by docs/play.ts and has no page.
         routes(path) {
+          // docs/build.ts also writes llms.txt and each page's Markdown copy, at its path plus `.md`.
+          if (path === "/llms.txt" || path === "/index.md") return true;
+          const markdown = /^(\/.+)\.md$/.exec(path)?.[1];
+          if (markdown) path = `${markdown}/`;
           const [first = "", ...rest] = path.split("/").filter(Boolean);
           if (first === "play") return true;
           if (existsSync(new URL(`packages/${first}/docs/index.md`, repo)))

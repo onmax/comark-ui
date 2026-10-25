@@ -17,13 +17,19 @@ const RENAMED: Record<string, string> = {
 };
 
 export default {
-  fetch(request: Request, env: { ASSETS: { fetch: (request: Request) => Promise<Response> } }) {
+  async fetch(request: Request, env: { ASSETS: { fetch: (request: Request) => Promise<Response> } }) {
     const url = new URL(request.url);
     const prefix = MOVED[url.hostname];
     if (prefix === undefined) {
       const merged = MERGED.exec(url.pathname);
       const moved = merged ? `/${merged[1]}/` : RENAMED[url.pathname];
       if (moved) return Response.redirect(`${SITE}${moved}${url.search}${url.hash}`, 301);
+      // An agent that asks for Markdown gets the page's Markdown copy.
+      if (url.pathname.endsWith("/") && request.headers.get("accept")?.includes("text/markdown")) {
+        url.pathname = url.pathname === "/" ? "/index.md" : `${url.pathname.slice(0, -1)}.md`;
+        const markdown = await env.ASSETS.fetch(new Request(url, request));
+        if (markdown.ok) return markdown;
+      }
       return env.ASSETS.fetch(request);
     }
     const path = KEEP.test(url.pathname) ? url.pathname : `${prefix}${url.pathname}`;
