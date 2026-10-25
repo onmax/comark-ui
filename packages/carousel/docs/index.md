@@ -2,7 +2,7 @@
 title: Carousel
 description: A carousel of any Markdown content, written in Markdown.
 keywords: slider, slideshow, slides, gallery, swiper, walkthrough, scroll snap
-tagline: Slides of images, code, or anything else that scroll and snap, with arrows, a counter, keys, and zoom.
+tagline: A row of slides that scroll and snap, holding images, code, or any other block.
 group: Page behavior
 icon: gallery-horizontal-end
 blurb: Slides of any content
@@ -52,13 +52,31 @@ Pass the plugin and its `components` to the renderer.
 :::
 ::
 
-Slides scroll and snap without a script, with a scrollbar to reach the others. The script swaps the scrollbar for arrows, a slide counter, and arrow keys, and a click zooms a slide.
+## Features
+
+- Every block inside `::carousel` is a slide, and a `:::slide` holds several blocks.
+- Slides scroll and snap with no script, with a scrollbar to reach the others.
+- The script swaps the scrollbar for arrows, a slide counter, and arrow keys.
+- A click zooms a slide, and the zoomed view pages through the others.
+- Screen readers hear each slide's position, such as "2 of 3".
 
 ## Usage
 
-### carousel
+Put blocks inside `::carousel`. Each one is a slide.
 
-Every block inside `::carousel` is a slide, unless it holds `:::slide` blocks.
+::example
+```md
+::carousel
+![Filter toolbar wrapping](/before.png)
+
+![Filter toolbar on one row](/after.png)
+::
+```
+::
+
+### Title
+
+Use the `title` prop to name the carousel for screen readers. It is also the heading of a zoomed slide that has no title or image of its own.
 
 ::example
 ```md
@@ -70,17 +88,41 @@ Every block inside `::carousel` is a slide, unless it holds `:::slide` blocks.
 ```
 ::
 
-| Prop | |
-| --- | --- |
-| `title` | Name read out by screen readers, and the heading of a zoomed slide that has no title or image of its own. Default `Carousel`. |
-| `columns` | `2` or `3` shows several slides at once on a wide page and one at a time on a narrow one. Default `1`. |
-| `zoom` | `false` turns zoom off. |
+> [!NOTE]
+> Each slide takes `title` and `zoom` while parsing. Bind them to the document or its frontmatter, not to render-time data.
 
-Props can be inline or bound, such as `:columns="2"`. Bind `zoom` and `title` to the document or its front matter, not to render-time data: each slide takes them while parsing.
+### Columns
 
-### slide
+Use the `columns` prop to show 2 or 3 slides at once on a wide page. A narrow page shows one at a time.
 
-One slide that holds several blocks. Once a carousel has a `:::slide`, only its slides count: anything else inside it is dropped and reported. A `:::slide` outside a carousel renders as plain content.
+::example
+```md
+::carousel{columns=2}
+![Before](/before.png)
+
+![After](/after.png)
+::
+```
+::
+
+> [!NOTE]
+> `columns` takes 1, 2, or 3. Any other value is reported.
+
+### Zoom
+
+Use the `zoom` prop to turn zoom off. A click on a slide no longer zooms it, and the slides are no longer tab stops.
+
+```md
+::carousel{zoom=false}
+![Filter toolbar wrapping](/before.png)
+
+![Filter toolbar on one row](/after.png)
+::
+```
+
+### Slides
+
+Use `:::slide` to put several blocks in one slide. Use its `title` prop to set the slide's heading when it's zoomed.
 
 ::example
 ````md
@@ -98,26 +140,81 @@ Pass the plugin and its `components` to the renderer.
 ````
 ::
 
-| Prop | |
-| --- | --- |
-| `title` | Heading of the slide when it's zoomed. |
-
-An image alone in a slide, or alone in its paragraph, is centered, and so is a link around one. An image inside a sentence stays in the text.
+> [!NOTE]
+> Once a carousel has a `:::slide`, only its slides count. Anything else inside it is dropped and reported. A `:::slide` outside a carousel renders as plain content.
 
 ## Examples
 
-### Keys
+### Zoom a slide
 
-With focus in a carousel, the left and right arrow keys page through it. On a right-to-left page they follow the reading direction. They also page when focus is on a link or a button.
+A click zooms a slide, with the others in a strip at the bottom. Paging in the zoomed view moves the carousel, so closing it lands on the slide you were looking at. Zoom comes from [comark-zoom](/zoom/), which comes with the package.
 
-The carousel leaves these keys alone:
+For annotated screenshots in a carousel, see the [recipe](/recipes/carousel/).
 
-- Keys pressed with Alt, Ctrl, Meta, or Shift.
-- Keys meant for a form field, video, `<summary>`, menu, tab list, slider, combo box, tree, or a wide code block in a slide.
+### Images in slides
 
-A disabled arrow keeps its focus, so the keys keep working. When the reader prefers reduced motion, paging jumps instead of scrolling smoothly.
+An image alone in a slide, or alone in its paragraph, is centered. So is a link around one. An image inside a sentence stays in the text.
 
-### Validation
+```md
+::carousel
+![Office correlations dashboard](/dashboard.png)
+
+The dashboard ![icon](/dashboard.png) sits in this sentence.
+::
+```
+
+## Accessibility
+
+The carousel follows the [WAI-ARIA carousel pattern](https://www.w3.org/WAI/ARIA/apg/patterns/carousel/). It is a region that screen readers announce as a carousel, named by its `title`, or "Carousel" without one. Each slide is a group announced as a slide and named by its position, such as "2 of 3".
+
+The counter is a polite live region, so screen readers read the new position after each page. The arrows are buttons named "Previous slide" and "Next slide". At either end an arrow is marked disabled but keeps its focus, so the keys keep working.
+
+When the slides zoom, each slide is a tab stop. Enter or Space opens it in the zoomed view, and focus returns to the slide when the view closes.
+
+When the reader prefers reduced motion, paging jumps instead of scrolling smoothly.
+
+### Keyboard interactions
+
+| Key | Description |
+| --- | --- |
+| `ArrowLeft`, `ArrowRight` | With focus anywhere in the carousel, including a link or a button in a slide, pages to the previous or next slide. On a right-to-left page they follow the reading direction. |
+| `Enter`, `Space` | On a slide, opens it in the zoomed view. On an arrow, pages. |
+| `Tab`, `Shift+Tab` | Moves focus through the slides, when they zoom, and then the arrows. |
+| `Escape` | Closes the zoomed view. |
+
+The carousel leaves the arrow keys alone when they are pressed with Alt, Ctrl, Meta, or Shift. It also leaves them to whatever has focus and uses them:
+
+- A form field, a video or audio player, a `<summary>`, or editable text.
+- A tab list, slider, radio group, list box, combo box, spin button, menu, menu bar, or tree.
+- A wide code block or table in a slide that scrolls sideways.
+
+In the zoomed view, the arrow keys page through the zoomed slides instead.
+
+## API
+
+### Props
+
+Props can be inline or bound, such as `:columns="2"`.
+
+#### Carousel
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| `title` | `"Carousel"` | The name screen readers read, and the heading of a zoomed slide that has no title or image of its own. Bind it to the document or its frontmatter, not to render-time data. |
+| `columns` | `1` | How many slides show at once on a wide page: `1`, `2`, or `3`. A narrow page shows one. |
+| `zoom` | `true` | `false` turns zoom off. Bind it to the document or its frontmatter, not to render-time data. |
+
+#### Slide
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| `title` | The carousel's `title`, unless the slide holds an image | The heading of the slide when it's zoomed. An image names its zoomed view by its alt text. |
+
+### Options
+
+comark-carousel takes no options. `carousel: false` in `comarkUi()` turns it off.
+
+### Issues
 
 The plugin adds a problem with any carousel to `meta.issues`, as [Validation](/guide/validation/) describes:
 
@@ -135,14 +232,6 @@ It reports:
 - A prop it doesn't know.
 
 Each one has its own rule in [Doctor](/doctor/).
-
-### Zoom
-
-A click zooms a slide, with the others in a strip at the bottom. Paging in the zoomed view moves the carousel, so closing it lands on the slide you were looking at. Zoom comes from [comark-zoom](/zoom/), which comes with the package. For annotated screenshots in a carousel, see the [recipe](/recipes/carousel/).
-
-## API
-
-comark-carousel takes no options. `carousel: false` in `comarkUi()` turns it off.
 
 ### Package
 

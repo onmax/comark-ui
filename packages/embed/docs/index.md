@@ -125,7 +125,7 @@ Each player is an iframe named by its `title`. Without one, a screen reader hear
 | Prop | Default | Description |
 | --- | --- | --- |
 | `url` | — | Required. An `https://` link to a player or any page. |
-| `title` | The host | Names the player for screen readers, and is the text of the link under it or the card's title. |
+| `title` | Provider label for the player; host for the link or card | Names the player for screen readers, and is the text of the link under it or the card's title. |
 | `start` | — | Whole seconds into a YouTube or Vimeo video to start at. |
 
 ### Providers

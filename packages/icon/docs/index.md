@@ -34,7 +34,7 @@ Built with :icon{name="logos:vue"} Vue and :icon{name="logos:vitejs"} Vite, depl
 - An icon in one color takes the color of the text around it and follows its theme. One with colors of its own, such as a logo, keeps them.
 - The plugin resolves icons while parsing and writes them into the page as CSS images, so the page asks no server for them and they show without a script.
 - Nuxt UI's spelling of a name works too, so Markdown written for Nuxt UI renders the same.
-- The resolver is public, so other plugins take the same options and draw their icons with it. [comark-tabs](/tabs/#icons) uses it for tab icons.
+- The resolver is public, so other plugins take the same options and draw their icons with it. [comark-tabs](/tabs/#icon) uses it for tab icons.
 
 ## Usage
 

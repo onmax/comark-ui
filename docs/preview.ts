@@ -5,4 +5,4 @@ export const previewDocument = (html: string, theme?: { scheme: string; css: str
   `<!doctype html><html lang="en"${theme ? ` class="${theme.scheme}" style="color-scheme:${theme.scheme}"` : ' style="color-scheme:light dark"'}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">` +
   `<link rel="stylesheet" href="/style.css"><style>body{padding:2rem;background:var(--comark-background,var(--bg))}body>main{margin:0}</style>` +
   `<style id="play-theme">${theme ? theme.css.replaceAll("</", "<\\/") : ""}</style></head>` +
-  `<body><main>${html}</main></body></html>`;
+  `<body><main class="play-preview-content">${html}</main></body></html>`;
