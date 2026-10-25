@@ -2,7 +2,7 @@
 title: Steps
 description: Numbered steps, written in Markdown.
 keywords: tutorial, procedure, numbered list, walkthrough, how-to, stepper, timeline
-tagline: Turn the headings of a tutorial, or a numbered list, into numbered steps down a line. Nuxt UI's syntax, with no script.
+tagline: Numbered steps down a line, made from the headings of a tutorial or a numbered list.
 group: Docs blocks
 icon: list-ordered
 blurb: Numbered steps
@@ -38,12 +38,35 @@ Wrap the headings of a tutorial in `::steps`.
 :::
 ::
 
-Each heading starts a step that holds everything up to the next one. The heading keeps its `id`, so links to it and the page's table of contents still work. Without the styles, the steps read as a numbered list.
+## Features
+
+- Each heading starts a step that holds everything up to the next one.
+- The heading keeps its `id`, so links to it and the page's table of contents still work.
+- A numbered list inside makes one step of each item, as Starlight's `<Steps>` does.
+- Without the styles, the steps read as a numbered list.
+- Nuxt UI's `::steps`, unchanged, so a page renders the same steps under Nuxt UI. No script.
 
 ## Usage
 
-### Headings
+Wrap the `###` headings of a tutorial in `::steps`.
 
+::example
+```md
+::steps
+### Install
+Run `pnpm add comark-steps`.
+
+### Register
+Pass `steps()` to the parser.
+::
+```
+::
+
+### Level
+
+Use the `level` prop to set the level of the headings that start each step, from 2 to 6. It defaults to 3, so `###` headings. Deeper headings stay inside their step.
+
+::example
 ```md
 ::steps{level="2"}
 ## Install
@@ -53,34 +76,23 @@ Run `pnpm add comark-steps`.
 Pass `steps()` to the parser.
 ::
 ```
+::
 
-| Prop | What it does |
-| --- | --- |
-| `level` | The level of the headings that start each step, from 2 to 6. Defaults to 3, so `###` headings. Deeper headings stay inside their step. |
+> [!NOTE]
+> A `level` outside 2 to 6 falls back to 3 and adds an issue.
 
-This is Nuxt UI's `::steps`, unchanged, so a page renders the same steps under Nuxt UI.
+### Numbered list
 
-### A numbered list
+Use one numbered list as the block's only content to make one step of each item. A list that starts past 1 keeps its number.
 
+::example
 ```md
 ::steps
 3. Open a pull request.
 4. Wait for review.
 ::
 ```
-
-A block whose only content is a numbered list makes one step of each item, as Starlight's `<Steps>` does. A list that starts past 1 keeps its number.
-
-### Issues
-
-The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation/) describes:
-
-- Content before the first heading renders above the steps.
-- A block with no headings at its `level` and no numbered list renders as plain content. When its headings are at another level, the issue names the `level` to write.
-- A `level` outside 2 to 6 falls back to 3.
-- A prop other than `level`, such as `start`, is ignored.
-
-Each issue names its block and says how to fix it. Each one has its own rule in [Doctor](/doctor/).
+::
 
 ## Examples
 
@@ -109,6 +121,14 @@ Run `pnpm dev`.
 
 ## API
 
+### Props
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| `level` | `3` | The level of the headings that start each step, from 2 to 6. A value outside that falls back to 3 and adds an issue. |
+
+### Options
+
 The plugin takes no options. In `comarkUi()`, `steps: false` turns it off.
 
 ### Your own renderer
@@ -119,7 +139,18 @@ The parse plugin replaces the block with a `steps` node holding one `step` per s
 ["steps", { "start": "3" }, ["step", { "index": "3" }, "Open a pull request."]]
 ```
 
-`start` is there only when the steps start past 1. A component for `step` gets everything after the heading as its content, the heading included.
+`start` is there only when the steps start past 1. A component for `step` gets the step's heading and everything after it as its content.
+
+### Issues
+
+The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation/) describes:
+
+- Content before the first heading renders above the steps.
+- A block with no headings at its `level` and no numbered list renders as plain content. When its headings are at another level, the issue names the `level` to write.
+- A `level` outside 2 to 6 falls back to 3.
+- A prop other than `level`, such as `start`, is ignored.
+
+Each issue names its block and says how to fix it. Each one has its own rule in [Doctor](/doctor/).
 
 ### Package
 
@@ -142,7 +173,9 @@ For Vue, React, or Svelte, import from `comark-steps/vue`, `comark-steps/react`,
 
 ## Theme
 
-Steps are an `<ol class="cs">` of `<li class="cs-step">`, numbered with the CSS counter `cs-step` in a circle on `::before`, and joined by a line on `::after`. They read these [shared tokens](/guide/theming/):
+Steps follow the shared tokens in [Theming](/guide/theming/).
+
+### Shared tokens
 
 | Token | Used for |
 | --- | --- |
@@ -151,4 +184,13 @@ Steps are an `<ol class="cs">` of `<li class="cs-step">`, numbered with the CSS 
 | `--comark-accent` | Inside the circles |
 | `--comark-font` | The numbers |
 
-The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
+### Classes
+
+| Selector | Is |
+| --- | --- |
+| `.cs` | The steps, an `<ol>` |
+| `.cs-step` | Each step, an `<li>`, numbered with the CSS counter `cs-step` in a circle on `::before`, and joined to the next by a line on `::after` |
+
+### Important rules
+
+The rules sit in a `comark` CSS layer, so any plain rule of your own wins, except the margins that keep a step's content against the line. A step's block margins, and the top margin of its first child and the bottom margin of its last, are `!important`. A page's own heading and list item margins are almost always unlayered, and would leave a gap the line can't cross. Override those with `!important` too.

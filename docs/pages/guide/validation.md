@@ -41,7 +41,7 @@ include "./ducks.md": file not found. It resolved to "guide/ducks.md" under the 
 | [carousel](/carousel/#validation) | Content outside every `:::slide`, empty carousels, bad `columns`, stray slides, and props bound to render-time data |
 | [embed](/embed/) | Missing or non-https links, links it can't read, cards without a `title`, and a bad `start` |
 | [tabs](/tabs/#validation) | Tabs without a label or with the same label, content outside every tab, anything but code blocks in a code group, empty blocks, and stray `:::tabs-item` |
-| [include](/include/#validation) | Missing files, paths that leave the root, cycles, and bad `lines` or `region` |
+| [include](/include/#issues) | Missing files, paths that leave the root, cycles, and bad `lines` or `region` |
 
 code and zoom have nothing to report, because every code block gets its buttons and anything can zoom. github reports only a `repo` that isn't `owner/name`. A quote that isn't a callout stays a quote, and github drops HTML that GitHub doesn't allow, the way GitHub does.
 
