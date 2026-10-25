@@ -18,7 +18,7 @@ export type Theme = {
   scheme?: "light" | "dark";
 };
 
-// Nuxt UI's own defaults stand in for a Nuxt UI app, so the guide's mapping has something to map.
+// Nuxt UI's own defaults stand in for a Nuxt UI app, which the plugins follow with no tokens set.
 const nuxtDefaults = `/* Nuxt UI's defaults, which a Nuxt UI app already has */
 :root {
   --ui-radius: 0.25rem;
@@ -43,15 +43,7 @@ export const themePresets: { id: string; label: string; tokens: Theme["tokens"];
   {
     id: "nuxt-ui",
     label: "Nuxt UI",
-    tokens: {
-      background: "var(--ui-bg)",
-      foreground: "var(--ui-text-highlighted)",
-      muted: "var(--ui-text-muted)",
-      border: "var(--ui-border)",
-      accent: "var(--ui-bg-elevated)",
-      ring: "var(--ui-primary)",
-      radius: "calc(var(--ui-radius) * 2)",
-    },
+    tokens: {},
     css: nuxtDefaults,
   },
   {

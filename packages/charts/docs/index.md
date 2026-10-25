@@ -460,18 +460,18 @@ A chart is a card in the style of [shadcn/ui](https://ui.shadcn.com), so it swit
 
 ### Shared tokens
 
-Charts read these [shared tokens](/guide/theming/), and their series read shadcn/ui's chart colors:
+Charts read these [shared tokens](/guide/theming/), and their series read Nuxt UI's or shadcn/ui's chart colors:
 
 | Token | Falls back to | Used for |
 | --- | --- | --- |
-| `--comark-foreground` | `--foreground` | Values, the caption, the data table |
-| `--comark-muted` | `--muted-foreground` | Axis labels, the **Data** toggle, waterfall totals |
-| `--comark-border` | `--border` | The card, grid lines, and the data table's rules |
-| `--comark-background` | `--background` | The card, and the edges between slices and around points |
-| `--comark-ring` | `--ring` | The focus ring on the **Data** toggle |
-| `--comark-radius` | `--radius` | The card's corners |
+| `--comark-foreground` | `--ui-text-highlighted`, `--foreground` | Values, the caption, the data table |
+| `--comark-muted` | `--ui-text-muted`, `--muted-foreground` | Axis labels, the **Data** toggle, waterfall totals |
+| `--comark-border` | `--ui-border`, `--border` | The card, grid lines, and the data table's rules |
+| `--comark-background` | `--ui-bg`, `--background` | The card, and the edges between slices and around points |
+| `--comark-ring` | `--ui-primary`, `--ring` | The focus ring on the **Data** toggle |
+| `--comark-radius` | twice `--ui-radius`, `--radius` | The card's corners |
 | `--comark-font` | `--font-sans` | All text |
-| `--comark-chart-1` to `-6` | `--chart-1` to `-6` | Series, in column order |
+| `--comark-chart-1` to `-6` | `--ui-chart-1` to `-6`, `--chart-1` to `-6` | Series, in column order |
 
 Without either, series use six colors that read on light and dark pages: blue, orange, green, purple, rose, and yellow. A waterfall's increases and decreases are series 3 and 5.
 

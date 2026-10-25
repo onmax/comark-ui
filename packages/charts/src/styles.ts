@@ -7,7 +7,7 @@ const swap = (hex: string, color: string, props = ["fill", "stroke"]) =>
 
 /**
  * A chart over its data table, on the shared `--comark-*` tokens. Series take `--comark-chart-1` to `-6`, then
- * shadcn/ui's `--chart-1` to `-6`. The rules sit in the `comark` layer, so any unlayered rule of the host's wins.
+ * Nuxt UI's `--ui-chart-1` to `-6`, then shadcn/ui's `--chart-1` to `-6`. The rules sit in the `comark` layer, so any unlayered rule of the host's wins.
  */
 export const css = `@layer comark{${[
   theme(".cch"),
@@ -36,7 +36,10 @@ export const css = `@layer comark{${[
   // White fills are labels on a mark, which stay white; white strokes part slices and points from the page.
   swap(INK.background, "var(--_comark-background)", ["stroke"]),
   ...SERIES.map((hex, index) =>
-    swap(hex, `var(--comark-chart-${index + 1},var(--chart-${index + 1},${hex}))`),
+    swap(
+      hex,
+      `var(--comark-chart-${index + 1},var(--ui-chart-${index + 1},var(--chart-${index + 1},${hex})))`,
+    ),
   ),
   ".cch-data{margin:1rem calc(-1 * var(--cch-padding)) 0;padding:.75rem var(--cch-padding);border-top:1px solid var(--_comark-border);color:var(--_comark-muted);font-size:.875rem;line-height:1.25rem}",
   ".cch-data summary{width:fit-content;cursor:pointer}",

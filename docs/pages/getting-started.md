@@ -182,7 +182,7 @@ comark-ui ships in lockstep with the blocks, so `comark-ui@X` holds every block 
 
 ::card-group
 :::card{title="Theming" icon="lucide:palette" to="/guide/theming/"}
-Match the blocks to your site with eight tokens.
+Match the blocks to your site. Nuxt UI and shadcn/ui apps match with no setup.
 :::
 
 :::card{title="Agents" icon="lucide:bot" to="/guide/agents/"}
