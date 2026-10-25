@@ -12,7 +12,9 @@ credits: 'Encoded with <a href="https://antfu.me">Anthony Fu</a>''s <a href="htt
 ::examples
 :::example{label="Preview link"}
 ```md
-Open the preview on your phone: :qr{value="https://comark-ui.onmax.me/qr/"}
+Open [comark-ui.onmax.me/qr](https://comark-ui.onmax.me/qr/), or scan it on your phone:
+
+:qr{value="https://comark-ui.onmax.me/qr/"}
 ```
 :::
 ::
@@ -59,6 +61,16 @@ Codes are 8rem wide by default. Set `--cqr-size` on `.cqr` or any element above 
 ```css
 .cqr {
   --cqr-size: 6rem;
+}
+```
+
+### Border
+
+The code has no border, since its white tile and quiet zone already set it apart, and on a white page it needs nothing. To outline it, give the `svg` a border:
+
+```css
+.cqr svg {
+  border: 1px solid var(--comark-border, #e5e5e5);
 }
 ```
 
@@ -110,13 +122,12 @@ For Vue, React, or Svelte, import from `comark-qr/vue`, `comark-qr/react`, or `c
 
 ## Theme
 
-The code sits on a tile with a 1px border. The modules are always black on white, in both color schemes, since phones read dark modules on a light ground best. The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
+The code sits on a white tile with no border. The modules are always black on white, in both color schemes, since phones read dark modules on a light ground best. The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
 
 ### Shared tokens
 
 | Token | Used for |
 | --- | --- |
-| `--comark-border` | The tile's border |
 | `--comark-radius` | The tile's corners, 4px tighter and at most `0.5rem`, so they can't round into the code |
 
 ### Variables
