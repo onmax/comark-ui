@@ -320,6 +320,15 @@ const href = (slug: string) => `/${slug}${slug ? "/" : ""}`;
 const playable = (source: string) => !/^:+include\b/m.test(source);
 const playLink = (source: string) => `/play/#md=${deflateRawSync(source).toString("base64url")}`;
 
+// comark-chips would take the `@user` that comark-github's references draw, and the links comark-links marks, so
+// those packages' examples show plain links.
+const withoutFor = (slug = "") => (["github", "links"].includes(slug) ? ["comark-chips"] : []);
+// Highlighted like the page, so a diff in an example keeps its colors.
+const parseExample = (source: string, without: string[]) =>
+  parseMarkdown(source, {
+    plugins: highlighted(contentPlugins().filter((plugin) => !without.includes(plugin.name))),
+  });
+
 // An example shows the Markdown in its code block twice: rendered, and as source. It runs every plugin but the ones
 // `without` names.
 const exampleWithout =
@@ -328,10 +337,7 @@ const exampleWithout =
     const pre = children.find(isPre);
     if (!pre) throw new Error(`Example "${str(attrs.label)}" needs a fenced code block.`);
     const source = textContent(pre);
-    // Highlighted like the page, so a diff in an example keeps its colors.
-    const preview = await parseMarkdown(source, {
-      plugins: highlighted(contentPlugins().filter((plugin) => !without.includes(plugin.name))),
-    });
+    const preview = await parseExample(source, without);
     if (preview.meta.issues.length)
       throw new Error(`Example "${str(attrs.label)}":\n${preview.meta.issues.join("\n")}`);
     const play = playable(source)
@@ -573,6 +579,19 @@ const presets = examples
     const pkg = packages.find((pkg) => pkg.slug === group);
     return { id, label, group: pkg?.label ?? "Recipes", npm: pkg?.npm ?? "", source };
   });
+// The component gallery's groups: each package's examples, in packageOrder, then the recipes.
+const galleryGroups = [...new Set(examples.map((example) => example.group))].map((group) => {
+  const pkg = packages.find((pkg) => pkg.slug === group);
+  return {
+    slug: group,
+    label: pkg?.label ?? "Recipes",
+    icon: pkg?.icon ?? "book-open",
+    npm: pkg?.npm ?? "",
+    examples: examples
+      .filter((example) => example.group === group)
+      .map((example) => ({ ...example, label: example.label || pageOf(example.page).label })),
+  };
+});
 // The size of each PNG the pages show, read from its header, so a still reserves its room before the image loads.
 const publicDir = new URL("public/", root);
 const imageSizes = new Map(
@@ -868,7 +887,24 @@ const column = (section: Section, current: string) => {
               `<a${page.slug.includes("/components/") ? ' class="nav-sub"' : ""}${page.slug === current ? ' aria-current="page"' : ""} href="${href(page.slug)}">${escapeHtml(page.label)}</a>`,
           ),
         }));
-  return `<nav class="pages" aria-label="${escapeHtml(section.label)}"><p class="pages-title">${escapeHtml(section.label)}</p>${section.slug === "play" ? '<a href="/play/editor/">Rich-text editor</a>' : ""}${lists
+  const playLinks = [
+    ["play/editor", "Rich-text editor"],
+    ["play/gallery", "Component gallery"],
+  ]
+    .map(
+      ([slug, label]) =>
+        `<a href="${href(slug)}"${slug === current ? ' aria-current="page"' : ""}>${label}</a>`,
+    )
+    .join("");
+  // The gallery's column is its index instead of the presets: a filter, and a link to each example.
+  if (current === "play/gallery")
+    return `<nav class="pages" aria-label="${escapeHtml(section.label)}"><p class="pages-title">${escapeHtml(section.label)}</p>${playLinks}<label class="gallery-filter">${siteIcon("search", 14)}<input type="search" placeholder="Filter components" aria-label="Filter components" autocomplete="off" spellcheck="false"></label>${galleryGroups
+      .map(
+        (group) =>
+          `<p class="nav-group" data-gallery-group="${group.slug}">${siteIcon(group.icon, 14)}${escapeHtml(group.label)}</p>${group.examples.map((example) => `<a href="#${example.id}" data-gallery="${example.id}">${escapeHtml(example.label)}</a>`).join("")}`,
+      )
+      .join("")}</nav>`;
+  return `<nav class="pages" aria-label="${escapeHtml(section.label)}"><p class="pages-title">${escapeHtml(section.label)}</p>${section.slug === "play" ? playLinks : ""}${lists
     .map(
       (list) =>
         `${list.title ? `<p class="nav-group">${list.icon ? siteIcon(list.icon, 14) : ""}${escapeHtml(list.title)}</p>` : ""}${list.links.join("")}`,
@@ -1375,6 +1411,14 @@ const searchIndex = [
   },
   {
     k: "page",
+    t: "Component gallery",
+    p: "Docs",
+    h: "/play/gallery/",
+    d: "Every example in the docs on one page, in light and dark side by side.",
+    w: "storybook, showcase, all components, dark mode",
+  },
+  {
+    k: "page",
     t: "Editor playground",
     p: "Docs",
     h: "/play/editor/",
@@ -1560,11 +1604,7 @@ ${page.install ? installerFor(page.install) : ""}</div>
         await renderHtmlFromDocument(page.document, {
           components: {
             ...components,
-            // comark-chips would take the `@user` that comark-github's references draw, and the links comark-links
-            // marks, so those pages show plain links.
-            example: exampleWithout(
-              ["github", "links"].includes(page.pkg?.slug ?? "") ? ["comark-chips"] : [],
-            ),
+            example: exampleWithout(withoutFor(page.pkg?.slug)),
             examples: exampleTabs,
             matrix,
             "badge-builder": badgeBuilder,
@@ -1708,6 +1748,134 @@ ${themePane}
     }),
   );
   console.log("docs/dist/play/index.html written");
+}
+
+// The component gallery, as in Nuxt UI's playground: every example on the site on one page, each in a frame of its
+// own once in light and once in dark, so a maintainer can look over every block in both schemes. A frame is its own
+// document, as the playground's preview is, so the plugins' scripts run and ids don't collide. `pnpm gallery` builds
+// the packages and the site and serves it at http://127.0.0.1:4173/play/gallery/ (E2E_PORT picks another port).
+//
+// A frame can't be told its scheme: prefers-color-scheme inside it follows the system, not the frame's color-scheme.
+// So the script forces one on each frame's document, as the playground's Theme pane does, with the scheme as a class
+// on its root, and turns every prefers-color-scheme query in its styles to match. In Light or Dark, the page around
+// the frames takes the scheme too.
+const galleryScript = `{
+const gallery = document.querySelector(".gallery"), system = matchMedia("(prefers-color-scheme: dark)");
+const queries = new WeakMap();
+const force = (doc, scheme) => {
+  const root = doc.documentElement;
+  root.classList.toggle("light", scheme === "light"); root.classList.toggle("dark", scheme === "dark");
+  root.style.colorScheme = scheme ?? "";
+  const swap = scheme && scheme !== (system.matches ? "dark" : "light");
+  const walk = rules => { for (const rule of rules) {
+    if ("conditionText" in rule && rule.media) {
+      if (!queries.has(rule)) queries.set(rule, rule.media.mediaText);
+      const text = queries.get(rule);
+      if (text.includes("prefers-color-scheme")) rule.media.mediaText = swap ? text.replace(/(prefers-color-scheme:\\s*)(dark|light)/g, (_, k, v) => k + (v === "dark" ? "light" : "dark")) : text;
+    }
+    if (rule.cssRules) walk(rule.cssRules);
+  } };
+  for (const sheet of doc.styleSheets) { try { walk(sheet.cssRules) } catch {} }
+};
+const frames = [...gallery.querySelectorAll(".gallery-frame")];
+// Frames around a linked example grow as they load and push it away, so it's held in view until the reader scrolls.
+let held;
+const hold = () => { held = location.hash ? gallery.querySelector(".gallery-item#" + CSS.escape(decodeURIComponent(location.hash.slice(1)))) : undefined };
+const keep = () => held?.scrollIntoView({ behavior: "instant" });
+hold(); addEventListener("hashchange", hold);
+for (const type of ["wheel", "touchmove", "keydown", "mousedown"]) addEventListener(type, () => { held = undefined }, { passive: true });
+// Each load is a new document: it takes its scheme, opens its links outside the frame, and keeps the frame its height.
+const ready = frame => {
+  const doc = frame.contentDocument;
+  if (!doc?.body || doc.URL === "about:blank") return;
+  force(doc, frame.dataset.scheme);
+  for (const a of doc.querySelectorAll("a[href]:not([href^='#'])")) a.target = "_blank";
+  const fit = () => { frame.style.height = Math.ceil(doc.body.getBoundingClientRect().height) + "px"; keep() };
+  new frame.contentWindow.ResizeObserver(fit).observe(doc.body);
+  frame.dataset.ready = "";
+};
+for (const frame of frames) { frame.addEventListener("load", () => ready(frame)); if (frame.contentDocument?.readyState === "complete") ready(frame) }
+const show = (scheme, keep) => {
+  gallery.dataset.scheme = scheme;
+  for (const b of document.querySelectorAll(".gallery-scheme [data-scheme]")) b.setAttribute("aria-pressed", b.dataset.scheme === scheme);
+  force(document, scheme === "both" ? undefined : scheme);
+  if (keep) try { localStorage.setItem("comark-gallery-scheme", scheme) } catch {}
+};
+let saved; try { saved = localStorage.getItem("comark-gallery-scheme") } catch {}
+show(["light", "dark", "both"].includes(saved) ? saved : "both");
+document.querySelector(".gallery-scheme").addEventListener("click", e => { const b = e.target.closest("[data-scheme]"); if (b) show(b.dataset.scheme, true) });
+system.addEventListener("change", () => { show(gallery.dataset.scheme); for (const frame of frames) if (frame.dataset.ready !== undefined) force(frame.contentDocument, frame.dataset.scheme) });
+// The filter keeps the examples whose package or name holds every word typed. The sidebar and the menu each have one.
+const items = [...gallery.querySelectorAll(".gallery-item")], groups = [...gallery.querySelectorAll(".gallery-group")];
+const filters = [...document.querySelectorAll(".gallery-filter input")];
+const filter = value => {
+  const words = value.toLowerCase().split(/\\s+/).filter(Boolean);
+  for (const item of items) item.hidden = !words.every(w => item.dataset.name.includes(w));
+  for (const group of groups) group.hidden = !group.querySelector(".gallery-item:not([hidden])");
+  for (const a of document.querySelectorAll(".pages [data-gallery]")) a.hidden = document.getElementById(a.dataset.gallery).hidden;
+  for (const p of document.querySelectorAll(".pages [data-gallery-group]")) p.hidden = gallery.querySelector('.gallery-group[data-group="' + p.dataset.galleryGroup + '"]').hidden;
+  gallery.querySelector(".gallery-empty").hidden = items.some(item => !item.hidden);
+};
+for (const input of filters) input.addEventListener("input", () => { for (const other of filters) if (other !== input) other.value = input.value; filter(input.value) });
+// The index marks the example at the top of the screen.
+const links = [...document.querySelectorAll(".pages [data-gallery]")];
+const spy = new IntersectionObserver(entries => {
+  for (const e of entries) if (e.isIntersecting) for (const a of links) if (a.dataset.gallery === e.target.id) a.setAttribute("aria-current", "location"); else a.removeAttribute("aria-current");
+}, { rootMargin: "-56px 0px -70% 0px" });
+for (const item of items) spy.observe(item);
+}`;
+if (playSection) {
+  const out = new URL("play/gallery/", dist);
+  await mkdir(out, { recursive: true });
+  await Promise.all(
+    examples.map(async (example) => {
+      const document = await parseExample(example.source, withoutFor(example.group));
+      if (document.meta.issues.length)
+        throw new Error(`Example "${example.id}":\n${document.meta.issues.join("\n")}`);
+      const html = await renderHtmlFromDocument(document, { components });
+      await writeFile(
+        new URL(`${example.id}.html`, out),
+        previewDocument(
+          `<style>body{padding:1rem}html{overflow-y:hidden}</style><div class="example-preview">${html}</div>`,
+        ),
+      );
+    }),
+  );
+  const item = (example: (typeof galleryGroups)[number]["examples"][number], group: string) => {
+    const frame = (scheme: string) =>
+      `<iframe class="gallery-frame" data-scheme="${scheme}" src="/play/gallery/${example.id}.html" loading="lazy" title="${escapeHtml(`${example.label}, ${scheme}`)}"></iframe>`;
+    const play = example.playable
+      ? `<a class="example-play" href="${escapeHtml(playLink(example.source))}">${siteIcon("flask-conical", 13)}Playground</a>`
+      : "";
+    return (
+      `<article class="gallery-item" id="${example.id}" data-name="${escapeHtml(`${group} ${example.label} ${example.id}`.toLowerCase())}">` +
+      `<div class="gallery-head"><h3><a href="#${example.id}">${escapeHtml(example.label)}</a></h3><span>${play}<a class="example-play" href="${href(example.page)}">${siteIcon("book-open", 13)}Docs</a></span></div>` +
+      `<div class="gallery-frames">${frame("light")}${frame("dark")}</div></article>`
+    );
+  };
+  await writeFile(
+    new URL("index.html", out),
+    shell({
+      slug: "play/gallery",
+      section: playSection,
+      title: "Component gallery · Comark plugins",
+      description: "Every example in the docs on one page, in light and dark side by side.",
+      body: `<div class="gallery" data-scheme="both">
+<div class="gallery-bar"><div class="hero"><h1>Component gallery</h1><p>Every example in the docs, each rendered alone. Side by side shows each in light and dark.</p></div>
+<div class="seg gallery-scheme" role="group" aria-label="Color scheme"><button type="button" data-scheme="light" aria-pressed="false">Light</button><button type="button" data-scheme="dark" aria-pressed="false">Dark</button><button type="button" data-scheme="both" aria-pressed="true">Side by side</button></div></div>
+<p class="gallery-empty" hidden>No component matches the filter.</p>
+${galleryGroups
+  .map(
+    (group) =>
+      `<section class="gallery-group" data-group="${group.slug}"><h2>${siteIcon(group.icon, 16)}${escapeHtml(group.label)}${group.npm ? `<small class="mono">${escapeHtml(group.npm)}</small>` : ""}</h2>${group.examples.map((example) => item(example, `${group.label} ${group.npm}`)).join("")}</section>`,
+  )
+  .join("\n")}
+</div>
+<script>${script.trim()}</script>
+<script>${galleryScript}</script>`,
+    }),
+  );
+  console.log(`docs/dist/play/gallery/ written (${examples.length} examples)`);
 }
 
 // Read by the docs app's server, which runs after this and replaces dist.
