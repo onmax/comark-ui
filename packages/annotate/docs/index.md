@@ -2,7 +2,7 @@
 title: Annotate
 description: Hand-drawn marks, numbered notes, and arrows on screenshots, written in Markdown.
 keywords: image annotation, markup, highlight, circle, underline, box, pin, before and after, side by side, compare, PR evidence, visual review, bug report, design review, AnnotationKit
-tagline: Mark up screenshots in Markdown with hand-drawn marks, numbered notes, arrows, and before/after comparisons.
+tagline: Hand-drawn marks, numbered notes, and arrows on screenshots, and before/after comparisons of them.
 group: Review blocks
 icon: scribble-loop
 blurb: Marks and notes on screenshots
@@ -143,26 +143,18 @@ Week 15 is missing for the pigeons.
 :::
 ::
 
-Hover a mark to highlight its note, or a note to highlight its mark. Click a screenshot to zoom it.
+## Features
 
-To share a screenshot, press its Copy button, or focus it and press Ctrl+C (⌘C on a Mac). You get a PNG with the marks and notes drawn in. The browser's own Copy Image gives you the same PNG once the pointer has been over the screenshot. Copying needs setup in two cases:
-
-- An image from another origin needs CORS headers from its server.
-- A page in an iframe needs `allow="clipboard-write"` on the frame.
-
-A comparison shows its screenshots side by side, or one at a time on a narrow page, and zooms them as one gallery. A slider stacks the two screenshots, and you drag the divider to reveal one or the other.
-
-Everything reads the same without a script. [zoom](/zoom/) and [carousel](/carousel/) come with the package. To page through screenshots spread across a page, or show a flow one step at a time, see the [recipes](/recipes/zoom/).
+- Hover a mark to highlight its note, or a note to highlight its mark.
+- Click a screenshot to zoom it, with its notes beside it.
+- Copy a screenshot as a PNG with its marks and notes drawn in.
+- A comparison shows two screenshots side by side, or one over the other with a slider.
+- Everything reads the same without a script.
+- [zoom](/zoom/) and [carousel](/carousel/) come with the package.
 
 ## Usage
 
-Three blocks, each on its own page:
-
-- [`screenshot`](/annotate/components/screenshot/) is an image with marks on it.
-- [`annotation`](/annotate/components/annotation/) is one mark and its note, inside a screenshot.
-- [`compare`](/annotate/components/compare/) shows two screenshots side by side, or one over the other with a slider.
-
-An `annotation` goes inside a `screenshot`, and a `compare` holds two screenshots:
+Put each `annotation` inside the `screenshot` it marks. The annotation's content is its note.
 
 ```md
 ::screenshot{src="/after.png" alt="Filter toolbar on one row" title="After" href="https://pr42.preview.example.com/plan"}
@@ -172,132 +164,53 @@ Extra filters collapse into **+2 filters**.
 ::
 ```
 
-### screenshot
+Props can be inline, in a YAML props block, or bound with `:x`. Each block has its own page, with its props.
 
-| Prop | |
-| --- | --- |
-| `src` | Image URL. Required. |
-| `alt` | What the screenshot shows. Required. |
-| `title` | Heading above the image, and the title of its zoomed view. |
-| `href` | The page you captured, linked by its host next to the title. |
-| `viewport` | Capture size in pixels, like `1440x900`. A compare checks that both sides match. |
-| `ink` | The color of every mark and note that doesn't set its own `color`. Takes the same values as `color`. |
+### Screenshot
 
-### annotation
+Use [`screenshot`](/annotate/components/screenshot/) for an image with marks on it. Any content besides its annotations becomes the caption.
 
-A mark on the screenshot and its note. The content is the note. Props can be inline, in a YAML props block, or bound with `:x`. Notes in the list under the image are numbered. Side notes sit beside, above, or below the image and point with an arrow instead.
+### Annotation
 
-A side note sits level with its mark unless `at` moves it along its margin; its arrow then leaves the note level and sweeps into the mark, the way a hand-drawn leader does. `to` aims the arrow at one point instead of the middle of the mark's edge, which suits `mark="none"`: the arrow alone points, and nothing covers the screen.
+Use [`annotation`](/annotate/components/annotation/) for one mark and its note, inside a screenshot. Notes go in a numbered list under the image, or beside it with an arrow.
 
-::example
-```md
-::screenshot{src="/dashboard.png" alt="Office correlations dashboard"}
-:::annotation{x=37 y=33.1 w=16.4 h=5.2 mark="none" side="top" at=58 to="44,33"}
-Bugs fixed fell with the duck supply.
-:::
+### Compare
 
-:::annotation{x=4 y=77.3 w=92 h=8.2 mark="none" side="bottom" at=42 to="55,81"}
-The pigeons ate week 15.
-:::
-::
-```
-::
+Use [`compare`](/annotate/components/compare/) to show two screenshots side by side, or one over the other with a slider.
+
+## Examples
+
+### Share a screenshot
+
+Press a screenshot's Copy button to copy it as a PNG with the marks and notes drawn in. The [screenshot page](/annotate/components/screenshot/#copy-a-screenshot) covers the keys and the setup some pages need.
+
+### Side notes
+
+Give an annotation a `side` to move its note beside, above, or below the image, with a hand-drawn arrow to its mark. Add `mark="none"` to point at something without drawing a mark.
 
 ::example
 ```md
 ::screenshot{src="/dashboard.png" alt="Office correlations dashboard"}
-:::annotation{x=82.4 y=5.3 w=14.2 h=8.8 color="blue"}
-**Export CSV** includes the filters you set.
-:::
-
-:::annotation{x=66.1 y=17 w=30.5 h=24.6 side="right" color="green"}
+:::annotation{x=66.1 y=17 w=30.5 h=24.6 mark="none" side="right"}
 r now counts the office cat.
 :::
 ::
 ```
 ::
 
-| Prop | |
-| --- | --- |
-| `x` `y` `w` `h` | The marked area, as percentages of the image: numbers from 0 to 100, without `%`. All four are required. |
-| `mark` | `box` (default), `circle`, `underline`, `line`, `highlight`, `bracket`, `cross`, `check`, or `none` to let a side note's arrow do the pointing. A `line` runs straight through the middle of its box, along its longer side, such as a fold or a limit. A `bracket` stands on the edge that faces its side note, the left one without a note, to span a run of rows or a group without covering it. `none` needs a `side`. Each mark wobbles a little differently, seeded by its box, so no two match and every render draws the same. |
-| `side` | `left`, `right`, `top`, or `bottom` puts the note beside, above, or below the image with an arrow. |
-| `at` | Where a side note sits along its margin, as a percentage of the image: across it for `top` and `bottom`, down it for `left` and `right`. Defaults to level with the arrow's point. A note set off to one side starts where its arrow leaves it and reads away from the point. Needs a `side`. |
-| `to` | The point the arrow lands on, as two percentages of the image, like `to="42,18"`. Defaults to the middle of the mark's edge that faces the note. Needs a `side`. |
-| `color` | `violet` (default) points something out and reads on light and dark screenshots alike, `red` flags a problem, `amber` a warning, `green` a fix, `blue` is a second voice beside the default, `gray` anything neutral. Each has a dark-mode value. A 3- or 6-digit hex color like `#e11d48` works too, and its stamp gets whichever of a white or dark number reads better. |
+The [annotation page](/annotate/components/annotation/#side-note) covers where side notes sit and how to keep them apart.
 
-### compare
+### Place marks on their target
 
-Two screenshots side by side, titled **Before** and **After** unless they set their own `title`. Numbers continue from one side to the other, and the pair stacks on narrow screens. Notes with `side="left"` or `side="right"` join the numbered list under their screenshot, since beside it they'd sit against the other one and shrink their own image; notes with `side="top"` and `side="bottom"` stay above and below, and both images keep the same room for them so they stay level.
+Measure each element in the page you captured, and don't estimate from the image. The [annotation page](/annotate/components/annotation/#place-marks-on-their-target) shows how.
 
-With `mode="slider"`, the two screenshots share one frame: Before shows left of a divider and After right of it. Drag anywhere on the pair, or focus the handle and use the arrow keys, to move it; a click on the screenshots that doesn't drag zooms the pair. Use it when both screenshots show the same spot and the change is small, so the reader sees it at full width. Side notes become numbered notes in the list, since an arrow would cross the divider. Without the script, the two screenshots stack.
+### Page through screenshots across a page
 
-::example
-```md
-::compare{title="Toolbar alignment"}
-:::screenshot{src="/before.png" alt="Toolbar wrapping" viewport="640x250"}
-::::annotation{x=22.4 y=50.4 w=13.3 h=20.6 mark="circle" color="red"}
-**Apply** sits lower than the chips.
-::::
-:::
-
-:::screenshot{src="/after.png" alt="Toolbar on one row" viewport="640x250"}
-::::annotation{x=82.5 y=34.8 w=10.5 h=14.2 mark="check" color="green"}
-Fixed.
-::::
-:::
-::
-```
-::
-
-| Prop | |
-| --- | --- |
-| `title` | What the comparison shows, read out by screen readers. Defaults to "Comparison". |
-| `mode` | `columns` (default) puts the screenshots side by side; `slider` lays them over each other with a divider to drag. |
-| `ink` | The color of every mark and note in both screenshots that doesn't set its own. A screenshot's own `ink` wins. |
-
-## Examples
-
-### Side notes
-
-`side="left"`, `side="right"`, or `side="top"` moves a note out of the list to beside or above the image, with a hand-drawn arrow to its mark. Add `mark="none"` to point at something without drawing a box. Side notes have no number, because the arrow already links them to their mark.
-
-- In a compare, only notes above the image keep their arrow.
-- On narrow screens, side notes drop under the image and the arrows hide. Each note and its target get a matching letter instead.
-
-Notes on the same side need room. The plugin reports side notes whose marks sit close together vertically, since they would likely overlap. It can't measure the text, so check the rendered page too. If two notes collide, move one to the other side or into the list.
-
-### Placing marks
-
-Measure the element in the page you captured and divide by the viewport. Don't estimate from the image.
-
-```js
-const r = element.getBoundingClientRect();
-const box = {
-  x: (r.x / innerWidth) * 100,
-  y: (r.y / innerHeight) * 100,
-  w: (r.width / innerWidth) * 100,
-  h: (r.height / innerHeight) * 100,
-};
-```
-
-For a full-page screenshot, add the scroll offset and divide by the page size instead.
-
-Numbers place themselves. Each sits on a corner of its mark, so it reads as that mark's number and not its neighbor's. It tries top left, top right, bottom left, then bottom right, and takes the first corner clear of other numbers, marks, and arrows. If it would hang past the image's edge, it lines up with the mark's edge instead.
-
-Set `viewport` on the screenshot so the plugin judges the corners against the image's real shape. If marks crowd so close that two numbers overlap at every corner, the plugin reports both annotations.
-
-### Validation
-
-The plugin adds a problem with any block to `meta.issues`, as [Validation](/guide/validation/) describes. Each issue names its block. A screenshot goes by its `src`, or by its position and `alt` when another screenshot has the same `src`. An annotation goes by its position in its screenshot:
-
-```txt
-screenshot "after.png", annotation 2: the box runs past the image edge. Keep x + w and y + h within 100.
-```
-
-The plugin reports an unknown prop with a list of the valid ones, and a `:bound` prop that points at missing frontmatter. It leaves bindings to `data` or `props` to the renderer. Each kind of problem has its own rule in [Doctor](/doctor/), with an example and its fix.
+To page through screenshots spread across a page, or show a flow one step at a time, see the [recipes](/recipes/zoom/).
 
 ## API
+
+### Options
 
 The plugin takes no options. In `comarkUi()`, `annotate: false` turns it off.
 
@@ -305,13 +218,35 @@ The plugin takes no options. In `comarkUi()`, `annotate: false` turns it off.
 
 The package comes with a small CLI that knows zoom and carousel too.
 
-- `check` lists every problem in one or more files, and exits with 1 if there are any.
-- `render` writes a standalone page next to each file. Open it and take a screenshot to confirm each mark sits on its target.
+| Command | Description |
+| --- | --- |
+| `check` | Lists every problem in one or more files, and exits with 1 if there are any. |
+| `render` | Writes a standalone page next to each file, or to `-o` for one file. Open it and take a screenshot to confirm each mark sits on its target. |
 
 ```sh
 npx comark-annotate check duck-audit.md pigeons.md
 npx comark-annotate render duck-audit.md -o duck-audit.html
 ```
+
+### Issues
+
+The plugin adds a problem with any block to `meta.issues`, as [Validation](/guide/validation/) describes. Each issue names its block:
+
+- A screenshot goes by its `src`, or by its position and `alt` when another screenshot has the same `src`.
+- A compare goes by its position, and its `title` when it has one.
+- An annotation goes by its position in its screenshot.
+
+```txt
+screenshot "after.png", annotation 2: the box runs past the image edge. Keep x + w and y + h within 100.
+```
+
+The plugin reports an unknown prop with a list of the valid ones, and a `:bound` prop that points at missing frontmatter. It leaves bindings to `data` or `props` to the renderer. Each block's page lists the rest:
+
+- [screenshot](/annotate/components/screenshot/#issues)
+- [annotation](/annotate/components/annotation/#issues)
+- [compare](/annotate/components/compare/#issues)
+
+Each kind of problem has its own rule in [Doctor](/doctor/), with an example and its fix.
 
 ### Package
 
@@ -329,7 +264,7 @@ const render = createHtmlRenderer({ plugins: [annotate()], components });
 const html = await render(markdown);
 ```
 
-The renderer inlines its styles and script once per document. Annotate renders only to HTML; [Renderers](/guide/renderers/) covers using it with other plugins, a strict Content Security Policy, and untrusted notes.
+The renderer inlines its styles and script once per document. Annotate renders only to HTML. [Renderers](/guide/renderers/) covers using it with other plugins, a strict Content Security Policy, and untrusted notes.
 
 The comark-ui agent skill knows the syntax, how to measure marks from the page, and how to check the result. Agents install it with `npx skills add onmax/comark-ui`, and [Agents](/guide/agents/) covers the rest.
 
@@ -377,9 +312,13 @@ A screenshot's or compare's `ink` colors its annotations the same way. An annota
 ### Classes
 
 - Every block sits in a `.ca`: a screenshot's `figure.ca-screenshot` inside it, and `.ca.ca-compare` for a compare (plus `.ca-slider` with `mode="slider"`).
-- A screenshot holds `.ca-heading` with its title in `.ca-label`, then `.ca-stage` with the image in `.ca-frame`, and a `figcaption` with the notes in `ol.ca-notes`. It has `.ca-left`, `.ca-right`, or `.ca-top` when it has side notes there.
+- A screenshot holds `.ca-heading` with its title in `.ca-label`, then `.ca-stage` with the image in `.ca-frame`, and a `figcaption` with the notes in `ol.ca-notes`. It has `.ca-left`, `.ca-right`, `.ca-top`, or `.ca-bottom` when it has side notes there.
 - A mark is a `.ca-mark` with its shape as a class, such as `.ca-box` or `.ca-circle`, and its number in `.ca-stamp`. A side note is a `.ca-callout` with its arrow in `.ca-arrow`. A mark, its arrow, and its note share a `data-n`.
 - The Copy button is `.ca-copy`. A slider's divider is `.ca-handle`, with its knob in `.ca-grip`.
+
+### Example
+
+Blue marks in the page's own font:
 
 ```css
 .ca {
