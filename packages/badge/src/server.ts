@@ -23,7 +23,7 @@ export function createBadgeHandler(options: BadgeServerOptions = {}) {
   async function json(url: string) {
     const response = await request(url, {
       signal: AbortSignal.timeout(5000),
-      redirect: "error",
+      redirect: "manual",
       headers: { Accept: "application/json", "User-Agent": "comark-badge" },
     });
     if (!response.ok) {

@@ -30,6 +30,37 @@ describe("hosted badge handler", () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 
+  it("fetches live data with Worker-supported redirect handling", async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>().mockImplementation(async (_input, init) => {
+      if (init?.redirect === "error") throw new TypeError("Unsupported redirect mode");
+      return json({ latest: "1.2.3" });
+    });
+    const response = await createBadgeHandler({ fetch })(
+      get("source=npm-version&package=comark-ui"),
+    );
+    expect(await response.text()).toContain("v1.2.3");
+    expect(fetch.mock.calls[0]?.[1]?.redirect).toBe("manual");
+  });
+
+  it.each([301, 302, 303, 307, 308])("rejects upstream redirects (%s)", async (status) => {
+    const cancel = vi.fn();
+    const fetch = vi
+      .fn<typeof globalThis.fetch>()
+      .mockResolvedValue(
+        new Response(new ReadableStream({ cancel }), {
+          status,
+          headers: { Location: "https://unexpected.example/" },
+        }),
+      );
+    const response = await createBadgeHandler({ fetch })(
+      get("source=npm-version&package=comark-ui"),
+    );
+    expect(response.headers.get("X-Badge-Status")).toBe("unavailable");
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(fetch.mock.calls[0]?.[1]?.redirect).toBe("manual");
+    expect(cancel).toHaveBeenCalledOnce();
+  });
+
   it("rejects invalid options and unsupported methods before fetching", async () => {
     const fetch = vi.fn<typeof globalThis.fetch>();
     const handle = createBadgeHandler({ fetch });

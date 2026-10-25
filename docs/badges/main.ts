@@ -188,9 +188,11 @@ download.addEventListener("click", () => {
   anchor.click();
 });
 const initial = new URLSearchParams(location.search);
-const initialDefaults = defaults[initial.get("source") ?? "static"];
-if (initialDefaults)
-  for (const [key, value] of Object.entries(initialDefaults)) control(key).value = value;
-for (const key of badgeKeys) if (initial.has(key)) control(key).value = initial.get(key)!;
+const restored = readBadge(Object.fromEntries(initial));
+if (restored.ok) {
+  for (const key of badgeKeys) control(key).value = restored.value[key];
+} else {
+  for (const key of badgeKeys) if (initial.has(key)) control(key).value = initial.get(key)!;
+}
 fields();
 void refresh();

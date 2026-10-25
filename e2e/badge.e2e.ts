@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { badgeParams, readBadge } from "../packages/badge/src/svg.ts";
 import { createBadgeHandler } from "../packages/badge/src/server.ts";
 
 test.beforeEach(async ({ page }) => {
@@ -76,3 +77,22 @@ test("explains unavailable data and blocks stale downloads during edits", async 
   await page.getByLabel("Package", { exact: true }).fill("../invalid");
   await expect(page.getByRole("button", { name: "Download SVG" })).toBeDisabled();
 });
+
+for (const input of [
+  { value: "release" },
+  { source: "npm-version", package: "comark-ui" },
+  { source: "npm-downloads", package: "comark-ui" },
+]) {
+  test(`restores canonical configuration ${JSON.stringify(input)}`, async ({ page }) => {
+    const parsed = readBadge(input);
+    if (!parsed.ok) throw new Error(parsed.error);
+    const params = badgeParams(parsed.value);
+    await page.goto(`/badges/?${params}`);
+    await expect(page.locator("#image-url")).not.toHaveValue("");
+    const imageUrl = await page.locator("#image-url").inputValue();
+    expect(readBadge(Object.fromEntries(new URL(imageUrl).searchParams))).toEqual(parsed);
+    await expect(page.locator('[name="color"]')).toHaveValue("primary");
+    await page.reload();
+    await expect(page.locator("#image-url")).toHaveValue(imageUrl);
+  });
+}
