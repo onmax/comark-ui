@@ -2,7 +2,7 @@
 title: Cross-references
 description: Numbered figures and tables, and references to them, written in Markdown.
 keywords: cross reference, cross-reference, figure numbers, table numbers, numbering, references, caption, label, ref
-tagline: Label an image or a table with an id and it gets a number. Write a reference to it and the reference reads "Figure 2", and stays right when figures move.
+tagline: Numbered figures and tables, and references to them that read "Figure 2" and stay right when figures move.
 group: Page behavior
 icon: hash
 blurb: Numbered figures and references
@@ -36,19 +36,43 @@ The pigeon tracker before the redesign is in :ref{#fig-before}, and after it in 
 :::
 ::
 
-Figures and tables are numbered separately, in the order they appear, and a reference can come before what it points at. A reference to a label that doesn't exist is an issue, not a broken link.
+## Features
+
+- An image alone in its paragraph with a `fig-` id becomes a numbered figure, captioned from its alt text.
+- A `::table` with a `tbl-` id gets a numbered caption.
+- `:ref{#id}` becomes a link that reads "Figure 1" or "Table 1", and stays right when figures move.
+- Figures and tables are numbered separately, in the order they appear, and a reference can come before what it points at.
+- A reference to a label that doesn't exist is an issue, not a broken link.
+- The output is plain `figure`, `figcaption`, `caption`, and `a` elements, so it needs no components and no styles.
 
 ## Usage
 
+Give an image an id that starts with `fig-`, and point at it with `:ref`.
+
+```md
+As :ref{#fig-login} shows, the button moved.
+
+![The login page](login.png){#fig-login}
+```
+
+A label is `fig-` or `tbl-` followed by letters, digits, `_`, or `-`.
+
 ### Figures
+
+Use a `fig-` id on an image alone in its paragraph to make it a numbered `figure`. Its caption reads "Figure 1: The login page", from its alt text. An image with no alt text reads "Figure 1".
 
 ```md
 ![The login page](login.png){#fig-login}
 ```
 
-An image alone in its paragraph with an id that starts with `fig-` becomes a `figure`, captioned "Figure 1: The login page" from its alt text. A `::figure{#fig-...}` block of your own is numbered as it is, and so is any other element with a `fig-` id, such as a comark-annotate `::screenshot`.
+A `::figure{#fig-...}` block of your own is numbered as it is, and so is any other element with a `fig-` id, such as a comark-annotate `::screenshot`.
+
+> [!NOTE]
+> A labeled image that shares its paragraph with text isn't a figure, and is reported. Put it on a line of its own.
 
 ### Tables
+
+Use a `tbl-` id on `::table` to number a table. Use its `caption` prop to set the text after the number, "Table 1: Homing times by bird".
 
 ```md
 ::table{#tbl-times caption="Homing times by bird"}
@@ -58,19 +82,19 @@ An image alone in its paragraph with an id that starts with `fig-` becomes a `fi
 ::
 ```
 
-A Markdown table can't take an id on its own, so wrap it in `::table` with an id that starts with `tbl-`. Its `caption` follows the number, "Table 1: Homing times by bird".
+> [!NOTE]
+> A Markdown table can't take an id on its own, so wrap it in `::table`.
 
 ### References
+
+Use `:ref{#id}` to link to a label. The link reads "Figure 1" or "Table 1". It can point at a label above or below it.
 
 ```md
 As :ref{#fig-login} shows, the button moved.
 ```
 
-`:ref{#id}` becomes a link to the label that reads "Figure 1" or "Table 1". It can point at a label above or below it.
-
-Pandoc's `@fig-login` isn't read, since `@name` is a mention in comark-chips and comark-github.
-
-The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation/) describes: a reference with no id, one to a label that doesn't exist (it renders as `[id]`), a label used twice, and a labeled image that shares its paragraph with text, so it isn't a figure, and text inside a `:ref`, which it drops. Each issue names its block and says how to fix it, and each has its own rule in [Doctor](/doctor/).
+> [!NOTE]
+> A reference to a label that doesn't exist renders as `[id]` and is reported. Text inside a `:ref` is dropped, since the reference reads as its label's number.
 
 ## Examples
 
@@ -86,34 +110,61 @@ The empty state in :ref{#fig-empty} replaces the spinner in :ref{#fig-loading}.
 ![The old spinner](loading.png){#fig-loading}
 ```
 
-### Styling
+### Numbers in another language
 
-The plugin ships no styles, since figures, captions, and links already have the page's. These classes are there for your own rules:
-
-| Class | Element |
-| --- | --- |
-| `.cxr` | A `figure` it made from an image, and a labeled table |
-| `.cxr-label` | The "Figure 1:" or "Table 1:" at the start of a caption |
-| `.cxr-ref` | A reference |
-
-```css
-.cxr-label {
-  font-weight: 600;
-}
-```
-
-## API
-
-The options go under `xref` in `comarkUi()`, or to `xref()` when you use the plugin alone.
-
-| Option | Default | What it does |
-| --- | --- | --- |
-| `figure` | `"Figure"` | The word before a figure's number. |
-| `table` | `"Table"` | The word before a table's number. |
+Use the `figure` and `table` options to change the words before the numbers:
 
 ```ts
 xref({ figure: "Abbildung", table: "Tabelle" });
 ```
+
+### Coming from Pandoc
+
+Pandoc's `@fig-login` isn't read, since `@name` is a mention in comark-chips and comark-github. Write `:ref{#fig-login}` instead.
+
+## API
+
+### Props
+
+#### Image
+
+| Attribute | Default | Description |
+| --- | --- | --- |
+| `#fig-…` | — | Numbers the image as a figure, when it's alone in its paragraph. |
+
+#### Table
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| `#tbl-…` | — | Numbers the table. |
+| `caption` | — | The text after the number in the table's caption. |
+
+#### Ref
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| `#id` | — | The label the link points at. Required. |
+
+### Options
+
+The options go under `xref` in `comarkUi()`, or to `xref()` when you use the plugin alone.
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `figure` | `"Figure"` | The word before a figure's number. |
+| `table` | `"Table"` | The word before a table's number. |
+
+### Issues
+
+The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation/) describes:
+
+- A reference with no id.
+- A reference to a label that doesn't exist. It renders as `[id]`.
+- A label used twice.
+- A labeled image that shares its paragraph with text, so it isn't a figure.
+- Text inside a `:ref`, which it drops.
+
+Each issue names its block and says how to fix it, and each has its own rule in [Doctor](/doctor/).
 
 ### Package
 
@@ -131,3 +182,27 @@ const render = createHtmlRenderer({ plugins: [xref()] });
 ```
 
 It needs no components: figures become `figure` and `figcaption`, tables get a `caption`, and references become links, which every renderer draws and most pages already style. [Renderers](/guide/renderers/) covers using it with other plugins.
+
+## Theme
+
+The plugin ships no styles, since figures, captions, and links already have the page's.
+
+### Classes and attributes
+
+These classes are there for your own rules:
+
+| Selector | Is |
+| --- | --- |
+| `.cxr` | A `figure` it made from an image, and a labeled table |
+| `.cxr-label` | The "Figure 1:" or "Table 1:" at the start of a caption |
+| `.cxr-ref` | A reference |
+
+### Example
+
+A bold label:
+
+```css
+.cxr-label {
+  font-weight: 600;
+}
+```
