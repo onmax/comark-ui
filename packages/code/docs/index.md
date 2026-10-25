@@ -2,7 +2,7 @@
 title: Code
 description: Copy and wrap buttons on code blocks.
 keywords: copy button, copy to clipboard, clipboard, line wrap, word wrap, code block, run button, actions, Shiki
-tagline: Copy and Wrap on every code block, and buttons of your own, such as Run, that hand the code to your app.
+tagline: A header on every code block with Copy, Wrap, and buttons of your own, and line markers written after the fence.
 group: Page behavior
 icon: square-code
 blurb: Copy and wrap buttons on code
@@ -70,11 +70,18 @@ pnpm add comark @comark/html comark-code
 :::
 ::
 
-Each code block gets a header above its first line. The file's name or the language sits on the left and the buttons on the right, so they never cover the code. Copy puts the block's code on the clipboard, and Wrap breaks long lines in that block only. Without a script, the header keeps its title and hides the buttons, since they couldn't work.
+## Features
 
-Words after the fence's language, written the way [Expressive Code](https://expressive-code.com) writes them, mark lines as added, deleted, or worth a look. They can also fold runs of lines away, number the lines, and draw shell sessions as a terminal. A `diff` fence with a `lang` turns pasted `git diff` output into highlighted code with its lines marked. [Usage](#usage) lists them all.
+- Each code block gets a header above its first line: the file's name or the language on the left, the buttons on the right, so they never cover the code.
+- Copy puts the block's code on the clipboard, and Wrap breaks long lines in that block only.
+- Words after the fence's language mark lines as added, deleted, or worth a look, fold runs of lines, number the lines, and draw shell sessions as a terminal.
+- A `diff` fence with a `lang` turns pasted `git diff` output into highlighted code with its lines marked.
+- Buttons of your own, such as Run, hand the block's code to your app.
+- Without a script, the header keeps its title and hides the buttons, since they couldn't work.
 
 ## Usage
+
+Write each attribute after the fence's language, the way [Expressive Code](https://expressive-code.com) writes them, so a block written for Expressive Code renders the same here. Comark's own `[file]` and `{2}` work beside them.
 
 ````md
 ```ts title="src/limits.ts" ins={3} del={2} collapse={5-9} showLineNumbers
@@ -87,30 +94,120 @@ export const limits = {
 ```
 ````
 
-Write each option after the fence's language, the way [Expressive Code](https://expressive-code.com) writes them, so a block written for Expressive Code renders the same here. Comark's own `[file]` and `{2}` work beside them.
-
-| Option | |
-| --- | --- |
-| `ins={3-4}` | Marks lines as added: green, with a `+` before them. |
-| `del={2}` | Marks lines as deleted: red, with a `−` before them. Copy leaves them out. |
-| `mark={7}` | Marks lines to look at, like Comark's `{7}`. |
-| `collapse={1-40}` | Folds lines behind a row that says how many there are. A click opens them, and they stay open. |
-| `showLineNumbers` | Numbers the lines. |
-| `startLineNumber=120` | Numbers the lines from 120, and turns the numbers on. |
-| `title="src/x.ts"` | The block's title, like `[src/x.ts]`. |
-| `frame="terminal"` | Draws the block as a terminal window. `frame="none"` or `frame="code"` draws a plain block. |
-| `wrap` | Starts the block with Wrap on. |
-
 A range is one line, `{7}`, or the first and last lines of a run, `{3-4}`, and a list takes both, `{1, 3-4}`. Lines count from 1, and collapsed lines are counted where they are.
 
-`sh`, `bash`, `zsh`, `shell`, `console`, and `ansi` blocks are terminals unless their title is a file's name, like `install.sh`. A terminal's header shows its title, if it has one, but not its language. In a [code group](/tabs/#code-group) the tab names the block, so a terminal there draws no window.
+The components draw every attribute with no script beyond the one the buttons already need.
 
-The components draw the options with no script beyond the one the buttons already need. A collapsed range is a `<details>` element. The numbers and the signs come from CSS, so selecting the code and copying it gets only the code.
+### Added and deleted lines
+
+Use the `ins` and `del` attributes to mark lines as added or deleted. Added lines are green, with a `+` before them. Deleted lines are red, with a `−` before them, and Copy leaves them out.
+
+::example
+````md
+```ts ins={4} del={3}
+function close() {
+  dialog.close();
+  history.back();
+  if (opened) history.back();
+}
+```
+````
+::
+
+### Marked lines
+
+Use the `mark` attribute to mark lines to look at, like Comark's `{7}`.
+
+::example
+````md
+```ts mark={2}
+function close() {
+  dialog.close();
+  history.back();
+}
+```
+````
+::
+
+### Collapsed lines
+
+Use the `collapse` attribute to fold lines behind a row that says how many there are. A click opens them, and they stay open.
+
+::example
+````md
+```ts collapse={2-4}
+import { defineConfig } from "vite";
+import vue from "@vitejs/plugin-vue";
+import inspect from "vite-plugin-inspect";
+import checker from "vite-plugin-checker";
+
+export default defineConfig({ plugins: [vue()] });
+```
+````
+::
+
+### Line numbers
+
+Use the `showLineNumbers` attribute to number the lines. Use `startLineNumber` to number them from another line, such as 120. It turns the numbers on too.
+
+::example
+````md
+```ts startLineNumber=120
+function close() {
+  dialog.close();
+}
+```
+````
+::
+
+The numbers and the signs come from CSS, so selecting the code and copying it gets only the code. A numbered line wraps under its own code, not under its number.
+
+> [!NOTE]
+> `startLineNumber` takes a whole number. Any other value is reported, and the lines are numbered from 1.
+
+### Title
+
+Use the `title` attribute to name the block in its header, like Comark's `[src/x.ts]`. Without a title, the header shows the language.
+
+::example
+````md
+```ts title="src/zoom.ts"
+export function close() {}
+```
+````
+::
+
+### Frame
+
+Use the `frame` attribute to choose how the block is drawn. `frame="terminal"` draws a terminal window. `frame="code"` or `frame="none"` draws a plain block.
+
+::example
+````md
+```sh title="Install"
+pnpm add comark @comark/html comark-code
+```
+````
+::
+
+`sh`, `bash`, `zsh`, `shell`, `shellscript`, `shellsession`, `console`, and `ansi` blocks are terminals unless their title is a file's name, like `install.sh`. A terminal's header shows its title, if it has one, but not its language. In a [code group](/tabs/#code-group) the tab names the block, so a terminal there draws no window.
+
+### Wrap
+
+Use the `wrap` attribute to start the block with Wrap on. Wrap stays on until the reader presses it again, and it isn't saved for the next visit.
+
+::example
+````md
+```sh wrap
+pnpm exec spurious correlate --x "rubber ducks bought" --y "bugs fixed" --office berlin --moon-phase waxing --min-r 0.9 > ducks.csv
+```
+````
+::
 
 ### Diffs
 
-A `diff` fence with a `lang` is highlighted as that language. Each line's leading `+` or `-` becomes `ins` or `del`:
+Use the `lang` attribute on a `diff` fence to highlight it as that language. Each line's leading `+` or `-` becomes `ins` or `del`.
 
+::example
 ````md
 ```diff lang="ts"
  function close() {
@@ -120,37 +217,15 @@ A `diff` fence with a `lang` is highlighted as that language. Each line's leadin
  }
 ```
 ````
+::
 
 Paste the output of `git diff` as it is. When the block has `@@` hunk headers, the plugin drops the hunk headers and the file headers before the first hunk. Without `lang`, a `diff` fence stays a diff in Shiki's colors.
 
-### Shiki
-
-List `shiki` before comark-code in `plugins`:
-
-```ts
-const render = createHtmlRenderer({ plugins: [shiki(), code()], components });
-```
-
-Shiki draws every block again from its text, so comark-code marks the lines once Shiki has drawn them. If comark-code comes first, a block keeps its title, frame, and Wrap. It loses its markers, numbers, and collapsed ranges, and the plugin says so in `meta.issues`. Without Shiki, comark-code splits the lines itself.
-
-Shiki's [notation transformers](https://shiki.style/packages/transformers) work too. comark-code styles the lines they mark with `// [!code ++]`, `// [!code --]`, `// [!code highlight]`, `// [!code focus]`, `// [!code error]`, and `// [!code warning]`, and the words `// [!code word:name]` marks.
-
-### Issues
-
-The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation/) describes, and never throws:
-
-- A range past the block's last line.
-- A range that isn't in braces.
-- A `startLineNumber` that isn't a whole number.
-- A frame it doesn't draw.
-
-Each issue names the block by its title, or else by its first line, and says how to write it. Each one has its own rule in [Doctor](/doctor/).
-
 ## Examples
 
-### Actions
+### Run code from a button
 
-Add buttons of your own with `actions`. Each one goes on the code blocks in its `languages`, or on every block when you leave them out, before Wrap and Copy:
+Use the `actions` option to add buttons of your own. Each one goes on the code blocks in its `languages`, or on every block when you leave them out, before Wrap and Copy:
 
 ```ts
 const render = createHtmlRenderer({
@@ -158,19 +233,6 @@ const render = createHtmlRenderer({
   components,
 });
 ```
-
-A button shows a `label`, an `icon`, or both. The icon is an Iconify name, such as `lucide:play`, or an image URL. It resolves while parsing, like comark-icon's icons, and `iconResolver` shares comark-icon's `collections`. An icon-only button needs a `title`, which is its tooltip and the name screen readers read:
-
-```ts
-code({
-  actions: [
-    { id: "run", label: "Run", icon: "lucide:play", languages: ["sh", "bash"] },
-    { id: "explain", icon: "lucide:sparkles", title: "Explain this code" },
-  ],
-});
-```
-
-If an icon can't be drawn, the plugin reports it in `meta.issues` under the same [Doctor](/doctor/) rule as an `:icon`'s, and the button shows its title as text instead.
 
 Your app decides what an action does. `onCodeAction()` from `comark-code/client` calls your function with the block's code and language whenever that action's button is clicked, and returns a function that stops it:
 
@@ -186,38 +248,119 @@ Under the hood, a click sends a `comark-code-action` event from the block. It bu
 
 The plugin does nothing else, so `code()` with no actions only adds Copy and Wrap, which come from the components. To see an action's button, add one under `comark-code` in the [playground](/play/)'s Config tab.
 
-### Copy
+### Icons on your buttons
+
+A button shows a `label`, an `icon`, or both. The icon is an Iconify name, such as `lucide:play`, or an image URL. It resolves while parsing, like comark-icon's icons, and `iconResolver` shares comark-icon's `collections`. An icon-only button needs a `title`, which is its tooltip and the name screen readers read:
+
+```ts
+code({
+  actions: [
+    { id: "run", label: "Run", icon: "lucide:play", languages: ["sh", "bash"] },
+    { id: "explain", icon: "lucide:sparkles", title: "Explain this code" },
+  ],
+});
+```
+
+If an icon can't be drawn, the plugin reports it in `meta.issues` under the same [Doctor](/doctor/) rule as an `:icon`'s, and the button shows its title as text instead.
+
+### Highlight with Shiki
+
+List `shiki` before comark-code in `plugins`:
+
+```ts
+const render = createHtmlRenderer({ plugins: [shiki(), code()], components });
+```
+
+Shiki draws every block again from its text, so comark-code marks the lines once Shiki has drawn them. If comark-code comes first, a block keeps its title, frame, and Wrap. It loses its markers, numbers, and collapsed ranges, and the plugin says so in `meta.issues`. Without Shiki, comark-code splits the lines itself.
+
+### Shiki's notation
+
+Shiki's [notation transformers](https://shiki.style/packages/transformers) work too. comark-code styles the lines they mark with `// [!code ++]`, `// [!code --]`, `// [!code highlight]`, `// [!code focus]`, `// [!code error]`, and `// [!code warning]`, and the words `// [!code word:name]` marks.
+
+### What Copy takes
 
 Copy takes the code's text as written. It leaves out the highlighting, the line numbers, the lines marked `del`, and the row that counts a collapsed range's lines, so a diff copies as the code after the change. Your actions get the same text.
 
-A check mark confirms the copy, and a status line tells screen readers. When the page can't write to the clipboard, such as over plain http, Copy selects the code instead and says to press Ctrl+C or ⌘C.
+A check mark confirms the copy. When the page can't write to the clipboard, such as over plain http, Copy selects the code instead and says to press Ctrl+C or ⌘C.
 
-### Wrap
+## Accessibility
 
-Wrap breaks long lines in its own block. It stays on until you press it again, and it isn't saved for the next visit. A block whose fence says `wrap` starts with it on. A numbered line wraps under its own code, not under its number.
+The header's buttons are hidden until the script runs, so without it screen readers don't reach them. The title is plain text in the header.
+
+- Copy is a button named "Copy code". After a click, a status line says "Copied", or, when the page can't write to the clipboard, "Couldn't copy, so the code is selected. Press Ctrl+C or ⌘C." Screen readers read it out.
+- Wrap is a toggle button named "Wrap lines", pressed while it's on.
+- Each action is named by its label, or by its `title` when it shows only an icon.
+- A collapsed range is a `<details>` element whose summary says how many lines it hides, such as "3 collapsed lines".
+
+### Keyboard interactions
+
+| Key | Description |
+| --- | --- |
+| `Tab`, `Shift+Tab` | Moves focus to each collapsed range in the code, then to the header's buttons: your actions, Wrap, and Copy. |
+| `Enter`, `Space` | Presses the focused button. On a collapsed range, opens its lines. |
 
 ## API
 
+### Attributes
+
+The words you write after the fence's language.
+
+| Attribute | Default | Description |
+| --- | --- | --- |
+| `ins` | — | Lines to mark as added, such as `ins={3-4}`: green, with a `+` before them. |
+| `del` | — | Lines to mark as deleted, such as `del={2}`: red, with a `−` before them. Copy leaves them out. |
+| `mark` | — | Lines to look at, such as `mark={7}`, like Comark's `{7}`. |
+| `collapse` | — | Lines to fold behind a row that counts them, such as `collapse={1-40}`. |
+| `showLineNumbers` | `false` | Numbers the lines. |
+| `startLineNumber` | `1` | The first line's number, such as `startLineNumber=120`. A whole number. Setting it turns the numbers on. |
+| `title` | — | The block's title, such as `title="src/x.ts"`, like `[src/x.ts]`. |
+| `frame` | `auto` | `terminal` draws a terminal window, and `code` or `none` a plain block. `auto` draws shell languages as terminals. |
+| `wrap` | `false` | Starts the block with Wrap on. |
+| `lang` | — | On a `diff` fence, the language to highlight it as, such as `lang="ts"`. |
+
+### Options
+
 The options go under `code` in `comarkUi()`, or to `code()` when you use it alone.
 
-| Option | Default | |
+| Option | Default | Description |
 | --- | --- | --- |
-| `actions` | `[]` | Buttons of your own, before Wrap and Copy, as [Actions](#actions) describes. |
+| `actions` | `[]` | Buttons of your own, before Wrap and Copy, as [Run code from a button](#run-code-from-a-button) describes. |
 | `iconResolver` | The Iconify API | Resolves the actions' icons, from `createIcons()` in comark-icon. Pass the one the page's other plugins use, so they share its `collections` and `fetch`. comark-ui passes the one its `icon` uses. |
 
 Each action takes:
 
-| Field | |
-| --- | --- |
-| `id` | Sent as `detail.action` with the `comark-code-action` event, and what `onCodeAction()` listens for. Required. |
-| `label` | The button's text. |
-| `icon` | An Iconify name, such as `lucide:play`, or an image URL, drawn before the label. With no `label`, the button shows only the icon. |
-| `title` | The tooltip, and the name screen readers read. The label by default; required when there is no `label`. |
-| `languages` | The languages of the code blocks that get the button, such as `["sh", "bash"]`. Every code block when left out. |
+| Field | Default | Description |
+| --- | --- | --- |
+| `id` | — | Sent as `detail.action` with the `comark-code-action` event, and what `onCodeAction()` listens for. Required. |
+| `label` | — | The button's text. |
+| `icon` | — | An Iconify name, such as `lucide:play`, or an image URL, drawn before the label. With no `label`, the button shows only the icon. |
+| `title` | The label | The tooltip, and the name screen readers read. Required when there is no `label`. |
+| `languages` | Every language | The languages of the code blocks that get the button, such as `["sh", "bash"]`. |
 
-### onCodeAction()
+### Events
 
-`onCodeAction(id, callback)` from `comark-code/client` calls `callback` with the block's `code` and `language` whenever that action's button is clicked, and returns a function that stops it. A click also sends a `comark-code-action` event that bubbles up to the page with the action's `id`, the code, and the language in its `detail`. [Actions](#actions) shows both.
+| Event | Detail | Description |
+| --- | --- | --- |
+| `comark-code-action` | `{ action, code, language }` | An action's button was clicked. It fires on the block and bubbles up to the page. |
+
+### Functions
+
+| Function | Returns | Description |
+| --- | --- | --- |
+| `onCodeAction(id, callback)` | `() => void` | Calls `callback` with the block's `code` and `language` whenever the action `id`'s button is clicked. The returned function stops it. Import it from `comark-code/client`. |
+
+### Issues
+
+The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation/) describes, and never throws:
+
+- A range past the block's last line.
+- A range that isn't in braces, or a part of one that isn't a line or a run from a lower line to a higher one.
+- A `startLineNumber` that isn't a whole number.
+- A frame it doesn't draw.
+- comark-code listed before `shiki` in `plugins`, so blocks lose their markers, numbers, and collapsed ranges.
+- An action's icon it can't draw.
+
+Each issue names the block by its title, or else by its first line, and says how to write it. Each one has its own rule in [Doctor](/doctor/).
 
 ### Package
 
@@ -287,7 +430,7 @@ The block's `padding-top` is the button size, the inset above the buttons, and `
 | `.ck` | The wrapper around each block, with `data-code-wrap` while Wrap is on |
 | `.ck-bar` | The header above the code: the title, then the buttons |
 | `.ck-title` | The file's name, or else the language; hidden inside a code group, whose tab names the block |
-| `.ck-action` | Each of your [actions](#actions), with its id in `data-code-action`, and `aria-label` when it shows only an icon |
+| `.ck-action` | Each of your [actions](#run-code-from-a-button), with its id in `data-code-action`, and `aria-label` when it shows only an icon |
 | `.ck-wrap` | Wrap, with `aria-pressed="true"` while it's on |
 | `.ck-copy` | Copy, with `data-state="done"` or `data-state="failed"` for a moment after a click |
 | `.ck-status` | The line under the header that says what Copy did |

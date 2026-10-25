@@ -1,13 +1,10 @@
 ---
 title: annotation
 description: One mark on a screenshot and its note, and its props.
+tagline: One hand-drawn mark on a screenshot, and the note that explains it.
 ---
 
 One mark on the screenshot. The block's content is its note.
-
-- A note goes in the numbered list under the image.
-- With `side`, the note sits beside or above the image instead, and an arrow points from it to the mark.
-- Props can be inline, in a YAML props block, or bound with `:x`.
 
 ::example
 ```md
@@ -23,13 +20,225 @@ r now counts the office cat.
 ```
 ::
 
-## Props
+## Features
 
-| Prop | |
+- A note goes in the numbered list under the image.
+- A side note sits beside, above, or below the image instead, and an arrow points from it to the mark.
+- Hover a mark to highlight its note, or a note to highlight its mark.
+- Each mark wobbles a little, seeded by its box, so no two marks match and the same Markdown always draws the same marks.
+- Props can be inline, in a YAML props block, or bound with `:x`.
+
+## Usage
+
+Use the `x`, `y`, `w`, and `h` props to mark an area of the image, as percentages of it. Write the note as the block's content.
+
+```md
+::screenshot{src="/dashboard.png" alt="Office correlations dashboard"}
+:::annotation{x=82.4 y=5.3 w=14.2 h=8.8}
+**Export CSV** includes the filters you set.
+:::
+::
+```
+
+> [!NOTE]
+> All four are required. They're numbers without `%`: `x` and `y` from 0 to 100, `w` and `h` above 0 and up to 100. Keep `x + w` and `y + h` within 100.
+
+### Mark
+
+Use the `mark` prop to pick the shape. `box` is the default.
+
+::example
+```md
+::screenshot{src="/dashboard.png" alt="Office correlations dashboard"}
+:::annotation{x=82.4 y=5.3 w=14.2 h=8.8}
+`box` frames an element.
+:::
+
+:::annotation{x=35.8 y=32.3 w=18.8 h=6.6 mark="circle"}
+`circle` rings a small detail.
+:::
+
+:::annotation{x=3.5 y=5.9 w=26.8 h=7.7 mark="underline" color="blue"}
+`underline` marks text.
+:::
+
+:::annotation{x=61.2 y=76.6 w=18 h=9.7 mark="highlight" color="amber"}
+`highlight` washes over an area.
+:::
+
+:::annotation{x=5.3 y=46 w=21.7 h=9.3 mark="cross" color="red"}
+`cross` strikes something out.
+:::
+
+:::annotation{x=85 y=46 w=9.7 h=9.3 mark="check" color="green"}
+`check` approves and sits beside its target.
+:::
+::
+```
+::
+
+- A `line` runs straight through the middle of its box, along its longer side, such as a fold or a limit.
+- A `bracket` stands on the edge that faces its side note, or the left one without a note. It spans a run of rows or a group without covering it.
+- `none` draws nothing, and lets a side note's arrow do the pointing.
+
+> [!NOTE]
+> `mark="none"` needs a `side`, since nothing else points at the spot.
+
+### Color
+
+Use the `color` prop to say what a mark means. Each named color has one meaning:
+
+| Color | Meaning |
 | --- | --- |
-| `x` `y` `w` `h` | The marked area, as percentages of the image: numbers from 0 to 100, without `%`. All four are required. |
-| `mark` | `box` (default), `circle`, `underline`, `line`, `highlight`, `bracket`, `cross`, or `check`. A `line` runs straight through the middle of the box, along its longer side. `none` draws no mark and lets a side note's arrow point, so it needs a `side`. |
-| `side` | `left`, `right`, or `top` puts the note beside or above the image, with an arrow. |
-| `color` | `blue` (default) points something out, `red` flags a problem, `amber` a warning, `green` a fix, and `gray` anything neutral. A 3- or 6-digit hex color like `#e11d48` works too. |
+| `violet` | Points something out. It's the default, and reads on light and dark screenshots alike. |
+| `red` | Flags a problem. |
+| `amber` | A warning. |
+| `green` | A fix. |
+| `blue` | A second voice beside the default. |
+| `gray` | Anything neutral. |
 
-Each mark wobbles a little, seeded by its box, so no two marks match and the same Markdown always draws the same marks. Every named color has a dark-mode value. A hex color's number stamp is white or dark, whichever reads better on it.
+::example
+```md
+::screenshot{src="/dashboard.png" alt="Office correlations dashboard"}
+:::annotation{x=5.3 y=46 w=21.7 h=9.3 color="red"}
+This filter ignores the moon phase.
+:::
+
+:::annotation{x=85 y=46 w=9.7 h=9.3 mark="check" color="green"}
+**Apply** waits until every filter is set.
+:::
+
+:::annotation{x=82.4 y=5.3 w=14.2 h=8.8 color="#e11d48"}
+**Export CSV** includes the filters you set.
+:::
+::
+```
+::
+
+Each named color has a dark-mode value. A 3- or 6-digit hex color like `#e11d48` works too, and its stamp gets whichever of a white or dark number reads better. Without a `color`, the mark takes its screenshot's or compare's `ink`.
+
+### Side note
+
+Use the `side` prop to move the note out of the list to the `left`, `right`, `top`, or `bottom` of the image, with a hand-drawn arrow to its mark. Side notes have no number, because the arrow already links them to their mark.
+
+::example
+```md
+::screenshot{src="/dashboard.png" alt="Office correlations dashboard"}
+:::annotation{x=37 y=33.1 w=16.4 h=5.2 mark="underline" side="top" color="red"}
+Bugs fixed fall for the first time this quarter. So do the ducks.
+:::
+
+:::annotation{x=66.1 y=17 w=30.5 h=24.6 side="right"}
+r now counts the office cat.
+:::
+
+:::annotation{x=4 y=77.3 w=75.5 h=8.2 mark="highlight" side="left" color="amber"}
+Week 15 is missing for the pigeons.
+:::
+::
+```
+::
+
+Add `mark="none"` to point at something without drawing a mark.
+
+> [!NOTE]
+> On narrow screens, side notes drop under the image and the arrows hide. Each note and its target get a matching letter instead.
+
+### Note position
+
+Use the `at` prop to move a side note along its margin, as a percentage of the image: across it for `top` and `bottom`, down it for `left` and `right`. Without it, the note sits level with the arrow's point. The arrow then leaves the note level and sweeps into the mark, the way a hand-drawn leader does. A note set off to one side starts where its arrow leaves it and reads away from the point.
+
+::example
+```md
+::screenshot{src="/dashboard.png" alt="Office correlations dashboard"}
+:::annotation{x=37 y=33.1 w=16.4 h=5.2 mark="none" side="top" at=58 to="44,33"}
+Bugs fixed fell with the duck supply.
+:::
+
+:::annotation{x=4 y=77.3 w=92 h=8.2 mark="none" side="bottom" at=42 to="55,81"}
+The pigeons ate week 15.
+:::
+::
+```
+::
+
+> [!NOTE]
+> `at` needs a `side`.
+
+### Arrow target
+
+Use the `to` prop to aim the arrow at one point, as two percentages of the image, like `to="42,18"`. Without it, the arrow lands on the middle of the mark's edge that faces the note. It suits `mark="none"`: the arrow alone points, and nothing covers the screen.
+
+::example
+```md
+::screenshot{src="/dashboard.png" alt="Office correlations dashboard"}
+:::annotation{x=66.1 y=17 w=30.5 h=24.6 mark="none" side="right" to="80,30"}
+r now counts the office cat.
+:::
+::
+```
+::
+
+> [!NOTE]
+> `to` needs a `side`.
+
+## Examples
+
+### Place marks on their target
+
+Measure the element in the page you captured and divide by the viewport. Don't estimate from the image.
+
+```js
+const r = element.getBoundingClientRect();
+const box = {
+  x: (r.x / innerWidth) * 100,
+  y: (r.y / innerHeight) * 100,
+  w: (r.width / innerWidth) * 100,
+  h: (r.height / innerHeight) * 100,
+};
+```
+
+For a full-page screenshot, add the scroll offset and divide by the page size instead.
+
+### Where the numbers go
+
+Numbers place themselves. Each sits on a corner of its mark, so it reads as that mark's number and not its neighbor's. It tries top left, top right, bottom left, then bottom right, and takes the first corner clear of other numbers, marks, and arrows. If it would hang past the image's edge, it lines up with the mark's edge instead.
+
+Set [`viewport`](/annotate/components/screenshot/#viewport) on the screenshot so the plugin judges the corners against the image's real shape. If marks crowd so close that two numbers overlap at every corner, the plugin reports both annotations.
+
+### Side notes that fit
+
+Notes on the same side need room. The plugin reports side notes that sit close together along their margin, since they would likely overlap. It can't measure the text, so check the rendered page too. If two notes collide, move one with `at`, to the other side, or into the list.
+
+In a [compare](/annotate/components/compare/#side-notes-in-a-pair) side by side, only notes above and below the image keep their arrow. In a slider, every note joins the list.
+
+## API
+
+### Props
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| `x` `y` `w` `h` | — | The marked area, as percentages of the image: numbers without `%`, `x` and `y` from 0 to 100, `w` and `h` above 0 and up to 100. All four are required. |
+| `mark` | `box` | `box`, `circle`, `underline`, `line`, `highlight`, `bracket`, `cross`, `check`, or `none`. `none` needs a `side`. |
+| `color` | `violet` | `violet`, `red`, `amber`, `green`, `blue`, `gray`, or a 3- or 6-digit hex color like `#e11d48`. Without it, the screenshot's or compare's `ink`. |
+| `side` | — | `left`, `right`, `top`, or `bottom` puts the note beside, above, or below the image with an arrow. |
+| `at` | Level with the arrow's point | Where a side note sits along its margin, as a percentage of the image. Needs a `side`. |
+| `to` | The middle of the mark's edge that faces the note | The point the arrow lands on, as two percentages of the image, like `to="42,18"`. Needs a `side`. |
+
+### Issues
+
+The plugin adds these problems to `meta.issues`:
+
+- `x`, `y`, `w`, or `h` is missing, isn't a number, or is out of range.
+- The box runs past the image edge.
+- `x`, `y`, `w`, and `h` are all 1 or less, as fractions instead of percentages.
+- `mark` isn't one of the marks, or is `none` without a `side`.
+- `color` isn't a named color or a 3- or 6-digit hex color.
+- `side` isn't `left`, `right`, `top`, or `bottom`.
+- `at` or `to` isn't a percentage, or has no `side`.
+- The annotation has no note.
+- A `screenshot`, `compare`, or `annotation` sits inside the note.
+- The annotation sits outside a screenshot, so it has nothing to point at.
+- A prop isn't one of the above. Likely slips such as `width`, `height`, `colour`, `left`, `top`, `target`, and `label` get a hint.
+
+Each has its own rule in [Doctor](/doctor/). [Annotate](/annotate/#issues) covers how issues name their block.

@@ -2,7 +2,7 @@
 title: GitHub
 description: GitHub's alerts, references, and raw HTML, rendered as on GitHub.
 keywords: callout, alert, admonition, note, tip, important, warning, caution, GFM, GitHub Flavored Markdown, issue links, mentions, raw HTML, sanitize, blockquote
-tagline: Write > [!NOTE], @user, #123, and <sub> as on GitHub, and get the same page anywhere.
+tagline: GitHub's alerts, references, and raw HTML, rendered the way GitHub renders them.
 group: Review blocks
 icon: github
 blurb: 'GitHub''s alerts, references, and HTML'
@@ -70,20 +70,42 @@ The source has a <code>&lt;script&gt;</code> after this sentence. GitHub drops i
 :::
 ::
 
-Three plugins, each one on its own:
+## Features
 
-- `callouts()` draws GitHub's five alerts with an icon, a color, and a title. Text after the marker on its line replaces the title. Comark's built-in [alert plugin](https://comark.dev/plugins/defaults/alert) only tags the quote with its type and leaves the drawing to you.
-- `references({ repo })` links `@user` to the profile and `#123` or `owner/name#123` to the issue or pull request, as GitHub does in comments.
-- `html()` renders raw HTML the way GitHub does. GitHub's tags and attributes stay, and scripts and anything else it doesn't allow go. Comark renders all raw HTML as written.
+- Three plugins, each one on its own, in any order: `callouts()`, `references()`, and `html()`.
+- `callouts()` draws GitHub's five alerts with an icon, a color, and a title. Comark's built-in [alert plugin](https://comark.dev/plugins/defaults/alert) only tags the quote with its type and leaves the drawing to you.
+- `references()` links `@user` to the profile and `#123` or `owner/name#123` to the issue or pull request, as GitHub does in comments.
+- `html()` renders raw HTML the way GitHub does: GitHub's tags and attributes stay, and scripts and anything else it doesn't allow go. Comark renders all raw HTML as written.
+- References and the HTML GitHub allows render as plain elements, so your page's styles apply to them.
 
 ## Usage
 
+Write Markdown as you would on GitHub.
+
+::example
+```md
+> [!TIP]
+> Thanks @onmax: press <kbd>⌘</kbd> <kbd>K</kbd> to search.
+```
+::
+
 ### Callouts
 
+Use a quote whose first line is `[!TYPE]` to draw a callout. The body is any Markdown, over as many lines as it needs.
+
+::example
 ```md
-> [!TYPE] Optional title
-> The body: any Markdown, over as many lines as it needs.
+> [!NOTE]
+> Drafts save every few seconds, so closing the tab keeps your work.
 ```
+::
+
+> [!NOTE]
+> A quote marked with any other type, such as `[!INFO]`, stays a plain quote, and `meta.issues` names it.
+
+#### Type
+
+Use the type to say how much the reader needs the callout. The marker is case-insensitive.
 
 | Type | Use it for |
 | --- | --- |
@@ -93,27 +115,82 @@ Three plugins, each one on its own:
 | `WARNING` | A risk that needs their attention now |
 | `CAUTION` | An action with consequences they can't undo |
 
-The marker is case-insensitive. Callouts work inside lists and other blocks. A quote marked with any other type, such as `[!INFO]`, stays a plain quote, and `meta.issues` names it, with its own rule in [Doctor](/doctor/).
+#### Title
+
+Use text after the marker, on its line, to replace the callout's title.
+
+::example
+```md
+> [!IMPORTANT] Decision
+> Keep the existing endpoint. Clients pin its response shape.
+```
+::
 
 ### References
+
+Use `@user`, `#123`, and `owner/name#123` in text to link to GitHub.
+
+::example
+```md
+Thanks @onmax: this fixes #51, and onmax/comark-ui#73 builds on it.
+```
+::
 
 | Written | Links to |
 | --- | --- |
 | `@user` | `https://github.com/user` |
-| `#123` | `https://github.com/<repo>/issues/123`, when `repo` is set; GitHub redirects it to the pull request when it is one |
+| `#123` | `https://github.com/<repo>/issues/123`, when `repo` is set. GitHub redirects it to the pull request when it is one. |
 | `owner/name#123` | `https://github.com/owner/name/issues/123` |
 
-A reference must stand on its own: `me@example.com`, `C#9`, and `@comark/html` stay text. So does anything in a link or in code.
+> [!NOTE]
+> A reference must stand on its own: `me@example.com`, `C#9`, and `@comark/html` stay text. So does anything in a link or in code. A bare `#123` needs the `repo` [option](#options).
 
 ### HTML
+
+Use raw HTML as GitHub allows it. Anything else goes.
+
+::example
+```md
+Water is H<sub>2</sub>O. <script>alert("hi")</script>
+```
+::
 
 These tags stay, as on GitHub: `a`, `abbr`, `b`, `bdo`, `blockquote`, `br`, `caption`, `cite`, `code`, `dd`, `del`, `details`, `dfn`, `div`, `dl`, `dt`, `em`, `figcaption`, `figure`, `h1` to `h6`, `hr`, `i`, `img`, `ins`, `kbd`, `li`, `mark`, `ol`, `p`, `picture`, `pre`, `q`, `rp`, `rt`, `ruby`, `s`, `samp`, `small`, `source`, `span`, `strike`, `strong`, `sub`, `summary`, `sup`, `table`, `tbody`, `td`, `tfoot`, `th`, `thead`, `time`, `tr`, `tt`, `ul`, `var`, and `wbr`.
 
 - `script` and `style` are removed with their content. Any other tag, such as `iframe`, `form`, or a component's tag, is replaced by its content.
-- Attributes that change the layout or describe the content stay, such as `align`, `width`, `height`, `alt`, `title`, `open`, `colspan`, and `aria-label`, plus `href` on links, `src` and `srcset` on images, and `srcset` and `media` on `source`. `class`, `id`, `style`, and event handlers such as `onclick` go.
+- Attributes that change the layout or describe the content stay, such as `align`, `width`, `height`, `alt`, `title`, `open`, `colspan`, and `aria-label`. So do `href` on links, `src` and `srcset` on images, and `srcset` and `media` on `source`. `class`, `id`, `style`, and event handlers such as `onclick` go.
 - A URL must be relative, http, or https, or mailto in a link. Any other, such as `javascript:` or `data:`, is removed.
 
-Markdown between an HTML tag and its closing tag, after a blank line, renders after the element instead of inside it, until Comark fixes [comark#235](https://github.com/comarkdown/comark/issues/235). Content on the lines right after the opening tag, with no blank line, stays inside, but as plain text.
+> [!NOTE]
+> Markdown between an HTML tag and its closing tag, after a blank line, renders after the element instead of inside it, until Comark fixes [comark#235](https://github.com/comarkdown/comark/issues/235). Content on the lines right after the opening tag, with no blank line, stays inside, but as plain text.
+
+## Examples
+
+### Callouts in another language
+
+Use the `titles` option of `callouts()` to change the default titles, for a site in another language.
+
+```ts
+callouts({ titles: { note: "Nota", warning: "Aviso" } });
+```
+
+### Lists and code in a callout
+
+A callout holds any Markdown. Callouts also work inside lists and other blocks.
+
+::example
+````md
+> [!WARNING] Breaking change in v2
+> `render(markdown)` is gone. Create a renderer once instead:
+>
+> - pass it your `plugins` and `components`
+> - key `components` by tag name
+>
+> ```ts
+> const render = createHtmlRenderer({ plugins, components });
+> ```
+````
+::
 
 ## API
 
@@ -121,11 +198,30 @@ Markdown between an HTML tag and its closing tag, after a blank line, renders af
 
 Options go under `github` in `comarkUi()`, by plugin, such as `comarkUi({ github: { references: { repo: "onmax/comark-ui" } } })`, or to each plugin function when you use it alone. `false` in place of a plugin's options turns that plugin off, and `github: false` turns off all three.
 
-`callouts({ titles: { note: "Nota", warning: "Aviso" } })` changes the default titles, for a site in another language.
+#### callouts()
 
-`references({ repo: "owner/name" })` is the repository a bare `#123` points into. Without it, `#123` stays text, while `@user` and `owner/name#123` still link. `meta.issues` reports a `repo` that isn't `owner/name`, with its own rule in [Doctor](/doctor/).
+| Option | Default | Description |
+| --- | --- | --- |
+| `titles` | GitHub's: Note, Tip, Important, Warning, Caution | Titles for callouts that don't set their own, by type, such as `{ note: "Nota" }`. |
+
+#### references()
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `repo` | — | The repository a bare `#123` points into, as `owner/name`. Without it, `#123` stays text, while `@user` and `owner/name#123` still link. |
+
+#### html()
 
 `html()` takes no options. It keeps GitHub's allowed tags and attributes; [HTML](#html) lists what goes.
+
+### Issues
+
+The plugins add these problems to `meta.issues`, as [Validation](/guide/validation/) describes:
+
+- A quote marked with a type other than GitHub's five, such as `[!INFO]`. It stays a plain quote.
+- A `repo` that isn't `owner/name`. Until it's fixed, `#123` stays text.
+
+Each has its own rule in [Doctor](/doctor/).
 
 ### Package
 
@@ -151,11 +247,9 @@ For Vue, React, or Svelte, import from `comark-github/vue`, `comark-github/react
 
 ## Theme
 
-Callouts follow shadcn/ui's Alert, a bordered card with the icon and title in the type's color. References and the HTML GitHub allows render as plain elements, so your page's styles apply to them. The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
+Callouts follow shadcn/ui's Alert, a bordered card with the icon and title in the type's color. The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
 
 ### Shared tokens
-
-Callouts read these [shared tokens](/guide/theming/):
 
 | Token | Used for |
 | --- | --- |
@@ -167,7 +261,7 @@ Callouts read these [shared tokens](/guide/theming/):
 
 ### Variables
 
-Set them on `.cgc`:
+Set them on `.cgc`. Each color goes to the type's icon and title.
 
 | Variable | Default | Used for |
 | --- | --- | --- |
@@ -177,11 +271,16 @@ Set them on `.cgc`:
 | `--cgc-warning` | `#d97706`, `#fbbf24` in dark mode | `WARNING` |
 | `--cgc-caution` | shadcn/ui's `--destructive`, else `#dc2626`, `#f87171` in dark mode | `CAUTION` |
 
-Each color goes to the type's icon and title.
+### Classes and attributes
 
-### Classes
+| Selector | Is |
+| --- | --- |
+| `.cgc` | A callout, with `data-type`: `note`, `tip`, `important`, `warning`, or `caution` |
+| `.cgc-icon` | The type's icon |
+| `.cgc-title` | The title |
+| `.cgc-body` | The body |
 
-A callout is a `.cgc` with `data-type`: `note`, `tip`, `important`, `warning`, or `caution`. It holds `.cgc-icon`, `.cgc-title`, and `.cgc-body`.
+### Example
 
 ```css
 .cgc {
