@@ -80,6 +80,129 @@ describe("::diff", () => {
     ]);
   });
 
+  it("falls back to whole lines after spending the word budget across separate changes", async () => {
+    const common = "shared ".repeat(300);
+    const before = Array.from({ length: 40 }, (_, i) =>
+      [`before${i} ${common}endBefore${i}`, `anchor ${i}`].join("\n"),
+    ).join("\n");
+    const after = Array.from({ length: 40 }, (_, i) =>
+      [`after${i} ${common}endAfter${i}`, `anchor ${i}`].join("\n"),
+    ).join("\n");
+    const { issues, html } = await run(diff(before, after));
+    expect(issues).toEqual([]);
+    expect(html).toContain("<del>before0</del>");
+    expect(html).toContain("<ins>after0</ins>");
+    expect(html).toContain(`<td class="cd-line">before39 ${common}endBefore39</td>`);
+    expect(html).toContain(`<td class="cd-line">after39 ${common}endAfter39</td>`);
+    const rendered = rows(html);
+    expect(rendered).toHaveLength(120);
+    expect(
+      rendered
+        .filter((row) => !row.startsWith("add "))
+        .map((row) => row.slice(row.indexOf(" ") + 1))
+        .join("\n"),
+    ).toBe(before);
+    expect(
+      rendered
+        .filter((row) => !row.startsWith("del "))
+        .map((row) => row.slice(row.indexOf(" ") + 1))
+        .join("\n"),
+    ).toBe(after);
+  });
+
+  it("trims common words so a small edit in a long line still gets word marks", async () => {
+    const prefix = "leading ".repeat(600);
+    const suffix = " trailing".repeat(600);
+    const { issues, html } = await run(diff(`${prefix}before${suffix}`, `${prefix}after${suffix}`));
+    expect(issues).toEqual([]);
+    expect(html).toContain(`<td class="cd-line">${prefix}<del>before</del>${suffix}</td>`);
+    expect(html).toContain(`<td class="cd-line">${prefix}<ins>after</ins>${suffix}</td>`);
+  });
+
+  it("trims common lines before matching and keeps their line numbers", async () => {
+    const prefix = Array.from({ length: 1100 }, (_, i) => `prefix ${i}`).join("\n");
+    const suffix = Array.from({ length: 1100 }, (_, i) => `suffix ${i}`).join("\n");
+    const { issues, html } = await run(
+      diff(`${prefix}\nbefore\n${suffix}`, `${prefix}\nafter\n${suffix}`, "{line=10}"),
+    );
+    expect(issues).toHaveLength(2);
+    expect(issues.every((issue) => issue.includes("at most 200"))).toBe(true);
+    const rendered = rows(html);
+    expect(rendered).toHaveLength(2202);
+    expect(rendered[0]).toBe("same 10 10 prefix 0");
+    expect(rendered.slice(1100, 1103)).toEqual([
+      "del 1110  before",
+      "add  1110 after",
+      "same 1111 1111 suffix 0",
+    ]);
+    expect(rendered.at(-1)).toBe("same 2210 2210 suffix 1099");
+  });
+
+  it("reports no change even when identical blocks exceed the old line-matching limit", async () => {
+    const same = Array.from({ length: 2100 }, (_, i) => `line ${i}`).join("\n");
+    const { issues, html } = await run(diff(same, same));
+    expect(issues).toHaveLength(3);
+    expect(issues.at(-1)).toContain("before and after are the same");
+    expect(rows(html)).toHaveLength(2100);
+    expect(rows(html).every((row) => row.startsWith("same "))).toBe(true);
+  });
+
+  it("keeps both sides complete when line matching exceeds the budget", async () => {
+    const before = Array.from({ length: 2100 }, (_, i) => `before ${i}`);
+    const after = Array.from({ length: 2100 }, (_, i) => `after ${i}`);
+    const { issues, html } = await run(diff(before.join("\n"), after.join("\n")));
+    expect(issues).toHaveLength(2);
+    expect(rows(html)).toEqual([
+      ...before.map((line) => `del ${line}`),
+      ...after.map((line) => `add ${line}`),
+    ]);
+    expect(html).not.toMatch(/<(?:del|ins)>/);
+  });
+
+  it("keeps repeated context and insertions at either end in order", async () => {
+    for (const [before, after, expected] of [
+      ["repeat\nrepeat", "new\nrepeat\nrepeat", ["add new", "same repeat", "same repeat"]],
+      ["repeat\nrepeat", "repeat\nrepeat\nnew", ["same repeat", "same repeat", "add new"]],
+      [
+        "repeat\nold\nrepeat\nrepeat",
+        "repeat\nnew\nrepeat",
+        ["same repeat", "del old", "del repeat", "add new", "same repeat"],
+      ],
+    ] as const) {
+      expect(rows((await run(diff(before, after))).html)).toEqual(expected);
+    }
+  });
+
+  it("resolves render-time bindings afresh with Shiki in either plugin order", async () => {
+    for (const plugins of [
+      [diffPlugin(), shiki()],
+      [shiki(), diffPlugin()],
+    ]) {
+      const document = await parseMarkdown(
+        diff(
+          "const value = 1",
+          "const value = 2",
+          '{:file="data.file" :line="data.line" :label="data.label"}',
+          "ts",
+        ),
+        { plugins },
+      );
+      expect(document.meta.issues).toEqual([]);
+      for (const line of [3, 20]) {
+        const html = await renderHtmlFromDocument(document, {
+          components,
+          data: { file: `file-${line}.ts`, line, label: `Change ${line}` },
+        });
+        expect(html).toContain(`<span class="cd-file">file-${line}.ts</span>`);
+        expect(html).toContain(`<span class="cd-label">Change ${line}</span>`);
+        expect(html).toContain(`data-line="${line}"`);
+        expect(html).toMatch(/<span style="color:[^"]+"> <del>1<\/del><\/span>/);
+        expect(html).toMatch(/<span style="color:[^"]+"> <ins>2<\/ins><\/span>/);
+        expect(html).not.toContain("<del><del>");
+      }
+    }
+  });
+
   it("shows an empty block as a file added or deleted", async () => {
     for (const highlight of [false, true]) {
       const added = await run(diff("", "export const a = 1", "{line=1}"), highlight);
