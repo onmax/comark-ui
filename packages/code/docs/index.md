@@ -30,19 +30,6 @@ function close() {
 ````
 :::
 
-:::example{label="Pasted diff"}
-````md
-```diff lang="ts"
-@@ -12,4 +12,4 @@ export function close() {
- function close() {
-   dialog.close();
--  history.back();
-+  if (opened) history.back();
- }
-```
-````
-:::
-
 :::example{label="Collapsed lines"}
 ````md
 ```ts [vite.config.ts] collapse={2-7} startLineNumber=1
@@ -220,6 +207,9 @@ Use the `lang` attribute on a `diff` fence to highlight it as that language. Eac
 ::
 
 Paste the output of `git diff` as it is. When the block has `@@` hunk headers, the plugin drops the hunk headers and the file headers before the first hunk. Without `lang`, a `diff` fence stays a diff in Shiki's colors.
+
+> [!TIP]
+> A `diff` fence marks a change inside one block of code. To set the code before and after a change side by side, use [Diff](/diff/).
 
 ## Examples
 
