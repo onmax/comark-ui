@@ -1455,6 +1455,11 @@ ${body}
 const footer = (credits?: string) =>
   `<footer><span>Built on <a href="https://comark.dev">Comark</a>.${credits ? ` ${credits}` : ""}</span><span>Made by <a href="https://onmax.me">Maxi García</a></span></footer>`;
 
+// Every page also has a Markdown copy at its path plus `.md`, as on ui.nuxt.com, for agents and for pasting into a chat.
+const markdownHref = (slug: string) => `/${slug || "index"}.md`;
+const pageActions = (slug: string) =>
+  `<div class="page-actions"><button type="button" class="button copy-page" data-markdown="${markdownHref(slug)}"><span class="copy-page-icon">${copyIcon}${checkIcon}</span>Copy page</button><a class="button" href="${markdownHref(slug)}">View as Markdown</a></div>`;
+
 // The landing page, as on vitehub.dev: the headline beside the install command, the packages, the example, and Drop.
 await writeFile(
   new URL("index.html", dist),
@@ -1465,7 +1470,7 @@ await writeFile(
     title: `${landing.title} · ${landing.description}`,
     description: landing.tagline,
     body: `<div class="landing">
-<div class="landing-hero enter"><div><h1>${escapeHtml(landing.headline)}</h1><p>${escapeHtml(landing.tagline)}</p></div>
+<div class="landing-hero enter"><div><h1>${escapeHtml(landing.headline)}</h1><p>${escapeHtml(landing.tagline)}</p>${pageActions("")}</div>
 <div>${installerFor(landing.install)}<div class="actions"><a class="button primary" href="/play/">${siteIcon("flask-conical", 15)}Open the playground</a><a class="button" href="/guide/renderers/">Read the docs${siteIcon("arrow-right", 15)}</a></div></div></div>
 <main class="enter" style="--i:1">${await renderHtmlFromDocument(landing.document, { components: { ...components, packages: packageGrid, drop, hero } })}</main>
 ${footer()}
@@ -1474,11 +1479,6 @@ ${footer()}
   }),
 );
 console.log("docs/dist/index.html written");
-
-// Every page also has a Markdown copy at its path plus `.md`, as on ui.nuxt.com, for agents and for pasting into a chat.
-const markdownHref = (slug: string) => `/${slug || "index"}.md`;
-const pageActions = (slug: string) =>
-  `<div class="page-actions"><button type="button" class="button copy-page" data-markdown="${markdownHref(slug)}"><span class="copy-page-icon">${copyIcon}${checkIcon}</span>Copy page</button><a class="button" href="${markdownHref(slug)}">View as Markdown</a></div>`;
 
 for (const page of parsed) {
   const out = new URL(`${page.slug}/`, dist);

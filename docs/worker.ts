@@ -17,7 +17,10 @@ const RENAMED: Record<string, string> = {
 };
 
 export default {
-  async fetch(request: Request, env: { ASSETS: { fetch: (request: Request) => Promise<Response> } }) {
+  async fetch(
+    request: Request,
+    env: { ASSETS: { fetch: (request: Request) => Promise<Response> } },
+  ) {
     const url = new URL(request.url);
     const prefix = MOVED[url.hostname];
     if (prefix === undefined) {
