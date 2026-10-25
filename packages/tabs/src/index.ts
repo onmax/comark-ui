@@ -9,7 +9,7 @@ import {
   type IconData,
   type Icons,
 } from "comark-icon";
-import { defaultManagers, hasCommand, translate, type PackageManager } from "./npm2yarn.ts";
+import { defaultManagers, translate, writtenIn, type PackageManager } from "./managers.ts";
 
 export type { PackageManager };
 
@@ -25,7 +25,7 @@ export type TabsOptions = {
    */
   iconResolver?: Icons;
   /**
-   * The tabs an `npm2yarn` code block becomes, in order. Defaults to npm, pnpm, yarn, and bun; add `"deno"` for Deno.
+   * The tabs a `pm` code block becomes, in order. Defaults to npm, pnpm, yarn, and bun; add `"deno"` for Deno.
    */
   managers?: PackageManager[];
 };
@@ -86,7 +86,7 @@ interface Walk {
   groups: number;
   strays: number;
   blocks: number;
-  npm2yarn: number;
+  pm: number;
   managers: PackageManager[];
   prefix: string;
 }
@@ -102,7 +102,7 @@ function hash(text: string) {
 
 // `icon=logos:pnpm` after a code block's label, quoted or not.
 const ICON = /(?:^|\s)icon=(?:"([^"]*)"|'([^']*)'|(\S+))(?=\s|$)/;
-const NPM2YARN = /(?:^|\s)npm2yarn(?=\s|$)/;
+const PM = /(?:^|\s)pm(?=\s|$)/;
 const or = new Intl.ListFormat("en", { type: "disjunction" });
 
 const resolve = (node: ElementNode, walk: Walk) =>
@@ -129,8 +129,8 @@ function codeGroup(node: ElementNode, name: string, walk: Walk) {
     }
     // The tab names the block, so its own title bar doesn't repeat it.
     delete child[1].filename;
-    // A block in a code group is one tab already, so `npm2yarn` doesn't split it again.
-    const meta = text(child[1].meta).replace(NPM2YARN, " ");
+    // A block in a code group is one tab already, so `pm` doesn't split it again.
+    const meta = text(child[1].meta).replace(PM, " ");
     const icon = ICON.exec(meta);
     const rest = (icon ? meta.replace(icon[0], " ") : meta).trim();
     if (rest) child[1].meta = rest;
@@ -212,17 +212,18 @@ function tabs(node: ElementNode, walk: Walk, name?: string) {
   node.splice(2, node.length - 2, ...items);
 }
 
-// An `npm2yarn` code block of npm commands becomes a code group with a tab per package manager, synced with the
+// A `pm` code block of package manager commands becomes a code group with a tab per package manager, synced with the
 // page's other `sync="pm"` blocks. A manager with no form for one of its commands gets no tab.
 function packageManagers(node: ElementNode, walk: Walk) {
-  const name = `\`npm2yarn\` block ${++walk.npm2yarn}`;
+  const name = `\`pm\` block ${++walk.pm}`;
   const attrs = { ...node[1] };
-  const meta = text(attrs.meta).replace(NPM2YARN, " ").trim();
+  const meta = text(attrs.meta).replace(PM, " ").trim();
   if (meta) attrs.meta = meta;
   else delete attrs.meta;
   const code = childrenOf(node)[0];
   const codeAttrs = isElement(code) ? code[1] : {};
   const source = textContent(node);
+  const written = writtenIn(source);
   const blocks: ElementNode[] = [];
   const failed = new Map<string, PackageManager[]>();
   for (const manager of walk.managers) {
@@ -236,13 +237,13 @@ function packageManagers(node: ElementNode, walk: Walk) {
         ["code", { ...codeAttrs }, result.code],
       ]);
   }
-  // The block is written in npm, so npm always keeps a tab when another manager loses one.
-  if (failed.size && !blocks.some((block) => block[1].filename === "npm"))
-    blocks.unshift(["pre", { ...attrs, filename: "npm" }, ["code", { ...codeAttrs }, source]]);
-  if (!hasCommand(source))
+  // The manager the block is written in keeps a tab when another manager loses one, so its readers still see it.
+  if (written && failed.size && !blocks.some((block) => block[1].filename === written))
+    blocks.unshift(["pre", { ...attrs, filename: written }, ["code", { ...codeAttrs }, source]]);
+  if (!written)
     walk.issues.push({
-      rule: "comark/tabs/no-npm-command",
-      message: `${name} has no npm or npx command, so every tab shows the same code. Write the commands in npm, such as \`npm install\`.`,
+      rule: "comark/tabs/no-manager-command",
+      message: `${name} has no package manager command, so every tab shows the same code. Write a command such as \`npm install\` or \`pnpm add\`.`,
     });
   for (const [command, managers] of failed)
     walk.issues.push({
@@ -293,7 +294,7 @@ function normalize(nodes: Node[], walk: Walk, inTabs = false) {
       node[0] = "div";
       node[1] = {};
     }
-    if (node[0] === "pre" && NPM2YARN.test(text(node[1].meta))) packageManagers(node, walk);
+    if (node[0] === "pre" && PM.test(text(node[1].meta))) packageManagers(node, walk);
     else if (node[0] === "tabs" || node[0] === "code-group") tabs(node, walk);
     normalize(childrenOf(node), walk, node[0] === "tabs");
   }
@@ -301,7 +302,7 @@ function normalize(nodes: Node[], walk: Walk, inTabs = false) {
 
 /**
  * Turns `::tabs` with `:::tabs-item{label}` blocks, `::code-group` with labelled code blocks, and code blocks marked
- * `npm2yarn`, into tabs. Without a script every tab shows under its label; the script adds the tab strip, keys, and
+ * `pm`, into tabs. Without a script every tab shows under its label; the script adds the tab strip, keys, and
  * `sync`. Problems, such as content outside every tab, are added to `meta.issues`.
  */
 export default defineComarkPlugin<TabsOptions, TabsMeta>((options = {}) => {
@@ -321,7 +322,7 @@ export default defineComarkPlugin<TabsOptions, TabsMeta>((options = {}) => {
         groups: 0,
         strays: 0,
         blocks: 0,
-        npm2yarn: 0,
+        pm: 0,
         managers: options.managers ?? defaultManagers,
         prefix: `ct-${hash(state.markdown)}`,
       };
