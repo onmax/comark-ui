@@ -1,6 +1,5 @@
 import { createHtmlRenderer } from "@comark/html";
 import { describe, expect, it } from "vite-plus/test";
-import html from "../src/html.ts";
 import { nuxtUiTheme } from "../src/nuxt-ui.ts";
 
 describe("nuxtUiTheme", () => {
@@ -48,6 +47,35 @@ describe("nuxtUiTheme", () => {
     expect(css).toContain("--color-stone-950:oklch(14.7% 0.004 49.25)");
   });
 
+  it("preserves global overrides in explicit and system dark mode", () => {
+    const { css, issues } = nuxtUiTheme({
+      css: `:root { --ui-primary: black; --ui-bg: ivory; }
+.light { --ui-primary: purple; }
+.dark { --ui-bg: midnightblue; }`,
+    });
+    expect(issues).toEqual([]);
+    const declarations = (selector: string) => {
+      const start = css.indexOf(`${selector}{`);
+      expect(start).toBeGreaterThanOrEqual(0);
+      return Object.fromEntries(
+        css
+          .slice(start + selector.length + 1, css.indexOf("}", start))
+          .split(";")
+          .map((entry) => entry.split(":")),
+      );
+    };
+    expect(declarations(":root,.light")).toMatchObject({
+      "--ui-primary": "purple",
+      "--ui-bg": "ivory",
+    });
+    for (const selector of [".dark", ":root:not(.light)"]) {
+      expect(declarations(selector)).toMatchObject({
+        "--ui-primary": "black",
+        "--ui-bg": "midnightblue",
+      });
+    }
+  });
+
   it("names a color it can't resolve", () => {
     const { css, issues } = nuxtUiTheme({ colors: { primary: "brand" } });
     expect(issues).toEqual([
@@ -59,6 +87,7 @@ describe("nuxtUiTheme", () => {
 
 describe("the plugins' styles", () => {
   it("fall back to Nuxt UI's variables", async () => {
+    const { default: html } = await import("../src/html.ts");
     const render = createHtmlRenderer(
       html({ chips: { download: false }, icon: { fetch: false }, diagrams: { draw: false } }),
     );

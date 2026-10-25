@@ -1,5 +1,5 @@
 // Tailwind 4.3's palette, which Nuxt UI resolves `app.config` colors from. Shades 50, 100, 200 to 900, and 950.
-export const palette: Record<string, readonly string[]> = {
+export const palette = {
   slate: [
     "98.4% 0.003 247.858",
     "96.8% 0.007 247.896",
@@ -338,4 +338,4 @@ export const palette: Record<string, readonly string[]> = {
     "41% 0.159 10.272",
     "27.1% 0.105 12.094",
   ],
-};
+} satisfies Record<string, readonly string[]>;

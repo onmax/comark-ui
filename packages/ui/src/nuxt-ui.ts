@@ -7,9 +7,10 @@ export type NuxtUiTheme = {
   css?: string;
 };
 
+const paletteByName = new Map(Object.entries(palette));
 const shades = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950];
 
-// Nuxt UI 4.12's defaults, from its module and `runtime/index.css`. A number is a shade of the neutral color.
+// Nuxt UI 4.12's defaults, from its module and `runtime/index.css`.
 const defaultColors = {
   primary: "green",
   secondary: "blue",
@@ -20,37 +21,37 @@ const defaultColors = {
   neutral: "slate",
 };
 const light = {
-  "text-dimmed": 400,
-  "text-muted": 500,
-  "text-toned": 600,
-  text: 700,
-  "text-highlighted": 900,
+  "text-dimmed": "var(--ui-color-neutral-400)",
+  "text-muted": "var(--ui-color-neutral-500)",
+  "text-toned": "var(--ui-color-neutral-600)",
+  text: "var(--ui-color-neutral-700)",
+  "text-highlighted": "var(--ui-color-neutral-900)",
   "text-inverted": "#fff",
   bg: "#fff",
-  "bg-muted": 50,
-  "bg-elevated": 100,
-  "bg-accented": 200,
-  "bg-inverted": 900,
-  border: 200,
-  "border-muted": 200,
-  "border-accented": 300,
-  "border-inverted": 900,
+  "bg-muted": "var(--ui-color-neutral-50)",
+  "bg-elevated": "var(--ui-color-neutral-100)",
+  "bg-accented": "var(--ui-color-neutral-200)",
+  "bg-inverted": "var(--ui-color-neutral-900)",
+  border: "var(--ui-color-neutral-200)",
+  "border-muted": "var(--ui-color-neutral-200)",
+  "border-accented": "var(--ui-color-neutral-300)",
+  "border-inverted": "var(--ui-color-neutral-900)",
 };
 const dark = {
-  "text-dimmed": 500,
-  "text-muted": 400,
-  "text-toned": 300,
-  text: 200,
+  "text-dimmed": "var(--ui-color-neutral-500)",
+  "text-muted": "var(--ui-color-neutral-400)",
+  "text-toned": "var(--ui-color-neutral-300)",
+  text: "var(--ui-color-neutral-200)",
   "text-highlighted": "#fff",
-  "text-inverted": 900,
-  bg: 900,
-  "bg-muted": 800,
-  "bg-elevated": 800,
-  "bg-accented": 700,
+  "text-inverted": "var(--ui-color-neutral-900)",
+  bg: "var(--ui-color-neutral-900)",
+  "bg-muted": "var(--ui-color-neutral-800)",
+  "bg-elevated": "var(--ui-color-neutral-800)",
+  "bg-accented": "var(--ui-color-neutral-700)",
   "bg-inverted": "#fff",
-  border: 800,
-  "border-muted": 700,
-  "border-accented": 700,
+  border: "var(--ui-color-neutral-800)",
+  "border-muted": "var(--ui-color-neutral-700)",
+  "border-accented": "var(--ui-color-neutral-700)",
   "border-inverted": "#fff",
 };
 const charts = ["blue", "violet", "amber", "rose", "cyan"];
@@ -67,7 +68,7 @@ export function nuxtUiTheme(theme: NuxtUiTheme = {}): { css: string; issues: str
 
   // Nuxt UI renames Tailwind's neutral to old-neutral, since its own neutral follows `ui.colors.neutral`.
   const shade = (name: string, step: number) => {
-    const value = palette[name]?.[shades.indexOf(step)];
+    const value = paletteByName.get(name)?.[shades.indexOf(step)];
     return (
       source.theme.get(`--color-${name === "neutral" ? "old-neutral" : name}-${step}`) ??
       (value ? `oklch(${value})` : undefined)
@@ -87,23 +88,16 @@ export function nuxtUiTheme(theme: NuxtUiTheme = {}): { css: string; issues: str
   const font = source.theme.get("--font-sans");
   if (font) root.set("--font-sans", font);
 
-  const scheme = (
-    base: Record<string, string | number>,
-    step: 500 | 400,
-    own: Map<string, string>,
-  ) => {
+  const scheme = (base: Record<string, string>, step: 500 | 400, own: Map<string, string>) => {
     const vars = new Map<string, string>();
     for (const key of Object.keys(colors))
       if (key !== "neutral") vars.set(`--ui-${key}`, `var(--ui-color-${key}-${step})`);
-    for (const [key, value] of Object.entries(base))
-      vars.set(
-        `--ui-${key}`,
-        typeof value === "number" ? `var(--ui-color-neutral-${value})` : value,
-      );
+    for (const [key, value] of Object.entries(base)) vars.set(`--ui-${key}`, value);
     vars.set("--ui-chart-1", "var(--ui-primary)");
     charts.forEach((name, index) =>
       vars.set(`--ui-chart-${index + 2}`, `var(--color-${name}-${step})`),
     );
+    for (const [name, value] of source.root) vars.set(name, value);
     for (const [name, value] of own) vars.set(name, value);
     return vars;
   };
@@ -151,6 +145,7 @@ function definedColors(colors: NuxtUiTheme["colors"] = {}) {
 function read(css: string) {
   const blocks = {
     theme: new Map<string, string>(),
+    root: new Map<string, string>(),
     light: new Map<string, string>(),
     dark: new Map<string, string>(),
   };
@@ -161,9 +156,11 @@ function read(css: string) {
       ? "theme"
       : /\.dark\b/.test(selector!)
         ? "dark"
-        : /:root|:host|\.light\b|^\s*html\s*$/.test(selector!)
-          ? "light"
-          : undefined;
+        : /:root|:host|^\s*html\s*$/.test(selector!)
+          ? "root"
+          : /\.light\b/.test(selector!)
+            ? "light"
+            : undefined;
     if (!kind) continue;
     for (const [, name, value] of body!.matchAll(/(--[\w-]+)\s*:\s*([^;]+)/g))
       if (kind === "theme" || name!.startsWith("--ui-")) blocks[kind].set(name!, value!.trim());
