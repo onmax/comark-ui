@@ -1,22 +1,57 @@
-<p align="center">
-  <img src="https://comark-ui.onmax.me/og/readme-banner.png" alt="comark ui: review documents, written in Markdown" width="100%">
-</p>
+<h1>
+  <img src="./.github/banner.svg" alt="Comark UI: The Component Library for Markdown" width="100%">
+</h1>
 
-# comark-ui
+[![release](https://img.shields.io/github/v/release/onmax/comark-ui?label=release&labelColor=0a0a0a&color=e5484d)](https://github.com/onmax/comark-ui/releases)
+[![license](https://img.shields.io/github/license/onmax/comark-ui?labelColor=0a0a0a&color=525252)](./LICENSE)
+[![docs](https://img.shields.io/badge/docs-comark--ui.onmax.me-14b8a6?labelColor=0a0a0a)](https://comark-ui.onmax.me)
 
-Plugins for review documents, built on [Comark](https://comark.dev). This is an independent project by [@onmax](https://github.com/onmax), not made by the Comark team.
+Comark UI is a free, open source library built on [Comark](https://comark.dev), with 40+ blocks for docs, reviews, and agent reports. Write tabs, cards, charts, annotated screenshots, and more in Markdown. Install them together with [`comark-ui`](./packages/ui), or use individual packages.
 
-Install [`comark-ui`](./packages/ui) to get every block below in one package, registered in the order they need:
+[Documentation](https://comark-ui.onmax.me) · [Getting started](https://comark-ui.onmax.me/getting-started/) · [Playground](https://comark-ui.onmax.me/play/)
+
+An independent project by [@onmax](https://github.com/onmax).
+
+## Get started
+
+Install Comark UI with the HTML renderer:
 
 ```sh
 pnpm add comark @comark/html comark-ui
 ```
 
-Each block is also published on its own, and all of them share one version.
+```ts
+import { createHtmlRenderer } from "@comark/html";
+import comarkUi from "comark-ui/html";
+
+const render = createHtmlRenderer(comarkUi());
+const html = await render(`
+::card{title="Getting started"}
+Write your docs in Markdown, with components when you need them.
+::
+`);
+```
+
+Comark UI registers the plugins and components in the order they need. Every plugin is enabled except `include`, which reads files from disk. Pass `false` to disable a plugin, or an object to configure it:
+
+```ts
+comarkUi({
+  zoom: false,
+  code: { actions: [{ id: "run", label: "Run" }] },
+});
+```
+
+HTML, Vue, React, and Svelte have their own entries: `comark-ui/html`, `comark-ui/vue`, `comark-ui/react`, and `comark-ui/svelte`. Annotate and diff are HTML-only. See [renderers](https://comark-ui.onmax.me/guide/renderers/) for framework setup and [theming](https://comark-ui.onmax.me/guide/theming/) to change the shared styles.
+
+## Components
+
+Browse the [docs and live examples](https://comark-ui.onmax.me) for component syntax and options. Each component page also shows how to install its package alone. All packages share one version.
+
+<details>
+<summary>Individual packages</summary>
 
 | Package | What it does |
 | --- | --- |
-| [`comark-ui`](./packages/ui) | Every block below in one install, registered in order with one icon resolver. |
 | [`comark-annotate`](./packages/annotate) | Hand-drawn marks, numbered notes, and arrows on screenshots, and before/after comparisons. |
 | [`comark-badge`](./packages/badge) | Badges for versions and statuses, inline as `:badge[deprecated]{color="warning"}` or as Nuxt UI's block `::badge`, in Nuxt UI's seven colors. |
 | [`comark-cards`](./packages/cards) | Cards, link cards, and columns in Nuxt UI's syntax, with no script. |
@@ -44,7 +79,6 @@ Each block is also published on its own, and all of them share one version.
 | [`comark-links`](./packages/links) | A `#` link beside each heading, and external links with the `target` and `rel` you choose and a warning before a new tab. |
 | [`comark-media`](./packages/media) | Videos and audio written as images, and GitHub attachment links that play, with no script. |
 | [`comark-metrics`](./packages/metrics) | Before → after numbers with the percent change, progress bars, and tables of metrics with a change column. |
-| [`comark-linter`](./packages/lint) | Finds unclosed blocks, unknown components, broken links and anchors, local URLs, and plugin issues in Comark documents, from a script, the command line, or Vite Doctor. |
 | [`comark-include`](./packages/include) | Markdown partials and code snippets from files, by lines or by region. |
 | [`comark-mark`](./packages/mark) | `==highlighted text==` as `<mark>` and `^superscript^` as `<sup>`. |
 | [`comark-properties`](./packages/properties) | Chosen frontmatter keys, such as status, pull request, author, date, and tags, as a properties box at the top of a document. |
@@ -60,7 +94,17 @@ Each block is also published on its own, and all of them share one version.
 | [`comark-xref`](./packages/xref) | Numbered figures and tables, and `:ref{#fig-x}` references that read "Figure 1". |
 | [`comark-zoom`](./packages/zoom) | Zoom images and any block like medium-zoom, with Escape, Back, and click-outside to close. |
 
-Docs and live demos: [comark-ui.onmax.me](https://comark-ui.onmax.me).
+</details>
+
+## Linting
+
+Install [`comark-linter`](./packages/lint) separately to check documents for unclosed blocks, unknown components, broken links, and plugin issues:
+
+```sh
+pnpm add -D comark-linter
+```
+
+It detects your installed `comark-ui` and checks documents with its plugins. Use it from the [CLI, a script, or Vite Doctor](https://comark-ui.onmax.me/lint/).
 
 ## Agents
 

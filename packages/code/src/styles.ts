@@ -19,6 +19,7 @@ const terminal = ".ck[data-code-frame=terminal]:not([data-tabs-code] .ck)";
  */
 export const css = `${icons}@layer comark{${[
   theme(".ck"),
+  ".ck>pre{border-radius:var(--_comark-radius)}",
   // No padding, border, or new formatting context, so the block's own margins collapse through the wrapper and the
   // header's top edge is the block's.
   ".ck{position:relative;--_ck-size:var(--ck-button-size,1.5rem);--_ck-inset:var(--ck-inset,.375rem);--_ck-bar:calc(var(--_ck-size) + 2 * var(--_ck-inset))}",

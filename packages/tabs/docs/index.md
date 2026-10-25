@@ -2,7 +2,7 @@
 title: Tabs
 description: Tabs and code groups, written in Markdown.
 keywords: tab, code group, code-group, package manager, npm, pnpm, yarn, bun, switcher, language tabs
-tagline: Tabs of any content, code blocks grouped by package manager or language, and npm commands in every package manager, that switch together across the page.
+tagline: Tabs of any content and code groups that switch together across the page, and npm commands in every package manager.
 group: Page behavior
 icon: panels-top-left
 blurb: Tabs and code groups
@@ -69,17 +69,17 @@ npm install -D comark-tabs
 :::
 ::
 
-Without a script, every tab shows under its label, one after another. The script adds:
+## Features
 
-- The tab strip, whose highlight slides to the tab you pick.
-- Arrow keys to move between tabs.
-- `sync`, which switches every block with the same key at once and remembers the choice.
+- Each `:::tabs-item` inside `::tabs` is a tab, and it holds any Markdown, even other tabs.
+- `::code-group` turns code blocks into tabs named by the label after their language.
+- A code block marked `npm2yarn` becomes a tab for each package manager.
+- Blocks with the same `sync` key switch together, and the choice is remembered on the next visit.
+- Without a script, every tab shows under its label, one after another. The script adds the tab strip, whose highlight slides to the tab you pick, and the arrow keys.
 
 ## Usage
 
-### tabs
-
-Each `:::tabs-item` inside `::tabs` is a tab, named by its `label`.
+Put `:::tabs-item` blocks inside `::tabs`. Each one is a tab.
 
 ::example
 ```md
@@ -95,83 +95,52 @@ Each `:::tabs-item` inside `::tabs` is a tab, named by its `label`.
 ```
 ::
 
-| Prop | |
-| --- | --- |
-| `sync` | A key shared by blocks that switch together. Picking a tab picks the tab with the same label in every block with that key, now and on the next visit. |
+### Label
 
-### tabs-item
+Use the `label` prop to name a tab.
 
-One tab. It holds any Markdown, even other tabs.
-
-| Prop | |
-| --- | --- |
-| `label` | The tab's name, required. Labels in one block must differ. |
-| `icon` | An [Iconify](https://icones.js.org) name such as `lucide:apple`, or an image URL, drawn by [comark-icon](/icon/) before the label. See [Icons](#icons). |
-
-### code-group
-
-Code blocks as tabs, each named by the label in brackets after its language. The label becomes the tab, so the code block doesn't repeat it, and the tabs sit in a header joined to the block. Without a script, each block keeps its label as a header of its own.
-
-::example
-````md
-::code-group{sync="pm"}
-```sh [pnpm]
-pnpm add comark-tabs
+```md
+:::tabs-item{label="macOS"}
+Press **⌘K** to search.
+:::
 ```
 
-```sh [npm]
-npm install comark-tabs
-```
-::
-````
-::
-
-| Prop | |
-| --- | --- |
-| `sync` | As on `::tabs`. A code group and tabs with the same key switch together. |
-
-A code block takes an icon after its label, as `icon=logos:pnpm`.
-
-### npm2yarn
-
-A code block with `npm2yarn` after its language holds npm commands and becomes a code group with a tab for each package manager: npm, pnpm, yarn, and bun. It has `sync="pm"`, so it switches with the code groups you write with that key.
-
-::example
-````md
-```sh npm2yarn
-npm install -D comark-tabs
-npx nuxi@latest module add ui
-```
-````
-::
-
-Only lines that start with `npm` or `npx`, or commands after `&&`, `||`, or `;`, change, so `cd my-npm-app` stays as written. [npm-to-yarn](https://github.com/nebrelbug/npm-to-yarn) converts them, and bun's tab writes `bunx` and `bun create` as Bun's docs do. In a `::code-group` the block is one tab already, and `npm2yarn` does nothing. Set the managers with the [`managers` option](#package-managers).
-
-## Examples
-
-### Keys
-
-The tabs follow the [WAI-ARIA tabs pattern](https://www.w3.org/WAI/ARIA/apg/patterns/tabs/). Tab moves focus into the strip and on to the open panel. The left and right arrow keys move between tabs and open them. They wrap at the ends and follow the reading direction. Home and End go to the first and last tab.
+> [!NOTE]
+> Every tab needs a `label`, and labels in one block must differ, because `sync` matches tabs by label. A missing or repeated label is reported.
 
 ### Sync
 
-Blocks with the same `sync` switch together by label, so `::code-group{sync="pm"}` on every install snippet keeps the reader's package manager. The script saves the choice in `localStorage` under `comark-tabs:` and the key, and restores it on the next page that uses it.
+Use the `sync` prop to switch blocks together. Picking a tab picks the tab with the same label in every block with that key, now and on the next visit. Tabs and code groups with the same key switch together.
 
-When a switch changes the height of blocks above the one the reader clicked, the page scrolls by as much, so the tab stays under the pointer.
+::example
+```md
+::tabs{sync="os"}
+:::tabs-item{label="macOS"}
+Press **⌘K** to find the pigeon data.
+:::
 
-### Package managers
+:::tabs-item{label="Windows"}
+Press **Ctrl+K** to find the pigeon data.
+:::
+::
 
-A code block marked `npm2yarn` gets a tab for npm, pnpm, yarn, and bun, in that order. Set others, in the order you want, with `managers`; Deno is there to add:
+::tabs{sync="os"}
+:::tabs-item{label="macOS"}
+Pigeon data lives in `~/Library/Pigeons`.
+:::
 
-```ts
-tabs({ managers: ["pnpm", "npm", "yarn", "bun", "deno"] });
+:::tabs-item{label="Windows"}
+Pigeon data lives in `%APPDATA%\Pigeons`.
+:::
+::
 ```
+::
 
-A command a manager has no form for, such as `npm ci` in pnpm, leaves that manager's tab out, keeps npm's, and adds an issue. Write that block as a `::code-group{sync="pm"}` by hand. Register comark-tabs before Shiki, so Shiki highlights every tab it adds.
+The script saves the choice in `localStorage` under `comark-tabs:` and the key, and restores it on the next page that uses it. When a switch changes the height of blocks above the one the reader clicked, the page scrolls by as much, so the tab stays under the pointer.
 
-### Icons
+### Icon
 
-Give a tab an `icon`, either an Iconify name, such as `lucide:apple` or `logos:pnpm`, or the URL of an image. [comark-icon](/icon/) resolves it while parsing and draws it. The icon shows before the label in the strip, shows without the script, and looks and sizes like an `:icon`.
+Use the `icon` prop to draw an icon before a tab's label. It takes an [Iconify](https://icones.js.org) name, such as `lucide:apple` or `logos:pnpm`, or the URL of an image. [comark-icon](/icon/) resolves it while parsing and draws it. The icon shows without the script too, and looks and sizes like an `:icon`.
 
 ::example
 ```md
@@ -187,7 +156,59 @@ Press **Ctrl+K** to search.
 ```
 ::
 
-Set icons once for every block with `icons`, by label, for tabs that don't set their own. Icons come from the Iconify API by default. Pass the resolver the page's `:icon` uses as `iconResolver`, so they share its sets and `fetch`:
+In a code group, write a code block's icon after its label, as `icon=logos:pnpm`.
+
+### Code group
+
+Use `::code-group` to show code blocks as tabs. Each tab is named by the label in brackets after the block's language. The label becomes the tab, so the code block doesn't repeat it, and the tabs sit in a header joined to the block. Without a script, each block keeps its label as a header of its own.
+
+::example
+````md
+::code-group{sync="pm"}
+```sh [pnpm]
+pnpm add comark-tabs
+```
+
+```sh [npm]
+npm install comark-tabs
+```
+::
+````
+::
+
+> [!NOTE]
+> Only code blocks go inside a code group, and each one needs a label. Anything else is reported.
+
+### npm2yarn
+
+Use the `npm2yarn` word after a code block's language to turn npm commands into a code group with a tab for each package manager: npm, pnpm, yarn, and bun. The group has `sync="pm"`, so it switches with the code groups you write with that key.
+
+::example
+````md
+```sh npm2yarn
+npm install -D comark-tabs
+npx nuxi@latest module add ui
+```
+````
+::
+
+Only lines that start with `npm` or `npx`, or commands after `&&`, `||`, or `;`, change, so `cd my-npm-app` stays as written. [npm-to-yarn](https://github.com/nebrelbug/npm-to-yarn) converts them, and bun's tab writes `bunx` and `bun create` as Bun's docs do. In a `::code-group` the block is one tab already, and `npm2yarn` does nothing. Set the managers with the [`managers` option](#choose-the-package-managers).
+
+## Examples
+
+### Choose the package managers
+
+A code block marked `npm2yarn` gets a tab for npm, pnpm, yarn, and bun, in that order. Use the `managers` option to set others, in the order you want. Deno is there to add:
+
+```ts
+tabs({ managers: ["pnpm", "npm", "yarn", "bun", "deno"] });
+```
+
+A command a manager has no form for, such as `npm ci` in pnpm, leaves that manager's tab out, keeps npm's, and adds an issue. Write that block as a `::code-group{sync="pm"}` by hand. Register comark-tabs before Shiki, so Shiki highlights every tab it adds.
+
+### Icons for every block
+
+Use the `icons` option to set icons once for every block, by label, for tabs that don't set their own. Icons come from the Iconify API by default. Pass the resolver the page's `:icon` uses as `iconResolver`, so they share its sets and `fetch`:
 
 ```ts
 import { icons as logos } from "@iconify-json/logos";
@@ -203,7 +224,66 @@ const plugins = [
 
 Size them with `--comark-icon-size`, and style them as [comark-icon's theme](/icon/#theme) describes.
 
-### Validation
+### Zoom images in tabs
+
+Images in tabs zoom with [comark-zoom](/zoom/) like any other image. A gallery or zoom group only pages through what's shown, so images in closed tabs stay out of it.
+
+## Accessibility
+
+The tabs follow the [WAI-ARIA tabs pattern](https://www.w3.org/WAI/ARIA/apg/patterns/tabs/). The strip is a tab list, and each tab is a button that screen readers announce as a tab, with whether it's selected. Each panel is a tab panel named by its tab.
+
+Only the open tab is a tab stop. Tab moves focus into the strip, then on to the open panel. The arrow keys move between tabs and open each one as focus lands on it.
+
+Without the script, the strip is hidden and every panel shows under its label, so a screen reader reads them one after another.
+
+### Keyboard interactions
+
+| Key | Description |
+| --- | --- |
+| `Tab` | Moves focus to the open tab, then to the open panel. |
+| `ArrowRight` | Moves focus to the next tab and opens it. From the last tab, wraps to the first. |
+| `ArrowLeft` | Moves focus to the previous tab and opens it. From the first tab, wraps to the last. |
+| `Home` | Moves focus to the first tab and opens it. |
+| `End` | Moves focus to the last tab and opens it. |
+
+On a right-to-left page, the arrow keys follow the reading direction. The keys do nothing when pressed with Alt, Ctrl, or Meta.
+
+## API
+
+### Props
+
+#### Tabs
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| `sync` | — | A key shared by blocks that switch together. Picking a tab picks the tab with the same label in every block with that key, now and on the next visit. |
+
+#### Tabs item
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| `label` | — | The tab's name. Required. Labels in one block must differ. |
+| `icon` | — | An [Iconify](https://icones.js.org) name such as `lucide:apple`, or an image URL, drawn by [comark-icon](/icon/) before the label. |
+
+#### Code group
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| `sync` | — | As on `::tabs`. A code group and tabs with the same key switch together. |
+
+Each code block in a code group takes its label in brackets after its language, such as `[pnpm]`, and an icon after it, as `icon=logos:pnpm`.
+
+### Options
+
+The options go under `tabs` in `comarkUi()`, or to `tabs()` when you use it alone.
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `managers` | `["npm", "pnpm", "yarn", "bun"]` | The tabs an `npm2yarn` code block becomes, in order. Add `"deno"` for Deno. See [Choose the package managers](#choose-the-package-managers). |
+| `icons` | `{}` | Icons for tabs that don't set one, by label, such as `{ pnpm: "logos:pnpm" }`. Labels match without regard to case. Each value is an Iconify name or an image URL, like the `icon` prop. See [Icons for every block](#icons-for-every-block). |
+| `iconResolver` | The Iconify API | Resolves the icons, from `createIcons()` in comark-icon. Pass the one the page's other plugins use, so they share its `collections` and `fetch`. comark-ui passes the one its `icon` uses. |
+
+### Issues
 
 The plugin adds a problem with any block to `meta.issues`, as [Validation](/guide/validation/) describes:
 
@@ -223,20 +303,6 @@ It reports:
 - A prop the block doesn't read.
 
 Each one has its own rule in [Doctor](/doctor/). Rendering never throws.
-
-### Zoom
-
-Images in tabs zoom with [comark-zoom](/zoom/) like any other image. A gallery or zoom group only pages through what's shown, so images in closed tabs stay out of it.
-
-## API
-
-The options go under `tabs` in `comarkUi()`, or to `tabs()` when you use it alone.
-
-| Option | Default | |
-| --- | --- | --- |
-| `managers` | `["npm", "pnpm", "yarn", "bun"]` | The tabs an `npm2yarn` code block becomes, in order. Add `"deno"` for Deno. See [Package managers](#package-managers). |
-| `icons` | `{}` | Icons for tabs that don't set one, by label, such as `{ pnpm: "logos:pnpm" }`. Labels match without regard to case. Each value is an Iconify name or an image URL, like the `icon` prop. See [Icons](#icons). |
-| `iconResolver` | The Iconify API | Resolves the icons, from `createIcons()` in comark-icon. Pass the one the page's other plugins use, so they share its `collections` and `fetch`. comark-ui passes the one its `icon` uses. |
 
 ### Package
 

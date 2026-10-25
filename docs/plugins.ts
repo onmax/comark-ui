@@ -5,13 +5,19 @@ import comarkUi from "../packages/ui/src/html.ts";
 import type { IconOptions } from "comark-icon";
 import type { PlayConfig } from "./config.ts";
 
+// Google's favicon service has none for this site, which only declares an SVG icon, so its chips would look like code.
+const favicon = (host: string) =>
+  host === "comark-ui.onmax.me"
+    ? "https://comark-ui.onmax.me/favicon.svg"
+    : `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=64`;
+
 // `download` is off in a browser, which may not download another site's images, so the reader's loads them as links.
 export const browserPlugins = (
   config: PlayConfig = {},
   { download = true, icon }: { download?: boolean; icon?: IconOptions } = {},
 ) =>
   comarkUi({
-    chips: { download },
+    chips: { download, favicon },
     icon,
     code: config["comark-code"],
     github: config["comark-github"],
