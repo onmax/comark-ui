@@ -83,7 +83,7 @@ Browse the [docs and live examples](https://comark-ui.onmax.me) for component sy
 | [`comark-metrics`](./packages/metrics) | Before → after numbers with the percent change, progress bars, and tables of metrics with a change column. |
 | [`comark-include`](./packages/include) | Markdown partials and code snippets from files, by lines or by region. |
 | [`comark-mark`](./packages/mark) | `==highlighted text==` as `<mark>` and `^superscript^` as `<sup>`. |
-| [`comark-math`](./packages/math) | LaTeX math in place of Comark's own plugin: `$…$`, `$$…$$`, and `math` fences typeset to MathML while parsing, so pages ship no math script, fonts, or stylesheet. |
+| [`comark-mathml`](./packages/math) | LaTeX math in place of Comark's own plugin: `$…$`, `$$…$$`, and `math` fences typeset to MathML while parsing, so pages ship no math script, fonts, or stylesheet. |
 | [`comark-properties`](./packages/properties) | Chosen frontmatter keys, such as status, pull request, author, date, and tags, as a properties box at the top of a document. |
 | [`comark-sources`](./packages/sources) | Numbered `:cite[2]` citations that link to a `::sources` list of links, each with a link back. |
 | [`comark-table`](./packages/table) | Tables from CSV, TSV, and JSON files or fences, read while parsing, with copy buttons and headers that sort. |

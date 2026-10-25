@@ -12,7 +12,7 @@ const styled = new WeakSet<object>();
 
 const formula: NodeHandler = ([, attrs], state) => {
   const html = text(attrs.html);
-  const styles = styled.has(state.context) ? "" : `<style data-comark-math>${css}</style>`;
+  const styles = styled.has(state.context) ? "" : `<style data-comark-mathml>${css}</style>`;
   styled.add(state.context);
   // The plugin typeset `html` itself, with links and other trusted commands off.
   return `${styles}<span class="${classOf(attrs.display === true, !!html)}">${html || escapeHtml(text(attrs.tex))}</span>`;
