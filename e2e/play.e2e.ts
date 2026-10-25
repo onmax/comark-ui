@@ -94,11 +94,11 @@ test("search opens with Ctrl+K and goes to the heading you pick", async ({ page 
   // A typo, a word only a page's keywords say, and a word only a section's text says.
   const first = page.getByRole("option").first();
   await field.fill("gannt");
-  await expect(first).toHaveAttribute("href", "/charts/components/gantt/");
+  await expect(first).toHaveAttribute("href", "/charts/gantt/");
   await field.fill("lightbox");
   await expect(first).toHaveAttribute("href", "/zoom/");
   await field.fill("diamond");
-  await expect(first).toHaveAttribute("href", "/charts/components/gantt/#features");
+  await expect(first).toHaveAttribute("href", "/charts/gantt/#features");
   await expect(first.locator("p mark")).toHaveText("diamond");
   await field.fill("zzzz");
   await expect(page.getByRole("status")).toHaveText("No page or heading matches.");

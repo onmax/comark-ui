@@ -1865,12 +1865,15 @@ kbd {
   background: var(--soft);
 }
 
-/* A component's own page sits under Components, on a guide line, in the name it has in Markdown. */
+/* A package's sub-page sits under its page on a guide line, and a component's in the name it has in Markdown. */
 .pages a.nav-sub {
   margin-left: 0.25rem;
   padding-left: 0.875rem;
   border-radius: 0 6px 6px 0;
   box-shadow: inset 1px 0 0 var(--line);
+}
+
+.pages a.nav-code {
   font-family: var(--mono);
   font-size: 0.75rem;
 }
