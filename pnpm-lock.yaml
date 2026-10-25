@@ -84,9 +84,6 @@ catalogs:
     markdown-it-cjk-friendly:
       specifier: ^3.0.0
       version: 3.0.0
-    npm-to-yarn:
-      specifier: ^3.2.0
-      version: 3.2.0
     nuxt-agent-discovery:
       specifier: ^0.8.0
       version: 0.8.0
@@ -1556,9 +1553,6 @@ importers:
       comark-icon:
         specifier: workspace:^
         version: link:../icon
-      npm-to-yarn:
-        specifier: 'catalog:'
-        version: 3.2.0
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
@@ -6227,10 +6221,6 @@ packages:
   npm-run-path@6.0.0:
     resolution: {integrity: sha512-9qny7Z9DsQU8Ou39ERsPU4OZQlSTP47ShQzuKZ6PRXpYLtIFgl/DEBYEXKlvcEa+9tHVcK8CF81Y2V72qaZhWA==}
     engines: {node: '>=18'}
-
-  npm-to-yarn@3.2.0:
-    resolution: {integrity: sha512-K1HmQeZT2HrjpsR6KgqbN2FAXL2NrJJmNUSD9ck7HGTVu1JKXox8n9SB+tjbU8m8JGLF4OscrroPepew/L7/Xw==}
-    engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
 
   nth-check@2.1.1:
     resolution: {integrity: sha512-lqjrjmaOoAnWfMmBPL+XNnynZh2+swxiX3WUE0s4yEHI6m+AwrK2UZOimIRl3X/4QctVqS8AiZjFqyOGrMXb/w==}
@@ -12211,8 +12201,6 @@ snapshots:
     dependencies:
       path-key: 4.0.0
       unicorn-magic: 0.3.0
-
-  npm-to-yarn@3.2.0: {}
 
   nth-check@2.1.1:
     dependencies:

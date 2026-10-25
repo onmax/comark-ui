@@ -29,7 +29,6 @@ catalog:
   vega-interpreter: ^2.3.2
   vega-lite: ^6.5.0
   geist: ^1.7.2
-  npm-to-yarn: ^3.2.0
   markdown-it-cjk-friendly: ^3.0.0
   pkg-pr-new: ^0.0.91
   publint: ^0.3.25
