@@ -13,6 +13,7 @@ credits: 'Drawn by <a href="https://kroki.io">Kroki</a>.'
 :::example{label="D2"}
 ````md
 ```d2 [How a sighting reaches the map]
+direction: right
 phone -> api: POST /sightings
 api -> queue: dedupe
 queue -> map: pigeon pin

@@ -53,7 +53,7 @@ export function eachChart(nodes: Node[], visit: (node: ElementNode, number: numb
  * A drawn chart keeps only its table as content and carries its SVG in its attributes, so every renderer only places
  * it, and Vega never reaches the browser.
  */
-export default defineComarkPlugin<ChartsOptions | void, ChartsMeta>((options) => ({
+export default /* @__PURE__ */ defineComarkPlugin<ChartsOptions | void, ChartsMeta>((options) => ({
   name: "comark-charts",
   async post(state) {
     const { tree } = state;

@@ -74,7 +74,17 @@ async function request(server: string, type: string, source: string): Promise<st
         .join(" ") || `HTTP ${response.status}`,
     );
   if (!/<svg[\s>]/.test(body)) throw new Error("it answered without an SVG");
-  return sanitizeSvg(body);
+  return sized(sanitizeSvg(body));
+}
+
+// D2 draws with a `viewBox` alone, which stretches the drawing to the column's width however tall that makes it, so it
+// gets the size its `viewBox` gives, as the other tools write it.
+function sized(svg: string): string {
+  return svg.replace(/<svg\b[^>]*>/, (tag) => {
+    if (/\swidth=/.test(tag)) return tag;
+    const box = /\sviewBox="[\d.\s-]*?([\d.]+)[\s,]+([\d.]+)"/.exec(tag);
+    return box ? tag.replace(/^<svg/, `<svg width="${box[1]}" height="${box[2]}"`) : tag;
+  });
 }
 
 // Each diagram by server, type, and source, kept across parses and instances, so a site that builds many pages draws

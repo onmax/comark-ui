@@ -1,5 +1,5 @@
-import { createHtmlRenderer } from "@comark/html";
-import { parseMarkdown } from "comark";
+import { createHtmlRenderer, renderHtmlFromDocument } from "@comark/html";
+import { createMarkdownParser, parseMarkdown } from "comark";
 import annotate, { components as annotateComponents } from "comark-annotate/html";
 import { describe, expect, it } from "vite-plus/test";
 import charts, { components } from "../src/html.ts";
@@ -23,6 +23,52 @@ const months = `
 | 2026-06 | 990 | 640 |`;
 
 describe("comark-charts", () => {
+  it("accepts Comark's metadata while streaming an annotated chart", async () => {
+    const parse = createMarkdownParser({ plugins: [charts()] });
+    const document = await parse(
+      `::chart{title="Bundle size"}
+${sizes.trim()}
+
+:::annotation{at="annotate" mark="circle"}
+The largest package.
+:::
+::`,
+      { streaming: true },
+    );
+    expect(document.meta.issues).toEqual([]);
+    expect(document.meta.issueRules).toEqual({});
+    const html = await renderHtmlFromDocument(document, { components });
+    expect(html).toContain('<svg role="img" aria-label="Bundle size"');
+    expect(html).toContain('class="ca-mark ca-circle"');
+    expect(html).toContain("The largest package.");
+  });
+
+  it("accepts Comark's metadata while streaming a Vega-Lite chart", async () => {
+    const parse = createMarkdownParser({ plugins: [charts()] });
+    const document = await parse(
+      `::chart{title="Bundle size"}
+${sizes.trim()}
+
+\`\`\`vega-lite
+{
+  "mark": "bar",
+  "encoding": {
+    "x": { "field": "package", "type": "nominal" },
+    "y": { "field": "size (kB)", "type": "quantitative" }
+  }
+}
+\`\`\`
+::`,
+      { streaming: true },
+    );
+    expect(document.meta.issues).toEqual([]);
+    expect(document.meta.issueRules).toEqual({});
+    const html = await renderHtmlFromDocument(document, { components });
+    expect(html).toContain('<figure class="cch" data-type="vega-lite">');
+    expect(html).toContain('<svg role="img" aria-label="Bundle size"');
+    expect(html).toContain("<td>annotate</td>");
+  });
+
   it("draws an SVG over the table it came from, and inlines the styles once", async () => {
     const html = await render(`${chart(sizes, '{title="Bundle size"}')}\n\n${chart(months)}`);
     expect(html).toContain(

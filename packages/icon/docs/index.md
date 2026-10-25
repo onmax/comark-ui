@@ -20,12 +20,6 @@ Merge the :icon{name="lucide:git-pull-request"} pull request once its :icon{name
 Built with :icon{name="logos:vue"} Vue and :icon{name="logos:vitejs"} Vite, deployed to :icon{name="logos:cloudflare-icon"} Cloudflare.
 ```
 :::
-
-:::example{label="Nuxt UI spelling"}
-```md
-:icon{name="simple-icons:github"} and :icon{name="i-simple-icons-github"}, as Nuxt UI writes it, draw the same icon.
-```
-:::
 ::
 
 ## Features

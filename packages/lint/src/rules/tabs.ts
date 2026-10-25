@@ -26,10 +26,10 @@ export default {
   },
   "comark/tabs/no-manager-form": {
     code: "COMARK1308",
-    title: "Write `npm2yarn` commands every package manager has",
+    title: "Write `pm` commands every package manager has",
   },
-  "comark/tabs/no-npm-command": {
+  "comark/tabs/no-manager-command": {
     code: "COMARK1309",
-    title: "Write an `npm2yarn` block in npm commands",
+    title: "Write a package manager command in a `pm` block",
   },
 } satisfies Record<`comark/tabs/${string}`, RuleInfo>;

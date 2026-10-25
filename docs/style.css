@@ -20,6 +20,7 @@
   --faint: oklch(0.62 0 0);
   --line: oklch(0.92 0 0);
   --soft: oklch(0.975 0 0);
+  --raised: #fff;
   --pre-line: var(--line);
   --max: 82rem;
   --sans: "Geist", ui-sans-serif, system-ui, sans-serif;
@@ -35,6 +36,7 @@
     --faint: oklch(0.56 0 0);
     --line: oklch(0.26 0 0);
     --soft: oklch(0.185 0 0);
+    --raised: oklch(0.285 0 0);
     --pre-line: transparent;
   }
 
@@ -53,6 +55,7 @@
   --faint: oklch(0.62 0 0);
   --line: oklch(0.92 0 0);
   --soft: oklch(0.975 0 0);
+  --raised: #fff;
   --pre-line: var(--line);
 }
 
@@ -64,6 +67,7 @@
   --faint: oklch(0.56 0 0);
   --line: oklch(0.26 0 0);
   --soft: oklch(0.185 0 0);
+  --raised: oklch(0.285 0 0);
   --pre-line: transparent;
 }
 
@@ -1865,12 +1869,15 @@ kbd {
   background: var(--soft);
 }
 
-/* A component's own page sits under Components, on a guide line, in the name it has in Markdown. */
+/* A package's sub-page sits under its page on a guide line, and a component's in the name it has in Markdown. */
 .pages a.nav-sub {
   margin-left: 0.25rem;
   padding-left: 0.875rem;
   border-radius: 0 6px 6px 0;
   box-shadow: inset 1px 0 0 var(--line);
+}
+
+.pages a.nav-code {
   font-family: var(--mono);
   font-size: 0.75rem;
 }
@@ -2109,6 +2116,45 @@ nav > .nav-group:first-child {
   color: #16a34a;
 }
 
+/* Copy page and View as Markdown, under the tagline, as on ui.nuxt.com. */
+.page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.page-actions .button {
+  height: 2rem;
+  padding: 0 0.75rem;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.copy-page-icon {
+  display: grid;
+  color: var(--muted);
+}
+
+.copy-page-icon svg {
+  grid-area: 1 / 1;
+  transition:
+    opacity 200ms var(--ease-out),
+    scale 200ms var(--ease-out);
+}
+
+.copy-page-icon .check,
+.copy-page.copied .copy-page-icon svg:not(.check) {
+  opacity: 0;
+  scale: 0.25;
+}
+
+.copy-page.copied .copy-page-icon .check {
+  opacity: 1;
+  scale: 1;
+  color: #16a34a;
+}
+
 .hero h1 {
   margin: 0 0 0.5rem;
   color: var(--fg);
@@ -2131,7 +2177,10 @@ nav > .nav-group:first-child {
   gap: 0.5rem;
   height: 2.5rem;
   padding: 0 1rem;
+  border: 0;
   border-radius: 8px;
+  background: none;
+  font-family: inherit;
   box-shadow: inset 0 0 0 1px var(--line);
   color: var(--fg);
   font-size: 0.875rem;
@@ -2847,6 +2896,17 @@ h3 {
   border: 0;
 }
 
+/* A heading in an example is the example's content, not a section of this page: no rule over it, and in the content's
+   type rather than the API headings' mono. */
+.example-preview :is(h2, :where(.cl-heading):has(> h2)) {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.example-preview h3 {
+  font: 600 1rem/1.5 var(--sans);
+}
+
 /* The row's rule sits above the heading now, so a jump to it stops that much higher. */
 .cl-heading > h2 {
   scroll-margin-top: 5.75rem;
@@ -2873,7 +2933,8 @@ code {
   overflow-x: auto;
 }
 
-.table-scroll > table:not(.cd-code) {
+.table-scroll > table:not(.cd-code),
+.ctb-scroll > table {
   margin: 0;
 }
 
@@ -2905,8 +2966,9 @@ table:not(.cd-code) {
   font-size: 0.875rem;
 }
 
+/* Cells pad both sides, so a right-aligned number keeps clear of the column after it. */
 th {
-  padding: 0.6rem 1rem 0.6rem 0;
+  padding: 0.6rem 0.75rem;
   font-weight: 500;
   text-align: left;
 }
@@ -2923,9 +2985,17 @@ main thead:not(:has(th:nth-child(3))) th:not(.example-preview th) {
 }
 
 td:not(.cd-code td) {
-  padding: 0.6rem 1rem 0.6rem 0;
+  padding: 0.6rem 0.75rem;
   border-top: 1px solid var(--line);
   vertical-align: baseline;
+}
+
+:is(th, td:not(.cd-code td)):not(.matrix *):first-child {
+  padding-left: 0;
+}
+
+:is(th, td:not(.cd-code td)):not(.matrix *):last-child {
+  padding-right: 0;
 }
 
 tr:last-child td:not(.cd-code td) {
@@ -3141,7 +3211,7 @@ dl:not([class]) > dd > :last-child {
   top: 3px;
   bottom: 3px;
   border-radius: 7px;
-  background: var(--bg);
+  background: var(--raised);
   box-shadow:
     0 0 0 0.5px rgb(0 0 0 / 0.06),
     0 1px 3px rgb(0 0 0 / 0.1);
@@ -3203,7 +3273,7 @@ dl:not([class]) > dd > :last-child {
 }
 
 .seg [aria-pressed="true"] {
-  background: var(--bg);
+  background: var(--raised);
   box-shadow:
     0 0 0 0.5px rgb(0 0 0 / 0.06),
     0 1px 3px rgb(0 0 0 / 0.1);
@@ -3253,6 +3323,12 @@ dl:not([class]) > dd > :last-child {
   margin: 0;
 }
 
+/* comark-code's wrapper holds the block's margins inside it in a flex preview, past the trims above. A paragraph next
+   to it still spaces it with its own margin. */
+.example-preview > .ck > pre {
+  margin-block: 0;
+}
+
 /* A block that draws its own frame (a chart, a diff, a diagram, a code block and its notes, a file tree, callouts,
    tabs, a carousel, a card, a test report, a properties box) isn't framed again: a preview that holds one drops its
    ring and padding. */
@@ -3283,6 +3359,13 @@ dl:not([class]) > dd > :last-child {
     .cn-notes
   )
 ) {
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* comark-media draws its framed player inside the paragraph it came from. */
+.example-preview:has(> p > :is(.cm-video, .cm-audio)) {
   padding: 0;
   border-radius: 0;
   box-shadow: none;
@@ -3601,6 +3684,153 @@ main img {
 
 .example-play:hover {
   color: var(--fg) !important;
+}
+
+/* The component gallery: every example in a frame of its own, in one scheme or in both side by side. */
+.gallery {
+  min-width: 0;
+  padding: 2.5rem 2rem 4rem;
+}
+
+.gallery-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.gallery-bar .hero p {
+  margin: 0;
+}
+
+.gallery-group {
+  margin-top: 3rem;
+}
+
+.gallery-group h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--line);
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.gallery-group h2 small {
+  color: var(--faint);
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+
+.gallery-item {
+  margin-top: 1.5rem;
+  scroll-margin-top: 4.5rem;
+}
+
+.gallery-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.gallery-head h3 {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.gallery-head h3 a {
+  color: var(--fg);
+  text-decoration: none;
+}
+
+.gallery-head span {
+  display: flex;
+  gap: 1rem;
+}
+
+.gallery-frames {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.75rem;
+}
+
+.gallery[data-scheme="both"] .gallery-frames {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.gallery[data-scheme="light"] .gallery-frame[data-scheme="dark"],
+.gallery[data-scheme="dark"] .gallery-frame[data-scheme="light"],
+.gallery [hidden],
+.pages [hidden] {
+  display: none;
+}
+
+/* Until its script gives it its scheme and height, a frame keeps its room and stays blank. */
+.gallery-frame {
+  display: block;
+  width: 100%;
+  height: 12rem;
+  border: 0;
+  border-radius: 12px;
+  box-shadow: 0 0 0 1px var(--line);
+  transition: opacity 150ms ease;
+}
+
+.gallery-frame:not([data-ready]) {
+  opacity: 0;
+}
+
+.gallery-empty {
+  margin-top: 3rem;
+  color: var(--muted);
+}
+
+/* Stays at the top of the index as it scrolls. */
+.gallery-filter {
+  position: sticky;
+  top: -0.75rem;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.75rem -0.5rem 0;
+  padding: 0.75rem 0.5rem 0.5rem;
+  background: var(--bg);
+  color: var(--faint);
+}
+
+.gallery-filter input {
+  flex: 1;
+  min-width: 0;
+  height: 2rem;
+  padding: 0 0.625rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+}
+
+.gallery-filter input:focus-visible {
+  outline: 2px solid var(--fg);
+  outline-offset: -1px;
+}
+
+@media (max-width: 60rem) {
+  .gallery {
+    padding: 2rem 1rem 3rem;
+  }
+
+  .gallery[data-scheme="both"] .gallery-frames {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 /* The playground: the editor and its issues on the left, the rendered page on the right. */

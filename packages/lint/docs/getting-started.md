@@ -184,6 +184,8 @@ routes: (path) => (path.startsWith("/api/") ? true : `content${path}`),
 | `cache` | `"node_modules/.cache/comark-linter/urls.json"` | The cache file from `root`, or `false`. |
 | `maxAge` | `86_400_000` | Milliseconds a URL that worked stays cached. |
 
+When parsing or a rule throws, the result's optional `cause` holds the original exception, including any nested diagnostic. The CLI omits it from JSON because exceptions can contain cycles.
+
 ## Next steps
 
 - [Vite Doctor](/lint/vite-doctor/) runs every rule in the same report as your code.

@@ -40,28 +40,6 @@ credits: 'Laid out by Microsoft Research''s <a href="https://github.com/microsof
 ```
 :::
 
-:::example{label="With notes"}
-```md
-::chart{title="Coffee cups and commits, per month (r = 0.99)"}
-| month | coffee cups | commits |
-| --- | --: | --: |
-| 2026-04 | 820 | 610 |
-| 2026-05 | 890 | 640 |
-| 2026-06 | 905 | 652 |
-| 2026-07 | 960 | 715 |
-| 2026-08 | 975 | 720 |
-| 2026-09 | 1,030 | 768 |
-| 2026-10 | 1,025 | 760 |
-::::annotation{at="2026-07" series="commits" mark="circle" color="green"}
-The new espresso machine arrives, and commits pass 700.
-::::
-::::annotation{at="2026-09" series="coffee cups" mark="none" side="top" color="red"}
-Peak coffee.
-::::
-::
-```
-:::
-
 :::example{label="Before / after"}
 ```md
 ::chart{type="dumbbell" title="Minutes lost per week, before and after the rubber ducks"}
@@ -71,36 +49,6 @@ Peak coffee.
 | debugging alone | 1,450 | 980 |
 | meetings about bugs | 2,100 | 1,320 |
 | standup | 380 | 160 |
-::
-```
-:::
-
-:::example{label="Performance"}
-```md
-::chart{type="dumbbell" title="Largest Contentful Paint per page, before and after lazy-loading the editor (ms)"}
-| page | before | after |
-| --- | --: | --: |
-| home | 2,480 | 1,120 |
-| docs | 2,910 | 1,340 |
-| blog post | 2,050 | 980 |
-| playground | 4,350 | 4,100 |
-::::annotation{at="playground" series="after" mark="circle" color="red"}
-The playground opens the editor right away, so it stays slow.
-::::
-::
-```
-:::
-
-:::example{label="Gantt"}
-```md
-::chart{type="gantt" title="A Friday deploy, minutes after 16:55"}
-| step | start | end |
-| --- | --: | --: |
-| tests | 0 | 6 |
-| build | 6 | 11 |
-| deploy | 11 | 13 |
-| it's live | 13 | 13 |
-| rollback | 21 | 24 |
 ::
 ```
 :::
@@ -125,8 +73,8 @@ The playground opens the editor right away, so it stays slow.
 - The chart's source is a plain Markdown table, so a person or an agent reading the Markdown reads the numbers, not a chart spec.
 - The page shows the same table under the chart, folded into **Data**, so a tool that turns the page into text keeps the numbers too.
 - Vega draws every chart while parsing, so the page needs no script.
-- An [`annotation`](/charts/components/annotation/) marks a row or a value with a note, or draws a line across the chart at a target.
-- Nine types cover bars, lines, pies, and a [`gantt`](/charts/components/gantt/), and a [`vega-lite`](/charts/components/vega-lite/) spec draws anything else.
+- [Notes](/charts/notes/) mark a row or a value, or draw a line across the chart at a target.
+- Nine types cover bars, lines, pies, and [gantt charts](/charts/gantt/), and a [Vega-Lite](/charts/vega-lite/) spec draws anything else.
 - Without the plugin, the table still renders as a table.
 
 ## Usage
@@ -159,7 +107,7 @@ Use the `type` prop to pick the chart. Without it, names on x make bars, and dat
 | `dumbbell` | Before and after for several metrics. | Metric names, then two or more columns, such as `before` and `after`. |
 | `waterfall` | How changes add up to a total. | The starting total, then each change, negative for a drop, then the end total, all in one column. |
 | `pie` | Shares of one whole. | Names, then one column of numbers that aren't negative. |
-| `gantt` | Steps or tasks over time, such as a build, a deploy, or a plan. | One row per bar: its name, then where it starts and where it ends, as numbers or dates. See [`gantt`](/charts/components/gantt/). |
+| `gantt` | Steps or tasks over time, such as a build, a deploy, or a plan. | One row per bar: its name, then where it starts and where it ends, as numbers or dates. See [Gantt charts](/charts/gantt/). |
 
 ::examples
 :::example{label="Sideways bars"}
@@ -195,21 +143,6 @@ Use the `type` prop to pick the chart. Without it, names on x make bars, and dat
 | Monday | 4 | 11 | 2 |
 | Wednesday | 6 | 1 | 3 |
 | Friday | 2 | 14 | 7 |
-::
-```
-:::
-
-:::example{label="Target line"}
-```md
-::chart{labels title="Minutes to the first review comment"}
-| team | minutes |
-| --- | --: |
-| frontend | 38 |
-| backend | 64 |
-| design | 12 |
-:::annotation{mark="line" value="45" color="red" side="right"}
-Team goal: 45 min.
-:::
 ::
 ```
 :::
@@ -330,18 +263,6 @@ A stack has one end, so its first series, drawn at the end, is the only part tha
 > [!NOTE]
 > `labels` applies to `bar` and `stacked` charts. Other types have no bars to write on, or print their numbers already: a dumbbell its ends, a waterfall each step, and a gantt each duration. The plugin reports it there.
 
-### Marks
-
-Use an [`annotation`](/charts/components/annotation/) inside the chart, after the table, to mark a row or one of its values with a note, or to draw a line across the chart at a target.
-
-### Gantt
-
-Use `type="gantt"` with a [table of its own](/charts/components/gantt/): each bar's name, then where it starts and where it ends.
-
-### Vega-Lite
-
-Use a [`vega-lite`](/charts/components/vega-lite/) block after the table to draw any chart the types don't cover, from a spec that reads the table.
-
 ## Examples
 
 ### Reject a document before publishing
@@ -409,7 +330,7 @@ The plugin adds these problems to `meta.issues`. Each issue names its chart by i
 - `labels` with a value, or on a type without bars.
 - A chart that couldn't be drawn, which shows its table alone.
 
-[Marks](/charts/components/annotation/#issues), [gantts](/charts/components/gantt/#issues), and [Vega-Lite specs](/charts/components/vega-lite/#issues) have checks of their own, on their pages.
+[Notes](/charts/notes/#issues), [gantt charts](/charts/gantt/#issues), and [Vega-Lite specs](/charts/vega-lite/#issues) have checks of their own, on their pages.
 
 Rendering never throws. A chart with a problem draws what it can:
 
@@ -460,18 +381,18 @@ A chart is a card in the style of [shadcn/ui](https://ui.shadcn.com), so it swit
 
 ### Shared tokens
 
-Charts read these [shared tokens](/guide/theming/), and their series read shadcn/ui's chart colors:
+Charts read these [shared tokens](/guide/theming/), and their series read Nuxt UI's or shadcn/ui's chart colors:
 
 | Token | Falls back to | Used for |
 | --- | --- | --- |
-| `--comark-foreground` | `--foreground` | Values, the caption, the data table |
-| `--comark-muted` | `--muted-foreground` | Axis labels, the **Data** toggle, waterfall totals |
-| `--comark-border` | `--border` | The card, grid lines, and the data table's rules |
-| `--comark-background` | `--background` | The card, and the edges between slices and around points |
-| `--comark-ring` | `--ring` | The focus ring on the **Data** toggle |
-| `--comark-radius` | `--radius` | The card's corners |
+| `--comark-foreground` | `--ui-text-highlighted`, `--foreground` | Values, the caption, the data table |
+| `--comark-muted` | `--ui-text-muted`, `--muted-foreground` | Axis labels, the **Data** toggle, waterfall totals |
+| `--comark-border` | `--ui-border`, `--border` | The card, grid lines, and the data table's rules |
+| `--comark-background` | `--ui-bg`, `--background` | The card, and the edges between slices and around points |
+| `--comark-ring` | `--ui-primary`, `--ring` | The focus ring on the **Data** toggle |
+| `--comark-radius` | twice `--ui-radius`, `--radius` | The card's corners |
 | `--comark-font` | `--font-sans` | All text |
-| `--comark-chart-1` to `-6` | `--chart-1` to `-6` | Series, in column order |
+| `--comark-chart-1` to `-6` | `--ui-chart-1` to `-6`, `--chart-1` to `-6` | Series, in column order |
 
 Without either, series use six colors that read on light and dark pages: blue, orange, green, purple, rose, and yellow. A waterfall's increases and decreases are series 3 and 5.
 

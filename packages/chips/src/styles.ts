@@ -15,7 +15,7 @@ export const css = `@layer comark{${[
   ".cp:not(:has(.cp-img)){padding-left:.375em}",
   ".cp:hover{background:var(--_cp-hover)}",
   ".cp:focus-visible{outline:2px solid var(--_comark-ring);outline-offset:2px}",
-  ".cp-img{display:inline-block;width:min(var(--cp-image-size,1em),1em);height:min(var(--cp-image-size,1em),1em);margin:0 .3125em 0 0;border-radius:.1875em;outline:1px solid color-mix(in oklab,var(--_comark-foreground) 10%,transparent);outline-offset:-1px;vertical-align:middle;object-fit:cover}",
+  ".cp-img{display:inline-block;width:min(var(--cp-image-size,1em),1em);height:min(var(--cp-image-size,1em),1em);margin:0 .3125em 0 0;border-radius:.1875em;outline:1px solid color-mix(in oklab,var(--_comark-foreground) 10%,transparent);outline-offset:-1px;vertical-align:-.125em;object-fit:cover}",
   '.cp[data-kind="avatar"]{padding:0;background:none;box-shadow:none;text-decoration:underline;text-decoration-color:transparent;text-underline-offset:.2em;transition:text-decoration-color .15s ease-out}',
   '.cp[data-kind="avatar"]:hover{background:none;text-decoration-color:currentColor}',
   '.cp[data-kind="avatar"] .cp-img{border-radius:50%;outline:none}',

@@ -16,6 +16,8 @@ import * as fileTree from "comark-file-tree/vue";
 import * as github from "comark-github/vue";
 import * as icon from "comark-icon/vue";
 import * as links from "comark-links/vue";
+import * as mark from "comark-mark/vue";
+import * as math from "comark-mathml/vue";
 import * as media from "comark-media/vue";
 import pele, { createPeleComponent } from "comark-pele/vue";
 import * as metrics from "comark-metrics/vue";
@@ -61,6 +63,8 @@ export default (options?: PresetOptions): Preset<Component> =>
       github,
       icon,
       links,
+      mark,
+      math,
       media,
       mermaid,
       metrics,

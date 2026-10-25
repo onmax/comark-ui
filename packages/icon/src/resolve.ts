@@ -1,5 +1,8 @@
 import type { IconifyJSON } from "@iconify/types";
-import { getIconData, iconToHTML, iconToSVG, svgToData } from "@iconify/utils";
+import { getIconData } from "@iconify/utils/lib/icon-set/get-icon";
+import { iconToSVG } from "@iconify/utils/lib/svg/build";
+import { iconToHTML } from "@iconify/utils/lib/svg/html";
+import { svgToData } from "@iconify/utils/lib/svg/url";
 
 /**
  * An icon set: an Iconify set as `@iconify-json/*` exports it, such as `icons` from `@iconify-json/lucide`, or SVG

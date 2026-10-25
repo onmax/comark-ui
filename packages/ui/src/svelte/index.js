@@ -18,6 +18,8 @@ import * as fileTree from "comark-file-tree/svelte";
 import * as github from "comark-github/svelte";
 import * as icon from "comark-icon/svelte";
 import * as links from "comark-links/svelte";
+import * as mark from "comark-mark/svelte";
+import * as math from "comark-mathml/svelte";
 import * as media from "comark-media/svelte";
 import pele, { createPeleComponent } from "comark-pele/svelte";
 import * as metrics from "comark-metrics/svelte";
@@ -59,6 +61,8 @@ export default (options) =>
       github,
       icon,
       links,
+      mark,
+      math,
       media,
       mermaid,
       metrics,

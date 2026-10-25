@@ -51,8 +51,7 @@
     "prepack": "pnpm --filter comark-tabs... build"
   },
   "dependencies": {
-    "comark-icon": "workspace:^",
-    "npm-to-yarn": "catalog:"
+    "comark-icon": "workspace:^"
   },
   "devDependencies": {
     "@comark/html": "catalog:",

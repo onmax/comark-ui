@@ -78,7 +78,8 @@ export default function comark(options: DoctorOptions = {}) {
           async onProjectEnd() {
             for (const { file, text = "", diagnostics: found } of await lintProject(ctx)) {
               const starts = [0];
-              for (const match of text.matchAll(/\n/g)) starts.push(match.index + 1);
+              for (const match of text.matchAll(/\r\n?|\n/g))
+                starts.push(match.index + match[0].length);
               for (const diagnostic of found) {
                 if (diagnostic.rule !== id) continue;
                 const start = (starts[diagnostic.line - 1] ?? 0) + (diagnostic.column ?? 1) - 1;
@@ -86,8 +87,18 @@ export default function comark(options: DoctorOptions = {}) {
                   diagnostics.diagnostics[info[id].code]({
                     why: diagnostic.message,
                     fix: diagnostic.fix,
+                    sources: [`${file}:${diagnostic.line}:${diagnostic.column ?? 1}`],
+                    cause: diagnostic.cause,
                   }),
-                  { file, range: ctx.helpers.rangeFromOffsets(file, text, start) },
+                  {
+                    file,
+                    range: {
+                      start,
+                      end: start,
+                      line: diagnostic.line,
+                      column: diagnostic.column ?? 1,
+                    },
+                  },
                 );
               }
             }

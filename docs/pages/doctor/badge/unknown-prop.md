@@ -1,4 +1,4 @@
-`:badge` reads only `color` and ignores every other prop. A `size` or `variant` copied from Nuxt UI's `UBadge` component changes nothing, since Nuxt UI's prose badge doesn't read them either.
+`:badge` reads `color` for prose, and the documented image props for SVG and live badges. It ignores other props. A `size` or `variant` copied from Nuxt UI's `UBadge` component changes nothing, since Nuxt UI's prose badge doesn't read them either.
 
 ::incorrect
 ```md

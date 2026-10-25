@@ -8,8 +8,8 @@ const repo = new URL("../", import.meta.url);
 // These pages show code instead: nothing in this repo still reports an issue without its own rule, so plugin-issue's
 // shows a plugin of your own; downloads, dead URLs, and diagrams depend on the network; a label used twice is an id
 // used twice, which comark/duplicate-id reports too; and a bad `repo`, a value too long for a QR code, the order of
-// Shiki against comark-code and comark-code-notes, a bad critic `mode`, a bad table `base`, and a `read` that fails are
-// plugin options, not Markdown.
+// Shiki against comark-code and comark-code-notes, a bad critic `mode`, a bad table `base`, math's `output` without
+// KaTeX, and a `read` that fails are plugin options, not Markdown.
 const withoutExamples = new Set([
   "comark/plugin-issue",
   "comark/dead-url",
@@ -19,6 +19,7 @@ const withoutExamples = new Set([
   "comark/chips/rate-limited",
   "comark/github/invalid-repo",
   "comark/qr/value-too-long",
+  "comark/math/katex-missing",
   "comark/critic/invalid-mode",
   "comark/diagrams/draw-failed",
   "comark/diagrams/server-unreachable",

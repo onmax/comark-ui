@@ -41,3 +41,18 @@ const render = createHtmlRenderer({ plugins: [badge()], components });
 Each entry exports the parse plugin as `default` and the renderer's `components`. The Vue, React, and Svelte components add the styles when they mount; import `comark-badge/style.css` with your styles so a server-rendered page doesn't shift.
 
 Each color reads Nuxt UI's variable, such as `--ui-primary`, when the page has it, so badges match a Nuxt UI app; otherwise primary follows shadcn/ui's `--primary`, or the text color, and error `--destructive`. Complete CSS colors and legacy bare HSL shadcn/ui tokens are supported. Set `--cb-*` to change a color and the shared `--comark-*` tokens to theme every plugin at once; the rules sit in a `comark` CSS layer, so any plain rule of your own wins.
+
+## SVG badges and builder
+
+Use the [builder](https://comark-ui.onmax.me/badges/) to preview, share, and export badges as SVG, Markdown, or Comark.
+
+```md
+:badge[Comark UI]{label="built with" icon="package" color="success"}
+:badge{source="npm-version" package="comark-ui"}
+:badge{source="npm-downloads" package="comark-ui" period="month"}
+:badge{source="github-actions" repository="onmax/comark-ui" workflow="ci.yml"}
+```
+
+Static badges embed their SVG locally. Live badges use `https://comark-ui.onmax.me/badge.svg`, configurable with `badge({ endpoint })` or `comarkUi({ badge: { endpoint } })`. Public npm and GitHub Actions data is cached; unavailable data displays `unavailable`. Downloads are snapshots.
+
+`comark-badge/svg` exports the shared option reader and SVG generator. `comark-badge/server` exports `createBadgeHandler()` for hosting the GET/HEAD image endpoint. See [Badge](https://comark-ui.onmax.me/badge/) for options, caching, and deployment details.

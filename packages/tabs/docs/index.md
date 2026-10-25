@@ -2,7 +2,7 @@
 title: Tabs
 description: Tabs and code groups, written in Markdown.
 keywords: tab, code group, code-group, package manager, npm, pnpm, yarn, bun, switcher, language tabs
-tagline: Tabs of any content and code groups that switch together across the page, and npm commands in every package manager.
+tagline: Tabs of any content and code groups that switch together across the page, and install commands in every package manager.
 group: Page behavior
 icon: panels-top-left
 blurb: Tabs and code groups
@@ -60,10 +60,10 @@ yarn add comark-tabs
 ````
 :::
 
-:::example{label="npm2yarn"}
+:::example{label="Package managers"}
 ````md
-```sh npm2yarn
-npm install -D comark-tabs
+```sh pm
+bun add -d comark-tabs
 ```
 ````
 :::
@@ -73,7 +73,7 @@ npm install -D comark-tabs
 
 - Each `:::tabs-item` inside `::tabs` is a tab, and it holds any Markdown, even other tabs.
 - `::code-group` turns code blocks into tabs named by the label after their language.
-- A code block marked `npm2yarn` becomes a tab for each package manager.
+- A code block marked `pm` becomes a tab for each package manager, whichever one it's written in.
 - Blocks with the same `sync` key switch together, and the choice is remembered on the next visit.
 - Without a script, every tab shows under its label, one after another. The script adds the tab strip, whose highlight slides to the tab you pick, and the arrow keys.
 
@@ -179,32 +179,45 @@ npm install comark-tabs
 > [!NOTE]
 > Only code blocks go inside a code group, and each one needs a label. Anything else is reported.
 
-### npm2yarn
+### Package managers
 
-Use the `npm2yarn` word after a code block's language to turn npm commands into a code group with a tab for each package manager: npm, pnpm, yarn, and bun. The group has `sync="pm"`, so it switches with the code groups you write with that key.
+Use the `pm` word after a code block's language to turn its commands into a code group with a tab for each package manager: npm, pnpm, yarn, and bun. Write the commands in whichever manager you use, npm, pnpm, yarn, bun, or deno, and its tab keeps them as written. The group has `sync="pm"`, so it switches with the code groups you write with that key.
 
 ::example
 ````md
-```sh npm2yarn
-npm install -D comark-tabs
-npx nuxi@latest module add ui
+```sh pm
+yarn add -D comark-tabs
+pnpm dlx nuxi@latest module add ui
 ```
 ````
 ::
 
-Only lines that start with `npm` or `npx`, or commands after `&&`, `||`, or `;`, change, so `cd my-npm-app` stays as written. [npm-to-yarn](https://github.com/nebrelbug/npm-to-yarn) converts them, and bun's tab writes `bunx` and `bun create` as Bun's docs do. In a `::code-group` the block is one tab already, and `npm2yarn` does nothing. Set the managers with the [`managers` option](#choose-the-package-managers).
+Only commands that start a line or follow `&&`, `||`, or `;` change, so `cd my-npm-app` stays as written. comark-tabs reads these commands, and their usual aliases, such as `npm i` and `pnpx`:
+
+| Command | npm | pnpm | yarn | bun | deno |
+| --- | --- | --- | --- | --- | --- |
+| Install | `npm install` | `pnpm install` | `yarn install` | `bun install` | `deno install` |
+| Frozen install | `npm ci` | `pnpm install --frozen-lockfile` | `yarn install --immutable` | `bun install --frozen-lockfile` | `deno install --frozen` |
+| Add | `npm install x` | `pnpm add x` | `yarn add x` | `bun add x` | `deno add npm:x` |
+| Remove | `npm uninstall x` | `pnpm remove x` | `yarn remove x` | `bun remove x` | `deno remove npm:x` |
+| Run a script | `npm run dev -- --port 3` | `pnpm run dev --port 3` | `yarn dev --port 3` | `bun run dev --port 3` | `deno task dev --port 3` |
+| Run a package | `npx x` | `pnpm dlx x` | `yarn dlx x` | `bunx x` | `deno run -A npm:x` |
+| Create a project | `npm create x@latest` | `pnpm create x` | `yarn create x` | `bun create x` | `deno init --npm x` |
+| Start a package | `npm init` | `pnpm init` | `yarn init` | `bun init` | `deno init` |
+
+Update commands and local execution with `pnpm exec` stay only in their source manager’s tab. Other managers’ tabs are omitted with a no-form issue: update range, manifest, and workspace behavior differs across managers, and local execution must not become a runner that can download a package. Add takes `-D` for a dev dependency, `-E` for an exact version, `-O` for an optional one, `--save-peer` for a peer one, and `-g` to install globally, each in the manager's own flag. In a `::code-group` the block is one tab already, and `pm` does nothing. Set the managers with the [`managers` option](#choose-the-package-managers).
 
 ## Examples
 
 ### Choose the package managers
 
-A code block marked `npm2yarn` gets a tab for npm, pnpm, yarn, and bun, in that order. Use the `managers` option to set others, in the order you want. Deno is there to add:
+A code block marked `pm` gets a tab for npm, pnpm, yarn, and bun, in that order. Use the `managers` option to set others, in the order you want. Deno is there to add:
 
 ```ts
 tabs({ managers: ["pnpm", "npm", "yarn", "bun", "deno"] });
 ```
 
-A command a manager has no form for, such as `npm ci` in pnpm, leaves that manager's tab out, keeps npm's, and adds an issue. Write that block as a `::code-group{sync="pm"}` by hand. Register comark-tabs before Shiki, so Shiki highlights every tab it adds.
+A command a manager has no form for, such as `npm install -g` in yarn, leaves that manager's tab out, keeps the tab of the manager the block is written in, and adds an issue. So does a command comark-tabs doesn't read, such as `npm publish`, in every other manager. Write that block as a `::code-group{sync="pm"}` by hand. Register comark-tabs before Shiki, so Shiki highlights every tab it adds.
 
 ### Icons for every block
 
@@ -279,7 +292,7 @@ The options go under `tabs` in `comarkUi()`, or to `tabs()` when you use it alon
 
 | Option | Default | Description |
 | --- | --- | --- |
-| `managers` | `["npm", "pnpm", "yarn", "bun"]` | The tabs an `npm2yarn` code block becomes, in order. Add `"deno"` for Deno. See [Choose the package managers](#choose-the-package-managers). |
+| `managers` | `["npm", "pnpm", "yarn", "bun"]` | The tabs a `pm` code block becomes, in order. Add `"deno"` for Deno. See [Choose the package managers](#choose-the-package-managers). |
 | `icons` | `{}` | Icons for tabs that don't set one, by label, such as `{ pnpm: "logos:pnpm" }`. Labels match without regard to case. Each value is an Iconify name or an image URL, like the `icon` prop. See [Icons for every block](#icons-for-every-block). |
 | `iconResolver` | The Iconify API | Resolves the icons, from `createIcons()` in comark-icon. Pass the one the page's other plugins use, so they share its `collections` and `fetch`. comark-ui passes the one its `icon` uses. |
 
@@ -294,7 +307,7 @@ The plugin adds a problem with any block to `meta.issues`, as [Validation](/guid
 It reports:
 
 - A tab without a label, or two tabs with the same label.
-- An `npm2yarn` command a package manager has no form for, or an `npm2yarn` block with no npm command.
+- A `pm` command a package manager has no form for, or a `pm` block with no package manager command.
 - An icon it can't draw, in comark-icon's words.
 - Content outside every tab, which doesn't render.
 - Anything but code blocks in a code group.
@@ -320,6 +333,8 @@ const render = createHtmlRenderer({ plugins: [tabs()], components });
 ```
 
 For Vue, React, or Svelte, import from `comark-tabs/vue`, `comark-tabs/react`, or `comark-tabs/svelte`. Svelte needs 5.20 or later. [Renderers](/guide/renderers/) covers server rendering and using it with other plugins.
+
+When you render on a server, import `comark-tabs/style.css` with your own styles so the tabs are styled before the components mount.
 
 ## Theme
 

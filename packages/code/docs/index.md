@@ -30,19 +30,6 @@ function close() {
 ````
 :::
 
-:::example{label="Pasted diff"}
-````md
-```diff lang="ts"
-@@ -12,4 +12,4 @@ export function close() {
- function close() {
-   dialog.close();
--  history.back();
-+  if (opened) history.back();
- }
-```
-````
-:::
-
 :::example{label="Collapsed lines"}
 ````md
 ```ts [vite.config.ts] collapse={2-7} startLineNumber=1
@@ -221,6 +208,9 @@ Use the `lang` attribute on a `diff` fence to highlight it as that language. Eac
 
 Paste the output of `git diff` as it is. When the block has `@@` hunk headers, the plugin drops the hunk headers and the file headers before the first hunk. Without `lang`, a `diff` fence stays a diff in Shiki's colors.
 
+> [!TIP]
+> A `diff` fence marks a change inside one block of code. To set the code before and after a change side by side, use [Diff](/diff/).
+
 ## Examples
 
 ### Run code from a button
@@ -381,6 +371,8 @@ The components replace how `pre` renders. The block keeps its own markup, so Shi
 
 For Vue, React, or Svelte, import from `comark-code/vue`, `comark-code/react`, or `comark-code/svelte` (Svelte 5.20 or later). [Renderers](/guide/renderers/) covers server rendering and using it with other plugins.
 
+When you render on a server, import `comark-code/style.css` with your own styles so the code blocks are styled before the components mount.
+
 ## Theme
 
 The header sits on the code block's own background, so it takes your `pre` styles and Shiki's theme. The title and buttons follow the shared tokens in [Theming](/guide/theming/). Two variables of their own size the buttons and the header, and a third sets the title's font.
@@ -413,7 +405,7 @@ Set these on `.ck` or any ancestor, such as `:root`:
 | Variable | Default | Used for |
 | --- | --- | --- |
 | `--ck-inset` | `0.375rem` | How far the buttons sit from the block's top right corner |
-| `--ck-button-size` | `1.5rem` | The buttons' height and least width, at least `2.25rem` on touch screens |
+| `--ck-button-size` | `1.5rem` | The buttons' height and least width. On touch screens the tap area is at least `2.75rem` tall without growing the button. Its width stays within the button to avoid overlapping adjacent controls. |
 | `--ck-title-font` | `ui-monospace, SFMono-Regular, Menlo, monospace` | The title. Set it to your code's font so the title matches the block. |
 | `--ck-green` | `#259f56`, `#59d38c` in dark mode | Lines marked `ins`, and their `+` |
 | `--ck-red` | `#ee3533`, `#fd736d` in dark mode | Lines marked `del`, and their `−`, and Shiki's errors |

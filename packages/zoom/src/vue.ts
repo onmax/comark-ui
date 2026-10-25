@@ -6,7 +6,7 @@ export type { ZoomOptions } from "./index.ts";
 export type { ZoomDetail } from "./client.ts";
 
 /** `::zoom` for `@comark/vue`. */
-export const Zoom = defineComponent({
+export const Zoom = /* @__PURE__ */ defineComponent({
   name: "Zoom",
   // Only the id and class pass through, as in the other renderers.
   inheritAttrs: false,
@@ -32,7 +32,7 @@ export const Zoom = defineComponent({
 });
 
 /** Starts the zoom script for zoomable images. The plugin adds it to documents that need it. */
-export const ZoomRuntime = defineComponent({
+export const ZoomRuntime = /* @__PURE__ */ defineComponent({
   name: "ZoomRuntime",
   setup() {
     let stop: (() => void) | undefined;

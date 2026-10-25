@@ -1,3 +1,4 @@
+import type { BadgeOptions } from "comark-badge";
 import type { ComarkPlugin } from "comark";
 import type { CastOptions } from "comark-cast";
 import type { ChartsOptions } from "comark-charts";
@@ -16,7 +17,7 @@ import { createIcons, type IconOptions, type Icons } from "comark-icon";
 import include, { type IncludeOptions } from "comark-include";
 import keys, { type KeysOptions } from "comark-keys";
 import type { AnchorsOptions, ExternalOptions } from "comark-links";
-import mark from "comark-mark";
+import type { MathOptions } from "comark-mathml";
 import type { MediaOptions } from "comark-media";
 import type { PeleConfig } from "comark-pele";
 import type { PropertiesOptions } from "comark-properties";
@@ -69,6 +70,8 @@ export type PresetOptions = {
   /** Also resolves the icons of cards, details, file trees, tabs, and code actions, so they share its options. */
   icon?: IconOptions | boolean;
   mark?: boolean;
+  /** Typesets `$…$`, `$$…$$`, and `math` fences as MathML while parsing, in place of Comark's math plugin. */
+  math?: MathOptions | boolean;
   details?: DetailsOptions | boolean;
   links?: { external?: ExternalOptions | boolean; anchors?: AnchorsOptions | boolean } | boolean;
   fileTree?: FileTreeOptions | boolean;
@@ -77,7 +80,7 @@ export type PresetOptions = {
   /** HTML only: Vue, React, and Svelte have no quiz components. */
   quiz?: QuizOptions | boolean;
   keys?: KeysOptions | boolean;
-  badge?: boolean;
+  badge?: BadgeOptions | boolean;
   media?: MediaOptions | boolean;
   metrics?: boolean;
   /** Reads no data files unless you pass `{ root }` or `{ read }`; CSV fences render either way. */
@@ -131,7 +134,9 @@ export type Renderer<C> = {
   fields: Part<C>;
   properties: Part<C, PropertiesOptions>;
   quiz?: Part<C, QuizOptions>;
-  badge: Part<C>;
+  badge: Part<C, BadgeOptions>;
+  mark: Part<C>;
+  math: Part<C, MathOptions>;
   media: Part<C, MediaOptions>;
   metrics: Part<C>;
   table: Part<C, TableOptions>;
@@ -202,7 +207,8 @@ export function preset<C>(renderer: Renderer<C>, options: PresetOptions = {}): P
     if (on(github.html)) plugins.push(renderer.github.html());
   }
   add(renderer.icon, options.icon, icons);
-  parse(mark, options.mark);
+  add(renderer.mark, options.mark);
+  add(renderer.math, options.math);
   add(renderer.details, options.details, { iconResolver: icons, ...optionsOf(options.details) });
   if (on(options.links)) {
     const links = optionsOf(options.links) ?? {};

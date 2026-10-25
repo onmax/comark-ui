@@ -1,3 +1,4 @@
-import { definePackage } from "../../tsdown.shared.ts";
+import { defineComponentsPackage } from "../../tsdown.shared.ts";
+import { css } from "./src/styles.ts";
 
-export default definePackage({ entry: ["src/index.ts"] });
+export default defineComponentsPackage(css);

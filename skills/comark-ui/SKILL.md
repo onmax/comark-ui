@@ -39,7 +39,7 @@ const render = createHtmlRenderer({ plugins: [annotate()], components });
 
 Each reference ends with a Register section that says how its package registers alone and which options it needs.
 
-Either way, the HTML renderer inlines the styles once per document, and the Vue, React, and Svelte components add them on mount. On a server-rendered page, import each package's `style.css`, such as `comark-cards/style.css`, so the page doesn't shift. The `--comark-*` tokens in https://comark-ui.onmax.me/guide/theming/ theme every plugin at once.
+Either way, the HTML renderer inlines the styles once per document, and the Vue, React, and Svelte components add them on mount. On a server-rendered page, import each package's `style.css`, such as `comark-cards/style.css`, so the page doesn't shift. The `--comark-*` tokens in https://comark-ui.onmax.me/guide/theming/ theme every plugin at once. In a Nuxt UI app the plugins follow its `--ui-*` variables with no setup; for a page rendered outside the app, such as review evidence, put the CSS from `nuxtUiTheme({ colors: appConfig.ui?.colors, css: mainCss })` in `comark-ui/nuxt-ui` in a `<style>`, so the page matches the app.
 
 Problems land in `meta.issues` after `parseMarkdown`, one sentence each, and a host can refuse a document while any remain. For untrusted input, add Comark's `security` plugin with `blockedTags` such as `script`, `style`, and `iframe`; it cleans the Markdown inside blocks too.
 
@@ -78,7 +78,7 @@ Read the reference for each block you use before you write it. Mix the blocks fr
 | A stable link to a section, or a link that opens a new tab | `{#id}`, `{target="_blank"}` | [links](references/links.md) |
 | A table, code block, or diagram too small to read in place | `::zoom` | [zoom](references/zoom.md) |
 | A sequence to page through in one place, such as the screens of a flow | `::carousel` | [carousel](references/carousel.md) |
-| Versions of one thing where each reader needs only one, such as an OS or a package manager | `::tabs`, `::code-group`, `npm2yarn` | [tabs](references/tabs.md) |
+| Versions of one thing where each reader needs only one, such as an OS or a package manager | `::tabs`, `::code-group`, `pm` | [tabs](references/tabs.md) |
 | Code with lines marked added, removed, or highlighted, or a pasted `git diff` | `ins={4}` after a fence's language, `diff lang="ts"` | [code](references/code.md) |
 
 ### Docs blocks
@@ -103,6 +103,7 @@ Read the reference for each block you use before you write it. Mix the blocks fr
 | A suggested edit or a comment inside the text | `{++ ++}`, `{-- --}`, `{~~ ~> ~~}`, `{== ==}`, `{>> <<}` | [critic](references/critic.md) |
 | Terms and their definitions, such as a glossary | `Term`, then `: definition` | [deflist](references/deflist.md) |
 | A numbered note at the end of the page, such as a source or a caveat | `[^label]`, `^[note]` | [footnotes](references/footnotes.md) |
+| A formula, such as a complexity bound or how a number was computed | `$…$`, `$$…$$` | [math](references/math.md) |
 | A keyboard shortcut | `++ctrl+k++` | [keys](references/keys.md) |
 
 ### Authoring tools

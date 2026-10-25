@@ -2,6 +2,9 @@ import type { ElementNode, Node } from "comark";
 import { defineComarkPlugin } from "comark";
 import { resolveAttributes } from "comark/render";
 import { textContent } from "comark/utils";
+import { badgeKeys, badgeParams, badgeSvg, readBadge } from "./svg.ts";
+
+export type BadgeOptions = { endpoint?: string };
 
 export type BadgeMeta = {
   /** One readable sentence per problem with a `:badge`. Empty when the document has none. Other plugins add theirs too. */
@@ -26,7 +29,7 @@ export const colors = [
 export type BadgeColor = (typeof colors)[number];
 
 /** What a `:badge` or `::badge` becomes: its color, `primary` unless it sets a known one, around its content. */
-export type BadgeAttributes = { color?: BadgeColor };
+export type BadgeAttributes = { color?: BadgeColor; src?: string; label?: string };
 
 type Data = Parameters<typeof resolveAttributes>[1];
 
@@ -47,22 +50,67 @@ const clip = (value: string) => {
 };
 const isColor = (value: string): value is BadgeColor => colors.some((color) => color === value);
 
-function badge(node: ElementNode, number: number, data: Data, issues: Issue[]) {
+function badge(
+  node: ElementNode,
+  number: number,
+  data: Data,
+  issues: Issue[],
+  options: BadgeOptions,
+) {
   // A block badge's content is a paragraph, which a badge, drawn inline, can't hold.
   const content = childrenOf(node)
     .filter(isContent)
     .flatMap((child) => (isElement(child) && child[0] === "p" ? childrenOf(child) : [child]));
   const words = clip(textContent(["span", {}, ...content]));
   const name = `\`:badge\` ${number}${words ? ` ("${words}")` : ""}`;
+  const attrs = resolveAttributes(node[1], data, { parseJson: true });
+  const image = badgeKeys.some((key) => key !== "color" && Object.hasOwn(attrs, key));
   for (const key of Object.keys(node[1])) {
     const prop = key.replace(/^:/, "");
-    if (prop !== "color" && prop !== "id" && prop !== "class")
+    if (!badgeKeys.some((key) => key === prop) && prop !== "id" && prop !== "class")
       issues.push({
         rule: "comark/badge/unknown-prop",
         message: `${name}: \`${prop}\` isn't a prop of \`:badge\`, so it's ignored. Use \`color\`.`,
       });
   }
-  const written = text(resolveAttributes(node[1], data, { parseJson: true }).color);
+  if (image) {
+    const parsed = readBadge({
+      ...attrs,
+      value: attrs.value ?? textContent(["span", {}, ...content]),
+    });
+    if (!parsed.ok) {
+      issues.push({ rule: "comark/badge/invalid-image", message: `${name}: ${parsed.error}` });
+      node.splice(1, node.length - 1, { color: "neutral" }, ...content);
+      return;
+    }
+    const spec = parsed.value;
+    let src: string;
+    if (spec.source === "static") src = `data:image/svg+xml,${encodeURIComponent(badgeSvg(spec))}`;
+    else {
+      try {
+        const endpoint = new URL(options.endpoint ?? "https://comark-ui.onmax.me/badge.svg");
+        if (endpoint.protocol !== "https:" || endpoint.username || endpoint.password)
+          throw new Error("Invalid endpoint");
+        endpoint.search = badgeParams(spec).toString();
+        endpoint.hash = "";
+        src = endpoint.href;
+      } catch {
+        issues.push({
+          rule: "comark/badge/invalid-image",
+          message: `${name}: Set the badge plugin's endpoint to an HTTPS URL without credentials.`,
+        });
+        node.splice(1, node.length - 1, { color: "neutral" }, ...content);
+        return;
+      }
+    }
+    const label =
+      spec.source === "static"
+        ? `${spec.label ? `${spec.label}: ` : ""}${spec.value}`
+        : `${spec.label}: ${spec.package || `${spec.repository} / ${spec.workflow}`}`;
+    node.splice(1, node.length - 1, { src, label });
+    return;
+  }
+  const written = text(attrs.color);
   let color: BadgeColor = "primary";
   if (isColor(written)) color = written;
   else if (written)
@@ -82,7 +130,7 @@ function badge(node: ElementNode, number: number, data: Data, issues: Issue[]) {
  * Turns inline `:badge[New]{color="success"}` and Nuxt UI's block `::badge` into badges in one of Nuxt UI's colors.
  * Problems, such as an unknown color, are added to `meta.issues`.
  */
-export default defineComarkPlugin<void, BadgeMeta>(() => ({
+export default defineComarkPlugin<BadgeOptions, BadgeMeta>((options = {}) => ({
   name: "comark-badge",
   post(state) {
     const { tree } = state;
@@ -92,7 +140,7 @@ export default defineComarkPlugin<void, BadgeMeta>(() => ({
     const walk = (nodes: Node[]) => {
       for (const node of nodes) {
         if (!isElement(node)) continue;
-        if (node[0] === "badge") badge(node, ++count, data, issues);
+        if (node[0] === "badge") badge(node, ++count, data, issues, options);
         walk(childrenOf(node));
       }
     };

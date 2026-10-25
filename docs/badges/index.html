@@ -1,0 +1,175 @@
+<div class="badge-builder" data-badge-builder>
+  <form id="badge-form" autocomplete="off">
+    <fieldset class="builder-presets">
+      <legend>Preset</legend>
+      <div class="preset-grid">
+        <button type="button" data-preset="custom" aria-pressed="true">
+          <span data-logo="comark"></span>Custom
+        </button>
+        <button type="button" data-preset="npm-version" aria-pressed="false">
+          <span data-logo="npm"></span>npm version
+        </button>
+        <button type="button" data-preset="npm-downloads" aria-pressed="false">
+          <span data-logo="npm"></span>Downloads
+        </button>
+        <button type="button" data-preset="github-actions" aria-pressed="false">
+          <span data-logo="github"></span>GitHub Actions
+        </button>
+        <button type="button" data-preset="license" aria-pressed="false">
+          <span data-logo="check"></span>License
+        </button>
+        <button type="button" data-preset="docs" aria-pressed="false">
+          <span data-logo="comark"></span>Docs
+        </button>
+      </div>
+      <input type="hidden" name="source" value="static" />
+    </fieldset>
+    <div class="builder-grid">
+      <div class="builder-controls">
+        <fieldset>
+          <legend>Content</legend>
+          <label data-for="static"
+            >Value<input name="value" value="Comark UI" maxlength="80" spellcheck="false"
+          /></label>
+          <label data-for="npm-version npm-downloads" hidden
+            >Package<input
+              name="package"
+              value="comark-ui"
+              placeholder="@scope/package"
+              maxlength="214"
+              spellcheck="false"
+          /></label>
+          <label data-for="npm-downloads" hidden
+            >Download period<select name="period">
+              <option value="month">Last month</option>
+              <option value="week">Last week</option>
+              <option value="day">Last day</option>
+            </select></label
+          >
+          <label data-for="github-actions" hidden
+            >Repository<input
+              name="repository"
+              value="onmax/comark-ui"
+              placeholder="owner/repository"
+              maxlength="140"
+              spellcheck="false"
+          /></label>
+          <label data-for="github-actions" hidden
+            >Workflow file<input
+              name="workflow"
+              value="pkg-pr-new.yml"
+              placeholder="ci.yml"
+              maxlength="100"
+              spellcheck="false"
+          /></label>
+          <label data-for="github-actions" hidden
+            >Branch <span class="optional">optional</span
+            ><input name="branch" placeholder="All branches" maxlength="200" spellcheck="false"
+          /></label>
+          <label
+            >Label<input name="label" value="built with" maxlength="80" spellcheck="false"
+          /></label>
+        </fieldset>
+        <fieldset>
+          <legend>Appearance</legend>
+          <div class="pair">
+            <label
+              >Style<select name="style">
+                <option value="shadcn">shadcn</option>
+                <option value="subtle">Subtle</option>
+                <option value="solid">Solid</option>
+              </select></label
+            >
+            <label
+              >Badge theme<select name="theme">
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+              </select></label
+            >
+          </div>
+          <label
+            >Logo<select name="icon">
+              <option value="none">None</option>
+              <option value="comark" selected>Comark</option>
+              <option value="npm">npm</option>
+              <option value="github">GitHub</option>
+              <option value="shadcn">shadcn</option>
+              <option value="package">Package</option>
+              <option value="check">Check</option>
+            </select></label
+          >
+          <div class="pair">
+            <label
+              >Color<input
+                name="color"
+                value="primary"
+                list="badge-colors"
+                spellcheck="false"
+                maxlength="20"
+                aria-describedby="color-help"
+            /></label>
+            <label data-label-color
+              >Label color<input
+                name="labelColor"
+                value="neutral"
+                list="badge-colors"
+                spellcheck="false"
+                maxlength="20"
+                aria-describedby="color-help"
+            /></label>
+          </div>
+          <datalist id="badge-colors">
+            <option value="primary"></option>
+            <option value="secondary"></option>
+            <option value="success"></option>
+            <option value="info"></option>
+            <option value="warning"></option>
+            <option value="error"></option>
+            <option value="neutral"></option>
+          </datalist>
+          <p id="color-help" class="hint">
+            Color name or hex, e.g. #15803d. CI uses its status color.
+          </p>
+        </fieldset>
+        <p id="form-error" class="error" role="alert"></p>
+      </div>
+      <section class="result" aria-label="Badge preview and export">
+        <div class="preview-heading">
+          <h2>Preview</h2>
+          <button class="refresh" type="submit">Refresh preview</button>
+        </div>
+        <div id="preview" class="preview" data-theme="light">
+          <img id="badge-preview" alt="built with: Comark UI" height="26" hidden /><span
+            id="preview-empty"
+            >Loading preview…</span
+          >
+        </div>
+        <p id="preview-status" class="hint" role="status"></p>
+        <div class="export-heading">
+          <label for="export-format">Export</label
+          ><select id="export-format">
+            <option value="markdown">Markdown</option>
+            <option value="comark">Comark</option>
+            <option value="image-url">Image URL</option>
+          </select>
+        </div>
+        <textarea
+          id="export-code"
+          aria-label="Export code"
+          readonly
+          rows="4"
+          spellcheck="false"
+        ></textarea>
+        <div class="actions">
+          <button id="copy-code" class="primary" type="button">Copy Markdown</button
+          ><button id="download" type="button" disabled>Download SVG</button
+          ><button id="share" type="button">Copy builder link</button>
+        </div>
+        <p id="copy-status" class="hint" role="status"></p>
+      </section>
+    </div>
+  </form>
+  <noscript
+    >Enable JavaScript to use the builder, or <a href="/badge/">write a badge by hand</a>.</noscript
+  >
+</div>

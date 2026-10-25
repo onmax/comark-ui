@@ -2,13 +2,15 @@
   <img src="./.github/banner.svg" alt="Comark UI: The Component Library for Markdown" width="100%">
 </h1>
 
-[![release](https://img.shields.io/github/v/release/onmax/comark-ui?label=release&labelColor=0a0a0a&color=e5484d)](https://github.com/onmax/comark-ui/releases)
-[![license](https://img.shields.io/github/license/onmax/comark-ui?labelColor=0a0a0a&color=525252)](./LICENSE)
-[![docs](https://img.shields.io/badge/docs-comark--ui.onmax.me-14b8a6?labelColor=0a0a0a)](https://comark-ui.onmax.me)
+[![release](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-ui&label=release&icon=npm)](https://github.com/onmax/comark-ui/releases)
+[![license: MIT](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](./LICENSE)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me&icon=comark)](https://comark-ui.onmax.me)
+[![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-ui&icon=npm)](https://www.npmjs.com/package/comark-ui)
+[![CI status](https://comark-ui.onmax.me/badge.svg?source=github-actions&repository=onmax%2Fcomark-ui&workflow=pkg-pr-new.yml&branch=main&icon=github)](https://github.com/onmax/comark-ui/actions/workflows/pkg-pr-new.yml)
 
 Comark UI is a free, open source library built on [Comark](https://comark.dev), with 40+ blocks for docs, reviews, and agent reports. Write tabs, cards, charts, annotated screenshots, and more in Markdown. Install them together with [`comark-ui`](./packages/ui), or use individual packages.
 
-[Documentation](https://comark-ui.onmax.me) · [Getting started](https://comark-ui.onmax.me/getting-started/) · [Playground](https://comark-ui.onmax.me/play/)
+[Documentation](https://comark-ui.onmax.me) · [Getting started](https://comark-ui.onmax.me/getting-started/) · [Playground](https://comark-ui.onmax.me/play/) · [Badge builder](https://comark-ui.onmax.me/badges/)
 
 An independent project by [@onmax](https://github.com/onmax).
 
@@ -82,6 +84,7 @@ Browse the [docs and live examples](https://comark-ui.onmax.me) for component sy
 | [`comark-metrics`](./packages/metrics) | Before → after numbers with the percent change, progress bars, and tables of metrics with a change column. |
 | [`comark-include`](./packages/include) | Markdown partials and code snippets from files, by lines or by region. |
 | [`comark-mark`](./packages/mark) | `==highlighted text==` as `<mark>` and `^superscript^` as `<sup>`. |
+| [`comark-mathml`](./packages/math) | LaTeX math in place of Comark's own plugin: `$…$`, `$$…$$`, and `math` fences typeset to MathML while parsing, so pages ship no math script, fonts, or stylesheet. |
 | [`comark-properties`](./packages/properties) | Chosen frontmatter keys, such as status, pull request, author, date, and tags, as a properties box at the top of a document. |
 | [`comark-sources`](./packages/sources) | Numbered `:cite[2]` citations that link to a `::sources` list of links, each with a link back. |
 | [`comark-table`](./packages/table) | Tables from CSV, TSV, and JSON files or fences, read while parsing, with copy buttons and headers that sort. |

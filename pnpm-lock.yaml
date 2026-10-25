@@ -33,6 +33,30 @@ catalogs:
     '@playwright/test':
       specifier: ^1.64.1
       version: 1.64.1
+    '@tiptap/core':
+      specifier: ^3.31.4
+      version: 3.32.0
+    '@tiptap/extension-image':
+      specifier: ^3.31.4
+      version: 3.32.0
+    '@tiptap/extension-list':
+      specifier: ^3.31.4
+      version: 3.32.0
+    '@tiptap/extension-table':
+      specifier: ^3.31.4
+      version: 3.32.0
+    '@tiptap/pm':
+      specifier: ^3.31.4
+      version: 3.32.0
+    '@tiptap/starter-kit':
+      specifier: ^3.31.4
+      version: 3.32.0
+    '@tiptap/vue-3':
+      specifier: ^3.31.4
+      version: 3.32.0
+    '@tiptap/y-tiptap':
+      specifier: ^3.0.9
+      version: 3.0.10
     '@types/node':
       specifier: ^24.0.0
       version: 24.19.2
@@ -47,7 +71,7 @@ catalogs:
       version: 0.0.4
     ai:
       specifier: ^7.0.130
-      version: 7.0.152
+      version: 7.0.153
     comark:
       specifier: ^0.8.1
       version: 0.8.1
@@ -60,12 +84,12 @@ catalogs:
     geist:
       specifier: ^1.7.2
       version: 1.7.2
+    katex:
+      specifier: ^0.19.1
+      version: 0.19.1
     markdown-it-cjk-friendly:
       specifier: ^3.0.0
       version: 3.0.0
-    npm-to-yarn:
-      specifier: ^3.2.0
-      version: 3.2.0
     nuxt-agent-discovery:
       specifier: ^0.8.0
       version: 0.8.0
@@ -87,6 +111,9 @@ catalogs:
     svelte:
       specifier: ^5.57.2
       version: 5.57.2
+    temml:
+      specifier: ^0.14.0
+      version: 0.14.0
     tsdown:
       specifier: ^0.23.1
       version: 0.23.1
@@ -111,6 +138,9 @@ catalogs:
     vue:
       specifier: ^3.5.44
       version: 3.5.44
+    yjs:
+      specifier: ^13.6.33
+      version: 13.6.33
 
 overrides:
   vite: npm:@voidzero-dev/vite-plus-core@^1.1.0
@@ -124,7 +154,7 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@fontsource-variable/caveat':
         specifier: 'catalog:'
         version: 5.3.0
@@ -139,7 +169,7 @@ importers:
         version: 24.19.2
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-linter:
         specifier: workspace:*
         version: link:packages/lint
@@ -175,7 +205,7 @@ importers:
     dependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@fontsource-variable/caveat':
         specifier: 'catalog:'
         version: 5.3.0
@@ -184,7 +214,7 @@ importers:
         version: 1.2.146
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-annotate:
         specifier: workspace:*
         version: link:../packages/annotate
@@ -255,22 +285,22 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
 
   packages/badge:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -279,7 +309,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -304,13 +334,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -319,7 +349,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -344,13 +374,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -359,7 +389,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       react:
         specifier: 'catalog:'
         version: 19.3.1
@@ -377,13 +407,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -392,7 +422,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -429,13 +459,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -444,7 +474,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -465,13 +495,13 @@ importers:
     devDependencies:
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/svelte':
         specifier: 'catalog:'
         version: 0.8.1(shiki@4.5.0)(svelte@5.57.2(@typescript-eslint/types@8.71.1))
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -480,10 +510,10 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       ai:
         specifier: 'catalog:'
-        version: 7.0.152(zod@4.6.7)
+        version: 7.0.153(zod@4.6.7)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -504,13 +534,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -519,7 +549,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -544,10 +574,10 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
 
   packages/code:
     dependencies:
@@ -557,13 +587,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -572,7 +602,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-tabs:
         specifier: workspace:*
         version: link:../tabs
@@ -596,13 +626,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -611,7 +641,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -632,13 +662,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -647,7 +677,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -668,10 +698,10 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -680,10 +710,10 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
 
   packages/details:
     dependencies:
@@ -693,13 +723,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -708,7 +738,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -729,13 +759,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -744,7 +774,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -765,10 +795,10 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -777,13 +807,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -792,7 +822,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -813,13 +843,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -828,7 +858,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -849,10 +879,10 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
 
   packages/file-tree:
     dependencies:
@@ -862,13 +892,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -877,7 +907,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -898,22 +928,22 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
 
   packages/github:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -922,7 +952,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -950,13 +980,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -965,7 +995,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       react:
         specifier: 'catalog:'
         version: 19.3.1
@@ -983,31 +1013,31 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
 
   packages/keys:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
 
   packages/links:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -1016,7 +1046,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -1037,7 +1067,7 @@ importers:
     devDependencies:
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-annotate:
         specifier: workspace:*
         version: link:../annotate
@@ -1116,6 +1146,9 @@ importers:
       comark-mark:
         specifier: workspace:*
         version: link:../mark
+      comark-mathml:
+        specifier: workspace:*
+        version: link:../math
       comark-media:
         specifier: workspace:*
         version: link:../media
@@ -1172,22 +1205,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
-      comark:
-        specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
-
-  packages/media:
-    devDependencies:
-      '@comark/html':
-        specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -1196,7 +1220,86 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
+      comark-zoom:
+        specifier: workspace:*
+        version: link:../zoom
+      react:
+        specifier: 'catalog:'
+        version: 19.3.1
+      react-dom:
+        specifier: 'catalog:'
+        version: 19.3.1(react@19.3.1)
+      svelte:
+        specifier: 'catalog:'
+        version: 5.57.2(@typescript-eslint/types@8.71.1)
+      vue:
+        specifier: 'catalog:'
+        version: 3.5.44(typescript@6.0.3)
+
+  packages/math:
+    dependencies:
+      temml:
+        specifier: 'catalog:'
+        version: 0.14.0
+    devDependencies:
+      '@comark/html':
+        specifier: 'catalog:'
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
+      '@comark/react':
+        specifier: 'catalog:'
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
+      '@comark/vue':
+        specifier: 'catalog:'
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+      '@types/react':
+        specifier: 'catalog:'
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: 'catalog:'
+        version: 19.3.0(@types/react@19.3.0)
+      comark:
+        specifier: 'catalog:'
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
+      comark-zoom:
+        specifier: workspace:*
+        version: link:../zoom
+      katex:
+        specifier: 'catalog:'
+        version: 0.19.1
+      react:
+        specifier: 'catalog:'
+        version: 19.3.1
+      react-dom:
+        specifier: 'catalog:'
+        version: 19.3.1(react@19.3.1)
+      svelte:
+        specifier: 'catalog:'
+        version: 5.57.2(@typescript-eslint/types@8.71.1)
+      vue:
+        specifier: 'catalog:'
+        version: 3.5.44(typescript@6.0.3)
+
+  packages/media:
+    devDependencies:
+      '@comark/html':
+        specifier: 'catalog:'
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
+      '@comark/react':
+        specifier: 'catalog:'
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
+      '@comark/vue':
+        specifier: 'catalog:'
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+      '@types/react':
+        specifier: 'catalog:'
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: 'catalog:'
+        version: 19.3.0(@types/react@19.3.0)
+      comark:
+        specifier: 'catalog:'
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -1217,13 +1320,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -1232,7 +1335,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -1253,13 +1356,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -1268,7 +1371,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -1289,13 +1392,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -1304,7 +1407,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -1329,13 +1432,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -1344,7 +1447,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -1365,10 +1468,10 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -1377,22 +1480,22 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
 
   packages/sources:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -1401,7 +1504,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -1422,13 +1525,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -1437,7 +1540,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -1458,13 +1561,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -1473,7 +1576,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -1495,19 +1598,16 @@ importers:
       comark-icon:
         specifier: workspace:^
         version: link:../icon
-      npm-to-yarn:
-        specifier: 'catalog:'
-        version: 3.2.0
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -1516,7 +1616,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -1537,13 +1637,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -1552,7 +1652,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -1652,6 +1752,9 @@ importers:
       comark-mark:
         specifier: workspace:^
         version: link:../mark
+      comark-mathml:
+        specifier: workspace:^
+        version: link:../math
       comark-media:
         specifier: workspace:^
         version: link:../media
@@ -1700,13 +1803,37 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+      '@tiptap/core':
+        specifier: 'catalog:'
+        version: 3.32.0(@tiptap/pm@3.32.0)
+      '@tiptap/extension-image':
+        specifier: 'catalog:'
+        version: 3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))
+      '@tiptap/extension-list':
+        specifier: 'catalog:'
+        version: 3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0)
+      '@tiptap/extension-table':
+        specifier: 'catalog:'
+        version: 3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0)
+      '@tiptap/pm':
+        specifier: 'catalog:'
+        version: 3.32.0
+      '@tiptap/starter-kit':
+        specifier: 'catalog:'
+        version: 3.32.0
+      '@tiptap/vue-3':
+        specifier: 'catalog:'
+        version: 3.32.0(@floating-ui/dom@1.8.0)(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0)(vue@3.5.44(typescript@6.0.3))
+      '@tiptap/y-tiptap':
+        specifier: 'catalog:'
+        version: 3.0.10(prosemirror-model@1.25.12)(prosemirror-state@1.4.4)(prosemirror-view@1.42.8)(y-protocols@1.0.7(yjs@13.6.33))(yjs@13.6.33)
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -1715,7 +1842,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       react:
         specifier: 'catalog:'
         version: 19.3.1
@@ -1728,18 +1855,21 @@ importers:
       vue:
         specifier: 'catalog:'
         version: 3.5.44(typescript@6.0.3)
+      yjs:
+        specifier: 'catalog:'
+        version: 13.6.33
 
   packages/xref:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -1748,7 +1878,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       react:
         specifier: 'catalog:'
         version: 19.3.1
@@ -1763,13 +1893,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -1778,7 +1908,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       react:
         specifier: 'catalog:'
         version: 19.3.1
@@ -1794,20 +1924,20 @@ importers:
 
 packages:
 
-  '@ai-sdk/gateway@4.0.125':
-    resolution: {integrity: sha512-9raNdkENebDxVl4piGntpQgOBHB62K1rC87KceV8kkGOc/g7s6lwbxN7C6QTqXYJaM+h1Lnm64MDgnHAmzUApg==}
+  '@ai-sdk/gateway@4.0.126':
+    resolution: {integrity: sha512-gOrvnfrWxslTws5puMe+CvEDjZ0rxbpQYLZgdngQl1g/z3mRc5sllcflVAhy2xJSZacrWtsXwua+NJoc/IKZDw==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/provider-utils@5.0.67':
-    resolution: {integrity: sha512-EUzV6GXutGcesWKOY8tRKgijfuv1LUBpqAquMh5k0n74NCjDbca5d5ZG12qhVtM2X5UwM4B2ZMP2XpnAwZlA8Q==}
+  '@ai-sdk/provider-utils@5.0.68':
+    resolution: {integrity: sha512-SASuC1DqSdWoYyYfpxbgPKm9VCnMP1VTahWY7WEYzi2QDmFdbw4runqmH7NKC33iB/INo+XbaN2hH3dXHSNQZw==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/provider@4.0.33':
-    resolution: {integrity: sha512-C6ylMuAXjgqKJllp6ODIJwUltK/tm3ZmIj4V2fqENP3Y8gif2DyeJSsTcDwFrXppgEKcrBisi/BWx2tYeoeCAw==}
+  '@ai-sdk/provider@4.0.34':
+    resolution: {integrity: sha512-Ip7ZQBq/FiGpM1mmOVseTtX9PBjnzo0bLC41WTgBSBBRUBz6LhNFGbYaNUzI6hPm6ll1oNSPOAZc/q/z+3QZEQ==}
     engines: {node: '>=22'}
 
   '@antfu/install-pkg@2.1.0':
@@ -2236,6 +2366,15 @@ packages:
   '@eslint/plugin-kit@0.7.3':
     resolution: {integrity: sha512-IkO+/KEUvwbVpiURZg+P7zF74z5Jxe0UgJxVni+RtoHQ6IZieXaO02kmadomap/q+l6bc/jdPGGqTjhuZnuz1Q==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24}
+
+  '@floating-ui/core@1.8.0':
+    resolution: {integrity: sha512-0CIZ5itps/8x7BG8dEIhs53BvCUH2PCoogtakwRTut+Arm58sJooJ0AuZhLw2HJYIR5cMLNPBSS728sPho2khQ==}
+
+  '@floating-ui/dom@1.8.0':
+    resolution: {integrity: sha512-yXSrzeHZBTZadLOlfyhCkJHNeLJnHRnRInwdZ40L7ZiaAtrBwoYlsDrX3v5zB1Utk7CLfzcOVnVVWoXEky7Ceg==}
+
+  '@floating-ui/utils@0.2.12':
+    resolution: {integrity: sha512-HpCo8tmWzLVad5s2d19EhAz5zqrrQ6s69qd6moPMQvkOuSwDT1YgRfWSVuc4ennqrgv3OHppiOGMQ7oC13yIww==}
 
   '@fontsource-variable/caveat@5.3.0':
     resolution: {integrity: sha512-Q3mjghoYIlXgwqBPJKZ4q6f3zu921Gq7UU76r9Z+NAmhapHfX130GIFpOCYf8vt2SIcgCi9RHDT7anfJKg/kiA==}
@@ -3598,6 +3737,174 @@ packages:
     peerDependencies:
       '@testing-library/dom': '>=7.21.4'
 
+  '@tiptap/core@3.32.0':
+    resolution: {integrity: sha512-Ghh2h02GKSqzytQGcLV4espYOG4EHxjj0MsrUB2Vnr47xmlZYRf6r7k2J09H+JpBdaGrWwrTkyBEi5i3c3yy2Q==}
+    peerDependencies:
+      '@tiptap/pm': 3.32.0
+
+  '@tiptap/extension-blockquote@3.32.0':
+    resolution: {integrity: sha512-wmuthEdlYVArNoUbqFPH35giutBABFu7fqEB0lTD1k0UXJUs4dFvcbRyGWWgnHFZgP3TT4u8e+xiayYw0eQ0NQ==}
+    peerDependencies:
+      '@tiptap/core': 3.32.0
+      '@tiptap/pm': 3.32.0
+
+  '@tiptap/extension-bold@3.32.0':
+    resolution: {integrity: sha512-SQYewnYDoIBN+8oH53IDcD8p+Pz+Jnyq3hrxjy/FAo5ctc+96d3ZLdqc9gzLVSqFFo/SUINv2FVGoq9PvU7yqw==}
+    peerDependencies:
+      '@tiptap/core': 3.32.0
+
+  '@tiptap/extension-bubble-menu@3.32.0':
+    resolution: {integrity: sha512-X3ll8i9Z8QNvt7+tcqlwopJG+68ugO13Av0Ox4Ico+jXcTnFdDuKQJBSI9sLuMR5vTQOeTHhKYXhjF88aahMSA==}
+    peerDependencies:
+      '@tiptap/core': 3.32.0
+      '@tiptap/pm': 3.32.0
+
+  '@tiptap/extension-bullet-list@3.32.0':
+    resolution: {integrity: sha512-Y5P/l06pVCUG46vXpBl3z0fW2b6JpSMX4Cvr+5sfQh8zB3TxwSiLQaaPwI3R5MFD1KfRk3AjiPRieEyXdWcNHw==}
+    peerDependencies:
+      '@tiptap/extension-list': 3.32.0
+
+  '@tiptap/extension-code-block@3.32.0':
+    resolution: {integrity: sha512-9NZW/yXP9j9XKr+hRS5m58xiyZI+tQo1PJ7eLHXjGNFWaF601NG/h6741mbKh5uCY51XsbyqG+7que+RavngPA==}
+    peerDependencies:
+      '@tiptap/core': 3.32.0
+      '@tiptap/pm': 3.32.0
+
+  '@tiptap/extension-code@3.32.0':
+    resolution: {integrity: sha512-I+aEVl0dTmkfnU6HzBGEefb9U7ja2MkucwBBwrmoMwU+uIKpC4xw8NcHC9X6sjAcom3Pxs2HX+8WEo4Vp13R/Q==}
+    peerDependencies:
+      '@tiptap/core': 3.32.0
+
+  '@tiptap/extension-document@3.32.0':
+    resolution: {integrity: sha512-GugeKE6AnZDluRXJUNBuX43TPcaJxy5wck6vT2J4a0/EnKStJ43suSZZf1IPfb1ij9EL9bYvAwg9DOcrvdEzTQ==}
+    peerDependencies:
+      '@tiptap/core': 3.32.0
+
+  '@tiptap/extension-dropcursor@3.32.0':
+    resolution: {integrity: sha512-t4Ug8hFLt30dwwYvrh63BVUt6N1Yg5PVI3tMllhCmN3Q68oD47v4MB/i5nGfzIsQqMyXUOetwHJWcZ4MoLTx4Q==}
+    peerDependencies:
+      '@tiptap/extensions': 3.32.0
+
+  '@tiptap/extension-floating-menu@3.32.0':
+    resolution: {integrity: sha512-AzKCWceL+4Q1pTc8Whw1kPqN/aYGPQ70/jXPsblWl501t/pXi6Kz0Pi/NggKkuu73VGjykh68YYf/dcOJ/mPZQ==}
+    peerDependencies:
+      '@floating-ui/dom': ^1.0.0
+      '@tiptap/core': 3.32.0
+      '@tiptap/pm': 3.32.0
+
+  '@tiptap/extension-gapcursor@3.32.0':
+    resolution: {integrity: sha512-HUpKKWJLtthnpQY5LIjHlJJOmh562RusmOMIe/4iP/H7y+WUR9ZFiZjEs1NBkRjig9fwj8F3BfsrVPYBnM4nLA==}
+    peerDependencies:
+      '@tiptap/extensions': 3.32.0
+
+  '@tiptap/extension-hard-break@3.32.0':
+    resolution: {integrity: sha512-IKUYvK+bO2hGrDWhhTVg0CSh9C2belWg9GyLzvpyd3SZyQ9EgdccLfoytNjOBKbAE/TQ4Oo3kSP+XF6RsUIKPA==}
+    peerDependencies:
+      '@tiptap/core': 3.32.0
+
+  '@tiptap/extension-heading@3.32.0':
+    resolution: {integrity: sha512-XRiZxZuhfjvbgwCvoBHj04gOsPANEXxxRwrFCQVuFi5yeTHYIzMEioc81j6iAH9pV7aQeJCwLxuh6VHNz3dXEQ==}
+    peerDependencies:
+      '@tiptap/core': 3.32.0
+
+  '@tiptap/extension-horizontal-rule@3.32.0':
+    resolution: {integrity: sha512-Iry7ynsG4xgcxnH1cm+uXJnEtUzoop4sGA10NUN9I+08TOjhj/GrDiRKMQHKAiVI/R7t2MVav1MJlxFf2FdzGw==}
+    peerDependencies:
+      '@tiptap/core': 3.32.0
+      '@tiptap/pm': 3.32.0
+
+  '@tiptap/extension-image@3.32.0':
+    resolution: {integrity: sha512-nv/YlOMwFUp2ItffQbHb14yAJjrn9sdxKl0WK5rH8PPiNoXVkvasieoBLNTHan9gjhrSp7LjVG2ZsMoSe/I7gg==}
+    peerDependencies:
+      '@tiptap/core': 3.32.0
+
+  '@tiptap/extension-italic@3.32.0':
+    resolution: {integrity: sha512-KB/i1xoHilbBGcQ+UotDWhi60KpdCde3RzRIpl2na0Yol4z4Fe2IRWg8ljIrlsssDRwel/fsHJbG7a13EP8oKA==}
+    peerDependencies:
+      '@tiptap/core': 3.32.0
+
+  '@tiptap/extension-link@3.32.0':
+    resolution: {integrity: sha512-DRdQSgWPSEjrDg5EDBB5yxRygHtUVLhceVGzAsTz8RziiFyvcwAvzBHCO9hd9jutjCXQ2DLIuZB8P+aHhFWnpg==}
+    peerDependencies:
+      '@tiptap/core': 3.32.0
+      '@tiptap/pm': 3.32.0
+
+  '@tiptap/extension-list-item@3.32.0':
+    resolution: {integrity: sha512-FdJTCAeALixzyyGSSEmroXmkIEclbo/4t2Pl03aRERqpPOSPJcC3evDtIhLazTuP6v+FjCmJ+pXNql6ov7qitA==}
+    peerDependencies:
+      '@tiptap/extension-list': 3.32.0
+
+  '@tiptap/extension-list-keymap@3.32.0':
+    resolution: {integrity: sha512-vXFre18Dk2m5N/gjo408C02GSrolZ8ZIf0wz6/U8lNC4FcYOISgZFj3BND6uabVntGh2GCSPrVFuNpVPhFnn/A==}
+    peerDependencies:
+      '@tiptap/extension-list': 3.32.0
+
+  '@tiptap/extension-list@3.32.0':
+    resolution: {integrity: sha512-QdzS5nFz9agAQhBgIuQluobWib39W2cMKx1XB6tYSue7bHMJdgPFP0EnGfFajaeVX42CG6RXtQWrNfyQGKhBvg==}
+    peerDependencies:
+      '@tiptap/core': 3.32.0
+      '@tiptap/pm': 3.32.0
+
+  '@tiptap/extension-ordered-list@3.32.0':
+    resolution: {integrity: sha512-htZ5hoMLBkGiDP6M5mGemjOoaBmkrj911wiGoTmMMKzO7qJq9QxUBkLY7ILPaKlUWL8U3ccLdDV2TB/nysp4Jg==}
+    peerDependencies:
+      '@tiptap/extension-list': 3.32.0
+
+  '@tiptap/extension-paragraph@3.32.0':
+    resolution: {integrity: sha512-afKLMc7fWMkkar9H5FilizStSbhFzUoCzdwwdZf6DDsn3LUt8tJlFHACK78cAyx/TzMJBo0N8/8T1u9bL+N67Q==}
+    peerDependencies:
+      '@tiptap/core': 3.32.0
+
+  '@tiptap/extension-strike@3.32.0':
+    resolution: {integrity: sha512-J9Vw6wmh/wV6SxSsN9RhurvAGcXSY5J3p4EQrROD5PARBl0VOnDFi7/UVoz1RkSdqOKPgAiqDZpaLRgtdBO9Rg==}
+    peerDependencies:
+      '@tiptap/core': 3.32.0
+
+  '@tiptap/extension-table@3.32.0':
+    resolution: {integrity: sha512-uOqCzWzxXvMccapZo+1CDxp3JGegxqNl11Lj8XiiWLxwmg81B/bKwMJW7+YlIdffgGNYJETk5YwL8T0IVBD2QQ==}
+    peerDependencies:
+      '@tiptap/core': 3.32.0
+      '@tiptap/pm': 3.32.0
+
+  '@tiptap/extension-text@3.32.0':
+    resolution: {integrity: sha512-sF0jIK67IHdZMnzv2mz5vPTyK7R0ui6/YZgFg+/bLnFCNmweVAoYcHZLlC7ISRnwu0mqJr+epNtzJepY1ZDCjg==}
+    peerDependencies:
+      '@tiptap/core': 3.32.0
+
+  '@tiptap/extension-underline@3.32.0':
+    resolution: {integrity: sha512-rMLdd4vg6sed/JnaXnaupLbCtYiWikTnQ8qir9ItKOXwf1Ui9P1Y4G0bYU4+gcnMsFzaSGtrOhMqG4/c66AogQ==}
+    peerDependencies:
+      '@tiptap/core': 3.32.0
+
+  '@tiptap/extensions@3.32.0':
+    resolution: {integrity: sha512-qO+ndNvlOjzU2MWCtQHoRg1tIortCXLvqPjDx58F1pUYFNCOVZegXi+jqLGDODUA31er+TVz66umzRbbN1bO1Q==}
+    peerDependencies:
+      '@tiptap/core': 3.32.0
+      '@tiptap/pm': 3.32.0
+
+  '@tiptap/pm@3.32.0':
+    resolution: {integrity: sha512-H9eN+xHFboJybE7KPGVsu24S8aBlCIgYz38vCHRSnNv17nwmqm06owq/IQ5scza0n3Y7IfUfpgPOtm9SgeHmNQ==}
+
+  '@tiptap/starter-kit@3.32.0':
+    resolution: {integrity: sha512-aPYxaevci4PgMrTLsg+baiqI7M1ICd4V9H+zTTdrqs8OUZIbAvj/pNDuHU8uWZyKMu3Dh72t2D6ZdqRu/6aSWw==}
+
+  '@tiptap/vue-3@3.32.0':
+    resolution: {integrity: sha512-FpYquLlZpfFzgWcQuOrXuUXDNn8YYomD3dLx92b61XxVMlwKkOH3p1XS/wlNNRBLaA7oSB5VRzy5E7EXtfgqpg==}
+    peerDependencies:
+      '@floating-ui/dom': ^1.0.0
+      '@tiptap/core': 3.32.0
+      '@tiptap/pm': 3.32.0
+      vue: ^3.0.0
+
+  '@tiptap/y-tiptap@3.0.10':
+    resolution: {integrity: sha512-vJtwYVoBBk+e8KyUVoH9WSsfUfKTXf1Uh+tk2UNTlD8wim9j7XVTuc7sakWUYuznB7DkXThT9w5uQTGH2SN0Kg==}
+    peerDependencies:
+      prosemirror-model: ^1.7.1
+      prosemirror-state: ^1.2.3
+      prosemirror-view: ^1.9.10
+      y-protocols: ^1.0.1
+      yjs: ^13.5.38
+
   '@types/aria-query@5.0.4':
     resolution: {integrity: sha512-rfT93uj5s0PRL7EzccGMs3brplhcrghnDoV26NqKhCAS1hVo+WdNsPvE/yb6ilfr5hi2MEk6d5EWJTKdxg8jVw==}
 
@@ -4271,8 +4578,8 @@ packages:
     resolution: {integrity: sha512-MnA+YT8fwfJPgBx3m60MNqakm30XOkyIoH1y6huTQvC0PwZG7ki8NacLBcrPbNoo8vEZy7Jpuk7+jMO+CUovTQ==}
     engines: {node: '>= 14'}
 
-  ai@7.0.152:
-    resolution: {integrity: sha512-cxQaE/17qhgqJcLCespbnyaN3c4IkGuNUtBXKSX1yTvlSsQ7ERV2ygFADMG7d+IWCUuvi7R8DrqAy9DGj0cgkg==}
+  ai@7.0.153:
+    resolution: {integrity: sha512-Ib8v374jWn9FXsjADXodRaP7fsMutlmPsbTLT5gYBDyadFcF9XxfYX1CSSxgSvE1r06MmOeYVwvQjFb3CcBi1Q==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -4613,6 +4920,10 @@ packages:
 
   comma-separated-tokens@2.0.3:
     resolution: {integrity: sha512-Fu4hJdvzeylCfQPp9SGWidpzrMs7tTrlu6Vb8XGaRGck8QSNZJJp538Wrb60Lax4fPwR64ViY468OIUTbRlGZg==}
+
+  commander@15.0.0:
+    resolution: {integrity: sha512-z67u4ZhzCL/Tydu1lJARtEZYWbWaN7oYLHbsuzocr6y4N6WZAagG3RQ4FW61V1/0+jImpj293XfrcYnd1qxtPg==}
+    engines: {node: '>=22.12.0'}
 
   commander@2.20.3:
     resolution: {integrity: sha512-GpVkmM8vF2vQUkj2LvZmD35JxeJOLCwJ9cUkugyk2nuhbv3+mJvpLYYt+0+USMxE+oj+ey/lJEnhZw75x/OMcQ==}
@@ -5560,6 +5871,9 @@ packages:
     resolution: {integrity: sha512-FFUtZMpoZ8RqHS3XeXEmHWLA4thH+ZxCv2lOiPIn1Xc7CxrqhWzNSDzD+/chS/zbYezmiwWLdQC09JdQKmthOw==}
     engines: {node: '>=20'}
 
+  isomorphic.js@0.2.5:
+    resolution: {integrity: sha512-PIeMbHqMt4DnUP3MA/Flc0HElYjMXArsw1qwJZcm9sqR8mq3l8NYizFMty0pWwE/tzIGH3EKK5+jes5mAr85yw==}
+
   jackspeak@3.4.3:
     resolution: {integrity: sha512-OGlZQpz2yfahA/Rd1Y8Cd9SIEsqvXkLVoSw/cgwhnhFMDbsQFeZYoJJ7bIZBS9BcamUW96asq/npPWugM+RQBw==}
 
@@ -5602,6 +5916,10 @@ packages:
     engines: {node: '>=6'}
     hasBin: true
 
+  katex@0.19.1:
+    resolution: {integrity: sha512-jG8uKntjSEcm2EpQOh0XturpPuuC9r3Sq5HLHdsFdWZT27E672SF19QEi+of0/YeOy15lDgRhKvr5614uRrEfA==}
+    hasBin: true
+
   keyv@5.6.0:
     resolution: {integrity: sha512-CYDD3SOtsHtyXeEORYRx2qBtpDJFjRTGXUtmNEMGyzYOKj1TE3tycdlho7kA1Ufx9OYWZzg52QFBGALTirzDSw==}
 
@@ -5629,6 +5947,11 @@ packages:
   levn@0.4.1:
     resolution: {integrity: sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ==}
     engines: {node: '>= 0.8.0'}
+
+  lib0@0.2.119:
+    resolution: {integrity: sha512-vh+TiejVy8Xm+hCdnRfn9BthGNvNUZdEXltNjVZL3TzRIKP3s1lnQh8pWd/Q0wCgY0FPAGVVjFF4ZiHUV3LFgA==}
+    engines: {node: '>=16'}
+    hasBin: true
 
   libsql@0.5.29:
     resolution: {integrity: sha512-8lMP8iMgiBzzoNbAPQ59qdVcj6UaE/Vnm+fiwX4doX4Narook0a4GPKWBEv+CR8a1OwbfkgL18uBfBjWdF0Fzg==}
@@ -5714,6 +6037,9 @@ packages:
 
   linkify-it@6.1.0:
     resolution: {integrity: sha512-wJ/TwpSDTLepCrQoYWYIExIKg5Zchex2Nn5yk2mFnB+6PtdkHtyLx742md9csRjjOnGkKIS/RrbY7l8D6gT9Vw==}
+
+  linkifyjs@4.4.0:
+    resolution: {integrity: sha512-InTexvtbai+2c+dEVGcc6O6P2DMVIiwD9a/i4zFroazOIYLOS6FSVmAJ7kFeumnCMx6/gQqNAkbUvgMubV4+MA==}
 
   listhen@1.10.1:
     resolution: {integrity: sha512-6nt/86SkqUQSLW1ofz8MxC6RhRMqOl3ONISe6qqvJ3xj09aJWQx6DhgSZpugs3PX4PXdOas/WD6A9jx6J2N19A==}
@@ -5992,10 +6318,6 @@ packages:
     resolution: {integrity: sha512-9qny7Z9DsQU8Ou39ERsPU4OZQlSTP47ShQzuKZ6PRXpYLtIFgl/DEBYEXKlvcEa+9tHVcK8CF81Y2V72qaZhWA==}
     engines: {node: '>=18'}
 
-  npm-to-yarn@3.2.0:
-    resolution: {integrity: sha512-K1HmQeZT2HrjpsR6KgqbN2FAXL2NrJJmNUSD9ck7HGTVu1JKXox8n9SB+tjbU8m8JGLF4OscrroPepew/L7/Xw==}
-    engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
-
   nth-check@2.1.1:
     resolution: {integrity: sha512-lqjrjmaOoAnWfMmBPL+XNnynZh2+swxiX3WUE0s4yEHI6m+AwrK2UZOimIRl3X/4QctVqS8AiZjFqyOGrMXb/w==}
 
@@ -6078,6 +6400,9 @@ packages:
   optionator@0.9.4:
     resolution: {integrity: sha512-6IpQ7mKUxRcZNLIObR0hz7lxsapSSIYNZJwXPGeF0mTVqGKFIXj1DQcMoT22S3ROcLyY/rz0PWaWZ9ayWmad9g==}
     engines: {node: '>= 0.8.0'}
+
+  orderedmap@2.1.1:
+    resolution: {integrity: sha512-TvAWxi0nDe1j/rtMcWcIj94+Ffe6n7zhow33h40SKxmsmozs6dz/e+EajymfoFcHd7sxNn8yHM8839uixMOV6g==}
 
   oxc-parser@0.148.0:
     resolution: {integrity: sha512-syxUKHeUll89RIABQADcI7sikYrwyssvA6gj4phSSIPezKVM8yMaLAiLLSc7fmzVvrwybfFGFbW5zme9sX87rg==}
@@ -6269,6 +6594,45 @@ packages:
   property-information@7.2.0:
     resolution: {integrity: sha512-IAtzIB6sUiWaJYrX9smp3V46pBGbBeLFRGdh25kg1334VcBlD8HzhPeNIWQH9zhGmo2itIe25EHt9dQP7G5hmg==}
 
+  prosemirror-changeset@2.4.4:
+    resolution: {integrity: sha512-Gyuz9jYdrAeA9I7AholyOes9KUmv/lEwsC5O9s5xF5VB3EgTPsXMGUxz4+H1B+wKVPdZbvRcg1Cp3x8qX+8ofA==}
+
+  prosemirror-commands@1.7.2:
+    resolution: {integrity: sha512-q6Q6szxqdu9Xd6EcdKsqXghu5nQdZTpB4Q9yd04WRc7/jt763e/rT60Owh0L1GYY+T46o5rD+9lEN36dZS43tw==}
+
+  prosemirror-dropcursor@1.8.4:
+    resolution: {integrity: sha512-VmKxhcA6a+h5oPSYmfF1ZNeQqPbyYaIxqZsKqeYCyTlPtrjUgNaHL3P8vVaO19oqAV0zuaM/axkowZHrB1P3Tg==}
+
+  prosemirror-gapcursor@1.4.1:
+    resolution: {integrity: sha512-pMdYaEnjNMSwl11yjEGtgTmLkR08m/Vl+Jj443167p9eB3HVQKhYCc4gmHVDsLPODfZfjr/MmirsdyZziXbQKw==}
+
+  prosemirror-history@1.5.1:
+    resolution: {integrity: sha512-onlwnqKvgtFg6srZOmDOAhlAy1FIHQpOExORybX0S+DvJepE5tPALrB9iGet/2sqqqrelSnB10OoiOJqAvu2DA==}
+
+  prosemirror-inputrules@1.5.1:
+    resolution: {integrity: sha512-7wj4uMjKaXWAQ1CDgxNzNtR9AlsuwzHfdFH1ygEHA2KHF2DOEaXl1CJfNPAKCg9qNEh4rum975QLaCiQPyY6Fw==}
+
+  prosemirror-keymap@1.2.3:
+    resolution: {integrity: sha512-4HucRlpiLd1IPQQXNqeo81BGtkY8Ai5smHhKW9jjPKRc2wQIxksg7Hl1tTI2IfT2B/LgX6bfYvXxEpJl7aKYKw==}
+
+  prosemirror-model@1.25.12:
+    resolution: {integrity: sha512-Ue2gTmXMa7EhpLNhC7J+h4+ykD8ha12K6rrZFFKKJHBForfIStw5gJ6Zrf1mqqAa9NmpmEB4wp9bKmA4eUVjWg==}
+
+  prosemirror-schema-list@1.5.1:
+    resolution: {integrity: sha512-927lFx/uwyQaGwJxLWCZRkjXG0p48KpMj6ueoYiu4JX05GGuGcgzAy62dfiV8eFZftgyBUvLx76RsMe20fJl+Q==}
+
+  prosemirror-state@1.4.4:
+    resolution: {integrity: sha512-6jiYHH2CIGbCfnxdHbXZ12gySFY/fz/ulZE333G6bPqIZ4F+TXo9ifiR86nAHpWnfoNjOb3o5ESi7J8Uz1jXHw==}
+
+  prosemirror-tables@1.8.5:
+    resolution: {integrity: sha512-V/0cDCsHKHe/tfWkeCmthNUcEp1IVO3p6vwN8XtwE9PZQLAZJigbw3QoraAdfJPir4NKJtNvOB8oYGKRl+t0Dw==}
+
+  prosemirror-transform@1.12.4:
+    resolution: {integrity: sha512-2/WuPum3pn+O/Vi2vzpi8210ICUe2kIPXdLYjQ09Pv5DtT5bcKWMJhAKPBwvpPjpp5iOYUVwVEr0gOM1BY1Mgw==}
+
+  prosemirror-view@1.42.8:
+    resolution: {integrity: sha512-ftDZjCs9AjAekXmCfJRn2U3IdlRCl0Yc4tZT1/jJWCsz4DiSifEBXtWmpJpw/4f1Rg328uAUQ+u2lCJ0+AVZkw==}
+
   publint@0.3.25:
     resolution: {integrity: sha512-WMMbn/d7JqRlfXQL/JUI4n5skC8cJ5WVr8/wT5mmiYWkUdENkZr1I5rgs2+dQPVRgoJd+JRYtB46MTsuDylw9g==}
     engines: {node: '>=18'}
@@ -6427,6 +6791,9 @@ packages:
     resolution: {integrity: sha512-GhAu8ZglZ61VWSX/ZW3K/qkazgURBIQL0/Yy51QsS8DPyebR5Cf/Z2PANJFpTU0aVZ9byJcyqR6xvBbkXhdGYQ==}
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
     hasBin: true
+
+  rope-sequence@1.3.4:
+    resolution: {integrity: sha512-UT5EDe2cu2E/6O4igUr5PSFs23nvvukicWHx6GnOPlHAiiYbzNuCRQCuiUdHJQcqKalLKlrYJnjY0ySGsXNQXQ==}
 
   rou3@0.9.2:
     resolution: {integrity: sha512-3SOzvaAg8rkHrXtRjpCvCvbyO5to9oOO27Z/XqHEYXfMRVSw/qMIVdmaOk9W2lcRLtR6dlqTjo9hDeJk70QBYQ==}
@@ -6669,6 +7036,10 @@ packages:
 
   teex@1.0.1:
     resolution: {integrity: sha512-eYE6iEI62Ni1H8oIa7KlDU6uQBtqr4Eajni3wX7rpfXD8ysFx8z0+dri+KWEPWpBsxXfxu58x/0jvTVT1ekOSg==}
+
+  temml@0.14.0:
+    resolution: {integrity: sha512-tz1LW/5IZpThK8c7ZpdTSH/n56eAj+ThirLieErtKxYC3EKCIiB4sKdRUehAgH+fQmvIKqMfP3gqTLBdLpy9zw==}
+    engines: {node: '>=18.13.0'}
 
   terser@5.51.2:
     resolution: {integrity: sha512-bWnjSNscmuI+GJze6ZupnHP8G/cTcsJF+bXCeQknk2SHQsgbNJnLrqiH9jZ2W4STPVXH2mDKKRX3iwPhc9Cn/Q==}
@@ -7345,6 +7716,9 @@ packages:
       typescript:
         optional: true
 
+  w3c-keyname@2.2.8:
+    resolution: {integrity: sha512-dpojBhNsCNN7T82Tm7k26A6G9ML3NkhDsnw9n/eoxSRlVBB4CEtIQ/KTCLI2Fwf3ataSXRhYFkQi3SlnFwPvPQ==}
+
   webidl-conversions@3.0.1:
     resolution: {integrity: sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ==}
 
@@ -7405,6 +7779,12 @@ packages:
     resolution: {integrity: sha512-EvGK8EJ3DhaHfbRlETOWAS5pO9MZITeauHKJyb8wyajUfQUenkIg2MvLDTZ4T/TgIcm3HU0TFBgWWboAZ30UHg==}
     engines: {node: '>=18'}
 
+  y-protocols@1.0.7:
+    resolution: {integrity: sha512-YSVsLoXxO67J6eE/nV4AtFtT3QEotZf5sK5BHxFBXso7VDUT3Tx07IfA6hsu5Q5OmBdMkQVmFZ9QOA7fikWvnw==}
+    engines: {node: '>=16.0.0', npm: '>=8.0.0'}
+    peerDependencies:
+      yjs: ^13.0.0
+
   y18n@5.0.8:
     resolution: {integrity: sha512-0pfFzegeDWJHJIAmTLRP2DwHjdF5s7jo9tuztdQxAhINCdvS+3nGINqPd00AphqJR/0LhANUS6/+7SCb98YOfA==}
     engines: {node: '>=10'}
@@ -7428,6 +7808,10 @@ packages:
   yargs@18.2.0:
     resolution: {integrity: sha512-9OpKOLeaoNFecEp7P6iYbzze/5CqWoH7N3SMs/6y1XF4nMvFMspEGZzJ6uFi9MmQwXhyzqYoSEKO3tvA3Z/o2w==}
     engines: {node: ^20.19.0 || ^22.12.0 || >=23}
+
+  yjs@13.6.33:
+    resolution: {integrity: sha512-q/UYvr1gOk4XII+Cu1CW2dINjYqJJFifTzogEaIARznrvX7uOlHsdTEXcnOBMuIsrCGEEKdNxi74kyMLZlKVfw==}
+    engines: {node: '>=16.0.0', npm: '>=8.0.0'}
 
   yocto-queue@0.1.0:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
@@ -7479,23 +7863,23 @@ packages:
 
 snapshots:
 
-  '@ai-sdk/gateway@4.0.125(zod@4.6.7)':
+  '@ai-sdk/gateway@4.0.126(zod@4.6.7)':
     dependencies:
-      '@ai-sdk/provider': 4.0.33
-      '@ai-sdk/provider-utils': 5.0.67(zod@4.6.7)
+      '@ai-sdk/provider': 4.0.34
+      '@ai-sdk/provider-utils': 5.0.68(zod@4.6.7)
       '@vercel/oidc': 3.2.0
       zod: 4.6.7
 
-  '@ai-sdk/provider-utils@5.0.67(zod@4.6.7)':
+  '@ai-sdk/provider-utils@5.0.68(zod@4.6.7)':
     dependencies:
-      '@ai-sdk/provider': 4.0.33
+      '@ai-sdk/provider': 4.0.34
       '@standard-schema/spec': 1.1.0
       '@workflow/serde': 4.1.0
       eventsource-parser: 3.1.1
       undici: 7.30.1
       zod: 4.6.7
 
-  '@ai-sdk/provider@4.0.33':
+  '@ai-sdk/provider@4.0.34':
     dependencies:
       json-schema: 0.4.0
 
@@ -7716,37 +8100,40 @@ snapshots:
 
   '@colordx/core@7.3.0': {}
 
-  '@comark/html@0.8.1(shiki@4.5.0)':
+  '@comark/html@0.8.1(katex@0.19.1)(shiki@4.5.0)':
     dependencies:
-      comark: 0.8.1(shiki@4.5.0)
+      comark: 0.8.1(katex@0.19.1)(shiki@4.5.0)
     optionalDependencies:
+      katex: 0.19.1
       shiki: 4.5.0
     transitivePeerDependencies:
       - rangi
 
-  '@comark/react@0.8.1(react@19.3.1)(shiki@4.5.0)':
+  '@comark/react@0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)':
     dependencies:
-      comark: 0.8.1(shiki@4.5.0)
+      comark: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       react: 19.3.1
     optionalDependencies:
+      katex: 0.19.1
       shiki: 4.5.0
     transitivePeerDependencies:
       - rangi
 
   '@comark/svelte@0.8.1(shiki@4.5.0)(svelte@5.57.2(@typescript-eslint/types@8.71.1))':
     dependencies:
-      comark: 0.8.1(shiki@4.5.0)
+      comark: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       svelte: 5.57.2(@typescript-eslint/types@8.71.1)
     optionalDependencies:
       shiki: 4.5.0
     transitivePeerDependencies:
       - rangi
 
-  '@comark/vue@0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))':
+  '@comark/vue@0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))':
     dependencies:
-      comark: 0.8.1(shiki@4.5.0)
+      comark: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       vue: 3.5.44(typescript@6.0.3)
     optionalDependencies:
+      katex: 0.19.1
       shiki: 4.5.0
     transitivePeerDependencies:
       - rangi
@@ -7901,6 +8288,17 @@ snapshots:
     dependencies:
       '@eslint/core': 1.2.1
       levn: 0.4.1
+
+  '@floating-ui/core@1.8.0':
+    dependencies:
+      '@floating-ui/utils': 0.2.12
+
+  '@floating-ui/dom@1.8.0':
+    dependencies:
+      '@floating-ui/core': 1.8.0
+      '@floating-ui/utils': 0.2.12
+
+  '@floating-ui/utils@0.2.12': {}
 
   '@fontsource-variable/caveat@5.3.0': {}
 
@@ -9566,6 +9964,191 @@ snapshots:
     dependencies:
       '@testing-library/dom': 10.4.2
 
+  '@tiptap/core@3.32.0(@tiptap/pm@3.32.0)':
+    dependencies:
+      '@tiptap/pm': 3.32.0
+
+  '@tiptap/extension-blockquote@3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0)':
+    dependencies:
+      '@tiptap/core': 3.32.0(@tiptap/pm@3.32.0)
+      '@tiptap/pm': 3.32.0
+
+  '@tiptap/extension-bold@3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))':
+    dependencies:
+      '@tiptap/core': 3.32.0(@tiptap/pm@3.32.0)
+
+  '@tiptap/extension-bubble-menu@3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0)':
+    dependencies:
+      '@floating-ui/dom': 1.8.0
+      '@tiptap/core': 3.32.0(@tiptap/pm@3.32.0)
+      '@tiptap/pm': 3.32.0
+    optional: true
+
+  '@tiptap/extension-bullet-list@3.32.0(@tiptap/extension-list@3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0))':
+    dependencies:
+      '@tiptap/extension-list': 3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0)
+
+  '@tiptap/extension-code-block@3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0)':
+    dependencies:
+      '@tiptap/core': 3.32.0(@tiptap/pm@3.32.0)
+      '@tiptap/pm': 3.32.0
+
+  '@tiptap/extension-code@3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))':
+    dependencies:
+      '@tiptap/core': 3.32.0(@tiptap/pm@3.32.0)
+
+  '@tiptap/extension-document@3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))':
+    dependencies:
+      '@tiptap/core': 3.32.0(@tiptap/pm@3.32.0)
+
+  '@tiptap/extension-dropcursor@3.32.0(@tiptap/extensions@3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0))':
+    dependencies:
+      '@tiptap/extensions': 3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0)
+
+  '@tiptap/extension-floating-menu@3.32.0(@floating-ui/dom@1.8.0)(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0)':
+    dependencies:
+      '@floating-ui/dom': 1.8.0
+      '@tiptap/core': 3.32.0(@tiptap/pm@3.32.0)
+      '@tiptap/pm': 3.32.0
+    optional: true
+
+  '@tiptap/extension-gapcursor@3.32.0(@tiptap/extensions@3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0))':
+    dependencies:
+      '@tiptap/extensions': 3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0)
+
+  '@tiptap/extension-hard-break@3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))':
+    dependencies:
+      '@tiptap/core': 3.32.0(@tiptap/pm@3.32.0)
+
+  '@tiptap/extension-heading@3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))':
+    dependencies:
+      '@tiptap/core': 3.32.0(@tiptap/pm@3.32.0)
+
+  '@tiptap/extension-horizontal-rule@3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0)':
+    dependencies:
+      '@tiptap/core': 3.32.0(@tiptap/pm@3.32.0)
+      '@tiptap/pm': 3.32.0
+
+  '@tiptap/extension-image@3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))':
+    dependencies:
+      '@tiptap/core': 3.32.0(@tiptap/pm@3.32.0)
+
+  '@tiptap/extension-italic@3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))':
+    dependencies:
+      '@tiptap/core': 3.32.0(@tiptap/pm@3.32.0)
+
+  '@tiptap/extension-link@3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0)':
+    dependencies:
+      '@tiptap/core': 3.32.0(@tiptap/pm@3.32.0)
+      '@tiptap/pm': 3.32.0
+      linkifyjs: 4.4.0
+
+  '@tiptap/extension-list-item@3.32.0(@tiptap/extension-list@3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0))':
+    dependencies:
+      '@tiptap/extension-list': 3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0)
+
+  '@tiptap/extension-list-keymap@3.32.0(@tiptap/extension-list@3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0))':
+    dependencies:
+      '@tiptap/extension-list': 3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0)
+
+  '@tiptap/extension-list@3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0)':
+    dependencies:
+      '@tiptap/core': 3.32.0(@tiptap/pm@3.32.0)
+      '@tiptap/pm': 3.32.0
+
+  '@tiptap/extension-ordered-list@3.32.0(@tiptap/extension-list@3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0))':
+    dependencies:
+      '@tiptap/extension-list': 3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0)
+
+  '@tiptap/extension-paragraph@3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))':
+    dependencies:
+      '@tiptap/core': 3.32.0(@tiptap/pm@3.32.0)
+
+  '@tiptap/extension-strike@3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))':
+    dependencies:
+      '@tiptap/core': 3.32.0(@tiptap/pm@3.32.0)
+
+  '@tiptap/extension-table@3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0)':
+    dependencies:
+      '@tiptap/core': 3.32.0(@tiptap/pm@3.32.0)
+      '@tiptap/pm': 3.32.0
+
+  '@tiptap/extension-text@3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))':
+    dependencies:
+      '@tiptap/core': 3.32.0(@tiptap/pm@3.32.0)
+
+  '@tiptap/extension-underline@3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))':
+    dependencies:
+      '@tiptap/core': 3.32.0(@tiptap/pm@3.32.0)
+
+  '@tiptap/extensions@3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0)':
+    dependencies:
+      '@tiptap/core': 3.32.0(@tiptap/pm@3.32.0)
+      '@tiptap/pm': 3.32.0
+
+  '@tiptap/pm@3.32.0':
+    dependencies:
+      prosemirror-changeset: 2.4.4
+      prosemirror-commands: 1.7.2
+      prosemirror-dropcursor: 1.8.4
+      prosemirror-gapcursor: 1.4.1
+      prosemirror-history: 1.5.1
+      prosemirror-inputrules: 1.5.1
+      prosemirror-keymap: 1.2.3
+      prosemirror-model: 1.25.12
+      prosemirror-schema-list: 1.5.1
+      prosemirror-state: 1.4.4
+      prosemirror-tables: 1.8.5
+      prosemirror-transform: 1.12.4
+      prosemirror-view: 1.42.8
+
+  '@tiptap/starter-kit@3.32.0':
+    dependencies:
+      '@tiptap/core': 3.32.0(@tiptap/pm@3.32.0)
+      '@tiptap/extension-blockquote': 3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0)
+      '@tiptap/extension-bold': 3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))
+      '@tiptap/extension-bullet-list': 3.32.0(@tiptap/extension-list@3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0))
+      '@tiptap/extension-code': 3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))
+      '@tiptap/extension-code-block': 3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0)
+      '@tiptap/extension-document': 3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))
+      '@tiptap/extension-dropcursor': 3.32.0(@tiptap/extensions@3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0))
+      '@tiptap/extension-gapcursor': 3.32.0(@tiptap/extensions@3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0))
+      '@tiptap/extension-hard-break': 3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))
+      '@tiptap/extension-heading': 3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))
+      '@tiptap/extension-horizontal-rule': 3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0)
+      '@tiptap/extension-italic': 3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))
+      '@tiptap/extension-link': 3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0)
+      '@tiptap/extension-list': 3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0)
+      '@tiptap/extension-list-item': 3.32.0(@tiptap/extension-list@3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0))
+      '@tiptap/extension-list-keymap': 3.32.0(@tiptap/extension-list@3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0))
+      '@tiptap/extension-ordered-list': 3.32.0(@tiptap/extension-list@3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0))
+      '@tiptap/extension-paragraph': 3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))
+      '@tiptap/extension-strike': 3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))
+      '@tiptap/extension-text': 3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))
+      '@tiptap/extension-underline': 3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))
+      '@tiptap/extensions': 3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0)
+      '@tiptap/pm': 3.32.0
+
+  '@tiptap/vue-3@3.32.0(@floating-ui/dom@1.8.0)(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0)(vue@3.5.44(typescript@6.0.3))':
+    dependencies:
+      '@floating-ui/dom': 1.8.0
+      '@tiptap/core': 3.32.0(@tiptap/pm@3.32.0)
+      '@tiptap/pm': 3.32.0
+      vue: 3.5.44(typescript@6.0.3)
+    optionalDependencies:
+      '@tiptap/extension-bubble-menu': 3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0)
+      '@tiptap/extension-floating-menu': 3.32.0(@floating-ui/dom@1.8.0)(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0)
+
+  '@tiptap/y-tiptap@3.0.10(prosemirror-model@1.25.12)(prosemirror-state@1.4.4)(prosemirror-view@1.42.8)(y-protocols@1.0.7(yjs@13.6.33))(yjs@13.6.33)':
+    dependencies:
+      lib0: 0.2.119
+      prosemirror-model: 1.25.12
+      prosemirror-state: 1.4.4
+      prosemirror-transform: 1.12.4
+      prosemirror-view: 1.42.8
+      y-protocols: 1.0.7(yjs@13.6.33)
+      yjs: 13.6.33
+
   '@types/aria-query@5.0.4': {}
 
   '@types/chai@5.2.3':
@@ -10158,11 +10741,11 @@ snapshots:
 
   agent-base@7.1.4: {}
 
-  ai@7.0.152(zod@4.6.7):
+  ai@7.0.153(zod@4.6.7):
     dependencies:
-      '@ai-sdk/gateway': 4.0.125(zod@4.6.7)
-      '@ai-sdk/provider': 4.0.33
-      '@ai-sdk/provider-utils': 5.0.67(zod@4.6.7)
+      '@ai-sdk/gateway': 4.0.126(zod@4.6.7)
+      '@ai-sdk/provider': 4.0.34
+      '@ai-sdk/provider-utils': 5.0.68(zod@4.6.7)
       zod: 4.6.7
 
   ajv@6.15.0:
@@ -10441,22 +11024,25 @@ snapshots:
 
   comark-pele@1.1.0(comark@0.8.1(shiki@4.5.0))(react@19.3.1)(svelte@5.57.2(@typescript-eslint/types@8.71.1))(vue@3.5.44(typescript@6.0.3)):
     dependencies:
-      comark: 0.8.1(shiki@4.5.0)
+      comark: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       pele: 1.9.0
     optionalDependencies:
       react: 19.3.1
       svelte: 5.57.2(@typescript-eslint/types@8.71.1)
       vue: 3.5.44(typescript@6.0.3)
 
-  comark@0.8.1(shiki@4.5.0):
+  comark@0.8.1(katex@0.19.1)(shiki@4.5.0):
     dependencies:
       entities: 8.1.0
       js-yaml: 5.4.3
       markdown-exit: 1.3.0
     optionalDependencies:
+      katex: 0.19.1
       shiki: 4.5.0
 
   comma-separated-tokens@2.0.3: {}
+
+  commander@15.0.0: {}
 
   commander@2.20.3: {}
 
@@ -11236,6 +11822,8 @@ snapshots:
 
   isexe@4.0.0: {}
 
+  isomorphic.js@0.2.5: {}
+
   jackspeak@3.4.3:
     dependencies:
       '@isaacs/cliui': 8.0.2
@@ -11267,6 +11855,10 @@ snapshots:
 
   json5@2.2.3: {}
 
+  katex@0.19.1:
+    dependencies:
+      commander: 15.0.0
+
   keyv@5.6.0:
     dependencies:
       '@keyv/serialize': 1.1.1
@@ -11292,6 +11884,10 @@ snapshots:
     dependencies:
       prelude-ls: 1.2.1
       type-check: 0.4.0
+
+  lib0@0.2.119:
+    dependencies:
+      isomorphic.js: 0.2.5
 
   libsql@0.5.29:
     dependencies:
@@ -11365,6 +11961,8 @@ snapshots:
   linkify-it@6.1.0:
     dependencies:
       uc.micro: 3.0.0
+
+  linkifyjs@4.4.0: {}
 
   listhen@1.10.1(srvx@1.0.6):
     dependencies:
@@ -11751,8 +12349,6 @@ snapshots:
       path-key: 4.0.0
       unicorn-magic: 0.3.0
 
-  npm-to-yarn@3.2.0: {}
-
   nth-check@2.1.1:
     dependencies:
       boolbase: 1.0.0
@@ -11765,7 +12361,7 @@ snapshots:
       ufo: 1.6.4
       yaml: 2.9.1
     optionalDependencies:
-      comark: 0.8.1(shiki@4.5.0)
+      comark: 0.8.1(katex@0.19.1)(shiki@4.5.0)
     transitivePeerDependencies:
       - '@nuxt/schema'
       - confbox
@@ -12310,6 +12906,8 @@ snapshots:
       type-check: 0.4.0
       word-wrap: 1.2.5
 
+  orderedmap@2.1.1: {}
+
   oxc-parser@0.148.0:
     dependencies:
       '@oxc-project/types': 0.148.0
@@ -12570,6 +13168,80 @@ snapshots:
 
   property-information@7.2.0: {}
 
+  prosemirror-changeset@2.4.4:
+    dependencies:
+      prosemirror-transform: 1.12.4
+
+  prosemirror-commands@1.7.2:
+    dependencies:
+      prosemirror-model: 1.25.12
+      prosemirror-state: 1.4.4
+      prosemirror-transform: 1.12.4
+
+  prosemirror-dropcursor@1.8.4:
+    dependencies:
+      prosemirror-state: 1.4.4
+      prosemirror-transform: 1.12.4
+      prosemirror-view: 1.42.8
+
+  prosemirror-gapcursor@1.4.1:
+    dependencies:
+      prosemirror-keymap: 1.2.3
+      prosemirror-model: 1.25.12
+      prosemirror-state: 1.4.4
+      prosemirror-view: 1.42.8
+
+  prosemirror-history@1.5.1:
+    dependencies:
+      prosemirror-state: 1.4.4
+      prosemirror-transform: 1.12.4
+      prosemirror-view: 1.42.8
+      rope-sequence: 1.3.4
+
+  prosemirror-inputrules@1.5.1:
+    dependencies:
+      prosemirror-state: 1.4.4
+      prosemirror-transform: 1.12.4
+
+  prosemirror-keymap@1.2.3:
+    dependencies:
+      prosemirror-state: 1.4.4
+      w3c-keyname: 2.2.8
+
+  prosemirror-model@1.25.12:
+    dependencies:
+      orderedmap: 2.1.1
+
+  prosemirror-schema-list@1.5.1:
+    dependencies:
+      prosemirror-model: 1.25.12
+      prosemirror-state: 1.4.4
+      prosemirror-transform: 1.12.4
+
+  prosemirror-state@1.4.4:
+    dependencies:
+      prosemirror-model: 1.25.12
+      prosemirror-transform: 1.12.4
+      prosemirror-view: 1.42.8
+
+  prosemirror-tables@1.8.5:
+    dependencies:
+      prosemirror-keymap: 1.2.3
+      prosemirror-model: 1.25.12
+      prosemirror-state: 1.4.4
+      prosemirror-transform: 1.12.4
+      prosemirror-view: 1.42.8
+
+  prosemirror-transform@1.12.4:
+    dependencies:
+      prosemirror-model: 1.25.12
+
+  prosemirror-view@1.42.8:
+    dependencies:
+      prosemirror-model: 1.25.12
+      prosemirror-state: 1.4.4
+      prosemirror-transform: 1.12.4
+
   publint@0.3.25:
     dependencies:
       '@publint/pack': 0.1.7
@@ -12753,6 +13425,8 @@ snapshots:
       '@rollup/rollup-win32-x64-gnu': 4.64.12
       '@rollup/rollup-win32-x64-msvc': 4.64.12
       fsevents: 2.3.3
+
+  rope-sequence@1.3.4: {}
 
   rou3@0.9.2: {}
 
@@ -13032,6 +13706,8 @@ snapshots:
     transitivePeerDependencies:
       - bare-abort-controller
       - react-native-b4a
+
+  temml@0.14.0: {}
 
   terser@5.51.2:
     dependencies:
@@ -14014,6 +14690,8 @@ snapshots:
     optionalDependencies:
       typescript: 6.0.3
 
+  w3c-keyname@2.2.8: {}
+
   webidl-conversions@3.0.1: {}
 
   webpack-virtual-modules@0.6.2: {}
@@ -14062,6 +14740,11 @@ snapshots:
 
   xml-name-validator@5.0.0: {}
 
+  y-protocols@1.0.7(yjs@13.6.33):
+    dependencies:
+      lib0: 0.2.119
+      yjs: 13.6.33
+
   y18n@5.0.8: {}
 
   yallist@3.1.1: {}
@@ -14080,6 +14763,10 @@ snapshots:
       string-width: 8.3.0
       y18n: 5.0.8
       yargs-parser: 22.0.0
+
+  yjs@13.6.33:
+    dependencies:
+      lib0: 0.2.119
 
   yocto-queue@0.1.0: {}
 

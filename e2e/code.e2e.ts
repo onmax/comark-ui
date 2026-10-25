@@ -154,3 +154,23 @@ test("a block in a code group still hangs from the group's header", async ({ pag
     "0px",
   );
 });
+
+test.describe("touch targets", () => {
+  test.use({ hasTouch: true });
+
+  test("Wrap owns its visible face and extra vertical tap area", async ({ page }) => {
+    await open(page, "```ts\nconst a = 1\n```");
+    expect(await page.evaluate(() => matchMedia("(pointer:coarse)").matches)).toBe(true);
+    const wrap = page.getByRole("button", { name: "Wrap lines" });
+    const box = await wrap.boundingBox();
+    expect(box).not.toBeNull();
+    expect(box!.height).toBe(24);
+    expect(box!.width).toBe(24);
+    // The old Copy target covered the rightmost 8px of Wrap.
+    await page.touchscreen.tap(box!.x + box!.width - 2, box!.y + box!.height / 2);
+    await expect(wrap).toHaveAttribute("aria-pressed", "true");
+    await expect(page.locator(".ck-status")).toBeEmpty();
+    await page.touchscreen.tap(box!.x + box!.width / 2, box!.y - 8);
+    await expect(wrap).toHaveAttribute("aria-pressed", "false");
+  });
+});

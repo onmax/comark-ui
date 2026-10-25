@@ -1,5 +1,5 @@
 import type { ChartAssemblyInput, ThemeSpec } from "flint-chart";
-import { assembleVegaLite } from "flint-chart";
+import { assembleVegaLite } from "flint-chart/vegalite";
 import * as vega from "vega";
 import { expressionInterpreter } from "vega-interpreter";
 import type { TopLevelSpec } from "vega-lite";

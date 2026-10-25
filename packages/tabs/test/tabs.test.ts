@@ -173,7 +173,7 @@ describe("comark-tabs", () => {
     expect(document.meta.issues[0]).toBe("An earlier plugin's issue.");
   });
 
-  describe("npm2yarn", () => {
+  describe("pm", () => {
     const panels = async (markdown: string, options?: TabsOptions) => {
       const html = (
         await createHtmlRenderer({ plugins: [tabs(options)], components })(markdown)
@@ -184,9 +184,10 @@ describe("comark-tabs", () => {
         ),
       ].map(([, label, code]) => [label, code]);
     };
+    const all: TabsOptions = { managers: ["npm", "pnpm", "yarn", "bun", "deno"] };
 
-    it("turns an npm code block into a code group with a tab per package manager, synced with `pm`", async () => {
-      const markdown = "```sh npm2yarn\nnpm i -D vitest\ncd my-npm-app && npm run dev\n```";
+    it("turns a code block into a code group with a tab per package manager, synced with `pm`", async () => {
+      const markdown = "```sh pm\nnpm i -D vitest\ncd my-npm-app && npm run dev\n```";
       const html = await markup(markdown);
       expect(html).toContain('<div class="ct" data-tabs-code data-tabs-sync="pm">');
       expect(
@@ -195,107 +196,235 @@ describe("comark-tabs", () => {
       expect(await panels(markdown)).toEqual([
         ["npm", "npm i -D vitest\ncd my-npm-app && npm run dev"],
         ["pnpm", "pnpm add -D vitest\ncd my-npm-app && pnpm run dev"],
-        ["yarn", "yarn add --dev vitest\ncd my-npm-app && yarn dev"],
-        ["bun", "bun add --dev vitest\ncd my-npm-app && bun run dev"],
+        ["yarn", "yarn add -D vitest\ncd my-npm-app && yarn dev"],
+        ["bun", "bun add -d vitest\ncd my-npm-app && bun run dev"],
       ]);
-      expect(html).not.toContain("npm2yarn");
+      expect(html).not.toMatch(/<pre[^>]*\bpm\b/);
       expect(await issues(markdown)).toEqual([]);
     });
 
+    it("reads a command in any manager and writes it in every one, keeping the author's own as written", async () => {
+      const markdown = [
+        "```sh pm",
+        "yarn",
+        "pnpm install --frozen-lockfile",
+        "yarn add -D vitest",
+        "bun remove left-pad",
+        "deno task dev --port 3000",
+        "pnpm test",
+        "pnpx nuxi@latest module add ui",
+        "bunx prettier --write .",
+        "yarn create astro --template starlight",
+        "npm init vue@latest",
+        "```",
+      ].join("\n");
+      expect(Object.fromEntries(await panels(markdown, all))).toEqual({
+        npm: [
+          "npm install",
+          "npm ci",
+          "npm install -D vitest",
+          "npm uninstall left-pad",
+          "npm run dev -- --port 3000",
+          "npm run test",
+          "npx nuxi@latest module add ui",
+          "npx prettier --write .",
+          "npm create astro@latest -- --template starlight",
+          "npm init vue@latest",
+        ].join("\n"),
+        pnpm: [
+          "pnpm install",
+          "pnpm install --frozen-lockfile",
+          "pnpm add -D vitest",
+          "pnpm remove left-pad",
+          "pnpm run dev --port 3000",
+          "pnpm test",
+          "pnpx nuxi@latest module add ui",
+          "pnpm dlx prettier --write .",
+          "pnpm create astro --template starlight",
+          "pnpm create vue",
+        ].join("\n"),
+        yarn: [
+          "yarn",
+          "yarn install --immutable",
+          "yarn add -D vitest",
+          "yarn remove left-pad",
+          "yarn dev --port 3000",
+          "yarn test",
+          "yarn dlx nuxi@latest module add ui",
+          "yarn dlx prettier --write .",
+          "yarn create astro --template starlight",
+          "yarn create vue",
+        ].join("\n"),
+        bun: [
+          "bun install",
+          "bun install --frozen-lockfile",
+          "bun add -d vitest",
+          "bun remove left-pad",
+          "bun run dev --port 3000",
+          "bun run test",
+          "bunx nuxi@latest module add ui",
+          "bunx prettier --write .",
+          "bun create astro --template starlight",
+          "bun create vue",
+        ].join("\n"),
+        deno: [
+          "deno install",
+          "deno install --frozen",
+          "deno add -D npm:vitest",
+          "deno remove npm:left-pad",
+          "deno task dev --port 3000",
+          "deno task test",
+          "deno run -A npm:nuxi@latest module add ui",
+          "deno run -A npm:prettier --write .",
+          "deno init --npm astro --template starlight",
+          "deno init --npm vue",
+        ].join("\n"),
+      });
+    });
+
+    it.each([
+      ["npm", "npm update vitest"],
+      ["pnpm", "pnpm update vitest"],
+      ["yarn", "yarn up vitest"],
+      ["yarn", "yarn upgrade vitest"],
+      ["bun", "bun update vitest"],
+      ["deno", "deno outdated --update vitest"],
+      ["pnpm", "pnpm update"],
+      ["pnpm", "pnpm exec eslint --fix ."],
+    ])("preserves %s command semantics for %s", async (manager, command) => {
+      const markdown = `\`\`\`sh pm\n${command}\n\`\`\``;
+      expect(await panels(markdown, all)).toEqual([[manager, command]]);
+      const { meta } = await parseMarkdown(markdown, { plugins: [tabs(all)] });
+      expect(meta.issues).toHaveLength(1);
+      expect(meta.issues[0]).toContain(`\`${command}\` has no `);
+      expect(meta.issueRules[meta.issues[0]]).toBe("comark/tabs/no-manager-form");
+    });
+
+    it.each(["pnpm dlx eslint", "pnpx eslint"])(
+      "keeps temporary runners translatable: %s",
+      async (command) => {
+        const markdown = `\`\`\`sh pm\n${command}\n\`\`\``;
+        expect(await panels(markdown, { managers: ["npm", "pnpm", "yarn"] })).toEqual([
+          ["npm", "npx eslint"],
+          ["pnpm", command],
+          ["yarn", "yarn dlx eslint"],
+        ]);
+        expect(await issues(markdown)).toEqual([]);
+      },
+    );
+
+    it("writes each kind of dependency in every manager's flag", async () => {
+      expect(
+        await panels(
+          "```sh pm\nnpm install --save-exact --save-peer react\nnpm i -O fsevents\n```",
+          {
+            managers: ["pnpm", "yarn", "bun"],
+          },
+        ),
+      ).toEqual([
+        ["pnpm", "pnpm add -E --save-peer react\npnpm add -O fsevents"],
+        ["yarn", "yarn add -E --peer react\nyarn add --optional fsevents"],
+        ["bun", "bun add --exact --peer react\nbun add --optional fsevents"],
+      ]);
+    });
+
+    it("leaves lines that don't start with a manager alone", async () => {
+      expect(
+        await panels("```sh pm\necho npm install\nNODE_ENV=1 npm test; bun dev\n```", {
+          managers: ["npm"],
+        }),
+      ).toEqual([["npm", "echo npm install\nNODE_ENV=1 npm test; npm run dev"]]);
+    });
+
     it("preserves separators inside quoted arguments", async () => {
-      const markdown = '```sh npm2yarn\nnpm run show -- "before; npm install hidden" && npm i\n```';
+      const markdown = '```sh pm\nnpm run show -- "before; npm install hidden" && npm i\n```';
       expect(await panels(markdown, { managers: ["pnpm"] })).toEqual([
-        ["pnpm", 'pnpm run show "before; npm install hidden" && pnpm i'],
+        ["pnpm", 'pnpm run show "before; npm install hidden" && pnpm install'],
       ]);
     });
 
     it("preserves separators inside command substitutions", async () => {
       const markdown =
-        '```sh npm2yarn\nnpm run show -- "$(printf "before; npm install hidden")" && npm i\n```';
+        '```sh pm\nnpm run show -- "$(printf "before; npm install hidden")" && npm i\n```';
       expect(await panels(markdown, { managers: ["pnpm"] })).toEqual([
-        ["pnpm", 'pnpm run show "$(printf "before; npm install hidden")" && pnpm i'],
+        ["pnpm", 'pnpm run show "$(printf "before; npm install hidden")" && pnpm install'],
       ]);
     });
 
     it("preserves separators inside backtick substitutions", async () => {
       const markdown =
-        "```sh npm2yarn\nnpm run show -- `printf before; npm install hidden` && npm i\n```";
+        "```sh pm\nnpm run show -- `printf before; npm install hidden` && npm i\n```";
       expect(await panels(markdown, { managers: ["pnpm"] })).toEqual([
-        ["pnpm", "pnpm run show `printf before; npm install hidden` && pnpm i"],
+        ["pnpm", "pnpm run show `printf before; npm install hidden` && pnpm install"],
       ]);
     });
 
     it("keeps escaped backticks and nested substitutions opaque", async () => {
       const markdown =
-        '```sh npm2yarn\nnpm run show -- "`printf \\`before; npm install hidden\\`" && npm i\n```';
+        '```sh pm\nnpm run show -- "`printf \\`before; npm install hidden\\`" && npm i\n```';
       expect(await panels(markdown, { managers: ["pnpm"] })).toEqual([
-        ["pnpm", 'pnpm run show "`printf \\`before; npm install hidden\\`" && pnpm i'],
+        ["pnpm", 'pnpm run show "`printf \\`before; npm install hidden\\`" && pnpm install'],
       ]);
     });
 
-    it("writes bun's commands as Bun's, Nuxt's, and Starlight's docs do", async () => {
+    it("takes the managers and their order", async () => {
       expect(
-        await panels(
-          "```sh npm2yarn\nnpx nuxi@latest module add ui\nnpm create astro@latest -- --template starlight\nnpm init vue@latest\n```",
-          { managers: ["bun"] },
-        ),
-      ).toEqual([
-        [
-          "bun",
-          "bunx nuxi@latest module add ui\nbun create astro --template starlight\nbun create vue",
-        ],
-      ]);
-    });
-
-    it("takes the managers and their order, deno among them", async () => {
-      expect(
-        await panels("```sh npm2yarn\nnpm install comark-tabs\n```", {
+        await panels("```sh pm\nnpm install comark-tabs\n```", {
           managers: ["bun", "deno", "npm"],
         }),
       ).toEqual([
         ["bun", "bun add comark-tabs"],
-        ["deno", "deno add comark-tabs"],
+        ["deno", "deno add npm:comark-tabs"],
         ["npm", "npm install comark-tabs"],
       ]);
     });
 
-    it("keeps the npm tab and reports a command another manager has no form for", async () => {
-      const markdown = "```sh [x] npm2yarn\nnpm i\n```\n\n```sh npm2yarn\nnpm ci\nnpm update\n```";
-      expect(await panels(markdown, { managers: ["pnpm", "deno"] })).toEqual([
-        ["pnpm", "pnpm i"],
-        ["deno", "deno install"],
-        ["npm", "npm ci\nnpm update"],
-        ["deno", "deno ci\ndeno update"],
+    it("keeps the written manager's tab and reports a command another manager has no form for", async () => {
+      const markdown = "```sh pm\nbun add -g serve\n```";
+      const options: TabsOptions = { managers: ["pnpm", "yarn", "deno"] };
+      expect(await panels(markdown, options)).toEqual([
+        ["bun", "bun add -g serve"],
+        ["pnpm", "pnpm add -g serve"],
       ]);
-      expect(await issues(markdown)).toEqual([
-        '`npm2yarn` block 2: `npm ci` has no pnpm, yarn, or bun form, so those tabs are left out. Write the block as a `::code-group{sync="pm"}` by hand.',
-        '`npm2yarn` block 2: `npm update` has no pnpm, yarn, or bun form, so those tabs are left out. Write the block as a `::code-group{sync="pm"}` by hand.',
+      expect((await parseMarkdown(markdown, { plugins: [tabs(options)] })).meta.issues).toEqual([
+        '`pm` block 1: `bun add -g serve` has no yarn or deno form, so those tabs are left out. Write the block as a `::code-group{sync="pm"}` by hand.',
       ]);
     });
 
-    it("names the rule of a command with no form and of a block with no npm command", async () => {
+    it("reports a command it can't read for every other manager", async () => {
+      const markdown = "```sh pm\nnpm publish && npm install --legacy-peer-deps\n```";
+      expect(await panels(markdown)).toEqual([
+        ["npm", "npm publish && npm install --legacy-peer-deps"],
+      ]);
+      expect(await issues(markdown)).toEqual([
+        '`pm` block 1: `npm publish` has no pnpm, yarn, or bun form, so those tabs are left out. Write the block as a `::code-group{sync="pm"}` by hand.',
+        '`pm` block 1: `npm install --legacy-peer-deps` has no pnpm, yarn, or bun form, so those tabs are left out. Write the block as a `::code-group{sync="pm"}` by hand.',
+      ]);
+    });
+
+    it("names the rule of a command with no form and of a block with no command", async () => {
       const { meta } = await parseMarkdown(
-        "```sh npm2yarn\nnpm ci\n```\n\n```sh npm2yarn\npnpm add duck-feeder\n```",
-        { plugins: [tabs()] },
+        "```sh pm\nnpm install -g serve\n```\n\n```sh pm\nls\n```",
+        {
+          plugins: [tabs()],
+        },
       );
       expect(meta.issueRules).toEqual({
-        '`npm2yarn` block 1: `npm ci` has no pnpm, yarn, or bun form, so those tabs are left out. Write the block as a `::code-group{sync="pm"}` by hand.':
+        '`pm` block 1: `npm install -g serve` has no yarn form, so that tab is left out. Write the block as a `::code-group{sync="pm"}` by hand.':
           "comark/tabs/no-manager-form",
-        "`npm2yarn` block 2 has no npm or npx command, so every tab shows the same code. Write the commands in npm, such as `npm install`.":
-          "comark/tabs/no-npm-command",
+        "`pm` block 2 has no package manager command, so every tab shows the same code. Write a command such as `npm install` or `pnpm add`.":
+          "comark/tabs/no-manager-command",
       });
     });
 
     it("leaves a block inside a code group as one tab, and the code groups numbered as written", async () => {
       const html = await markup(
-        "```sh npm2yarn\nnpm i x\n```\n\n::code-group\n```sh [npm] npm2yarn\nnpm i x\n```\n\nText\n::",
+        "```sh pm\nnpm i x\n```\n\n::code-group\n```sh [npm] pm\nnpm i x\n```\n\nText\n::",
       );
       expect(html.match(/role="tab"/g)).toHaveLength(5);
-      expect(html).not.toContain("npm2yarn");
+      expect(html).not.toMatch(/<pre[^>]*\bpm\b/);
       expect(
-        await issues(
-          "```sh npm2yarn\nnpm i x\n```\n\n::code-group\n```sh [npm]\na\n```\n\nText\n::",
-        ),
+        await issues("```sh pm\nnpm i x\n```\n\n::code-group\n```sh [npm]\na\n```\n\nText\n::"),
       ).toEqual([
         '`::code-group` 1: only code blocks go inside. Move the paragraph "Text" out, or use `::tabs`.',
       ]);

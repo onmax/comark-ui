@@ -141,11 +141,13 @@ function transform(
  * on its line replaces the title. It is named `alert`, so it takes the place of Comark's built-in alert plugin. A
  * marker of any other type, such as `[!INFO]`, leaves a plain quote and is reported in `meta.issues`.
  */
-export const callouts = defineComarkPlugin<CalloutsOptions, GitHubMeta>((options) => ({
-  name: "alert",
-  post(state) {
-    const issues: Issue[] = [];
-    transform(state.tree.nodes, 0, { ...TITLES, ...options?.titles }, issues);
-    if (issues.length) report(state.tree.meta, issues);
-  },
-}));
+export const callouts = /* @__PURE__ */ defineComarkPlugin<CalloutsOptions, GitHubMeta>(
+  (options) => ({
+    name: "alert",
+    post(state) {
+      const issues: Issue[] = [];
+      transform(state.tree.nodes, 0, { ...TITLES, ...options?.titles }, issues);
+      if (issues.length) report(state.tree.meta, issues);
+    },
+  }),
+);

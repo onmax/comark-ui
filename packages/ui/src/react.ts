@@ -16,6 +16,8 @@ import * as fileTree from "comark-file-tree/react";
 import * as github from "comark-github/react";
 import * as icon from "comark-icon/react";
 import * as links from "comark-links/react";
+import * as mark from "comark-mark/react";
+import * as math from "comark-mathml/react";
 import * as media from "comark-media/react";
 import pele, { createPeleComponent } from "comark-pele/react";
 import * as metrics from "comark-metrics/react";
@@ -64,6 +66,8 @@ export default (options?: PresetOptions): Preset<AnyComponent> =>
       github,
       icon,
       links,
+      mark,
+      math,
       media,
       mermaid,
       metrics,

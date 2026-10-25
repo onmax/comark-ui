@@ -1,4 +1,4 @@
-import { theme } from "comark-zoom/client";
+import { theme } from "comark-zoom/theme";
 import { caveat } from "./font.ts";
 
 // Hovering, focusing, or linking to a mark or its note sets `--ca-on` on both, so each lights up the other without a script.
