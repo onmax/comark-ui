@@ -28,9 +28,13 @@ const root = new URL("./", import.meta.url);
 const dist = new URL("dist/", root);
 const fonts = new URL("../node_modules/geist/dist/fonts/", root);
 const site = "https://comark-ui.onmax.me";
-// `#123` on the site links to this repository's issues.
+// `#123` on the site links to this repository's issues. Lucide's icons come from the installed set, so a slow Iconify
+// API can't fail the build.
 const sitePlugins = () =>
-  browserPlugins({ "comark-github": { references: { repo: "onmax/comark-ui" } } });
+  browserPlugins(
+    { "comark-github": { references: { repo: "onmax/comark-ui" } } },
+    { icon: { collections: { lucide } } },
+  );
 // Only comark-include's examples include files, so includes resolve from its docs, where their partials sit.
 const contentPlugins = () => [
   include({ root: fileURLToPath(new URL("../packages/include/docs/", root)) }),
@@ -251,11 +255,13 @@ const sections: Section[] = [
     icon: "book-open",
     // The index is the landing page, outside every section's column.
     lists: [
+      { title: "Getting started", slugs: ["introduction", "getting-started"] },
       {
+        title: "Guides",
         slugs: [
-          "getting-started",
           "guide/renderers",
           "guide/theming",
+          "guide/accessibility",
           "guide/validation",
           "guide/agents",
         ],
@@ -1460,7 +1466,7 @@ await writeFile(
     description: landing.tagline,
     body: `<div class="landing">
 <div class="landing-hero enter"><div><h1>${escapeHtml(landing.headline)}</h1><p>${escapeHtml(landing.tagline)}</p></div>
-<div>${installerFor(landing.install)}<div class="actions"><a class="button primary" href="/play/">${siteIcon("flask-conical", 15)}Open the playground</a><a class="button" href="/guide/renderers/">Read the docs${siteIcon("arrow-right", 15)}</a></div></div></div>
+<div>${installerFor(landing.install)}<div class="actions"><a class="button primary" href="/play/">${siteIcon("flask-conical", 15)}Open the playground</a><a class="button" href="/introduction/">Read the docs${siteIcon("arrow-right", 15)}</a></div></div></div>
 <main class="enter" style="--i:1">${await renderHtmlFromDocument(landing.document, { components: { ...components, packages: packageGrid, drop, hero } })}</main>
 ${footer()}
 </div>
