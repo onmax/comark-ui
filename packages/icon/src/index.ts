@@ -57,7 +57,7 @@ function collect(nodes: Node[], found: { node: ElementNode; parent: Node[] }[]) 
  * resolved while parsing, from `collections` or else the Iconify API. An icon it can't draw is left out, and its
  * problem added to `meta.issues`. Pass an `Icons` from `createIcons()` to share one with other plugins.
  */
-export default defineComarkPlugin<IconOptions | Icons, IconMeta>((options) => {
+export default /* @__PURE__ */ defineComarkPlugin<IconOptions | Icons, IconMeta>((options) => {
   const icons = options && "resolve" in options ? options : createIcons(options);
   return {
     name: "comark-icon",

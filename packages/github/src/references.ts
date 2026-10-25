@@ -54,19 +54,21 @@ function walk(nodes: Node[], start: number, repo: string | undefined) {
  * GitHub's references as links: `@user` to the profile, and `#123` or `owner/name#123` to the issue or pull request.
  * Text in links and code stays as written.
  */
-export const references = defineComarkPlugin<ReferencesOptions, GitHubMeta>((options) => ({
-  name: "comark-github-references",
-  post(state) {
-    const { tree } = state;
-    const repo = options?.repo;
-    const valid = repo === undefined || REPO.test(repo);
-    if (!valid)
-      report(tree.meta, [
-        {
-          rule: "comark/github/invalid-repo",
-          message: `references: \`repo\` must be owner/name, such as "onmax/comark-ui", not "${repo}"; until then #123 stays text.`,
-        },
-      ]);
-    walk(tree.nodes, 0, valid ? repo : undefined);
-  },
-}));
+export const references = /* @__PURE__ */ defineComarkPlugin<ReferencesOptions, GitHubMeta>(
+  (options) => ({
+    name: "comark-github-references",
+    post(state) {
+      const { tree } = state;
+      const repo = options?.repo;
+      const valid = repo === undefined || REPO.test(repo);
+      if (!valid)
+        report(tree.meta, [
+          {
+            rule: "comark/github/invalid-repo",
+            message: `references: \`repo\` must be owner/name, such as "onmax/comark-ui", not "${repo}"; until then #123 stays text.`,
+          },
+        ]);
+      walk(tree.nodes, 0, valid ? repo : undefined);
+    },
+  }),
+);
