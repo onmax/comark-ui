@@ -24,7 +24,9 @@
     "dist"
   ],
   "type": "module",
-  "sideEffects": false,
+  "sideEffects": [
+    "*.css"
+  ],
   "exports": {
     ".": "./dist/index.mjs",
     "./client": "./dist/client.mjs",
