@@ -1,3 +1,15 @@
 {
-  "extends": ["auto", "vite-doctor/typescript/strict"]
+  "extends": ["auto", "vite-doctor/typescript/strict"],
+  "suppressions": [
+    {
+      "ruleId": "typescript/strict/no-runtime-typeof",
+      "file": "src/svg.ts",
+      "reason": "readBadge parses untrusted Markdown and URL fields into BadgeSpec, validating source, colors, length, package names, and workflow names before use."
+    },
+    {
+      "ruleId": "typescript/strict/no-runtime-typeof",
+      "file": "src/server.ts",
+      "reason": "The upstream JSON parser validates object shapes, nonempty bounded version strings, and nonnegative integer downloads before rendering; malformed responses become unavailable badges."
+    }
+  ]
 }
