@@ -2,7 +2,7 @@
 title: Figure
 description: Image captions in Markdown, from the title, rendered as native figure and figcaption.
 keywords: caption, figcaption, image caption, image title, alt text
-tagline: Give an image a title and get a figure with a caption, while its alt text stays alt text.
+tagline: An image with a caption under it, written as an image with a title.
 group: Markdown syntax
 icon: image
 blurb: Image captions from the title
@@ -28,38 +28,91 @@ credits: 'After <a href="https://github.com/arve0/markdown-it-implicit-figures">
 :::
 ::
 
-An image alone in its paragraph with a title, `![alt](src "Caption")`, renders as `<figure>` with the title in `<figcaption>`. The alt text still describes the image to screen readers, and the caption is what everyone reads under it.
+## Features
+
+- An image alone in its paragraph with a title renders as `<figure>`, with the title in `<figcaption>`.
+- The alt text still describes the image to screen readers. The caption is what everyone reads under it.
+- It works at the top of the page, in a list item, a blockquote, a definition, or a `::component`.
+- A linked image keeps its link, and the caption sits outside it.
+- No classes, no styles, and no components.
 
 ## Usage
 
-The caption is the image's title, the quoted text after its URL:
+Write the caption as the image's title, the quoted text after its URL. Keep the image alone in its paragraph.
 
+::example
 ```md
-![A rubber duck on a keyboard](/duck.png "The duck that found the race condition")
+![The dashboard with three charts of office metrics](/dashboard.png "Office correlations, week 42")
 ```
+::
 
-The image keeps its `src`, its alt text, and any `{attributes}`, and loses only the `title`, since the caption now says it:
+The image keeps its `src`, its alt text, and any `{attributes}`. It loses only the `title`, since the caption now says it:
 
 ```html
 <figure>
-  <img src="/duck.png" alt="A rubber duck on a keyboard">
-  <figcaption>The duck that found the race condition</figcaption>
+  <img src="/dashboard.png" alt="The dashboard with three charts of office metrics">
+  <figcaption>Office correlations, week 42</figcaption>
 </figure>
 ```
 
+### Linked image
+
+Use a link around a captioned image to keep the image clickable, here to the full-size file. The link stays around the image, and the caption sits under it, outside the link.
+
+::example
+```md
+[![The dashboard with three charts of office metrics](/dashboard.png "Office correlations, week 42")](/dashboard.png)
+```
+::
+
+> [!NOTE]
+> A title on the link instead of the image, `[![alt](src)](url "Title")`, stays the link's tooltip.
+
+### Image in a sentence
+
+Use an image with a title inside a sentence to keep the title as a tooltip. Only an image alone in its paragraph becomes a figure.
+
+```md
+The duck ![duck](/duck.png "Gerald") found the race condition.
+```
+
+### Unwrap
+
+Use the `unwrap` option to lift every image that stands alone in its paragraph out of the `<p>`, with a title or without. Comark's `autoUnwrap` only does that in list items and blockquotes.
+
+```ts
+figure({ unwrap: true });
+```
+
+## Examples
+
 ### What becomes a figure
 
-An image with a title that stands alone in its paragraph, at the top of the page, in a list item, in a blockquote, in a definition, or in a `::component` next to other blocks. An image inside a sentence keeps its title as a tooltip.
+An image with a title becomes a figure when it stands alone in its paragraph:
 
-A linked image counts too: `[![alt](src "Caption")](https://example.com)` keeps the link around the image, and the caption sits under it, outside the link.
+- at the top of the page
+- in a list item
+- in a blockquote
+- in a definition
+- in a `::component`, next to other blocks
 
-The caption is plain text, as a title is. A title on the link instead of the image, `[![alt](src)](url "Title")`, stays the link's tooltip.
+The caption is plain text, as a title is.
 
 ### Inside a component
 
 When a `::component` holds nothing but the image, Comark removes the paragraph, and the image ends up as the component's only child. An inline `:component[![alt](src "Title")]` alone on its line produces the same tree, so the plugin leaves both as they are. Add another block to the component, and its image becomes a figure.
 
-## Examples
+### Alt text and captions
+
+Screen readers read both, so they shouldn't say the same thing. Alt text says what the image shows, for someone who can't see it. The caption says why it's there, for everyone:
+
+```md
+![Bar chart: deploys per day, highest on Tuesday](/deploys.png "Most deploys land on Tuesday, after the Monday freeze")
+```
+
+### Size block images apart
+
+With `unwrap: true`, an image alone in its paragraph renders as a bare `<img>` with no `<p>` around it. A stylesheet can then size block images apart from the ones inside a sentence with `.prose > img`.
 
 ### Styling
 
@@ -76,25 +129,19 @@ figcaption {
 }
 ```
 
-### Alt text and captions
+### With comark-zoom
 
-Screen readers read both, so they shouldn't say the same thing. Alt text says what the image shows, for someone who can't see it. The caption says why it's there, for everyone:
-
-```md
-![Bar chart: deploys per day, highest on Tuesday](/deploys.png "Most deploys land on Tuesday, after the Monday freeze")
-```
-
-### Images without captions
-
-With `unwrap: true`, an image alone in its paragraph renders as a bare `<img>` with no `<p>` around it, so a stylesheet can size block images apart from the ones inside a sentence with `.prose > img`.
+With [comark-zoom](/zoom/), the image inside a figure zooms as any other image does, in either plugin order.
 
 ## API
 
-The options go under `figure` in `comarkUi()`, or to `figure()` when you use the plugin alone.
-
 ### Options
 
-`figure({ unwrap: true })` also lifts every image that stands alone in its paragraph out of the `<p>`, with a title or without. Comark's `autoUnwrap` only does that in list items and blockquotes.
+The options go under `figure` in `comarkUi()`, or to `figure()` when you use the plugin alone.
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `unwrap` | `false` | `true` also lifts every image that stands alone in its paragraph out of the `<p>`, with a title or without. |
 
 ### Package
 
@@ -113,4 +160,4 @@ const document = await parseMarkdown(markdown, {
 });
 ```
 
-It has no components and no styles, because a figure is native HTML. It works with `registerDefaultPlugins: false` and in streaming parses. With [comark-zoom](/zoom/), the image inside a figure zooms as any other image does, in either plugin order.
+It has no components and no styles, because a figure is native HTML. It works with `registerDefaultPlugins: false` and in streaming parses.

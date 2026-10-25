@@ -2,7 +2,7 @@
 title: Diff
 description: A code change in Markdown, shown like a suggested change in a pull request review.
 keywords: suggested change, suggestion, code review, patch, before and after, changes, compare code, pull request, word diff
-tagline: Write a file's lines before and after as two code blocks and get a suggested change, the way a review shows one, with no script.
+tagline: A suggested change, the way a pull request review shows one, from a file's lines before and after.
 group: Review blocks
 icon: file-diff
 blurb: Compare two code fences
@@ -41,14 +41,22 @@ export const MAX_FILTERS = 3;
 :::
 ::
 
-The header shows the file and how many lines were added and removed. Removed lines are red and added lines green. Within a pair of changed lines, the words that changed are a shade deeper. The line numbers and the `+` and `−` come from CSS, so copying a selection copies only the code.
+## Features
+
+- Two ordinary fenced blocks, before and after, become a suggested change like a review's.
+- The header shows the file and how many lines were added and removed.
+- Removed lines are red and added lines green. Within a pair of changed lines, the words that changed are a shade deeper.
+- The line numbers and the `+` and `−` come from CSS, so copying a selection copies only the code.
+- With Comark's `shiki` plugin, both blocks keep their highlighting.
+- The output needs no script.
 
 ## Usage
 
-### Diff
+Write two fenced blocks inside `::diff`, before then after, and nothing else. Name the file on the first block.
 
+::example
 ````md
-::diff{line=212 label="Suggested change"}
+::diff
 ```ts [packages/zoom/src/client.ts]
 history.back();
 ```
@@ -57,28 +65,142 @@ if (opened) history.back();
 ```
 ::
 ````
+::
 
-Write two ordinary fenced blocks, before then after, and nothing else inside. Leave the first block empty for a new file, or the second for a deleted one.
+> [!NOTE]
+> Keep both blocks to the lines around the change. One diff shows one file, and it takes no unified diff. It's for a change a reader should see, and a few lines before and after show that best.
 
-| Prop | |
+### File
+
+Use the `file` prop to name the file. Without it, the diff takes the name on the first block, like `` ```ts [src/a.ts] ``.
+
+::example
+````md
+::diff{file="src/limits.ts"}
+```ts
+export const MAX_FILTERS = 3;
+```
+```ts
+export const MAX_FILTERS = 5;
+```
+::
+````
+::
+
+> [!NOTE]
+> A diff needs one of the two. If both blocks name a file, it must be the same one.
+
+### Line numbers
+
+Use the `line` prop to number the lines. It's the file's line number for the first line of both blocks. Without it, the diff has no line numbers.
+
+::example
+````md
+::diff{line=212}
+```ts [packages/zoom/src/client.ts]
+history.back();
+```
+```ts
+if (opened) history.back();
+```
+::
+````
+::
+
+### Label
+
+Use the `label` prop to put a heading before the file name, such as "Suggested change".
+
+::example
+````md
+::diff{label="Suggested change"}
+```ts [packages/zoom/src/client.ts]
+history.back();
+```
+```ts
+if (opened) history.back();
+```
+::
+````
+::
+
+### New or deleted file
+
+Leave the first block empty for a new file, or the second for a deleted one.
+
+::example
+````md
+::diff{line=1}
+```ts [src/limits.ts]
+```
+```ts
+export const MAX_FILTERS = 3;
+```
+::
+````
+::
+
+### Highlighted lines
+
+Use Comark's `shiki` plugin to keep both blocks' highlighting. A line a block highlights, like `` ```ts {2} ``, stays highlighted.
+
+::example
+````md
+::diff
+```ts [src/close.ts] {2}
+function close() {
+  history.back();
+}
+```
+```ts {2}
+function close() {
+  if (opened) history.back();
+}
+```
+::
+````
+::
+
+## Accessibility
+
+The header reads as the figure's caption: the label, the file, and the counts. The code scrolls in its own box, which is a tab stop, so a keyboard reaches a long line.
+
+### Keyboard interactions
+
+| Key | Description |
 | --- | --- |
-| `file` | The file's path. Defaults to the name on the first block, like `` ```ts [src/a.ts] ``; one of the two is required. |
-| `line` | The file's line number for the first line of both blocks. Without it, the diff has no line numbers. |
-| `label` | A heading before the file name, such as "Suggested change". |
-
-Keep both blocks to the lines around the change. One diff shows one file and takes no unified diff. It's for a change a reader should see, and a few lines before and after show that best. The plugin reports a block over 200 lines, two blocks in different languages or files, and a diff with no change.
-
-### Highlighting
-
-The line numbers and the `+` and `−` come from CSS, so copying a selection copies only the code. With Comark's `shiki` plugin, both blocks keep their highlighting, and a line a block highlights, like `` ```ts {2} ``, stays highlighted.
-
-### Issues
-
-The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation/) describes. Each issue names its diff, by its file, and says how to fix it. Each kind has its own rule in [Doctor](/doctor/).
+| `Tab` | Moves focus to the code. |
+| `ArrowLeft`, `ArrowRight` | Scrolls a focused code box sideways. |
 
 ## API
 
+### Props
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| `file` | The name on the first block | The file's path. A diff needs it here or on the first block. |
+| `line` | — | The file's line number for the first line of both blocks, a whole number from 1. Without it, the diff has no line numbers. |
+| `label` | — | A heading before the file name, such as "Suggested change". |
+
+### Options
+
 The plugin takes no options. In `comarkUi()`, `diff: false` turns it off.
+
+### Issues
+
+The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation/) describes. Each issue names its diff, by its file, and says how to fix it:
+
+- A count of code blocks other than two.
+- Anything inside besides the two blocks.
+- A ` ```diff ` or ` ```patch ` block, which is a unified diff.
+- No file, on the block or in `file`.
+- Two blocks that name different files, or have different languages.
+- A `line` that isn't a whole number from 1.
+- A block over 200 lines.
+- Before and after that are the same.
+- A prop `::diff` doesn't read, or a `:prop` bound to a value that is undefined.
+
+Each kind has its own rule in [Doctor](/doctor/).
 
 ### Package
 
