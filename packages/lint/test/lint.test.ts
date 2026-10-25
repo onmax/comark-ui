@@ -1,11 +1,12 @@
 import { execFile } from "node:child_process";
-import { mkdtemp, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
 import annotate, { components } from "comark-annotate/html";
 import charts, { components as chartComponents } from "comark-charts/html";
-import { describe, expect, it } from "vite-plus/test";
+import { describe, expect, it, vi } from "vite-plus/test";
+import { defineDoctorDiagnostics } from "vite-doctor/extension";
 import { runProjectFixture } from "vite-doctor/testkit";
 import { lint, resolveConfig } from "../src/index.ts";
 import comark from "../src/doctor.ts";
@@ -244,6 +245,12 @@ describe("comark/invalid-frontmatter", () => {
       expect.objectContaining({ rule: "comark/unknown-component", line: 6 }),
     ]);
   });
+
+  it("keeps the YAML exception as the cause", async () => {
+    const found = await lint("---\nsummary: a: b\n---\n\n# Page");
+    expect(found).toHaveLength(1);
+    expect(found[0]!.cause).toMatchObject({ name: "YAMLException" });
+  });
 });
 
 describe("plugin issues", () => {
@@ -416,6 +423,23 @@ describe("meta.issueRules", () => {
 });
 
 describe("lint()", () => {
+  it("preserves a plugin's original exception", async () => {
+    const cause = new Error("The plugin could not read its input.");
+    const found = await lint("# Title", {
+      plugins: [
+        {
+          name: "broken",
+          post() {
+            throw cause;
+          },
+        },
+      ],
+    });
+    expect(found).toHaveLength(1);
+    expect(found[0]).toMatchObject({ rule: "comark/plugin-issue", line: 1 });
+    expect(found[0]!.cause).toBe(cause);
+  });
+
   it("turns a rule that crashes into one diagnostic and still runs the others", async () => {
     const broken = {
       name: "broken",
@@ -451,6 +475,10 @@ describe("lint()", () => {
       ],
       ["comark/unclosed-block", "`::compare` opened on line 1 is never closed."],
     ]);
+    for (const diagnostic of found.filter(({ message }) =>
+      message.startsWith("lint-comark crashed"),
+    ))
+      expect(diagnostic.cause).toBeInstanceOf(TypeError);
   });
 });
 
@@ -513,9 +541,75 @@ describe("lint-comark CLI", () => {
         .stdout,
     ).toBe("No problems.\n");
   });
+
+  it("prints JSON when a plugin throws a circular exception", async () => {
+    const root = new URL("../../../test-results/", import.meta.url);
+    await mkdir(root, { recursive: true });
+    const dir = await mkdtemp(new URL("lint-comark-", root).pathname);
+    try {
+      await writeFile(join(dir, "page.md"), "# Page");
+      await writeFile(
+        join(dir, "lint-comark.config.mjs"),
+        `
+        const error = new Error("Plugin failed");
+        error.cause = error;
+        export default { plugins: [{ name: "broken", post() { throw error; } }] };
+      `,
+      );
+      await expect(
+        cli(
+          join(dir, "page.md"),
+          "--config",
+          join(dir, "lint-comark.config.mjs"),
+          "--format",
+          "json",
+        ),
+      ).rejects.toMatchObject({
+        code: 1,
+        stdout:
+          JSON.stringify(
+            [
+              {
+                file: join(dir, "page.md"),
+                rule: "comark/plugin-issue",
+                line: 1,
+                message: "Comark could not parse this document: Plugin failed",
+                fix: "Fix what the error names; a plugin that throws stops the whole document from rendering.",
+              },
+            ],
+            null,
+            2,
+          ) + "\n",
+      });
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
 });
 
 describe("lint-comark/doctor", () => {
+  it.each(["\n", "\r\n", "\r"])(
+    "keeps sources and ranges aligned for %j newlines",
+    async (newline) => {
+      const text = ["---", "title: Page", "---", "", "# Page", "", "::wat", "::"].join(newline);
+      const result = await runProjectFixture({
+        framework: "vite",
+        extensions: [comark({ components: [] })],
+        files: { "docs/page.md": text },
+      });
+      expect(result.diagnostics).toHaveLength(1);
+      const [report] = result.diagnostics;
+      expect(report!.code).toBe("COMARK0002");
+      expect(report!.range).toEqual({
+        start: text.indexOf("::wat"),
+        end: text.indexOf("::wat"),
+        line: 7,
+        column: 1,
+      });
+      expect(report!.diagnostic.sources).toEqual([`${report!.file}:7:1`]);
+    },
+  );
+
   it("reports Markdown problems as Vite Doctor diagnostics", async () => {
     const result = await runProjectFixture({
       framework: "vite",
@@ -538,5 +632,63 @@ describe("lint-comark/doctor", () => {
       ["COMARK0002", "comark/unknown-component", "docs/page.md", 3],
       ["COMARK0004", "comark/broken-anchor", "docs/page.md", 6],
     ]);
+    for (const report of result.diagnostics) {
+      expect(report.diagnostic.name).toBe(report.code);
+      expect(report.diagnostic.why).toBe(report.message);
+      expect(report.diagnostic.fix).toBe(report.suggestion);
+      expect(report.diagnostic.docs).toBe(
+        `https://comark-ui.onmax.me/doctor/${report.ruleId.replace(/^comark\//, "")}/`,
+      );
+      expect(report.diagnostic.sources).toEqual([
+        `${report.file}:${report.range!.line}:${report.range!.column}`,
+      ]);
+      expect(report.sources).toEqual(report.diagnostic.sources);
+      expect(report.diagnostic.toJSON()).toMatchObject({
+        name: report.code,
+        why: report.message,
+        fix: report.suggestion,
+        docs: report.docs,
+        sources: report.sources,
+      });
+    }
+  });
+
+  it("preserves a thrown nostics diagnostic without reporting it twice", async () => {
+    const upstream = defineDoctorDiagnostics([{ code: "TEST0001", ruleId: "test/plugin" }]);
+    const cause = upstream.diagnostics.TEST0001({
+      why: "The diagram plugin could not read its input.",
+      fix: "Close the diagram's brackets.",
+      sources: ["diagram.txt:4:2"],
+      cause: new Error("Unexpected end of input"),
+    });
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      const result = await runProjectFixture({
+        framework: "vite",
+        extensions: [
+          comark({
+            plugins: [
+              {
+                name: "broken",
+                post() {
+                  throw cause;
+                },
+              },
+            ],
+          }),
+        ],
+        files: { "docs/page.md": "# Page" },
+      });
+      const reports = result.diagnostics.filter(({ ruleId }) => ruleId === "comark/plugin-issue");
+      expect(reports).toHaveLength(1);
+      expect(reports[0]!.diagnostic.cause).toBe(cause);
+      expect(reports[0]!.diagnostic.sources).toEqual([`${reports[0]!.file}:1:1`]);
+      expect(warn).not.toHaveBeenCalled();
+      expect(error).not.toHaveBeenCalled();
+    } finally {
+      warn.mockRestore();
+      error.mockRestore();
+    }
   });
 });

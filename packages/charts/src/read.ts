@@ -145,7 +145,7 @@ export function readChart(
   // A chart drawn from a spec checks its props itself.
   const spec = childrenOf(node).find(isSpec);
   for (const key of Object.keys(attrs))
-    if (!spec && !PROPS.has(key))
+    if (!spec && key !== "$" && !PROPS.has(key))
       issues.push({
         rule: "comark/charts/unknown-prop",
         message: `${name}: ${code(key)} isn't a prop of \`::chart\`. Valid props: type, x, y, title, labels.`,
@@ -397,7 +397,7 @@ function readMarks(
     const found: Issue[] = [];
     const markAttrs = child[1];
     for (const key of Object.keys(markAttrs))
-      if (!MARK_PROPS.has(key))
+      if (key !== "$" && !MARK_PROPS.has(key))
         found.push({
           rule: "comark/charts/unknown-prop",
           message: `${code(key)} isn't a prop of an annotation in a chart. Point at a row with \`at\`, and ${groups ? "its group" : "a column"} with \`series\`${groups ? "" : ', or cross the plot with `mark="line"` at a number with `value`'}.`,
@@ -691,7 +691,7 @@ function readSpec(
   issues: Issue[],
 ): SpecChart | undefined {
   for (const key of Object.keys(attrs))
-    if (key !== "title" && key !== "class" && key !== "id")
+    if (key !== "$" && key !== "title" && key !== "class" && key !== "id")
       issues.push({
         rule: "comark/charts/spec-with-props",
         message: `${name}: ${code(key)} doesn't apply to a chart drawn from a Vega-Lite spec. Name the columns in the spec's \`encoding\` instead.`,

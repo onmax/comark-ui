@@ -92,3 +92,5 @@ The [library options](/lint/getting-started/#library) list the rest, all but `fi
 Each rule reports with its own code, and the code links to the rule's page in [Doctor](/doctor/). The core rules start at `COMARK0001`, and each package's rules get a hundred codes of their own. comark-annotate's start at `COMARK0101`, comark-cards' at `COMARK0201`, and so on.
 
 Of the core rules, frontmatter Comark can't read and unsafe URLs are errors. A few package rules are errors too, such as an unsafe card link, a path outside the project root, and a quiz question with no correct option. The rest are warnings. Each rule's page shows its severity, and [Doctor's overview](/doctor/#rules) lists every code.
+
+The extension creates [nostics](https://github.com/vercel-labs/nostics) diagnostics through Vite Doctor's registry. Each one carries `why`, `fix`, its docs link, and the Markdown location in `sources`. A parsing or rule failure also keeps the original exception in `cause`. The library collects these diagnostics without logging them; Vite Doctor reports them once.

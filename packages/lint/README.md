@@ -28,7 +28,7 @@ import annotate, { components } from "comark-annotate/html";
 const diagnostics = await lint(markdown, { plugins: [annotate()], components });
 ```
 
-`lint()` never throws and returns `{ rule, line, column?, message, fix }[]`. Without `components`, unknown components aren't reported, and without `file`, links to other files aren't checked. `lintFiles(paths, options)` checks many files in one run, as the CLI does.
+`lint()` never throws and returns `{ rule, line, column?, message, fix, cause? }[]`. When parsing or a rule throws, `cause` holds the original exception. The CLI omits `cause` from JSON. Without `components`, unknown components aren't reported, and without `file`, links to other files aren't checked. `lintFiles(paths, options)` checks many files in one run, as the CLI does.
 
 For Vite Doctor 0.1 or later, register the extension in `doctor.config.ts` and run `vite-doctor . --config doctor.config.ts`:
 
