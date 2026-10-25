@@ -413,7 +413,7 @@ Set these on `.ck` or any ancestor, such as `:root`:
 | Variable | Default | Used for |
 | --- | --- | --- |
 | `--ck-inset` | `0.375rem` | How far the buttons sit from the block's top right corner |
-| `--ck-button-size` | `1.5rem` | The buttons' height and least width, at least `2.25rem` on touch screens |
+| `--ck-button-size` | `1.5rem` | The buttons' height and least width. On touch screens each one takes taps from at least `2.75rem` around it, without growing. |
 | `--ck-title-font` | `ui-monospace, SFMono-Regular, Menlo, monospace` | The title. Set it to your code's font so the title matches the block. |
 | `--ck-green` | `#259f56`, `#59d38c` in dark mode | Lines marked `ins`, and their `+` |
 | `--ck-red` | `#ee3533`, `#fd736d` in dark mode | Lines marked `del`, and their `−`, and Shiki's errors |
