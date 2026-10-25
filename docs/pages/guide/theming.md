@@ -2,14 +2,32 @@
 title: Theming
 description: One set of --comark-* tokens themes every plugin, on top of Nuxt UI's or shadcn/ui's variables.
 keywords: CSS, colors, dark mode, light mode, CSS variables, custom properties, shadcn, Tailwind, styles, theme, Nuxt UI
-tagline: The plugins follow Nuxt UI and shadcn/ui. On a site that uses either one's variables they match with no setup; elsewhere, eight tokens theme them all at once.
+tagline: The blocks match a Nuxt UI or shadcn/ui site as it is. Elsewhere, eight tokens theme them all at once.
 ---
 
-## shadcn/ui
+This page shows how the blocks pick up your site's theme, how to change it with the `--comark-*` tokens, and how to carry a Nuxt UI app's theme to a page rendered outside the app.
 
-The styles follow [shadcn/ui](https://ui.shadcn.com). On a site that already uses its CSS variables, every plugin matches it with no setup, and a `.dark` class anywhere above a block switches the theme. Elsewhere they use shadcn's neutral theme and follow the system's light or dark mode.
+## Nuxt UI and shadcn/ui
 
-shadcn/ui before Tailwind 4 stores colors as bare HSL numbers, so map those through the tokens below: `--comark-border: hsl(var(--border))`.
+Every plugin reads the CSS variables of [Nuxt UI](https://ui.nuxt.com) and [shadcn/ui](https://ui.shadcn.com). On a site built with either one, the blocks match it with no CSS of your own, and a `.dark` class anywhere above a block switches it to dark mode. On a site with neither, they use shadcn's neutral theme and follow the system's light or dark mode.
+
+When a site sets both, Nuxt UI's variables win.
+
+### Nuxt UI
+
+The blocks follow the app's `app.config` colors, its `--ui-radius`, and its color mode:
+
+- Surfaces, text, and borders read `--ui-bg`, `--ui-text-highlighted`, `--ui-text-muted`, `--ui-border`, and `--ui-bg-elevated`. The table under [Tokens](#tokens) maps each one.
+- Brand colors, such as a primary badge or an error card, read `--ui-primary`, `--ui-success`, `--ui-error`, and the rest.
+- Chart series read `--ui-chart-1` to `-6`.
+- Focus rings use `--ui-primary`, like Nuxt UI's own components.
+- Corners are twice `--ui-radius`.
+
+To render the blocks somewhere the app's stylesheet isn't loaded, see [Outside a Nuxt UI app](#outside-a-nuxt-ui-app).
+
+### shadcn/ui
+
+shadcn/ui before Tailwind 4 stores colors as bare HSL numbers, which the blocks can't read. Map those through the tokens below: `--comark-border: hsl(var(--border))`.
 
 ## Tokens
 
@@ -41,25 +59,54 @@ To theme one part only, set the tokens on its root instead: `.ca` for annotate, 
 
 The rules sit in a `comark` CSS layer, so any plain rule of your own wins without `!important`, such as `.cc-step { border-radius: 0 }`.
 
-## Nuxt UI
+## Outside a Nuxt UI app
 
-In a [Nuxt UI](https://ui.nuxt.com) app, the plugins read its `--ui-*` variables, so they follow its `app.config` colors, its radius, and its color mode with no setup. Brand colors come from them too: `--ui-primary`, `--ui-success`, `--ui-error`, and the rest, and chart series from `--ui-chart-1` to `-6`.
+A review document, a static export, or an email built by a script doesn't load the app's stylesheet. The `--ui-*` variables are missing there, so the blocks fall back to shadcn's neutral theme. `nuxtUiTheme()` from `comark-ui/nuxt-ui` writes those variables from your app's theme. Put its CSS on the page and the blocks match the app again.
 
-A page that renders Comark outside the app, such as a review document or a static export, has none of those variables. `nuxtUiTheme()` from `comark-ui/nuxt-ui` rebuilds them from the app's `ui.colors` and its main CSS, where it reads the `@theme` colors and fonts and the `--ui-*` values the app's `:root` and `.dark` set:
+### Pass the app's theme
+
+Pass the colors your `app.config.ts` sets under `ui.colors`, and the source of the CSS file that imports `@nuxt/ui`:
 
 ```ts
 import { readFile } from "node:fs/promises";
+import { createHtmlRenderer } from "@comark/html";
+import comarkUi from "comark-ui/html";
 import { nuxtUiTheme } from "comark-ui/nuxt-ui";
-import appConfig from "./app/app.config";
 
 const { css, issues } = nuxtUiTheme({
-  colors: appConfig.ui?.colors,
+  colors: { primary: "indigo", neutral: "zinc" },
   css: await readFile("app/assets/css/main.css", "utf8"),
 });
-const page = `<style>${css}</style>${body}`;
+
+const render = createHtmlRenderer(comarkUi());
+const page = `<style>${css}</style>${await render(markdown)}`;
 ```
 
-The CSS sets light mode on `:root` and `.light`, and dark mode on `.dark` and on a system in dark mode, all in a `theme` layer. `issues` names each color it can't resolve, such as an `app.config` color whose shades aren't in the CSS passed in.
+> [!NOTE]
+> Copy the colors instead of importing `app.config.ts`. It calls `defineAppConfig()`, which only exists inside a Nuxt build.
+
+Both options are optional. With neither, you get Nuxt UI's default theme: a green primary on slate.
+
+### What it reads
+
+| Source | What it takes |
+| --- | --- |
+| `colors` | Each color's shades, from Tailwind's palette or from the `--color-<name>-50` to `-950` your CSS defines |
+| `@theme` in `css` | Your own palettes, any Tailwind shades you override, and `--font-sans` |
+| `:root`, `.light`, and `.dark` in `css` | Every `--ui-*` variable you set there, such as `--ui-primary: var(--ui-color-primary-700)` or `--ui-radius` |
+
+It skips the rest of the file. It doesn't load fonts either: if `--font-sans` names a web font, the page needs its `@font-face`, or the text falls back to the next font in the list.
+
+### Light and dark
+
+The CSS sets light mode on `:root` and `.light`, and dark mode on `.dark`. With neither class on the page, it follows the system, like a Nuxt app with the default color mode. It all sits in a `theme` layer, so any plain rule of your own wins.
+
+### Issues
+
+`issues` lists what it couldn't resolve, one sentence each. The CSS leaves those colors out, and the blocks use their defaults for them:
+
+- A color in `colors` that isn't in Tailwind's palette and has no shades in your CSS's `@theme`, such as `primary: "brand"` without `--color-brand-50` to `-950`.
+- A `var(--color-…)` that one of your `--ui-*` values reads and nothing defines.
 
 ## Each plugin's own
 
