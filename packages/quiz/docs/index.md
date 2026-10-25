@@ -331,13 +331,13 @@ Opened as a file, a lesson keeps the reader's answers in their browser. In [Drop
 
 ## Accessibility
 
-A question or poll is a `fieldset` of radios or checkboxes, labelled by its number and prompt. The status line under the options is a live region, so a screen reader hears the verdict once after each check, with the count of answers.
+A question or poll is a `fieldset` of radios or checkboxes. A question is labelled by its number and prompt; a poll is labelled by its prompt alone. The status line under the options is a live region, so a screen reader hears the verdict once after each check. It includes the count of answers when a host supplies aggregate results.
 
 A state's color always comes with an icon, a border, and a tint, and the status line says the verdict in words, so color never carries it alone.
 
 Focus follows what the reader does:
 
-- After Check, focus goes to the first picked option on a right answer, or to Try again on a wrong one.
+- After Check, focus goes to the first selected option in rendered order on a right answer, or to Try again on a wrong one.
 - Try again sends focus to the first option, and Show answer to the first right option.
 - Change vote sends focus to the reader's vote.
 - On a recall card, Show answer sends focus to the answer.

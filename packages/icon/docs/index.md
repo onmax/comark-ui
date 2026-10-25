@@ -32,7 +32,7 @@ An icon in one color takes the color of the text around it and follows its theme
 
 The plugin resolves icons while parsing and writes them into the page as CSS images. The page asks no server for them, and they show without a script.
 
-The resolver is public, so other plugins take the same options and draw their icons with it. [comark-tabs](/tabs/#icons) uses it for tab icons.
+The resolver is public, so other plugins take the same options and draw their icons with it. [comark-tabs](/tabs/#icon) uses it for tab icons.
 
 ## Usage
 

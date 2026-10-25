@@ -23,7 +23,7 @@ Set the `--comark-*` tokens to theme annotate, carousel, charts, chips, code, di
 | `--comark-border` | `--border` | Button, thumbnail, screenshot, player, callout, and diff borders |
 | `--comark-accent` | `--accent` | Hovered buttons, the diff header |
 | `--comark-ring` | `--ring` | Focus rings, the edge of a highlighted diff line |
-| `--comark-radius` | `--radius` | Corners, a little smaller on buttons and images |
+| `--comark-radius` | `--radius` | Image and code block corners; some controls use a smaller radius |
 | `--comark-font` | `--font-sans` | The zoomed view's header, callouts, and the links under players |
 
 ```css
