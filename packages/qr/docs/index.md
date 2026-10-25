@@ -12,7 +12,9 @@ credits: 'Encoded with <a href="https://antfu.me">Anthony Fu</a>''s <a href="htt
 ::examples
 :::example{label="Preview link"}
 ```md
-Open the preview on your phone: :qr{value="https://comark-ui.onmax.me/qr/"}
+Open [comark-ui.onmax.me/qr](https://comark-ui.onmax.me/qr/), or scan it on your phone:
+
+:qr{value="https://comark-ui.onmax.me/qr/"}
 ```
 :::
 ::
@@ -29,7 +31,7 @@ The code is an inline SVG with one path, dark on white in both color schemes, so
 | --- | --- |
 | `value` | Required. The text to encode, usually a link. Up to about 2,300 characters. |
 
-`:qr` is inline, so it can sit in a sentence, a table cell, or a list item. It's an `svg` in a `span` named "QR code: " and its value for screen readers. The code uses error correction level M and a quiet zone of two modules.
+`:qr` is inline, so it can sit in a sentence, a table cell, or a list item. Screen readers announce it as "QR code:" followed by its value. The code uses error correction level M and a quiet zone of two modules.
 
 The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation/) describes: a `:qr` with no `value`, one too long to encode, text in its brackets, and a prop it doesn't read. Each issue names its block and says how to fix it, and each has its own rule in [Doctor](/doctor/). A `:qr` with no `value`, or one too long, renders nothing.
 
@@ -52,6 +54,16 @@ Codes are 8rem wide by default. Set `--cqr-size` on `.cqr` or any element above 
 ```css
 .cqr {
   --cqr-size: 6rem;
+}
+```
+
+### Border
+
+The code has no border, since its white tile and quiet zone already set it apart, and on a white page it needs nothing. To outline it, give the `svg` a border:
+
+```css
+.cqr svg {
+  border: 1px solid var(--comark-border, #e5e5e5);
 }
 ```
 
@@ -82,7 +94,7 @@ For Vue, React, or Svelte, import from `comark-qr/vue`, `comark-qr/react`, or `c
 
 ## Theme
 
-The code sits on a tile that reads the [shared tokens](/guide/theming/): `--comark-border` for its 1px border and `--comark-radius` for its corners, capped at `0.5rem` so they can't round into the code. The modules are always black on white, in both color schemes, since phones read dark modules on a light ground best. The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
+The code sits on a white tile that reads `--comark-radius`, one of the [shared tokens](/guide/theming/), for its corners, capped at `0.5rem` so they can't round into the code. The modules are always black on white, in both color schemes, since phones read dark modules on a light ground best. The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
 
 | Class | Element |
 | --- | --- |
