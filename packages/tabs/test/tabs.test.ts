@@ -210,7 +210,6 @@ describe("comark-tabs", () => {
         "pnpm install --frozen-lockfile",
         "yarn add -D vitest",
         "bun remove left-pad",
-        "pnpm update vitest",
         "deno task dev --port 3000",
         "pnpm test",
         "pnpx nuxi@latest module add ui",
@@ -225,7 +224,6 @@ describe("comark-tabs", () => {
           "npm ci",
           "npm install -D vitest",
           "npm uninstall left-pad",
-          "npm update vitest",
           "npm run dev -- --port 3000",
           "npm run test",
           "npx nuxi@latest module add ui",
@@ -238,7 +236,6 @@ describe("comark-tabs", () => {
           "pnpm install --frozen-lockfile",
           "pnpm add -D vitest",
           "pnpm remove left-pad",
-          "pnpm update vitest",
           "pnpm run dev --port 3000",
           "pnpm test",
           "pnpx nuxi@latest module add ui",
@@ -251,7 +248,6 @@ describe("comark-tabs", () => {
           "yarn install --immutable",
           "yarn add -D vitest",
           "yarn remove left-pad",
-          "yarn up vitest",
           "yarn dev --port 3000",
           "yarn test",
           "yarn dlx nuxi@latest module add ui",
@@ -264,7 +260,6 @@ describe("comark-tabs", () => {
           "bun install --frozen-lockfile",
           "bun add -d vitest",
           "bun remove left-pad",
-          "bun update vitest",
           "bun run dev --port 3000",
           "bun run test",
           "bunx nuxi@latest module add ui",
@@ -277,7 +272,6 @@ describe("comark-tabs", () => {
           "deno install --frozen",
           "deno add -D npm:vitest",
           "deno remove npm:left-pad",
-          "deno outdated --update vitest",
           "deno task dev --port 3000",
           "deno task test",
           "deno run -A npm:nuxi@latest module add ui",
@@ -287,6 +281,37 @@ describe("comark-tabs", () => {
         ].join("\n"),
       });
     });
+
+    it.each([
+      ["npm", "npm update vitest"],
+      ["pnpm", "pnpm update vitest"],
+      ["yarn", "yarn up vitest"],
+      ["yarn", "yarn upgrade vitest"],
+      ["bun", "bun update vitest"],
+      ["deno", "deno outdated --update vitest"],
+      ["pnpm", "pnpm update"],
+      ["pnpm", "pnpm exec eslint --fix ."],
+    ])("preserves %s command semantics for %s", async (manager, command) => {
+      const markdown = `\`\`\`sh pm\n${command}\n\`\`\``;
+      expect(await panels(markdown, all)).toEqual([[manager, command]]);
+      const { meta } = await parseMarkdown(markdown, { plugins: [tabs(all)] });
+      expect(meta.issues).toHaveLength(1);
+      expect(meta.issues[0]).toContain(`\`${command}\` has no `);
+      expect(meta.issueRules[meta.issues[0]]).toBe("comark/tabs/no-manager-form");
+    });
+
+    it.each(["pnpm dlx eslint", "pnpx eslint"])(
+      "keeps temporary runners translatable: %s",
+      async (command) => {
+        const markdown = `\`\`\`sh pm\n${command}\n\`\`\``;
+        expect(await panels(markdown, { managers: ["npm", "pnpm", "yarn"] })).toEqual([
+          ["npm", "npx eslint"],
+          ["pnpm", command],
+          ["yarn", "yarn dlx eslint"],
+        ]);
+        expect(await issues(markdown)).toEqual([]);
+      },
+    );
 
     it("writes each kind of dependency in every manager's flag", async () => {
       expect(
@@ -355,15 +380,14 @@ describe("comark-tabs", () => {
     });
 
     it("keeps the written manager's tab and reports a command another manager has no form for", async () => {
-      const markdown = "```sh pm\nbun add -g serve\nbun update\n```";
+      const markdown = "```sh pm\nbun add -g serve\n```";
       const options: TabsOptions = { managers: ["pnpm", "yarn", "deno"] };
       expect(await panels(markdown, options)).toEqual([
-        ["bun", "bun add -g serve\nbun update"],
-        ["pnpm", "pnpm add -g serve\npnpm update"],
+        ["bun", "bun add -g serve"],
+        ["pnpm", "pnpm add -g serve"],
       ]);
       expect((await parseMarkdown(markdown, { plugins: [tabs(options)] })).meta.issues).toEqual([
         '`pm` block 1: `bun add -g serve` has no yarn or deno form, so those tabs are left out. Write the block as a `::code-group{sync="pm"}` by hand.',
-        '`pm` block 1: `bun update` has no yarn form, so that tab is left out. Write the block as a `::code-group{sync="pm"}` by hand.',
       ]);
     });
 

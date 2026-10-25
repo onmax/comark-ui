@@ -67,7 +67,7 @@ const ACTIONS: Record<Exclude<PackageManager, "deno">, Record<string, Action>> =
     test: "script",
     t: "script",
     start: "script",
-    exec: "exec",
+    // Local execution must not become a runner that can fetch packages.
     dlx: "exec",
     create: "create",
     init: "init",
@@ -318,12 +318,9 @@ function write(manager: PackageManager, command: Command): string | undefined {
         return [(command.action === "add" ? ADD : REMOVE)[manager], ...flags, ...packages];
       }
       case "update":
-        if (manager === "yarn")
-          return command.packages.length ? ["yarn up", ...command.packages] : undefined;
-        return [
-          manager === "deno" ? "deno outdated --update" : `${manager} update`,
-          ...command.packages,
-        ];
+        // Managers differ in range, manifest, and workspace update semantics.
+        // translate() preserves the original manager's command verbatim.
+        return undefined;
       case "run": {
         const { target, args } = command;
         if (manager === "npm") return ["npm run", target, ...fenced(args)];

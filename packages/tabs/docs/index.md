@@ -200,13 +200,12 @@ Only commands that start a line or follow `&&`, `||`, or `;` change, so `cd my-n
 | Frozen install | `npm ci` | `pnpm install --frozen-lockfile` | `yarn install --immutable` | `bun install --frozen-lockfile` | `deno install --frozen` |
 | Add | `npm install x` | `pnpm add x` | `yarn add x` | `bun add x` | `deno add npm:x` |
 | Remove | `npm uninstall x` | `pnpm remove x` | `yarn remove x` | `bun remove x` | `deno remove npm:x` |
-| Update | `npm update x` | `pnpm update x` | `yarn up x` | `bun update x` | `deno outdated --update x` |
 | Run a script | `npm run dev -- --port 3` | `pnpm run dev --port 3` | `yarn dev --port 3` | `bun run dev --port 3` | `deno task dev --port 3` |
 | Run a package | `npx x` | `pnpm dlx x` | `yarn dlx x` | `bunx x` | `deno run -A npm:x` |
 | Create a project | `npm create x@latest` | `pnpm create x` | `yarn create x` | `bun create x` | `deno init --npm x` |
 | Start a package | `npm init` | `pnpm init` | `yarn init` | `bun init` | `deno init` |
 
-yarn updates only the packages you name, so an update of every package has no yarn tab. Add takes `-D` for a dev dependency, `-E` for an exact version, `-O` for an optional one, `--save-peer` for a peer one, and `-g` to install globally, each in the manager's own flag. In a `::code-group` the block is one tab already, and `pm` does nothing. Set the managers with the [`managers` option](#choose-the-package-managers).
+Update commands and local execution with `pnpm exec` stay only in their source manager’s tab. Other managers’ tabs are omitted with a no-form issue: update range, manifest, and workspace behavior differs across managers, and local execution must not become a runner that can download a package. Add takes `-D` for a dev dependency, `-E` for an exact version, `-O` for an optional one, `--save-peer` for a peer one, and `-g` to install globally, each in the manager's own flag. In a `::code-group` the block is one tab already, and `pm` does nothing. Set the managers with the [`managers` option](#choose-the-package-managers).
 
 ## Examples
 
