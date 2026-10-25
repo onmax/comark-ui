@@ -1,0 +1,10 @@
+{
+  "extends": ["auto", "vite-doctor/typescript/strict"],
+  "suppressions": [
+    {
+      "ruleId": "typescript/strict/no-runtime-typeof",
+      "file": "src/index.ts",
+      "reason": "read() is the boundary that parses message parts. They come from the model, from tools, and from stored messages of any version, so it checks each field's runtime type before it reads it."
+    }
+  ]
+}

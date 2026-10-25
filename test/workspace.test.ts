@@ -63,8 +63,9 @@ describe.each(folders)("packages/%s", (folder) => {
   });
 
   // A package with no renderer runs from the preset's core, so it works in every renderer.
+  // comark-chat renders AI SDK messages, not documents, so the preset leaves it out.
   it("comes with the preset", () => {
-    if (folder === "ui" || folder === "lint") return;
+    if (folder === "ui" || folder === "lint" || folder === "chat") return;
     expect(manifest("ui").dependencies?.[pkg.name]).toBe("workspace:^");
     if (!withRenderer.includes(folder))
       expect(read("packages/ui/src/index.ts")).toContain(`from "${pkg.name}"`);

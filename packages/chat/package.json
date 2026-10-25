@@ -1,0 +1,101 @@
+{
+  "name": "comark-chat",
+  "version": "0.5.0",
+  "description": "AI SDK chat messages rendered with Comark: streaming Markdown, files, and a trace of each turn's reasoning, tool calls, and sources, for Vue, React, and Svelte.",
+  "keywords": [
+    "ai",
+    "ai-sdk",
+    "chat",
+    "comark",
+    "llm",
+    "markdown",
+    "react",
+    "streaming",
+    "svelte",
+    "vue"
+  ],
+  "homepage": "https://comark-ui.onmax.me/chat",
+  "bugs": "https://github.com/onmax/comark-ui/issues",
+  "license": "MIT",
+  "author": "onmax",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/onmax/comark-ui.git",
+    "directory": "packages/chat"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "sideEffects": [
+    "*.css"
+  ],
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./client": "./dist/client.mjs",
+    "./react": "./dist/react.mjs",
+    "./style.css": "./dist/style.css",
+    "./svelte": {
+      "types": "./dist/svelte/index.d.ts",
+      "svelte": "./dist/svelte/index.js",
+      "default": "./dist/svelte/index.js"
+    },
+    "./vue": "./dist/vue.mjs",
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "doctor": "vite-doctor . --no-cache --max-warnings 0 --format text",
+    "prepack": "pnpm --filter comark-chat... build"
+  },
+  "devDependencies": {
+    "@comark/react": "catalog:",
+    "@comark/svelte": "catalog:",
+    "@comark/vue": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "ai": "catalog:",
+    "comark": "catalog:",
+    "comark-zoom": "workspace:*",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "svelte": "catalog:",
+    "vue": "catalog:"
+  },
+  "peerDependencies": {
+    "@comark/react": "^0.7.0 || ^0.8.0",
+    "@comark/svelte": "^0.7.0 || ^0.8.0",
+    "@comark/vue": "^0.7.0 || ^0.8.0",
+    "react": ">=18",
+    "svelte": ">=5",
+    "vue": ">=3.5"
+  },
+  "peerDependenciesMeta": {
+    "@comark/react": {
+      "optional": true
+    },
+    "@comark/svelte": {
+      "optional": true
+    },
+    "@comark/vue": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    },
+    "svelte": {
+      "optional": true
+    },
+    "vue": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}
