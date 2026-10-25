@@ -42,8 +42,8 @@ export const css = `${icons}@layer comark{${[
   ".ck-copy[data-state=done] .ck-copy-done{display:block}",
   ".ck-status{position:absolute;top:calc(100% + .25rem);right:var(--_ck-inset);z-index:1;width:max-content;max-width:18rem;padding:.25rem .5rem;border-radius:calc(var(--_comark-radius) - 4px);background:var(--_comark-foreground);color:var(--_comark-background);font:.75rem/1.25rem var(--_comark-font);pointer-events:none}",
   ".ck-status:empty{display:none}",
-  // Touch gets a bigger target, not a bigger button, so the header and the code under it stay where they are.
-  "@media (pointer:coarse){.ck-bar>button::after{content:'';position:absolute;top:50%;left:50%;width:max(100%,2.75rem);height:max(100%,2.75rem);translate:-50% -50%}}",
+  // Expand touch targets vertically only, so adjacent buttons cannot steal each other's taps.
+  "@media (pointer:coarse){.ck-bar>button::after{content:'';position:absolute;top:50%;left:50%;width:100%;height:max(100%,2.75rem);translate:-50% -50%}}",
   // A terminal is a window: three dots on the left and its title in the middle, over a line.
   `${terminal}>.ck-bar{border-bottom:1px solid var(--_comark-border)}`,
   `${terminal}>.ck-bar::before{content:'';flex:none;width:.625rem;height:.625rem;margin:0 auto 0 .125rem;border-radius:50%;background:currentColor;box-shadow:1rem 0,2rem 0;color:color-mix(in srgb,var(--_comark-muted) 45%,transparent)}`,
