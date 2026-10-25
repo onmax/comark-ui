@@ -11,8 +11,12 @@ import html, { type PresetOptions } from "../src/html.ts";
 import react from "../src/react.ts";
 import vue from "../src/vue.ts";
 
-// No downloads, so the tests stay offline.
-const offline: PresetOptions = { chips: { download: false }, icon: { fetch: false } };
+// No downloads and no Kroki, so the tests stay offline.
+const offline: PresetOptions = {
+  chips: { download: false },
+  icon: { fetch: false },
+  diagrams: { draw: false },
+};
 const document = [
   "> [!TIP]\n> Read this.",
   "Released :badge[New]",

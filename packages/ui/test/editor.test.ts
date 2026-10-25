@@ -14,6 +14,8 @@ import {
 } from "../src/editor.ts";
 
 const schema = getSchema([ComarkKit]);
+// No downloads and no Kroki, so the tests stay offline.
+const offline = { chips: { download: false }, icon: { fetch: false }, diagrams: { draw: false } };
 const roundTrip = async (markdown: string) => toMarkdown((await fromMarkdown(markdown)).doc);
 
 describe("fromMarkdown and toMarkdown", () => {
@@ -110,7 +112,7 @@ describe("checkMarkdown", () => {
 
   // Comark's alert plugin reads the title into the callout's text, so the editor would move it into the body.
   it("refuses a callout with its own title", async () => {
-    const { plugins } = html({ chips: { download: false }, icon: { fetch: false } });
+    const { plugins } = html(offline);
     expect(await checkMarkdown("> [!NOTE] Heads up\n> Read this.\n", { plugins })).toEqual({
       editable: false,
     });
@@ -121,7 +123,7 @@ describe("checkMarkdown", () => {
   it("refuses syntax only the page's plugins read", async () => {
     const markdown = "Note[^1]\n\n[^1]: Foot\n";
     expect((await checkMarkdown(markdown)).editable).toBe(true);
-    const { plugins } = html({ chips: { download: false }, icon: { fetch: false } });
+    const { plugins } = html(offline);
     expect(await checkMarkdown(markdown, { plugins })).toEqual({ editable: false });
   });
 });
@@ -131,7 +133,7 @@ describe("checkMarkdown", () => {
 describe("the docs examples", async () => {
   const packages = readdirSync(new URL("../../", import.meta.url));
   const examples = await loadExamples(packages);
-  const { plugins } = html({ chips: { download: false }, icon: { fetch: false } });
+  const { plugins } = html(offline);
 
   it.each(examples.map((example) => [example.id, example.source] as const))(
     "%s",
