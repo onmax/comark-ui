@@ -66,3 +66,5 @@ export default defineDoctorConfig({
 Each rule reports with its own code, and the code links to the rule's page in [Doctor](/doctor/). The core rules start at `COMARK0001`, and each package's rules get a hundred codes of their own. comark-annotate's start at `COMARK0101`, comark-cards' at `COMARK0201`, and so on.
 
 Frontmatter Comark can't read and unsafe URLs are errors. The rest are warnings. [Doctor's overview](/doctor/#rules) lists every code.
+
+The extension creates [nostics](https://github.com/vercel-labs/nostics) diagnostics through Vite Doctor's registry. Each one carries `why`, `fix`, its docs link, and the Markdown location in `sources`. A parsing or rule failure also keeps the original exception in `cause`. The library collects these diagnostics without logging them; Vite Doctor reports them once.

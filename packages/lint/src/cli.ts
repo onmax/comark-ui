@@ -62,10 +62,12 @@ for (const input of positionals) {
   files.push(...matches.sort());
 }
 
-const results: (Diagnostic & { file: string })[] = [];
+const results: (Omit<Diagnostic, "cause"> & { file: string })[] = [];
 for (const { file, text, diagnostics } of await lintFiles([...new Set(files)], options)) {
   if (text === undefined) fail(`can't read ${file}`);
-  for (const diagnostic of diagnostics) results.push({ file, ...diagnostic });
+  // Exceptions can contain cycles; the CLI keeps its results serializable.
+  for (const { rule, line, column, message, fix } of diagnostics)
+    results.push({ file, rule, line, column, message, fix });
 }
 
 if (values.format === "json") console.log(JSON.stringify(results, null, 2));

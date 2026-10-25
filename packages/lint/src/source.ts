@@ -10,7 +10,7 @@ export type Source = {
 };
 
 export function read(markdown: string): Source {
-  const lines = markdown.split(/\r?\n/);
+  const lines = markdown.split(/\r\n?|\n/);
   const prose = [...lines];
   let body = 0;
   let frontmatter: Source["frontmatter"];

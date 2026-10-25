@@ -38,6 +38,8 @@ export type Diagnostic = {
   message: string;
   /** How to fix it. */
   fix: string;
+  /** The original exception when parsing or a rule failed. */
+  cause?: unknown;
 };
 
 export type LintOptions = {
@@ -287,6 +289,7 @@ async function parse(
     };
     found.push({
       rule: "comark/invalid-frontmatter",
+      cause: error,
       line: source.frontmatter.start + 1 + (mark?.line ?? 0),
       column: mark ? mark.column + 1 : undefined,
       message: `The frontmatter is not valid YAML: ${reason ?? error.message}.`,
@@ -307,6 +310,7 @@ async function parse(
 
 const couldNotParse = (error: unknown): Diagnostic => ({
   rule: "comark/plugin-issue",
+  cause: error,
   line: 1,
   message: `Comark could not parse this document: ${error instanceof Error ? error.message : String(error)}`,
   fix: "Fix what the error names; a plugin that throws stops the whole document from rendering.",
@@ -314,6 +318,7 @@ const couldNotParse = (error: unknown): Diagnostic => ({
 
 const crashed = (rule: Rule, error: unknown): Diagnostic => ({
   rule,
+  cause: error,
   line: 1,
   message: `lint-comark crashed while checking \`${rule}\`: ${error instanceof Error ? error.message : String(error)}.`,
   fix: "The other rules still ran. Report this with the document at https://github.com/onmax/comark-ui/issues.",
