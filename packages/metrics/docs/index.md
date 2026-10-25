@@ -2,7 +2,7 @@
 title: Metrics
 description: Before and after numbers, progress, and tables of metrics, written in Markdown.
 keywords: KPI, stats, statistics, numbers, delta, change, percent, progress bar, performance, benchmark, bundle size, comparison table
-tagline: Write two numbers and get the arrow, the percent change, and whether it's better or worse. Wrap a table of befores and afters and get its change column, or a tile for each.
+tagline: Deltas, progress bars, and tables of before and after numbers, with the change worked out while parsing.
 group: Review blocks
 icon: trending-down
 blurb: Deltas, progress, stats, and tiles
@@ -47,46 +47,124 @@ Duck tests moved to Vitest: :progress{value=0.85 label="Migrated"}
 :::
 ::
 
-A pull request that changes a size or a speed reads best with the numbers next to the claim. The plugin works out the change while parsing, so every renderer only draws it, and the output needs no script.
+## Features
+
+- `:delta` turns two numbers into the arrow, the percent change, and whether the change is better or worse.
+- `:progress` draws a progress bar with its percent after it.
+- `::stats` adds a Change column to a table of befores and afters, or shows each row as a tile.
+- The plugin works out every change while parsing, so the renderers only draw it and the output needs no script.
+- The numbers sit next to the claim, which is how a pull request that changes a size or a speed reads best.
 
 ## Usage
 
+Write `:delta` with the number before and the number after.
+
+::example
+```md
+The main bundle went :delta{from=412 to=388 unit="kB" better="lower"}
+```
+::
+
 ### Delta
 
+`:delta` shows `412 kB → 388 kB ↓ 5.8%`. The change is a percent of `from`.
+
+#### Before and after
+
+Use the `from` and `to` props to set the numbers. Both are required.
+
+::example
 ```md
-:delta{from=412 to=388 unit="kB" better="lower"}
+:delta{from=412 to=388}
 ```
+::
 
-Shows `412 kB → 388 kB ↓ 5.8%`. The change is green when it's better and red when it's worse.
+When `from` is 0 there is no percent, so the delta shows the difference instead, such as `↑ 1.5 s`. When both are equal, it shows `= 0%`.
 
-| Prop | What it does |
-| --- | --- |
-| `from` | Required. The number before. |
-| `to` | Required. The number after. |
-| `unit` | Written after both numbers, such as `kB`, `s`, or `%`. |
-| `better` | `lower` for sizes and durations, `higher` for scores. Without it, the change is gray. |
+#### Unit
 
-The change is a percent of `from`. When `from` is 0 there is no percent, so it shows the difference instead, such as `↑ 1.5 s`.
+Use the `unit` prop to write a unit after both numbers, such as `kB`, `s`, or `%`.
+
+::example
+```md
+:delta{from=2.4 to=1.9 unit="s"}
+```
+::
+
+#### Better or worse
+
+Use the `better` prop to color the change: green when it's better, red when it's worse. Write `lower` for sizes and durations, and `higher` for scores.
+
+::example
+```md
+Bundle :delta{from=412 to=388 unit="kB" better="lower"}, score :delta{from=91 to=88 better="higher"}
+```
+::
+
+Without `better`, the change is gray.
 
 ### Progress
 
+`:progress` is a native `<progress>` with its percent after it. A raw `<progress>` in the Markdown stays as written.
+
+#### Value
+
+Use the `value` prop to fill the bar. It's a fraction from 0 to 1. It's required.
+
+::example
 ```md
-:progress{value=0.85 label="Migrated"}
+:progress{value=0.85}
+```
+::
+
+> [!NOTE]
+> A `value` outside 0 to `max` is clamped to the bar and reported.
+
+#### Maximum
+
+Use the `max` prop to count up to a number other than 1.
+
+::example
+```md
 :progress{value=17 max=20}
 ```
+::
 
-A native `<progress>` with its percent after it.
+#### Label
 
-| Prop | What it does |
-| --- | --- |
-| `value` | Required. A fraction from 0 to 1, or a count up to `max`. |
-| `max` | What `value` counts up to. Default 1. |
-| `label` | Shown before the bar, and names it for screen readers. |
+Use the `label` prop to show a label before the bar. It also names the bar for screen readers.
 
-A raw `<progress>` in the Markdown stays as written.
+::example
+```md
+:progress{value=0.85 label="Migrated"}
+```
+::
 
 ### Stats
 
+`::stats` wraps a table of three columns: a name, the value before, and the value after. The plugin adds a Change column with each row's arrow and percent, and aligns the numbers. Name the headers what you like.
+
+::example
+```md
+::stats
+| Metric | Before | After |
+| --- | --- | --- |
+| JavaScript | 412 kB | 388 kB |
+| Requests | 38 | 41 |
+::
+```
+::
+
+A cell is a number, with commas if you like, and an optional unit after it.
+
+> [!NOTE]
+> Both cells of a row need the same unit.
+
+#### Better for every row
+
+Use the `better` prop to color every row's change, with `lower` or `higher`.
+
+::example
 ```md
 ::stats{better="lower"}
 | Metric | Before | After |
@@ -95,16 +173,27 @@ A raw `<progress>` in the Markdown stays as written.
 | Requests | 38 | 41 |
 ::
 ```
+::
 
-The table needs three columns: a name, the value before, and the value after. The plugin adds a Change column with each row's arrow and percent, colored by `better`, and aligns the numbers. A cell is a number, with commas if you like, and an optional unit after it; both cells of a row need the same unit. Name the headers what you like.
+#### Unit of a difference
 
-| Prop | What it does |
-| --- | --- |
-| `better` | `lower` or `higher`, for every row. |
-| `unit` | The unit of a difference from 0, for cells written without one. |
+Use the `unit` prop to set the unit of a difference from 0, for cells written without one.
 
-With `tiles`, each row becomes a tile: the name is above the after value, and the change is shown below it in a pill. The before value is used for the change but is not displayed:
+::example
+```md
+::stats{unit="ms"}
+| Metric | Before | After |
+| --- | --- | --- |
+| Blocking time | 0 | 120 |
+::
+```
+::
 
+#### Tiles
+
+Use the `tiles` prop to show each row as a tile. The name sits above the after value, and the change sits below it in a pill. The before value counts toward the change but isn't shown.
+
+::example
 ```md
 ::stats{tiles better="lower"}
 | Metric | Before | After |
@@ -113,9 +202,11 @@ With `tiles`, each row becomes a tile: the name is above the after value, and th
 | Largest paint | 2.4 s | 1.9 s |
 ::
 ```
+::
 
-Tiles also accept a two-column table when there is no before value. The value can be any text and is shown without a change:
+Tiles also take a two-column table when there is no before value. The value can be any text, and it shows without a change:
 
+::example
 ```md
 ::stats{tiles}
 | Metric | Value |
@@ -124,15 +215,7 @@ Tiles also accept a two-column table when there is no before value. The value ca
 | Status | Passing |
 ::
 ```
-
-### Issues
-
-The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation/) describes: a missing or unreadable number, a `better` that isn't `lower` or `higher`, a `value` outside 0 to `max`, a `::stats` without a table or with other than three columns (or two or three columns when `tiles` is set), a row whose cells aren't numbers or are in different units, and a prop a block doesn't read. Each issue names its block and says how to fix it, and each has its own rule in [Doctor](/doctor/):
-
-```txt
-`:progress` 1: `value=85` is outside 0 to 1, so the bar was clamped. Write a fraction such as `value=0.85`, or set `max=100`.
-`::stats` 1, row "Size": before is in MB and after in kB. Write both in the same unit.
-```
+::
 
 ## Examples
 
@@ -159,7 +242,56 @@ Copy the numbers from the tool's output as it prints them: `1,204` and `2.4 s` b
 
 ## API
 
+### Props
+
+#### Delta props
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| `from` | — | Required. The number before. |
+| `to` | — | Required. The number after. |
+| `unit` | — | Written after both numbers, such as `kB`, `s`, or `%`. |
+| `better` | — | `lower` for sizes and durations, `higher` for scores. Without it, the change is gray. |
+
+#### Progress props
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| `value` | — | Required. A fraction from 0 to 1, or a count up to `max`. Clamped to 0 to `max`. |
+| `max` | `1` | What `value` counts up to. A number above 0. |
+| `label` | — | Shown before the bar, and names it for screen readers. |
+
+#### Stats props
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| `better` | — | `lower` or `higher`, for every row. |
+| `unit` | — | The unit of a difference from 0, for cells written without one. |
+| `tiles` | `false` | Shows each row as a tile. Takes a table of two or three columns. |
+
+### Options
+
 The plugin takes no options. `metrics: false` in `comarkUi()` turns it off.
+
+### Issues
+
+The plugin adds these problems to `meta.issues`, as [Validation](/guide/validation/) describes:
+
+- A missing or unreadable number.
+- A `better` that isn't `lower` or `higher`.
+- A `max` that isn't a number above 0.
+- A `value` outside 0 to `max`.
+- A `::stats` without a table, or with content besides its table, which is dropped.
+- A table with other than three columns, or two or three with `tiles`, and a row with the wrong number of cells.
+- A row whose cells aren't numbers, or are in different units.
+- A prop a block doesn't read.
+
+Each issue names its block and says how to fix it, and each has its own rule in [Doctor](/doctor/):
+
+```txt
+`:progress` 1: `value=85` is outside 0 to 1, so the bar was clamped. Write a fraction such as `value=0.85`, or set `max=100`.
+`::stats` 1, row "Size": before is in MB and after in kB. Write both in the same unit.
+```
 
 ### Package
 
@@ -178,7 +310,7 @@ import metrics, { components } from "comark-metrics/html";
 const render = createHtmlRenderer({ plugins: [metrics()], components });
 ```
 
-The renderer inlines the styles once per document, and the output needs no script. For Vue, React, or Svelte, import from `comark-metrics/vue`, `comark-metrics/react`, or `comark-metrics/svelte`; the components add the styles when they mount. Import `comark-metrics/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+The renderer inlines the styles once per document, and the output needs no script. For Vue, React, or Svelte, import from `comark-metrics/vue`, `comark-metrics/react`, or `comark-metrics/svelte`. The components add the styles when they mount. Import `comark-metrics/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
 
 ## Theme
 
@@ -191,7 +323,7 @@ Deltas, bars, and tables read these [shared tokens](/guide/theming/):
 | Token | Used for |
 | --- | --- |
 | `--comark-foreground` | Tile values and the progress bar, when the page has no `--primary` |
-| `--comark-muted` | The value before, a change with no verdict, a bar's label and percent |
+| `--comark-muted` | The value before, a change with no verdict, a bar's label and percent, a tile's name |
 | `--comark-font` | Inherited text, with tabular numbers |
 | `--comark-border` | Tile borders |
 | `--comark-background` | Tile backgrounds |
