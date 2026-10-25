@@ -17,6 +17,7 @@ import { createIcons, type IconOptions, type Icons } from "comark-icon";
 import include, { type IncludeOptions } from "comark-include";
 import keys, { type KeysOptions } from "comark-keys";
 import type { AnchorsOptions, ExternalOptions } from "comark-links";
+import type { MathOptions } from "comark-math";
 import type { MediaOptions } from "comark-media";
 import type { PeleConfig } from "comark-pele";
 import type { PropertiesOptions } from "comark-properties";
@@ -69,6 +70,8 @@ export type PresetOptions = {
   /** Also resolves the icons of cards, details, file trees, tabs, and code actions, so they share its options. */
   icon?: IconOptions | boolean;
   mark?: boolean;
+  /** Typesets `$…$`, `$$…$$`, and `math` fences as MathML while parsing, in place of Comark's math plugin. */
+  math?: MathOptions | boolean;
   details?: DetailsOptions | boolean;
   links?: { external?: ExternalOptions | boolean; anchors?: AnchorsOptions | boolean } | boolean;
   fileTree?: FileTreeOptions | boolean;
@@ -133,6 +136,7 @@ export type Renderer<C> = {
   quiz?: Part<C, QuizOptions>;
   badge: Part<C, BadgeOptions>;
   mark: Part<C>;
+  math: Part<C, MathOptions>;
   media: Part<C, MediaOptions>;
   metrics: Part<C>;
   table: Part<C, TableOptions>;
@@ -204,6 +208,7 @@ export function preset<C>(renderer: Renderer<C>, options: PresetOptions = {}): P
   }
   add(renderer.icon, options.icon, icons);
   add(renderer.mark, options.mark);
+  add(renderer.math, options.math);
   add(renderer.details, options.details, { iconResolver: icons, ...optionsOf(options.details) });
   if (on(options.links)) {
     const links = optionsOf(options.links) ?? {};

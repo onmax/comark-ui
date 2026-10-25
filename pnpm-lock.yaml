@@ -78,6 +78,9 @@ catalogs:
     geist:
       specifier: ^1.7.2
       version: 1.7.2
+    katex:
+      specifier: ^0.19.1
+      version: 0.19.1
     markdown-it-cjk-friendly:
       specifier: ^3.0.0
       version: 3.0.0
@@ -105,6 +108,9 @@ catalogs:
     svelte:
       specifier: ^5.57.2
       version: 5.57.2
+    temml:
+      specifier: ^0.14.0
+      version: 0.14.0
     tsdown:
       specifier: ^0.23.1
       version: 0.23.1
@@ -145,7 +151,7 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@fontsource-variable/caveat':
         specifier: 'catalog:'
         version: 5.3.0
@@ -160,7 +166,7 @@ importers:
         version: 24.19.2
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-linter:
         specifier: workspace:*
         version: link:packages/lint
@@ -196,7 +202,7 @@ importers:
     dependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@fontsource-variable/caveat':
         specifier: 'catalog:'
         version: 5.3.0
@@ -205,7 +211,7 @@ importers:
         version: 1.2.146
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-annotate:
         specifier: workspace:*
         version: link:../packages/annotate
@@ -276,22 +282,22 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
 
   packages/badge:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -300,7 +306,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -325,13 +331,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -340,7 +346,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -365,13 +371,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -380,7 +386,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       react:
         specifier: 'catalog:'
         version: 19.3.1
@@ -398,13 +404,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -413,7 +419,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -450,13 +456,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -465,7 +471,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -486,13 +492,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -501,7 +507,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -526,10 +532,10 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
 
   packages/code:
     dependencies:
@@ -539,13 +545,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -554,7 +560,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-tabs:
         specifier: workspace:*
         version: link:../tabs
@@ -578,13 +584,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -593,7 +599,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -614,13 +620,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -629,7 +635,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -650,10 +656,10 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -662,10 +668,10 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
 
   packages/details:
     dependencies:
@@ -675,13 +681,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -690,7 +696,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -711,13 +717,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -726,7 +732,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -747,10 +753,10 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -759,13 +765,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -774,7 +780,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -795,13 +801,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -810,7 +816,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -831,10 +837,10 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
 
   packages/file-tree:
     dependencies:
@@ -844,13 +850,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -859,7 +865,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -880,22 +886,22 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
 
   packages/github:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -904,7 +910,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -932,13 +938,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -947,7 +953,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       react:
         specifier: 'catalog:'
         version: 19.3.1
@@ -965,31 +971,31 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
 
   packages/keys:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
 
   packages/links:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -998,7 +1004,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -1019,7 +1025,7 @@ importers:
     devDependencies:
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-annotate:
         specifier: workspace:*
         version: link:../annotate
@@ -1098,6 +1104,9 @@ importers:
       comark-mark:
         specifier: workspace:*
         version: link:../mark
+      comark-math:
+        specifier: workspace:*
+        version: link:../math
       comark-media:
         specifier: workspace:*
         version: link:../media
@@ -1154,13 +1163,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -1169,10 +1178,53 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
+      react:
+        specifier: 'catalog:'
+        version: 19.3.1
+      react-dom:
+        specifier: 'catalog:'
+        version: 19.3.1(react@19.3.1)
+      svelte:
+        specifier: 'catalog:'
+        version: 5.57.2(@typescript-eslint/types@8.71.1)
+      vue:
+        specifier: 'catalog:'
+        version: 3.5.44(typescript@6.0.3)
+
+  packages/math:
+    dependencies:
+      temml:
+        specifier: 'catalog:'
+        version: 0.14.0
+    devDependencies:
+      '@comark/html':
+        specifier: 'catalog:'
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
+      '@comark/react':
+        specifier: 'catalog:'
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
+      '@comark/vue':
+        specifier: 'catalog:'
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+      '@types/react':
+        specifier: 'catalog:'
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: 'catalog:'
+        version: 19.3.0(@types/react@19.3.0)
+      comark:
+        specifier: 'catalog:'
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
+      comark-zoom:
+        specifier: workspace:*
+        version: link:../zoom
+      katex:
+        specifier: 'catalog:'
+        version: 0.19.1
       react:
         specifier: 'catalog:'
         version: 19.3.1
@@ -1190,13 +1242,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -1205,7 +1257,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -1226,13 +1278,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -1241,7 +1293,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -1262,13 +1314,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -1277,7 +1329,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -1298,13 +1350,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -1313,7 +1365,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -1338,13 +1390,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -1353,7 +1405,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -1374,10 +1426,10 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -1386,22 +1438,22 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
 
   packages/sources:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -1410,7 +1462,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -1431,13 +1483,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -1446,7 +1498,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -1467,13 +1519,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -1482,7 +1534,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -1510,13 +1562,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -1525,7 +1577,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -1546,13 +1598,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -1561,7 +1613,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       comark-zoom:
         specifier: workspace:*
         version: link:../zoom
@@ -1661,6 +1713,9 @@ importers:
       comark-mark:
         specifier: workspace:^
         version: link:../mark
+      comark-math:
+        specifier: workspace:^
+        version: link:../math
       comark-media:
         specifier: workspace:^
         version: link:../media
@@ -1709,13 +1764,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@tiptap/core':
         specifier: 'catalog:'
         version: 3.32.0(@tiptap/pm@3.32.0)
@@ -1748,7 +1803,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       react:
         specifier: 'catalog:'
         version: 19.3.1
@@ -1769,13 +1824,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -1784,7 +1839,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       react:
         specifier: 'catalog:'
         version: 19.3.1
@@ -1799,13 +1854,13 @@ importers:
     devDependencies:
       '@comark/html':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       '@comark/react':
         specifier: 'catalog:'
-        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/vue':
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -1814,7 +1869,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
-        version: 0.8.1(shiki@4.5.0)
+        version: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       react:
         specifier: 'catalog:'
         version: 19.3.1
@@ -4783,6 +4838,10 @@ packages:
   comma-separated-tokens@2.0.3:
     resolution: {integrity: sha512-Fu4hJdvzeylCfQPp9SGWidpzrMs7tTrlu6Vb8XGaRGck8QSNZJJp538Wrb60Lax4fPwR64ViY468OIUTbRlGZg==}
 
+  commander@15.0.0:
+    resolution: {integrity: sha512-z67u4ZhzCL/Tydu1lJARtEZYWbWaN7oYLHbsuzocr6y4N6WZAagG3RQ4FW61V1/0+jImpj293XfrcYnd1qxtPg==}
+    engines: {node: '>=22.12.0'}
+
   commander@2.20.3:
     resolution: {integrity: sha512-GpVkmM8vF2vQUkj2LvZmD35JxeJOLCwJ9cUkugyk2nuhbv3+mJvpLYYt+0+USMxE+oj+ey/lJEnhZw75x/OMcQ==}
 
@@ -5765,6 +5824,10 @@ packages:
   json5@2.2.3:
     resolution: {integrity: sha512-XmOWe7eyHYH14cLdVPoyg+GOH3rYX++KpzrylJwSW98t3Nk+U8XOl8FWKOgwtzdb8lXGf6zYwDUzeHMWfxasyg==}
     engines: {node: '>=6'}
+    hasBin: true
+
+  katex@0.19.1:
+    resolution: {integrity: sha512-jG8uKntjSEcm2EpQOh0XturpPuuC9r3Sq5HLHdsFdWZT27E672SF19QEi+of0/YeOy15lDgRhKvr5614uRrEfA==}
     hasBin: true
 
   keyv@5.6.0:
@@ -6888,6 +6951,10 @@ packages:
   teex@1.0.1:
     resolution: {integrity: sha512-eYE6iEI62Ni1H8oIa7KlDU6uQBtqr4Eajni3wX7rpfXD8ysFx8z0+dri+KWEPWpBsxXfxu58x/0jvTVT1ekOSg==}
 
+  temml@0.14.0:
+    resolution: {integrity: sha512-tz1LW/5IZpThK8c7ZpdTSH/n56eAj+ThirLieErtKxYC3EKCIiB4sKdRUehAgH+fQmvIKqMfP3gqTLBdLpy9zw==}
+    engines: {node: '>=18.13.0'}
+
   terser@5.51.2:
     resolution: {integrity: sha512-bWnjSNscmuI+GJze6ZupnHP8G/cTcsJF+bXCeQknk2SHQsgbNJnLrqiH9jZ2W4STPVXH2mDKKRX3iwPhc9Cn/Q==}
     engines: {node: '>=10'}
@@ -7920,28 +7987,31 @@ snapshots:
 
   '@colordx/core@7.3.0': {}
 
-  '@comark/html@0.8.1(shiki@4.5.0)':
+  '@comark/html@0.8.1(katex@0.19.1)(shiki@4.5.0)':
     dependencies:
-      comark: 0.8.1(shiki@4.5.0)
+      comark: 0.8.1(katex@0.19.1)(shiki@4.5.0)
     optionalDependencies:
+      katex: 0.19.1
       shiki: 4.5.0
     transitivePeerDependencies:
       - rangi
 
-  '@comark/react@0.8.1(react@19.3.1)(shiki@4.5.0)':
+  '@comark/react@0.8.1(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)':
     dependencies:
-      comark: 0.8.1(shiki@4.5.0)
+      comark: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       react: 19.3.1
     optionalDependencies:
+      katex: 0.19.1
       shiki: 4.5.0
     transitivePeerDependencies:
       - rangi
 
-  '@comark/vue@0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))':
+  '@comark/vue@0.8.1(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))':
     dependencies:
-      comark: 0.8.1(shiki@4.5.0)
+      comark: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       vue: 3.5.44(typescript@6.0.3)
     optionalDependencies:
+      katex: 0.19.1
       shiki: 4.5.0
     transitivePeerDependencies:
       - rangi
@@ -10821,22 +10891,25 @@ snapshots:
 
   comark-pele@1.1.0(comark@0.8.1(shiki@4.5.0))(react@19.3.1)(svelte@5.57.2(@typescript-eslint/types@8.71.1))(vue@3.5.44(typescript@6.0.3)):
     dependencies:
-      comark: 0.8.1(shiki@4.5.0)
+      comark: 0.8.1(katex@0.19.1)(shiki@4.5.0)
       pele: 1.9.0
     optionalDependencies:
       react: 19.3.1
       svelte: 5.57.2(@typescript-eslint/types@8.71.1)
       vue: 3.5.44(typescript@6.0.3)
 
-  comark@0.8.1(shiki@4.5.0):
+  comark@0.8.1(katex@0.19.1)(shiki@4.5.0):
     dependencies:
       entities: 8.1.0
       js-yaml: 5.4.3
       markdown-exit: 1.3.0
     optionalDependencies:
+      katex: 0.19.1
       shiki: 4.5.0
 
   comma-separated-tokens@2.0.3: {}
+
+  commander@15.0.0: {}
 
   commander@2.20.3: {}
 
@@ -11645,6 +11718,10 @@ snapshots:
 
   json5@2.2.3: {}
 
+  katex@0.19.1:
+    dependencies:
+      commander: 15.0.0
+
   keyv@5.6.0:
     dependencies:
       '@keyv/serialize': 1.1.1
@@ -12149,7 +12226,7 @@ snapshots:
       ufo: 1.6.4
       yaml: 2.9.1
     optionalDependencies:
-      comark: 0.8.1(shiki@4.5.0)
+      comark: 0.8.1(katex@0.19.1)(shiki@4.5.0)
     transitivePeerDependencies:
       - '@nuxt/schema'
       - confbox
@@ -13494,6 +13571,8 @@ snapshots:
     transitivePeerDependencies:
       - bare-abort-controller
       - react-native-b4a
+
+  temml@0.14.0: {}
 
   terser@5.51.2:
     dependencies:
