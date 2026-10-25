@@ -46,7 +46,7 @@ function mark(nodes: Node[], images: boolean, skip = false): boolean {
  * Zooms images and `::zoom` blocks like medium-zoom: out of their place on the page, closed with Escape, Back, or a
  * click around them. Items with the same `group` page through one zoomed view with a strip of them at the bottom.
  */
-export default defineComarkPlugin<ZoomOptions>((options) => ({
+export default /* @__PURE__ */ defineComarkPlugin<ZoomOptions>((options) => ({
   name: "comark-zoom",
   post(state) {
     const { nodes } = state.tree;

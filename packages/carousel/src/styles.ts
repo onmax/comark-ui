@@ -1,4 +1,4 @@
-import { theme } from "comark-zoom/client";
+import { theme } from "comark-zoom/theme";
 
 /**
  * The carousel styles. The script adds them to the page once. Theme the controls with the shared `--comark-*` tokens,

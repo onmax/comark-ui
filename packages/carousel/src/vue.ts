@@ -21,7 +21,7 @@ const chevron = (d: string) =>
   );
 
 /** `::carousel` for `@comark/vue`. */
-export const Carousel = defineComponent({
+export const Carousel = /* @__PURE__ */ defineComponent({
   name: "Carousel",
   // The other renderers drop `{#id .class}`, so Vue drops it too instead of falling it through to the root.
   inheritAttrs: false,
@@ -85,7 +85,7 @@ export const Carousel = defineComponent({
 });
 
 /** `:::slide` for `@comark/vue`. */
-export const Slide = defineComponent({
+export const Slide = /* @__PURE__ */ defineComponent({
   name: "Slide",
   inheritAttrs: false,
   props: {
