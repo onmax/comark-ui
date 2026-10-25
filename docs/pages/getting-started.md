@@ -178,6 +178,8 @@ comark-ui ships in lockstep with the blocks, so `comark-ui@X` holds every block 
 
 ## Next steps
 
+[Editor](/guide/editor/) adds a Tiptap editor to your app, with Vue bindings, file uploads, and Markdown conversion.
+
 ::card-group
 :::card{title="Theming" icon="lucide:palette" to="/guide/theming/"}
 Match the blocks to your site with eight tokens.

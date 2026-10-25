@@ -44,6 +44,8 @@ Vue, React, and Svelte leave out annotate and diff, which render only to HTML.
 
 ## Editor
 
+[Editor docs](https://comark-ui.onmax.me/guide/editor/) cover setup, Vue bindings, file uploads, and collaborative rooms.
+
 `comark-ui/editor` is a [Tiptap](https://tiptap.dev) editor for Comark Markdown, with no DOM and no framework, so a server can convert documents with it too. Install `@tiptap/core`, `@tiptap/pm`, `@tiptap/starter-kit`, `@tiptap/extension-list`, `@tiptap/extension-image`, and `@tiptap/extension-table`.
 
 | Export | What it does |

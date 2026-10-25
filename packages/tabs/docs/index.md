@@ -321,6 +321,8 @@ const render = createHtmlRenderer({ plugins: [tabs()], components });
 
 For Vue, React, or Svelte, import from `comark-tabs/vue`, `comark-tabs/react`, or `comark-tabs/svelte`. Svelte needs 5.20 or later. [Renderers](/guide/renderers/) covers server rendering and using it with other plugins.
 
+When you render on a server, import `comark-tabs/style.css` with your own styles so the tabs are styled before the components mount.
+
 ## Theme
 
 The tab strip is a segmented control in the style of shadcn/ui, and follows the shared tokens in [Theming](/guide/theming/). Five variables of its own change the strip, the open tab, and the space under them. The rules sit in a `comark` CSS layer, so a plain rule of your own wins over any of them.

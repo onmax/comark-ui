@@ -152,6 +152,8 @@ The HTML renderer puts static SVG in the page, so it needs no script, no browser
 
 On its own, comark-pele draws with Pele's colors. To put its diagrams on the `--comark-*` tokens, as comark-ui does, add `mermaidCss` from `comark-ui/client` to the page; [Theme](#theme) lists what it sets. [Renderers](/guide/renderers/) covers using it with other plugins.
 
+For a browser-only integration, call `addMermaidStyles()` from `comark-ui/client` to add the Mermaid styles to the document once. The Vue, React, and Svelte entries do this for you.
+
 ## Theme
 
 Through [comark-ui](/getting-started/), each diagram sits on a card in a 1px frame, and Pele paints it with the page's colors, so it follows light and dark like the other blocks without being drawn again. The rules sit in a `comark` CSS layer, so any plain rule of your own wins. comark-pele alone draws with Pele's own colors; add `mermaidCss` from `comark-ui/client` to the page for these.

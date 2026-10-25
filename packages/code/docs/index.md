@@ -381,6 +381,8 @@ The components replace how `pre` renders. The block keeps its own markup, so Shi
 
 For Vue, React, or Svelte, import from `comark-code/vue`, `comark-code/react`, or `comark-code/svelte` (Svelte 5.20 or later). [Renderers](/guide/renderers/) covers server rendering and using it with other plugins.
 
+When you render on a server, import `comark-code/style.css` with your own styles so the code blocks are styled before the components mount.
+
 ## Theme
 
 The header sits on the code block's own background, so it takes your `pre` styles and Shiki's theme. The title and buttons follow the shared tokens in [Theming](/guide/theming/). Two variables of their own size the buttons and the header, and a third sets the title's font.
