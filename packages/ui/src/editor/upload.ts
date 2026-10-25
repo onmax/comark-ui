@@ -31,7 +31,9 @@ interface View {
   dispatch(tr: Transaction): void;
 }
 
-type Meta = { add: { id: number; pos: number } } | { remove: number };
+type Meta =
+  | { add: { id: number; pos: number; batch: symbol } }
+  | { remove: number; batch?: symbol };
 
 export const uploadKey = new PluginKey<DecorationSet>("comarkUpload");
 
@@ -86,18 +88,28 @@ function placeholder(pending: PendingUpload) {
 export function startUploads(view: View, files: File[], pos: number, options: UploadOptions) {
   const { upload } = options;
   if (!upload) return [];
+  const batch = Symbol();
   return files.flatMap((file) =>
-    options.accept(file) ? [send(view, file, pos, upload, options)] : [],
+    options.accept(file) ? [send(view, file, pos, upload, options, batch)] : [],
   );
 }
 
 type Send = NonNullable<UploadOptions["upload"]>;
 
-function send(view: View, file: File, pos: number, upload: Send, options: UploadOptions) {
+function send(
+  view: View,
+  file: File,
+  pos: number,
+  upload: Send,
+  options: UploadOptions,
+  batch: symbol,
+) {
   const pending: PendingUpload = { id: nextId++, file, fraction: null };
   if (/^(?:image|video)\//.test(file.type)) pending.preview = URL.createObjectURL(file);
   pendingUploads.set(pending.id, pending);
-  view.dispatch(view.state.tr.setMeta(uploadKey, { add: { id: pending.id, pos } } satisfies Meta));
+  view.dispatch(
+    view.state.tr.setMeta(uploadKey, { add: { id: pending.id, pos, batch } } satisfies Meta),
+  );
   const finish = () => {
     pendingUploads.delete(pending.id);
     if (pending.preview) URL.revokeObjectURL(pending.preview);
@@ -108,7 +120,7 @@ function send(view: View, file: File, pos: number, upload: Send, options: Upload
   }).then(
     (src) => {
       const at = findUpload(view.state, pending.id);
-      const tr = view.state.tr.setMeta(uploadKey, { remove: pending.id } satisfies Meta);
+      const tr = view.state.tr.setMeta(uploadKey, { remove: pending.id, batch } satisfies Meta);
       // Deleted along with the text around it: the upload still finished, but nothing asks for it here.
       if (at !== undefined)
         insertImage(tr, at, view.state.schema.nodes.image!.create({ src, alt: file.name }));
@@ -135,6 +147,20 @@ let nextId = 1;
 const pendingUploads = new Map<number, PendingUpload>();
 const elements = new Map<number, ReturnType<typeof placeholder>>();
 
+function uploadWidget(pos: number, id: number, batch: symbol) {
+  return Decoration.widget(
+    pos,
+    () => {
+      const element = placeholder(
+        pendingUploads.get(id) ?? { id, file: new File([], ""), fraction: null },
+      );
+      elements.set(id, element);
+      return element.root;
+    },
+    { id, batch, key: String(id), side: -1, destroy: () => elements.delete(id) },
+  );
+}
+
 /** The plugin alone, for a ProseMirror editor without Tiptap. */
 export function uploadPlugin(options: UploadOptions) {
   const filesOf = (list: FileList | null | undefined) =>
@@ -147,21 +173,27 @@ export function uploadPlugin(options: UploadOptions) {
         let next = set.map(tr.mapping, tr.doc);
         const meta: Meta | undefined = tr.getMeta(uploadKey);
         if (meta && "add" in meta) {
-          const { id, pos } = meta.add;
-          const widget = Decoration.widget(
-            pos,
-            () => {
-              const element = placeholder(
-                pendingUploads.get(id) ?? { id, file: new File([], ""), fraction: null },
+          const { id, pos, batch } = meta.add;
+          next = next.add(tr.doc, [uploadWidget(pos, id, batch)]);
+        } else if (meta && "remove" in meta) {
+          // Later files in this batch belong after this insertion, even if they finish first.
+          // Ordinary edits still use side: -1 so typing at a placeholder keeps it in place.
+          if (meta.batch) {
+            for (const widget of set.find(
+              undefined,
+              undefined,
+              (spec) => spec.batch === meta.batch && spec.id > meta.remove,
+            )) {
+              next = next.remove(
+                next.find(undefined, undefined, (spec) => spec.id === widget.spec.id),
               );
-              elements.set(id, element);
-              return element.root;
-            },
-            { id, side: -1, destroy: () => elements.delete(id) },
-          );
-          next = next.add(tr.doc, [widget]);
-        } else if (meta && "remove" in meta)
+              next = next.add(tr.doc, [
+                uploadWidget(tr.mapping.map(widget.from, 1), widget.spec.id, meta.batch),
+              ]);
+            }
+          }
           next = next.remove(next.find(undefined, undefined, (spec) => spec.id === meta.remove));
+        }
         return next;
       },
     },

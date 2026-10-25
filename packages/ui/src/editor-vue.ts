@@ -52,6 +52,7 @@ export function useComarkEditor(markdown: Ref<string>, options: UseComarkEditorO
 
   async function load(source: string) {
     const run = ++loads;
+    ++saves; // An external load supersedes serialization of the previous editor state.
     const [check, read] = await Promise.all([
       checkMarkdown(source, { plugins: options.plugins }),
       fromMarkdown(source),

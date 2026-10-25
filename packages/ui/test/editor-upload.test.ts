@@ -66,6 +66,37 @@ describe("uploads", () => {
     );
   });
 
+  it.each([false, true])("preserves file order with reverse completion: %s", async (reverse) => {
+    for (const [markdown, pos] of [
+      ["Before after\n", 8],
+      ["# Title\n\nText\n", 7],
+    ] as const) {
+      const first = deferred();
+      const second = deferred();
+      const view = await editorOf(markdown, { accept: media });
+      const done = startUploads(view, [png, mp4], pos, {
+        accept: media,
+        upload: (file) => (file === png ? first.promise : second.promise),
+      });
+      if (reverse) {
+        second.resolve("/f/demo.mp4");
+        await done[1];
+        first.resolve("/f/shot.png");
+      } else {
+        first.resolve("/f/shot.png");
+        await done[0];
+        second.resolve("/f/demo.mp4");
+      }
+      await Promise.all(done);
+      const images: string[] = [];
+      view.state.doc.descendants((node) => {
+        if (node.type.name === "image") images.push(node.attrs.src);
+      });
+      expect(images).toEqual(["/f/shot.png", "/f/demo.mp4"]);
+      expect(uploadKey.getState(view.state)?.find()).toHaveLength(0);
+    }
+  });
+
   it("writes a video as an image comark-media plays", async () => {
     const view = await editorOf("Watch\n", { accept: media });
     const [done] = startUploads(view, [mp4], 6, {
