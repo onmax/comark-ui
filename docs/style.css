@@ -3225,15 +3225,15 @@ dl:not([class]) > dd > :last-child {
   padding: 1.25rem 1.5rem;
 }
 
-:where(.example-preview, .play-preview) figure:has(> img[data-zoom]) {
+:where(.example-preview, .play-preview-content) figure:has(> img[data-zoom]) {
   margin: 1.5rem 0;
 }
 
-:where(.example-preview, .play-preview) figure > img[data-zoom] {
+:where(.example-preview, .play-preview-content) figure > img[data-zoom] {
   display: block;
 }
 
-:where(.example-preview, .play-preview) figure:has(> img[data-zoom]) > figcaption {
+:where(.example-preview, .play-preview-content) figure:has(> img[data-zoom]) > figcaption {
   margin-top: 0.75rem;
   color: var(--muted);
   font-size: 0.875rem;
