@@ -92,7 +92,7 @@ comarkUi({ math: { macros: { "\\R": "\\mathbb{R}" } } });
 
 ### From Comark's math plugin
 
-Swap `comark/plugins/math` for `comark-math`, and drop KaTeX's stylesheet and its `Math` component. This plugin is named `math` too, so a list holds one or the other. When a list holds both, Comark keeps the first, so remove the import from `comark/plugins/math` rather than adding this one after it.
+Swap `comark/plugins/math` for `comark-mathml`, and drop KaTeX's stylesheet and its `Math` component. This plugin is named `math` too, so a list holds one or the other. When a list holds both, Comark keeps the first, so remove the import from `comark/plugins/math` rather than adding this one after it.
 
 Comark's plugin leaves the TeX in the tree and typesets it with KaTeX in a component, in the reader's browser. This one typesets while parsing and stores the MathML on the node, so renderers only draw it and the page loads no KaTeX.
 
@@ -142,20 +142,20 @@ Each has its own rule in [Doctor](/doctor/).
 
 ### Package
 
-comark-ui brings `comark-math` and registers it. To use it alone, install it with Comark and a renderer, and register it instead of `comark/plugins/math`:
+comark-ui brings `comark-mathml` and registers it. To use it alone, install it with Comark and a renderer, and register it instead of `comark/plugins/math`:
 
 ```sh
-pnpm add comark @comark/html comark-math
+pnpm add comark @comark/html comark-mathml
 ```
 
 ```ts
 import { createHtmlRenderer } from "@comark/html";
-import math, { components } from "comark-math/html";
+import math, { components } from "comark-mathml/html";
 
 const render = createHtmlRenderer({ plugins: [math()], components });
 ```
 
-For Vue, React, or Svelte, import from `comark-math/vue`, `comark-math/react`, or `comark-math/svelte`. The components add the styles when they mount. Import `comark-math/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-mathml/vue`, `comark-mathml/react`, or `comark-mathml/svelte`. The components add the styles when they mount. Import `comark-mathml/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
 
 It works with `registerDefaultPlugins: false` and in streaming parses.
 

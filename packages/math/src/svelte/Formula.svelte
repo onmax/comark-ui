@@ -1,7 +1,7 @@
 <!-- Math for `@comark/svelte`. -->
 <script>
   import { onMount } from "svelte";
-  import { addStyles, classOf } from "comark-math/client";
+  import { addStyles, classOf } from "comark-mathml/client";
 
   let { tex = undefined, display = false, html = undefined } = $props();
   onMount(addStyles);

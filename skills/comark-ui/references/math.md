@@ -1,6 +1,6 @@
 # Math
 
-comark-math typesets LaTeX formulas to MathML while parsing, so the page loads no math script, fonts, or stylesheet. Use it for a formula the prose would garble, such as a complexity bound, a rate, or how a number in the report was computed. Plain numbers and units stay text.
+comark-mathml typesets LaTeX formulas to MathML while parsing, so the page loads no math script, fonts, or stylesheet. Use it for a formula the prose would garble, such as a complexity bound, a rate, or how a number in the report was computed. Plain numbers and units stay text.
 
 ## Syntax
 
@@ -22,4 +22,4 @@ The plugin reports a formula whose TeX doesn't typeset, with the typesetter's re
 ## Register
 
 - In `comark-ui`: on by default, in place of Comark's own math plugin. `math: { macros: { "\\R": "\\mathbb{R}" } }` defines commands every formula can use. `math: { output: "htmlAndMathml" }` uses KaTeX's HTML instead, which needs `katex` installed and `katex/dist/katex.css` on the page.
-- Alone: `pnpm add comark @comark/html comark-math`, then `plugins: [math()]` and `components` from `comark-math/html` (or `/vue`, `/react`, `/svelte`). It is named `math`, and Comark keeps the first plugin of a name, so remove `comark/plugins/math` from the list instead of adding this one after it.
+- Alone: `pnpm add comark @comark/html comark-mathml`, then `plugins: [math()]` and `components` from `comark-mathml/html` (or `/vue`, `/react`, `/svelte`). It is named `math`, and Comark keeps the first plugin of a name, so remove `comark/plugins/math` from the list instead of adding this one after it.

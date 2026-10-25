@@ -17,11 +17,11 @@ const formulas = async (markdown: string) => {
   ].map(([, display, tex]) => (display ? `$$${tex}$$` : tex));
 };
 
-describe("comark-math", () => {
+describe("comark-mathml", () => {
   it("preserves authored components that resemble generated formula markers", async () => {
     vi.resetModules();
     const { default: freshMath } = await import("../src/index.ts");
-    const authored = "::comark-math-0{index=0}\n\n::comark-math-1{index=0}";
+    const authored = "::comark-mathml-0{index=0}\n\n::comark-mathml-1{index=0}";
     const markdown = `$x$\n\n${authored}`;
     const original = await parseMarkdown(authored);
     const tree = await parseMarkdown(markdown, { plugins: [freshMath()] });
@@ -39,7 +39,7 @@ describe("comark-math", () => {
     expect(html).toContain(
       '<span class="cmh cmh-display"><math display="block" class="tml-display" style="display:block math;"><semantics><mfrac><mi>a</mi><mi>b</mi></mfrac>',
     );
-    expect(html.match(/<style data-comark-math>/g)).toHaveLength(1);
+    expect(html.match(/<style data-comark-mathml>/g)).toHaveLength(1);
     expect(html).not.toContain("<script");
   });
 

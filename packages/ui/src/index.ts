@@ -17,7 +17,7 @@ import { createIcons, type IconOptions, type Icons } from "comark-icon";
 import include, { type IncludeOptions } from "comark-include";
 import keys, { type KeysOptions } from "comark-keys";
 import type { AnchorsOptions, ExternalOptions } from "comark-links";
-import type { MathOptions } from "comark-math";
+import type { MathOptions } from "comark-mathml";
 import type { MediaOptions } from "comark-media";
 import type { PeleConfig } from "comark-pele";
 import type { PropertiesOptions } from "comark-properties";
