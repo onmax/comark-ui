@@ -142,23 +142,36 @@ const fileOf = (slug: string) => {
       : `docs/pages/${slug || "index"}.md`;
 };
 const exists = (file: string) => existsSync(new URL(file, repo));
-// A package with several rich components, or parts with syntax of their own, gives each its own page in
-// docs/components/, listed after its page in the order that page links to them.
-function componentPages(slug: string) {
-  const folder = new URL(`packages/${slug}/docs/components/`, repo);
-  if (!existsSync(folder)) return [];
+// A package with several rich components, or parts with syntax of their own, gives each its own page, in
+// docs/components/ or beside its page in docs/. They sit under its page in the rail, in the order that page links them.
+function subPages(slug: string) {
+  const docs = new URL(`packages/${slug}/docs/`, repo);
+  if (!existsSync(docs)) return [];
+  const pages = [
+    ...readdirSync(docs)
+      .filter((file) => file.endsWith(".md"))
+      .map((file) => file.replace(/\.md$/, ""))
+      .filter((page) => page !== "index" && !pageOrder.includes(page)),
+    ...(existsSync(new URL("components/", docs))
+      ? readdirSync(new URL("components/", docs)).map(
+          (file) => `components/${file.replace(/\.md$/, "")}`,
+        )
+      : []),
+  ];
+  if (!pages.length) return [];
   const linked = [
-    ...readFileSync(new URL("../index.md", folder), "utf8").matchAll(
-      new RegExp(`\\(/${slug}/components/([\\w-]+)/\\)`, "g"),
+    ...readFileSync(new URL("index.md", docs), "utf8").matchAll(
+      new RegExp(`\\(/${slug}/((?:components/)?[\\w-]+)/\\)`, "g"),
     ),
-  ].map(([, name]) => name);
-  const pages = readdirSync(folder).map((file) => file.replace(/\.md$/, ""));
+  ]
+    .map(([, page]) => page)
+    .filter((page) => pages.includes(page));
   const unlisted = pages.filter((page) => !linked.includes(page));
   if (unlisted.length)
     throw new Error(
-      `packages/${slug}/docs/index.md needs a link to each page in components/: ${unlisted.join(", ")}.`,
+      `packages/${slug}/docs/index.md needs a link to each of its pages: ${unlisted.join(", ")}.`,
     );
-  return [...new Set(linked)].map((name) => `components/${name}`);
+  return [...new Set(linked)];
 }
 // A package's group picks its section and its heading there: blocks under Components, syntax under Typography, the
 // authoring tools under the docs' Utilities, and the linter on its own. comark-ui has no page: Getting started is it.
@@ -234,14 +247,15 @@ type Section = {
   icon: string;
   lists: { title?: string; icon?: string; slugs: string[] }[];
 };
-// A package's page, then its components' pages.
+// A package's page, then its sub-pages, then its other pages.
 const pagesOfPackage = (pkg: Package) =>
   pageOrder
-    .flatMap((page) =>
-      page === "components" ? ["components", ...componentPages(pkg.slug)] : [page],
-    )
+    .flatMap((page) => (page === "" ? ["", ...subPages(pkg.slug)] : [page]))
     .map((page) => (page ? `${pkg.slug}/${page}` : pkg.slug))
     .filter((slug) => exists(fileOf(slug)));
+const subPageSlugs = new Set(
+  packages.flatMap((pkg) => subPages(pkg.slug).map((page) => `${pkg.slug}/${page}`)),
+);
 // By name, as ui.nuxt.com lists its components, so a block is found without knowing the order.
 const inGroup = (group: string) =>
   packages
@@ -865,7 +879,7 @@ const column = (section: Section, current: string) => {
           icon: list.icon,
           links: list.pages.map(
             (page) =>
-              `<a${page.slug.includes("/components/") ? ' class="nav-sub"' : ""}${page.slug === current ? ' aria-current="page"' : ""} href="${href(page.slug)}">${escapeHtml(page.label)}</a>`,
+              `<a${subPageSlugs.has(page.slug) ? ` class="nav-sub${page.slug.includes("/components/") ? " nav-code" : ""}"` : ""}${page.slug === current ? ' aria-current="page"' : ""} href="${href(page.slug)}">${escapeHtml(page.label)}</a>`,
           ),
         }));
   return `<nav class="pages" aria-label="${escapeHtml(section.label)}"><p class="pages-title">${escapeHtml(section.label)}</p>${section.slug === "play" ? '<a href="/play/editor/">Rich-text editor</a>' : ""}${lists

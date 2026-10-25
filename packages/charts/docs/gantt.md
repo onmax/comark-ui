@@ -1,13 +1,26 @@
 ---
-title: gantt
+title: Gantt charts
 description: Steps or tasks over time, such as a build, a deploy, or a plan, from a table of starts and ends.
-keywords: timeline, roadmap, schedule
+keywords: gantt, timeline, roadmap, schedule
 tagline: Steps or tasks over time, one bar per row, from a table of starts and ends.
 ---
 
-A gantt draws one bar per row, top to bottom in table order. The first column names the bar, and two columns of numbers or of dates say where it starts and where it ends.
+::examples
+:::example{label="Deploy"}
+```md
+::chart{type="gantt" title="A Friday deploy, minutes after 16:55"}
+| step | start | end |
+| --- | --: | --: |
+| tests | 0 | 6 |
+| build | 6 | 11 |
+| deploy | 11 | 13 |
+| it's live | 13 | 13 |
+| rollback | 21 | 24 |
+::
+```
+:::
 
-::example
+:::example{label="Two runs"}
 ```md
 ::chart{type="gantt" title="nuxt build, before and after the worker (s)"}
 | step | run | start | end |
@@ -19,6 +32,7 @@ A gantt draws one bar per row, top to bottom in table order. The first column na
 | ready | after | 4.6 | 4.6 |
 ::
 ```
+:::
 ::
 
 ## Features
@@ -31,7 +45,7 @@ A gantt draws one bar per row, top to bottom in table order. The first column na
 
 ## Usage
 
-Use `type="gantt"` with a table of three columns: the bar's name, where it starts, and where it ends.
+Use `type="gantt"` with a table of three columns: the bar's name, where it starts, and where it ends. The chart draws one bar per row, top to bottom in table order. The start and end columns hold numbers or dates.
 
 ```md
 ::chart{type="gantt" title="A Friday deploy, minutes after 16:55"}
@@ -58,12 +72,12 @@ Use the `y` prop to name the start and end columns when the table has other numb
 
 ### Groups
 
-Add a column of names, such as a phase, an owner, or a run, to color the bars, one color per name, with a legend over the chart. A task may then repeat in another group, like the same step in two runs.
+Add a column of names, such as a phase, an owner, or a run, to color the bars, one color per name, with a legend over the chart. A task may then repeat in another group, like the same step in the two runs of the **Two runs** example.
 
 > [!NOTE]
 > A column of numbers reads as times, so write numbered groups as names, like `shard 1`.
 
-To mark a task that repeats, name its group in the [annotation](/charts/components/annotation/#series)'s `series`.
+To mark a task that repeats, name its group in the [note](/charts/notes/#series)'s `series`.
 
 ### Milestones and durations
 
@@ -93,7 +107,7 @@ Use dates in the forms x takes: `2026`, `2026-04`, `2026-04-15`, or an ISO date 
 
 ### Props
 
-A gantt takes the chart's [props](/charts/#props), except `labels`.
+A gantt chart takes the chart's [props](/charts/#props), except `labels`.
 
 ### Issues
 
@@ -104,4 +118,4 @@ The plugin adds these problems to `meta.issues`:
 - A bar ends before it starts.
 - The table has two columns of names to color by.
 
-A row without a start or an end isn't drawn, and a gantt colors by its first column of names. Each problem has its own rule in [Doctor](/doctor/).
+A row without a start or an end isn't drawn, and a gantt chart colors by its first column of names. Each problem has its own rule in [Doctor](/doctor/).
