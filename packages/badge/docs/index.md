@@ -2,7 +2,7 @@
 title: Badge
 description: Badges for versions and statuses, written in Markdown.
 keywords: label, tag, pill, status, version, deprecated, new, beta, shield, shields.io
-tagline: Mark an API deprecated, a feature new, or a release by its version, in one of Nuxt UI's seven colors.
+tagline: A small label in one of Nuxt UI's seven colors, for a version, a status, or a deprecated API.
 group: Docs blocks
 icon: tag
 blurb: Badges
@@ -27,41 +27,52 @@ Use `useFetch` instead. :badge[v4]{color="info"} :badge[stable]{color="success"}
 :::
 ::
 
-A badge is a `<span>` in a tint of its color with text in the color, so it reads on light and dark pages. Primary follows the page's shadcn/ui `--primary`, or the text color without one, and on a Nuxt UI page every color takes the app's `--ui-*` variable.
+## Features
+
+- A badge is one `<span>`, written inline or as Nuxt UI's block `::badge`.
+- Seven colors from Nuxt UI, each a tint with text in the color, so a badge reads on light and dark pages.
+- Primary follows the page's shadcn/ui `--primary`, or the text color without one.
+- On a Nuxt UI page, every color but neutral takes the app's `--ui-*` variable.
+- No script: the components add the styles when they mount.
 
 ## Usage
 
-```md
-:badge[deprecated]{color="warning"}
+Write a badge inline, with its text in brackets.
 
+```md
+:badge[deprecated]
+```
+
+### Block
+
+Use the block `::badge` to write the badge's content inside it, as Nuxt UI does. Its paragraph is unwrapped, so it renders as one badge.
+
+::example
+```md
 ::badge
 **v4.0.0**
 ::
 ```
+::
 
-Write a badge inline, with its text in brackets, or as Nuxt UI's block `::badge` with its content inside. A block badge's paragraph is unwrapped, so it renders as one badge.
+### Color
 
-| Prop | What it does |
-| --- | --- |
-| `color` | One of `primary`, the default, `secondary`, `success`, `info`, `warning`, `error`, and `neutral`. |
+Use the `color` prop to change the badge's color. It defaults to `primary`.
 
-Nuxt UI's prose badge is always primary. The `color` prop is this plugin's own, and Nuxt UI ignores it.
+::example
+```md
+:badge[primary] :badge[secondary]{color="secondary"} :badge[success]{color="success"} :badge[info]{color="info"} :badge[warning]{color="warning"} :badge[error]{color="error"} :badge[neutral]{color="neutral"}
+```
+::
 
-### Issues
-
-The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation/) describes:
-
-- A `color` it doesn't know. The badge shows as primary, and the issue lists the colors it knows.
-- A prop it doesn't read.
-- An empty badge.
-
-Each issue names its badge by its text and says how to fix it. Each one has its own rule in [Doctor](/doctor/).
+> [!NOTE]
+> Nuxt UI's prose badge is always primary. `color` is this plugin's own, and Nuxt UI ignores it.
 
 ## Examples
 
-### Badges in headings
+### Badge in a heading
 
-A badge in a heading sits on the heading's line, a little smaller than its text. The heading's `id` takes the badge's words too, as Comark builds ids from all of a heading's text: `## useFetch :badge[deprecated]` links as `#usefetch-deprecated`.
+A badge in a heading sits on the heading's line, a little smaller than its text.
 
 ::example
 ```md
@@ -69,7 +80,17 @@ A badge in a heading sits on the heading's line, a little smaller than its text.
 ```
 ::
 
+The heading's `id` takes the badge's words too, as Comark builds ids from all of a heading's text. `## useFetch :badge[deprecated]` links as `#usefetch-deprecated`.
+
 ## API
+
+### Props
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| `color` | `primary` | The badge's color: `primary`, `secondary`, `success`, `info`, `warning`, `error`, or `neutral`. An unknown color shows as primary and adds an issue. |
+
+### Options
 
 The plugin takes no options. In `comarkUi()`, `badge: false` turns it off.
 
@@ -82,6 +103,16 @@ The parse plugin replaces each badge's attributes with its `color`, `primary` un
 ```
 
 `colors`, exported from every entry, lists the seven colors.
+
+### Issues
+
+The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation/) describes:
+
+- A `color` it doesn't know. The badge shows as primary, and the issue lists the colors it knows.
+- A prop it doesn't read.
+- An empty badge.
+
+Each issue names its badge by its number and text, and says how to fix it. Each one has its own rule in [Doctor](/doctor/).
 
 ### Package
 
@@ -104,13 +135,36 @@ For Vue, React, or Svelte, import from `comark-badge/vue`, `comark-badge/react`,
 
 ## Theme
 
-A badge is a `<span class="cb" data-color="...">`. Each color reads Nuxt UI's variable, such as `--ui-warning`, then its own default. Primary's default is shadcn/ui's `--primary`, then the foreground, so badges match the page's brand color or stay neutral without one. Secondary's is the muted text color, and error's is `--destructive`. Set `--cb-primary`, `--cb-secondary`, `--cb-success`, `--cb-info`, `--cb-warning`, `--cb-error`, or `--cb-neutral` on `.cb` to change one. Badges also read these [shared tokens](/guide/theming/):
+Badges follow the shared tokens in [Theming](/guide/theming/), and a variable per color. The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
+
+### Shared tokens
 
 | Token | Used for |
 | --- | --- |
 | `--comark-foreground` | Mixed into the text, so it stays readable |
-| `--comark-muted` | Neutral badges |
+| `--comark-muted` | Neutral and secondary badges |
 | `--comark-radius` | Corners |
 | `--comark-font` | Text |
 
-The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
+### Variables
+
+Each color reads Nuxt UI's variable first, then its own default. Set one on `.cb` to change it:
+
+| Variable | Default |
+| --- | --- |
+| `--cb-primary` | `--ui-primary`, else shadcn/ui's `--primary`, else `--comark-foreground` |
+| `--cb-secondary` | `--ui-secondary`, else `--comark-muted` |
+| `--cb-success` | `--ui-success`, else `#16a34a` (`#4ade80` in dark mode) |
+| `--cb-info` | `--ui-info`, else `#2563eb` (`#60a5fa` in dark mode) |
+| `--cb-warning` | `--ui-warning`, else `#ca8a04` (`#facc15` in dark mode) |
+| `--cb-error` | `--ui-error`, else shadcn/ui's `--destructive`, else `#dc2626` (`#f87171` in dark mode) |
+| `--cb-neutral` | `--comark-muted` |
+
+Primary's default matches the page's brand color, or stays neutral without one.
+
+### Classes and attributes
+
+| Selector | Is |
+| --- | --- |
+| `.cb` | A badge, a `<span>` |
+| `[data-color]` | The badge's color, on `.cb` |

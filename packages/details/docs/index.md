@@ -2,7 +2,7 @@
 title: Details
 description: Details, accordions, and collapsibles, written in Markdown.
 keywords: accordion, collapsible, collapse, expand, fold, spoiler, toggle, summary, disclosure, FAQ
-tagline: Fold away the answer, the long log, or the optional props behind a summary that opens with no script. Nuxt UI's syntax, drawn as native details.
+tagline: A summary that opens to show more, as one disclosure, an accordion of them, or a quiet collapsible.
 group: Docs blocks
 icon: list-collapse
 blurb: Details and accordions
@@ -42,20 +42,33 @@ No. Each item is a native `<details>`, and `type="single"` gives them one `name`
 :::
 ::
 
-Everything renders as `<details>` with a real `<summary>`, so it opens and closes, finds with the browser's search, and prints, all without a script. Comark alone writes a `#summary` slot as a `<template>`, which browsers never show.
+## Features
+
+- Every block renders as `<details>` with a real `<summary>`, so it opens and closes with no script.
+- The browser's search finds text inside a closed block, and it prints.
+- A `#summary` slot renders as a real `<summary>`. Comark alone writes it as a `<template>`, which browsers never show.
+- A single accordion keeps one item open through the `name` attribute, which [every current browser](https://caniuse.com/mdn-html_elements_details_name) supports.
+- Nuxt UI's syntax, unchanged, so a page renders the same accordions and collapsibles under Nuxt UI.
 
 ## Usage
 
-### Details
+Write `::details` with a `summary` and the content it hides.
 
+::example
 ```md
-::details{summary="Why?" open}
+::details{summary="Why?"}
 Because.
 ::
 ```
+::
 
-Or give the summary in a slot, where it can hold Markdown:
+### Details
 
+#### Summary
+
+Use the `summary` prop to set the text that shows while it's closed. A `#summary` slot wins over it, and can hold Markdown.
+
+::example
 ```md
 ::details
 #summary
@@ -65,57 +78,180 @@ Why **pnpm**?
 It saves disk.
 ::
 ```
+::
 
-| Prop | What it does |
-| --- | --- |
-| `summary` | The text that shows while it's closed. A `#summary` slot wins over it. |
-| `open` | Starts it open. |
-| `icon` | An icon before the summary. |
+> [!NOTE]
+> A `::details` with no summary shows "Details" and adds an issue.
+
+#### Open
+
+Use the `open` prop to start it open.
+
+::example
+```md
+::details{summary="Why?" open}
+Because.
+::
+```
+::
+
+#### Icon
+
+Use the `icon` prop to show an icon before the summary.
+
+::example
+```md
+::details{summary="Why does the build need Node 22?" icon="lucide:info"}
+`node:sqlite` caches the icons between builds.
+::
+```
+::
 
 ### Accordion
 
+Use `::accordion` with one `:::accordion-item` for each item.
+
+::example
 ```md
-::accordion{type="single" :defaultValue='["0"]'}
-:::accordion-item{label="Is it free?" icon="lucide:badge-dollar-sign"}
+::accordion
+:::accordion-item{label="Is it free?"}
 Yes.
 :::
 
+:::accordion-item{label="Where's the source?"}
+On GitHub.
+:::
+::
+```
+::
+
+#### Type
+
+Use the `type` prop to keep one item open at a time. `multiple`, the default, lets every item open at once. `single` gives the items one `name`, so opening one closes the others.
+
+::example
+```md
+::accordion{type="single"}
+:::accordion-item{label="Is it free?"}
+Yes.
+:::
+
+:::accordion-item{label="Does it need a script?"}
+No.
+:::
+::
+```
+::
+
+#### Default value
+
+Use the `defaultValue` prop to open items when the page loads. It takes their positions from 0, as Nuxt UI does: `:defaultValue='["0", "2"]'`, or `defaultValue="1"` for one.
+
+::example
+```md
+::accordion{:defaultValue='["1"]'}
+:::accordion-item{label="Is it free?"}
+Yes.
+:::
+
+:::accordion-item{label="Does it need a script?"}
+No.
+:::
+::
+```
+::
+
+> [!NOTE]
+> A `single` accordion opens only the first of them.
+
+### Accordion item
+
+#### Label
+
+Use the `label` prop to set the item's summary. It's required: an item without one shows "Item 1", "Item 2", and so on, and adds an issue.
+
+```md
+:::accordion-item{label="Is it free?"}
+Yes.
+:::
+```
+
+#### Icon
+
+Use the `icon` prop to show an icon before the label.
+
+::example
+```md
+::accordion
+:::accordion-item{label="Is it free?" icon="lucide:badge-dollar-sign"}
+Yes. Every package is MIT licensed.
+:::
+::
+```
+::
+
+#### Description
+
+Use the `description` prop to set the item's text when it has no content of its own.
+
+::example
+```md
+::accordion
 :::accordion-item{label="Where's the source?" description="On GitHub."}
 :::
 ::
 ```
-
-| Prop | What it does |
-| --- | --- |
-| `type` | `multiple`, the default, lets every item open at once. `single` gives the items one `name`, so opening one closes the others, which [every current browser](https://caniuse.com/mdn-html_elements_details_name) does. |
-| `defaultValue` | The items that start open, by position from 0, as Nuxt UI takes them: `:defaultValue='["0", "2"]'`, or `defaultValue="1"` for one. A single accordion opens only the first. |
-
-Each `:::accordion-item` takes `label`, the summary, `icon`, and `description`, the text shown when the item has no content of its own.
+::
 
 ### Collapsible
 
+Use `::collapsible` to hide content behind a quiet line of text.
+
+::example
 ```md
-::collapsible{name="options" openText="Show" closeText="Hide"}
+::collapsible
+- `level`: the heading level that starts each step.
+- `start`: the number of the first step.
+::
+```
+::
+
+#### Name
+
+Use the `name` prop to say what the collapsible hides. It defaults to "properties". With `name="options"`, the summary reads "Show options" while it's closed and "Hide options" while it's open.
+
+::example
+```md
+::collapsible{name="options"}
 Anything.
 ::
 ```
+::
 
-The summary reads "Show options" while it's closed and "Hide options" while it's open. `name` defaults to "properties", and `icon` sets an icon before it. Without the styles, it reads "options" alone.
+> [!NOTE]
+> The words before the name come from the styles. Without them, the summary reads "options" alone.
 
-This is Nuxt UI's syntax, unchanged, so a page renders the same accordions and collapsibles under Nuxt UI.
+#### Open and close text
 
-### Issues
+Use the `openText` and `closeText` props to change the words before the name. They default to "Show" and "Hide".
 
-The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation/) describes:
+::example
+```md
+::collapsible{name="options" openText="See" closeText="Fold"}
+Anything.
+::
+```
+::
 
-- A `::details` with no summary shows "Details".
-- Content in an `::accordion` outside every `:::accordion-item` doesn't render, and an accordion with no items is reported.
-- An item without a `label`, a `defaultValue` that isn't an item's position, and a `type` that isn't `single` or `multiple`.
-- An `:::accordion-item` outside `::accordion` renders on its own.
-- An empty `::collapsible`, and an icon comark-icon can't draw.
-- A prop the block doesn't read, such as a misspelled `summary`.
+#### Icon
 
-Each issue names its block and says how to fix it. Each one has its own rule in [Doctor](/doctor/).
+Use the `icon` prop to show an icon before the summary.
+
+```md
+::collapsible{name="options" icon="lucide:settings"}
+Anything.
+::
+```
 
 ## Examples
 
@@ -123,13 +259,69 @@ Each issue names its block and says how to fix it. Each one has its own rule in 
 
 A `type="single"` accordion names its items from a hash of the document and the accordion's position, so two accordions on one page, or two documents rendered into one page, never close each other's items. The name stays the same every time a document renders, so server and client output match.
 
+## Accessibility
+
+Each block is a native `<details>`, so the browser handles focus, keys, and what a screen reader hears. Each summary is a tab stop.
+
+### Keyboard interactions
+
+| Key | Description |
+| --- | --- |
+| `Enter`, `Space` | Opens or closes the focused summary. |
+| `Tab`, `Shift+Tab` | Moves focus to the next or previous summary. |
+
 ## API
 
-The plugin's one option, `iconResolver`, goes under `details` in `comarkUi()`, or to `details()` when you use it alone. In `comarkUi()` it defaults to the resolver built from the `icon` options.
+### Props
 
-### Icons
+#### `::details`
 
-Accordion items and collapsibles take an `icon`, resolved by [comark-icon](/icon/) while parsing. By default icons come from the Iconify API; pass the page's resolver so every plugin shares it:
+| Prop | Default | Description |
+| --- | --- | --- |
+| `summary` | `"Details"` | The text that shows while it's closed. A `#summary` slot wins over it. |
+| `open` | `false` | Starts it open. |
+| `icon` | — | An icon before the summary. |
+
+#### `::accordion`
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| `type` | `multiple` | `multiple` lets every item open at once. `single` gives the items one `name`, so opening one closes the others. |
+| `defaultValue` | — | The items that start open, by position from 0: `:defaultValue='["0", "2"]'`, or `defaultValue="1"` for one. A single accordion opens only the first. |
+
+#### `:::accordion-item`
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| `label` | `"Item 1"`, `"Item 2"`, … | The summary. Required, so leaving it out adds an issue. |
+| `icon` | — | An icon before the label. |
+| `description` | — | The text shown when the item has no content of its own. |
+
+#### `::collapsible`
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| `name` | `"properties"` | What it hides, after the open or close text. |
+| `openText` | `"Show"` | The word before the name while it's closed. |
+| `closeText` | `"Hide"` | The word before the name while it's open. |
+| `icon` | — | An icon before the summary. |
+
+### Slots
+
+| Slot | Description |
+| --- | --- |
+| `#summary` | The summary of a `::details`, which can hold Markdown. It wins over `summary`. |
+| `#default` | The content it hides. |
+
+### Options
+
+The plugin's one option goes under `details` in `comarkUi()`, or to `details()` when you use it alone.
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `iconResolver` | Icons from the Iconify API | Resolves each block's `icon`, from `createIcons()` in [comark-icon](/icon/). In `comarkUi()` it defaults to the resolver built from the `icon` options. |
+
+Pass the page's resolver so every plugin shares it:
 
 ```ts
 import { createIcons } from "comark-icon";
@@ -151,6 +343,19 @@ Every block becomes a `disclosure` node, drawn as `<details>`, whose first child
 
 `variant` is `details`, `item`, or `collapsible`. A collapsible's summary also has `show` and `hide`, the words before its label.
 
+### Issues
+
+The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation/) describes:
+
+- A `::details` with no summary shows "Details".
+- Content in an `::accordion` outside every `:::accordion-item` doesn't render, and an accordion with no items is reported.
+- An item without a `label`, a `defaultValue` that isn't an item's position, and a `type` that isn't `single` or `multiple`.
+- An `:::accordion-item` outside `::accordion` renders on its own.
+- An empty `::collapsible`, and an icon comark-icon can't draw.
+- A prop the block doesn't read, such as a misspelled `summary`.
+
+Each issue names its block and says how to fix it. Each one has its own rule in [Doctor](/doctor/).
+
 ### Package
 
 comark-ui brings `comark-details` and registers it. To use it alone, install it:
@@ -168,11 +373,13 @@ import details, { components } from "comark-details/html";
 const render = createHtmlRenderer({ plugins: [details()], components });
 ```
 
-For Vue, React, or Svelte, import from `comark-details/vue`, `comark-details/react`, or `comark-details/svelte`; the components add the styles when they mount. Import `comark-details/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-details/vue`, `comark-details/react`, or `comark-details/svelte`. The components add the styles when they mount. When you render on a server, import `comark-details/style.css` with your own styles so the page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
 
 ## Theme
 
-Details and accordions are bordered boxes with a chevron that turns as they open; a collapsible is a quiet line of text. Each is a `<details class="cdt">` with `data-variant`, and an accordion wraps its items in `<div class="cdt-accordion">`. They read these [shared tokens](/guide/theming/):
+Details and accordions are bordered boxes with a chevron that turns as they open. A collapsible is a quiet line of text. They follow the shared tokens in [Theming](/guide/theming/).
+
+### Shared tokens
 
 | Token | Used for |
 | --- | --- |
@@ -184,4 +391,15 @@ Details and accordions are bordered boxes with a chevron that turns as they open
 | `--comark-radius` | Corners |
 | `--comark-font` | Summaries |
 
-The rules sit in a `comark` CSS layer, so any plain rule of your own wins, except the spacing that draws each box: the padding of `.cdt` and its summary, the margins between accordion items, and the edge margins of a box's content are `!important`, because a page's own `details`, `summary`, and paragraph rules are almost always unlayered and would pull the summary out of line or split an accordion. Override those with `!important` too.
+### Classes and attributes
+
+| Selector | Is |
+| --- | --- |
+| `.cdt` | A `<details>`, with `data-variant` (`details`, `item`, or `collapsible`) |
+| `.cdt-summary` | Its `<summary>` |
+| `.cdt-toggle` | A collapsible's open or close text, from `data-show` and `data-hide` |
+| `.cdt-accordion` | The `<div>` around an accordion's items |
+
+### Important rules
+
+The rules sit in a `comark` CSS layer, so any plain rule of your own wins, except the spacing that draws each box. The padding of `.cdt` and its summary, the margins between accordion items, and the edge margins of a box's content are `!important`. A page's own `details`, `summary`, and paragraph rules are almost always unlayered, and would pull the summary out of line or split an accordion. Override those with `!important` too.
