@@ -2,7 +2,7 @@
 title: Chips
 description: Links and @mentions as chips with the site's favicon or the person's avatar, written in Markdown.
 keywords: mention, avatar, favicon, link preview, user, GitHub user, pill, inline link, unavatar
-tagline: Write a link or an @user as usual and get a chip with its favicon or avatar, downloaded while parsing so readers ask no one.
+tagline: A link or an @user drawn as a chip with its site's favicon or the person's avatar.
 group: Review blocks
 icon: at-sign
 blurb: Links and @mentions as chips
@@ -29,28 +29,49 @@ Ask [Anthony](https://antfu.me){avatar="@antfu"}, or read the [guide](https://vi
 :::
 ::
 
-Every web link becomes a chip with its site's favicon, and every `@user` a chip with their GitHub avatar that links to their profile. A link into a GitHub account or repository shows the account's avatar, and a link into an X, Bluesky, YouTube, or GitLab account shows theirs through [unavatar.io](https://unavatar.io).
+## Features
 
-The plugin downloads the images while parsing and inlines them, so the page asks no other site for them. It keeps them on disk, so the next build asks no one either. An image it can't download, such as in a browser that blocks the request, stays a link for the reader's browser to load.
+- Every web link becomes a chip with its site's favicon.
+- Every `@user` becomes a chip with their GitHub avatar that links to their profile.
+- A link into a GitHub, X, Bluesky, YouTube, or GitLab account shows the account's avatar.
+- Images download while parsing and go inline, so the page asks no other site for them.
+- Images stay on disk, so the next build asks no one either.
+- An image it can't download, such as in a browser that blocks the request, keeps its URL for the reader's browser to load.
 
 ## Usage
 
-### Links
+Write a link as usual. Any link to an `http` or `https` address becomes a chip.
 
-Any link to an `http` or `https` address becomes a chip. A link's text stays as written, except that a bare URL loses its scheme and an `@user` link its `@`. These stay plain links:
+::example
+```md
+Read the [Vite guide](https://vite.dev/guide/).
+```
+::
 
-- relative links, anchors, and `mailto:` links;
-- a link around an image, such as a badge;
-- a link written as raw HTML;
-- a link with `{chip=false}`.
+A link's text stays as written. A bare URL loses its scheme.
 
 ### Mentions
 
-`@user` becomes a chip linking to `https://github.com/user`. It must stand on its own: `me@example.com` and `@comark/html` stay text. So does anything in a link or in code.
+Write `@user` to link a GitHub account, with its avatar. The chip links to `https://github.com/user`.
+
+::example
+```md
+@posva maintains Vue Router.
+```
+::
+
+> [!NOTE]
+> A mention must stand on its own: `me@example.com` and `@comark/html` stay text. So does anything in a link or in code.
 
 ### Accounts
 
-A link into an account shows the account's avatar instead of the site's favicon, and a link whose text is `@` and the handle loses its `@`:
+Link into an account to show the account's avatar instead of the site's favicon. A link whose text is `@` and the handle loses its `@`.
+
+::example
+```md
+Ask [@danielroe](https://github.com/danielroe) about [Nuxt](https://github.com/nuxt/nuxt).
+```
+::
 
 | Link | Avatar from |
 | --- | --- |
@@ -60,53 +81,117 @@ A link into an account shows the account's avatar instead of the site's favicon,
 | `https://youtube.com/@handle` | unavatar.io |
 | `https://gitlab.com/user` | unavatar.io |
 
-### Props
+### Avatar
 
-| Prop | On | Does |
-| --- | --- | --- |
-| `avatar="https://…"` | a link or `:chip` | Uses this image, round like an avatar |
-| `avatar="@user"` | a link or `:chip` | Uses that GitHub account's avatar |
-| `avatar="provider:name"` | a link or `:chip` | Uses that account's avatar on any network [unavatar.io](https://unavatar.io/docs) knows, such as `bluesky:sindresorhus.com` |
-| `chip=false` | a link | Keeps a plain link |
-| `href` | `:chip` | The address, required |
-| `title` | a link or `:chip` | The tooltip, as on any link |
+Use the `avatar` prop to set the chip's image. It shows round, like an avatar. It takes an image URL, `@user` for a GitHub account, or `provider:name` for an account on any network [unavatar.io](https://unavatar.io/docs) knows, such as `bluesky:sindresorhus.com`.
 
-`:chip[Text]{href="https://…"}` writes a chip directly, for text that isn't a link elsewhere in Markdown.
+::example
+```md
+Ask [Anthony](https://antfu.me){avatar="@antfu"} before you change the link rules.
+```
+::
 
-[Theme](#theme) covers the variables and class names that change how chips look.
+### Plain link
+
+Use the `chip` prop with `false` to keep a plain link.
+
+::example
+```md
+Read the [guide](https://vite.dev/guide/){chip=false}.
+```
+::
+
+These stay plain links too:
+
+- relative links, anchors, and `mailto:` links;
+- a link around an image, such as a badge;
+- a link written as raw HTML.
+
+### Chip without a link
+
+Use `:chip` to write a chip for text that isn't a link elsewhere in Markdown. It takes the same props, and its `href` is required.
+
+::example
+```md
+The pages render with :chip[Comark]{href="https://comark.dev"}.
+```
+::
+
+### Tooltip
+
+Use the `title` prop to set the chip's tooltip, as on any link.
+
+```md
+[Vite](https://vite.dev){title="The build tool this site uses"}
+```
+
+## Examples
+
+### Cache images in CI
+
+A CI that starts with no `node_modules` downloads every image on every build. Set `cache` to a folder you commit, such as `.comark/chips`, and it downloads only the images that are new.
+
+```ts
+chips({ cache: ".comark/chips" });
+```
+
+### Parse in a browser
+
+Pass `download: false` where parsing runs in a browser. Most sites don't let a page download their images, so each chip would try and then fall back to its URL anyway.
+
+```ts
+chips({ download: false });
+```
+
+### Stay under unavatar.io's limit
+
+Avatars from X, Bluesky, YouTube, GitLab, and `avatar="provider:name"` come from [unavatar.io](https://unavatar.io). It answers 25 downloads a day for each IP address without a plan. With the cache, each image counts once a week. GitHub avatars and favicons have no such limit.
+
+When unavatar.io says no, the chip keeps the URL for the reader's browser, and `meta.issues` says to build again.
+
+### Your own image services
+
+Use the `favicon` and `avatar` options to load images from other services.
+
+```ts
+chips({
+  favicon: (host) => `https://${host}/favicon.ico`,
+  avatar: (login) => `https://unavatar.io/github/${login}`,
+});
+```
 
 ## API
+
+### Props
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| `href` | — | The chip's address, on `:chip`. Required, and a web address. |
+| `avatar` | — | The chip's image, round like an avatar, on a link or `:chip`: an image URL, `@user` for a GitHub account, or `provider:name` for any network unavatar.io knows. |
+| `chip` | `true` | `false` keeps a link plain. |
+| `title` | — | The tooltip, as on any link. |
 
 ### Options
 
 Options go under `chips` in `comarkUi()`, or to `chips()` when you use it alone.
 
-```ts
-chips({
-  // Keep the image URLs for the reader's browser to load, instead of downloading them while parsing.
-  download: false,
-  // A site's image, by its host. Google's favicon service by default.
-  favicon: (host) => `https://${host}/favicon.ico`,
-  // An account's image, by its GitHub login. Its GitHub avatar by default.
-  avatar: (login) => `https://unavatar.io/github/${login}`,
-  // The folder that keeps images between builds. `false` keeps them in memory only.
-  cache: ".comark/chips",
-});
-```
+| Option | Default | Description |
+| --- | --- | --- |
+| `download` | `true` | `false` keeps the image URLs for the reader's browser to load, instead of downloading them while parsing. |
+| `favicon` | Google's favicon service | A function from a site's host to its image URL. |
+| `avatar` | The GitHub avatar | A function from a GitHub login to its image URL. |
+| `cache` | `"node_modules/.cache/comark-chips"` | The folder that keeps images between builds, for a week each. `false` keeps them in memory only. |
 
-Parsing downloads each favicon and avatar and inlines it. Each image is kept in `node_modules/.cache/comark-chips` for a week, so a site that builds many pages, or builds again, asks once per image.
+### Issues
 
-Pass `download: false` where parsing runs in a browser. Most sites don't let a page download their images, so each chip would try and then fall back to its URL anyway.
+The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation/) describes:
 
-### Rate limits
+- An avatar that answers with an HTTP error, such as an `@user` with no GitHub account.
+- A download the site turns away for now (HTTP 429). The chip keeps the URL, and the issue says to build again.
+- An `avatar` that is a bare login, such as `avatar="antfu"`. Write `avatar="@antfu"`.
+- A `:chip` whose `href` isn't a web address.
 
-Avatars from X, Bluesky, YouTube, GitLab, and `avatar="provider:name"` come from [unavatar.io](https://unavatar.io), which answers 25 downloads a day for each IP address without a plan. With the cache, each image counts once a week. GitHub avatars and favicons have no such limit.
-
-When unavatar.io says no, the chip keeps the URL for the reader's browser, and `meta.issues` says to build again.
-
-A CI that starts with no `node_modules` downloads everything every time. Set `cache` to a folder you commit, such as `.comark/chips`, and it downloads only the images that are new.
-
-`meta.issues` reports an avatar that answers with an HTTP error, such as an `@user` with no GitHub account. A site without a favicon gets a chip with no image. Each problem has its own rule in [Doctor](/doctor/).
+A site without a favicon gets a chip with no image, and no issue. Each problem has its own rule in [Doctor](/doctor/).
 
 ### Package
 
@@ -127,9 +212,14 @@ For Vue, React, or Svelte, import from `comark-chips/vue`, `comark-chips/react`,
 
 ## Theme
 
-### Tokens
+Chips take their colors from the shared tokens in [Theming](/guide/theming/), so a site that themes the other plugins themes chips too. The rules sit in a `comark` CSS layer, so a plain rule of your own wins without `!important`.
 
-Chips take their colors from the shared tokens in [Theming](/guide/theming/), so a site that themes the other plugins themes chips too. A favicon chip is a faint tint of `--comark-foreground` with a hairline ring of it, so it reads on a page, a card, or a callout without a color of its own. A focused chip draws its outline in `--comark-ring`.
+### Shared tokens
+
+| Token | Used for |
+| --- | --- |
+| `--comark-foreground` | A favicon chip's faint fill and its hairline ring, so it reads on a page, a card, or a callout without a color of its own |
+| `--comark-ring` | The focus outline |
 
 ### Variables
 
@@ -145,22 +235,27 @@ Set these on `:root`, or on any ancestor to change the chips inside it only:
 | `--cp-radius` | `0.375em` | A favicon chip's corners |
 | `--cp-image-size` | `1em` | The favicon or avatar |
 
+### Classes and attributes
+
+| Selector | Is |
+| --- | --- |
+| `a.cp` | A chip |
+| `.cp[data-kind="favicon"]` | A favicon chip: a faint pill with its favicon, square with rounded corners |
+| `.cp[data-kind="avatar"]` | An avatar chip, such as a mention: only its round avatar and the name, with no pill, underlined under the pointer |
+| `.cp-img` | The favicon or avatar |
+
+### Example
+
+A tinted, round pill with no ring, and a ring around avatars:
+
 ```css
 :root {
   --cp-background: oklch(0.95 0.03 250);
   --cp-ring: transparent;
   --cp-radius: 999px;
 }
-```
 
-### Class names
-
-A chip is an `a.cp` with `data-kind="favicon"` or `data-kind="avatar"`, holding an `img.cp-img` and its text. A favicon chip sits in a faint pill with its favicon, square with rounded corners. An avatar chip, such as a mention, is only its round avatar and the name, with no pill, and underlines under the pointer. Target these for anything the variables don't cover:
-
-```css
 .cp[data-kind="avatar"] .cp-img {
   outline: 2px solid var(--comark-background);
 }
 ```
-
-The rules sit in a `comark` CSS layer, so a plain rule of your own wins without `!important`.
