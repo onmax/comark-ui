@@ -26,6 +26,8 @@ export const css = `${icons}@layer comark{${[
   // The header sits on the block's own background, in room the block makes above its first line, so it never covers
   // the code.
   ".ck-bar{position:absolute;inset:0 0 auto;display:flex;align-items:center;justify-content:flex-end;gap:.125rem;height:var(--_ck-bar);padding:var(--_ck-inset) var(--_ck-inset) 0 .75rem;box-sizing:border-box;user-select:none}",
+  // In a flex or grid item the block's margins stay inside the wrapper, so the header pins itself to the block itself.
+  "@supports (anchor-scope:all){.ck{anchor-scope:--ck-pre}.ck>pre{anchor-name:--ck-pre}.ck-bar{position-anchor:--ck-pre;top:anchor(top);left:anchor(left);right:anchor(right)}}",
   ".ck-title{min-width:0;margin-right:auto;overflow:hidden;color:color-mix(in srgb,var(--_comark-foreground) 72%,transparent);font:.6875rem/1 var(--ck-title-font,ui-monospace,SFMono-Regular,Menlo,monospace);text-overflow:ellipsis;white-space:nowrap}",
   ".ck-bar>button{display:inline-flex;align-items:center;justify-content:center;gap:.25rem;min-width:var(--_ck-size);height:var(--_ck-size);margin:0;padding:0;border:1px solid transparent;border-radius:calc(var(--_comark-radius) - 2px);background:transparent;color:var(--_comark-muted);font:500 .75rem/1 var(--_comark-font);position:relative;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:background-color .15s ease,color .15s ease;visibility:hidden}",
   "[data-code-ready] .ck-bar>button{visibility:visible}",

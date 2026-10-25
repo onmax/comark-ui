@@ -78,7 +78,7 @@ Read the reference for each block you use before you write it. Mix the blocks fr
 | A stable link to a section, or a link that opens a new tab | `{#id}`, `{target="_blank"}` | [links](references/links.md) |
 | A table, code block, or diagram too small to read in place | `::zoom` | [zoom](references/zoom.md) |
 | A sequence to page through in one place, such as the screens of a flow | `::carousel` | [carousel](references/carousel.md) |
-| Versions of one thing where each reader needs only one, such as an OS or a package manager | `::tabs`, `::code-group`, `npm2yarn` | [tabs](references/tabs.md) |
+| Versions of one thing where each reader needs only one, such as an OS or a package manager | `::tabs`, `::code-group`, `pm` | [tabs](references/tabs.md) |
 | Code with lines marked added, removed, or highlighted, or a pasted `git diff` | `ins={4}` after a fence's language, `diff lang="ts"` | [code](references/code.md) |
 
 ### Docs blocks

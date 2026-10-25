@@ -49,6 +49,7 @@ export const MAX_FILTERS = 3;
 - The line numbers and the `+` and `−` come from CSS, so copying a selection copies only the code.
 - With Comark's `shiki` plugin, both blocks keep their highlighting.
 - The output needs no script.
+- To mark a change inside one block of code instead, such as pasted `git diff` output, use a `diff` fence with [Code](/code/#diffs).
 
 ## Usage
 

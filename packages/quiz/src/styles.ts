@@ -130,7 +130,7 @@ export const css = `@layer comark{${[
   ".cqz-hint{display:flex;gap:.5rem;margin-top:.75rem;color:var(--_comark-muted);text-wrap:pretty}",
   ".cqz-hint>.cqz-icon{margin-top:.125rem}",
   ".cqz-hint-body{min-width:0;flex:1}",
-  ".cqz-explain{margin-top:1rem;padding-top:1rem;border-top:1px solid var(--_comark-border);text-wrap:pretty;overflow-wrap:break-word}",
+  ".cqz-explain{margin-top:1rem;text-wrap:pretty;overflow-wrap:break-word}",
   ".cqz-footer{display:flex;flex-wrap:wrap;align-items:center;column-gap:.75rem;row-gap:.25rem;margin-top:.75rem;color:var(--_comark-muted);font-variant-numeric:tabular-nums}",
   ".cqz-footer:not(:has(>:not(:empty,[hidden]))){display:none}",
   ".cqz-total{color:var(--_comark-foreground);font-weight:500}",

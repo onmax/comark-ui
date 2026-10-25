@@ -42,6 +42,7 @@ test("every docs page has a search entry", async ({ request }) => {
       .flatMap((folder) => routes(`packages/${folder}/docs`, `/${folder}`)),
     "/play/",
     "/play/editor/",
+    "/play/gallery/",
   ];
   expect(
     entries

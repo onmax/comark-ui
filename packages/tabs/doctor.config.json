@@ -5,11 +5,6 @@
       "ruleId": "vue/lifecycle/require-cleanup",
       "file": "src/client.ts",
       "reason": "client.ts is not a Vue component. start() returns a stop function that aborts every listener, and the Vue components call it in onBeforeUnmount."
-    },
-    {
-      "ruleId": "typescript/evidence/no-chained-type-assertions",
-      "file": "src/npm2yarn.ts",
-      "reason": "npm-to-yarn's ES module default export is convert(), but its types sit in a CommonJS package, so TypeScript types that default as the module. The test suite runs convert() through the plugin."
     }
   ]
 }

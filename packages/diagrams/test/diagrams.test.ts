@@ -44,7 +44,7 @@ describe("comark-diagrams", () => {
       { url: "https://kroki.io/graphviz/svg", body: "digraph { a -> b }" },
     ]);
     expect(html).toContain(
-      '<figure class="cdg" data-type="d2"><div class="cdg-svg" role="img" aria-label="Login flow"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><text>user -&gt; api</text></svg></div><figcaption>Login flow</figcaption></figure>',
+      '<figure class="cdg" data-type="d2"><div class="cdg-svg" role="img" aria-label="Login flow"><svg width="10" height="10" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><text>user -&gt; api</text></svg></div><figcaption>Login flow</figcaption></figure>',
     );
     expect(html).toContain('<figure class="cdg" data-type="graphviz"><div class="cdg-svg"><svg');
     expect(html).not.toMatch(/<\?xml|DOCTYPE|<!-- drawn/);

@@ -111,11 +111,14 @@ export async function loadExamples(packageOrder: readonly string[]): Promise<Exa
   }).items();
   const rank = ({ group, page }: Example) => {
     const name = page.slice(group.length + 1);
+    // A page pageOrder doesn't name is a sub-page, listed after its package's page; docs/build.ts checks that page
+    // links it.
+    const place = pageOrder.indexOf(name);
     return group === "recipes"
       ? [packageOrder.length, recipeOrder.indexOf(name)]
-      : [packageOrder.indexOf(group), pageOrder.indexOf(name)];
+      : [packageOrder.indexOf(group), place < 0 ? 0.5 : place];
   };
-  // Pages outside the rail, and packages outside packageOrder, aren't on the site.
+  // Recipes outside recipeOrder, and packages outside packageOrder, aren't on the site.
   const listed = items
     .flatMap((item) => (item.data ? [item.data] : []))
     .filter((example) => rank(example).every((place) => place >= 0));

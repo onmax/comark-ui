@@ -17,7 +17,14 @@ export const css = `@layer comark{${[
   // A page's own heading and list item margins would collapse out of the step and leave a gap the line can't cross, and
   // they are almost always unlayered, so only `!important` beats them. The gap between steps is their bottom padding.
   ".cs-step{margin-block:0!important}",
-  ".cs-step>:first-child{margin-top:0!important}",
-  ".cs-step>:last-child{margin-bottom:0!important}",
+  // The renderer may put the styles first in the first step, so the trims skip a `style` or `script`.
+  ".cs-step>:nth-child(1 of :not(style,script)){margin-top:0!important}",
+  ".cs-step>:nth-last-child(1 of :not(style,script)){margin-bottom:0!important}",
+  // A step's heading sits on the number's line, with what it says close under it.
+  ".cs-step>:is(h1,h2,h3,h4,h5,h6):nth-child(1 of :not(style,script)){margin-bottom:.5rem!important;line-height:1.75rem}",
+  ".cs-step>:is(h1,h2,h3,h4,h5,h6):nth-child(1 of :not(style,script))+*{margin-top:0!important}",
+  // comark-code wraps a block whose own margins would pass through the wrapper.
+  ".cs-step>.ck:nth-last-child(1 of :not(style,script))>pre{margin-bottom:0!important}",
+  ".cs-step>:is(h1,h2,h3,h4,h5,h6):nth-child(1 of :not(style,script))+.ck>pre{margin-top:0!important}",
   "@media print{.cs-step{break-inside:avoid}}",
 ].join("")}}`;

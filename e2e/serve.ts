@@ -50,4 +50,6 @@ createServer(async (request, response) => {
     }
   }
   response.writeHead(404).end("Not found");
-}).listen(Number(process.env.E2E_PORT ?? 4173), "127.0.0.1");
+}).listen(Number(process.env.E2E_PORT ?? 4173), "127.0.0.1", () =>
+  console.log(`docs/dist at http://127.0.0.1:${process.env.E2E_PORT ?? 4173}/`),
+);

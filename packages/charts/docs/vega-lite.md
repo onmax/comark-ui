@@ -1,12 +1,12 @@
 ---
-title: vega-lite
+title: Vega-Lite
 description: Any chart the types don't cover, from a Vega-Lite spec that reads the table.
+keywords: box plot, heatmap, error bands, custom chart
 tagline: Any chart the types don't cover, drawn from a Vega-Lite spec over the table.
 ---
 
-For a chart the types don't cover, such as a box plot, a heatmap, or error bands, put a [Vega-Lite](https://vega.github.io/vega-lite/) spec after the table in a `vega-lite` block. The table is still its data, so it stays in the page. Each row becomes one data point, with a field per column named by its header.
-
-::example
+::examples
+:::example{label="Box plot"}
 ````md
 ::chart{title="Latency per request (ms)"}
 | endpoint | ms |
@@ -33,6 +33,7 @@ For a chart the types don't cover, such as a box plot, a heatmap, or error bands
 ```
 ::
 ````
+:::
 ::
 
 ## Features
@@ -43,6 +44,8 @@ For a chart the types don't cover, such as a box plot, a heatmap, or error bands
 - The spec can't load files or URLs.
 
 ## Usage
+
+For a chart the types don't cover, such as a box plot, a heatmap, or error bands, put a [Vega-Lite](https://vega.github.io/vega-lite/) spec after the table in a `vega-lite` block. The table is still its data, so it stays in the page. Each row becomes one data point, with a field per column named by its header.
 
 Leave `data` out of the spec, because the table replaces it. Name the columns in the spec's `encoding`.
 

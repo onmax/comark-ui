@@ -142,23 +142,36 @@ const fileOf = (slug: string) => {
       : `docs/pages/${slug || "index"}.md`;
 };
 const exists = (file: string) => existsSync(new URL(file, repo));
-// A package with several rich components, or parts with syntax of their own, gives each its own page in
-// docs/components/, listed after its page in the order that page links to them.
-function componentPages(slug: string) {
-  const folder = new URL(`packages/${slug}/docs/components/`, repo);
-  if (!existsSync(folder)) return [];
+// A package with several rich components, or parts with syntax of their own, gives each its own page, in
+// docs/components/ or beside its page in docs/. They sit under its page in the rail, in the order that page links them.
+function subPages(slug: string) {
+  const docs = new URL(`packages/${slug}/docs/`, repo);
+  if (!existsSync(docs)) return [];
+  const pages = [
+    ...readdirSync(docs)
+      .filter((file) => file.endsWith(".md"))
+      .map((file) => file.replace(/\.md$/, ""))
+      .filter((page) => page !== "index" && !pageOrder.includes(page)),
+    ...(existsSync(new URL("components/", docs))
+      ? readdirSync(new URL("components/", docs)).map(
+          (file) => `components/${file.replace(/\.md$/, "")}`,
+        )
+      : []),
+  ];
+  if (!pages.length) return [];
   const linked = [
-    ...readFileSync(new URL("../index.md", folder), "utf8").matchAll(
-      new RegExp(`\\(/${slug}/components/([\\w-]+)/\\)`, "g"),
+    ...readFileSync(new URL("index.md", docs), "utf8").matchAll(
+      new RegExp(`\\(/${slug}/((?:components/)?[\\w-]+)/\\)`, "g"),
     ),
-  ].map(([, name]) => name);
-  const pages = readdirSync(folder).map((file) => file.replace(/\.md$/, ""));
+  ]
+    .map(([, page]) => page)
+    .filter((page) => pages.includes(page));
   const unlisted = pages.filter((page) => !linked.includes(page));
   if (unlisted.length)
     throw new Error(
-      `packages/${slug}/docs/index.md needs a link to each page in components/: ${unlisted.join(", ")}.`,
+      `packages/${slug}/docs/index.md needs a link to each of its pages: ${unlisted.join(", ")}.`,
     );
-  return [...new Set(linked)].map((name) => `components/${name}`);
+  return [...new Set(linked)];
 }
 // A package's group picks its section and its heading there: blocks under Components, syntax under Typography, the
 // authoring tools under the docs' Utilities, and the linter on its own. comark-ui has no page: Getting started is it.
@@ -234,14 +247,15 @@ type Section = {
   icon: string;
   lists: { title?: string; icon?: string; slugs: string[] }[];
 };
-// A package's page, then its components' pages.
+// A package's page, then its sub-pages, then its other pages.
 const pagesOfPackage = (pkg: Package) =>
   pageOrder
-    .flatMap((page) =>
-      page === "components" ? ["components", ...componentPages(pkg.slug)] : [page],
-    )
+    .flatMap((page) => (page === "" ? ["", ...subPages(pkg.slug)] : [page]))
     .map((page) => (page ? `${pkg.slug}/${page}` : pkg.slug))
     .filter((slug) => exists(fileOf(slug)));
+const subPageSlugs = new Set(
+  packages.flatMap((pkg) => subPages(pkg.slug).map((page) => `${pkg.slug}/${page}`)),
+);
 // By name, as ui.nuxt.com lists its components, so a block is found without knowing the order.
 const inGroup = (group: string) =>
   packages
@@ -320,6 +334,15 @@ const href = (slug: string) => `/${slug}${slug ? "/" : ""}`;
 const playable = (source: string) => !/^:+include\b/m.test(source);
 const playLink = (source: string) => `/play/#md=${deflateRawSync(source).toString("base64url")}`;
 
+// comark-chips would take the `@user` that comark-github's references draw, and the links comark-links marks, so
+// those packages' examples show plain links.
+const withoutFor = (slug = "") => (["github", "links"].includes(slug) ? ["comark-chips"] : []);
+// Highlighted like the page, so a diff in an example keeps its colors.
+const parseExample = (source: string, without: string[]) =>
+  parseMarkdown(source, {
+    plugins: highlighted(contentPlugins().filter((plugin) => !without.includes(plugin.name))),
+  });
+
 // An example shows the Markdown in its code block twice: rendered, and as source. It runs every plugin but the ones
 // `without` names.
 const exampleWithout =
@@ -328,10 +351,7 @@ const exampleWithout =
     const pre = children.find(isPre);
     if (!pre) throw new Error(`Example "${str(attrs.label)}" needs a fenced code block.`);
     const source = textContent(pre);
-    // Highlighted like the page, so a diff in an example keeps its colors.
-    const preview = await parseMarkdown(source, {
-      plugins: highlighted(contentPlugins().filter((plugin) => !without.includes(plugin.name))),
-    });
+    const preview = await parseExample(source, without);
     if (preview.meta.issues.length)
       throw new Error(`Example "${str(attrs.label)}":\n${preview.meta.issues.join("\n")}`);
     const play = playable(source)
@@ -573,6 +593,19 @@ const presets = examples
     const pkg = packages.find((pkg) => pkg.slug === group);
     return { id, label, group: pkg?.label ?? "Recipes", npm: pkg?.npm ?? "", source };
   });
+// The component gallery's groups: each package's examples, in packageOrder, then the recipes.
+const galleryGroups = [...new Set(examples.map((example) => example.group))].map((group) => {
+  const pkg = packages.find((pkg) => pkg.slug === group);
+  return {
+    slug: group,
+    label: pkg?.label ?? "Recipes",
+    icon: pkg?.icon ?? "book-open",
+    npm: pkg?.npm ?? "",
+    examples: examples
+      .filter((example) => example.group === group)
+      .map((example) => ({ ...example, label: example.label || pageOf(example.page).label })),
+  };
+});
 // The size of each PNG the pages show, read from its header, so a still reserves its room before the image loads.
 const publicDir = new URL("public/", root);
 const imageSizes = new Map(
@@ -865,10 +898,27 @@ const column = (section: Section, current: string) => {
           icon: list.icon,
           links: list.pages.map(
             (page) =>
-              `<a${page.slug.includes("/components/") ? ' class="nav-sub"' : ""}${page.slug === current ? ' aria-current="page"' : ""} href="${href(page.slug)}">${escapeHtml(page.label)}</a>`,
+              `<a${subPageSlugs.has(page.slug) ? ` class="nav-sub${page.slug.includes("/components/") ? " nav-code" : ""}"` : ""}${page.slug === current ? ' aria-current="page"' : ""} href="${href(page.slug)}">${escapeHtml(page.label)}</a>`,
           ),
         }));
-  return `<nav class="pages" aria-label="${escapeHtml(section.label)}"><p class="pages-title">${escapeHtml(section.label)}</p>${section.slug === "play" ? '<a href="/play/editor/">Rich-text editor</a>' : ""}${lists
+  const playLinks = [
+    ["play/editor", "Rich-text editor"],
+    ["play/gallery", "Component gallery"],
+  ]
+    .map(
+      ([slug, label]) =>
+        `<a href="${href(slug)}"${slug === current ? ' aria-current="page"' : ""}>${label}</a>`,
+    )
+    .join("");
+  // The gallery's column is its index instead of the presets: a filter, and a link to each example.
+  if (current === "play/gallery")
+    return `<nav class="pages" aria-label="${escapeHtml(section.label)}"><p class="pages-title">${escapeHtml(section.label)}</p>${playLinks}<label class="gallery-filter">${siteIcon("search", 14)}<input type="search" placeholder="Filter components" aria-label="Filter components" autocomplete="off" spellcheck="false"></label>${galleryGroups
+      .map(
+        (group) =>
+          `<p class="nav-group" data-gallery-group="${group.slug}">${siteIcon(group.icon, 14)}${escapeHtml(group.label)}</p>${group.examples.map((example) => `<a href="#${example.id}" data-gallery="${example.id}">${escapeHtml(example.label)}</a>`).join("")}`,
+      )
+      .join("")}</nav>`;
+  return `<nav class="pages" aria-label="${escapeHtml(section.label)}"><p class="pages-title">${escapeHtml(section.label)}</p>${section.slug === "play" ? playLinks : ""}${lists
     .map(
       (list) =>
         `${list.title ? `<p class="nav-group">${list.icon ? siteIcon(list.icon, 14) : ""}${escapeHtml(list.title)}</p>` : ""}${list.links.join("")}`,
@@ -1375,6 +1425,14 @@ const searchIndex = [
   },
   {
     k: "page",
+    t: "Component gallery",
+    p: "Docs",
+    h: "/play/gallery/",
+    d: "Every example in the docs on one page, in light and dark side by side.",
+    w: "storybook, showcase, all components, dark mode",
+  },
+  {
+    k: "page",
     t: "Editor playground",
     p: "Docs",
     h: "/play/editor/",
@@ -1439,6 +1497,69 @@ const badgeMarkup = (await readFile(new URL("badges/index.html", root), "utf8"))
 );
 const badgeBuilder: NodeHandler = () =>
   `<style>${readFileSync(new URL("badges/style.css", root), "utf8")}</style>${badgeMarkup}<script>${badgeScript.code.replaceAll("</script", "<\\/script")}</script>`;
+
+// A reference table (`| Prop | Default | Description |`, or Option or Attribute) is drawn with comark-fields, the block
+// the site documents for this, while the Markdown copy keeps the table an agent reads more easily. A description that
+// starts "Required." becomes the field's required tag.
+const referenceHeads = new Set(["Prop", "Option", "Attribute"]);
+const cellsOf = (row: Node) =>
+  (Array.isArray(row) ? row.slice(2) : []).filter(
+    (cell): cell is ElementNode => Array.isArray(cell) && (cell[0] === "td" || cell[0] === "th"),
+  );
+const childOf = (node: ElementNode, tag: string) =>
+  node.slice(2).find((child): child is ElementNode => Array.isArray(child) && child[0] === tag);
+function asFields(nodes: Node[]): Node[] {
+  return nodes.map((node) => {
+    if (!Array.isArray(node) || node[0] === null) return node;
+    if (node[0] === "table") {
+      const head = childOf(node, "thead");
+      const body = childOf(node, "tbody");
+      const titles = head
+        ? cellsOf(childOf(head, "tr") ?? ["tr", {}]).map((cell) => textContent(cell).trim())
+        : [];
+      if (
+        body &&
+        titles.length === 3 &&
+        referenceHeads.has(titles[0]!) &&
+        titles[1] === "Default" &&
+        titles[2] === "Description"
+      )
+        return [
+          "field-group",
+          {},
+          ...(body.slice(2) as Node[]).flatMap((row): Node[] => {
+            const [name, fallback, description] = cellsOf(row);
+            if (!name || !description) return [];
+            const value = fallback ? textContent(fallback).trim() : "";
+            // A default in words, such as "`_blank` for a web address", leads the description instead of the head.
+            const worded = fallback
+              ?.slice(2)
+              .some((part) => !Array.isArray(part) || part[0] !== "code");
+            const content = description.slice(2) as Node[];
+            const first = content[0];
+            const required = typeof first === "string" && /^Required\.\s*/.test(first);
+            if (required) content[0] = first.replace(/^Required\.\s*/, "");
+            if (worded && value !== "—")
+              content.unshift("Default: ", ...(fallback!.slice(2) as Node[]), ". ");
+            return [
+              [
+                "field",
+                {
+                  name: textContent(name).trim(),
+                  ...(required && { required: "true" }),
+                  ...(value &&
+                    value !== "—" &&
+                    !worded && { default: value.replace(/^"(.*)"$/, "$1") }),
+                },
+                ["p", {}, ...content],
+              ],
+            ];
+          }),
+        ];
+    }
+    return [node[0], node[1], ...asFields(node.slice(2) as Node[])] as ElementNode;
+  });
+}
 
 // The page around the content: header, rail, the section's column, and a menu that holds both on narrow screens. The
 // landing page has no sidebar, so its header links to the docs and the playground instead.
@@ -1557,22 +1678,21 @@ for (const page of parsed) {
 ${page.slug === "badges" ? "" : pageActions(page.slug)}
 ${page.install ? installerFor(page.install) : ""}</div>
 <main class="enter" style="--i:1">${(
-        await renderHtmlFromDocument(page.document, {
-          components: {
-            ...components,
-            // comark-chips would take the `@user` that comark-github's references draw, and the links comark-links
-            // marks, so those pages show plain links.
-            example: exampleWithout(
-              ["github", "links"].includes(page.pkg?.slug ?? "") ? ["comark-chips"] : [],
-            ),
-            examples: exampleTabs,
-            matrix,
-            "badge-builder": badgeBuilder,
-            incorrect: ruleExample(page, "incorrect"),
-            correct: ruleExample(page, "correct"),
-            rules: ruleTable,
+        await renderHtmlFromDocument(
+          { ...page.document, nodes: asFields(page.document.nodes) },
+          {
+            components: {
+              ...components,
+              example: exampleWithout(withoutFor(page.pkg?.slug)),
+              examples: exampleTabs,
+              matrix,
+              "badge-builder": badgeBuilder,
+              incorrect: ruleExample(page, "incorrect"),
+              correct: ruleExample(page, "correct"),
+              rules: ruleTable,
+            },
           },
-        })
+        )
       ).replace(
         /<table>[\s\S]*?<\/table>/g,
         (table) => `<div class="table-scroll">${table}</div>`,
@@ -1708,6 +1828,134 @@ ${themePane}
     }),
   );
   console.log("docs/dist/play/index.html written");
+}
+
+// The component gallery, as in Nuxt UI's playground: every example on the site on one page, each in a frame of its
+// own once in light and once in dark, so a maintainer can look over every block in both schemes. A frame is its own
+// document, as the playground's preview is, so the plugins' scripts run and ids don't collide. `pnpm gallery` builds
+// the packages and the site and serves it at http://127.0.0.1:4173/play/gallery/ (E2E_PORT picks another port).
+//
+// A frame can't be told its scheme: prefers-color-scheme inside it follows the system, not the frame's color-scheme.
+// So the script forces one on each frame's document, as the playground's Theme pane does, with the scheme as a class
+// on its root, and turns every prefers-color-scheme query in its styles to match. In Light or Dark, the page around
+// the frames takes the scheme too.
+const galleryScript = `{
+const gallery = document.querySelector(".gallery"), system = matchMedia("(prefers-color-scheme: dark)");
+const queries = new WeakMap();
+const force = (doc, scheme) => {
+  const root = doc.documentElement;
+  root.classList.toggle("light", scheme === "light"); root.classList.toggle("dark", scheme === "dark");
+  root.style.colorScheme = scheme ?? "";
+  const swap = scheme && scheme !== (system.matches ? "dark" : "light");
+  const walk = rules => { for (const rule of rules) {
+    if ("conditionText" in rule && rule.media) {
+      if (!queries.has(rule)) queries.set(rule, rule.media.mediaText);
+      const text = queries.get(rule);
+      if (text.includes("prefers-color-scheme")) rule.media.mediaText = swap ? text.replace(/(prefers-color-scheme:\\s*)(dark|light)/g, (_, k, v) => k + (v === "dark" ? "light" : "dark")) : text;
+    }
+    if (rule.cssRules) walk(rule.cssRules);
+  } };
+  for (const sheet of doc.styleSheets) { try { walk(sheet.cssRules) } catch {} }
+};
+const frames = [...gallery.querySelectorAll(".gallery-frame")];
+// Frames around a linked example grow as they load and push it away, so it's held in view until the reader scrolls.
+let held;
+const hold = () => { held = location.hash ? gallery.querySelector(".gallery-item#" + CSS.escape(decodeURIComponent(location.hash.slice(1)))) : undefined };
+const keep = () => held?.scrollIntoView({ behavior: "instant" });
+hold(); addEventListener("hashchange", hold);
+for (const type of ["wheel", "touchmove", "keydown", "mousedown"]) addEventListener(type, () => { held = undefined }, { passive: true });
+// Each load is a new document: it takes its scheme, opens its links outside the frame, and keeps the frame its height.
+const ready = frame => {
+  const doc = frame.contentDocument;
+  if (!doc?.body || doc.URL === "about:blank") return;
+  force(doc, frame.dataset.scheme);
+  for (const a of doc.querySelectorAll("a[href]:not([href^='#'])")) a.target = "_blank";
+  const fit = () => { frame.style.height = Math.ceil(doc.body.getBoundingClientRect().height) + "px"; keep() };
+  new frame.contentWindow.ResizeObserver(fit).observe(doc.body);
+  frame.dataset.ready = "";
+};
+for (const frame of frames) { frame.addEventListener("load", () => ready(frame)); if (frame.contentDocument?.readyState === "complete") ready(frame) }
+const show = (scheme, keep) => {
+  gallery.dataset.scheme = scheme;
+  for (const b of document.querySelectorAll(".gallery-scheme [data-scheme]")) b.setAttribute("aria-pressed", b.dataset.scheme === scheme);
+  force(document, scheme === "both" ? undefined : scheme);
+  if (keep) try { localStorage.setItem("comark-gallery-scheme", scheme) } catch {}
+};
+let saved; try { saved = localStorage.getItem("comark-gallery-scheme") } catch {}
+show(["light", "dark", "both"].includes(saved) ? saved : "both");
+document.querySelector(".gallery-scheme").addEventListener("click", e => { const b = e.target.closest("[data-scheme]"); if (b) show(b.dataset.scheme, true) });
+system.addEventListener("change", () => { show(gallery.dataset.scheme); for (const frame of frames) if (frame.dataset.ready !== undefined) force(frame.contentDocument, frame.dataset.scheme) });
+// The filter keeps the examples whose package or name holds every word typed. The sidebar and the menu each have one.
+const items = [...gallery.querySelectorAll(".gallery-item")], groups = [...gallery.querySelectorAll(".gallery-group")];
+const filters = [...document.querySelectorAll(".gallery-filter input")];
+const filter = value => {
+  const words = value.toLowerCase().split(/\\s+/).filter(Boolean);
+  for (const item of items) item.hidden = !words.every(w => item.dataset.name.includes(w));
+  for (const group of groups) group.hidden = !group.querySelector(".gallery-item:not([hidden])");
+  for (const a of document.querySelectorAll(".pages [data-gallery]")) a.hidden = document.getElementById(a.dataset.gallery).hidden;
+  for (const p of document.querySelectorAll(".pages [data-gallery-group]")) p.hidden = gallery.querySelector('.gallery-group[data-group="' + p.dataset.galleryGroup + '"]').hidden;
+  gallery.querySelector(".gallery-empty").hidden = items.some(item => !item.hidden);
+};
+for (const input of filters) input.addEventListener("input", () => { for (const other of filters) if (other !== input) other.value = input.value; filter(input.value) });
+// The index marks the example at the top of the screen.
+const links = [...document.querySelectorAll(".pages [data-gallery]")];
+const spy = new IntersectionObserver(entries => {
+  for (const e of entries) if (e.isIntersecting) for (const a of links) if (a.dataset.gallery === e.target.id) a.setAttribute("aria-current", "location"); else a.removeAttribute("aria-current");
+}, { rootMargin: "-56px 0px -70% 0px" });
+for (const item of items) spy.observe(item);
+}`;
+if (playSection) {
+  const out = new URL("play/gallery/", dist);
+  await mkdir(out, { recursive: true });
+  await Promise.all(
+    examples.map(async (example) => {
+      const document = await parseExample(example.source, withoutFor(example.group));
+      if (document.meta.issues.length)
+        throw new Error(`Example "${example.id}":\n${document.meta.issues.join("\n")}`);
+      const html = await renderHtmlFromDocument(document, { components });
+      await writeFile(
+        new URL(`${example.id}.html`, out),
+        previewDocument(
+          `<style>body{padding:1rem}html{overflow-y:hidden}</style><div class="example-preview">${html}</div>`,
+        ),
+      );
+    }),
+  );
+  const item = (example: (typeof galleryGroups)[number]["examples"][number], group: string) => {
+    const frame = (scheme: string) =>
+      `<iframe class="gallery-frame" data-scheme="${scheme}" src="/play/gallery/${example.id}.html" loading="lazy" title="${escapeHtml(`${example.label}, ${scheme}`)}"></iframe>`;
+    const play = example.playable
+      ? `<a class="example-play" href="${escapeHtml(playLink(example.source))}">${siteIcon("flask-conical", 13)}Playground</a>`
+      : "";
+    return (
+      `<article class="gallery-item" id="${example.id}" data-name="${escapeHtml(`${group} ${example.label} ${example.id}`.toLowerCase())}">` +
+      `<div class="gallery-head"><h3><a href="#${example.id}">${escapeHtml(example.label)}</a></h3><span>${play}<a class="example-play" href="${href(example.page)}">${siteIcon("book-open", 13)}Docs</a></span></div>` +
+      `<div class="gallery-frames">${frame("light")}${frame("dark")}</div></article>`
+    );
+  };
+  await writeFile(
+    new URL("index.html", out),
+    shell({
+      slug: "play/gallery",
+      section: playSection,
+      title: "Component gallery · Comark plugins",
+      description: "Every example in the docs on one page, in light and dark side by side.",
+      body: `<div class="gallery" data-scheme="both">
+<div class="gallery-bar"><div class="hero"><h1>Component gallery</h1><p>Every example in the docs, each rendered alone. Side by side shows each in light and dark.</p></div>
+<div class="seg gallery-scheme" role="group" aria-label="Color scheme"><button type="button" data-scheme="light" aria-pressed="false">Light</button><button type="button" data-scheme="dark" aria-pressed="false">Dark</button><button type="button" data-scheme="both" aria-pressed="true">Side by side</button></div></div>
+<p class="gallery-empty" hidden>No component matches the filter.</p>
+${galleryGroups
+  .map(
+    (group) =>
+      `<section class="gallery-group" data-group="${group.slug}"><h2>${siteIcon(group.icon, 16)}${escapeHtml(group.label)}${group.npm ? `<small class="mono">${escapeHtml(group.npm)}</small>` : ""}</h2>${group.examples.map((example) => item(example, `${group.label} ${group.npm}`)).join("")}</section>`,
+  )
+  .join("\n")}
+</div>
+<script>${script.trim()}</script>
+<script>${galleryScript}</script>`,
+    }),
+  );
+  console.log(`docs/dist/play/gallery/ written (${examples.length} examples)`);
 }
 
 // Read by the docs app's server, which runs after this and replaces dist.
