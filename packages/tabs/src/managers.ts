@@ -14,16 +14,19 @@ type Command =
 
 type Action = "add" | "remove" | "ci" | "run" | "script" | "exec" | "create" | "init" | "update";
 
-const BINS: Record<string, [PackageManager, string?]> = {
-  npm: ["npm"],
-  npx: ["npm", "exec"],
-  pnpm: ["pnpm"],
-  pnpx: ["pnpm", "dlx"],
-  yarn: ["yarn"],
-  bun: ["bun"],
-  bunx: ["bun", "x"],
-  deno: ["deno"],
-};
+// Maps, so a word such as `constructor` finds nothing rather than a property of every object.
+const BINS = new Map<string, [PackageManager, string?]>(
+  Object.entries({
+    npm: ["npm"],
+    npx: ["npm", "exec"],
+    pnpm: ["pnpm"],
+    pnpx: ["pnpm", "dlx"],
+    yarn: ["yarn"],
+    bun: ["bun"],
+    bunx: ["bun", "x"],
+    deno: ["deno"],
+  }),
+);
 
 const ACTIONS: Record<Exclude<PackageManager, "deno">, Record<string, Action>> = {
   npm: {
@@ -109,33 +112,35 @@ const BUILTINS = new Set(
   ),
 );
 
-const FLAGS: Record<string, Flag | null> = {
-  "-D": "dev",
-  "--save-dev": "dev",
-  "--dev": "dev",
-  "-g": "global",
-  "--global": "global",
-  "-E": "exact",
-  "--save-exact": "exact",
-  "--exact": "exact",
-  "--save-peer": "peer",
-  "--peer": "peer",
-  "-O": "optional",
-  "--save-optional": "optional",
-  "--optional": "optional",
-  // A production dependency is what every manager adds by default.
-  "-S": null,
-  "--save": null,
-  "--save-prod": null,
-  "--prod": null,
-};
+const FLAGS = new Map<string, Flag | null>(
+  Object.entries({
+    "-D": "dev",
+    "--save-dev": "dev",
+    "--dev": "dev",
+    "-g": "global",
+    "--global": "global",
+    "-E": "exact",
+    "--save-exact": "exact",
+    "--exact": "exact",
+    "--save-peer": "peer",
+    "--peer": "peer",
+    "-O": "optional",
+    "--save-optional": "optional",
+    "--optional": "optional",
+    // A production dependency is what every manager adds by default.
+    "-S": null,
+    "--save": null,
+    "--save-prod": null,
+    "--prod": null,
+  }),
+);
 const FROZEN = new Set(["--frozen-lockfile", "--immutable", "--frozen"]);
 
 // `-P` is a peer dependency in yarn and a production one in npm and pnpm, and `-d` is bun's `-D`.
 function flagOf(token: string, manager: PackageManager) {
   if (token === "-P") return manager === "yarn" ? "peer" : null;
   if (token === "-d" && manager === "bun") return "dev";
-  return FLAGS[token];
+  return FLAGS.get(token);
 }
 
 function dependencies(
@@ -304,9 +309,9 @@ function write(manager: PackageManager, command: Command): string | undefined {
         ];
       case "add":
       case "remove": {
-        const flags = [...command.flags]
-          .filter((flag) => command.action === "add" || flag === "global")
-          .map((flag) => WORDS[manager][flag]);
+        const flags = [...command.flags].flatMap((flag) =>
+          command.action === "add" || flag === "global" ? [WORDS[manager][flag]] : [],
+        );
         if (flags.includes(undefined)) return undefined;
         const packages =
           manager === "deno" ? command.packages.map((name) => `npm:${name}`) : command.packages;
@@ -445,7 +450,7 @@ function parse(part: string) {
   const tokens = split(body, (at) => /^\s+/.exec(body.slice(at))?.[0].length ?? 0).filter(
     (_, index) => index % 2 === 0,
   );
-  const bin = BINS[tokens[0] ?? ""];
+  const bin = BINS.get(tokens[0] ?? "");
   if (!bin) return undefined;
   const [manager, implied] = bin;
   const [sub = manager === "yarn" ? "install" : "", ...rest] = implied
