@@ -260,7 +260,7 @@ A collapsed range's margins, padding, and border are `!important`, so a page's o
 | `--comark-border` | The line under a terminal's header |
 | `--comark-accent` | Hovered buttons, and Wrap while it's on |
 | `--comark-ring` | The focus ring on the buttons and on a collapsed range |
-| `--comark-radius` | The buttons', the status line's, and highlighted words' corners |
+| `--comark-radius` | Code block, button, status line, and highlighted word corners |
 | `--comark-font` | Action labels and the status line |
 
 ### Variables

@@ -6,8 +6,9 @@ import { theme } from "./theme.ts";
  * change the backdrop. The rules sit in the `comark` layer, so any unlayered rule of the host's wins.
  */
 export const css = `@layer comark{${[
-  theme(".cz-dialog,[data-zoom]"),
+  theme(".cz-dialog,[data-zoom],.cz-item>img"),
   "[data-zoom]{cursor:zoom-in}",
+  "img[data-zoom],.cz-item>img{border-radius:var(--_comark-radius)}",
   // A `::zoom` block holds no margin of its own for its content's to collapse into, so blocks in a row would touch.
   ".cz{margin:1.5rem 0}",
   "[data-zoom]:focus-visible{outline:2px solid var(--_comark-ring);outline-offset:3px}",

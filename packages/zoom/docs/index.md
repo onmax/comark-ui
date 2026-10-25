@@ -162,10 +162,12 @@ The zoomed view follows the shared tokens in [Theming](/guide/theming/), and two
 | `--comark-border` | The thumbnails' borders |
 | `--comark-accent` | Hovered close and arrow buttons |
 | `--comark-ring` | Focus rings on items and buttons |
-| `--comark-radius` | Button and thumbnail corners |
+| `--comark-radius` | Image, button, and thumbnail corners |
 | `--comark-font` | The header |
 
 The tokens resolve on `.cz-dialog`, so tokens set there theme the zoomed view alone.
+
+Content images use the shared radius, `0.625rem` by default. Set `--comark-radius: 0px` on an image to keep its corners square, or on `:root` to use square corners throughout.
 
 ### Variables
 

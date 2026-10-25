@@ -71,7 +71,7 @@ export const css = `@layer comark{${[
   ".ca-top .ca-stage{--ca-pt:var(--ca-top-gutter);padding-top:var(--ca-top-gutter)}",
   ".ca-bottom .ca-stage{--ca-pb:var(--ca-bottom-gutter);padding-bottom:var(--ca-bottom-gutter)}",
   ".ca-frame{position:relative;line-height:0}",
-  ".ca-frame img{display:block;width:100%;height:auto;margin:0;border-radius:calc(var(--_comark-radius) - 4px);outline:1px solid var(--_comark-border);outline-offset:-1px}",
+  ".ca-frame img{display:block;width:100%;height:auto;margin:0;border-radius:var(--_comark-radius);outline:1px solid var(--_comark-border);outline-offset:-1px}",
   // The Copy button shows on hover and focus, and always on touch screens and when zoomed.
   ".ca-copy{display:none}",
   "[data-annotate-copy] .ca-copy{position:absolute;top:.5rem;right:.5rem;display:grid;place-items:center;width:1.75rem;height:1.75rem;padding:0;border:1px solid var(--_comark-border);border-radius:calc(var(--_comark-radius) - 4px);background:var(--_comark-background);color:var(--_comark-foreground);box-shadow:0 1px 2px rgb(0 0 0/.05);cursor:pointer;opacity:0;transition:opacity .15s ease,background .15s ease}",
