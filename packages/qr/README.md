@@ -20,7 +20,9 @@ const render = createHtmlRenderer({ plugins: [qr()], components });
 ```
 
 ```md
-Open the preview on your phone: :qr{value="https://pr-123.preview.example.com"}
+Open [pr-123.preview.example.com](https://pr-123.preview.example.com), or scan it on your phone:
+
+:qr{value="https://pr-123.preview.example.com"}
 ```
 
 The parse plugin encodes `value` with [uqr](https://github.com/unjs/uqr), Anthony Fu's zero-dependency ES module from his [QR Toolkit](https://qrcode.antfu.me), and writes the code as one SVG path, so no renderer encodes anything and the page needs no script. Codes are black on white in both color schemes; set `--cqr-size` to resize them.

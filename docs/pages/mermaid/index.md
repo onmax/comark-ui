@@ -1,7 +1,7 @@
 ---
 title: Mermaid
 description: Mermaid diagrams in Markdown, drawn to SVG while rendering, with no browser and no network.
-tagline: Write a Mermaid diagram in a fenced block and get it as SVG in the page, drawn by Pele on the server and themed with the other blocks.
+tagline: A Mermaid diagram drawn as SVG on the server by Pele, themed with the other blocks.
 group: Review blocks
 icon: network
 blurb: Mermaid diagrams drawn by Pele
@@ -43,32 +43,30 @@ pie title Birds at the pond
 :::
 ::
 
-A diagram in a review shows a flow or a schema faster than prose, and Mermaid is the syntax agents and GitHub already write. [comark-pele](https://github.com/farnabaz/comark-pele) turns each `mermaid` fence into SVG with [Pele](https://pele.run), a Mermaid renderer with no dependencies, so the page needs no script and the diagram's source never leaves your machine.
+## Features
 
-comark-pele is a third-party plugin, by [farnabaz](https://github.com/farnabaz), not one of this repository's packages. [comark-ui](/getting-started/) registers it for you and puts its diagrams on the [shared tokens](/guide/theming/), so they match the other blocks in light and dark.
+- Mermaid is the syntax agents and GitHub already write, and it shows a flow or a schema faster than prose.
+- [comark-pele](https://github.com/farnabaz/comark-pele) turns each `mermaid` fence into SVG with [Pele](https://pele.run), a Mermaid renderer with no dependencies.
+- The page needs no script, and the diagram's source never leaves your machine.
+- Through comark-ui, the diagrams follow the [shared tokens](/guide/theming/), so they match the other blocks in light and dark.
+- comark-pele is a third-party plugin, by [farnabaz](https://github.com/farnabaz), not one of this repository's packages. [comark-ui](/getting-started/) registers it for you.
 
 ## Usage
 
-### Fences
+Write a diagram in a ` ```mermaid ` or ` ```pele ` fence. Every other fence stays code.
 
-A ` ```mermaid ` or ` ```pele ` fence becomes a diagram. Every other fence stays code. Pass `languages` to change which ones:
-
-```ts
-pele({ languages: ["mermaid"] }); // only `mermaid` fences, not `pele` ones
-```
-
-Props after the language go on the diagram's wrapper, so a class or an id reaches your styles and links:
-
+::example
 ````md
-```mermaid {.wide #checkout}
+```mermaid
 flowchart LR
   cart --> pay --> done
 ```
 ````
+::
 
-### Diagram types
+### Diagram type
 
-Pele draws every diagram type built into Mermaid 12.1.0, picked by the first word of the diagram as in Mermaid:
+Use the diagram's first word to pick its type, as in Mermaid. Pele draws every diagram type built into Mermaid 12.1.0.
 
 | First word | Diagram |
 | --- | --- |
@@ -90,13 +88,48 @@ Pele draws every diagram type built into Mermaid 12.1.0, picked by the first wor
 
 Mermaid settings, such as a diagram's own theme, go in the diagram, in its frontmatter or a `%%{init}%%` directive.
 
-### Failures
+### Class and id
+
+Use props after the language to put a class or an id on the diagram's wrapper, so it reaches your styles and links.
+
+````md
+```mermaid {.wide #checkout}
+flowchart LR
+  cart --> pay --> done
+```
+````
+
+## Examples
+
+### Only `mermaid` fences
+
+Pass `languages` to change which fences become diagrams:
+
+```ts
+pele({ languages: ["mermaid"] }); // only `mermaid` fences, not `pele` ones
+```
+
+### Check a diagram before you publish
 
 A diagram Pele can't draw shows its source as code, with Pele's error in the wrapper's `data-error` attribute. Nothing goes in `meta.issues`, so check a diagram in the [playground](/play/#preset=mermaid-flowchart) before you publish it.
 
+### Comark's own mermaid plugin
+
+Comark has a built-in `mermaid` plugin too, which reads the same fences. Register only one of them for `mermaid` fences, or give comark-pele its own language with `pele({ languages: ["pele"] })`.
+
 ## API
 
+### Options
+
 In `comarkUi()`, the `mermaid` option takes comark-pele's options, or `false` to leave `mermaid` fences as code. [Getting started](/getting-started/#mermaid) says when turning it off is worth it.
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `languages` | `["mermaid", "pele"]` | The fence languages that become diagrams. |
+
+### Issues
+
+comark-pele adds nothing to `meta.issues`. A diagram that fails shows its source, with the error in `data-error`.
 
 ### Package
 
@@ -117,17 +150,13 @@ const render = createHtmlRenderer({ plugins: [pele()], components: { Pele } });
 
 The HTML renderer puts static SVG in the page, so it needs no script, no browser, and no network, in Node or in a Cloudflare Worker. For Vue, React, or Svelte, import from `comark-pele/vue`, `comark-pele/react`, or `comark-pele/svelte`, or from comark-ui's entry for that renderer. Those components draw the same SVG on the server, then switch to Pele's `mount()` in the browser, which fits each diagram to its container and adds zoom.
 
-On its own, comark-pele draws with Pele's colors. To put its diagrams on the `--comark-*` tokens, as comark-ui does, add `mermaidCss` from `comark-ui/client` to the page; [Theme](#theme) lists what it sets.
-
-Comark has a built-in `mermaid` plugin too, which reads the same fences. Register only one of them for `mermaid` fences, or give comark-pele its own language with `pele({ languages: ["pele"] })`. [Renderers](/guide/renderers/) covers using it with other plugins.
+On its own, comark-pele draws with Pele's colors. To put its diagrams on the `--comark-*` tokens, as comark-ui does, add `mermaidCss` from `comark-ui/client` to the page; [Theme](#theme) lists what it sets. [Renderers](/guide/renderers/) covers using it with other plugins.
 
 ## Theme
 
 Through [comark-ui](/getting-started/), each diagram sits on a card in a 1px frame, and Pele paints it with the page's colors, so it follows light and dark like the other blocks without being drawn again. The rules sit in a `comark` CSS layer, so any plain rule of your own wins. comark-pele alone draws with Pele's own colors; add `mermaidCss` from `comark-ui/client` to the page for these.
 
 ### Shared tokens
-
-Diagrams read these [shared tokens](/guide/theming/):
 
 | Token | Used for |
 | --- | --- |
@@ -143,8 +172,13 @@ Pie and xy charts color their series with `--comark-chart-1` to `--comark-chart-
 
 ### Variables
 
-Pele paints with its `--pele-*` variables, which the card sets from the tokens. Set one on `.pele-diagram` to change a single color, such as `--pele-accent` for highlighted nodes. [Pele's theming](https://pele.run/theming) lists them all.
+Pele paints with its `--pele-*` variables, which comark-ui sets on `:root` from the tokens. Set one on `.pele-diagram` to change a single color, such as `--pele-accent` for highlighted nodes. [Pele's theming](https://pele.run/theming) lists them all.
 
-### Classes
+### Classes and attributes
 
-A diagram is `div.pele-diagram`, with `data-diagram` set to its type, such as `flowchart` or `pie`, and the SVG inside it is `svg.pele`. A diagram that failed has `data-error` and shows its source in `pre.pele-source`.
+| Selector | Is |
+| --- | --- |
+| `div.pele-diagram` | A diagram, with `data-diagram` set to its type, such as `flowchart` or `pie` |
+| `svg.pele` | The drawing |
+| `.pele-diagram[data-error]` | A diagram that failed |
+| `pre.pele-source` | A failed diagram's source |

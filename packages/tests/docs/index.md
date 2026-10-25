@@ -2,7 +2,7 @@
 title: Tests
 description: Test results in Markdown, read from a JUnit report.
 keywords: JUnit, test report, test results, Vitest, Jest, Playwright, pytest, CI, XML, failures, stack trace
-tagline: Point a block at the JUnit XML your test runner writes and get how many tests passed, failed, and were skipped, how long they took, and every failure with its stack.
+tagline: A summary of a JUnit test report, with the counts, the time, and every failure with its stack.
 group: Review blocks
 icon: test-tube-diagonal
 blurb: Results from a JUnit report
@@ -44,23 +44,19 @@ credits: 'Reads the <a href="https://github.com/testmoapp/junitxml">JUnit XML</a
 :::
 ::
 
-A pull request that says the tests pass reads better with the run next to it. The plugin reads the report while parsing, so the page shows the counts with no script, and each failure opens to its message and stack.
+## Features
+
+- Reads the JUnit XML that Vitest, Jest, pytest, Go, and most CI tools write, from a file or a fence.
+- Shows how many tests passed, failed, and were skipped, and how long they took.
+- Each failure opens to its message and stack.
+- The report is read while parsing, so the page shows the counts with no script.
+- A pull request that says the tests pass reads better with the run next to it.
 
 ## Usage
 
-### From a file
+Paste the report into an ` ```xml ` fence inside `::tests`.
 
-```md
-::tests{src="reports/junit.xml" title="Unit tests"}
-::
-```
-
-`src` is a path relative to the document's folder, or to `root` when it starts with `/`. It can't leave `root` or be a URL.
-
-### From a fence
-
-Paste the report into an ` ```xml ` fence inside the block:
-
+::example
 ````md
 ::tests
 ```xml
@@ -68,30 +64,35 @@ Paste the report into an ` ```xml ` fence inside the block:
 ```
 ::
 ````
+::
 
-### Props
+### File
 
-| Prop | What it does |
-| --- | --- |
-| `src` | The JUnit XML file to read. |
-| `title` | Shown before the counts, and names the results for screen readers. |
+Use the `src` prop to read the report from a file.
 
-### What it shows
-
-- **Passed, failed, and skipped.** Counted from the `<testcase>` elements, so the totals always match the cases. A case with `<failure>` or `<error>` failed, and one with `<skipped>` was skipped. Failed and skipped show only when there are any.
-- **Duration.** The `time` of `<testsuites>`, else the sum of the suites', else the sum of the cases', as `250 ms`, `4.2 s`, or `1 min 21 s`.
-- **Failures.** Each one is a `<details>` named `classname › name`, with the failure's `message` and its stack in a code block. With [comark-code](/code/), the stack gets a Copy button.
-
-The root can be `<testsuites>` or a single `<testsuite>`.
-
-### Issues
-
-The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation/) describes: a missing `src`, a prop it doesn't read, a file that's missing, outside the root, or a URL, XML that isn't well-formed (with the line), and a document that isn't a JUnit report. The block renders nothing then. Each issue names the block and says how to fix it, and each has its own rule in [Doctor](/doctor/):
-
-```txt
-`::tests` 1 ("junit.xml"): its XML is malformed at line 3: `</testsuite>` closes `<testcase>`. Fix the report, or run the tests again to rewrite it.
-`::tests` 2: it isn't a JUnit report: its root is `<coverage>`, not `<testsuites>` or `<testsuite>`.
+```md
+::tests{src="reports/junit.xml"}
+::
 ```
+
+`src` is a path relative to the document's folder, or to `root` when it starts with `/`.
+
+> [!NOTE]
+> `src` can't leave `root` or be a URL. In `comarkUi()`, a `::tests` block reads no files until you pass [options](#options).
+
+### Title
+
+Use the `title` prop to show a title before the counts. It also names the results for screen readers.
+
+::example
+````md
+::tests{title="Unit tests"}
+```xml
+<testsuite time="0.4"><testcase name="counts the ducks"/><testcase name="maps the herons"><skipped/></testcase></testsuite>
+```
+::
+````
+::
 
 ## Examples
 
@@ -120,13 +121,64 @@ The summary is one line, and the failures stay closed until a reader opens one, 
 
 ### The XML parser
 
-JUnit XML uses a small part of XML: elements, attributes, text, CDATA, and the five entities. The plugin reads it with a parser of its own, about a hundred lines with no dependency, rather than pulling in a general XML library many times its size. It refuses what isn't well-formed and says on which line, and it skips doctypes without reading them, so a report can't make it load anything.
+JUnit XML uses a small part of XML: elements, attributes, text, CDATA, the five entities, and character references. The plugin reads it with a parser of its own, under two hundred lines with no dependency, rather than pulling in a general XML library many times its size. It refuses what isn't well-formed and says on which line. It skips doctypes without reading them, so a report can't make it load anything.
+
+## Accessibility
+
+The results are a section named by their title, or "Test results" without one. Each failure is a disclosure, and its summary is a tab stop.
+
+### Keyboard interactions
+
+| Key | Description |
+| --- | --- |
+| `Tab`, `Shift+Tab` | Moves between the failures. |
+| `Enter`, `Space` | Opens or closes the focused failure. |
 
 ## API
 
-These options go under `tests` in `comarkUi()`, or to `tests()` when you use the plugin alone. In `comarkUi()`, a `::tests` block reads no files until you pass options, such as `comarkUi({ tests: { root: "." } })`.
+### Props
 
-`root` is the folder `src` can't leave, and `base` the document's folder under it, as in [comark-include](/include/). In a browser or an edge runtime, pass `read`, a function that takes a path under the root and returns the file's text.
+| Prop | Default | Description |
+| --- | --- | --- |
+| `src` | — | The JUnit XML file to read. Without it, the block reads the ` ```xml ` fence inside it. |
+| `title` | — | Shown before the counts, and names the results for screen readers. |
+
+### What it shows
+
+- **Passed, failed, and skipped.** Counted from the `<testcase>` elements, so the totals always match the cases. A case with `<failure>` or `<error>` failed, and one with `<skipped>` was skipped. Failed and skipped show only when there are any.
+- **Duration.** The `time` of the root element, else the sum of the suites', else the sum of the cases', as `250 ms`, `4.2 s`, or `1 min 21 s`.
+- **Failures.** Each one is a `<details>` named `classname › name`, with the failure's `message` and its stack in a code block. With [comark-code](/code/), the stack gets a Copy button.
+
+The root can be `<testsuites>` or a single `<testsuite>`.
+
+### Options
+
+The options go under `tests` in `comarkUi()`, or to `tests()` when you use the plugin alone. In `comarkUi()`, a `::tests` block reads no files until you pass options, such as `comarkUi({ tests: { root: "." } })`.
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `root` | `"."` | The folder `src` can't leave, as in [comark-include](/include/). |
+| `base` | `""` | The document's folder under `root`, where relative paths start. |
+| `read` | Reads from disk | A function that takes a path under the root and returns the file's text. Pass it in a browser or an edge runtime. |
+
+### Issues
+
+The plugin adds these problems to `meta.issues`, as [Validation](/guide/validation/) describes:
+
+- A block with no `src` and no ` ```xml ` fence.
+- A file that's missing, outside the root, a URL, or can't be read.
+- A `base` option that leaves the root.
+- XML that isn't well-formed, with the line.
+- A document that isn't a JUnit report.
+- Content inside a block that has `src`. It's dropped.
+- A prop it doesn't read. It's ignored.
+
+A block whose report can't be read renders nothing. Each issue names the block and says how to fix it, and each has its own rule in [Doctor](/doctor/):
+
+```txt
+`::tests` 1 ("junit.xml"): its XML is malformed at line 3: `</testsuite>` closes `<testcase>`. Fix the report, or run the tests again to rewrite it.
+`::tests` 2: it isn't a JUnit report: its root is `<coverage>`, not `<testsuites>` or `<testsuite>`.
+```
 
 ### Package
 
@@ -145,7 +197,7 @@ import tests, { components } from "comark-tests/html";
 const render = createHtmlRenderer({ plugins: [tests({ root: "." })], components });
 ```
 
-The renderer inlines the styles once per document, and the output needs no script. For Vue, React, or Svelte, import from `comark-tests/vue`, `comark-tests/react`, or `comark-tests/svelte`; the components add the styles when they mount. Import `comark-tests/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+The renderer inlines the styles once per document, and the output needs no script. For Vue, React, or Svelte, import from `comark-tests/vue`, `comark-tests/react`, or `comark-tests/svelte`. The components add the styles when they mount. Import `comark-tests/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
 
 ## Theme
 
@@ -178,4 +230,11 @@ Set them on `.ctr`:
 
 ### Classes
 
-The block is `section.ctr`, with `data-status` set to `passed` or `failed`. The parts are `.ctr-summary`, `.ctr-title`, `.ctr-count` with `data-kind`, `.ctr-time`, and each `details.ctr-failure` with `.ctr-message` and `pre.ctr-stack`.
+| Selector | Is |
+| --- | --- |
+| `section.ctr` | The block, with `data-status` set to `passed` or `failed` |
+| `.ctr-summary` | The line of the title, the counts, and the duration |
+| `.ctr-title` | The title |
+| `.ctr-count` | A count's badge, with `data-kind` |
+| `.ctr-time` | The duration |
+| `details.ctr-failure` | A failure, with `.ctr-message` and `pre.ctr-stack` |

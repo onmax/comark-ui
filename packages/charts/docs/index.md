@@ -2,7 +2,7 @@
 title: Charts
 description: Charts from a Markdown table, drawn to SVG with no script.
 keywords: graph, plot, bar chart, line chart, pie chart, scatter plot, area chart, benchmark, data visualization, dataviz, Vega
-tagline: Write a table and get a chart drawn to SVG, with no script. The table stays under it, so people see the chart and agents read the numbers.
+tagline: A chart drawn to SVG from a Markdown table, with the table kept under it.
 group: Review blocks
 icon: chart-column
 blurb: Charts from a Markdown table
@@ -120,9 +120,18 @@ The playground opens the editor right away, so it stays slow.
 :::
 ::
 
-The chart's source is a plain Markdown table. A person or an agent reading the Markdown reads the numbers, not a chart spec. The page shows the chart with the same table under it, folded into **Data**, so a tool that turns the page into text keeps the numbers too. Without the plugin, the table still renders as a table.
+## Features
+
+- The chart's source is a plain Markdown table, so a person or an agent reading the Markdown reads the numbers, not a chart spec.
+- The page shows the same table under the chart, folded into **Data**, so a tool that turns the page into text keeps the numbers too.
+- Vega draws every chart while parsing, so the page needs no script.
+- An [`annotation`](/charts/components/annotation/) marks a row or a value with a note, or draws a line across the chart at a target.
+- Nine types cover bars, lines, pies, and a [`gantt`](/charts/components/gantt/), and a [`vega-lite`](/charts/components/vega-lite/) spec draws anything else.
+- Without the plugin, the table still renders as a table.
 
 ## Usage
+
+Put one table between `::chart` and `::`, with a header row, then one row per bar, point, or step. The first column is x, and every other column is a series of numbers, named by its header. Rows are drawn in table order.
 
 ```md
 ::chart{type="line" x="month" y="coffee cups, commits" title="Coffee cups and commits"}
@@ -132,27 +141,13 @@ The chart's source is a plain Markdown table. A person or an agent reading the M
 ::
 ```
 
-Put one table between `::chart` and `::`, with a header row, then one row per bar, point, or step. The first column is x, and every other column is a series of numbers, named by its header. Rows are drawn in table order.
-
-| Prop | What it does |
-| --- | --- |
-| `type` | The chart type, from the table below. Without it, dates on x make a line and anything else makes bars. |
-| `x` | The column along the x axis. Default the first. |
-| `y` | The columns to draw, separated by commas. Default every column but `x`. |
-| `title` | The chart's caption, and its name for screen readers. |
-| `labels` | Writes each value on its bar. See [Values on the bars](#values-on-the-bars). |
-
 Cells hold plain numbers, with commas between thousands if you like, such as `1,200`. Put units in the header or the title, such as `size (kB)`.
 
 x values in the form `2026`, `2026-04`, `2026-04-15`, or an ISO date and time sit on a time axis, and numbers sit on a number axis. Bars, steps, and dumbbells are the exception, and give each value its own row.
 
-Marks, gantts, and Vega-Lite specs each have their own page:
+### Type
 
-- [`annotation`](/charts/components/annotation/) marks a row or one of its values with a note, or draws a line across the chart at a target.
-- [`gantt`](/charts/components/gantt/) is the type with its own table: each bar's name, then where it starts and where it ends.
-- [`vega-lite`](/charts/components/vega-lite/) draws any chart the types don't cover, from a spec that reads the table.
-
-### Chart types
+Use the `type` prop to pick the chart. Without it, names on x make bars, and dates or numbers make a line.
 
 | `type` | Use it for | Table |
 | --- | --- | --- |
@@ -165,10 +160,6 @@ Marks, gantts, and Vega-Lite specs each have their own page:
 | `waterfall` | How changes add up to a total. | The starting total, then each change, negative for a drop, then the end total, all in one column. |
 | `pie` | Shares of one whole. | Names, then one column of numbers that aren't negative. |
 | `gantt` | Steps or tasks over time, such as a build, a deploy, or a plan. | One row per bar: its name, then where it starts and where it ends, as numbers or dates. See [`gantt`](/charts/components/gantt/). |
-
-Bars turn sideways when their labels are long or there are many of them, so file paths and test names stay whole.
-
-In a waterfall, the first row is a total, and so is the last when it equals the running sum. The other rows are changes, green up and red down.
 
 ::examples
 :::example{label="Sideways bars"}
@@ -265,8 +256,63 @@ Team goal: 45 min.
 :::
 ::
 
+Bars turn sideways when their labels are long or there are many of them, so file paths and test names stay whole.
+
+In a waterfall, the first row is a total, and so is the last when it equals the running sum. The other rows are changes, green up and red down.
+
+### X axis
+
+Use the `x` prop to pick the column along the x axis. It defaults to the first column.
+
+::example
+```md
+::chart{x="weekday" title="Pigeons on the roof, by weekday"}
+| pigeons (average) | weekday |
+| --: | --- |
+| 3.2 | Monday |
+| 6.5 | Thursday |
+| 14.7 | Friday |
+::
+```
+::
+
+### Series
+
+Use the `y` prop to pick the columns to draw, separated by commas. It defaults to every column but `x`.
+
+::example
+```md
+::chart{y="commits" title="Commits per month"}
+| month | coffee cups | commits |
+| --- | --: | --: |
+| 2026-04 | 820 | 610 |
+| 2026-05 | 890 | 640 |
+| 2026-06 | 905 | 652 |
+| 2026-07 | 960 | 715 |
+::
+```
+::
+
+### Title
+
+Use the `title` prop to caption the chart. It's also the chart's name for screen readers.
+
+::example
+```md
+::chart{title="Rubber ducks bought, by team"}
+| team | ducks |
+| --- | --: |
+| backend | 41 |
+| frontend | 18 |
+::
+```
+::
+
 ### Values on the bars
 
+Use the `labels` prop to write every value on its bar. Write it alone, with no value.
+
+::example
 ```md
 ::chart{type="stacked" labels title="Standup by topic (min)"}
 | day | work | weekend | pigeons |
@@ -275,18 +321,32 @@ Team goal: 45 min.
 | Friday | 2 | 14 | 7 |
 ::
 ```
+::
 
 Without `labels`, bars print their values past their ends when there's room, and crowded bars, stacked bars, and bars with negative numbers print none. With `labels`, every bar and segment writes its value inside itself, in white. A bar too short or too thin for its value writes it just past its end instead. The value axis goes, since every value is on the chart.
 
 A stack has one end, so its first series, drawn at the end, is the only part that writes its value past it. A thinner part elsewhere in the stack, or a value that would cover another bar's, leaves its value to the **Data** table.
 
-`labels` applies to `bar` and `stacked` charts. Other types have no bars to write on, or print their numbers already: a dumbbell its ends, a waterfall each step, and a gantt each duration. The plugin reports it there.
+> [!NOTE]
+> `labels` applies to `bar` and `stacked` charts. Other types have no bars to write on, or print their numbers already: a dumbbell its ends, a waterfall each step, and a gantt each duration. The plugin reports it there.
+
+### Marks
+
+Use an [`annotation`](/charts/components/annotation/) inside the chart, after the table, to mark a row or one of its values with a note, or to draw a line across the chart at a target.
+
+### Gantt
+
+Use `type="gantt"` with a [table of its own](/charts/components/gantt/): each bar's name, then where it starts and where it ends.
+
+### Vega-Lite
+
+Use a [`vega-lite`](/charts/components/vega-lite/) block after the table to draw any chart the types don't cover, from a spec that reads the table.
 
 ## Examples
 
-### Validation
+### Reject a document before publishing
 
-The plugin checks every chart while parsing and adds the problems to `meta.issues`, so you can reject a document before publishing it:
+The plugin checks every chart while parsing and adds the problems to `meta.issues`. Throw on them to stop a broken document:
 
 ```ts
 import { parseMarkdown } from "comark";
@@ -296,13 +356,48 @@ const { meta } = await parseMarkdown(markdown, { plugins: [charts()] });
 if (meta.issues.length) throw new Error(meta.issues.join("\n"));
 ```
 
-Each issue names its chart by its position in the document and says how to fix it:
+To check documents without drawing them, as comark-linter does, pass `charts({ draw: false })`.
+
+### Fit the column
+
+A chart keeps the size its text was set for instead of stretching to the column, so labels read the same in every chart. It's sized to fit its card, with room for its labels.
+
+- Values sit on the marks when they fit. On crowded or stacked bars, or with negative numbers, you read them off the value axis instead.
+- Lines name their series at their ends. When the ends sit close together, a legend names them.
+- No row is ever dropped. A long sideways chart grows taller.
+- A narrower column scrolls the chart sideways, and print shrinks it to the page. A chart with marks shrinks to fit instead, since its marks sit at percentages of the chart.
+
+## Accessibility
+
+Each chart's SVG is an image named by its `title`. Without one, the name says what it draws, such as "bar chart of ducks by team". Charts are static: they have no tooltips, and the **Data** table under the chart holds every number for a screen reader. A chart with marks zooms like a [screenshot](/annotate/components/screenshot/#accessibility).
+
+## API
+
+### Props
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| `type` | `bar` for names on x, else `line` | `bar`, `stacked`, `line`, `area`, `scatter`, `dumbbell`, `waterfall`, `pie`, or `gantt`. |
+| `x` | The first column | The column along the x axis. |
+| `y` | Every column but `x` | The columns to draw, separated by commas. |
+| `title` | — | The chart's caption, and its name for screen readers. |
+| `labels` | Off | Writes each value on its bar. Takes no value. Only `bar` and `stacked` charts take it. |
+
+### Options
+
+Options go under `charts` in `comarkUi()`, or to `charts()` when you use it alone.
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `draw` | `true` | `false` checks every chart without drawing it, as comark-linter does. |
+
+### Issues
+
+The plugin adds these problems to `meta.issues`. Each issue names its chart by its position in the document and says how to fix it:
 
 ```txt
 `::chart` 2: row 3 has `41 kB` in `size`, which isn't a number. Write the number alone, such as `1200` or `1,200`, and put the unit in the header, such as `size (ms)`.
 ```
-
-It reports:
 
 - Unknown props and types.
 - Columns that `x` or `y` name but the table doesn't have.
@@ -311,8 +406,10 @@ It reports:
 - An x value that appears twice.
 - Content besides the table and its annotations.
 - Data that doesn't fit the type, such as a line or an area of one row, a scatter without numbers on x, a dumbbell with one column, a pie or a waterfall with several, and a pie with a negative number or nothing but zeros.
+- `labels` with a value, or on a type without bars.
+- A chart that couldn't be drawn, which shows its table alone.
 
-[Marks](/charts/components/annotation/#validation), [gantts](/charts/components/gantt/#validation), and [Vega-Lite specs](/charts/components/vega-lite/#validation) have checks of their own, on their pages.
+[Marks](/charts/components/annotation/#issues), [gantts](/charts/components/gantt/#issues), and [Vega-Lite specs](/charts/components/vega-lite/#issues) have checks of their own, on their pages.
 
 Rendering never throws. A chart with a problem draws what it can:
 
@@ -322,15 +419,6 @@ Rendering never throws. A chart with a problem draws what it can:
 - A chart with nothing to draw shows its content as it is.
 
 [comark-linter](/lint/) reports the same issues with their line numbers. Each one has its own rule in [Doctor](/doctor/).
-
-### Size
-
-A chart keeps the size its text was set for instead of stretching to the column, so labels read the same in every chart. It's sized to fit its card, with room for its labels.
-
-- Values sit on the marks when they fit. On crowded or stacked bars, or with negative numbers, you read them off the value axis instead.
-- Lines name their series at their ends. When the ends sit close together, a legend names them.
-- No row is ever dropped. A long sideways chart grows taller.
-- A narrower column scrolls the chart sideways, and print shrinks it to the page. A chart with marks shrinks to fit instead, since its marks sit at percentages of the chart.
 
 ### Renderers
 
@@ -346,12 +434,6 @@ The parse plugin draws every chart, so Vega runs where you parse, on the server 
 The Vue, React, and Svelte components add the styles when they mount. When you render on a server, import `comark-charts/style.css` with your own styles so the page doesn't shift.
 
 Marks come from comark-annotate, which renders only to HTML, so the other renderers draw the chart without them.
-
-Charts are static. They have no tooltips, and the **Data** table holds every number. To check documents without drawing them, as comark-linter does, pass `charts({ draw: false })`.
-
-## API
-
-Options go under `charts` in `comarkUi()`, or to `charts()` when you use it alone. `draw: false` checks every chart without drawing it, as comark-linter does. It defaults to `true`.
 
 ### Package
 

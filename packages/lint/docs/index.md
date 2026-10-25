@@ -2,7 +2,7 @@
 title: comark-linter
 description: Finds unclosed blocks, unknown components, broken links and anchors, local URLs, and plugin issues in Comark documents.
 keywords: linter, lint, ESLint, check, validate, validation, CI, Vite Doctor, markdownlint, errors, diagnostics, broken links, CLI
-tagline: Check Comark documents before they publish, from a script, the command line, or Vite Doctor. Every message names the block and says how to fix it.
+tagline: A linter for Comark documents that runs from the command line, a script, or Vite Doctor.
 install: pnpm add -D comark-linter
 group: Linter
 label: Overview
@@ -12,10 +12,31 @@ blurb: Catches what Comark forgives
 
 Comark forgives a lot. It closes a `::` block you forgot to close, reads a missing `}` as the end of the line, and renders a misspelled component as an empty element. lint-comark reports each of these with its line, so whoever wrote the document, often an agent, can fix it.
 
+## Features
+
+- Every message names the block and says how to fix it.
+- It reports each problem with its file, line, and column.
+- It checks links to files, anchors in them, and, on request, external URLs.
+- The command line and Vite Doctor load every comark-ui package you have installed, so they know its blocks and its issues.
+- It runs from the command line, as a library, or as a [Vite Doctor](/lint/vite-doctor/) extension.
+- `lint()` never throws.
+
+## Usage
+
+Run `lint-comark` on your documents:
+
+```sh
+pnpm lint-comark "docs/**/*.md"
+```
+
+It prints one line per problem:
+
 ```txt
 docs/pigeons-vs-deploys.md:8:1 comark/unclosed-block `::compare` opened on line 8 is never closed. Add a line with `::` after its last child.
 docs/pigeons-vs-deploys.md:12:1 comark/unknown-component `::screnshot` on line 12 is not a known component. Did you mean `screenshot`? Known: `annotation`, `compare`, `diff`, `screenshot`.
 ```
+
+[Getting started](/lint/getting-started/) installs it and covers the config and the library.
 
 ## Rules
 
