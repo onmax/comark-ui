@@ -31,7 +31,7 @@ const renderers = {
     renderReact(createElement(ReactDocument, { value, components: reactComponents })),
 };
 
-describe("comark-math renderers", async () => {
+describe("comark-mathml renderers", async () => {
   const value = await parseMarkdown(markdown, { plugins: [math()] });
   const expected = normalize(await renderHtmlFromDocument(value, { components: htmlComponents }));
 

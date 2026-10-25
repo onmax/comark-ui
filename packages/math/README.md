@@ -1,20 +1,20 @@
-# comark-math
+# comark-mathml
 
-[![npm version](https://npmx.dev/api/registry/badge/version/comark-math)](https://npmx.dev/package/comark-math)
-[![npm downloads](https://npmx.dev/api/registry/badge/downloads-month/comark-math)](https://npmx.dev/package/comark-math)
-[![install size](https://npmx.dev/api/registry/badge/size/comark-math)](https://npmx.dev/package/comark-math)
-[![license](https://npmx.dev/api/registry/badge/license/comark-math)](https://npmx.dev/package/comark-math)
+[![npm version](https://npmx.dev/api/registry/badge/version/comark-mathml)](https://npmx.dev/package/comark-mathml)
+[![npm downloads](https://npmx.dev/api/registry/badge/downloads-month/comark-mathml)](https://npmx.dev/package/comark-mathml)
+[![install size](https://npmx.dev/api/registry/badge/size/comark-mathml)](https://npmx.dev/package/comark-mathml)
+[![license](https://npmx.dev/api/registry/badge/license/comark-mathml)](https://npmx.dev/package/comark-mathml)
 [![docs](https://img.shields.io/badge/docs-comark--ui.onmax.me-14b8a6?labelColor=0a0a0a)](https://comark-ui.onmax.me/math/)
 
 LaTeX math in [Comark](https://comark.dev), in place of `comark/plugins/math`: `$…$` and `\(…\)` inline, `$$…$$`, `\[…\]`, and `math` fences as display math, typeset to MathML while parsing, so the page loads no math script, fonts, or stylesheet. For HTML, Vue, React, and Svelte.
 
 ```sh
-pnpm add comark comark-math
+pnpm add comark comark-mathml
 ```
 
 ```ts
 import { createHtmlRenderer } from "@comark/html";
-import math, { components } from "comark-math/html";
+import math, { components } from "comark-mathml/html";
 
 const render = createHtmlRenderer({ plugins: [math()], components });
 ```
@@ -35,9 +35,9 @@ The plugin adds every formula that doesn't typeset to `meta.issues`, with the re
 
 | Renderer | Import |
 | --- | --- |
-| `@comark/html` | `comark-math/html`: the styles are inlined once per document |
-| `@comark/vue` | `comark-math/vue` |
-| `@comark/react` | `comark-math/react` |
-| `@comark/svelte` | `comark-math/svelte` |
+| `@comark/html` | `comark-mathml/html`: the styles are inlined once per document |
+| `@comark/vue` | `comark-mathml/vue` |
+| `@comark/react` | `comark-mathml/react` |
+| `@comark/svelte` | `comark-mathml/svelte` |
 
-Each entry exports the parse plugin as `default` and the renderer's `components`. The Vue, React, and Svelte components add the styles when they mount; import `comark-math/style.css` with your styles so a server-rendered page doesn't shift.
+Each entry exports the parse plugin as `default` and the renderer's `components`. The Vue, React, and Svelte components add the styles when they mount; import `comark-mathml/style.css` with your styles so a server-rendered page doesn't shift.

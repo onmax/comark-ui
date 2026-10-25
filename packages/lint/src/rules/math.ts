@@ -1,6 +1,6 @@
 import type { RuleInfo } from "./types.ts";
 
-// comark-math's issues, COMARK4101 on.
+// comark-mathml's issues, COMARK4101 on.
 export default {
   "comark/math/invalid-tex": { code: "COMARK4101", title: "Write math that typesets" },
   "comark/math/katex-missing": {

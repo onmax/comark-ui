@@ -175,7 +175,7 @@ export default defineComarkPlugin<MathOptions | undefined, MathMeta>((options = 
       collectTags(state.tokens);
       let tag: string;
       do {
-        tag = `comark-math-${nextParse++}`;
+        tag = `comark-mathml-${nextParse++}`;
       } while (authoredTags.has(tag));
       const formulas: { tex: string; display: boolean }[] = [];
       const visit = (tokens: Token[]) => {

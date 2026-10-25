@@ -80,7 +80,7 @@
     "comark-keys": "workspace:^",
     "comark-links": "workspace:^",
     "comark-mark": "workspace:^",
-    "comark-math": "workspace:^",
+    "comark-mathml": "workspace:^",
     "comark-media": "workspace:^",
     "comark-metrics": "workspace:^",
     "comark-outline": "workspace:^",
