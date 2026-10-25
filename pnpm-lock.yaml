@@ -1155,9 +1155,36 @@ importers:
       '@comark/html':
         specifier: 'catalog:'
         version: 0.8.1(shiki@4.5.0)
+      '@comark/react':
+        specifier: 'catalog:'
+        version: 0.8.1(react@19.3.1)(shiki@4.5.0)
+      '@comark/vue':
+        specifier: 'catalog:'
+        version: 0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+      '@types/react':
+        specifier: 'catalog:'
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: 'catalog:'
+        version: 19.3.0(@types/react@19.3.0)
       comark:
         specifier: 'catalog:'
         version: 0.8.1(shiki@4.5.0)
+      comark-zoom:
+        specifier: workspace:*
+        version: link:../zoom
+      react:
+        specifier: 'catalog:'
+        version: 19.3.1
+      react-dom:
+        specifier: 'catalog:'
+        version: 19.3.1(react@19.3.1)
+      svelte:
+        specifier: 'catalog:'
+        version: 5.57.2(@typescript-eslint/types@8.71.1)
+      vue:
+        specifier: 'catalog:'
+        version: 3.5.44(typescript@6.0.3)
 
   packages/media:
     devDependencies:

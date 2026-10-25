@@ -128,11 +128,7 @@ const packages = [
     () => import("comark-links/html").then((module) => ({ ...module, default: module.anchors })),
     [],
   ],
-  [
-    "comark-mark",
-    () => import("comark-mark").then((module) => ({ ...module, components: {} })),
-    [],
-  ],
+  ["comark-mark/html", () => import("comark-mark/html"), []],
   ["comark-media/html", () => import("comark-media/html"), []],
   ["comark-metrics/html", () => import("comark-metrics/html"), ["stats"]],
   ["comark-steps/html", () => import("comark-steps/html"), []],

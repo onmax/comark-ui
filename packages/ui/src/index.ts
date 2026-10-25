@@ -16,7 +16,6 @@ import { createIcons, type IconOptions, type Icons } from "comark-icon";
 import include, { type IncludeOptions } from "comark-include";
 import keys, { type KeysOptions } from "comark-keys";
 import type { AnchorsOptions, ExternalOptions } from "comark-links";
-import mark from "comark-mark";
 import type { MediaOptions } from "comark-media";
 import type { PeleConfig } from "comark-pele";
 import type { PropertiesOptions } from "comark-properties";
@@ -132,6 +131,7 @@ export type Renderer<C> = {
   properties: Part<C, PropertiesOptions>;
   quiz?: Part<C, QuizOptions>;
   badge: Part<C>;
+  mark: Part<C>;
   media: Part<C, MediaOptions>;
   metrics: Part<C>;
   table: Part<C, TableOptions>;
@@ -202,7 +202,7 @@ export function preset<C>(renderer: Renderer<C>, options: PresetOptions = {}): P
     if (on(github.html)) plugins.push(renderer.github.html());
   }
   add(renderer.icon, options.icon, icons);
-  parse(mark, options.mark);
+  add(renderer.mark, options.mark);
   add(renderer.details, options.details, { iconResolver: icons, ...optionsOf(options.details) });
   if (on(options.links)) {
     const links = optionsOf(options.links) ?? {};

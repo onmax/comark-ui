@@ -18,6 +18,7 @@ import * as fileTree from "comark-file-tree/html";
 import * as github from "comark-github/html";
 import * as icon from "comark-icon/html";
 import * as links from "comark-links/html";
+import * as mark from "comark-mark/html";
 import * as media from "comark-media/html";
 import pele, { Pele } from "comark-pele/html";
 import * as metrics from "comark-metrics/html";
@@ -76,6 +77,7 @@ export default (options?: PresetOptions): Preset<NodeHandler> =>
       github,
       icon,
       links,
+      mark,
       media,
       mermaid,
       metrics,

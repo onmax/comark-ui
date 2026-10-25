@@ -1,7 +1,7 @@
 {
   "name": "comark-mark",
   "version": "0.5.0",
-  "description": "Highlights and superscripts in Comark: ==marked text== as <mark> and ^sup^ as <sup>.",
+  "description": "Highlights and superscripts in Comark: ==marked text== as <mark> and ^sup^ as <sup>, styled by components for HTML, Vue, React, and Svelte.",
   "keywords": [
     "comark",
     "highlight",
@@ -24,9 +24,21 @@
     "dist"
   ],
   "type": "module",
-  "sideEffects": false,
+  "sideEffects": [
+    "*.css"
+  ],
   "exports": {
     ".": "./dist/index.mjs",
+    "./client": "./dist/client.mjs",
+    "./html": "./dist/html.mjs",
+    "./react": "./dist/react.mjs",
+    "./style.css": "./dist/style.css",
+    "./svelte": {
+      "types": "./dist/svelte/index.d.ts",
+      "svelte": "./dist/svelte/index.js",
+      "default": "./dist/svelte/index.js"
+    },
+    "./vue": "./dist/vue.mjs",
     "./package.json": "./package.json"
   },
   "publishConfig": {
@@ -37,14 +49,41 @@
     "build": "tsdown",
     "dev": "tsdown --watch",
     "doctor": "vite-doctor . --no-cache --max-warnings 0 --format text",
-    "prepack": "pnpm --filter comark-mark build"
+    "prepack": "pnpm --filter comark-mark... build"
   },
   "devDependencies": {
     "@comark/html": "catalog:",
-    "comark": "catalog:"
+    "@comark/react": "catalog:",
+    "@comark/vue": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "comark": "catalog:",
+    "comark-zoom": "workspace:*",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "svelte": "catalog:",
+    "vue": "catalog:"
   },
   "peerDependencies": {
-    "comark": "^0.8.0"
+    "@comark/html": "^0.8.0",
+    "comark": "^0.8.0",
+    "react": ">=18",
+    "svelte": ">=5",
+    "vue": ">=3.5"
+  },
+  "peerDependenciesMeta": {
+    "@comark/html": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    },
+    "svelte": {
+      "optional": true
+    },
+    "vue": {
+      "optional": true
+    }
   },
   "engines": {
     "node": ">=22.12.0"
