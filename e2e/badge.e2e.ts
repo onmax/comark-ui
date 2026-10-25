@@ -31,7 +31,9 @@ test("builds, copies, downloads, and restores a static badge", async ({ page, co
   await page.getByLabel("Value", { exact: true }).fill('A "quoted" release');
   await page.getByLabel("Badge theme").selectOption("dark");
   await page.getByRole("button", { name: "Refresh preview" }).click();
-  await expect(page.locator("#comark")).toHaveValue(/quoted/);
+  await page.getByLabel("Export", { exact: true }).selectOption("comark");
+  await expect(page.locator("#export-code")).toHaveValue(/quoted/);
+  await page.getByLabel("Export", { exact: true }).selectOption("markdown");
   await page.getByRole("button", { name: "Copy Markdown", exact: true }).click();
   expect(await page.evaluate(() => navigator.clipboard.readText())).toContain("![built with:");
   await page.getByRole("button", { name: "Copy builder link" }).click();
@@ -60,7 +62,7 @@ test("previews all live sources and validates the options", async ({ page }) => 
   await page.getByRole("button", { name: "Refresh preview" }).click();
   await expect(page.getByRole("alert")).toContainText("owner/repo");
   await expect(page.getByRole("button", { name: "Download SVG" })).toBeDisabled();
-  await expect(page.locator("#image-url")).toHaveValue("");
+  await expect(page.locator("#export-code")).toHaveValue("");
 });
 
 test("explains unavailable data and blocks stale downloads during edits", async ({ page }) => {
@@ -78,6 +80,37 @@ test("explains unavailable data and blocks stale downloads during edits", async 
   await expect(page.getByRole("button", { name: "Download SVG" })).toBeDisabled();
 });
 
+test("uses the docs shell and survives client navigation with a shared configuration", async ({
+  page,
+}) => {
+  await page.goto("/badge/");
+  await page.evaluate(() => {
+    window.sessionStorage.setItem("builder-navigation", "same-document");
+    (window as Window & { badgeNavigation?: boolean }).badgeNavigation = true;
+  });
+  await page.getByRole("link", { name: "builder", exact: true }).first().click();
+  await expect(page.getByRole("heading", { name: "Badge builder", exact: true })).toBeVisible();
+  await expect(
+    page.locator(".sidebar a[aria-current]").filter({ hasText: "Badge builder" }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(() => (window as Window & { badgeNavigation?: boolean }).badgeNavigation),
+  ).toBe(true);
+  await expect(page.getByRole("combobox", { name: "Style", exact: true })).toHaveValue("shadcn");
+  await page.getByRole("button", { name: "Docs", exact: true }).click();
+  await page.getByRole("combobox", { name: "Logo", exact: true }).selectOption("shadcn");
+  await page.getByLabel("Export", { exact: true }).selectOption("comark");
+  await expect(page.locator("#export-code")).toHaveValue(/icon="shadcn"/);
+  const shared = page.url();
+  await page.goto(shared);
+  await expect(page.getByRole("combobox", { name: "Logo", exact: true })).toHaveValue("shadcn");
+  await expect(page.getByLabel("Export", { exact: true })).toHaveValue("comark");
+  await page.getByRole("link", { name: "Badge syntax and hosting options" }).click();
+  await expect(page.getByRole("heading", { name: "Badge", exact: true })).toBeVisible();
+  await page.goBack();
+  await expect(page.getByRole("img", { name: "docs: comark-ui.onmax.me" })).toBeVisible();
+  await expect(page.getByRole("combobox", { name: "Logo", exact: true })).toHaveValue("shadcn");
+});
 for (const input of [
   { value: "release" },
   { source: "npm-version", package: "comark-ui" },
@@ -88,11 +121,14 @@ for (const input of [
     if (!parsed.ok) throw new Error(parsed.error);
     const params = badgeParams(parsed.value);
     await page.goto(`/badges/?${params}`);
-    await expect(page.locator("#image-url")).not.toHaveValue("");
-    const imageUrl = await page.locator("#image-url").inputValue();
+    await page.getByLabel("Export", { exact: true }).selectOption("image-url");
+    await expect(page.locator("#export-code")).not.toHaveValue("");
+    const imageUrl = await page.locator("#export-code").inputValue();
     expect(readBadge(Object.fromEntries(new URL(imageUrl).searchParams))).toEqual(parsed);
     await expect(page.locator('[name="color"]')).toHaveValue("primary");
     await page.reload();
-    await expect(page.locator("#image-url")).toHaveValue(imageUrl);
+    await expect(page.locator("#export-code")).toHaveValue(imageUrl);
+    await page.getByRole("button", { name: "GitHub Actions", exact: true }).click();
+    await expect(page.getByRole("img", { name: "build: passing" })).toBeVisible();
   });
 }

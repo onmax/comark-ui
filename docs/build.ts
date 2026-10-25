@@ -12,6 +12,7 @@ import { icons as lucide } from "@iconify-json/lucide";
 import dark from "shiki/themes/vitesse-dark.mjs";
 import light from "shiki/themes/vitesse-light.mjs";
 import { build } from "vite";
+import { badgeIcon, icons as badgeIcons } from "../packages/badge/src/svg.ts";
 import { css as criticCss } from "../packages/critic/src/index.ts";
 import { createIcons, css as iconCss, iconHtml } from "../packages/icon/src/html.ts";
 import include from "../packages/include/src/index.ts";
@@ -272,7 +273,7 @@ const sections: Section[] = [
         title: "Recipes",
         slugs: recipeOrder.map((recipe) => `recipes/${recipe}`),
       },
-      { title: "Utilities", slugs: inGroup("Authoring tools") },
+      { title: "Utilities", slugs: ["badges", ...inGroup("Authoring tools")] },
       { title: "Compared", slugs: ["compare/charts"] },
     ],
   },
@@ -1410,13 +1411,34 @@ await build({
   build: { outDir: fileURLToPath(new URL("play/editor/", dist)), emptyOutDir: false },
 });
 
-await build({
+const badgeBundle = await build({
   configFile: false,
-  root: fileURLToPath(new URL("badges/", root)),
-  base: "/badges/",
   logLevel: "warn",
-  build: { outDir: fileURLToPath(new URL("badges/", dist)), emptyOutDir: false },
+  build: {
+    write: false,
+    minify: true,
+    lib: {
+      entry: fileURLToPath(new URL("badges/main.ts", root)),
+      formats: ["iife"],
+      name: "BadgeBuilder",
+    },
+  },
 });
+const badgeScript = [badgeBundle]
+  .flat()
+  .flatMap((result) => ("output" in result ? result.output : []))
+  .find((output) => output.type === "chunk");
+if (!badgeScript || badgeScript.type !== "chunk")
+  throw new Error("Badge builder bundle is missing.");
+const badgeMarkup = (await readFile(new URL("badges/index.html", root), "utf8")).replace(
+  /<span data-logo="([^"]+)"><\/span>/g,
+  (_, name: string) => {
+    const icon = badgeIcons.find((icon) => icon === name);
+    return icon ? badgeIcon(icon) : "";
+  },
+);
+const badgeBuilder: NodeHandler = () =>
+  `<style>${readFileSync(new URL("badges/style.css", root), "utf8")}</style>${badgeMarkup}<script>${badgeScript.code.replaceAll("</script", "<\\/script")}</script>`;
 
 // The page around the content: header, rail, the section's column, and a menu that holds both on narrow screens. The
 // landing page has no sidebar, so its header links to the docs and the playground instead.
@@ -1529,10 +1551,10 @@ for (const page of parsed) {
       npm,
       title: eyebrow ? `${page.title} · ${eyebrow}` : `${page.title} · ${page.description}`,
       description: page.tagline,
-      body: `<div class="page">
+      body: `<div class="page${page.slug === "badges" ? " page-badges" : ""}">
 <div class="content">
 <div class="hero enter">${eyebrow ? `<p class="eyebrow mono">${eyebrow}</p>` : ""}${page.rule ? `<p class="eyebrow mono">${page.rule.code} · ${page.rule.severity ?? "warning"}</p>` : ""}<h1>${escapeHtml(page.title)}</h1><p>${page.rule ? inlineCode(page.rule.title) : escapeHtml(page.tagline)}</p>
-${pageActions(page.slug)}
+${page.slug === "badges" ? "" : pageActions(page.slug)}
 ${page.install ? installerFor(page.install) : ""}</div>
 <main class="enter" style="--i:1">${(
         await renderHtmlFromDocument(page.document, {
@@ -1545,6 +1567,7 @@ ${page.install ? installerFor(page.install) : ""}</div>
             ),
             examples: exampleTabs,
             matrix,
+            "badge-builder": badgeBuilder,
             incorrect: ruleExample(page, "incorrect"),
             correct: ruleExample(page, "correct"),
             rules: ruleTable,

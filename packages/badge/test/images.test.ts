@@ -17,6 +17,16 @@ describe("image badges", () => {
       "<svg",
     );
   });
+  it("defaults image badges to shadcn outlines with self-contained brand logos", async () => {
+    for (const icon of ["npm", "github", "comark", "shadcn"]) {
+      const html = await render(`:badge[ready]{label="build" icon="${icon}"}`);
+      const svg = decodeURIComponent(/src="data:image\/svg\+xml,([^"]+)"/.exec(html)![1]!);
+      expect(svg).toContain('font-family="Arial,Helvetica,sans-serif"');
+      expect(svg).toContain('stroke="#e5e5e5"');
+      expect(svg).not.toContain("href=");
+      expect(svg).not.toContain("<script");
+    }
+  });
   it("encodes live badge options in a hosted image without fetching during parse", async () => {
     const html = await render(
       ':badge{source="github-actions" repository="onmax/comark-ui" workflow="ci.yml" branch="feat/new"}',
