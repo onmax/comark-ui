@@ -2,7 +2,7 @@
 title: Table
 description: Tables from CSV, TSV, and JSON, read while parsing, that copy and sort.
 keywords: CSV, TSV, JSON, data table, sortable table, sort, spreadsheet, Excel, copy table, datagrid
-tagline: Point a table at a CSV file, or paste the CSV into a fence, and get a table with Copy CSV and Copy Markdown buttons and, if you like, headers that sort.
+tagline: A table read from CSV, TSV, or JSON while parsing, with buttons that copy it and headers that sort.
 group: Review blocks
 icon: table
 blurb: Tables from CSV and JSON
@@ -46,25 +46,56 @@ Count the pigeons,412,388
 :::
 ::
 
-A benchmark or an export reads best as the table it is, and an agent writing a review shouldn't have to turn CSV into Markdown by hand. The plugin reads the file or the fence while parsing, so the table is plain HTML. A small script adds the copy buttons and sorting, and without it the table still reads. Any table, Markdown or data, can color a cell or a row by its status.
+## Features
+
+- A ` ```csv ` or ` ```tsv ` fence becomes a table wherever it is.
+- `::table` reads a CSV, TSV, or JSON file or fence while parsing, so the table is plain HTML.
+- Every table it makes gets Copy CSV and Copy Markdown buttons, and headers that sort if you like.
+- A small script adds the buttons and sorting. Without it, the table still reads.
+- Any table, Markdown or data, can color a cell or a row by its status.
 
 ## Usage
 
-### Files
+Paste CSV into a ` ```csv ` fence. The first row is the header.
+
+::example
+````md
+```csv
+Bird,Seen,Pond
+Mallard,14,North
+Heron,2,North
+```
+````
+::
+
+### File
+
+Use the `src` prop to read a CSV, TSV, or JSON file. The extension picks the format.
 
 ```md
-::table{src="bench/results.csv" sort}
+::table{src="bench/results.csv"}
 ::
 ```
 
-`src` is a path relative to the document's folder, or to `root` when it starts with `/`. It can't leave `root` or be a URL. The extension picks the format: `.csv`, `.tsv`, or `.json`; set `format` for a file named otherwise.
+`src` is a path relative to the document's folder, or to `root` when it starts with `/`.
 
-### Fences
+> [!NOTE]
+> `src` can't leave `root` or be a URL. In `comarkUi()`, a table reads no files until you pass [options](#options).
 
-A ` ```csv ` or ` ```tsv ` fence becomes a table wherever it is. Pass `fences: false` to keep them as code.
+### Format
 
-A ` ```json ` fence stays code, since most JSON in a document is an example. Put it inside `::table` to make it a table:
+Use the `format` prop to set the format when the extension or the fence doesn't say: `csv`, `tsv`, or `json`.
 
+```md
+::table{src="bench/results.txt" format="csv"}
+::
+```
+
+### JSON
+
+Put a ` ```json ` fence inside `::table` to make it a table. A bare JSON fence stays code, since most JSON in a document is an example.
+
+::example
 ````md
 ::table
 ```json
@@ -72,47 +103,82 @@ A ` ```json ` fence stays code, since most JSON in a document is an example. Put
 ```
 ::
 ````
+::
 
-`::table` around a Markdown table gives it the copy buttons and `sort`.
+### Markdown tables
 
-### Formats
+Put a Markdown table inside `::table` to give it the copy buttons and `sort`.
 
-| Format | Reads |
-| --- | --- |
-| CSV | Comma-separated, as RFC 4180 writes it: a cell in double quotes may hold commas and line breaks, and `""` is a quote. |
-| TSV | Tab-separated, with no quoting. |
-| JSON | An array of objects, one per row. Every key becomes a column, in the order first seen; a nested value is written as JSON. |
-
-The first row of CSV and TSV is the header. A column whose cells are all numbers, with commas and a short unit if you like, lines up on the right.
-
-### Props
-
-| Prop | What it does |
-| --- | --- |
-| `src` | A CSV, TSV, or JSON file to read. |
-| `format` | `csv`, `tsv`, or `json`, when the extension or the fence doesn't say. |
-| `sort` | Makes every header a button that sorts the rows, up then down. Numbers sort as numbers. |
-| `copy` | `copy=false` hides the Copy CSV and Copy Markdown buttons. |
-| `tone` | A whole cell can be written as `[text]{tone="success"}` (also `warning`, `error`, or `info`) to tint it. A tone on the first cell colors the whole row; other cells keep their own tone or inherit the row tone. |
-
-### Issues
-
-The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation/) describes: a file that's missing, outside the root, a URL, or in a format it can't read; JSON that doesn't parse or isn't an array of objects; a quote that never closes; a row with too few or too many cells; and a `::table` with nothing in it. A fence it can't read stays code, and a prop it doesn't read is reported too. A tone span must fill its whole cell; partial spans and tones other than `success`, `warning`, `error`, or `info` report issues and leave the cell uncolored. Each issue names its table and says how to fix it, and each has its own rule in [Doctor](/doctor/):
-
-```txt
-`::table` 1 ("bench.csv"): file not found. It resolved to "guide/bench.csv" under the root; check the path or `base`.
-The ```csv fence 1: row 3 has 4 cells, but the header has 3. Give every row one cell per column.
+::example
+```md
+::table{sort}
+| Bird | Seen |
+| --- | --: |
+| Mallard | 14 |
+| Heron | 2 |
+::
 ```
+::
 
-### Theme
+### Sort
 
-Tone colors use `--ui-success`, `--ui-warning`, `--ui-error`, and `--ui-info`, with green, amber, red, and blue fallbacks. Override those variables in your theme to match the rest of the page.
+Use the `sort` prop to make every header a button that sorts the rows, up then down. Numbers sort as numbers.
+
+::example
+````md
+::table{sort}
+```csv
+Bird,Seen
+Mallard,14
+Pigeon,212
+Heron,2
+```
+::
+````
+::
+
+> [!NOTE]
+> A bare ` ```csv ` or ` ```tsv ` fence never sorts. Put it inside `::table{sort}`.
+
+### Copy
+
+Use `copy=false` to hide the Copy CSV and Copy Markdown buttons.
+
+::example
+````md
+::table{copy=false}
+```csv
+Bird,Seen
+Mallard,14
+Heron,2
+```
+::
+````
+::
+
+### Tone
+
+Use the `tone` prop on a span that fills a cell, as `[text]{tone="success"}`, to tint the cell. The tones are `success`, `warning`, `error`, and `info`. A tone on the first cell colors the whole row. The row's other cells keep a tone of their own, or take the row's.
+
+::example
+```md
+| Check | Time | Result |
+| --- | --: | --- |
+| [Unit tests]{tone="success"} | 1.9 s | 412 passed |
+| E2E | [48 s]{tone="warning"} | 3 slow |
+```
+::
+
+A CSV, TSV, or JSON cell takes the same span.
+
+> [!NOTE]
+> A tone span must fill its whole cell. A partial span, or a tone other than the four, leaves the cell uncolored and reports an issue.
 
 ## Examples
 
 ### Benchmarks in a pull request
 
-Have the benchmark write CSV next to the document, and point a table at it, so the numbers in the review are the ones the run produced:
+A benchmark reads best as the table it is, and an agent writing a review shouldn't have to turn CSV into Markdown by hand. Have the benchmark write CSV next to the document, and point a table at it, so the numbers in the review are the ones the run produced:
 
 ```md
 ::table{src="./bench/results.csv" sort}
@@ -125,17 +191,75 @@ Every row becomes HTML, so a table of thousands of rows makes a heavy page. Trim
 
 ### Reading files
 
-Files are read while parsing, the way [comark-include](/include/) reads them: from disk under `root` by default, refusing symlinks that lead out of it, or through your `read`. The table doesn't fetch URLs; download the data first.
+Files are read while parsing, the way [comark-include](/include/) reads them: from disk under `root` by default, refusing symlinks that lead out of it, or through your `read`. The table doesn't fetch URLs, so download the data first.
 
 ### Without the script
 
 The copy buttons and the sort arrows only show once the script runs. Without it, the headers read as plain text and the table is still a table. In print, the buttons are hidden.
 
+## Accessibility
+
+A sortable header is a button inside its `th`, and the `th` carries `aria-sort` once sorted. The copy buttons are named "Copy as CSV" and "Copy as Markdown". A status line beside them announces "Copied CSV", "Copied Markdown", or "Couldn't copy here".
+
+### Keyboard interactions
+
+| Key | Description |
+| --- | --- |
+| `Tab`, `Shift+Tab` | Moves between the copy buttons and the sortable headers. |
+| `Enter`, `Space` | On a sortable header, sorts the rows up, then down. On a copy button, copies the table. |
+
 ## API
 
-These options go under `table` in `comarkUi()`, or to `table()` when you use the plugin alone. In `comarkUi()`, a table reads no files until you pass options, such as `comarkUi({ table: { root: "docs" } })`.
+### Props
 
-`root` is the folder `src` can't leave, and `base` the document's folder under it, as in [comark-include](/include/). In a browser or an edge runtime, pass `read`, a function that takes a path under the root and returns the file's text. `fences: false` keeps ` ```csv ` and ` ```tsv ` fences as code.
+| Prop | Default | Description |
+| --- | --- | --- |
+| `src` | — | A CSV, TSV, or JSON file to read, relative to the document's folder, or to `root` when it starts with `/`. |
+| `format` | — | `csv`, `tsv`, or `json`, when the extension or the fence doesn't say. |
+| `sort` | `false` | Makes every header a button that sorts the rows, up then down. Numbers sort as numbers. |
+| `copy` | `true` | `false` hides the Copy CSV and Copy Markdown buttons. |
+| `tone` | — | On a span that fills a cell: `success`, `warning`, `error`, or `info`. On the first cell, it colors the whole row. |
+
+### Formats
+
+| Format | Reads |
+| --- | --- |
+| CSV | Comma-separated, as RFC 4180 writes it: a cell in double quotes may hold commas and line breaks, and `""` is a quote. |
+| TSV | Tab-separated, with no quoting. |
+| JSON | An array of objects, one per row. Every key becomes a column, in the order first seen. A nested value is written as JSON. |
+
+The first row of CSV and TSV is the header. A column whose cells are all numbers, with commas and a short unit if you like, lines up on the right.
+
+### Options
+
+The options go under `table` in `comarkUi()`, or to `table()` when you use the plugin alone. In `comarkUi()`, a table reads no files until you pass options, such as `comarkUi({ table: { root: "docs" } })`.
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `root` | `"."` | The folder `src` can't leave, as in [comark-include](/include/). |
+| `base` | `""` | The document's folder under `root`, where relative paths start. |
+| `read` | Reads from disk | A function that takes a path under the root and returns the file's text. Pass it in a browser or an edge runtime. |
+| `fences` | `true` | `false` keeps ` ```csv ` and ` ```tsv ` fences as code. |
+
+### Issues
+
+The plugin adds these problems to `meta.issues`, as [Validation](/guide/validation/) describes:
+
+- A file that's missing, outside the root, a URL, unreadable, or in a format it can't read.
+- A `base` option that leaves the root.
+- JSON that doesn't parse or isn't an array of objects.
+- A quote that never closes.
+- A row with too few or too many cells.
+- A `::table` with nothing in it.
+- A tone span that doesn't fill its cell, or a tone it doesn't know.
+- A prop it doesn't read.
+
+A fence it can't read stays code. Each issue names its table and says how to fix it, and each has its own rule in [Doctor](/doctor/):
+
+```txt
+`::table` 1 ("bench.csv"): file not found. It resolved to "guide/bench.csv" under the root; check the path or `base`.
+The ```csv fence 1: row 3 has 4 cells, but the header has 3. Give every row one cell per column.
+```
 
 ### Package
 
@@ -154,7 +278,7 @@ import table, { components } from "comark-table/html";
 const render = createHtmlRenderer({ plugins: [table({ root: "docs" })], components });
 ```
 
-The HTML renderer inlines the script and styles once per document. For Vue, React, or Svelte, import from `comark-table/vue`, `comark-table/react`, or `comark-table/svelte`; the components start the script when they mount. Import `comark-table/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+The HTML renderer inlines the script and styles once per document. For Vue, React, or Svelte, import from `comark-table/vue`, `comark-table/react`, or `comark-table/svelte`. The components start the script when they mount. Import `comark-table/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
 
 ## Theme
 
@@ -176,6 +300,17 @@ Tables read these [shared tokens](/guide/theming/):
 | `--comark-font` | The bar |
 
 The table itself takes the page's own table styles.
+
+### Tones
+
+A toned cell is tinted with its color at 20%. Set these variables in your theme to match the rest of the page:
+
+| Variable | Default | Used for |
+| --- | --- | --- |
+| `--ui-success` | `#16a34a` | `success` |
+| `--ui-warning` | `#ca8a04` | `warning` |
+| `--ui-error` | shadcn/ui's `--destructive`, else `#dc2626` | `error` |
+| `--ui-info` | `#2563eb` | `info` |
 
 ### Classes
 
