@@ -32,6 +32,12 @@ export const css = `@layer comark{${[
   ".cdt-toggle::before{content:attr(data-show)}",
   ".cdt[open]>.cdt-summary .cdt-toggle::before{content:attr(data-hide)}",
   ".cdt[data-variant='collapsible']>.cdt-summary+*{margin-top:.5rem!important}",
+  // The content slides open from 0 to its own height, where the browser can interpolate to `auto`; elsewhere it opens
+  // at once, as before.
+  "@supports (interpolate-size:allow-keywords) and selector(::details-content){@media (prefers-reduced-motion:no-preference){" +
+    ".cdt{interpolate-size:allow-keywords;transition:padding-bottom .25s cubic-bezier(.23,1,.32,1)}" +
+    ".cdt::details-content{block-size:0;overflow-y:clip;transition:block-size .25s cubic-bezier(.23,1,.32,1),content-visibility .25s allow-discrete}" +
+    ".cdt[open]::details-content{block-size:auto}}}",
   "@media (prefers-reduced-motion:reduce){.cdt-summary::after{transition:none}}",
   "@media print{.cdt-summary::after{display:none}}",
 ].join("")}}`;
