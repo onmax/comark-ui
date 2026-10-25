@@ -37,7 +37,7 @@ jobs:
       - name: Doctor
         run: pnpm run doctor
       - name: Docs
-        run: pnpm docs:build
+        run: pnpm docs:generate
       # The oldest Node supported by Vite+ 1.1.0. pnpm and the docs build need a newer one, so this runs last and calls vp directly.
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:

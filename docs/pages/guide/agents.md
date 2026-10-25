@@ -15,6 +15,12 @@ npx skills add onmax/comark-ui
 
 This site serves it too, so `npx skills add https://comark-ui.onmax.me` installs the same skill.
 
+## Markdown pages
+
+Every page on this site has a Markdown copy at its path plus `.md`, such as [`/zoom.md`](/zoom.md) for [`/zoom/`](/zoom/). A request for a page with `Accept: text/markdown` gets the copy too. The **Copy page** button on each page copies it, to paste into a chat.
+
+[`/llms.txt`](/llms.txt) lists every page's copy by section, and says how an agent reads the site.
+
 ## Bundle the skill in your app
 
 An app that renders these documents for its own agents, like [Drop](https://drop.vitehub.dev/?utm_source=comark-ui&utm_medium=guide), can ship this skill instead of writing one. `comark-ui` includes it, so the app copies it at build time and its agents always read the syntax of the plugins it installed:

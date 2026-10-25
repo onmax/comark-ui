@@ -35,3 +35,6 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
       - run: pnpm exec pkg-pr-new publish './packages/*' --pnpm --packageManager=pnpm
+        env:
+          # The preceding build includes publint; don't rebuild each package's dependencies while packing.
+          pnpm_config_ignore_scripts: "true"
