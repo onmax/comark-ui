@@ -1392,6 +1392,14 @@ await build({
   },
 });
 
+await build({
+  configFile: false,
+  root: fileURLToPath(new URL("badges/", root)),
+  base: "/badges/",
+  logLevel: "warn",
+  build: { outDir: fileURLToPath(new URL("badges/", dist)), emptyOutDir: false },
+});
+
 // The page around the content: header, rail, the section's column, and a menu that holds both on narrow screens. The
 // landing page has no sidebar, so its header links to the docs and the playground instead.
 const searchDialog = `<dialog class="search" aria-label="Search the docs">

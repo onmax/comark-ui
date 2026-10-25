@@ -10,6 +10,7 @@ import { theme } from "comark-zoom/theme";
  */
 export const css = `@layer comark{${[
   theme(".cb"),
+  ".cb-image{display:inline-block;height:26px;max-width:100%;object-fit:contain;vertical-align:middle;margin:0}",
   ":where(.cb){--cb-primary:var(--ui-primary,var(--primary,var(--_comark-foreground)));--cb-secondary:var(--ui-secondary,var(--_comark-muted));--cb-success:var(--ui-success,#16a34a);--cb-info:var(--ui-info,#2563eb);--cb-warning:var(--ui-warning,#ca8a04);--cb-error:var(--ui-error,var(--destructive,#dc2626));--cb-neutral:var(--_comark-muted)}",
   "@media (prefers-color-scheme:dark){:where(.cb){--cb-success:var(--ui-success,#4ade80);--cb-info:var(--ui-info,#60a5fa);--cb-warning:var(--ui-warning,#facc15);--cb-error:var(--ui-error,var(--destructive,#f87171))}}",
   ".cb{--cb:var(--cb-primary);display:inline-flex;align-items:center;gap:.25rem;padding:.0625rem .375rem;border-radius:calc(var(--_comark-radius) - 4px);background:color-mix(in srgb,var(--cb) 10%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--cb) 25%,transparent);color:color-mix(in srgb,var(--cb) 85%,var(--_comark-foreground));font:500 .75rem/1rem var(--_comark-font);vertical-align:middle;white-space:nowrap}",
