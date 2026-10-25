@@ -19,7 +19,7 @@ const icon = (value?: IconData | null) => (value?.src ? h(Icon, { ...value }) : 
 const tabsId: InjectionKey<string> = Symbol("comark-tabs");
 
 /** `::tabs` and `::code-group` for `@comark/vue`. */
-export const Tabs = defineComponent({
+export const Tabs = /* @__PURE__ */ defineComponent({
   name: "Tabs",
   // The other renderers drop `{#id .class}`, so Vue drops it too instead of falling it through to the root.
   inheritAttrs: false,
@@ -72,7 +72,7 @@ export const Tabs = defineComponent({
 });
 
 /** `:::tabs-item` for `@comark/vue`. */
-export const TabsItem = defineComponent({
+export const TabsItem = /* @__PURE__ */ defineComponent({
   name: "TabsItem",
   inheritAttrs: false,
   props: {

@@ -2,7 +2,7 @@
 title: Reading time
 description: How long a document takes to read, counted while parsing.
 keywords: read time, minutes to read, word count, reading speed, estimated time
-tagline: Get a document's word count and reading time in its meta, with code blocks left out and Chinese, Japanese, and Korean counted by character.
+tagline: A count of the words in a document and the minutes it takes to read, written to its meta while parsing.
 group: Authoring tools
 icon: clock
 blurb: Word count and reading time
@@ -16,9 +16,13 @@ const { meta } = await parseMarkdown(markdown, { plugins: [readingTime()] });
 meta.readingTime; // { words: 1240, minutes: 7 }
 ```
 
-The plugin draws nothing: it writes the numbers to `meta`, and your layout shows them where it wants, such as under the title or in a list of posts.
+## Features
 
-It counts the text a reader reads. It leaves out code blocks, since a reader skims them, and frontmatter and comments. Inline code counts. Chinese, Japanese, and Korean are written without spaces between words, so each of their characters counts as a word.
+- The plugin draws nothing. It writes the numbers to `meta`, and your layout shows them where it wants, such as under the title or in a list of posts.
+- It counts the text a reader reads, and leaves out code blocks, since a reader skims them.
+- Frontmatter, comments, and raw `script`, `style`, and `textarea` elements don't count. Inline code does.
+- Chinese, Japanese, and Korean are written without spaces between words, so each of their characters counts as a word.
+- It works with any renderer, since it changes nothing a renderer draws.
 
 ## Usage
 
@@ -32,12 +36,16 @@ const { meta } = await parseMarkdown(markdown, { plugins: comarkUi().plugins });
 const label = `${meta.readingTime.minutes} min read`;
 ```
 
-### What it writes
+### Speed
 
-| Field | What it is |
-| --- | --- |
-| `meta.readingTime.words` | The words in the text outside code blocks, frontmatter, and comments. Each CJK character counts as one. |
-| `meta.readingTime.minutes` | `words` over `wordsPerMinute`, rounded up, so any text takes at least a minute. 0 for a document with no words. |
+Use the `wordsPerMinute` option to set how many words a reader reads a minute. It defaults to 200.
+
+```ts
+const { meta } = await parseMarkdown(markdown, { plugins: [readingTime({ wordsPerMinute: 230 })] });
+```
+
+> [!NOTE]
+> A `wordsPerMinute` of 0 or less counts at 200.
 
 ## Examples
 
@@ -65,13 +73,26 @@ A page of CJK text counts characters, and most readers get through more than 200
 
 ## API
 
+### Options
+
 The options go under `readingTime` in `comarkUi()`, or to `readingTime()` when you use the plugin alone.
 
-| Option | Default | What it does |
+| Option | Default | Description |
 | --- | --- | --- |
-| `wordsPerMinute` | `200` | How many words a reader reads a minute. |
+| `wordsPerMinute` | `200` | How many words a reader reads a minute. 0 or less counts at 200. |
 
-`countWords(text)` is exported too, to count a string the same way, such as an excerpt.
+### Meta
+
+| Field | Description |
+| --- | --- |
+| `meta.readingTime.words` | The words in the text outside code blocks, frontmatter, and comments. Each CJK character counts as one. |
+| `meta.readingTime.minutes` | `words` over `wordsPerMinute`, rounded up, so any text takes at least a minute. 0 for a document with no words. |
+
+### Functions
+
+| Function | Returns | Description |
+| --- | --- | --- |
+| `countWords(text)` | `number` | Counts a string's words the same way, such as an excerpt's. |
 
 ### Package
 
@@ -89,4 +110,4 @@ const { meta } = await parseMarkdown(markdown, { plugins: [readingTime()] });
 const label = `${meta.readingTime.minutes} min read`;
 ```
 
-It works with any renderer, since it changes nothing a renderer draws. With `createHtmlRenderer`, parse first with `parseMarkdown`, read the meta, and render the document with `renderHtmlFromDocument`.
+With `createHtmlRenderer`, parse first with `parseMarkdown`, read the meta, and render the document with `renderHtmlFromDocument`.

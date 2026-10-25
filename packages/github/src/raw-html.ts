@@ -85,7 +85,7 @@ function sanitize(nodes: Node[], start: number) {
  * any other tag gives way to its content, and a URL must be relative, http, https, or (for links) mailto. It is named
  * `html`, so it takes the place of Comark's built-in html plugin. Components written as Markdown aren't touched.
  */
-export const html = defineComarkPlugin(() => ({
+export const html = /* @__PURE__ */ defineComarkPlugin(() => ({
   ...comarkHtml(),
   name: "html",
   post(state) {

@@ -2,7 +2,7 @@
 title: Cards
 description: Cards, link cards, and columns, written in Markdown.
 keywords: card grid, grid, layout, tiles, see also, next steps
-tagline: Point readers to the next page with link cards, and set blocks side by side in columns. Nuxt UI's syntax, with no script.
+tagline: A card that points readers to another page, and columns that set blocks side by side.
 group: Docs blocks
 icon: layout-grid
 blurb: Cards and columns
@@ -56,43 +56,147 @@ Every other test passes.
 :::
 ::
 
-A link card is one link that covers the card, named after its title, so a click anywhere opens it and a screen reader hears one link, not a card's worth of text. Links in the card's own text still work.
+## Features
+
+- A link card is one link that covers the card, named after its title, so a click anywhere opens it.
+- A screen reader hears one link, not a card's worth of text, and links in the card's own text still work.
+- Links to other sites open in a new tab, with an arrow in the corner.
+- Groups and columns stack into one column when they're narrower than 36rem, whatever the screen's width.
+- Nuxt UI's syntax, with no script.
 
 ## Usage
 
-### Cards
+Write a `::card` with its text inside.
 
+::example
 ```md
-::card-group
-:::card{title="Guides" description="Start here." icon="lucide:book-open" to="/guides/"}
-:::
+::card{title="Guides"}
+Start here.
+::
+```
+::
 
-:::card
+### Card
+
+#### Title
+
+Use the `title` prop to set the card's title. A `#title` slot wins over it, and can hold Markdown.
+
+::example
+```md
+::card
 #title
 The `api` route
 
 #default
 Every option it takes.
-:::
+::
+```
+::
+
+#### Description
+
+Use the `description` prop to set the card's text when it has no content of its own.
+
+::example
+```md
+::card{title="Guides" description="Start here."}
+::
+```
+::
+
+#### Icon
+
+Use the `icon` prop to show an icon above the title, in the card's color. [comark-icon](/icon/) resolves it while parsing.
+
+::example
+```md
+::card{title="Renderers" icon="lucide:rocket"}
+Render with HTML, Vue, React, or Svelte.
+::
+```
+::
+
+#### Link
+
+Use the `to` prop to make the card a link card. A web address opens in a new tab, with an arrow in the corner.
+
+::example
+```md
+::card{title="Renderers" icon="lucide:rocket" to="/guide/renderers/"}
+Render with HTML, Vue, React, or Svelte.
+::
+```
+::
+
+> [!NOTE]
+> Nuxt UI links a card with `to` and ignores `href`. A card with `href` still links here, but it adds an issue.
+
+#### Target
+
+Use the `target` prop to set where the link opens, such as `_self` to keep a web address in the tab.
+
+```md
+::card{title="Source on GitHub" to="https://github.com/onmax/comark-ui" target="_self"}
+Read the code, or open an issue.
 ::
 ```
 
-| Prop | What it does |
-| --- | --- |
-| `title` | The card's title. A `#title` slot wins over it, and can hold Markdown. |
-| `description` | The text shown when the card has no content of its own. |
-| `icon` | An icon above the title, in the card's color. |
-| `to` | Makes it a link card. A web address opens in a new tab with an arrow in the corner. |
-| `target` | Where the link opens, such as `_self` to keep a web address in the tab. |
-| `color` | Tints the icon and a hovered link card's border: `primary`, the default, `secondary`, `success`, `info`, `warning`, `error`, or `neutral`. |
-| `variant` | The card's appearance: `outline` (the default), `soft` (a light color wash), or `subtle` (a wash with a colored border). An unknown value falls back to `outline` and adds an issue. |
+#### Color
 
-`::card-group` sets its cards in two columns, and in one when the group is narrower than 36rem, whatever the screen's width, so a group in a sidebar or a narrow column stacks too. A card works on its own too.
+Use the `color` prop to tint the icon and a hovered link card's border.
+
+::example
+```md
+::card{title="Deprecated" icon="lucide:triangle-alert" color="warning"}
+`useAsyncData` goes away in the next major.
+::
+```
+::
+
+#### Variant
+
+Use the `variant` prop to change the card's look: `outline` keeps the plain card, `soft` washes it in its color, and `subtle` adds a border in the color.
+
+::example
+```md
+::card-group
+:::card{title="Soft" color="success" variant="soft" icon="lucide:circle-check"}
+A light wash of the color.
+:::
+
+:::card{title="Subtle" color="success" variant="subtle" icon="lucide:circle-check"}
+A wash with a colored border.
+:::
+::
+```
+::
+
+### Card group
+
+Use `::card-group` to set cards in two columns. A group narrower than 36rem shows one, so a group in a sidebar or a narrow column stacks too. A card works on its own as well.
+
+::example
+```md
+::card-group
+:::card{title="Renderers" to="/guide/renderers/"}
+Render with HTML, Vue, React, or Svelte.
+:::
+
+:::card{title="Theming" to="/guide/theming/"}
+Match the page's colors.
+:::
+::
+```
+::
 
 ### Columns
 
+Use `::columns` to set blocks side by side. Each block directly inside is a cell, and `:::column` groups several blocks into one.
+
+::example
 ```md
-::columns{cols="3"}
+::columns
 First cell.
 
 :::column
@@ -100,24 +204,25 @@ Second cell, with
 
 two paragraphs.
 :::
+::
+```
+::
+
+#### Cols
+
+Use the `cols` prop to set how many columns there are, from 1 to 6. Every row stacks into one column when the block is narrower than 36rem.
+
+::example
+```md
+::columns{cols="3"}
+First cell.
+
+Second cell.
 
 Third cell.
 ::
 ```
-
-Each block directly inside is a cell, and `:::column` groups several blocks into one. `cols` is 1 to 6, 2 by default, and every row stacks into one column when the block is narrower than 36rem.
-
-### Issues
-
-The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation/) describes:
-
-- `href` instead of `to`. The card still links, but Nuxt UI ignores `href`, so the issue says to write `to`.
-- A `to` that runs a script, such as `javascript:`, which doesn't link.
-- A `color` it doesn't know, which shows as primary.
-- A `cols` outside 1 to 6, an empty `::columns`, and an icon comark-icon can't draw.
-- A prop `::card` or `::columns` doesn't read, such as `link` or `columns`, which is ignored.
-
-Each issue names its block, by its title when it has one, and says how to fix it. Each one has its own rule in [Doctor](/doctor/).
+::
 
 ## Examples
 
@@ -125,15 +230,41 @@ Each issue names its block, by its title when it has one, and says how to fix it
 
 A card with `to` renders the way Nuxt UI renders it. An empty link, named by the card's title, stretches over the card, and the card's content follows it. A screen reader reads the card as one link, and its text stays selectable. Links inside it sit on top of the stretched one, so they open on their own.
 
-Links to other sites open in a new tab with `rel="noopener noreferrer"` and an arrow in the corner. Set `target="_self"` to keep them in the tab.
+Links to other sites open in a new tab with `rel="noopener noreferrer"`. Set `target="_self"` to keep them in the tab.
 
 ## API
 
+### Props
+
+#### `::card`
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| `title` | — | The card's title. A `#title` slot wins over it, and can hold Markdown. |
+| `description` | — | The text shown when the card has no content of its own. |
+| `icon` | — | An icon above the title, in the card's color, such as `lucide:rocket`. |
+| `to` | — | A page or a web address, which makes it a link card. A `javascript:`, `vbscript:`, or `data:` link doesn't link, and adds an issue. |
+| `target` | `_blank` for a web address | Where the link opens. `_blank` opens a new tab, with an arrow in the corner. |
+| `color` | `primary` | Tints the icon and a hovered link card's border: `primary`, `secondary`, `success`, `info`, `warning`, `error`, or `neutral`. |
+| `variant` | `outline` | The card's look: `outline`, `soft` (a light wash of its color), or `subtle` (a wash with a colored border). An unknown value falls back to `outline` and adds an issue. |
+
+#### `::columns`
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| `cols` | `2` | How many columns, from 1 to 6. A value outside that shows 2 and adds an issue. |
+
+`::card-group` and `:::column` take no props.
+
+### Options
+
 `cards()` takes one option, `iconResolver`, when you use it alone. In `comarkUi()`, `cards` takes no options, since cards share the resolver built from the `icon` options, and `cards: false` turns them off.
 
-### Icons
+| Option | Default | Description |
+| --- | --- | --- |
+| `iconResolver` | Icons from the Iconify API | Resolves a card's `icon`, from `createIcons()` in [comark-icon](/icon/). |
 
-[comark-icon](/icon/) resolves a card's `icon` while parsing. By default icons come from the Iconify API. Pass the page's resolver so every plugin shares it:
+Pass the page's resolver so every plugin shares it:
 
 ```ts
 import { createIcons } from "comark-icon";
@@ -153,6 +284,19 @@ The parse plugin replaces each card's attributes with the ones it renders from, 
 ```
 
 The plugin sets `external` when the link opens in a new tab. `label` is the link's name, which is the title's text or "Card link".
+
+### Issues
+
+The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation/) describes:
+
+- `href` instead of `to`. The card still links, but Nuxt UI ignores `href`, so the issue says to write `to`.
+- A `to` that runs a script, such as `javascript:`, which doesn't link.
+- A `color` it doesn't know, which shows as primary.
+- A `variant` it doesn't know, which shows as outline.
+- A `cols` outside 1 to 6, an empty `::columns`, and an icon comark-icon can't draw.
+- A prop `::card` or `::columns` doesn't read, such as `link` or `columns`, which is ignored.
+
+Each issue names its block, by its title when it has one, and says how to fix it. Each one has its own rule in [Doctor](/doctor/).
 
 ### Package
 
@@ -175,11 +319,9 @@ For Vue, React, or Svelte, import from `comark-cards/vue`, `comark-cards/react`,
 
 ## Theme
 
-A card is a `<div class="ccr" data-color="...">`. A group is a `<div class="ccr-group">`, and columns are a `<div class="ccr-columns" data-cols="...">` of `<div class="ccr-column">`.
+Cards follow the shared tokens in [Theming](/guide/theming/), and a variable per color. The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
 
-Each color reads Nuxt UI's variable, such as `--ui-primary`, then its own default. Primary falls back to shadcn/ui's `--primary`, then to the foreground, so cards match the page's brand color, or stay neutral without one. Set `--ccr-primary` and the others on `.ccr` to change one.
-
-Cards also read these [shared tokens](/guide/theming/):
+### Shared tokens
 
 | Token | Used for |
 | --- | --- |
@@ -192,4 +334,29 @@ Cards also read these [shared tokens](/guide/theming/):
 | `--comark-radius` | Corners |
 | `--comark-font` | Text |
 
-The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
+### Variables
+
+Each color but neutral reads Nuxt UI's variable first, then its own default. Set one on `.ccr` to change it:
+
+| Variable | Default |
+| --- | --- |
+| `--ccr-primary` | `--ui-primary`, else shadcn/ui's `--primary`, else `--comark-foreground` |
+| `--ccr-secondary` | `--ui-secondary`, else `#2563eb` (`#60a5fa` in dark mode) |
+| `--ccr-success` | `--ui-success`, else `#16a34a` (`#4ade80` in dark mode) |
+| `--ccr-info` | `--ui-info`, else `#2563eb` (`#60a5fa` in dark mode) |
+| `--ccr-warning` | `--ui-warning`, else `#ca8a04` (`#facc15` in dark mode) |
+| `--ccr-error` | `--ui-error`, else shadcn/ui's `--destructive`, else `#dc2626` (`#f87171` in dark mode) |
+| `--ccr-neutral` | `--comark-foreground` |
+
+Primary's default matches the page's brand color, or stays neutral without one.
+
+### Classes and attributes
+
+| Selector | Is |
+| --- | --- |
+| `.ccr` | A card, with `data-color`, and `data-variant` when it isn't `outline` |
+| `.ccr-title` | The card's title |
+| `.ccr-link` | The link that covers a link card |
+| `.ccr-external` | The arrow on a card that opens in a new tab |
+| `.ccr-group` | A card group |
+| `.ccr-columns`, `.ccr-column` | Columns, with `data-cols`, and each cell |
