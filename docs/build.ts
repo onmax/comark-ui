@@ -690,11 +690,13 @@ interface Demo {
   label: string;
   source: string;
 }
+// A card is titled as the rail titles its page, so the canvas and the docs name a block alike; its copy button gives the
+// package.
 async function demoCard({ id, pkg, page, label, source }: Demo) {
   const still = await renderDemo(pkg.slug, source);
   return (
     `<article class="demo demo-${slugify(pkg.slug)}" data-package="${pkg.slug}" data-example="${id}">` +
-    `<a class="demo-link" href="${href(page)}" draggable="false" tabindex="-1">${siteIcon(pkg.icon, 15)}<strong>${escapeHtml(pkg.label === "recipe" ? pkg.label : pkg.npm!)}</strong>${label ? `<span>${escapeHtml(label.toLowerCase())}</span>` : ""}</a>` +
+    `<a class="demo-link" href="${href(page)}" draggable="false" tabindex="-1">${siteIcon(pkg.icon, 15)}<strong>${escapeHtml(pkg.label)}</strong>${label ? `<span>${escapeHtml(label.toLowerCase())}</span>` : ""}</a>` +
     `<button type="button" class="demo-copy" data-copy="pnpm add ${escapeHtml(pkg.npm!)}" tabindex="-1" title="Copy pnpm add ${escapeHtml(pkg.npm!)}" aria-label="Copy pnpm add ${escapeHtml(pkg.npm!)}">${copyIcon}${checkIcon}</button>` +
     `<div class="demo-screen" inert><div class="demo-page">${still}</div></div></article>`
   );
