@@ -28,6 +28,7 @@
     ".": "./dist/index.mjs",
     "./client": "./dist/client.mjs",
     "./editor": "./dist/editor.mjs",
+    "./editor/vue": "./dist/editor-vue.mjs",
     "./html": "./dist/html.mjs",
     "./react": "./dist/react.mjs",
     "./svelte": {
@@ -47,7 +48,8 @@
     "build": "tsdown",
     "dev": "tsdown --watch",
     "doctor": "vite-doctor . --no-cache --max-warnings 0 --format text",
-    "prepack": "pnpm --filter comark-ui... build"
+    "prepack": "pnpm --filter comark-ui... build",
+    "playground": "vp dev playground --port 5199"
   },
   "dependencies": {
     "comark-annotate": "workspace:^",
@@ -103,6 +105,7 @@
     "@tiptap/extension-table": "catalog:",
     "@tiptap/pm": "catalog:",
     "@tiptap/starter-kit": "catalog:",
+    "@tiptap/vue-3": "catalog:",
     "@tiptap/y-tiptap": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
@@ -121,6 +124,7 @@
     "@tiptap/extension-table": "^3.31.0",
     "@tiptap/pm": "^3.31.0",
     "@tiptap/starter-kit": "^3.31.0",
+    "@tiptap/vue-3": "^3.31.0",
     "comark": "^0.8.0",
     "react": ">=18",
     "svelte": ">=5.20",
@@ -146,6 +150,9 @@
       "optional": true
     },
     "@tiptap/starter-kit": {
+      "optional": true
+    },
+    "@tiptap/vue-3": {
       "optional": true
     },
     "react": {
