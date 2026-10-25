@@ -44,14 +44,12 @@ describe("hosted badge handler", () => {
 
   it.each([301, 302, 303, 307, 308])("rejects upstream redirects (%s)", async (status) => {
     const cancel = vi.fn();
-    const fetch = vi
-      .fn<typeof globalThis.fetch>()
-      .mockResolvedValue(
-        new Response(new ReadableStream({ cancel }), {
-          status,
-          headers: { Location: "https://unexpected.example/" },
-        }),
-      );
+    const fetch = vi.fn<typeof globalThis.fetch>().mockResolvedValue(
+      new Response(new ReadableStream({ cancel }), {
+        status,
+        headers: { Location: "https://unexpected.example/" },
+      }),
+    );
     const response = await createBadgeHandler({ fetch })(
       get("source=npm-version&package=comark-ui"),
     );
