@@ -138,7 +138,7 @@ const markdownIt = (md: MarkdownExit) => {
   });
 };
 
-// A private tag per parse distinguishes generated tokens from authored HTML and components.
+// A collision-free tag per parse distinguishes generated tokens from authored components.
 let nextParse = 0;
 const generated = new WeakMap<
   object,
@@ -164,7 +164,19 @@ export default defineComarkPlugin<MathOptions | undefined, MathMeta>((options = 
     name: "math",
     markdownItPlugins: [markdownIt],
     markdownItPost(state) {
-      const tag = `comark-math-${nextParse++}`;
+      // Inspect nested tokens too: authored components can use any internal-looking name.
+      const authoredTags = new Set<string>();
+      const collectTags = (tokens: Token[]) => {
+        for (const token of tokens) {
+          authoredTags.add(token.tag);
+          if (token.children) collectTags(token.children);
+        }
+      };
+      collectTags(state.tokens);
+      let tag: string;
+      do {
+        tag = `comark-math-${nextParse++}`;
+      } while (authoredTags.has(tag));
       const formulas: { tex: string; display: boolean }[] = [];
       const visit = (tokens: Token[]) => {
         for (const token of tokens) {

@@ -1,6 +1,6 @@
 import { createHtmlRenderer } from "@comark/html";
 import { defineComarkPlugin, parseMarkdown } from "comark";
-import { describe, expect, it } from "vite-plus/test";
+import { describe, expect, it, vi } from "vite-plus/test";
 import math, { components, type MathOptions } from "../src/html.ts";
 
 const render = (markdown: string, options?: MathOptions) =>
@@ -18,6 +18,19 @@ const formulas = async (markdown: string) => {
 };
 
 describe("comark-math", () => {
+  it("preserves authored components that resemble generated formula markers", async () => {
+    vi.resetModules();
+    const { default: freshMath } = await import("../src/index.ts");
+    const authored = "::comark-math-0{index=0}\n\n::comark-math-1{index=0}";
+    const markdown = `$x$\n\n${authored}`;
+    const original = await parseMarkdown(authored);
+    const tree = await parseMarkdown(markdown, { plugins: [freshMath()] });
+    expect(tree.nodes.slice(1)).toEqual(original.nodes);
+    const html = await createHtmlRenderer({ plugins: [freshMath()], components })(markdown);
+    expect(html).toContain(await createHtmlRenderer()(authored));
+    expect(html.match(/<mi>x<\/mi>/g)).toHaveLength(1);
+  });
+
   it("typesets inline and display math as MathML, with the styles once", async () => {
     const html = await render("Mass $E = mc^2$ and\n\n$$\n\\frac{a}{b}\n$$\n");
     expect(html).toContain(
