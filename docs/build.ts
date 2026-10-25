@@ -123,6 +123,7 @@ const packageOrder = [
   "outline",
   "xref",
   "reading-time",
+  "chat",
   "lint",
 ];
 const repo = new URL("../", root);
@@ -162,6 +163,7 @@ const groups = [
   "Page behavior",
   "Markdown syntax",
   "Authoring tools",
+  "Chat",
   "Linter",
 ];
 for (const folder of await readdir(new URL("packages/", repo))) {
@@ -272,7 +274,7 @@ const sections: Section[] = [
     slug: "components",
     label: "Components",
     icon: "blocks",
-    lists: ["Review blocks", "Docs blocks", "Page behavior"].map((group) => ({
+    lists: ["Review blocks", "Docs blocks", "Page behavior", "Chat"].map((group) => ({
       title: group,
       slugs: inGroup(group),
     })),

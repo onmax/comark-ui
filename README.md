@@ -57,6 +57,7 @@ Browse the [docs and live examples](https://comark-ui.onmax.me) for component sy
 | [`comark-cards`](./packages/cards) | Cards, link cards, and columns in Nuxt UI's syntax, with no script. |
 | [`comark-carousel`](./packages/carousel) | A carousel of any Markdown content, with arrows, a counter, keys, and zoom. |
 | [`comark-cast`](./packages/cast) | Terminal recordings from asciinema casts as their final screen or full log, in colored text with no player. |
+| [`comark-chat`](./packages/chat) | AI SDK chat messages in Vue, React, and Svelte: streaming Markdown, files, and a trace of each turn's reasoning, tool calls, and sources. |
 | [`comark-charts`](./packages/charts) | Charts from Markdown tables. |
 | [`comark-chips`](./packages/chips) | Links and `@user` mentions as chips with the site's favicon or the person's avatar, inlined while parsing. |
 | [`comark-cjk`](./packages/cjk) | Bold, italics, and strikethrough next to Chinese, Japanese, and Korean punctuation, as in `**この文は太字。**次の文`. |

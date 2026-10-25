@@ -114,6 +114,12 @@ Read the reference for each block you use before you write it. Mix the blocks fr
 | Figures and tables numbered and referred to by number | `{#fig-name}`, `:ref{#fig-name}` | [xref](references/xref.md) |
 | Word count and reading time, for the page's layout | nothing; it writes `meta.readingTime` | [reading-time](references/reading-time.md) |
 
+### Chat
+
+| To show | Use | Reference |
+| --- | --- | --- |
+| An AI SDK chat message, with its reasoning, tool calls, sources, and files | `MessageParts` from `comark-chat` | [chat](references/chat.md) |
+
 ## Marks
 
 Screenshots and charts draw the same marks. Each `::annotation` is one mark and its note, written in Markdown.
