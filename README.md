@@ -1,6 +1,10 @@
-# Comark UI
+<h1>
+  <img src="./.github/banner.svg" alt="Comark UI: The Component Library for Markdown" width="100%">
+</h1>
 
-The Component Library for Markdown.
+[![release](https://img.shields.io/github/v/release/onmax/comark-ui?label=release&labelColor=0a0a0a&color=e5484d)](https://github.com/onmax/comark-ui/releases)
+[![license](https://img.shields.io/github/license/onmax/comark-ui?labelColor=0a0a0a&color=525252)](./LICENSE)
+[![docs](https://img.shields.io/badge/docs-comark--ui.onmax.me-14b8a6?labelColor=0a0a0a)](https://comark-ui.onmax.me)
 
 Comark UI is a free, open source library built on [Comark](https://comark.dev), with 40+ blocks for docs, reviews, and agent reports. Write tabs, cards, charts, annotated screenshots, and more in Markdown. Install them together with [`comark-ui`](./packages/ui), or use individual packages.
 
