@@ -31,7 +31,7 @@ When no element fits, a block follows the matching [WAI-ARIA pattern](https://ww
 | [Tabs](/tabs/) | [Tabs](https://www.w3.org/WAI/ARIA/apg/patterns/tabs/) | `ArrowLeft`, `ArrowRight`, `Home`, `End` |
 | [Carousel](/carousel/) | [Carousel](https://www.w3.org/WAI/ARIA/apg/patterns/carousel/) | `ArrowLeft`, `ArrowRight` |
 | [Zoom](/zoom/) | [Modal dialog](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/) | `Enter`, `Space`, `Escape`, `ArrowLeft`, `ArrowRight` |
-| [Annotate](/annotate/)'s compare slider | [Slider](https://www.w3.org/WAI/ARIA/apg/patterns/slider/) | Arrow keys, `Home`, `End` |
+| [Annotate](/annotate/)'s compare slider | [Slider](https://www.w3.org/WAI/ARIA/apg/patterns/slider/) | Arrow keys, `Home`, `End`, `PageUp` (+25%), `PageDown` (−25%) |
 
 Status messages, such as "Copied" after a code block's copy button or a quiz's result, go in a live region, so a screen reader announces them.
 
@@ -43,7 +43,7 @@ Status messages, such as "Copied" after a code block's copy button or a quiz's r
 
 ## Reduced motion
 
-When the reader asks for reduced motion, zoom, tabs, and carousels move at once instead of animating, and the other blocks drop their transitions.
+When the reader asks for reduced motion, zoom skips its opening and closing animations, and carousels scroll instantly. Tabs replace the sliding indicator with a 150 ms opacity fade. Some blocks retain other transitions; reduced motion does not disable every animation.
 
 ## Links
 

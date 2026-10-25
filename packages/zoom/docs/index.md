@@ -152,7 +152,7 @@ document.addEventListener("comark-zoom:open", (event) => {
 });
 ```
 
-Use `copyOf(element)` to find the copy of a page element in the zoomed view, and `originalOf(element)` to go back, so a pin can follow what it points at.
+Inside an open or change event listener, use `event.detail.copyOf(element)` to find the copy of a page element in the zoomed view, and `event.detail.originalOf(element)` to go back, so a pin can follow what it points at.
 
 ## Accessibility
 
@@ -201,18 +201,32 @@ Each event fires on the item.
 
 | Event | Detail | Description |
 | --- | --- | --- |
-| `comark-zoom:open` | `{ header, footer, layer }` | The view opened. |
-| `comark-zoom:change` | `{ header, footer, layer }` | The view moved to another item in its group. |
-| `comark-zoom:close` | — | The view closed. |
+| `comark-zoom:open` | `ZoomDetail` | The view opened. |
+| `comark-zoom:change` | `ZoomDetail` | The view moved to another item in its group. |
+| `comark-zoom:close` | `{ item }` | The view closed. |
 
-### Functions
+### Event detail
 
-| Function | Returns | Description |
+The open and change events expose these `ZoomDetail` fields and methods through `event.detail`:
+
+| Field | Type | Description |
 | --- | --- | --- |
-| `copyOf(element)` | `Element \| null` | The copy of a page element in the zoomed view. |
-| `originalOf(element)` | `Element \| null` | The page element a copy in the zoomed view came from. |
+| `dialog` | `HTMLElement` | The zoom dialog. |
+| `header` | `HTMLElement` | The header for controls above the content. |
+| `footer` | `HTMLElement` | The footer for controls below the content. |
+| `layer` | `HTMLElement` | An overlay sized to the zoomed content for pins and outlines. |
+| `content` | `HTMLElement` | The zoomed copy of the item. |
+| `aside` | `HTMLElement \| null` | The column holding a copy of the item's aside, or `null` when absent. |
+| `item` | `HTMLElement` | The original item on the page. |
+| `index` | `number` | The zero-based position of the current item in `items`. |
+| `items` | `HTMLElement[]` | The items in the current group. |
 
-Both return `null` for anything the zoom doesn't show.
+| Method | Returns | Description |
+| --- | --- | --- |
+| `event.detail.copyOf(element)` | `Element \| null` | The zoomed copy of an element in the item or its aside. |
+| `event.detail.originalOf(element)` | `Element \| null` | The original page element for a copy in the zoomed item or aside. |
+
+Both methods return `null` for anything the zoom doesn't show. The close event exposes only `event.detail.item`, the original item that closed.
 
 ### Package
 
