@@ -1440,6 +1440,69 @@ const badgeMarkup = (await readFile(new URL("badges/index.html", root), "utf8"))
 const badgeBuilder: NodeHandler = () =>
   `<style>${readFileSync(new URL("badges/style.css", root), "utf8")}</style>${badgeMarkup}<script>${badgeScript.code.replaceAll("</script", "<\\/script")}</script>`;
 
+// A reference table (`| Prop | Default | Description |`, or Option or Attribute) is drawn with comark-fields, the block
+// the site documents for this, while the Markdown copy keeps the table an agent reads more easily. A description that
+// starts "Required." becomes the field's required tag.
+const referenceHeads = new Set(["Prop", "Option", "Attribute"]);
+const cellsOf = (row: Node) =>
+  (Array.isArray(row) ? row.slice(2) : []).filter(
+    (cell): cell is ElementNode => Array.isArray(cell) && (cell[0] === "td" || cell[0] === "th"),
+  );
+const childOf = (node: ElementNode, tag: string) =>
+  node.slice(2).find((child): child is ElementNode => Array.isArray(child) && child[0] === tag);
+function asFields(nodes: Node[]): Node[] {
+  return nodes.map((node) => {
+    if (!Array.isArray(node) || node[0] === null) return node;
+    if (node[0] === "table") {
+      const head = childOf(node, "thead");
+      const body = childOf(node, "tbody");
+      const titles = head
+        ? cellsOf(childOf(head, "tr") ?? ["tr", {}]).map((cell) => textContent(cell).trim())
+        : [];
+      if (
+        body &&
+        titles.length === 3 &&
+        referenceHeads.has(titles[0]!) &&
+        titles[1] === "Default" &&
+        titles[2] === "Description"
+      )
+        return [
+          "field-group",
+          {},
+          ...body.slice(2).flatMap((row): Node[] => {
+            const [name, fallback, description] = cellsOf(row);
+            if (!name || !description) return [];
+            const value = fallback ? textContent(fallback).trim() : "";
+            // A default in words, such as "`_blank` for a web address", leads the description instead of the head.
+            const worded = fallback
+              ?.slice(2)
+              .some((part) => !Array.isArray(part) || part[0] !== "code");
+            const content = description.slice(2) as Node[];
+            const first = content[0];
+            const required = typeof first === "string" && /^Required\.\s*/.test(first);
+            if (required) content[0] = first.replace(/^Required\.\s*/, "");
+            if (worded && value !== "—")
+              content.unshift("Default: ", ...(fallback!.slice(2) as Node[]), ". ");
+            return [
+              [
+                "field",
+                {
+                  name: textContent(name).trim(),
+                  ...(required && { required: "true" }),
+                  ...(value &&
+                    value !== "—" &&
+                    !worded && { default: value.replace(/^"(.*)"$/, "$1") }),
+                },
+                ["p", {}, ...content],
+              ],
+            ];
+          }),
+        ];
+    }
+    return [node[0], node[1], ...asFields(node.slice(2) as Node[])] as ElementNode;
+  });
+}
+
 // The page around the content: header, rail, the section's column, and a menu that holds both on narrow screens. The
 // landing page has no sidebar, so its header links to the docs and the playground instead.
 const searchDialog = `<dialog class="search" aria-label="Search the docs">
@@ -1557,22 +1620,25 @@ for (const page of parsed) {
 ${page.slug === "badges" ? "" : pageActions(page.slug)}
 ${page.install ? installerFor(page.install) : ""}</div>
 <main class="enter" style="--i:1">${(
-        await renderHtmlFromDocument(page.document, {
-          components: {
-            ...components,
-            // comark-chips would take the `@user` that comark-github's references draw, and the links comark-links
-            // marks, so those pages show plain links.
-            example: exampleWithout(
-              ["github", "links"].includes(page.pkg?.slug ?? "") ? ["comark-chips"] : [],
-            ),
-            examples: exampleTabs,
-            matrix,
-            "badge-builder": badgeBuilder,
-            incorrect: ruleExample(page, "incorrect"),
-            correct: ruleExample(page, "correct"),
-            rules: ruleTable,
+        await renderHtmlFromDocument(
+          { ...page.document, nodes: asFields(page.document.nodes) },
+          {
+            components: {
+              ...components,
+              // comark-chips would take the `@user` that comark-github's references draw, and the links comark-links
+              // marks, so those pages show plain links.
+              example: exampleWithout(
+                ["github", "links"].includes(page.pkg?.slug ?? "") ? ["comark-chips"] : [],
+              ),
+              examples: exampleTabs,
+              matrix,
+              "badge-builder": badgeBuilder,
+              incorrect: ruleExample(page, "incorrect"),
+              correct: ruleExample(page, "correct"),
+              rules: ruleTable,
+            },
           },
-        })
+        )
       ).replace(
         /<table>[\s\S]*?<\/table>/g,
         (table) => `<div class="table-scroll">${table}</div>`,

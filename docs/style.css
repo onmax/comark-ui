@@ -20,6 +20,7 @@
   --faint: oklch(0.62 0 0);
   --line: oklch(0.92 0 0);
   --soft: oklch(0.975 0 0);
+  --raised: #fff;
   --pre-line: var(--line);
   --max: 82rem;
   --sans: "Geist", ui-sans-serif, system-ui, sans-serif;
@@ -35,6 +36,7 @@
     --faint: oklch(0.56 0 0);
     --line: oklch(0.26 0 0);
     --soft: oklch(0.185 0 0);
+    --raised: oklch(0.285 0 0);
     --pre-line: transparent;
   }
 
@@ -53,6 +55,7 @@
   --faint: oklch(0.62 0 0);
   --line: oklch(0.92 0 0);
   --soft: oklch(0.975 0 0);
+  --raised: #fff;
   --pre-line: var(--line);
 }
 
@@ -64,6 +67,7 @@
   --faint: oklch(0.56 0 0);
   --line: oklch(0.26 0 0);
   --soft: oklch(0.185 0 0);
+  --raised: oklch(0.285 0 0);
   --pre-line: transparent;
 }
 
@@ -2170,7 +2174,10 @@ nav > .nav-group:first-child {
   gap: 0.5rem;
   height: 2.5rem;
   padding: 0 1rem;
+  border: 0;
   border-radius: 8px;
+  background: none;
+  font-family: inherit;
   box-shadow: inset 0 0 0 1px var(--line);
   color: var(--fg);
   font-size: 0.875rem;
@@ -2886,6 +2893,17 @@ h3 {
   border: 0;
 }
 
+/* A heading in an example is the example's content, not a section of this page: no rule over it, and in the content's
+   type rather than the API headings' mono. */
+.example-preview :is(h2, :where(.cl-heading):has(> h2)) {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.example-preview h3 {
+  font: 600 1rem/1.5 var(--sans);
+}
+
 /* The row's rule sits above the heading now, so a jump to it stops that much higher. */
 .cl-heading > h2 {
   scroll-margin-top: 5.75rem;
@@ -2912,7 +2930,8 @@ code {
   overflow-x: auto;
 }
 
-.table-scroll > table:not(.cd-code) {
+.table-scroll > table:not(.cd-code),
+.ctb-scroll > table {
   margin: 0;
 }
 
@@ -2944,8 +2963,9 @@ table:not(.cd-code) {
   font-size: 0.875rem;
 }
 
+/* Cells pad both sides, so a right-aligned number keeps clear of the column after it. */
 th {
-  padding: 0.6rem 1rem 0.6rem 0;
+  padding: 0.6rem 0.75rem;
   font-weight: 500;
   text-align: left;
 }
@@ -2962,9 +2982,17 @@ main thead:not(:has(th:nth-child(3))) th:not(.example-preview th) {
 }
 
 td:not(.cd-code td) {
-  padding: 0.6rem 1rem 0.6rem 0;
+  padding: 0.6rem 0.75rem;
   border-top: 1px solid var(--line);
   vertical-align: baseline;
+}
+
+:is(th, td:not(.cd-code td)):not(.matrix *):first-child {
+  padding-left: 0;
+}
+
+:is(th, td:not(.cd-code td)):not(.matrix *):last-child {
+  padding-right: 0;
 }
 
 tr:last-child td:not(.cd-code td) {
@@ -3180,7 +3208,7 @@ dl:not([class]) > dd > :last-child {
   top: 3px;
   bottom: 3px;
   border-radius: 7px;
-  background: var(--bg);
+  background: var(--raised);
   box-shadow:
     0 0 0 0.5px rgb(0 0 0 / 0.06),
     0 1px 3px rgb(0 0 0 / 0.1);
@@ -3242,7 +3270,7 @@ dl:not([class]) > dd > :last-child {
 }
 
 .seg [aria-pressed="true"] {
-  background: var(--bg);
+  background: var(--raised);
   box-shadow:
     0 0 0 0.5px rgb(0 0 0 / 0.06),
     0 1px 3px rgb(0 0 0 / 0.1);
@@ -3292,6 +3320,12 @@ dl:not([class]) > dd > :last-child {
   margin: 0;
 }
 
+/* comark-code's wrapper holds the block's margins inside it in a flex preview, past the trims above. A paragraph next
+   to it still spaces it with its own margin. */
+.example-preview > .ck > pre {
+  margin-block: 0;
+}
+
 /* A block that draws its own frame (a chart, a diff, a diagram, a code block and its notes, a file tree, callouts,
    tabs, a carousel, a card, a test report, a properties box) isn't framed again: a preview that holds one drops its
    ring and padding. */
@@ -3322,6 +3356,13 @@ dl:not([class]) > dd > :last-child {
     .cn-notes
   )
 ) {
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* comark-media draws its framed player inside the paragraph it came from. */
+.example-preview:has(> p > :is(.cm-video, .cm-audio)) {
   padding: 0;
   border-radius: 0;
   box-shadow: none;
