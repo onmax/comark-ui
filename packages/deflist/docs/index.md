@@ -115,11 +115,14 @@ Deploy freeze
 
 ### Empty definition
 
-Use a marker with nothing after it to leave a definition empty.
+Use a marker with nothing after it to leave a definition empty. Keep another term after it; a lone `:` at the end of the document requires Comark's `autoClose: false`.
 
 ```md
 TBD
 :
+
+Ready
+: Approved for the next deploy.
 ```
 
 ## Examples

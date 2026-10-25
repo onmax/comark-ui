@@ -138,7 +138,7 @@ Removing a word leaves the spaces around it, so `a {--big--} duck` accepts as `a
 
 Escape the brace, `\{++`, to write the characters themselves. Inside a code span, a mark stays as written.
 
-```md
+```text
 Type \{++ to open an insertion, or write `{++this++}` in code.
 ```
 
