@@ -99,14 +99,30 @@ jobs:
     concurrency:
       group: pack-${{ github.ref }}
       cancel-in-progress: false
-    permissions: {}
+    permissions:
+      contents: read
     outputs:
       files: ${{ steps.pack.outputs.files }}
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: corepack enable
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: pnpm build
       - id: pack
         uses: danielroe/uppt/pack@6ec27140623aa835e362f866d8ab0018ab057f4d # v0.6.11
         with:
           packages: packages/*
+          checkout: "false"
+          install: "false"
+        env:
+          # Build once above, then keep uppt's tarballs without repeating the prepack builds.
+          pnpm_config_ignore_scripts: "true"
 
   # publish the prebuilt tarballs straight to npm through OIDC trusted publishing
   publish:
