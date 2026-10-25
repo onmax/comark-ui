@@ -49,6 +49,19 @@ describe("comark-ui", () => {
     for (const block of blocks) expect(out).toContain(block);
   });
 
+  it("passes hosted badge options through each preset", async () => {
+    for (const preset of [html, vue, react]) {
+      const { plugins } = preset({
+        ...offline,
+        badge: { endpoint: "https://example.com/badge.svg" },
+      });
+      const document = await parseMarkdown(':badge{source="npm-version" package="comark-ui"}', {
+        plugins,
+      });
+      expect(JSON.stringify(document.nodes)).toContain("https://example.com/badge.svg?");
+    }
+  });
+
   it("turns a plugin off, with its components", async () => {
     const { plugins, components } = html({ ...offline, zoom: false, github: { callouts: false } });
     expect(Object.keys(components)).not.toContain("zoom");

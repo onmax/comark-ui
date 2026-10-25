@@ -1,3 +1,6 @@
+import { createBadgeHandler } from "../packages/badge/src/server.ts";
+
+const badge = createBadgeHandler();
 // The docs moved from comark-annotate.onmax.me to comark.onmax.me/annotate, then to comark-ui.onmax.me. Old links
 // redirect; the skill, images, and fonts keep their paths, so agents that installed the skill from an old address still
 // find it.
@@ -24,6 +27,7 @@ export default {
     const url = new URL(request.url);
     const prefix = MOVED[url.hostname];
     if (prefix === undefined) {
+      if (url.pathname === "/badge.svg") return badge(request);
       const merged = MERGED.exec(url.pathname);
       const moved = merged ? `/${merged[1]}/` : RENAMED[url.pathname];
       if (moved) return Response.redirect(`${SITE}${moved}${url.search}${url.hash}`, 301);

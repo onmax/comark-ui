@@ -148,7 +148,7 @@ Pass your renderer's plugins for the same preservation check as `checkMarkdown()
 | `toMarkdown(doc)` | The document as Markdown. |
 | `verify(markdown)` | `{ writable: true, canonical }` when the room can save the document, or `{ writable: false }`. |
 
-A collaborative room holds only the body. `verify()` refuses documents with frontmatter, which the room would otherwise drop.
+A collaborative room holds only the body. `verify()` refuses documents whose parsed frontmatter contains keys. This does not guarantee preservation of empty or comment-only blocks: comment-only frontmatter can pass verification and be omitted on save. Hosts that need to preserve those blocks must reject them before opening a writable room.
 
 ## Vue options
 

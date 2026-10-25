@@ -47,6 +47,20 @@ describe("comark-badge renderers", () => {
     }
   });
 
+  it("renders static and hosted image badges in each framework", async () => {
+    const value = await parseMarkdown(
+      ':badge[ready]{label="build" icon="check"} :badge{source="npm-version" package="comark-ui"}',
+      { plugins: [badge()] },
+    );
+    for (const renderer of Object.values(renderers)) {
+      const html = await renderer(value);
+      expect(html).toContain('class="cb-image"');
+      expect(html).toContain('alt="build: ready"');
+      expect(html).toContain("data:image/svg+xml,");
+      expect(html).toContain("https://comark-ui.onmax.me/badge.svg?");
+    }
+  });
+
   it("ships Svelte components that compile", async () => {
     const source = await readFile(new URL("../src/svelte/Badge.svelte", import.meta.url), "utf8");
     expect(() => compile(source, { filename: "Badge.svelte", generate: "server" })).not.toThrow();

@@ -1,3 +1,4 @@
+import type { BadgeOptions } from "comark-badge";
 import type { ComarkPlugin } from "comark";
 import type { CastOptions } from "comark-cast";
 import type { ChartsOptions } from "comark-charts";
@@ -76,7 +77,7 @@ export type PresetOptions = {
   /** HTML only: Vue, React, and Svelte have no quiz components. */
   quiz?: QuizOptions | boolean;
   keys?: KeysOptions | boolean;
-  badge?: boolean;
+  badge?: BadgeOptions | boolean;
   media?: MediaOptions | boolean;
   metrics?: boolean;
   /** Reads no data files unless you pass `{ root }` or `{ read }`; CSV fences render either way. */
@@ -130,7 +131,7 @@ export type Renderer<C> = {
   fields: Part<C>;
   properties: Part<C, PropertiesOptions>;
   quiz?: Part<C, QuizOptions>;
-  badge: Part<C>;
+  badge: Part<C, BadgeOptions>;
   mark: Part<C>;
   media: Part<C, MediaOptions>;
   metrics: Part<C>;
