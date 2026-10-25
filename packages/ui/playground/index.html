@@ -3,10 +3,20 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>comark-ui editor</title>
+    <title>Editor playground · comark-ui</title>
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
+    <header>
+      <div>
+        <h1>Editor playground</h1>
+        <p>Edit either pane. Files stay in this tab; reloading resets the example.</p>
+      </div>
+      <nav aria-label="Playgrounds">
+        <a href="/play/">Markdown playground</a>
+        <a href="/guide/editor/">Editor guide</a>
+      </nav>
+    </header>
     <div id="app"></div>
     <script type="module" src="./main.ts"></script>
   </body>

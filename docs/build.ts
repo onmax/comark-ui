@@ -260,6 +260,7 @@ const sections: Section[] = [
         title: "Guides",
         slugs: [
           "guide/renderers",
+          "guide/editor",
           "guide/theming",
           "guide/accessibility",
           "guide/validation",
@@ -865,7 +866,7 @@ const column = (section: Section, current: string) => {
               `<a${page.slug.includes("/components/") ? ' class="nav-sub"' : ""}${page.slug === current ? ' aria-current="page"' : ""} href="${href(page.slug)}">${escapeHtml(page.label)}</a>`,
           ),
         }));
-  return `<nav class="pages" aria-label="${escapeHtml(section.label)}"><p class="pages-title">${escapeHtml(section.label)}</p>${lists
+  return `<nav class="pages" aria-label="${escapeHtml(section.label)}"><p class="pages-title">${escapeHtml(section.label)}</p>${section.slug === "play" ? '<a href="/play/editor/">Rich-text editor</a>' : ""}${lists
     .map(
       (list) =>
         `${list.title ? `<p class="nav-group">${list.icon ? siteIcon(list.icon, 14) : ""}${escapeHtml(list.title)}</p>` : ""}${list.links.join("")}`,
@@ -1368,7 +1369,15 @@ const searchIndex = [
     p: "Docs",
     h: "/play/",
     d: "Edit any example with every plugin and share a link to it.",
-    w: "editor, sandbox, repl, try it, live preview",
+    w: "sandbox, repl, try it, live preview",
+  },
+  {
+    k: "page",
+    t: "Editor playground",
+    p: "Docs",
+    h: "/play/editor/",
+    d: "Edit Markdown and rich text side by side with the Comark Tiptap editor. Try task lists, tables, and file uploads.",
+    w: "WYSIWYG, ProseMirror",
   },
 ];
 
@@ -1390,6 +1399,14 @@ await build({
     emptyOutDir: false,
     lib: { entry: fileURLToPath(new URL("play.ts", root)), formats: ["es"], fileName: "play" },
   },
+});
+
+await build({
+  configFile: false,
+  logLevel: "warn",
+  root: fileURLToPath(new URL("../packages/ui/playground/", root)),
+  base: "/play/editor/",
+  build: { outDir: fileURLToPath(new URL("play/editor/", dist)), emptyOutDir: false },
 });
 
 // The page around the content: header, rail, the section's column, and a menu that holds both on narrow screens. The
