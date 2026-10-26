@@ -19,6 +19,12 @@ const resolver = (
 });
 
 export default function viteHubPilot(_: unknown, nuxt: Nuxt) {
+  // Auth adds a client plugin for its Vue composables (useAuth and the like), which this site never calls: sign-in is a
+  // plain fetch (server/routes/sign-in.get.ts). Left in, every visitor downloads the better-auth client and hydrates later.
+  nuxt.hook("app:resolve", (app) => {
+    app.plugins = app.plugins.filter((plugin) => !/@vite-hub[/+]auth.*vue-nuxt/.test(plugin.src));
+  });
+
   // The Workspace's Nitro plugin is added as `.vitehub/nitro/workspace/plugin.ts`, which Nitro reads from server/.
   nuxt.hook("nitro:config", (config) => {
     config.plugins = config.plugins?.map((plugin) =>
