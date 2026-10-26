@@ -108,7 +108,7 @@ The office flooded in March.
 ```
 ::
 
-On a [gantt chart](/charts/gantt/#groups), `series` names the group of the bar instead, for a task that repeats across groups.
+On a [gantt chart](/charts/#gantt-charts), `series` names the group of the bar instead, for a task that repeats across groups.
 
 ### Mark, color, and side
 

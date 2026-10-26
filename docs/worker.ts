@@ -12,14 +12,17 @@ const MOVED: Record<string, string | undefined> = {
 const KEEP = /^\/(\.well-known\/|fonts\/)|\.(png|svg|woff2)$/;
 // Each package had a page per topic until its pages merged into one; the linter keeps its own, and the guides are
 // their own section with a Theming page. The preset's page is Getting started now that it's comark-ui, and the
-// charts' sub-pages left components/, where the annotation page became Notes.
+// charts' sub-pages left components/, where the annotation page became Notes, and gantt and Vega-Lite joined the
+// Charts page.
 const MERGED =
   /^\/(?!lint\/|guide\/)([\w-]+)\/(?:getting-started|syntax|components|guides|theming)\/?$/;
 const RENAMED: Record<string, string | undefined> = {
   "/preset/": "/getting-started/",
   "/charts/components/annotation/": "/charts/notes/",
-  "/charts/components/gantt/": "/charts/gantt/",
-  "/charts/components/vega-lite/": "/charts/vega-lite/",
+  "/charts/components/gantt/": "/charts/#gantt-charts",
+  "/charts/components/vega-lite/": "/charts/#vega-lite",
+  "/charts/gantt/": "/charts/#gantt-charts",
+  "/charts/vega-lite/": "/charts/#vega-lite",
 };
 
 export default {
@@ -33,7 +36,11 @@ export default {
       if (url.pathname === "/badge.svg") return badge(request);
       const merged = MERGED.exec(url.pathname);
       const moved = merged ? `/${merged[1]}/` : RENAMED[url.pathname.replace(/\/?$/, "/")];
-      if (moved) return Response.redirect(`${SITE}${moved}${url.search}${url.hash}`, 301);
+      if (moved) {
+        // A page that became a section moves to its heading, and the query goes before the hash.
+        const [path, hash] = moved.split("#");
+        return Response.redirect(`${SITE}${path}${url.search}${hash ? `#${hash}` : url.hash}`, 301);
+      }
       // An agent that asks for Markdown gets the page's Markdown copy.
       if (url.pathname.endsWith("/") && request.headers.get("accept")?.includes("text/markdown")) {
         url.pathname = url.pathname === "/" ? "/index.md" : `${url.pathname.slice(0, -1)}.md`;
