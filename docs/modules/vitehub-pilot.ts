@@ -88,22 +88,15 @@ export default function viteHubPilot(_: unknown, nuxt: Nuxt) {
 
   // Nitro's prerenderer is a Node build that can't bundle ViteHub's packages (their pnpm folders are named after the
   // URLs they install from, and bundled they hit a circular import), and no page needs them. It leaves ViteHub's handlers
-  // and plugins out and adds the one thing ViteHub's comments plugin does to a page: the loader tag, so the prerendered
-  // files carry it like the Worker's rendered ones would.
+  // and plugins out. The prerendered files carry nothing of Comments: the Worker adds the overlay to a page it serves,
+  // only for the team in comment mode (server/middleware/site.ts).
   nuxt.hook("nitro:init", (nitro) => {
     nitro.hooks.hook("prerender:config", (config) => {
       const viteHub = (path: unknown) =>
         typeof path === "string" && /vite-hub|(^|[/\\])\.vitehub[/\\]/.test(path);
       config.handlers = config.handlers?.filter((handler) => !viteHub(handler?.handler));
       config.devHandlers = config.devHandlers?.filter((handler) => !viteHub(handler?.handler));
-      config.plugins = [
-        ...(config.plugins ?? []).filter((plugin) => !viteHub(plugin)),
-        fileURLToPath(new URL("./server/prerender/comments-loader.ts", root)),
-      ];
-      // The loader's URL carries a hash of its content, which ViteHub generated.
-      const generated = new URL(".vitehub/comments/inject-overlay.mjs", root);
-      const commentsLoader = /const url = "([^"]+)"/.exec(readFileSync(generated, "utf8"))?.[1];
-      config.runtimeConfig = { ...config.runtimeConfig, commentsLoader };
+      config.plugins = config.plugins?.filter((plugin) => !viteHub(plugin));
       config.modules = config.modules?.filter(
         (module) => typeof module !== "function" || !viteHub(module.name),
       );
