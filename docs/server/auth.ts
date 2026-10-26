@@ -8,9 +8,6 @@ export default defineAuth(({ env, requestOrigin }) => ({
   baseURL: requestOrigin,
   database: drizzleAdapter(db, { provider: "sqlite", schema }),
   secret: env.auth.secret.unseal(),
-  // /sign-in sends a visitor without a session to GitHub and back to the home page; with one it answers
-  // server/routes/sign-in.get.ts.
-  access: { routes: ["/sign-in"], signIn: { provider: "github", callbackURL: "/" } },
   socialProviders: {
     github: {
       clientId: env.auth.github.clientId.unseal(),

@@ -1,5 +1,5 @@
 import { cp, mkdir, rm } from "node:fs/promises";
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { defineNuxtConfig } from "nuxt/config";
 import { env } from "vite-hub/env";
@@ -53,15 +53,6 @@ function pageRoutes() {
   ];
 }
 
-// The D1 database is declared once, in the root wrangler.jsonc, which Nitro merges into the Worker's config too.
-const [database] = (
-  JSON.parse(
-    readFileSync(new URL("../wrangler.jsonc", root), "utf8")
-      .replace(/^\s*\/\/.*$/gm, "")
-      .replace(/,(\s*[}\]])/g, "$1"),
-  ) as { d1_databases: { database_id: string; database_name: string }[] }
-).d1_databases;
-
 export default defineNuxtConfig({
   compatibilityDate: "2026-10-01",
   devtools: { enabled: false },
@@ -94,6 +85,7 @@ export default defineNuxtConfig({
   },
   modules: [
     "vite-hub/nuxt",
+    "~~/modules/vitehub-pilot",
     "nuxt-agent-discovery",
     async (_, nuxt) => {
       await writeAssets();
@@ -102,16 +94,24 @@ export default defineNuxtConfig({
     },
   ],
   vitehub: {
+    // The Worker keeps its first name so its Workers Builds connection stays (wrangler.jsonc).
+    name: "comark-annotate",
     preset: "cloudflare",
     // Comments, the editor's sessions in the Content cms preset (server/content.ts), and nothing else use the database.
+    // The ID is a placeholder until `wrangler d1 create comark-ui-docs` makes the database; paste its ID here.
     database: {
       driver: "d1",
-      databaseId: database!.database_id,
-      databaseName: database!.database_name,
+      databaseId: "00000000-0000-4000-8000-000000000000",
+      databaseName: "comark-ui-docs",
     },
+    // Files live in the repository (server/content.ts), so there is no R2 bucket.
+    blob: false,
     auth: true,
     // The editor is the Console's Content section: the team signs in with the site's own session (server/auth.ts).
-    console: { auth: "app", authorize: "./server/console-authorize.ts" },
+    console: {
+      auth: "app",
+      authorize: fileURLToPath(new URL("./server/console-authorize.ts", import.meta.url)),
+    },
   },
   vite: {
     env: {
@@ -138,8 +138,16 @@ export default defineNuxtConfig({
     skills: { dir: "../skills" },
   },
   nitro: {
-    // The Worker's own settings are in the root wrangler.jsonc, which Nitro merges into docs/dist/server/wrangler.json.
-    cloudflare: { deployConfig: true, nodeCompat: true },
+    // The root wrangler.jsonc holds what ViteHub doesn't generate (name, routes, previews). Nitro merges it with ViteHub's
+    // bindings into docs/dist/server/wrangler.json, which the hook below makes `wrangler` use from the repository's root.
+    cloudflare: {
+      deployConfig: true,
+      nodeCompat: true,
+      // Wrangler bundles the output again, and ViteHub's code imports this one by a name only Nitro's aliases know.
+      wrangler: {
+        alias: { "#vitehub/env/server": fileURLToPath(new URL(".vitehub/env/server.mjs", root)) },
+      },
+    },
     output: { dir: fileURLToPath(new URL("dist/", root)) },
     // The playground is a static app copied into the output, not a Nuxt page.
     prerender: {

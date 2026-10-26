@@ -1,22 +1,15 @@
 {
   // The Worker keeps its first name so its Workers Builds connection stays.
   "name": "comark-annotate",
-  // Nitro's output, from `pnpm docs:generate`. Nitro reads this file when it builds, so it keeps the settings below in
-  // docs/dist/server/wrangler.json too.
+  // Nitro's output, from `pnpm docs:generate`. The build merges this file with ViteHub's bindings (D1, the secrets) into
+  // docs/dist/server/wrangler.json and points .wrangler/deploy/config.json at it, so `wrangler deploy` from here
+  // deploys that one.
   "main": "docs/dist/server/index.mjs",
   "compatibility_date": "2026-10-01",
   "compatibility_flags": ["nodejs_compat"],
   // The Worker runs first so the old hosts can redirect before an asset answers. Nitro's middleware then serves the
   // prerendered file through ASSETS (docs/server/middleware/site.ts).
   "assets": { "directory": "./docs/dist/public", "binding": "ASSETS", "run_worker_first": true },
-  // The IDs are placeholders until the database exists: `wrangler d1 create comark-ui-docs`, then paste its ID here.
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "comark-ui-docs",
-      "database_id": "00000000-0000-4000-8000-000000000000",
-    },
-  ],
   "routes": [
     { "pattern": "comark-ui.onmax.me", "custom_domain": true },
     { "pattern": "comark.onmax.me", "custom_domain": true },

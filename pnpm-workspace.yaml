@@ -4,6 +4,13 @@ packages:
 
 catalogMode: prefer
 
+# The ViteHub preview builds are URLs, which pnpm refuses as sub-dependencies unless this is off.
+blockExoticSubdeps: false
+# The code that ViteHub generates into docs/.vitehub imports its @vite-hub/* packages by name, from the docs app.
+publicHoistPattern:
+  - "@vite-hub/*"
+  - nitro
+
 catalog:
   "@fontsource-variable/caveat": ^5.3.0
   "@iconify-json/lucide": ^1.2.100
@@ -40,7 +47,6 @@ catalog:
   "@types/node": ^24.0.0
   vite: npm:@voidzero-dev/vite-plus-core@^1.1.0
   vite-plus: ^1.1.0
-  "@vite-hub/source": 0.0.4
   "@tiptap/core": ^3.31.4
   "@tiptap/extension-image": ^3.31.4
   "@tiptap/extension-list": ^3.31.4
@@ -53,11 +59,42 @@ catalog:
   nuxt-agent-discovery: ^0.8.0
   valibot: ^1.4.2
   better-auth: 1.7.10
+  # The combined ViteHub branch (comments overlay, Content multi-glob and GitHub store), until a release has them.
+  vite-hub: https://pkg.pr.new/vite-hub/vitehub/vite-hub@b6ed55449bb46fd81653c80632e4aebdc41ac49a
+  drizzle-kit: ^0.31.10
   drizzle-orm: 0.45.3
   wrangler: ^4.152.0
 
 overrides:
   vite: "catalog:"
+  # Every @vite-hub/* package is the pilot build, so no released copy mixes in.
+  "@vite-hub/agent": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/agent@b6ed55449bb46fd81653c80632e4aebdc41ac49a
+  "@vite-hub/auth": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/auth@b6ed55449bb46fd81653c80632e4aebdc41ac49a
+  "@vite-hub/blob": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/blob@b6ed55449bb46fd81653c80632e4aebdc41ac49a
+  "@vite-hub/browser": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/browser@b6ed55449bb46fd81653c80632e4aebdc41ac49a
+  "@vite-hub/channels": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/channels@b6ed55449bb46fd81653c80632e4aebdc41ac49a
+  "@vite-hub/cli": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/cli@b6ed55449bb46fd81653c80632e4aebdc41ac49a
+  "@vite-hub/comments": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/comments@b6ed55449bb46fd81653c80632e4aebdc41ac49a
+  "@vite-hub/connections": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/connections@b6ed55449bb46fd81653c80632e4aebdc41ac49a
+  "@vite-hub/content": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/content@b6ed55449bb46fd81653c80632e4aebdc41ac49a
+  "@vite-hub/database": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/database@b6ed55449bb46fd81653c80632e4aebdc41ac49a
+  "@vite-hub/email": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/email@b6ed55449bb46fd81653c80632e4aebdc41ac49a
+  "@vite-hub/env": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/env@b6ed55449bb46fd81653c80632e4aebdc41ac49a
+  "@vite-hub/kv": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/kv@b6ed55449bb46fd81653c80632e4aebdc41ac49a
+  "@vite-hub/markdown-template": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/markdown-template@b6ed55449bb46fd81653c80632e4aebdc41ac49a
+  "@vite-hub/presets": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/presets@b6ed55449bb46fd81653c80632e4aebdc41ac49a
+  "@vite-hub/queue": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/queue@b6ed55449bb46fd81653c80632e4aebdc41ac49a
+  "@vite-hub/rate-limit": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/rate-limit@b6ed55449bb46fd81653c80632e4aebdc41ac49a
+  "@vite-hub/realtime": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/realtime@b6ed55449bb46fd81653c80632e4aebdc41ac49a
+  "@vite-hub/runtime": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/runtime@b6ed55449bb46fd81653c80632e4aebdc41ac49a
+  "@vite-hub/sandbox": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/sandbox@b6ed55449bb46fd81653c80632e4aebdc41ac49a
+  "@vite-hub/sandbox-task": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/sandbox-task@b6ed55449bb46fd81653c80632e4aebdc41ac49a
+  "@vite-hub/schedule": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/schedule@b6ed55449bb46fd81653c80632e4aebdc41ac49a
+  "@vite-hub/shell": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/shell@b6ed55449bb46fd81653c80632e4aebdc41ac49a
+  "@vite-hub/source": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/source@b6ed55449bb46fd81653c80632e4aebdc41ac49a
+  "@vite-hub/ui": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/ui@b6ed55449bb46fd81653c80632e4aebdc41ac49a
+  "@vite-hub/workflow": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/workflow@b6ed55449bb46fd81653c80632e4aebdc41ac49a
+  "@vite-hub/workspace": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/workspace@b6ed55449bb46fd81653c80632e4aebdc41ac49a
 
 minimumReleaseAgeExclude:
   - vite-doctor@0.1.0
@@ -67,9 +104,13 @@ minimumReleaseAgeExclude:
   - comark@0.8.1
 
 allowBuilds:
+  # ViteHub's optional dependencies (zstd, swc, cbor-extract, cpu-features, liblzma, ssh2) are not used by the docs.
+  "@mongodb-js/zstd": false
+  "@swc/core": false
+  cbor-extract: false
+  cpu-features: false
   esbuild: false
   msgpackr-extract: true
+  node-liblzma: false
+  ssh2: false
   workerd: true
-
-patchedDependencies:
-  "@vite-hub/source@0.0.4": patches/@vite-hub__source@0.0.4.patch
