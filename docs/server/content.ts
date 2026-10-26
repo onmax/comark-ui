@@ -9,6 +9,12 @@ import { inTeam } from "./utils/team.ts";
 // The page the site serves for a file, with the trailing slash it prerenders. content.resolve() finds a page's
 // document by this, which is how a comment on a page belongs to the Markdown behind it.
 const page = (path: string) => `/${path.replace(/(^|\/)index$/, "")}/`.replace("//", "/");
+const packagePage = (id: string) => page(id.replace("/docs", ""));
+// The sitemap lists every page; a partial is included into other pages and has none of its own.
+const url =
+  (route: (id: string) => string) =>
+  ({ id }: { id: string }) =>
+    /(^|\/)partials\//.test(id) ? null : route(id);
 const fields = { title: v.optional(v.string()), description: v.optional(v.string()) };
 
 export const content = defineContent({
@@ -24,14 +30,27 @@ export const content = defineContent({
   ],
   collections: {
     // docs/pages/guide/theming.md is /guide/theming/.
-    pages: documents({ path: "docs/pages/**/*.md", fields, label: "Pages", route: page }),
+    pages: documents({
+      path: "docs/pages/**/*.md",
+      fields,
+      label: "Pages",
+      route: page,
+      url: url(page),
+    }),
     // packages/zoom/docs/theming.md is /zoom/theming/, and packages/zoom/docs/index.md is /zoom/.
     packages: documents({
       path: "packages/*/docs/**/*.md",
       fields,
       label: "Package pages",
-      route: (id) => page(id.replace("/docs", "")),
+      route: packagePage,
+      url: url(packagePage),
     }),
   },
   authorize: ({ user }) => inTeam(user),
+  // /sitemap.xml lists the published pages; robots.txt keeps crawlers out of the Console, the API, and sign-in.
+  seo: {
+    site: "https://comark-ui.onmax.me",
+    sitemap: true,
+    robots: { disallow: ["/_vitehub", "/api", "/sign-in"] },
+  },
 });

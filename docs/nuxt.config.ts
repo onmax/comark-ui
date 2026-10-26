@@ -107,6 +107,10 @@ export default defineNuxtConfig({
     // Files live in the repository (server/content.ts), so there is no R2 bucket.
     blob: false,
     auth: true,
+    // A Durable Object holds each page's room: who else is on it and where their cursor is, for comments and the editor.
+    realtime: { authority: "cloudflare" },
+    // A Cron Trigger runs server/schedules/publish.ts, which publishes the pages the editor scheduled.
+    schedule: true,
     // The editor is the Console's Content section: the team signs in with the site's own session (server/auth.ts).
     console: {
       auth: "app",
@@ -139,6 +143,8 @@ export default defineNuxtConfig({
     robots: { aiPolicy: false },
     skills: { dir: "../skills" },
   },
+  // The sitemap lists the repository's published pages through the GitHub API, so it's kept for an hour.
+  routeRules: { "/sitemap.xml": { swr: 3600 } },
   nitro: {
     // The root wrangler.jsonc holds what ViteHub doesn't generate (name, routes, previews). Nitro merges it with ViteHub's
     // bindings into docs/dist/server/wrangler.json, which the hook below makes `wrangler` use from the repository's root.
