@@ -1,6 +1,6 @@
 ---
 title: Getting started
-description: Run comark-linter from the command line, a script, or Vite Doctor.
+description: Run comark-linter from the command line, a script, ESLint, or Vite Doctor.
 install: pnpm add -D comark-linter
 ---
 
@@ -65,6 +65,10 @@ const diagnostics = await lint(markdown, { plugins: [annotate()], components });
 ```
 
 `lint()` never throws. If a rule crashes on a document, that rule reports one diagnostic saying so, and the others still run.
+
+### Add it to ESLint
+
+Add `comark-linter/eslint`'s recommended config to `eslint.config.js` to lint your Markdown with `eslint .` and in your editor. [ESLint](/lint/eslint/) has the setup.
 
 ### Add it to Vite Doctor
 
@@ -188,6 +192,7 @@ When parsing or a rule throws, the result's optional `cause` holds the original 
 
 ## Next steps
 
+- [ESLint](/lint/eslint/) runs every rule as an ESLint rule.
 - [Vite Doctor](/lint/vite-doctor/) runs every rule in the same report as your code.
 - [Guides](/lint/guides/) add lint-comark to your lint script, staged files, and CI.
 - [Doctor](/doctor/) has a page for every rule.

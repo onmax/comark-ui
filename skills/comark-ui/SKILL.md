@@ -133,5 +133,5 @@ Mark only what your text talks about. Each note says what changed or what is wro
 
 ## Check the result
 
-1. Lint the file: `npx lint-comark report.md`, in a project with `comark-linter` and the plugins installed, where `comark-ui` counts as every plugin. It prints one line per problem with its line, its rule, and how to fix it, and exits with 1 while any remain. Fix every one, and run it again until it exits with 0. The [lint reference](references/lint.md) covers its flags, its config file, the library, and Vite Doctor.
+1. Lint the file: `npx lint-comark report.md`, in a project with `comark-linter` and the plugins installed, where `comark-ui` counts as every plugin. It prints one line per problem with its line, its rule, and how to fix it, and exits with 1 while any remain. Fix every one, and run it again until it exits with 0. The [lint reference](references/lint.md) covers its flags, its config file, the library, ESLint, and Vite Doctor.
 2. Look at the render, made as the block's reference says. Open it in a browser and take a screenshot: each mark sits on its target, each number matches its note, and each chart says what your text says. If you can't verify something, say so when you hand the document over instead of guessing.

@@ -1,46 +1,46 @@
 ---
 title: Guides
-description: Run lint-comark next to ESLint or oxlint, on staged files and in CI, or all of it as one Vite Doctor run.
+description: Run lint-comark from ESLint or next to oxlint, on staged files and in CI, or all of it as one Vite Doctor run.
 ---
 
 Add lint-comark to the scripts, hooks, and CI jobs that already check your code.
 
 ## With your linter
 
-### Run it next to ESLint or oxlint
+### Run it from ESLint
 
-ESLint and oxlint check your code, and lint-comark checks your Markdown. Neither reads `::` blocks, so add lint-comark to the same scripts instead of to their configs:
+`comark-linter/eslint` turns every lint-comark rule into an ESLint rule, so `eslint .` and your editor report broken documents next to broken code:
+
+```js
+// eslint.config.js
+import comark from "comark-linter/eslint";
+
+export default [comark.configs.recommended];
+```
+
+[ESLint](/lint/eslint/) has the setup and the rules' settings.
+
+### Run it next to oxlint
+
+oxlint checks your code, and lint-comark checks your Markdown. oxlint's JS plugins don't read `.md` files yet, so add lint-comark to the same script instead of to its config:
 
 ```sh
 pnpm add -D comark-linter
 ```
 
-::code-group
-```json [ESLint]
-{
-  "scripts": {
-    "lint": "eslint . && lint-comark \"content/**/*.md\""
-  }
-}
-```
-
-```json [oxlint]
+```json
 {
   "scripts": {
     "lint": "oxlint && lint-comark \"content/**/*.md\""
   }
 }
 ```
-::
 
 Quote the glob so the shell passes it as it is. lint-comark expands it and skips `node_modules` and `dist`. `pnpm lint` now fails on a broken document the way it fails on a lint error in code:
 
 ```txt
 content/review.md:8:1 comark/unclosed-block `::compare` opened on line 8 is never closed. Add a line with `::` after its last child.
 ```
-
-> [!TIP]
-> If you use `@eslint/markdown`, keep it. It checks plain Markdown, and lint-comark checks what Comark adds on top.
 
 ### Lint staged files
 
@@ -49,13 +49,13 @@ With [lint-staged](https://github.com/lint-staged/lint-staged), each tool gets t
 ```json
 {
   "lint-staged": {
-    "*.{js,ts,vue}": "eslint --fix",
+    "*.{js,ts,vue}": "oxlint --fix",
     "*.{md,mdc}": "lint-comark"
   }
 }
 ```
 
-Swap `eslint --fix` for `oxlint --fix` if that's your linter.
+With the ESLint plugin, `"*.{js,ts,vue,md,mdc}": "eslint"` covers both.
 
 ## In CI
 

@@ -6,7 +6,7 @@
 [![license](https://npmx.dev/api/registry/badge/license/comark-linter)](https://npmx.dev/package/comark-linter)
 [![docs](https://img.shields.io/badge/docs-comark--ui.onmax.me-14b8a6?labelColor=0a0a0a)](https://comark-ui.onmax.me/lint/)
 
-Finds unclosed blocks, unknown components, broken links and anchors, local URLs, and plugin issues in [Comark](https://comark.dev) documents. A library, a CLI, and a [Vite Doctor](https://github.com/onmax/vite-doctor) extension. Every message names the block and says how to fix it.
+Finds unclosed blocks, unknown components, broken links and anchors, local URLs, and plugin issues in [Comark](https://comark.dev) documents. A library, a CLI, an [ESLint](https://eslint.org) plugin, and a [Vite Doctor](https://github.com/onmax/vite-doctor) extension. Every message names the block and says how to fix it.
 
 ```sh
 pnpm add -D comark-linter
@@ -29,6 +29,16 @@ const diagnostics = await lint(markdown, { plugins: [annotate()], components });
 ```
 
 `lint()` never throws and returns `{ rule, line, column?, message, fix, cause? }[]`. When parsing or a rule throws, `cause` holds the original exception. The CLI omits `cause` from JSON. Without `components`, unknown components aren't reported, and without `file`, links to other files aren't checked. `lintFiles(paths, options)` checks many files in one run, as the CLI does.
+
+For ESLint 9.15 or later, install `eslint` and `@eslint/markdown` and add the recommended config to `eslint.config.js`. It lints `.md` and `.mdc` files with every rule but `comark/dead-url`, each one configurable like any ESLint rule, and `settings.comark.config` points at a `lint-comark.config.ts`:
+
+```js
+import comark from "comark-linter/eslint";
+
+export default [comark.configs.recommended];
+```
+
+oxlint can't run it yet: its JS plugins lint JavaScript and TypeScript only, so run `lint-comark` next to `oxlint`.
 
 For Vite Doctor 0.1 or later, register the extension in `doctor.config.ts` and run `vite-doctor . --config doctor.config.ts`:
 
