@@ -1,6 +1,6 @@
 {
   "name": "comark-embed",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Video, audio, and tool embeds from a link: YouTube, Vimeo, Loom, Spotify, CodePen, StackBlitz, and Figma, with no network fetch. A Comark plugin.",
   "keywords": [
     "comark",
