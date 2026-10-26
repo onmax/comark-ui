@@ -16,7 +16,7 @@ Moon phase and vibes wrap.
 ::
 
 ::hero
-## Made for agents. Read by people.
+## Written for agents. Read by people.
 
 Your agent writes the review in Markdown and your team reads the page. When a block is wrong, the plugins say how to fix it.
 
