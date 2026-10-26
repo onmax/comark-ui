@@ -178,6 +178,7 @@ function subPages(slug: string) {
 // authoring tools under the docs' Utilities, and the linter on its own. comark-ui has no page: Getting started is it.
 const groups = [
   "Review blocks",
+  "Charts and diagrams",
   "Docs blocks",
   "Page behavior",
   "Markdown syntax",
@@ -297,10 +298,12 @@ const sections: Section[] = [
     slug: "components",
     label: "Components",
     icon: "blocks",
-    lists: ["Review blocks", "Docs blocks", "Page behavior", "Chat"].map((group) => ({
-      title: group,
-      slugs: inGroup(group),
-    })),
+    lists: ["Review blocks", "Charts and diagrams", "Docs blocks", "Page behavior", "Chat"].map(
+      (group) => ({
+        title: group,
+        slugs: inGroup(group),
+      }),
+    ),
   },
   {
     slug: "typography",

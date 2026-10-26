@@ -3,7 +3,7 @@ title: Diagrams
 description: PlantUML, Graphviz, D2, DBML, and ASCII diagrams in Markdown, drawn as SVG.
 keywords: PlantUML, Graphviz, dot, D2, DBML, goat, svgbob, Kroki, flowchart, sequence diagram, UML, ER diagram, ERD, architecture diagram
 tagline: A diagram in PlantUML, Graphviz, D2, DBML, or ASCII art, drawn as SVG in the page by a Kroki server.
-group: Review blocks
+group: Charts and diagrams
 icon: workflow
 blurb: Diagrams drawn through Kroki
 credits: 'Drawn by <a href="https://kroki.io">Kroki</a>.'
