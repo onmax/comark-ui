@@ -18,7 +18,7 @@ comark-charts draws the Markdown table inside `::chart` as an SVG chart and keep
 - Dates on x read as time when they look like `2026`, `2026-04`, `2026-04-15`, or an ISO date and time.
 - Inside the block, the table comes first, then any marks or Vega-Lite spec. Write explanations above or below the block.
 
-Props, all optional: `type` (below, default `bar` whatever the table holds, so write `type="line"` for a trend), `x` (the x column, default the first), `y` (the columns to draw, comma-separated, default all the others), `title` (the caption and the chart's name for screen readers), `labels` (prints the numbers on bars, waterfall steps, dumbbell rows, and gantt bars, as in `::chart{type="stacked" labels}`; without it the axis and the data table carry them), and `horizontal` (turns `bar` and `stacked` bars sideways, for long names such as file paths; past 40 bars they turn on their own). Give every chart a `title` that says what it measures and in what unit. Two or more series always get a legend over the plot.
+Props, all optional: `type` (below, default `bar` whatever the table holds, so write `type="line"` for a trend), `x` (the x column, default the first), `y` (the columns to draw, comma-separated, default all the others), `title` (the caption and the chart's name for screen readers), `labels` (prints the numbers on bars, waterfall steps, dumbbell rows, sankey nodes, and gantt bars, as in `::chart{type="stacked" labels}`; without it the axis and the data table carry them), and `horizontal` (turns `bar` and `stacked` bars sideways, for long names such as file paths; past 40 bars they turn on their own). Give every chart a `title` that says what it measures and in what unit. Two or more series always get a legend over the plot.
 
 ## Choose the type
 
@@ -34,6 +34,7 @@ Props, all optional: `type` (below, default `bar` whatever the table holds, so w
 | How changes add up to a total | `waterfall` | the start total, each change (negative for a drop), then the end total, which must be the start plus every change, in one column |
 | Shares of one whole, five or fewer | `pie` | names, then one column of non-negative numbers |
 | Steps or tasks over time, such as a build trace, a deploy, or a plan | `gantt` | the task, then a start and an end column, as numbers or dates; a column of names, such as a run or a phase, colors the bars |
+| Where an amount goes, such as a budget, a cashflow, or a bundle's bytes | `sankey` | where each flow comes from, where it goes, and how much; a flow can't loop back, and a node in the middle can't send out more than it takes in |
 
 When none of these fit, such as a box plot or a heatmap, put a Vega-Lite spec after the table in a fenced `vega-lite` block. The table is its data, so leave `data` out of the spec and name the table's headers as fields; marks don't apply.
 
@@ -43,7 +44,7 @@ For a before and after of one or two metrics, grouped `bar` reads best; past thr
 
 ## Mark what matters
 
-Point at the value the text talks about with an `::annotation` inside the chart, after the table. `at` is the row's x value copied from the table, and `series` picks one column in that row, or on a `gantt`, the group of the bar when a task repeats. `mark`, `color`, and `side` are under Marks in SKILL.md.
+Point at the value the text talks about with an `::annotation` inside the chart, after the table. `at` is the row's x value copied from the table (on a `sankey`, the node's name), and `series` picks one column in that row, or on a `gantt`, the group of the bar when a task repeats. `mark`, `color`, and `side` are under Marks in SKILL.md.
 
 ```md
 ::chart{type="line" title="Coffee cups and commits, per month"}

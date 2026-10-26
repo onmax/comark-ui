@@ -33,7 +33,7 @@ Put one table between `::chart` and `::`: a header row, then one row per point. 
 
 | Prop | What it does |
 | --- | --- |
-| `type` | `bar`, `stacked`, `line`, `area`, `scatter`, `dumbbell`, `waterfall`, `pie`, or `gantt`. Default `bar`. |
+| `type` | `bar`, `stacked`, `line`, `area`, `scatter`, `dumbbell`, `waterfall`, `pie`, `gantt`, or `sankey`. Default `bar`. |
 | `x` | The column along the x axis. Default the first. |
 | `y` | The columns to draw, separated by commas. Default every column but `x`. |
 | `title` | The chart's caption, and its name for screen readers. |

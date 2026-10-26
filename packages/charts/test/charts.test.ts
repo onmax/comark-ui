@@ -519,7 +519,7 @@ ${sizes.trim()}
     ].join("\n\n");
     expect(await issues(markdown)).toEqual([
       "`::chart` 1: `colour` isn't a prop of `::chart`. Valid props: type, x, y, title, labels, horizontal.",
-      '`::chart` 1: `type="donut"` isn\'t a chart type. Use `bar`, `stacked`, `line`, `area`, `scatter`, `dumbbell`, `waterfall`, `pie` or `gantt`.',
+      '`::chart` 1: `type="donut"` isn\'t a chart type. Use `bar`, `stacked`, `line`, `area`, `scatter`, `dumbbell`, `waterfall`, `pie`, `gantt` or `sankey`.',
       '`::chart` 2: `y` names column `befor`, but its table has `month`, `before` and `after`. Separate several with commas, as in `y="before, after"`.',
       "`::chart` 3: row 1 has `41 kB` in `size`, which isn't a number. Write the number alone, such as `1200` or `1,200`, and put the unit in the header, such as `size (ms)`.",
       '`::chart` 4: a pie shows one column of numbers, and this one has `before` and `after`. Name one with `y`, or use `type="bar"`.',
@@ -853,7 +853,7 @@ No such run.
         ].join("\n\n"),
       ),
     ).toEqual([
-      '`::chart` 1: `labels` prints each number on its bar, step, or dot, and a line has none. Remove it, or use `type="bar"`.',
+      '`::chart` 1: `labels` prints each number on its bar, step, dot, or node, and a line has none. Remove it, or use `type="bar"`.',
       '`::chart` 2: `labels` takes no value. Write `labels` alone, as in `::chart{type="bar" labels}`.',
       "`::chart` 3: a dumbbell always runs sideways, so `horizontal` changes nothing. Remove it.",
       '`::chart` 4: `horizontal` turns bars sideways, and an area has no bars to turn. Remove it, or use `type="bar"`.',
@@ -971,6 +971,138 @@ No such run.
       '`::chart` 4, annotation 1: `value` places a line across the plot. Add `mark="line"`, or remove `value` and mark a row with `at`.',
       '`::chart` 5, annotation 1: `mark="line"` crosses the plot at a number on its value axis, and a pie has none. Mark a slice with `at` and another mark, such as `box`.',
     ]);
+  });
+
+  const budget = `
+| from | to | amount |
+| --- | --- | --: |
+| salary | budget | 3,000 |
+| freelance | budget | 200 |
+| budget | rent | 1,200 |
+| budget | savings | 2,000 |`;
+  const words = (html: string) =>
+    [...html.matchAll(/<text[^>]*>([^<]+)<\/text>/g)].map(([, text]) => text);
+
+  it("draws a sankey's nodes in table order, as tall as their flows, with their amounts under `labels`", async () => {
+    expect(await issues(chart(budget, '{type="sankey" labels}'))).toEqual([]);
+    const html = await render(chart(budget, '{type="sankey" labels}'));
+    expect(html).toContain(
+      '<figure class="cch" data-type="sankey"><div class="cch-plot"><svg role="img" aria-label="sankey chart of amount from from to to"',
+    );
+    // Each node takes its place from the row that first names it.
+    expect(words(html)).toEqual([
+      "salary",
+      "budget",
+      "freelance",
+      "rent",
+      "savings",
+      "3,000",
+      "3,200",
+      "200",
+      "1,200",
+      "2,000",
+    ]);
+    // A flow per row, and a node per name.
+    expect(html.match(/class="mark-path role-mark/g)).toHaveLength(1);
+    expect(html.match(/<path [^>]*stroke-opacity="0.3"/g)).toHaveLength(4);
+    expect(html.match(/class="mark-rect role-mark/g)).toHaveLength(1);
+    // Without `labels`, the nodes keep their names and drop their amounts.
+    expect(words(await render(chart(budget, '{type="sankey"}')))).toEqual([
+      "salary",
+      "budget",
+      "freelance",
+      "rent",
+      "savings",
+    ]);
+    expect(await render(chart(budget, '{type="sankey"}'))).toContain("<td>freelance</td>");
+  });
+
+  it("marks a sankey's node by its name", async () => {
+    const markdown = `::chart{type="sankey"}
+${budget.trim()}
+:::annotation{at="budget" mark="circle"}
+Everything passes through here.
+:::
+:::annotation{at="budget" series="amount"}
+Not a column.
+:::
+:::annotation{at="taxes"}
+Not a node.
+:::
+:::annotation{mark="line" value="1000"}
+No axis.
+:::
+::`;
+    const plugins = [charts(), annotate()];
+    expect((await parseMarkdown(markdown, { plugins })).meta.issues).toEqual([
+      "`::chart` 1, annotation 2: `series` doesn't apply to a sankey, where `at` names the node. Leave `series` out.",
+      '`::chart` 1, annotation 3: `at="taxes"` isn\'t a node in `from` or `to` in the table. Copy it from the table, such as `salary`, `budget`, `freelance`.',
+      '`::chart` 1, annotation 4: `mark="line"` crosses the plot at a number on its value axis, and a sankey has none. Mark a node with `at` and another mark, such as `box`.',
+    ]);
+    const html = await createHtmlRenderer({
+      plugins,
+      components: { ...annotateComponents, ...components },
+    })(markdown);
+    expect(html).toMatch(/class="ca-mark ca-circle[^"]*" data-n="1"[^>]*left:[\d.]+%;top:[\d.]+%/);
+    expect(html).toContain("Everything passes through here.");
+  });
+
+  it("rejects overflowing sankey amounts before layout", async () => {
+    for (const validRow of ["", "\n| income | savings | 100 |"]) {
+      const markdown = chart(
+        `| from | to | amount |\n| --- | --- | --: |\n| income | spending | ${"9".repeat(309)} |${validRow}`,
+        '{type="sankey"}',
+      );
+      const { meta } = await parseMarkdown(markdown, { plugins: [charts()] });
+      expect(meta.issues).toHaveLength(1);
+      expect(meta.issues[0]).toContain("row 1");
+      expect(Object.values(meta.issueRules)).toEqual(["comark/charts/invalid-flow"]);
+      const html = await render(markdown);
+      expect(html).not.toMatch(/NaN|Infinity/);
+      expect(html.includes('<svg role="img"')).toBe(Boolean(validRow));
+      expect(html).toContain(`${"9".repeat(309)}</td>`);
+    }
+  });
+
+  it("reports a sankey's problems, naming the row and the fix", async () => {
+    const markdown = [
+      chart(`| pond | ducks |\n| --- | --: |\n| north | 12 |`, '{type="sankey"}'),
+      chart(
+        `
+| from | to | amount |
+| --- | --- | --: |
+| salary | budget | 3,000 |
+| budget | budget | 10 |
+| budget | rent | 0 |
+| budget | refund | -50 |
+| budget | savings | lots |
+| budget | | 5 |
+| budget | savings | 1,000 |
+| budget | savings | 900 |
+| budget | holidays | 2,500 |`,
+        '{type="sankey" horizontal}',
+      ),
+      chart(
+        `| from | to | ducks |\n| --- | --- | --: |\n| north | south | 12 |\n| south | east | 3 |\n| east | north | 4 |`,
+        '{type="sankey"}',
+      ),
+    ].join("\n\n");
+    expect(await issues(markdown)).toEqual([
+      "`::chart` 1: a sankey reads three columns, where each flow comes from, where it goes, and how much, as in `| from | to | amount |`, and its table has `pond` and `ducks`. Add a column naming where each flow goes.",
+      "`::chart` 2: row 2 flows from `budget` back into itself, which a sankey can't draw. Point it at another node, or remove the row.",
+      "`::chart` 2: row 3 flows `0` from `budget` to `rent`, and a flow needs an amount above 0. Fill in the amount, or remove the row.",
+      "`::chart` 2: row 4 flows `-50` from `budget` to `refund`, and a flow needs an amount above 0. Swap `from` and `to` and write the amount without its sign, or remove the row.",
+      "`::chart` 2: row 5 has `lots` in `amount`, which isn't a number. Write the number alone, such as `1200` or `1,200`, and put the unit in the header, such as `amount ($)`.",
+      "`::chart` 2: row 6 has no `to`. Fill it in, or remove the row.",
+      "`::chart` 2: rows 7 and 8 both flow from `budget` to `savings`. Add them up into one row.",
+      "`::chart` 2: `budget` sends out 3,500 but takes in 3,000. Add the flow into it that's missing, or check the amounts.",
+      '`::chart` 2: `horizontal` turns bars sideways, and a sankey has no bars to turn. Remove it, or use `type="bar"`.',
+      "`::chart` 3: its flows run in a loop, `north` to `south` to `east` to `north`, and a sankey only runs one way. Remove one of those rows, or split a node in two, such as `north (in)` and `north (out)`.",
+    ]);
+    // The second still draws what it can, and a loop shows its table.
+    const html = await render(markdown);
+    expect(html.match(/<svg role="img"/g)).toHaveLength(1);
+    expect(html).toContain("<td>east</td>");
   });
 
   it("renders the content as it is when there's nothing to draw", async () => {

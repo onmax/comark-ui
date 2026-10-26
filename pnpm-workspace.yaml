@@ -51,6 +51,8 @@ catalog:
   "@tiptap/y-tiptap": ^3.0.9
   yjs: ^13.6.33
   nuxt-agent-discovery: ^0.8.0
+  d3-sankey: ^0.12.3
+  "@types/d3-sankey": ^0.12.5
 
 overrides:
   vite: "catalog:"

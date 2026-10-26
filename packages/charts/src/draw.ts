@@ -7,7 +7,7 @@ import type { Field } from "vega-lite/types_unstable/channeldef.js";
 import type { LayerSpec, UnitSpec } from "vega-lite/types_unstable/spec/index.js";
 import { compile } from "vega-lite";
 import { INK, SERIES } from "./colors.ts";
-import type { Chart, SpecChart, XKind } from "./read.ts";
+import type { Chart, FlowChart, SpecChart, XKind } from "./read.ts";
 
 const { logger, None, parse, View } = vega;
 
@@ -26,7 +26,7 @@ const EM = [
 ] as const;
 // Graphemes, so a family or a flag emoji counts as the one glyph it draws.
 const graphemes = new Intl.Segmenter();
-const guess = (text: string, size: number) => {
+export const guess = (text: string, size: number) => {
   let width = 0;
   for (const { segment } of graphemes.segment(text))
     width += EM.find(([kind]) => kind.test(segment))?.[1] ?? 0.58;
@@ -352,7 +352,7 @@ const SHAPES = new Set(["rect", "symbol", "arc"]);
 // A mark keeps clear of the shape it circles, and a point gets a box big enough to draw around. A mark that draws
 // nothing only leaves its arrow a hair short of the point, so the arrow reaches the data.
 const PAD = 6;
-const PADDING = { left: 12, right: 12, top: 12, bottom: 12 };
+export const PADDING = { left: 12, right: 12, top: 12, bottom: 12 };
 const SMALLEST = 18;
 // A circle mark loops a little past its box, so a chart with one keeps room under the plot for a loop around a bar
 // and its name on the axis, above the notes.
@@ -391,14 +391,19 @@ const BANDED = new Set(["bar", "stacked", "waterfall", "dumbbell"]);
 // A line's box reaches this far to each side of it, so its stamp and its arrow sit on the line.
 const LINE = 4;
 
-function boxes(chart: Chart, view: vega.View, width: number, height: number): Map<number, Box> {
+export function boxes(
+  chart: Chart | FlowChart,
+  view: vega.View,
+  width: number,
+  height: number,
+): Map<number, Box> {
   const found = new Map<number, Box>();
   // Vega draws the scene at its origin plus its padding, and origin() leaves the padding out.
   const [x0, y0] = view.origin();
   const [left, top] = [x0 + PADDING.left, y0 + PADDING.top];
   for (const mark of chart.marks) {
     let [x1, y1, x2, y2] = [Infinity, Infinity, -Infinity, -Infinity];
-    if (mark.value !== undefined) {
+    if (mark.value !== undefined && chart.type !== "sankey") {
       // A line runs across the whole plot at its value.
       const at = Number(view.scale(valueAxis(chart))?.(mark.value));
       if (!Number.isFinite(at)) continue;
@@ -414,6 +419,7 @@ function boxes(chart: Chart, view: vega.View, width: number, height: number): Ma
         // through it. Elsewhere the axis holds ticks, which only share a row's name by chance.
         const name =
           mark.mark === "circle" &&
+          chart.type !== "sankey" &&
           BANDED.has(chart.type) &&
           !mark.series &&
           item.mark?.role === "axis-label" &&
@@ -455,7 +461,8 @@ function boxes(chart: Chart, view: vega.View, width: number, height: number): Ma
   return found;
 }
 
-const format = (value: number) => value.toLocaleString("en-US", { maximumFractionDigits: 12 });
+export const format = (value: number) =>
+  value.toLocaleString("en-US", { maximumFractionDigits: 12 });
 
 interface Label {
   x: number;
@@ -989,7 +996,7 @@ function gantt(chart: Chart, spec: TopLevelSpec) {
 }
 
 /** Draws a compiled Vega spec to an SVG string, and returns the view for finding where its marks sit. */
-async function render(compiled: vega.Spec, loader?: vega.Loader) {
+export async function render(compiled: vega.Spec, loader?: vega.Loader) {
   // Vega compiles its expressions with `new Function` unless told to interpret them, and Cloudflare Workers, where
   // documents like these often render, forbid that.
   const options: vega.ViewOptions = {
