@@ -1,7 +1,18 @@
+import { css } from "./styles.ts";
+
 declare global {
   interface Window {
     __comarkSources?: { users: number; stop: () => void };
   }
+}
+
+/** Adds the sources styles once, preserving the style-only client API. */
+export function addStyles(): void {
+  if (document.querySelector("style[data-comark-sources]")) return;
+  const style = document.createElement("style");
+  style.dataset.comarkSources = "";
+  style.textContent = css;
+  document.head.append(style);
 }
 
 /**
@@ -267,4 +278,4 @@ export function start(css: string): () => void {
   return state.stop;
 }
 
-export { css } from "./styles.ts";
+export { css };
