@@ -92,6 +92,22 @@ describe("image badges", () => {
     await render(markdown);
     expect(fetch).toHaveBeenCalledOnce();
   });
+  it("bounds successful cache entries while reusing recent results", async () => {
+    const fetch = vi
+      .fn<typeof globalThis.fetch>()
+      .mockImplementation(async () => new Response(JSON.stringify({ latest: "1.0.0" })));
+    vi.stubGlobal("fetch", fetch);
+    const markdown = (index: number) =>
+      `:badge{source="npm-version" package="cache-capacity-${index}"}`;
+    for (let index = 0; index < 257; index++) {
+      expect(await render(markdown(index))).toContain("data:image/svg+xml,");
+    }
+    expect(fetch).toHaveBeenCalledTimes(257);
+    await render(markdown(256));
+    expect(fetch).toHaveBeenCalledTimes(257);
+    await render(markdown(0));
+    expect(fetch).toHaveBeenCalledTimes(258);
+  });
   it("keeps the hosted image when live data is unavailable, and tries again next parse", async () => {
     const fetch = vi
       .fn<typeof globalThis.fetch>()
