@@ -2,7 +2,7 @@
 title: Mermaid
 description: Mermaid diagrams in Markdown, drawn to SVG while rendering, with no browser and no network.
 tagline: A Mermaid diagram drawn as SVG on the server by Pele, themed with the other blocks.
-group: Review blocks
+group: Charts and diagrams
 icon: network
 blurb: Mermaid diagrams drawn by Pele
 credits: 'Mermaid comes from <a href="https://github.com/farnabaz/comark-pele">comark-pele</a> by <a href="https://github.com/farnabaz">farnabaz</a>, drawn by <a href="https://pele.run">Pele</a>.'

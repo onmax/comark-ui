@@ -141,22 +141,35 @@ test("the sidebar restores each browser history entry's position", async ({ page
 });
 
 test("the sidebar does not reuse a discarded forward entry's position", async ({ page }) => {
+  // A fresh entry reveals its current link, which may be below the fold as the rail grows.
+  await page.goto("/charts/");
+  await expect(page.locator('.sidebar .pages a[aria-current="page"]')).toBeInViewport();
+  const fresh = await page
+    .locator(".sidebar .pages")
+    .evaluate((column) => Math.round(column.scrollTop));
   await page.goto("/annotate/");
   await page.locator(".sidebar .pages").evaluate((column) => {
     column.scrollTop = 120;
   });
   await page.locator('.sidebar a[href="/tabs/"]').click();
   await expect(page).toHaveURL(/\/tabs\/$/);
-  await page.locator(".sidebar .pages").evaluate((column) => {
+  const discarded = await page.locator(".sidebar .pages").evaluate((column) => {
     column.scrollTop = column.scrollHeight;
+    return Math.round(column.scrollTop);
   });
+  expect(discarded - fresh).toBeGreaterThan(1);
   await page.goBack();
   await expect(page).toHaveURL(/\/annotate\/$/);
   await page.locator('.sidebar a[href="/charts/"]').click();
   await expect(page).toHaveURL(/\/charts\/$/);
+  // Pointer scrolling and the first-load reveal can round to adjacent CSS pixels.
   await expect
-    .poll(() => page.locator(".sidebar .pages").evaluate((column) => Math.round(column.scrollTop)))
-    .toBe(0);
+    .poll(() =>
+      page
+        .locator(".sidebar .pages")
+        .evaluate((column, fresh) => Math.abs(Math.round(column.scrollTop) - fresh), fresh),
+    )
+    .toBeLessThanOrEqual(1);
 });
 
 test("the sidebar shows the current page's link on a first load", async ({ page }) => {

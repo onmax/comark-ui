@@ -2,6 +2,7 @@
 import type {} from "../.vitehub/types.d.ts";
 import type {} from "../.vitehub/types/auth.d.ts";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { APIError, createAuthMiddleware } from "better-auth/api";
 import { defineAuth } from "vite-hub/auth";
 import { db, schema } from "vite-hub/database/drizzle";
 
@@ -20,6 +21,13 @@ export default defineAuth(({ env, requestOrigin }) => ({
       overrideUserInfoOnSignIn: true,
     },
   },
-  // `input: false` keeps /update-user from setting it: a name can be changed, a login only by GitHub.
-  user: { additionalFields: { login: { type: "string", required: false, input: false } } },
+  // Not `input: false`: Better Auth drops such a field from the GitHub profile too, so the login would never be stored.
+  user: { additionalFields: { login: { type: "string", required: false } } },
+  // A name can be changed, a login only by GitHub.
+  hooks: {
+    before: createAuthMiddleware(async (ctx) => {
+      if (ctx.path === "/update-user" && ctx.body && "login" in ctx.body)
+        throw new APIError("BAD_REQUEST", { message: "The GitHub login can't be changed." });
+    }),
+  },
 }));

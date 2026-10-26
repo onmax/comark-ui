@@ -8,7 +8,7 @@ tagline: A hand-drawn mark on a chart's data and its note, or a line across the 
 ::examples
 :::example{label="With notes"}
 ```md
-::chart{title="Coffee cups and commits, per month (r = 0.99)"}
+::chart{type="line" title="Coffee cups and commits, per month (r = 0.99)"}
 | month | coffee cups | commits |
 | --- | --: | --: |
 | 2026-04 | 820 | 610 |
@@ -108,7 +108,7 @@ The office flooded in March.
 ```
 ::
 
-On a [gantt chart](/charts/gantt/#groups), `series` names the group of the bar instead, for a task that repeats across groups.
+On a [gantt chart](/charts/#gantt-charts), `series` names the group of the bar instead, for a task that repeats across groups. On a [sankey](/charts/#sankey), `at` names a node, from either column, and there's no `series`.
 
 ### Mark, color, and side
 
@@ -151,7 +151,7 @@ The 200 ms budget.
 The line runs across an upright chart and down a sideways one, wherever its values run. The value axis grows to reach a value past the data, so a target nobody has met yet still shows. Its note is numbered under the chart, or sits in the margin with `side`, like any other mark's.
 
 > [!NOTE]
-> A line crosses every row and series, so it takes no `at` or `series`. Pies and gantt charts have no value axis, so the plugin reports a line on them.
+> A line crosses every row and series, so it takes no `at` or `series`. Pies, gantt charts, and sankeys have no value axis, so the plugin reports a line on them.
 
 On a [screenshot](/annotate/components/annotation/#mark), `line` draws a straight stroke through the middle of its box, along its longer side.
 
@@ -161,7 +161,7 @@ On a [screenshot](/annotate/components/annotation/#mark), `line` draws a straigh
 
 | Prop | Default | Description |
 | --- | --- | --- |
-| `at` | — | The x value of the row to mark, copied from the table. Required, except on a line. |
+| `at` | — | The x value of the row to mark, copied from the table, or on a sankey the node's name. Required, except on a line. |
 | `series` | Every series in the row | The column to mark in that row. On a gantt chart, the group of the bar instead. |
 | `value` | — | With `mark="line"`, the number on the value axis the line crosses at. |
 | `mark` | `box` | `box`, `circle`, `underline`, `line`, `highlight`, `bracket`, `cross`, `check`, or `none`. |

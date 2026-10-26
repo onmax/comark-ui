@@ -118,7 +118,6 @@ describe("hosted badge handler", () => {
   it.each([
     ["completed", "success", "passing"],
     ["completed", "failure", "failing"],
-    ["in_progress", null, "pending"],
     ["completed", "timed_out", "failing"],
     ["completed", "cancelled", "cancelled"],
     ["completed", "skipped", "skipped"],
@@ -134,7 +133,7 @@ describe("hosted badge handler", () => {
     );
     expect(await response.text()).toContain(expected!);
     expect(fetch.mock.calls[0]?.[0]).toBe(
-      "https://api.github.com/repos/onmax/comark-ui/actions/workflows/ci.yaml/runs?per_page=1&branch=feat%2Fbadges",
+      "https://api.github.com/repos/onmax/comark-ui/actions/workflows/ci.yaml/runs?per_page=1&status=completed&branch=feat%2Fbadges",
     );
   });
 

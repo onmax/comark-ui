@@ -94,14 +94,12 @@ export default defineNuxtConfig({
     },
   ],
   vitehub: {
-    // The Worker keeps its first name so its Workers Builds connection stays (wrangler.jsonc).
-    name: "comark-annotate",
+    name: "comark-ui",
     preset: "cloudflare",
     // Comments, the editor's sessions in the Content cms preset (server/content.ts), and nothing else use the database.
-    // The ID is a placeholder until `wrangler d1 create comark-ui-docs` makes the database; paste its ID here.
     database: {
       driver: "d1",
-      databaseId: "00000000-0000-4000-8000-000000000000",
+      databaseId: "66cd474e-9408-4af3-bab9-75e06b76f099",
       databaseName: "comark-ui-docs",
     },
     // Files live in the repository (server/content.ts), so there is no R2 bucket.

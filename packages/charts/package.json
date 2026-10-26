@@ -1,7 +1,7 @@
 {
   "name": "comark-charts",
-  "version": "0.5.0",
-  "description": "Charts from a Markdown table, drawn to SVG while parsing, with no script: bars, stacked bars, lines, areas, scatter plots, dumbbells, waterfalls, pies, and gantt charts. The table stays in the page, so people see the chart and agents read the numbers. A Comark plugin.",
+  "version": "0.6.0",
+  "description": "Charts from a Markdown table, drawn to SVG while parsing, with no script: bars, stacked bars, lines, areas, scatter plots, dumbbells, waterfalls, pies, gantt charts, and sankeys. The table stays in the page, so people see the chart and agents read the numbers. A Comark plugin.",
   "keywords": [
     "chart",
     "comark",
@@ -9,6 +9,7 @@
     "markdown",
     "mdc",
     "plugin",
+    "sankey",
     "svg",
     "vega"
   ],
@@ -54,6 +55,7 @@
   },
   "dependencies": {
     "comark-annotate": "workspace:*",
+    "d3-sankey": "catalog:",
     "flint-chart": "catalog:",
     "vega": "catalog:",
     "vega-interpreter": "catalog:",
@@ -63,6 +65,7 @@
     "@comark/html": "catalog:",
     "@comark/react": "catalog:",
     "@comark/vue": "catalog:",
+    "@types/d3-sankey": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "comark": "catalog:",

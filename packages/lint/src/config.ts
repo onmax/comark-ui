@@ -22,6 +22,7 @@ const packages = [
           cast: {},
           charts: { draw: false },
           chips: { download: false },
+          badge: { download: false },
           diagrams: { draw: false },
           mermaid: false,
           github: { references: false, html: false },
@@ -140,7 +141,16 @@ const packages = [
     ["table"],
   ],
   ["comark-cards/html", () => import("comark-cards/html"), []],
-  ["comark-badge/html", () => import("comark-badge/html"), []],
+  [
+    "comark-badge/html",
+    // Linting draws no badges, so it fetches no npm or GitHub data.
+    () =>
+      import("comark-badge/html").then((module) => ({
+        ...module,
+        default: () => module.default({ download: false }),
+      })),
+    [],
+  ],
   ["comark-qr/html", () => import("comark-qr/html"), []],
   ["comark-quiz/html", () => import("comark-quiz/html"), []],
   ["comark-fields/html", () => import("comark-fields/html"), []],

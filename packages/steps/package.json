@@ -1,6 +1,6 @@
 {
   "name": "comark-steps",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Numbered steps from Markdown headings or a numbered list, in Nuxt UI's ::steps syntax, with no script. A Comark plugin.",
   "keywords": [
     "comark",

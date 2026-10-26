@@ -108,7 +108,7 @@ Install [`comark-linter`](./packages/lint) separately to check documents for unc
 pnpm add -D comark-linter
 ```
 
-It detects your installed `comark-ui` and checks documents with its plugins. Use it from the [CLI, a script, or Vite Doctor](https://comark-ui.onmax.me/lint/).
+It detects your installed `comark-ui` and checks documents with its plugins. Use it from the [CLI, a script, ESLint, or Vite Doctor](https://comark-ui.onmax.me/lint/).
 
 ## Agents
 
