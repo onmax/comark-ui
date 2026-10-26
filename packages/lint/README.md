@@ -30,7 +30,7 @@ const diagnostics = await lint(markdown, { plugins: [annotate()], components });
 
 `lint()` never throws and returns `{ rule, line, column?, message, fix, cause? }[]`. When parsing or a rule throws, `cause` holds the original exception. The CLI omits `cause` from JSON. Without `components`, unknown components aren't reported, and without `file`, links to other files aren't checked. `lintFiles(paths, options)` checks many files in one run, as the CLI does.
 
-For ESLint 9.15 or later, install `eslint` and `@eslint/markdown` and add the recommended config to `eslint.config.js`. It lints `.md` and `.mdc` files with every rule but `comark/dead-url`, each one configurable like any ESLint rule, and `settings.comark.config` points at a `lint-comark.config.ts`:
+For ESLint 9.15 or later, install `eslint` and `@eslint/markdown` and add the recommended config to `eslint.config.js`. It lints `.md` and `.mdc` files with every rule but `comark/dead-url`, each one configurable like any ESLint rule, and `settings.comark.config` points at a `lint-comark.config.mjs`:
 
 ```js
 import comark from "comark-linter/eslint";
