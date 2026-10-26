@@ -884,15 +884,21 @@ No such run.
         '{type="waterfall"}',
       );
     for (const values of [
+      [1e16, 1, -1e16, 2],
+      [1e16, 1, -1e16, 0],
       [1e12, 1, 1e12],
       [1e15, 1, 1e15],
+      [1e16, 1e16, -1e16, -1e16, 5],
       [-1e12, -1, -1e12],
       [0.000001, 0.000001, 0.0000020001],
     ]) {
       expect(await issues(waterfall(values))).toHaveLength(1);
     }
     for (const values of [
+      [1.9, -2, -0.1],
+      [1e16, 1, -1e16, 1],
       [1e12, 1, 1e12 + 1],
+      [1e16, 1e16, -1e16, -1e16, 0],
       [0.1, 0.2, 0.3],
       [0.1, 0.2, -0.3, 0],
     ]) {

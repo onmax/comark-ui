@@ -89,7 +89,7 @@ Use the `value` prop to set a static image's text without brackets.
 
 ### Source
 
-Use `source` to show live data. npm sources need `package`; GitHub Actions needs a public `repository` and a workflow filename, with an optional `branch` filter. Without `branch`, GitHub returns the latest finished run across branches. Live images load from the hosted endpoint; parsing never contacts npm or GitHub.
+Use `source` to show live data. npm sources need `package`; GitHub Actions needs a public `repository` and a workflow filename, with an optional `branch` filter. Without `branch`, GitHub returns the latest finished run across branches. Parsing fetches the data and draws it into the document like a static image, so a page loads no badge; it shows the data as of the build. When the data is unavailable, or with `download: false`, the badge loads from the hosted endpoint instead and stays current.
 
 ```md
 :badge{source="npm-version" package="comark-ui"}
@@ -247,11 +247,12 @@ A missing package, missing workflow, no runs, rate limit, or failed request disp
 
 ### Options
 
-In `comarkUi()`, `badge: false` turns it off, and `badge: { endpoint }` configures the hosted images. Standalone, pass the same options to `badge({ endpoint })`.
+In `comarkUi()`, `badge: false` turns it off, and `badge: { endpoint, download }` configures live images. Standalone, pass the same options to `badge({ endpoint, download })`.
 
 | Option | Default | Description |
 | --- | --- | --- |
 | `endpoint` | `https://comark-ui.onmax.me/badge.svg` | HTTPS image endpoint without credentials. Applies only to live sources. |
+| `download` | `true` | Fetches live data while parsing and draws it into the document. Each source's data is kept for its cache lifetime below, once per process. `false` links live badges to `endpoint`. |
 
 ### Functions
 
@@ -265,7 +266,7 @@ The parse plugin replaces each badge's attributes with its `color`, `primary` un
 ["badge", { "color": "warning" }, "deprecated"]
 ```
 
-`colors`, exported from every renderer entry, lists the seven semantic colors. Image mode replaces the attributes with `src` and `label`, with no children; render an image with `label` as its alt text.
+`colors`, exported from every renderer entry, lists the seven semantic colors. Image mode replaces the attributes with `src`, a data URI or the endpoint's URL, and `label`, with no children; render an image with `label` as its alt text.
 
 ### Issues
 
