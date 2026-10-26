@@ -20,13 +20,6 @@ const resolver = (
 });
 
 export default function viteHubPilot(_: unknown, nuxt: Nuxt) {
-  // The pilot generates Auth's declarations but omits them from its types entry point.
-  // Include both the virtual server module and the site's auth registry in Nuxt's projects.
-  nuxt.hook("prepare:types", ({ references }) => {
-    for (const file of ["auth-server.d.ts", "auth.d.ts"])
-      references.push({ path: fileURLToPath(new URL(`.vitehub/types/${file}`, root)) });
-  });
-
   // Auth adds a client plugin for its Vue composables (useAuth and the like), which this site never calls: sign-in is a
   // plain fetch (server/routes/sign-in.get.ts). Left in, every visitor downloads the better-auth client and hydrates later.
   nuxt.hook("app:resolve", (app) => {
