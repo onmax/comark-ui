@@ -60,7 +60,7 @@ catalog:
   valibot: ^1.4.2
   better-auth: 1.7.10
   # The combined ViteHub branch (the Comments stack of vite-hub/vitehub#2884, Content multi-glob and GitHub store), until a release has them.
-  vite-hub: https://pkg.pr.new/vite-hub/vitehub/vite-hub@bf36782
+  vite-hub: https://pkg.pr.new/vite-hub/vitehub/vite-hub@b6062af
   drizzle-kit: ^0.31.10
   drizzle-orm: 0.45.3
   wrangler: ^4.152.0
@@ -68,33 +68,33 @@ catalog:
 overrides:
   vite: "catalog:"
   # Every @vite-hub/* package is the pilot build, so no released copy mixes in.
-  "@vite-hub/agent": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/agent@bf36782
-  "@vite-hub/auth": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/auth@bf36782
-  "@vite-hub/blob": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/blob@bf36782
-  "@vite-hub/browser": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/browser@bf36782
-  "@vite-hub/channels": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/channels@bf36782
-  "@vite-hub/cli": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/cli@bf36782
-  "@vite-hub/comments": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/comments@bf36782
-  "@vite-hub/connections": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/connections@bf36782
-  "@vite-hub/content": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/content@bf36782
-  "@vite-hub/database": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/database@bf36782
-  "@vite-hub/email": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/email@bf36782
-  "@vite-hub/env": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/env@bf36782
-  "@vite-hub/kv": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/kv@bf36782
-  "@vite-hub/markdown-template": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/markdown-template@bf36782
-  "@vite-hub/presets": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/presets@bf36782
-  "@vite-hub/queue": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/queue@bf36782
-  "@vite-hub/rate-limit": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/rate-limit@bf36782
-  "@vite-hub/realtime": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/realtime@bf36782
-  "@vite-hub/runtime": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/runtime@bf36782
-  "@vite-hub/sandbox": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/sandbox@bf36782
-  "@vite-hub/sandbox-task": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/sandbox-task@bf36782
-  "@vite-hub/schedule": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/schedule@bf36782
-  "@vite-hub/shell": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/shell@bf36782
-  "@vite-hub/source": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/source@bf36782
-  "@vite-hub/ui": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/ui@bf36782
-  "@vite-hub/workflow": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/workflow@bf36782
-  "@vite-hub/workspace": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/workspace@bf36782
+  "@vite-hub/agent": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/agent@b6062af
+  "@vite-hub/auth": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/auth@b6062af
+  "@vite-hub/blob": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/blob@b6062af
+  "@vite-hub/browser": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/browser@b6062af
+  "@vite-hub/channels": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/channels@b6062af
+  "@vite-hub/cli": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/cli@b6062af
+  "@vite-hub/comments": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/comments@b6062af
+  "@vite-hub/connections": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/connections@b6062af
+  "@vite-hub/content": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/content@b6062af
+  "@vite-hub/database": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/database@b6062af
+  "@vite-hub/email": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/email@b6062af
+  "@vite-hub/env": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/env@b6062af
+  "@vite-hub/kv": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/kv@b6062af
+  "@vite-hub/markdown-template": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/markdown-template@b6062af
+  "@vite-hub/presets": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/presets@b6062af
+  "@vite-hub/queue": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/queue@b6062af
+  "@vite-hub/rate-limit": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/rate-limit@b6062af
+  "@vite-hub/realtime": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/realtime@b6062af
+  "@vite-hub/runtime": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/runtime@b6062af
+  "@vite-hub/sandbox": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/sandbox@b6062af
+  "@vite-hub/sandbox-task": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/sandbox-task@b6062af
+  "@vite-hub/schedule": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/schedule@b6062af
+  "@vite-hub/shell": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/shell@b6062af
+  "@vite-hub/source": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/source@b6062af
+  "@vite-hub/ui": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/ui@b6062af
+  "@vite-hub/workflow": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/workflow@b6062af
+  "@vite-hub/workspace": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/workspace@b6062af
 
 minimumReleaseAgeExclude:
   - vite-doctor@0.1.0
