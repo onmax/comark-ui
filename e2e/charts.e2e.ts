@@ -175,6 +175,26 @@ for (const dates of DATES)
     cases.push(gantt(tasks, dates(rows + 3), cases.length));
   }
 
+// A budget per list of names: two incomes into a hub, and a flow from it to each name, from thousandths to millions,
+// with amounts on every other chart and a mark on the hub of every third.
+function flow(names: string[], n: number) {
+  const make = NUMBERS[[0, 1, 2, 7][n % 4]!]!;
+  const outs = names.map((_, row) => make(row * 8 + n) || 1);
+  const total = outs.reduce((sum, value) => sum + value, 0);
+  return [
+    `::chart{type="sankey" ${n % 2 ? "labels " : ""}title="sankey, case ${n}"}`,
+    "| from | to | amount |",
+    "| --- | --- | --: |",
+    `| salary | budget | ${format(Number((total * 0.9).toPrecision(6)))} |`,
+    `| side project | budget | ${format(Number((total * 0.1).toPrecision(6)))} |`,
+    ...names.map((name, row) => `| budget | ${name} | ${format(outs[row]!)} |`),
+    ...(n % 3 ? [] : [':::annotation{at="budget" mark="circle"}\nWhere it all goes.\n:::']),
+    "::",
+  ].join("\n");
+}
+for (const names of NAMES)
+  for (const rows of [1, 3, 8]) cases.push(flow(names.slice(0, rows), cases.length));
+
 test("hundreds of worst-case charts draw with no text colliding, clipped, or past the column", async ({
   page,
 }) => {

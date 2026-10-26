@@ -11,6 +11,7 @@ export type {
   ChartsOptions,
   ChartType,
   DrawnChart,
+  FlowChart,
   SpecChart,
   XKind,
 } from "./index.ts";

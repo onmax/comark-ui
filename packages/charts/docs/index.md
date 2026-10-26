@@ -1,12 +1,12 @@
 ---
 title: Charts
 description: Charts from a Markdown table, drawn to SVG with no script.
-keywords: graph, plot, bar chart, line chart, pie chart, scatter plot, area chart, gantt, timeline, roadmap, schedule, box plot, heatmap, benchmark, data visualization, dataviz, Vega, Vega-Lite
+keywords: graph, plot, bar chart, line chart, pie chart, scatter plot, area chart, gantt, timeline, roadmap, schedule, sankey, flow diagram, alluvial, cashflow, box plot, heatmap, benchmark, data visualization, dataviz, Vega, Vega-Lite
 tagline: A chart drawn to SVG from a Markdown table, with the table kept under it.
 group: Charts and diagrams
 icon: chart-column
 blurb: Charts from a Markdown table
-credits: 'Laid out by Microsoft Research''s <a href="https://github.com/microsoft/flint-chart">Flint</a> on its New York Times theme, and drawn by <a href="https://vega.github.io">Vega</a>.'
+credits: 'Laid out by Microsoft Research''s <a href="https://github.com/microsoft/flint-chart">Flint</a> on its New York Times theme and by <a href="https://github.com/d3/d3-sankey">d3-sankey</a>, and drawn by <a href="https://vega.github.io">Vega</a>.'
 ---
 
 ::examples
@@ -80,6 +80,20 @@ credits: 'Laid out by Microsoft Research''s <a href="https://github.com/microsof
 ::
 ```
 :::
+
+:::example{label="Sankey"}
+```md
+::chart{type="sankey" labels title="Where the office snack budget went ($)"}
+| from | to | amount |
+| --- | --- | --: |
+| snack budget | coffee | 410 |
+| snack budget | biscuits | 160 |
+| snack budget | fruit | 40 |
+| biscuits | eaten | 120 |
+| biscuits | fed to the pigeons | 40 |
+::
+```
+:::
 ::
 
 ## Features
@@ -88,7 +102,7 @@ credits: 'Laid out by Microsoft Research''s <a href="https://github.com/microsof
 - The page shows the same table under the chart, folded into **Data**, so a tool that turns the page into text keeps the numbers too.
 - Vega draws every chart while parsing, so the page needs no script.
 - [Notes](/charts/notes/) mark a row or a value, or draw a line across the chart at a target.
-- Nine types cover bars, lines, pies, and [gantt charts](#gantt-charts), and a [Vega-Lite spec](#vega-lite) draws anything else, all in the same card, colors, and type.
+- Ten types cover bars, lines, pies, [gantt charts](#gantt-charts), and [sankeys](#sankey), and a [Vega-Lite spec](#vega-lite) draws anything else, all in the same card, colors, and type.
 - Without the plugin, the table still renders as a table.
 
 ## Usage
@@ -122,6 +136,7 @@ Use the `type` prop to pick the chart. It defaults to `bar`, whatever the table 
 | `waterfall` | How changes add up to a total. | The starting total, then each change, negative for a drop, then the end total, all in one column. |
 | `pie` | Shares of one whole. | Names, then one column of numbers that aren't negative. |
 | `gantt` | Steps or tasks over time, such as a build, a deploy, or a plan. | One row per bar: its name, then where it starts and where it ends, as numbers or dates. See [Gantt charts](#gantt-charts). |
+| `sankey` | Where an amount goes: a budget, a cashflow, a bundle's bytes. | One row per flow: where it comes from, where it goes, and how much. See [Sankey](#sankey). |
 
 ::examples
 :::example{label="Sideways bars"}
@@ -292,11 +307,12 @@ Each type prints its numbers where they belong:
 - **Waterfalls** print each step's change and each total's value beside it, when the numbers fit their steps.
 - **Dumbbells** print each row's least and most values beside its outer dots, when the plot has room for them.
 - **Gantts** print how long each bar lasts past its end.
+- **Sankeys** print each node's amount under its name.
 
 A `bar` worth zero draws as a thin, faded stroke in its series' color at the base, so a grouped chart keeps a lane for it.
 
 > [!NOTE]
-> Lines, areas, scatter plots, and pies have no bars, steps, or dots to print on, so the plugin reports `labels` on them.
+> Lines, areas, scatter plots, and pies have no bars, steps, dots, or nodes to print on, so the plugin reports `labels` on them.
 
 ### Gantt charts
 
@@ -337,103 +353,31 @@ Dates take the forms x takes: `2026`, `2026-04`, `2026-04-15`, or an ISO date an
 ```
 ::
 
-### Notes
+### Sankey
 
-Put an `::annotation` after the table to mark a row or a value with a hand-drawn mark and a note, or to draw a target across the plot. [Notes](/charts/notes/) has their props.
+Use `type="sankey"` with a table of three columns: where each flow comes from, where it goes, and how much. Each name is a node, drawn as tall as what flows through it, and each row a flow between two nodes, as wide as its amount. Each node takes its place, top to bottom, from the row that first names it, and nodes that only take flows in sit in the last column.
 
 ::example
 ```md
-::chart{labels title="Minutes to the first review comment"}
-| team | minutes |
-| --- | --: |
-| frontend | 38 |
-| backend | 64 |
-| design | 12 |
-:::annotation{at="backend" mark="circle" color="red"}
-Two reviewers were on leave.
-:::
-:::annotation{mark="line" value="45" color="red" side="right"}
-Team goal: 45 min.
-:::
+::chart{type="sankey" labels title="Where the bundle's bytes go (kB)"}
+| from | to | kB |
+| --- | --- | --: |
+| main.js | vega | 410 |
+| main.js | app | 120 |
+| vega | vega-lite | 180 |
+| vega | vega-scenegraph | 95 |
+| app | charts | 60 |
+| app | zoom | 18 |
 ::
 ```
 ::
 
-### Vega-Lite
-
-For a chart the types don't cover, such as a box plot, a heatmap, or error bands, put a [Vega-Lite](https://vega.github.io/vega-lite/) spec after the table in a `vega-lite` block. The table is still its data, so it stays in the page: each row becomes one data point, with a field per column named by its header. Cells that read as numbers become numbers, empty ones become null, and the rest stay text.
-
-Leave `data` out of the spec, because the table replaces it, and name the columns in the spec's `encoding`. The spec can't load files or URLs.
-
-::example
-````md
-::chart{title="Latency per request (ms)"}
-| endpoint | ms |
-| --- | --: |
-| /search | 120 |
-| /search | 180 |
-| /search | 210 |
-| /search | 260 |
-| /search | 410 |
-| /login | 40 |
-| /login | 45 |
-| /login | 52 |
-| /login | 58 |
-| /login | 61 |
-
-```vega-lite
-{
-  "mark": "boxplot",
-  "encoding": {
-    "x": { "field": "ms", "type": "quantitative" },
-    "y": { "field": "endpoint", "type": "nominal" }
-  }
-}
-```
-::
-````
-::
-
-The chart takes the same card, colors, and typeface as the other types wherever the spec sets none. Use the spec's own `config` to change them, since it wins over the chart's. A chart drawn from a spec takes only `title` from the props, and no notes: draw them with a `text` or `rule` layer in the spec.
-
-### Gantt charts
-
-Use `type="gantt"` with a table of three columns: the bar's name, where it starts, and where it ends. The chart draws one bar per row, top to bottom in table order. The start and end columns hold numbers or dates.
-
-```md
-::chart{type="gantt" title="A Friday deploy, minutes after 16:55"}
-| step | start | end |
-| --- | --: | --: |
-| tests | 0 | 6 |
-| build | 6 | 11 |
-| deploy | 11 | 13 |
-::
-```
-
-Use the `y` prop to name the start and end columns when the table has other numbers too, such as a duration: `y="start, end"`.
-
-A column of names, such as a phase, an owner, or a run, colors the bars, one color per name, with a legend over the chart. A task may then repeat in another group, like the same step in two runs. To mark a task that repeats, name its group in the [note](/charts/notes/#series)'s `series`.
+The first column is where a flow comes from, unless `x` names another. The next column of names is where it goes, and the column of numbers is the amount, unless `y` names one. A flow into a node that ends there takes that node's color, and any other flow its source's.
 
 > [!NOTE]
-> A column of numbers reads as times, so write numbered groups as names, like `shard 1`.
+> A sankey runs one way, so a flow back into a node it came from is reported, and the chart shows its table. Split such a node in two, such as `pond (spring)` and `pond (summer)`.
 
-A row that ends where it starts is a milestone, and draws as a diamond. Every other bar prints how long it lasts past its end. For numbers that's the difference, and for dates it's a span in the table's unit, such as `3y`, `2mo`, `7d`, or `1.5h`. A gantt prints its own durations and has no value axis, so it takes no `labels` and no target line.
-
-Dates take the forms x takes: `2026`, `2026-04`, `2026-04-15`, or an ISO date and time. A time without a zone is UTC, and the axis shows UTC, so the chart reads the same wherever it's drawn.
-
-::example
-```md
-::chart{type="gantt" title="nuxt build, before and after the worker (s)"}
-| step | run | start | end |
-| --- | --- | --: | --: |
-| compile client | before | 0 | 3.7 |
-| compile server | before | 3.7 | 7.8 |
-| compile client | after | 0 | 3.7 |
-| compile server | after | 0.2 | 4.6 |
-| ready | after | 4.6 | 4.6 |
-::
-```
-::
+The plugin also reports a flow of 0 or less, a flow from a node into itself, two rows with the same pair of nodes, and a node in the middle that sends out more than flows into it. A sankey has no value axis, so it takes no target line, and a [note](/charts/notes/) marks a node by its name in `at`.
 
 ### Notes
 
@@ -528,11 +472,11 @@ Each chart's SVG is an image named by its `title`. Without one, the name says wh
 
 | Prop | Default | Description |
 | --- | --- | --- |
-| `type` | `bar` | `bar`, `stacked`, `line`, `area`, `scatter`, `dumbbell`, `waterfall`, `pie`, or `gantt`. |
+| `type` | `bar` | `bar`, `stacked`, `line`, `area`, `scatter`, `dumbbell`, `waterfall`, `pie`, `gantt`, or `sankey`. |
 | `x` | The first column | The column along the x axis. |
 | `y` | Every column but `x` | The columns to draw, separated by commas. |
 | `title` | — | The chart's caption, and its name for screen readers. |
-| `labels` | Off | Prints the numbers on the chart: on each bar, beside each waterfall step and dumbbell row, and past each gantt bar. Takes no value. Lines, areas, scatter plots, and pies don't take it. |
+| `labels` | Off | Prints the numbers on the chart: on each bar, beside each waterfall step, dumbbell row, and sankey node, and past each gantt bar. Takes no value. Lines, areas, scatter plots, and pies don't take it. |
 | `horizontal` | Off, or on past 40 bars | Turns bars sideways. Takes no value. Only `bar` and `stacked` charts take it; dumbbells and gantts always run sideways. |
 
 ### Options
@@ -561,6 +505,7 @@ The plugin adds these problems to `meta.issues`. Each issue names its chart by i
 - `labels` or `horizontal` with a value, or on a type that doesn't take it.
 - A waterfall whose last row isn't its first plus every change.
 - A chart that couldn't be drawn, which shows its table alone.
+- A sankey without a column to flow from, one to flow to, and one of amounts, a flow of 0 or less or into its own node, a loop, and a node that sends out more than it takes in.
 - A gantt without one start and one end column, a row missing its start or its end, a bar that ends before it starts, and two columns of names to color by.
 - A Vega-Lite spec that isn't one JSON object, has `data`, reads a field that's neither a column nor made by a transform, or that Vega-Lite can't draw, and a spec chart with `type`, `x`, `y`, or an `::annotation`.
 
@@ -574,6 +519,7 @@ Rendering never throws. A chart with a problem draws what it can:
 - `labels` or `horizontal` on a type that doesn't take it is ignored.
 - A pie or a waterfall draws only its first column.
 - A gantt row without a start or an end isn't drawn, and a gantt colors by its first column of names.
+- A sankey leaves out a flow it can't draw, and a sankey with a loop shows its table.
 - A Vega-Lite spec loses its links.
 - A chart with nothing to draw shows its content as it is.
 
