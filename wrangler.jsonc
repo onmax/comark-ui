@@ -1,6 +1,6 @@
 {
-  // The Worker keeps its first name so its Workers Builds connection stays.
-  "name": "comark-annotate",
+  // Renamed from comark-annotate in Cloudflare, so its Workers Builds connection, secrets, and domains stayed.
+  "name": "comark-ui",
   "main": "docs/worker.ts",
   "compatibility_date": "2026-10-01",
   // The Worker runs first so the old hosts can redirect before an asset answers.
