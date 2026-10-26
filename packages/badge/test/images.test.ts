@@ -1,11 +1,14 @@
 import { createHtmlRenderer } from "@comark/html";
 import { parseMarkdown } from "comark";
-import { describe, expect, it } from "vite-plus/test";
+import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 import badge, { components } from "../src/html.ts";
 import { badgeParams, readBadge } from "../src/svg.ts";
 const render = createHtmlRenderer({ plugins: [badge()], components });
 
 describe("image badges", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
   it("renders static badges locally while keeping prose badges unchanged", async () => {
     const html = await render(
       ':badge[New] :badge[Comark UI]{label="built with" icon="package" color="#15803d"}',
@@ -53,18 +56,72 @@ describe("image badges", () => {
       }
     },
   );
-  it("encodes live badge options in a hosted image without fetching during parse", async () => {
-    const html = await render(
+  it("encodes live badge options in a hosted image when downloads are off", async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>();
+    vi.stubGlobal("fetch", fetch);
+    const hosted = createHtmlRenderer({ plugins: [badge({ download: false })], components });
+    const html = await hosted(
       ':badge{source="github-actions" repository="onmax/comark-ui" workflow="ci.yml" branch="feat/new"}',
     );
     expect(html).toContain("https://comark-ui.onmax.me/badge.svg?");
     expect(html).toContain("repository=onmax%2Fcomark-ui");
     expect(html).toContain("branch=feat%2Fnew");
     expect(html).not.toContain("data:image");
+    expect(fetch).not.toHaveBeenCalled();
+  });
+  it("draws live badges from data fetched while parsing, once per process", async () => {
+    const fetch = vi
+      .fn<typeof globalThis.fetch>()
+      .mockImplementation(
+        async () =>
+          new Response(
+            JSON.stringify({ workflow_runs: [{ status: "completed", conclusion: "success" }] }),
+          ),
+      );
+    vi.stubGlobal("fetch", fetch);
+    const markdown =
+      ':badge{source="github-actions" repository="onmax/drawn" workflow="ci.yml" label="build"}';
+    const html = await render(`${markdown} ${markdown.replace('label="build"', 'label="ci"')}`);
+    expect(html).not.toContain("https://comark-ui.onmax.me/badge.svg");
+    const svgs = [...html.matchAll(/src="data:image\/svg\+xml,([^"]+)"/g)].map((match) =>
+      decodeURIComponent(match[1]!),
+    );
+    expect(svgs).toHaveLength(2);
+    for (const svg of svgs) expect(svg).toContain("passing");
+    expect(html).toContain('alt="build: onmax/drawn / ci.yml"');
+    await render(markdown);
+    expect(fetch).toHaveBeenCalledOnce();
+  });
+  it("bounds successful cache entries while reusing recent results", async () => {
+    const fetch = vi
+      .fn<typeof globalThis.fetch>()
+      .mockImplementation(async () => new Response(JSON.stringify({ latest: "1.0.0" })));
+    vi.stubGlobal("fetch", fetch);
+    const markdown = (index: number) =>
+      `:badge{source="npm-version" package="cache-capacity-${index}"}`;
+    for (let index = 0; index < 257; index++) {
+      expect(await render(markdown(index))).toContain("data:image/svg+xml,");
+    }
+    expect(fetch).toHaveBeenCalledTimes(257);
+    await render(markdown(256));
+    expect(fetch).toHaveBeenCalledTimes(257);
+    await render(markdown(0));
+    expect(fetch).toHaveBeenCalledTimes(258);
+  });
+  it("keeps the hosted image when live data is unavailable, and tries again next parse", async () => {
+    const fetch = vi
+      .fn<typeof globalThis.fetch>()
+      .mockResolvedValue(new Response("", { status: 404 }));
+    vi.stubGlobal("fetch", fetch);
+    const markdown = ':badge{source="npm-version" package="missing-badge-package"}';
+    expect(await render(markdown)).toContain("https://comark-ui.onmax.me/badge.svg?");
+    fetch.mockResolvedValue(new Response(JSON.stringify({ latest: "1.0.0" })));
+    const src = /src="data:image\/svg\+xml,([^"]+)"/.exec(await render(markdown))![1]!;
+    expect(decodeURIComponent(src)).toContain("v1.0.0");
   });
   it("uses a custom HTTPS endpoint", async () => {
     const custom = createHtmlRenderer({
-      plugins: [badge({ endpoint: "https://example.com/status.svg" })],
+      plugins: [badge({ endpoint: "https://example.com/status.svg", download: false })],
       components,
     });
     expect(await custom(':badge{source="npm-version" package="comark-ui"}')).toContain(

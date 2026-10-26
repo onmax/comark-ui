@@ -17,6 +17,7 @@ export const browserPlugins = (
   { download = true, icon }: { download?: boolean; icon?: IconOptions } = {},
 ) =>
   comarkUi({
+    badge: { download },
     chips: { download, favicon },
     icon,
     code: config["comark-code"],
