@@ -42,7 +42,7 @@ test("without the clipboard, Copy selects the code and says how to copy it", asy
   await expect(page.getByRole("status")).toContainText("Press Ctrl+C or ⌘C");
 });
 
-test("Wrap breaks the block's long lines and unwraps them again", async ({ page }) => {
+test("Wrap remembers the preference for every block and later pages", async ({ page }) => {
   await open(page, `${sh}\n\n${sh}`);
   const [first, second] = [page.locator(".ck pre").first(), page.locator(".ck pre").nth(1)];
   const overflows = (pre: typeof first) =>
@@ -52,10 +52,66 @@ test("Wrap breaks the block's long lines and unwraps them again", async ({ page 
   await wrap.click();
   await expect(wrap).toHaveAttribute("aria-pressed", "true");
   expect(await overflows(first)).toBe(false);
-  expect(await overflows(second)).toBe(true);
+  expect(await overflows(second)).toBe(false);
+  await expect(wrap).toBeVisible();
+  await open(page, `${sh}\n\n${sh}`);
+  await expect(wrap).toHaveAttribute("aria-pressed", "true");
+  expect(await overflows(first)).toBe(false);
+  expect(await overflows(second)).toBe(false);
   await wrap.click();
   await expect(wrap).toHaveAttribute("aria-pressed", "false");
   expect(await overflows(first)).toBe(true);
+  expect(await overflows(second)).toBe(true);
+  await open(page, sh.replace("```sh", "```sh wrap"));
+  await expect(wrap).toHaveAttribute("aria-pressed", "false");
+  expect(await overflows(first)).toBe(true);
+});
+
+test("Wrap appears only where unwrapped code overflows, including after resize and edits", async ({
+  page,
+}) => {
+  await open(page, `${sh}\n\n\`\`\`ts\nconst a = 1\n\`\`\``);
+  const first = page.locator(".ck").first().locator(".ck-wrap");
+  const second = page.locator(".ck").nth(1).locator(".ck-wrap");
+  await expect(first).toBeVisible();
+  await expect(second).toBeHidden();
+  await first.click();
+  await expect(first).toHaveAttribute("aria-pressed", "true");
+  await page.evaluate(() => {
+    document.body.style.width = "200rem";
+  });
+  await expect(first).toBeHidden();
+  await page.evaluate(() => {
+    document.body.style.width = "30rem";
+  });
+  await expect(first).toBeVisible();
+  await expect(first).toHaveAttribute("aria-pressed", "true");
+  await page
+    .locator(".ck")
+    .nth(1)
+    .locator("code")
+    .evaluate((element, text) => {
+      element.textContent = text;
+    }, long);
+  await expect(second).toBeVisible();
+  await expect(second).toHaveAttribute("aria-pressed", "true");
+});
+
+test("Wrap works when localStorage is unavailable", async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(window, "localStorage", {
+      get() {
+        throw new DOMException("Blocked", "SecurityError");
+      },
+    });
+  });
+  await open(page, sh);
+  const wrap = page.getByRole("button", { name: "Wrap lines" });
+  await wrap.click();
+  await expect(wrap).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator("pre")).toHaveCSS("white-space", "pre-wrap");
+  await wrap.click();
+  await expect(wrap).toHaveAttribute("aria-pressed", "false");
 });
 
 test("an action sends the block's code and language to the page", async ({ page }) => {
@@ -159,9 +215,10 @@ test.describe("touch targets", () => {
   test.use({ hasTouch: true });
 
   test("Wrap owns its visible face and extra vertical tap area", async ({ page }) => {
-    await open(page, "```ts\nconst a = 1\n```");
+    await open(page, sh);
     expect(await page.evaluate(() => matchMedia("(pointer:coarse)").matches)).toBe(true);
     const wrap = page.getByRole("button", { name: "Wrap lines" });
+    await expect(wrap).toBeVisible();
     const box = await wrap.boundingBox();
     expect(box).not.toBeNull();
     expect(box!.height).toBe(24);
