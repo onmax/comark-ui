@@ -4,8 +4,8 @@ import { fileURLToPath } from "node:url";
 import type { Nuxt } from "nuxt/schema";
 
 // What the ViteHub preview build (pilot/comark-plugins, installed from pkg.pr.new) needs around it to build this site
-// on Nuxt 4, where Nitro 2 runs on h3 1. Each block names what it works around, so it can go when ViteHub fixes that. With build 78c9348 the `event.url` shim,
-// the dev-token fix and the Auth type declaration are gone; what stays is below.
+// on Nuxt 4, where Nitro 2 runs on h3 1. Each block names what it works around, so it can go when ViteHub fixes that.
+// With build 29b625f the `event.url` shim, the RPC request shim, the dev bundling and the `cloudflare:workers` shim are gone; what stays is below.
 const root = new URL("../", import.meta.url);
 
 type Resolver = {
@@ -31,34 +31,6 @@ export default function viteHubPilot(_: unknown, nuxt: Nuxt) {
     config.plugins = config.plugins?.map((plugin) =>
       plugin?.startsWith(".vitehub/") ? fileURLToPath(new URL(plugin, root)) : plugin,
     );
-  });
-
-  // `nuxt dev` leaves ViteHub's packages external. Their pnpm folders are named after the URLs they install from, and Nitro
-  // mangles those paths, so Node can't load them; Auth's Nitro plugin also needs Nitro's alias for `#vitehub/env/server`.
-  // Bundled, both work.
-  nuxt.hook("nitro:config", (config) => {
-    if (!nuxt.options.dev) return;
-    const externals = (config.externals ??= {});
-    externals.inline = [...(externals.inline ?? []), (id: string) => /vite-hub/.test(id)];
-    // Nitro's own dev shim for `cloudflare:workers` only applies when its preset is `cloudflare-dev`, which the cloudflare
-    // preset of ViteHub's module doesn't select under `nuxt dev`, and Nitro treats the scheme as external before aliases.
-    const shim = fileURLToPath(new URL("./shims/cloudflare-workers.dev.ts", import.meta.url));
-    const rollup = (config.rollupConfig ??= {});
-    // SAFETY: a Rollup plugin; Nitro's own type for the list is a union of Rollup's and Rolldown's.
-    rollup.plugins = [
-      {
-        // Rollup asks `external` about the raw specifier before any plugin resolves it, so the import is rewritten instead.
-        name: "docs:cloudflare-workers-shim",
-        transform: (code: string) =>
-          code.includes("cloudflare:workers")
-            ? {
-                code: code.replaceAll(/(["'])cloudflare:workers\1/g, JSON.stringify(shim)),
-                map: null,
-              }
-            : null,
-      },
-      ...[rollup.plugins ?? []].flat(),
-    ] as never;
   });
 
   nuxt.hook("nitro:config", (config) => {
