@@ -1,6 +1,6 @@
 # Checking documents
 
-comark-linter reports what Comark forgives, such as a `::` block never closed, a misspelled component, or a link to a missing file. It also reports every problem a plugin puts in `meta.issues`, each under its own rule. Check the result in SKILL.md runs it on one file; this page covers its flags, its config file, the library, and Vite Doctor.
+comark-linter reports what Comark forgives, such as a `::` block never closed, a misspelled component, or a link to a missing file. It also reports every problem a plugin puts in `meta.issues`, each under its own rule. Check the result in SKILL.md runs it on one file; this page covers its flags, its config file, the library, ESLint, and Vite Doctor.
 
 ## Run the command
 
@@ -62,6 +62,19 @@ const results = await lintFiles(["docs/index.md", "docs/setup.md"], await resolv
 - `lintFiles(paths, options)` parses each file once, checks links between them against each other's headings, and requests each URL once. It returns `{ file, text, diagnostics }` for each path, with no `text` when the file can't be read.
 - `resolveConfig(config)` returns the installed packages' plugins and components plus the config's, as the command uses them. `rules` maps every rule to its title.
 
+## ESLint
+
+```js
+// eslint.config.js
+import comark from "comark-linter/eslint";
+
+export default [comark.configs.recommended, { settings: { comark: { config: "lint-comark.config.mjs" } } }];
+```
+
+Use a JavaScript ES module (`export default { ... }`) for the linter config across supported Node versions. A `.ts` config requires Node 22.18+ or `--experimental-strip-types` on Node 22.12–22.17, including in the editor. Restart ESLint after editing the config or its imports; they are cached for the process lifetime.
+
+Install `eslint` (9.15 or later) and `@eslint/markdown` (8 or later). The recommended config lints `**/*.md` and `**/*.mdc` with `@eslint/markdown`'s `markdown/commonmark` language and YAML frontmatter, and turns on every rule but `comark/dead-url`, which requests every URL; turn that one on in `rules` to check them. Each rule has the name the command prints and is configured like any ESLint rule, `<!-- eslint-disable-next-line comark/unknown-component -->` included. ESLint prints the fix after the message. `settings.comark.config`, from the working directory, loads the same config file as `--config`. oxlint can't run it: its JS plugins don't lint `.md` files, so run `lint-comark` beside `oxlint`.
+
 ## Vite Doctor
 
 ```ts
@@ -80,4 +93,4 @@ Run `vite-doctor . --config doctor.config.ts --max-warnings 0`. The extension ta
 ## Register
 
 - In `comark-ui`: not included. Install it beside the preset, which it finds on its own.
-- Alone: `pnpm add -D comark-linter`. The command is `lint-comark`, the library `comark-linter`, and the extension `comark-linter/doctor`. npm refused `comark-lint` as too close to `remark-lint`, hence the name.
+- Alone: `pnpm add -D comark-linter`. The command is `lint-comark`, the library `comark-linter`, the ESLint plugin `comark-linter/eslint`, and the extension `comark-linter/doctor`. npm refused `comark-lint` as too close to `remark-lint`, hence the name.

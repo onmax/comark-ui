@@ -1,9 +1,12 @@
 {
   "name": "comark-linter",
   "version": "0.6.0",
-  "description": "Finds unclosed blocks, unknown components, broken links and anchors, local URLs, and plugin issues in Comark documents. A library, a CLI, and a Vite Doctor extension.",
+  "description": "Finds unclosed blocks, unknown components, broken links and anchors, local URLs, and plugin issues in Comark documents. A library, a CLI, an ESLint plugin, and a Vite Doctor extension.",
   "keywords": [
     "comark",
+    "eslint",
+    "eslint-plugin",
+    "eslintplugin",
     "lint",
     "markdown",
     "mdc",
@@ -29,6 +32,7 @@
   "exports": {
     ".": "./dist/index.mjs",
     "./doctor": "./dist/doctor.mjs",
+    "./eslint": "./dist/eslint.mjs",
     "./package.json": "./package.json"
   },
   "publishConfig": {
@@ -42,6 +46,7 @@
     "prepack": "pnpm --filter comark-linter... build"
   },
   "devDependencies": {
+    "@eslint/markdown": "catalog:",
     "comark": "catalog:",
     "comark-annotate": "workspace:*",
     "comark-badge": "workspace:*",
@@ -86,9 +91,11 @@
     "comark-ui": "workspace:*",
     "comark-xref": "workspace:*",
     "comark-zoom": "workspace:*",
+    "eslint": "catalog:",
     "vite-doctor": "catalog:"
   },
   "peerDependencies": {
+    "@eslint/markdown": "^8.0.0",
     "comark": "^0.8.0",
     "comark-annotate": "workspace:^",
     "comark-badge": "workspace:^",
@@ -133,9 +140,13 @@
     "comark-ui": "workspace:^",
     "comark-xref": "workspace:^",
     "comark-zoom": "workspace:^",
+    "eslint": "^9.15.0 || ^10.0.0",
     "vite-doctor": "^0.1.0"
   },
   "peerDependenciesMeta": {
+    "@eslint/markdown": {
+      "optional": true
+    },
     "comark-annotate": {
       "optional": true
     },
@@ -266,6 +277,9 @@
       "optional": true
     },
     "vite-doctor": {
+      "optional": true
+    },
+    "eslint": {
       "optional": true
     }
   },

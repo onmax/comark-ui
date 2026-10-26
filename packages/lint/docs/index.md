@@ -2,7 +2,7 @@
 title: comark-linter
 description: Finds unclosed blocks, unknown components, broken links and anchors, local URLs, and plugin issues in Comark documents.
 keywords: linter, lint, ESLint, check, validate, validation, CI, Vite Doctor, markdownlint, errors, diagnostics, broken links, CLI
-tagline: A linter for Comark documents that runs from the command line, a script, or Vite Doctor.
+tagline: A linter for Comark documents that runs from the command line, a script, ESLint, or Vite Doctor.
 install: pnpm add -D comark-linter
 group: Linter
 label: Overview
@@ -17,8 +17,8 @@ Comark forgives a lot. It closes a `::` block you forgot to close, reads a missi
 - Every message names the block and says how to fix it.
 - It reports each problem with its file, line, and column.
 - It checks links to files, anchors in them, and, on request, external URLs.
-- The command line and Vite Doctor load every comark-ui package you have installed, so they know its blocks and its issues.
-- It runs from the command line, as a library, or as a [Vite Doctor](/lint/vite-doctor/) extension.
+- The command line, ESLint, and Vite Doctor load every comark-ui package you have installed, so they know its blocks and its issues.
+- It runs from the command line, as a library, as an [ESLint](/lint/eslint/) plugin, or as a [Vite Doctor](/lint/vite-doctor/) extension.
 - `lint()` never throws.
 
 ## Usage
