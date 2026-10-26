@@ -110,7 +110,8 @@ export function createBadgeHandler(options: BadgeServerOptions = {}) {
     if (spec.source !== "static") {
       const key = liveKey(spec);
       // The data is cached apart from the badge's look, so every style of one package shares it.
-      const address = new URL(`/badge-data/${encodeURIComponent(key)}`, url);
+      // Discard entries written before authenticated results required public visibility.
+      const address = new URL(`/badge-data/v2/${encodeURIComponent(key)}`, url);
       let entry = await lookup(key, address);
       if (entry && entry.fresh <= now()) {
         const task = refresh(spec, key, address, entry);

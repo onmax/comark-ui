@@ -226,16 +226,65 @@ describe("hosted badge handler", () => {
     expect(await (await handle(get(query))).text()).toContain("v2.0.0");
   });
 
+  it.each([true, undefined, "false"])(
+    "does not expose or share authenticated workflow results without public visibility (%s)",
+    async (visibility) => {
+      const fetch = vi
+        .fn<typeof globalThis.fetch>()
+        .mockImplementation(async () =>
+          json({
+            workflow_runs: [
+              { status: "completed", conclusion: "success", repository: { private: visibility } },
+            ],
+          }),
+        );
+      const cache = sharedCache();
+      const query = "source=github-actions&repository=owner/private&workflow=ci.yml";
+      for (const token of ["broad-token", undefined]) {
+        const response = await createBadgeHandler({ fetch, token, cache })(get(query));
+        expect(response.headers.get("X-Badge-Status")).toBe("unavailable");
+        expect(await response.text()).not.toContain("passing");
+      }
+      expect(fetch).toHaveBeenCalledOnce();
+    },
+  );
+
+  it("ignores shared workflow data cached before visibility validation", async () => {
+    const cache = sharedCache();
+    const key = JSON.stringify(["github-actions", "", "month", "owner/private", "ci.yml", ""]);
+    await cache.put(
+      new URL(`/badge-data/${encodeURIComponent(key)}`, "https://badges.example"),
+      json({
+        result: { value: "passing", color: "success", unavailable: false },
+        fresh: Date.now() + 60000,
+        kept: Date.now() + 86400000,
+      }),
+    );
+    const fetch = vi.fn<typeof globalThis.fetch>().mockImplementation(async () => json({}, 404));
+    const response = await createBadgeHandler({ fetch, cache })(
+      get("source=github-actions&repository=owner/private&workflow=ci.yml"),
+    );
+    expect(response.headers.get("X-Badge-Status")).toBe("unavailable");
+    expect(fetch).toHaveBeenCalledOnce();
+  });
+
   it("sends the token to GitHub only", async () => {
     const fetch = vi
       .fn<typeof globalThis.fetch>()
       .mockImplementation(async (url) =>
         typeof url === "string" && url.startsWith("https://api.github.com/")
-          ? json({ workflow_runs: [{ status: "completed", conclusion: "success" }] })
+          ? json({
+              workflow_runs: [
+                { status: "completed", conclusion: "success", repository: { private: false } },
+              ],
+            })
           : json({ latest: "1.0.0" }),
       );
     const handle = createBadgeHandler({ fetch, token: "secret" });
-    await handle(get("source=github-actions&repository=onmax/comark-ui&workflow=ci.yml"));
+    const response = await handle(
+      get("source=github-actions&repository=onmax/comark-ui&workflow=ci.yml"),
+    );
+    expect(response.headers.get("X-Badge-Status")).toBe("ok");
     await handle(get("source=npm-version&package=comark-ui"));
     const authorization = (call: number) =>
       new Headers(fetch.mock.calls[call]?.[1]?.headers).get("Authorization");

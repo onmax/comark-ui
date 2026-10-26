@@ -107,6 +107,10 @@ export async function resolveLive(
         token,
       );
       const run = record(Array.isArray(data.workflow_runs) ? data.workflow_runs[0] : undefined);
+      // Check the run's repository in the same response: a broader token must never
+      // turn this public endpoint into a private workflow status oracle.
+      if (token && record(run.repository).private !== false)
+        throw new Error("Workflow repository is not public");
       if (!run.status) throw new Error("No workflow runs");
       if (run.status !== "completed") {
         throw new Error("Unknown workflow status");

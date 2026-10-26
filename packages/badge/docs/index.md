@@ -218,7 +218,7 @@ export default {
 };
 ```
 
-The handler accepts GET and HEAD, rejects malformed options with HTTP 400, and fetches only public npm and GitHub APIs. The token, which needs no scopes, goes only to GitHub; private repositories stay unreadable. It limits concurrent upstream requests to 16, response bodies to 64 KiB, requests to five seconds, and its process cache to 256 entries.
+The handler accepts GET and HEAD, rejects malformed options with HTTP 400, and fetches only public npm and GitHub APIs. The token, which needs no scopes, goes only to GitHub. Authenticated workflow results are displayed and cached only when GitHub explicitly marks the run’s repository as public; private or unknown visibility returns `unavailable`, even with a broader token. It limits concurrent upstream requests to 16, response bodies to 64 KiB, requests to five seconds, and its process cache to 256 entries.
 
 | Source | Cache lifetime |
 | --- | --- |
