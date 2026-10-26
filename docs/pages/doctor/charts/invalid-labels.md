@@ -1,4 +1,4 @@
-`labels` prints a chart's numbers on its bars, beside its waterfall steps and dumbbell rows, or past its gantt bars. Lines, areas, scatter plots, and pies have none of those to print on, so read their numbers off the axis and the **Data** table. Write it alone, with no value.
+`labels` prints a chart's numbers on its bars, beside its waterfall steps, dumbbell rows, and sankey nodes, or past its gantt bars. Lines, areas, scatter plots, and pies have none of those to print on, so read their numbers off the axis and the **Data** table. Write it alone, with no value.
 
 ::incorrect
 ```md

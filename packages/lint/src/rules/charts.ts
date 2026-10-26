@@ -112,7 +112,7 @@ export default {
   },
   "comark/charts/invalid-labels": {
     code: "COMARK0431",
-    title: "Put `labels` on a chart with bars, steps, or dots",
+    title: "Put `labels` on a chart with bars, steps, dots, or nodes",
   },
   "comark/charts/invalid-line": {
     code: "COMARK0432",
@@ -125,5 +125,21 @@ export default {
   "comark/charts/waterfall-total": {
     code: "COMARK0434",
     title: "End a waterfall with its start plus every change",
+  },
+  "comark/charts/flow-columns": {
+    code: "COMARK0435",
+    title: "Give a sankey a column it flows from, one it flows to, and one of amounts",
+  },
+  "comark/charts/invalid-flow": {
+    code: "COMARK0436",
+    title: "Give every flow of a sankey an amount above 0 between two nodes",
+  },
+  "comark/charts/flow-cycle": {
+    code: "COMARK0437",
+    title: "Keep a sankey's flows from looping back",
+  },
+  "comark/charts/flow-imbalance": {
+    code: "COMARK0438",
+    title: "Send no more out of a sankey's node than flows into it",
   },
 } satisfies Record<`comark/charts/${string}`, RuleInfo>;
