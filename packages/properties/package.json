@@ -1,6 +1,6 @@
 {
   "name": "comark-properties",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Chosen frontmatter keys, such as status, pull request, author, date, and tags, as a properties box at the top of a document. A Comark plugin.",
   "keywords": [
     "comark",

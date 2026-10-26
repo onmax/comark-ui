@@ -53,6 +53,6 @@ Use the [builder](https://comark-ui.onmax.me/badges/) to preview, share, and exp
 :badge{source="github-actions" repository="onmax/comark-ui" workflow="ci.yml"}
 ```
 
-Static badges embed their SVG locally. Live badges use `https://comark-ui.onmax.me/badge.svg`, configurable with `badge({ endpoint })` or `comarkUi({ badge: { endpoint } })`. Public npm and GitHub Actions data is cached; unavailable data displays `unavailable`. Downloads are snapshots.
+Static badges embed their SVG locally. Live badges fetch their data while parsing and embed it too, so a page loads no badge. With `download: false`, or when the data is unavailable, they load from `https://comark-ui.onmax.me/badge.svg`, configurable with `badge({ endpoint })` or `comarkUi({ badge: { endpoint } })`. Public npm and GitHub Actions data is cached; unavailable data displays `unavailable`. Downloads are snapshots.
 
 `comark-badge/svg` exports the shared option reader and SVG generator. `comark-badge/server` exports `createBadgeHandler()` for hosting the GET/HEAD image endpoint. See [Badge](https://comark-ui.onmax.me/badge/) for options, caching, and deployment details.

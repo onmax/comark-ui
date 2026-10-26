@@ -8,7 +8,7 @@
     },
     {
       "ruleId": "typescript/strict/no-runtime-typeof",
-      "file": "src/server.ts",
+      "file": "src/live.ts",
       "reason": "The upstream JSON parser validates object shapes, nonempty bounded version strings, and nonnegative integer downloads before rendering; malformed responses become unavailable badges."
     }
   ]

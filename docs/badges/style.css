@@ -2,6 +2,12 @@
   grid-template-columns: minmax(0, 62rem);
 }
 .badge-builder {
+  /* Edges are the text color at low alpha, so they follow the page into dark mode instead of being a gray picked per theme. */
+  --edge: color-mix(in oklab, var(--fg) 14%, transparent);
+  --edge-hover: color-mix(in oklab, var(--fg) 28%, transparent);
+  --edge-field: color-mix(in oklab, var(--fg) 45%, transparent);
+  --edge-selected: color-mix(in oklab, var(--fg) 65%, transparent);
+  --lift: 0 1px 2px color-mix(in oklab, var(--fg) 6%, transparent);
   color: var(--fg);
   margin-block: 2rem;
   font-size: 0.875rem;
@@ -21,13 +27,18 @@
 .badge-builder button {
   min-height: 2.5rem;
   padding: 0.5rem 0.75rem;
-  border: 1px solid var(--line);
+  border: 1px solid var(--edge);
   border-radius: 0.5rem;
   background: var(--bg);
+  box-shadow: var(--lift);
   font-weight: 500;
   cursor: pointer;
+  transition-property: background-color, border-color;
+  transition-duration: 120ms;
+  transition-timing-function: var(--ease-out);
 }
 .badge-builder button:hover {
+  border-color: var(--edge-hover);
   background: var(--soft);
 }
 .badge-builder button:disabled {
@@ -36,7 +47,7 @@
 }
 .badge-builder :is(button, input, select, textarea):focus-visible {
   outline: 2px solid var(--fg);
-  outline-offset: 3px;
+  outline-offset: 2px;
 }
 .badge-builder :is(button, input, select, textarea) {
   scroll-margin-block: 5rem;
@@ -64,7 +75,7 @@
   text-align: start;
 }
 .badge-builder .preset-grid button[aria-pressed="true"] {
-  border-color: var(--fg);
+  border-color: var(--edge-selected);
   background: var(--soft);
 }
 .badge-builder .preset-grid img {
@@ -103,10 +114,18 @@
   min-width: 0;
   min-height: 2.5rem;
   padding: 0.5rem 0.625rem;
-  border: 1px solid var(--muted);
+  border: 1px solid var(--edge-field);
   border-radius: 0.5rem;
   background: var(--bg);
+  box-shadow: var(--lift);
   margin-top: 0.375rem;
+  transition: border-color 120ms var(--ease-out);
+}
+.badge-builder :is(input, select, textarea):not([aria-invalid="true"]):hover {
+  border-color: var(--edge-selected);
+}
+.badge-builder :is(input, select, textarea):not([aria-invalid="true"]):focus-visible {
+  border-color: var(--fg);
 }
 .badge-builder .pair {
   display: grid;
@@ -140,6 +159,7 @@
   margin-bottom: 0.75rem;
 }
 .badge-builder h2 {
+  text-wrap: balance;
   font-size: 0.875rem;
   margin: 0;
   border: 0;
@@ -148,6 +168,8 @@
 }
 .badge-builder .refresh {
   font-size: 0.8125rem;
+  /* The row is as tall as the legend beside it; the button's 2.5rem hit area hangs out of it. */
+  margin-block: -0.5rem;
 }
 .badge-builder .preview {
   display: flex;
@@ -155,7 +177,7 @@
   align-items: center;
   min-height: 12rem;
   padding: 1rem;
-  border: 1px solid var(--line);
+  border: 1px solid var(--edge);
   border-radius: 0.75rem;
   background: #fff;
   color: #737373;
@@ -200,6 +222,7 @@
 }
 .badge-builder .primary:hover {
   opacity: 0.85;
+  border-color: var(--fg);
   background: var(--fg);
 }
 @media (max-width: 70rem) {
@@ -216,6 +239,11 @@
   }
   .badge-builder :is(input, select, textarea) {
     font-size: 1rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .badge-builder :is(button, input, select, textarea) {
+    transition: none;
   }
 }
 @media (forced-colors: active) {

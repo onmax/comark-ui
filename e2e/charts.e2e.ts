@@ -80,8 +80,13 @@ function chart(type: string, x: string[], series: number, kind: number, n: numbe
           (at, i) => `:::annotation{at="${at}" ${MARKS[(n + i) % 3]}}\nA note about ${at}.\n:::`,
         )
       : [];
+  // Long names turn bars sideways, as a writer would ask, and every third chart that can prints its numbers.
+  const flags = [
+    (type === "bar" || type === "stacked") && x.some((value) => value.length > 12) && "horizontal",
+    ["bar", "stacked", "waterfall", "dumbbell"].includes(type) && n % 3 === 0 && "labels",
+  ].filter(Boolean);
   return [
-    `::chart{type="${type}" title="${n % 5 ? `${type}, case ${n}` : "Median server response time for every authenticated API route, before and after the connection-pool change (ms)"}"}`,
+    `::chart{type="${type}" ${flags.map((flag) => `${flag} `).join("")}title="${n % 5 ? `${type}, case ${n}` : "Median server response time for every authenticated API route, before and after the connection-pool change (ms)"}"}`,
     `| x | ${names.join(" | ")} |`,
     `| --- |${names.map(() => " --: |").join("")}`,
     ...rows,
@@ -105,7 +110,7 @@ function gantt(tasks: string[], times: string[], n: number) {
           (at, i) => `:::annotation{at="${at}" ${MARKS[(n + i) % 3]}}\nA note about ${at}.\n:::`,
         );
   return [
-    `::chart{type="gantt" title="gantt, case ${n}"}`,
+    `::chart{type="gantt" ${n % 2 ? "labels " : ""}title="gantt, case ${n}"}`,
     `| task |${grouped ? " group |" : ""} start | end |`,
     `| --- |${grouped ? " --- |" : ""} --: | --: |`,
     ...rows,
@@ -169,6 +174,26 @@ for (const dates of DATES)
     const tasks = Array.from({ length: rows }, (_, i) => `${NAMES[0]![i % 8]} ${i + 1}`);
     cases.push(gantt(tasks, dates(rows + 3), cases.length));
   }
+
+// A budget per list of names: two incomes into a hub, and a flow from it to each name, from thousandths to millions,
+// with amounts on every other chart and a mark on the hub of every third.
+function flow(names: string[], n: number) {
+  const make = NUMBERS[[0, 1, 2, 7][n % 4]!]!;
+  const outs = names.map((_, row) => make(row * 8 + n) || 1);
+  const total = outs.reduce((sum, value) => sum + value, 0);
+  return [
+    `::chart{type="sankey" ${n % 2 ? "labels " : ""}title="sankey, case ${n}"}`,
+    "| from | to | amount |",
+    "| --- | --- | --: |",
+    `| salary | budget | ${format(Number((total * 0.9).toPrecision(6)))} |`,
+    `| side project | budget | ${format(Number((total * 0.1).toPrecision(6)))} |`,
+    ...names.map((name, row) => `| budget | ${name} | ${format(outs[row]!)} |`),
+    ...(n % 3 ? [] : [':::annotation{at="budget" mark="circle"}\nWhere it all goes.\n:::']),
+    "::",
+  ].join("\n");
+}
+for (const names of NAMES)
+  for (const rows of [1, 3, 8]) cases.push(flow(names.slice(0, rows), cases.length));
 
 test("hundreds of worst-case charts draw with no text colliding, clipped, or past the column", async ({
   page,

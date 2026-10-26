@@ -1,6 +1,5 @@
 {
-  // The Worker keeps its first name so its Workers Builds connection stays.
-  "name": "comark-annotate",
+  "name": "comark-ui",
   // Nitro's output, from `pnpm docs:generate`. The build merges this file with ViteHub's bindings (D1, the secrets) into
   // docs/dist/server/wrangler.json and points .wrangler/deploy/config.json at it, so `wrangler deploy` from here
   // deploys that one.
