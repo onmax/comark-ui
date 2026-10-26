@@ -27,6 +27,18 @@ describe("image badges", () => {
       expect(svg).not.toContain("<script");
     }
   });
+  it("sizes shadcn text by its letters and shows status as a dot inside a neutral outline", async () => {
+    const svgOf = async (markdown: string) =>
+      decodeURIComponent(/src="data:image\/svg\+xml,([^"]+)"/.exec(await render(markdown))![1]!);
+    const lengths = async (value: string) =>
+      Number(/textLength="([\d.]+)"/.exec(await svgOf(`:badge[${value}]{icon="none"}`))![1]);
+    expect(await lengths("WWW")).toBeGreaterThan((await lengths("iii")) * 3);
+    const passing = await svgOf(':badge[passing]{label="build" color="success"}');
+    expect(passing).toContain('stroke="#e5e5e5"');
+    expect(passing).toContain('<circle cx="');
+    expect(passing).toContain('fill="#15803d"');
+    expect(await svgOf(':badge[MIT]{label="license"}')).not.toContain("<circle");
+  });
   it("encodes live badge options in a hosted image without fetching during parse", async () => {
     const html = await render(
       ':badge{source="github-actions" repository="onmax/comark-ui" workflow="ci.yml" branch="feat/new"}',
