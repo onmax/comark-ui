@@ -91,7 +91,7 @@ Bought in bulk after the Tuesday incident.
 
 ### Series
 
-Use the `series` prop to mark one column's value in the row. Without it, the mark covers every series in the row.
+Use the `series` prop to mark one column's value in the row. Without it, the mark covers every series in the row and their values, and a `circle` on bars loops around the row's name too.
 
 ::example
 ```md

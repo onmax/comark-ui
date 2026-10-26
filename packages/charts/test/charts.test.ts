@@ -280,6 +280,77 @@ Cache on.
     expect(html).toContain('<details class="cch-data"><summary>Data</summary><table>');
   });
 
+  it("draws a bar worth zero as a faded stroke at its base", async () => {
+    const steps = `
+| step | cache miss | cache hit |
+| --- | --: | --: |
+| Client build | 8.8 | 0 |
+| Restore from cache | 0 | 0.2 |
+| Nitro | 44.6 | 37.4 |`;
+    const zeros = (html: string) => html.match(/fill-opacity="0.5"/g)?.length ?? 0;
+    expect(zeros(await render(chart(steps)))).toBe(2);
+    expect(zeros(await render(chart(steps, '{type="stacked"}')))).toBe(0);
+    expect(zeros(await render(chart(sizes)))).toBe(0);
+  });
+
+  it("rings a row of bars with its values and its name", async () => {
+    const html = await createHtmlRenderer({
+      plugins: [charts(), annotate()],
+      components: { ...annotateComponents, ...components },
+    })(`::chart
+| step | cache miss | cache hit |
+| --- | --: | --: |
+| Client build | 8.8 | 0 |
+| Server build | 8.8 | 0 |
+| Restore from cache | 0 | 0.2 |
+| Nitro | 44.6 | 37.4 |
+:::annotation{at="Nitro" mark="circle"}
+Runs on every build.
+:::
+::`);
+    const svg = /<svg role="img"[\s\S]*?<\/svg>/.exec(html)?.[0] ?? "";
+    const [width = 0, height = 0] = (/viewBox="0 0 ([\d.]+) ([\d.]+)"/.exec(svg) ?? [])
+      .slice(1)
+      .map(Number);
+    // Each text sits at its own translation plus those of every group around it.
+    const texts = new Map<string, { x: number; y: number; end: boolean }>();
+    const groups = [{ x: 0, y: 0 }];
+    for (const [tag, close, name, text] of svg.matchAll(/<(\/?)(\w+)[^>]*>([^<]*)/g)) {
+      const [dx = 0, dy = 0] = (/translate\(([-\d.]+),([-\d.]+)\)/.exec(tag) ?? [])
+        .slice(1)
+        .map(Number);
+      const { x, y } = groups.at(-1)!;
+      if (name === "g" && close) groups.pop();
+      else if (name === "g") groups.push({ x: x + dx, y: y + dy });
+      else if (name === "text")
+        texts.set(text!, { x: x + dx, y: y + dy, end: tag.includes('text-anchor="end"') });
+    }
+    const [left = 0, top = 0, w = 0, h = 0] = (
+      /class="ca-mark ca-circle"[^>]*left:([\d.]+)%;top:([\d.]+)%;width:([\d.]+)%;height:([\d.]+)%/.exec(
+        html,
+      ) ?? []
+    )
+      .slice(1)
+      .map(Number);
+    const box = {
+      x1: (left / 100) * width,
+      y1: (top / 100) * height,
+      x2: ((left + w) / 100) * width,
+      y2: ((top + h) / 100) * height,
+    };
+    // The row's name ends where it's anchored, and a value printed past its bar starts there.
+    const name = texts.get("Nitro")!;
+    const value = texts.get("37.4")!;
+    expect(name.end).toBe(true);
+    expect(box.x1).toBeLessThan(name.x - 30);
+    expect(box.x2).toBeGreaterThan(value.x + 20);
+    for (const { y } of [name, value]) {
+      expect(box.y1).toBeLessThan(y);
+      expect(box.y2).toBeGreaterThan(y);
+    }
+    expect(texts.get("0.2")!.y).toBeLessThan(box.y1);
+  });
+
   it("centers a mark on the point it names", async () => {
     const html = await createHtmlRenderer({
       plugins: [charts(), annotate()],
@@ -337,7 +408,7 @@ The first slice.
       plugins: [charts(), annotate()],
       components: { ...annotateComponents, ...components },
     })(markdown);
-    expect(html).toContain('viewBox="0 0 544 376"');
+    expect(html).toContain('viewBox="0 0 544 396"');
     expect(html).toContain('ca-stamp" style="left:0;top:0;translate:-50% -50%"');
   });
 
