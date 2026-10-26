@@ -24,11 +24,15 @@ export const liveKey = (spec: BadgeSpec) =>
     spec.branch,
   ]);
 
-async function json(url: string, request: typeof fetch) {
+async function json(url: string, request: typeof fetch, token?: string) {
   const response = await request(url, {
     signal: AbortSignal.timeout(5000),
     redirect: "manual",
-    headers: { Accept: "application/json", "User-Agent": "comark-badge" },
+    headers: {
+      Accept: "application/json",
+      "User-Agent": "comark-badge",
+      ...(token && { Authorization: `Bearer ${token}` }),
+    },
   });
   if (!response.ok) {
     await response.body?.cancel();
@@ -63,6 +67,8 @@ async function json(url: string, request: typeof fetch) {
 export async function resolveLive(
   spec: BadgeSpec,
   request: typeof fetch = globalThis.fetch,
+  /** A GitHub token, sent only to GitHub, so workflow badges get its rate limit instead of the IP's. */
+  token?: string,
 ): Promise<LiveResult> {
   try {
     let value: string;
@@ -98,6 +104,7 @@ export async function resolveLive(
       const data = await json(
         `https://api.github.com/repos/${spec.repository}/actions/workflows/${encodeURIComponent(spec.workflow)}/runs?${query}`,
         request,
+        token,
       );
       const run = record(Array.isArray(data.workflow_runs) ? data.workflow_runs[0] : undefined);
       if (!run.status) throw new Error("No workflow runs");

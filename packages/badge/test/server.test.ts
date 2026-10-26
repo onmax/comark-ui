@@ -5,6 +5,18 @@ const get = (query: string, method = "GET") =>
   new Request(`https://badges.example/badge.svg?${query}`, { method });
 const json = (value: unknown, status = 200) =>
   new Response(JSON.stringify(value), { status, headers: { "Content-Type": "application/json" } });
+// A Cache API that every handler shares, as one Worker location's instances do.
+function sharedCache() {
+  const stored = new Map<string, Response>();
+  const address = (request: RequestInfo | URL) =>
+    request instanceof Request ? request.url : String(request);
+  return {
+    match: async (request: RequestInfo | URL) => stored.get(address(request))?.clone(),
+    put: async (request: RequestInfo | URL, response: Response) => {
+      stored.set(address(request), response.clone());
+    },
+  };
+}
 
 describe("hosted badge handler", () => {
   it("renders a self-contained static image, escapes text, and supports HEAD", async () => {
@@ -96,7 +108,9 @@ describe("hosted badge handler", () => {
     expect(await recolored.text()).toContain('fill="#b91c1c"');
     expect(fetch).toHaveBeenCalledTimes(1);
     time = 100000;
-    expect((await handle(get(query))).headers.get("Cache-Control")).toBe("public, max-age=200");
+    expect((await handle(get(query))).headers.get("Cache-Control")).toBe(
+      "public, max-age=200, stale-while-revalidate=86400",
+    );
     time = 300001;
     await handle(get(query));
     expect(fetch).toHaveBeenCalledTimes(2);
@@ -112,7 +126,9 @@ describe("hosted badge handler", () => {
     expect(fetch.mock.calls[0]?.[0]).toBe(
       "https://api.npmjs.org/downloads/point/last-week/comark-ui",
     );
-    expect(response.headers.get("Cache-Control")).toBe("public, max-age=3600");
+    expect(response.headers.get("Cache-Control")).toBe(
+      "public, max-age=3600, stale-while-revalidate=86400",
+    );
   });
 
   it.each([
@@ -169,5 +185,61 @@ describe("hosted badge handler", () => {
       expect(response.headers.get("X-Badge-Status")).toBe("unavailable");
       expect(await response.text()).toContain("unavailable");
     }
+  });
+
+  it("shares data between instances through the shared cache, whatever the badge's style", async () => {
+    const fetch = vi
+      .fn<typeof globalThis.fetch>()
+      .mockImplementation(async () => json({ latest: "1.2.3" }));
+    const cache = sharedCache();
+    await createBadgeHandler({ fetch, cache })(get("source=npm-version&package=comark-ui"));
+    const other = await createBadgeHandler({ fetch, cache })(
+      get("source=npm-version&package=comark-ui&style=solid&label=release"),
+    );
+    expect(await other.text()).toContain("v1.2.3");
+    expect(fetch).toHaveBeenCalledOnce();
+  });
+
+  it("answers with the last good value while it refreshes, and keeps it when the refresh fails", async () => {
+    let time = 0;
+    const fetch = vi
+      .fn<typeof globalThis.fetch>()
+      .mockResolvedValueOnce(json({ latest: "1.0.0" }))
+      .mockResolvedValueOnce(json({ message: "rate limited" }, 429))
+      .mockResolvedValueOnce(json({ latest: "2.0.0" }));
+    const waitUntil = vi.fn<(promise: Promise<unknown>) => void>();
+    const handle = createBadgeHandler({ fetch, now: () => time, cache: sharedCache() });
+    const query = "source=npm-version&package=comark-ui";
+    await handle(get(query));
+    time = 300001;
+    const stale = await handle(get(query), { waitUntil });
+    expect(await stale.text()).toContain("v1.0.0");
+    expect(stale.headers.get("X-Badge-Status")).toBe("ok");
+    expect(waitUntil).toHaveBeenCalledOnce();
+    await waitUntil.mock.calls[0]![0];
+    const kept = await handle(get(query));
+    expect(await kept.text()).toContain("v1.0.0");
+    expect(fetch).toHaveBeenCalledTimes(2);
+    time = 330002;
+    await handle(get(query), { waitUntil });
+    await waitUntil.mock.calls[1]![0];
+    expect(await (await handle(get(query))).text()).toContain("v2.0.0");
+  });
+
+  it("sends the token to GitHub only", async () => {
+    const fetch = vi
+      .fn<typeof globalThis.fetch>()
+      .mockImplementation(async (url) =>
+        typeof url === "string" && url.startsWith("https://api.github.com/")
+          ? json({ workflow_runs: [{ status: "completed", conclusion: "success" }] })
+          : json({ latest: "1.0.0" }),
+      );
+    const handle = createBadgeHandler({ fetch, token: "secret" });
+    await handle(get("source=github-actions&repository=onmax/comark-ui&workflow=ci.yml"));
+    await handle(get("source=npm-version&package=comark-ui"));
+    const authorization = (call: number) =>
+      new Headers(fetch.mock.calls[call]?.[1]?.headers).get("Authorization");
+    expect(authorization(0)).toBe("Bearer secret");
+    expect(authorization(1)).toBeNull();
   });
 });

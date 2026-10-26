@@ -204,16 +204,21 @@ https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-ui
 
 ### Host the endpoint
 
-Use `createBadgeHandler()` from `comark-badge/server` in a server or Worker. Keep one handler per process so requests share its bounded cache. It accepts optional `fetch` and `now` functions for testing.
+Use `createBadgeHandler()` from `comark-badge/server` in a server or Worker. Keep one handler per process so requests share its bounded cache. In a Worker, pass a `cache` from the Cache API so every instance in a location shares the data, a GitHub `token` so workflow badges don't share the IP's limit of 60 requests an hour, and the request's context so data refreshes after the response. It also accepts `fetch` and `now` functions for testing.
 
 ```ts
 import { createBadgeHandler } from "comark-badge/server";
 
-const badges = createBadgeHandler();
-export default { fetch: badges };
+let badges: ReturnType<typeof createBadgeHandler> | undefined;
+export default {
+  async fetch(request: Request, env: { GITHUB_TOKEN?: string }, context: ExecutionContext) {
+    badges ??= createBadgeHandler({ token: env.GITHUB_TOKEN, cache: await caches.open("badges") });
+    return badges(request, context);
+  },
+};
 ```
 
-The handler accepts GET and HEAD, rejects malformed options with HTTP 400, and fetches only public npm and GitHub APIs. It uses no token and cannot read private repositories. It limits concurrent upstream requests to 16, response bodies to 64 KiB, requests to five seconds, and its process cache to 256 entries.
+The handler accepts GET and HEAD, rejects malformed options with HTTP 400, and fetches only public npm and GitHub APIs. The token, which needs no scopes, goes only to GitHub; private repositories stay unreadable. It limits concurrent upstream requests to 16, response bodies to 64 KiB, requests to five seconds, and its process cache to 256 entries.
 
 | Source | Cache lifetime |
 | --- | --- |
@@ -223,7 +228,7 @@ The handler accepts GET and HEAD, rejects malformed options with HTTP 400, and f
 | GitHub Actions | One minute |
 | Unavailable upstream | 30 seconds |
 
-A missing package, missing workflow, no runs, rate limit, or failed request displays `unavailable`, never a passing status. Image responses include `X-Badge-Status: ok` or `unavailable`. Browsers and image proxies can cache longer than the source's refresh interval. An image reload checks the cache; there is no polling script.
+Data is kept apart from the badge's look, so every style of one package shares it. Once its lifetime ends, the handler answers with the last value it has and refreshes it in the background; if the refresh fails, it keeps that value for up to a day and tries again 30 seconds later. Without one, a missing package, missing workflow, no runs, rate limit, or failed request displays `unavailable`, never a passing status. Image responses include `X-Badge-Status: ok` or `unavailable`. Responses allow `stale-while-revalidate` for a day, so browsers and image proxies show the last image while they fetch the next. An image reload checks the cache; there is no polling script.
 
 ## API
 
