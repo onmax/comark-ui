@@ -121,10 +121,10 @@
   margin-top: 0.375rem;
   transition: border-color 120ms var(--ease-out);
 }
-.badge-builder :is(input, select, textarea):hover {
+.badge-builder :is(input, select, textarea):not([aria-invalid="true"]):hover {
   border-color: var(--edge-selected);
 }
-.badge-builder :is(input, select, textarea):focus-visible {
+.badge-builder :is(input, select, textarea):not([aria-invalid="true"]):focus-visible {
   border-color: var(--fg);
 }
 .badge-builder .pair {
