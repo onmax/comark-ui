@@ -1,6 +1,6 @@
 {
   "name": "comark-diff",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "A code change in Markdown, shown like a suggested change in a pull request review: the file, red and green lines, and the words that changed. A Comark plugin.",
   "keywords": [
     "code-review",
