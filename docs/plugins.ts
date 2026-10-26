@@ -14,9 +14,14 @@ const favicon = (host: string) =>
 // `download` is off in a browser, which may not download another site's images, so the reader's loads them as links.
 export const browserPlugins = (
   config: PlayConfig = {},
-  { download = true, icon }: { download?: boolean; icon?: IconOptions } = {},
+  {
+    download = true,
+    icon,
+    typeset,
+  }: { download?: boolean; icon?: IconOptions; typeset?: boolean } = {},
 ) =>
   comarkUi({
+    typeset,
     badge: { download },
     chips: { download, favicon },
     icon,

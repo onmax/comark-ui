@@ -25,6 +25,7 @@ comarkUi({
 - Three plugins use the network while parsing: `chips` downloads favicons and avatars, `icon` fetches icon sets from the Iconify API, and `diagrams` sends each diagram's source to `https://kroki.io`. In a browser, pass `chips: { download: false }`, since a browser may not download another site's images. To parse offline, also pass `icon: { fetch: false }` with your icon sets in `collections`, and `diagrams: { draw: false }`. To keep diagram sources private, pass your own Kroki `server`.
 - `icon`'s options apply to every icon the preset draws, in cards, details, file trees, tabs, and code actions too.
 - comark-critic has no component to add its styles, so put `criticCss`, which every entry exports, in the page.
+- The text around the blocks is styled by default, scoped to the element the document renders into, on the same `--comark-*` tokens. Pass `typeset: false` when the site already styles Markdown, such as with Tailwind Typography's `prose`.
 
 ## Renderers
 
