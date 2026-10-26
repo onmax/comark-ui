@@ -183,9 +183,28 @@
   color: #737373;
   overflow: auto;
 }
+.badge-builder .preview {
+  color-scheme: light;
+}
 .badge-builder .preview[data-theme="dark"] {
+  color-scheme: dark;
   background: #171717;
   color: #a3a3a3;
+}
+/* An auto badge follows the color-scheme around its image, so it is shown once on each half. */
+.badge-builder .preview[data-theme="auto"]:has(#badge-preview:not([hidden])) {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  justify-items: center;
+  padding: 0;
+  background: linear-gradient(90deg, #fff 50%, #171717 50%);
+}
+.badge-builder #badge-preview-dark {
+  color-scheme: dark;
+}
+.badge-builder .preview:not([data-theme="auto"]) #badge-preview-dark,
+.badge-builder #badge-preview[hidden] + #badge-preview-dark {
+  display: none;
 }
 .badge-builder .preview img {
   max-width: 100%;

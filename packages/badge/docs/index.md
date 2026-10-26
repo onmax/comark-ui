@@ -169,7 +169,7 @@ Use the `style` prop to choose shadcn outlines, subtle tints, or solid backgroun
 
 ### Theme
 
-Use the `theme` prop to embed a light or dark appearance in the image.
+Images follow the reader's light or dark theme by default, on GitHub too: the SVG carries both palettes and picks one from the page around it. Use the `theme` prop to lock an image to `light` or `dark`.
 
 ::example
 ```md
@@ -243,7 +243,7 @@ A missing package, missing workflow, no runs, rate limit, or failed request disp
 | `icon` | Source icon | `none`, `package`, `npm`, `github`, `comark`, `shadcn`, or `check`. Brand marks are embedded in the SVG. |
 | `labelColor` | `neutral` | Semantic or six-digit hex color for the label background in subtle and solid styles. |
 | `style` | `shadcn` | `shadcn`, `subtle`, or `solid`. shadcn uses a neutral outline and text, with a dot in the value's color unless it is primary, secondary, or neutral. Solid automatically chooses black or white text for contrast. |
-| `theme` | `light` | `light` or `dark`, embedded in the image. |
+| `theme` | `auto` | `auto` follows the page's light or dark theme; `light` or `dark` locks the image to one. |
 
 ### Options
 
