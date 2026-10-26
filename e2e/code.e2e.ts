@@ -97,6 +97,55 @@ test("Wrap appears only where unwrapped code overflows, including after resize a
   await expect(second).toHaveAttribute("aria-pressed", "true");
 });
 
+test("unrelated DOM updates do not remeasure code blocks", async ({ page }) => {
+  await open(page, sh.replace("```sh", "```sh wrap"));
+  await expect(page.locator(".ck-wrap")).toHaveAttribute("aria-pressed", "true");
+  const measurements = await page.evaluate(async () => {
+    const settle = async () => {
+      for (let i = 0; i < 5; i++) await new Promise(requestAnimationFrame);
+    };
+    await settle();
+    let changes = 0;
+    const observer = new MutationObserver((records) => {
+      changes += records.length;
+    });
+    observer.observe(document.querySelector(".ck")!, {
+      attributes: true,
+      attributeFilter: ["data-code-wrap"],
+    });
+    const unrelated = document.createElement("div");
+    unrelated.style.position = "fixed";
+    document.body.append(unrelated);
+    unrelated.textContent = "Loading";
+    await settle();
+    unrelated.firstChild!.textContent = "Done";
+    await settle();
+    unrelated.remove();
+    await settle();
+    observer.disconnect();
+    return changes;
+  });
+  expect(measurements).toBe(0);
+});
+
+test("inserted code blocks and character edits update Wrap", async ({ page }) => {
+  await open(page, sh);
+  await page.evaluate(() => {
+    const container = document.createElement("section");
+    const block = document.querySelector(".ck")!.cloneNode(true) as Element;
+    block.removeAttribute("data-code-overflow");
+    block.querySelector("code")!.textContent = "short";
+    container.append(block);
+    document.body.append(container);
+  });
+  const wrap = page.locator("section .ck-wrap");
+  await expect(wrap).toBeHidden();
+  await page.locator("section code").evaluate((element, text) => {
+    element.firstChild!.textContent = text;
+  }, long);
+  await expect(wrap).toBeVisible();
+});
+
 test("Wrap works when localStorage is unavailable", async ({ page }) => {
   await page.addInitScript(() => {
     Object.defineProperty(window, "localStorage", {

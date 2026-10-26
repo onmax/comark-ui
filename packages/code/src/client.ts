@@ -143,7 +143,16 @@ export function start(css: string): () => void {
     if (!frame) frame = requestAnimationFrame(refresh);
   };
   const resize = new ResizeObserver(schedule);
-  const mutations = new MutationObserver(schedule);
+  const mutations = new MutationObserver((records) => {
+    const affectsCode = records.some(({ target, addedNodes, removedNodes }) => {
+      const element = target instanceof Element ? target : target.parentElement;
+      if (element?.closest(".ck")) return true;
+      return [...addedNodes, ...removedNodes].some(
+        (node) => node instanceof Element && (node.matches(".ck") || node.querySelector(".ck")),
+      );
+    });
+    if (affectsCode) schedule();
+  });
   mutations.observe(document.documentElement, {
     childList: true,
     subtree: true,
