@@ -16,7 +16,7 @@ export const content = defineContent({
     cms,
     {
       store: "github",
-      repo: "onmax/comark-plugins",
+      repo: "onmax/comark-ui",
       publish: "pr",
       draftBranch: "vitehub/content",
       root: "",

@@ -64,7 +64,7 @@ catalog:
   # The combined ViteHub branch (comments overlay, Content multi-glob and GitHub store), until a release has them.
   vite-hub: https://pkg.pr.new/vite-hub/vitehub/vite-hub@29b625f
   drizzle-kit: ^0.31.10
-  drizzle-orm: 0.45.3
+  drizzle-orm: 0.45.4
   wrangler: ^4.152.0
   d3-sankey: ^0.12.3
   "@types/d3-sankey": ^0.12.5
