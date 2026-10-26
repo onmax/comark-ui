@@ -113,6 +113,8 @@ export default defineNuxtConfig({
       authorize: fileURLToPath(new URL("./server/console-authorize.ts", import.meta.url)),
     },
   },
+  // `nuxt dev` has no GitHub OAuth app: the Console runs every call as the loopback user `local`, which team.ts accepts.
+  $development: { vitehub: { console: { auth: false } } },
   vite: {
     env: {
       server: {
