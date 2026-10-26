@@ -20,11 +20,6 @@ const resolver = (
 });
 
 export default function viteHubPilot(_: unknown, nuxt: Nuxt) {
-  // ViteHub registers this alias in Nitro, but Nuxt 4 also needs it to type its generated auth route.
-  nuxt.options.alias["#vitehub/auth/server"] = fileURLToPath(
-    import.meta.resolve("vite-hub/auth/server"),
-  );
-
   // Auth adds a client plugin for its Vue composables (useAuth and the like), which this site never calls: sign-in is a
   // plain fetch (server/routes/sign-in.get.ts). Left in, every visitor downloads the better-auth client and hydrates later.
   nuxt.hook("app:resolve", (app) => {
