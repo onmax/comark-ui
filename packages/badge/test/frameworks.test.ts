@@ -50,7 +50,7 @@ describe("comark-badge renderers", () => {
   it("renders static and hosted image badges in each framework", async () => {
     const value = await parseMarkdown(
       ':badge[ready]{label="build" icon="check"} :badge{source="npm-version" package="comark-ui"}',
-      { plugins: [badge()] },
+      { plugins: [badge({ download: false })] },
     );
     for (const renderer of Object.values(renderers)) {
       const html = await renderer(value);

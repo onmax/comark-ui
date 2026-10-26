@@ -396,6 +396,104 @@ Leave `data` out of the spec, because the table replaces it, and name the column
 
 The chart takes the same card, colors, and typeface as the other types wherever the spec sets none. Use the spec's own `config` to change them, since it wins over the chart's. A chart drawn from a spec takes only `title` from the props, and no notes: draw them with a `text` or `rule` layer in the spec.
 
+### Gantt charts
+
+Use `type="gantt"` with a table of three columns: the bar's name, where it starts, and where it ends. The chart draws one bar per row, top to bottom in table order. The start and end columns hold numbers or dates.
+
+```md
+::chart{type="gantt" title="A Friday deploy, minutes after 16:55"}
+| step | start | end |
+| --- | --: | --: |
+| tests | 0 | 6 |
+| build | 6 | 11 |
+| deploy | 11 | 13 |
+::
+```
+
+Use the `y` prop to name the start and end columns when the table has other numbers too, such as a duration: `y="start, end"`.
+
+A column of names, such as a phase, an owner, or a run, colors the bars, one color per name, with a legend over the chart. A task may then repeat in another group, like the same step in two runs. To mark a task that repeats, name its group in the [note](/charts/notes/#series)'s `series`.
+
+> [!NOTE]
+> A column of numbers reads as times, so write numbered groups as names, like `shard 1`.
+
+A row that ends where it starts is a milestone, and draws as a diamond. Every other bar prints how long it lasts past its end. For numbers that's the difference, and for dates it's a span in the table's unit, such as `3y`, `2mo`, `7d`, or `1.5h`. A gantt prints its own durations and has no value axis, so it takes no `labels` and no target line.
+
+Dates take the forms x takes: `2026`, `2026-04`, `2026-04-15`, or an ISO date and time. A time without a zone is UTC, and the axis shows UTC, so the chart reads the same wherever it's drawn.
+
+::example
+```md
+::chart{type="gantt" title="nuxt build, before and after the worker (s)"}
+| step | run | start | end |
+| --- | --- | --: | --: |
+| compile client | before | 0 | 3.7 |
+| compile server | before | 3.7 | 7.8 |
+| compile client | after | 0 | 3.7 |
+| compile server | after | 0.2 | 4.6 |
+| ready | after | 4.6 | 4.6 |
+::
+```
+::
+
+### Notes
+
+Put an `::annotation` after the table to mark a row or a value with a hand-drawn mark and a note, or to draw a target across the plot. [Notes](/charts/notes/) has their props.
+
+::example
+```md
+::chart{labels title="Minutes to the first review comment"}
+| team | minutes |
+| --- | --: |
+| frontend | 38 |
+| backend | 64 |
+| design | 12 |
+:::annotation{at="backend" mark="circle" color="red"}
+Two reviewers were on leave.
+:::
+:::annotation{mark="line" value="45" color="red" side="right"}
+Team goal: 45 min.
+:::
+::
+```
+::
+
+### Vega-Lite
+
+For a chart the types don't cover, such as a box plot, a heatmap, or error bands, put a [Vega-Lite](https://vega.github.io/vega-lite/) spec after the table in a `vega-lite` block. The table is still its data, so it stays in the page: each row becomes one data point, with a field per column named by its header. Cells that read as numbers become numbers, empty ones become null, and the rest stay text.
+
+Leave `data` out of the spec, because the table replaces it, and name the columns in the spec's `encoding`. The spec can't load files or URLs.
+
+::example
+````md
+::chart{title="Latency per request (ms)"}
+| endpoint | ms |
+| --- | --: |
+| /search | 120 |
+| /search | 180 |
+| /search | 210 |
+| /search | 260 |
+| /search | 410 |
+| /login | 40 |
+| /login | 45 |
+| /login | 52 |
+| /login | 58 |
+| /login | 61 |
+
+```vega-lite
+{
+  "mark": "boxplot",
+  "encoding": {
+    "x": { "field": "ms", "type": "quantitative" },
+    "y": { "field": "endpoint", "type": "nominal" }
+  }
+}
+```
+::
+````
+::
+
+The chart takes the same card, colors, and typeface as the other types wherever the spec sets none. Use the spec's own `config` to change them, since it wins over the chart's. A chart drawn from a spec takes only `title` from the props, and no notes: draw them with a `text` or `rule` layer in the spec.
+
 ## Examples
 
 ### Reject a document before publishing

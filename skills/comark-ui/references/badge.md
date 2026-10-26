@@ -26,7 +26,7 @@ For a prose badge, `color` is `primary` (default), `secondary`, `success`, `info
 
 ## Image and live badges
 
-Use image mode for README-style label/value badges. Static images embed their SVG; live sources load a hosted image and make no network request during parsing.
+Use image mode for README-style label/value badges. Static images embed their SVG. Live sources fetch npm or GitHub data while parsing and embed it too, as of the build; with `download: false`, or when the data is unavailable, they load a hosted image.
 
 ```md
 :badge[Comark UI]{label="built with" icon="package" color="#15803d"}
@@ -45,7 +45,7 @@ The builder at `/badges/` lives in the docs layout, shares its configuration and
 
 ## Register
 
-- In `comark-ui`: on, under the key `badge`, with an optional `{ endpoint }` for live images.
-- Alone: `pnpm add comark @comark/html comark-badge`, then `createHtmlRenderer({ plugins: [badge()], components })` with both from `comark-badge/html`. It accepts `{ endpoint }`, an HTTPS URL without credentials, and needs no script. Colors read Nuxt UI's `--ui-*` variables, and primary follows shadcn/ui's `--primary`, else the text color. `comark-badge/vue`, `/react`, and `/svelte` render it too.
+- In `comark-ui`: on, under the key `badge`, with optional `{ endpoint, download }` for live images.
+- Alone: `pnpm add comark @comark/html comark-badge`, then `createHtmlRenderer({ plugins: [badge()], components })` with both from `comark-badge/html`. It accepts `{ endpoint }`, an HTTPS URL without credentials, and `{ download: false }` to skip fetching while parsing, and needs no script. Colors read Nuxt UI's `--ui-*` variables, and primary follows shadcn/ui's `--primary`, else the text color. `comark-badge/vue`, `/react`, and `/svelte` render it too.
 
 Host images with `createBadgeHandler()` from `comark-badge/server`. Generate static SVG with `readBadge()` and `badgeSvg()` from `comark-badge/svg`. The server entry fetches only public APIs and uses no token.
