@@ -22,7 +22,9 @@ describe("hosted badge handler", () => {
     const svg = await response.text();
     expect(svg).toContain("&lt;script&gt;&quot;&amp;");
     expect(svg).not.toContain("<script>");
-    expect(svg).toContain('fill="#000000"');
+    expect(svg).toContain(".v{fill:#000000}");
+    // Opened on its own, the image is a document, and its palettes are an inline style.
+    expect(response.headers.get("Content-Security-Policy")).toContain("style-src 'unsafe-inline'");
     expect(svg).not.toContain("href=");
     const head = await handle(get(query, "HEAD"));
     expect(head.headers.get("Cache-Control")).toBe(response.headers.get("Cache-Control"));
@@ -68,7 +70,7 @@ describe("hosted badge handler", () => {
       "source=npm-version&package=../secret",
       "value=x&color=url(evil)",
       "value=x&icon=evil",
-      "value=x&theme=auto",
+      "value=x&theme=sepia",
       "source=github-actions&repository=https://example.org&workflow=ci.yml",
       `value=${"x".repeat(81)}`,
       `value=x&junk=${"x".repeat(4096)}`,

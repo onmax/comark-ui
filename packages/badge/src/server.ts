@@ -64,7 +64,7 @@ export function createBadgeHandler(options: BadgeServerOptions = {}) {
           "Content-Type": "image/svg+xml; charset=utf-8",
           "Cache-Control": `public, max-age=${ttl}`,
           "X-Content-Type-Options": "nosniff",
-          "Content-Security-Policy": "default-src 'none'; sandbox",
+          "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; sandbox",
           "Access-Control-Allow-Origin": "*",
           "Access-Control-Expose-Headers": "X-Badge-Status",
           "X-Badge-Status": result.unavailable ? "unavailable" : "ok",
