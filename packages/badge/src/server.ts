@@ -83,21 +83,15 @@ export function createBadgeHandler(options: BadgeServerOptions = {}) {
           throw new Error("Missing downloads");
         value = `${new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 }).format(data.downloads)}/${spec.period === "month" ? "mo" : spec.period === "week" ? "wk" : "day"}`;
       } else {
-        const query = new URLSearchParams({ per_page: "1" });
+        // The latest finished run, like GitHub's own badge, so a README doesn't read "pending" after every push.
+        const query = new URLSearchParams({ per_page: "1", status: "completed" });
         if (spec.branch) query.set("branch", spec.branch);
         const data = await json(
           `https://api.github.com/repos/${spec.repository}/actions/workflows/${encodeURIComponent(spec.workflow)}/runs?${query}`,
         );
         const run = record(Array.isArray(data.workflow_runs) ? data.workflow_runs[0] : undefined);
         if (!run.status) throw new Error("No workflow runs");
-        if (
-          ["queued", "in_progress", "requested", "waiting", "pending"].some(
-            (status) => status === run.status,
-          )
-        ) {
-          value = "pending";
-          color = "warning";
-        } else if (run.status !== "completed") {
+        if (run.status !== "completed") {
           throw new Error("Unknown workflow status");
         } else if (run.conclusion === "success") {
           value = "passing";

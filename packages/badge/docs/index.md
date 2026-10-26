@@ -89,7 +89,7 @@ Use the `value` prop to set a static image's text without brackets.
 
 ### Source
 
-Use `source` to show live data. npm sources need `package`; GitHub Actions needs a public `repository` and a workflow filename, with an optional `branch` filter. Without `branch`, GitHub returns the latest run across branches. Live images load from the hosted endpoint; parsing never contacts npm or GitHub.
+Use `source` to show live data. npm sources need `package`; GitHub Actions needs a public `repository` and a workflow filename, with an optional `branch` filter. Without `branch`, GitHub returns the latest finished run across branches. Live images load from the hosted endpoint; parsing never contacts npm or GitHub.
 
 ```md
 :badge{source="npm-version" package="comark-ui"}
@@ -131,7 +131,7 @@ Use the `workflow` prop to choose the workflow's YAML filename.
 
 ### Branch
 
-Use the `branch` prop to filter workflow runs to one branch. Without it, the badge shows the latest run across branches.
+Use the `branch` prop to filter workflow runs to one branch. Without it, the badge shows the latest finished run across branches. A run still in progress never shows; the badge keeps the last result until it finishes.
 
 ```md
 :badge{source="github-actions" repository="onmax/comark-ui" workflow="ci.yaml" branch="main"}
@@ -242,7 +242,7 @@ A missing package, missing workflow, no runs, rate limit, or failed request disp
 | `branch` | — | Optional workflow branch filter. |
 | `icon` | Source icon | `none`, `package`, `npm`, `github`, `comark`, `shadcn`, or `check`. Brand marks are embedded in the SVG. |
 | `labelColor` | `neutral` | Semantic or six-digit hex color for the label background in subtle and solid styles. |
-| `style` | `shadcn` | `shadcn`, `subtle`, or `solid`. shadcn uses an outline and neutral text. Solid automatically chooses black or white text for contrast. |
+| `style` | `shadcn` | `shadcn`, `subtle`, or `solid`. shadcn uses a neutral outline and text, with a dot in the value's color unless it is primary, secondary, or neutral. Solid automatically chooses black or white text for contrast. |
 | `theme` | `light` | `light` or `dark`, embedded in the image. |
 
 ### Options
