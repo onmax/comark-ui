@@ -7,7 +7,7 @@ import { inTeam } from "./utils/team.ts";
 // the published pages still come from the files in the repository when the site is built. Pages the build writes
 // itself (the landing page's examples, the playground) are not here.
 // The page the site serves for a file, with the trailing slash it prerenders. content.resolve() finds a page's
-// document by this, which is how a comment on a page belongs to the Markdown behind it.
+// document by its url, which is how a comment on a page belongs to the Markdown behind it.
 const page = (path: string) => `/${path.replace(/(^|\/)index$/, "")}/`.replace("//", "/");
 const packagePage = (id: string) => page(id.replace("/docs", ""));
 // The sitemap lists every page; a partial is included into other pages and has none of its own.
@@ -34,7 +34,6 @@ export const content = defineContent({
       path: "docs/pages/**/*.md",
       fields,
       label: "Pages",
-      route: page,
       url: url(page),
     }),
     // packages/zoom/docs/theming.md is /zoom/theming/, and packages/zoom/docs/index.md is /zoom/.
@@ -42,7 +41,6 @@ export const content = defineContent({
       path: "packages/*/docs/**/*.md",
       fields,
       label: "Package pages",
-      route: packagePage,
       url: url(packagePage),
     }),
   },
