@@ -8,4 +8,3 @@ tagline: Create a badge, then copy it into your README or Comark document.
 ::
 
 [Badge syntax and hosting options](/badge/)
-
