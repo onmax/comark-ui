@@ -877,6 +877,29 @@ No such run.
     expect(totals(await render(waterfall("-3")))).toBe(2);
   });
 
+  it("checks large waterfall totals without hiding changes or reporting floating-point roundoff", async () => {
+    const waterfall = (values: number[]) =>
+      chart(
+        `| step | value |\n| --- | --: |\n${values.map((value, i) => `| step ${i} | ${value} |`).join("\n")}`,
+        '{type="waterfall"}',
+      );
+    for (const values of [
+      [1e12, 1, 1e12],
+      [1e15, 1, 1e15],
+      [-1e12, -1, -1e12],
+      [0.000001, 0.000001, 0.0000020001],
+    ]) {
+      expect(await issues(waterfall(values))).toHaveLength(1);
+    }
+    for (const values of [
+      [1e12, 1, 1e12 + 1],
+      [0.1, 0.2, 0.3],
+      [0.1, 0.2, -0.3, 0],
+    ]) {
+      expect(await issues(waterfall(values))).toEqual([]);
+    }
+  });
+
   it("crosses the plot with a line at a value, growing the axis to reach it", async () => {
     const marked = (annotation: string, table = sizes, props = "") =>
       `${chart(table, props).slice(0, -2)}${annotation}\n::`;

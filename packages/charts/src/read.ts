@@ -421,9 +421,18 @@ function readTotal(
 ) {
   const values = points.map((row) => row.values[0] ?? 0);
   if (values.length < 2) return;
-  const sum = values.slice(0, -1).reduce((total, value) => total + value, 0);
+  let sum = 0;
+  let roundoff = 0;
+  for (const value of values.slice(0, -1)) {
+    const next = sum + value;
+    // Safe integer additions are exact; otherwise allow only floating-point rounding at this step's scale.
+    if (![sum, value, next].every(Number.isSafeInteger)) {
+      roundoff += Number.EPSILON * (Math.abs(sum) + Math.abs(value));
+    }
+    sum = next;
+  }
   const end = values.at(-1)!;
-  if (Math.abs(end - sum) <= Math.max(1e-9, 1e-9 * Math.abs(sum))) return;
+  if (Math.abs(end - sum) <= roundoff) return;
   const last = points.at(-1)!.x;
   const round = (value: number) =>
     value.toLocaleString("en-US", { maximumFractionDigits: 12, useGrouping: false });
