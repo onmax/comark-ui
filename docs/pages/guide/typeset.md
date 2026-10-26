@@ -112,7 +112,7 @@ The blocks keep their own styles either way.
 
 ## Without the preset
 
-The plugin and its CSS are exported on their own. Add `typeset()` to your plugins and render its `typeset-styles` node, or put `typesetCss` in a `<style>` inside the element you render into:
+The plugin and its CSS are exported on their own. Add `typeset()` to your plugins and render its `typeset-styles` node, or put `typesetCss` in a `<style>` inside the element you render into. In a browser, such as around a rich-text editor, import `typesetCss` from `comark-ui/client`, which leaves the parse plugins out of the bundle:
 
 ```ts
 import { typesetCss } from "comark-ui";

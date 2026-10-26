@@ -32,7 +32,7 @@ import * as tests from "comark-tests/vue";
 import * as zoom from "comark-zoom/vue";
 import { addMermaidStyles } from "./client.ts";
 import { type Preset, type PresetOptions, preset } from "./index.ts";
-import { typesetCss } from "./typeset.ts";
+import { typesetCss } from "./typeset-css.ts";
 
 export { criticCss } from "./index.ts";
 export type { PresetOptions } from "./index.ts";
