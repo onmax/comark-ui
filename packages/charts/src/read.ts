@@ -389,10 +389,11 @@ function readTotal(
   let roundoff = 0;
   for (const value of values.slice(0, -1)) {
     const next = sum + value;
-    // Safe integer additions are exact; otherwise allow only floating-point rounding at this step's scale.
-    if (![sum, value, next].every(Number.isSafeInteger)) {
-      roundoff += Number.EPSILON * (Math.abs(sum) + Math.abs(value));
-    }
+    // TwoSum recovers the actual rounding residual, so exact additions (even large ones) add no tolerance.
+    const added = next - sum;
+    const error = (sum - (next - added)) + (value - added);
+    // Allow the reported decimal total to round in the opposite direction, too (for example 0.1 + 0.2 = 0.3).
+    roundoff += 2 * Math.abs(error);
     sum = next;
   }
   const end = values.at(-1)!;
