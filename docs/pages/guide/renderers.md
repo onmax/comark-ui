@@ -72,6 +72,8 @@ Nothing needs a script to read. Zoom, carousel, tabs, code, and annotate add beh
 
 The HTML renderers inline each plugin's styles, and its script if it has one, once per document.
 
+The [text styles](/guide/typeset/) are the exception in every renderer: Vue, React, and Svelte render them with the document too, since they're scoped to the element the document renders into.
+
 The Vue, React, and Svelte components add the styles and start the script when they mount. They stop the script when the last one unmounts. When you render on a server, import each package's `style.css`, such as `comark-zoom/style.css`, with your own styles, so the page doesn't shift when the components mount.
 
 Without a renderer, call `start()` from `comark-zoom/client` once on a page with `data-zoom` elements. It adds the styles and returns a function that stops it.

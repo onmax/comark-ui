@@ -32,6 +32,7 @@ import * as table from "comark-table/svelte";
 import * as tabs from "comark-tabs/svelte";
 import * as tests from "comark-tests/svelte";
 import * as zoom from "comark-zoom/svelte";
+import typeset from "./Typeset.svelte";
 
 export { criticCss } from "comark-ui";
 
@@ -74,6 +75,7 @@ export default (options) =>
       table,
       tabs,
       tests,
+      typeset,
       zoom,
     },
     options,

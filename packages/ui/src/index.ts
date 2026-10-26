@@ -28,9 +28,11 @@ import type { TabsOptions } from "comark-tabs";
 import type { TestsOptions } from "comark-tests";
 import xref, { type XrefOptions } from "comark-xref";
 import type { ZoomOptions } from "comark-zoom";
+import { typeset, TYPESET_TAG } from "./typeset.ts";
 
 /** comark-critic's styles. It has no component to add them, so put them in the page yourself. */
 export { css as criticCss } from "comark-critic";
+export { typeset, typesetCss, TYPESET_TAG } from "./typeset.ts";
 
 /**
  * `false` turns a plugin off, and an object turns it on with those options. Everything but `include` is on, and cast,
@@ -98,6 +100,11 @@ export type PresetOptions = {
   zoom?: ZoomOptions | boolean;
   code?: CodeOptions | boolean;
   codeNotes?: boolean;
+  /**
+   * The text around the blocks, from shadcn/typeset on the same tokens: headings, paragraphs, lists, tables, code, and
+   * quotes. `false` leaves the text to your own styles.
+   */
+  typeset?: boolean;
 };
 
 // oxlint-disable-next-line no-explicit-any -- each plugin types its own meta, as in Comark's ParserOptions.
@@ -150,6 +157,8 @@ export type Renderer<C> = {
   zoom: Part<C, ZoomOptions>;
   code: Part<C, CodeOptions>;
   codeNotes: Part<C>;
+  /** The component that writes the typeset styles into the document, as `typeset-styles`. */
+  typeset: C;
 };
 
 export type Preset<C> = { plugins: AnyPlugin[]; components: Record<string, C> };
@@ -239,5 +248,9 @@ export function preset<C>(renderer: Renderer<C>, options: PresetOptions = {}): P
   add(renderer.zoom, options.zoom);
   add(renderer.code, options.code, { iconResolver: icons, ...optionsOf(options.code) });
   add(renderer.codeNotes, options.codeNotes);
+  if (on(options.typeset)) {
+    plugins.push(typeset());
+    components[TYPESET_TAG] = renderer.typeset;
+  }
   return { plugins, components };
 }

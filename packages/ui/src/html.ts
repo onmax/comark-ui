@@ -35,6 +35,7 @@ import * as tests from "comark-tests/html";
 import * as zoom from "comark-zoom/html";
 import { mermaidCss } from "./client.ts";
 import { type Preset, type PresetOptions, preset } from "./index.ts";
+import { typesetCss } from "./typeset-css.ts";
 
 export { criticCss } from "./index.ts";
 export type { PresetOptions } from "./index.ts";
@@ -54,6 +55,9 @@ const mermaid = {
     }) satisfies NodeHandler,
   },
 };
+
+// In the document itself, so `@scope` styles the element it renders into.
+const typeset: NodeHandler = () => `<style data-comark-typeset>${typesetCss}</style>`;
 
 /** Every plugin for `@comark/html`, with the `components` to render them. */
 export default (options?: PresetOptions): Preset<NodeHandler> =>
@@ -92,6 +96,7 @@ export default (options?: PresetOptions): Preset<NodeHandler> =>
       table,
       tabs,
       tests,
+      typeset,
       zoom,
     },
     options,

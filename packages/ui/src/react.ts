@@ -1,4 +1,4 @@
-import type { ComponentType } from "react";
+import { type ComponentType, createElement } from "react";
 import * as badge from "comark-badge/react";
 import * as cards from "comark-cards/react";
 import * as carousel from "comark-carousel/react";
@@ -32,6 +32,7 @@ import * as tests from "comark-tests/react";
 import * as zoom from "comark-zoom/react";
 import { addMermaidStyles } from "./client.ts";
 import { type Preset, type PresetOptions, preset } from "./index.ts";
+import { typesetCss } from "./typeset-css.ts";
 
 export { criticCss } from "./index.ts";
 export type { PresetOptions } from "./index.ts";
@@ -44,6 +45,13 @@ const mermaid = {
 
 // oxlint-disable-next-line no-explicit-any -- the type `@comark/react` takes for its components.
 type AnyComponent = ComponentType<any>;
+
+// Rendered with the document rather than added on mount, so `@scope` styles its root and server renders arrive styled.
+const typeset = () =>
+  createElement("style", {
+    "data-comark-typeset": "",
+    dangerouslySetInnerHTML: { __html: typesetCss },
+  });
 
 /** Every plugin with components for `@comark/react`, which leaves out annotate and diff. */
 export default (options?: PresetOptions): Preset<AnyComponent> =>
@@ -79,6 +87,7 @@ export default (options?: PresetOptions): Preset<AnyComponent> =>
       table,
       tabs,
       tests,
+      typeset,
       zoom,
     },
     options,
