@@ -371,14 +371,36 @@ export function start(): () => void {
             return copy.outerHTML;
           });
           if (!paths.length) continue;
+          // A stretched mark may draw past its viewBox, as a circle's loop does, and the page shows it with
+          // `overflow: visible`. An image crops at its viewBox, so the copy grows it to every path and a stroke's
+          // width more, and draws it over a rectangle grown to match.
+          const aspect = node.getAttribute("preserveAspectRatio") || "xMidYMid meet";
+          let [x1, y1, x2, y2] = [view.x, view.y, view.x + view.width, view.y + view.height];
+          if (aspect === "none") {
+            const [padX, padY] = [(6 * view.width) / rect.width, (6 * view.height) / rect.height];
+            for (const path of node.querySelectorAll("path")) {
+              const bounds = path.getBBox();
+              x1 = Math.min(x1, bounds.x - padX);
+              y1 = Math.min(y1, bounds.y - padY);
+              x2 = Math.max(x2, bounds.x + bounds.width + padX);
+              y2 = Math.max(y2, bounds.y + bounds.height + padY);
+            }
+          }
+          const [scaleX, scaleY] = [width / view.width, height / view.height];
           const source = new Image();
           source.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(
-            `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${view.x} ${view.y} ${view.width} ${view.height}" preserveAspectRatio="${node.getAttribute("preserveAspectRatio") || "xMidYMid meet"}">${paths.join("")}</svg>`,
+            `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${x1} ${y1} ${x2 - x1} ${y2 - y1}" preserveAspectRatio="${aspect}">${paths.join("")}</svg>`,
           )}`;
           await source.decode();
           paint.push((context) => {
             context.globalAlpha = alpha;
-            context.drawImage(source, x, y, width, height);
+            context.drawImage(
+              source,
+              x + (x1 - view.x) * scaleX,
+              y + (y1 - view.y) * scaleY,
+              (x2 - x1) * scaleX,
+              (y2 - y1) * scaleY,
+            );
           });
         } else if (node instanceof HTMLElement) {
           // Stamps, notes, and inline code: a fill, a border, and the ring a stamp draws with a spread shadow.
