@@ -229,15 +229,13 @@ describe("hosted badge handler", () => {
   it.each([true, undefined, "false"])(
     "does not expose or share authenticated workflow results without public visibility (%s)",
     async (visibility) => {
-      const fetch = vi
-        .fn<typeof globalThis.fetch>()
-        .mockImplementation(async () =>
-          json({
-            workflow_runs: [
-              { status: "completed", conclusion: "success", repository: { private: visibility } },
-            ],
-          }),
-        );
+      const fetch = vi.fn<typeof globalThis.fetch>().mockImplementation(async () =>
+        json({
+          workflow_runs: [
+            { status: "completed", conclusion: "success", repository: { private: visibility } },
+          ],
+        }),
+      );
       const cache = sharedCache();
       const query = "source=github-actions&repository=owner/private&workflow=ci.yml";
       for (const token of ["broad-token", undefined]) {
@@ -269,17 +267,15 @@ describe("hosted badge handler", () => {
   });
 
   it("sends the token to GitHub only", async () => {
-    const fetch = vi
-      .fn<typeof globalThis.fetch>()
-      .mockImplementation(async (url) =>
-        typeof url === "string" && url.startsWith("https://api.github.com/")
-          ? json({
-              workflow_runs: [
-                { status: "completed", conclusion: "success", repository: { private: false } },
-              ],
-            })
-          : json({ latest: "1.0.0" }),
-      );
+    const fetch = vi.fn<typeof globalThis.fetch>().mockImplementation(async (url) =>
+      typeof url === "string" && url.startsWith("https://api.github.com/")
+        ? json({
+            workflow_runs: [
+              { status: "completed", conclusion: "success", repository: { private: false } },
+            ],
+          })
+        : json({ latest: "1.0.0" }),
+    );
     const handle = createBadgeHandler({ fetch, token: "secret" });
     const response = await handle(
       get("source=github-actions&repository=onmax/comark-ui&workflow=ci.yml"),
