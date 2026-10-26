@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
-import { db, schema } from "vite-hub/database/drizzle";
+import { db } from "vite-hub/database/drizzle";
+import { user as userTable } from "../databases/config.ts";
 
 // GitHub logins that may comment on the docs and edit them. Everyone else, signed in or not, is an anonymous visitor.
 // Lowercase: GitHub logins are not case sensitive.
@@ -18,9 +19,9 @@ export async function inTeam(user: Person): Promise<boolean> {
       : user?.id
         ? (
             await db
-              .select({ login: schema.user.login })
-              .from(schema.user)
-              .where(eq(schema.user.id, user.id))
+              .select({ login: userTable.login })
+              .from(userTable)
+              .where(eq(userTable.id, user.id))
               .get()
           )?.login
         : undefined;
