@@ -157,14 +157,19 @@ test("the sidebar does not reuse a discarded forward entry's position", async ({
     column.scrollTop = column.scrollHeight;
     return Math.round(column.scrollTop);
   });
-  expect(discarded).toBeGreaterThan(fresh);
+  expect(discarded - fresh).toBeGreaterThan(1);
   await page.goBack();
   await expect(page).toHaveURL(/\/annotate\/$/);
   await page.locator('.sidebar a[href="/charts/"]').click();
   await expect(page).toHaveURL(/\/charts\/$/);
+  // Pointer scrolling and the first-load reveal can round to adjacent CSS pixels.
   await expect
-    .poll(() => page.locator(".sidebar .pages").evaluate((column) => Math.round(column.scrollTop)))
-    .toBe(fresh);
+    .poll(() =>
+      page
+        .locator(".sidebar .pages")
+        .evaluate((column, fresh) => Math.abs(Math.round(column.scrollTop) - fresh), fresh),
+    )
+    .toBeLessThanOrEqual(1);
 });
 
 test("the sidebar shows the current page's link on a first load", async ({ page }) => {
