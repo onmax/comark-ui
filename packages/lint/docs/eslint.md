@@ -74,7 +74,7 @@ Turn one off for a single line with a comment above it:
 
 ### Add your own components
 
-The plugin loads every comark-ui package you have installed, as the [command line](/lint/getting-started/) does. Point `settings.comark.config` at a `lint-comark.config.ts` to add your own plugins and components:
+The plugin loads every comark-ui package you have installed, as the [command line](/lint/getting-started/) does. Point `settings.comark.config` at a `lint-comark.config.mjs` to add your own plugins and components:
 
 ```js
 // eslint.config.js
@@ -82,11 +82,20 @@ import comark from "comark-linter/eslint";
 
 export default [
   comark.configs.recommended,
-  { settings: { comark: { config: "lint-comark.config.ts" } } },
+  { settings: { comark: { config: "lint-comark.config.mjs" } } },
 ];
 ```
 
-The path resolves from ESLint's working directory, and the file is the one `lint-comark --config` reads.
+Create the config as a JavaScript ES module:
+
+```js
+// lint-comark.config.mjs
+export default { components: ["duck-count"] };
+```
+
+The path resolves from ESLint's working directory, and the file is the one `lint-comark --config` reads. `.mjs` works across the package's supported Node versions. Configs are imported by Node without a TypeScript loader: to use `lint-comark.config.ts` with erasable TypeScript syntax, run ESLint on Node 22.18 or later, or enable `--experimental-strip-types` on Node 22.12–22.17. The same requirement applies to the Node runtime used by your editor's ESLint extension.
+
+Configs and their imports are cached for the lifetime of the ESLint process. After editing a config or a module it imports, restart ESLint (in VS Code, run **ESLint: Restart ESLint Server**) to load the changes.
 
 ### Check external URLs
 
@@ -123,7 +132,7 @@ oxlint can't run this plugin yet. Its JS plugins lint JavaScript and TypeScript 
 
 | Setting | Default | Description |
 | --- | --- | --- |
-| `settings.comark.config` | — | A `lint-comark.config.ts`, from the working directory, whose plugins and components are added to the installed comark-ui packages. |
+| `settings.comark.config` | — | A `lint-comark.config.mjs`, from the working directory, whose plugins and components are added to the installed comark-ui packages. |
 
 ### How it runs
 

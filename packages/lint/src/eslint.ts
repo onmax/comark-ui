@@ -13,7 +13,7 @@ import { catalog, type RuleInfo } from "./rules/index.ts";
 
 /** `settings.comark` in an ESLint config. */
 export type Settings = {
-  /** A `lint-comark.config.ts`, from the working directory, whose plugins and components are added to the installed comark-ui packages. */
+  /** A `lint-comark.config.mjs`, from the working directory, whose plugins and components are added to the installed comark-ui packages. */
   config?: string;
 };
 

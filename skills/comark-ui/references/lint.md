@@ -68,8 +68,10 @@ const results = await lintFiles(["docs/index.md", "docs/setup.md"], await resolv
 // eslint.config.js
 import comark from "comark-linter/eslint";
 
-export default [comark.configs.recommended, { settings: { comark: { config: "lint-comark.config.ts" } } }];
+export default [comark.configs.recommended, { settings: { comark: { config: "lint-comark.config.mjs" } } }];
 ```
+
+Use a JavaScript ES module (`export default { ... }`) for the linter config across supported Node versions. A `.ts` config requires Node 22.18+ or `--experimental-strip-types` on Node 22.12–22.17, including in the editor. Restart ESLint after editing the config or its imports; they are cached for the process lifetime.
 
 Install `eslint` (9.15 or later) and `@eslint/markdown` (8 or later). The recommended config lints `**/*.md` and `**/*.mdc` with `@eslint/markdown`'s `markdown/commonmark` language and YAML frontmatter, and turns on every rule but `comark/dead-url`, which requests every URL; turn that one on in `rules` to check them. Each rule has the name the command prints and is configured like any ESLint rule, `<!-- eslint-disable-next-line comark/unknown-component -->` included. ESLint prints the fix after the message. `settings.comark.config`, from the working directory, loads the same config file as `--config`. oxlint can't run it: its JS plugins don't lint `.md` files, so run `lint-comark` beside `oxlint`.
 
