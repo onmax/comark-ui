@@ -80,8 +80,13 @@ function chart(type: string, x: string[], series: number, kind: number, n: numbe
           (at, i) => `:::annotation{at="${at}" ${MARKS[(n + i) % 3]}}\nA note about ${at}.\n:::`,
         )
       : [];
+  // Long names turn bars sideways, as a writer would ask, and every third chart that can prints its numbers.
+  const flags = [
+    (type === "bar" || type === "stacked") && x.some((value) => value.length > 12) && "horizontal",
+    ["bar", "stacked", "waterfall", "dumbbell"].includes(type) && n % 3 === 0 && "labels",
+  ].filter(Boolean);
   return [
-    `::chart{type="${type}" title="${n % 5 ? `${type}, case ${n}` : "Median server response time for every authenticated API route, before and after the connection-pool change (ms)"}"}`,
+    `::chart{type="${type}" ${flags.map((flag) => `${flag} `).join("")}title="${n % 5 ? `${type}, case ${n}` : "Median server response time for every authenticated API route, before and after the connection-pool change (ms)"}"}`,
     `| x | ${names.join(" | ")} |`,
     `| --- |${names.map(() => " --: |").join("")}`,
     ...rows,
@@ -105,7 +110,7 @@ function gantt(tasks: string[], times: string[], n: number) {
           (at, i) => `:::annotation{at="${at}" ${MARKS[(n + i) % 3]}}\nA note about ${at}.\n:::`,
         );
   return [
-    `::chart{type="gantt" title="gantt, case ${n}"}`,
+    `::chart{type="gantt" ${n % 2 ? "labels " : ""}title="gantt, case ${n}"}`,
     `| task |${grouped ? " group |" : ""} start | end |`,
     `| --- |${grouped ? " --- |" : ""} --: | --: |`,
     ...rows,

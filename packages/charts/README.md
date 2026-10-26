@@ -20,7 +20,7 @@ const render = createHtmlRenderer({ plugins: [charts()], components });
 ```
 
 ```md
-::chart{title="Coffee cups and commits, per month (r = 0.99)"}
+::chart{type="line" title="Coffee cups and commits, per month (r = 0.99)"}
 | month | coffee cups | commits |
 | --- | --: | --: |
 | 2026-04 | 820 | 610 |
@@ -33,10 +33,12 @@ Put one table between `::chart` and `::`: a header row, then one row per point. 
 
 | Prop | What it does |
 | --- | --- |
-| `type` | `bar`, `stacked`, `line`, `area`, `scatter`, `dumbbell`, `waterfall`, `pie`, or `gantt`. Without it, dates on x make a line and anything else makes bars. |
+| `type` | `bar`, `stacked`, `line`, `area`, `scatter`, `dumbbell`, `waterfall`, `pie`, or `gantt`. Default `bar`. |
 | `x` | The column along the x axis. Default the first. |
 | `y` | The columns to draw, separated by commas. Default every column but `x`. |
 | `title` | The chart's caption, and its name for screen readers. |
+| `labels` | Prints the numbers on the chart's bars, steps, or dots. Takes no value. |
+| `horizontal` | Turns bars sideways, for long names such as file paths. Takes no value. |
 
 Mark a value with a [comark-annotate](https://comark-ui.onmax.me/annotate/) annotation after the table: `at` names the row by its x value and `series` its column, and the renderer draws the mark around the bar, point, or slice.
 
@@ -46,7 +48,7 @@ The espresso machine arrives.
 :::
 ```
 
-Bars turn sideways when their labels are long, so file paths and test names stay whole. For any other chart, put a [Vega-Lite](https://vega.github.io/vega-lite/) spec after the table in a `vega-lite` block; the table is its data. The [docs](https://comark-ui.onmax.me/charts/#usage) show the table each type expects.
+For any other chart, put a [Vega-Lite](https://vega.github.io/vega-lite/) spec after the table in a `vega-lite` block; the table is its data. The [docs](https://comark-ui.onmax.me/charts/#usage) show the table each type expects.
 
 The plugin adds every problem to `meta.issues`, so a host can reject a document before publishing it. Each issue names its chart and says how to fix it.
 

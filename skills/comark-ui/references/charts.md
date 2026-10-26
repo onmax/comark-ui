@@ -5,7 +5,7 @@ comark-charts draws the Markdown table inside `::chart` as an SVG chart and keep
 ## Write the table
 
 ```md
-::chart{title="Coffee cups and commits, per month (r = 0.99)"}
+::chart{type="line" title="Coffee cups and commits, per month (r = 0.99)"}
 | month | coffee cups | commits |
 | --- | --: | --: |
 | 2026-04 | 820 | 610 |
@@ -18,20 +18,20 @@ comark-charts draws the Markdown table inside `::chart` as an SVG chart and keep
 - Dates on x read as time when they look like `2026`, `2026-04`, `2026-04-15`, or an ISO date and time.
 - Inside the block, the table comes first, then any marks or Vega-Lite spec. Write explanations above or below the block.
 
-Props, all optional: `type` (below), `x` (the x column, default the first), `y` (the columns to draw, comma-separated, default all the others), `title` (the caption and the chart's name for screen readers), and `labels` (bar and stacked charts only: writes each value inside its bar or segment, or past the bar's end when it doesn't fit, as in `::chart{type="stacked" labels}`). Give every chart a `title` that says what it measures and in what unit.
+Props, all optional: `type` (below, default `bar` whatever the table holds, so write `type="line"` for a trend), `x` (the x column, default the first), `y` (the columns to draw, comma-separated, default all the others), `title` (the caption and the chart's name for screen readers), `labels` (prints the numbers on bars, waterfall steps, dumbbell rows, and gantt bars, as in `::chart{type="stacked" labels}`; without it the axis and the data table carry them), and `horizontal` (turns `bar` and `stacked` bars sideways, for long names such as file paths; past 40 bars they turn on their own). Give every chart a `title` that says what it measures and in what unit. Two or more series always get a legend over the plot.
 
 ## Choose the type
 
 | Data | `type` | Table |
 | --- | --- | --- |
-| One number per name, such as size per package | `bar` (default for names) | names, then one column; long names turn the bars sideways |
+| One number per name, such as size per package | `bar` (default) | names, then one column; add `horizontal` for long names |
 | Several numbers per name, compared side by side | `bar` | names, then one column per series |
 | Parts that add up to a total per name | `stacked` | names, then one column per part |
-| A trend over time | `line` (default for dates) | dates, then one column per series |
+| A trend over time | `line` | dates, then one column per series |
 | Totals over time that add up | `area` | dates, then one column per part |
 | One measure against another | `scatter` | numbers, then one column per series |
 | Before and after for several metrics | `dumbbell` | metric names, then a `before` and an `after` column |
-| How changes add up to a total | `waterfall` | the start total, each change (negative for a drop), then the end total, in one column |
+| How changes add up to a total | `waterfall` | the start total, each change (negative for a drop), then the end total, which must be the start plus every change, in one column |
 | Shares of one whole, five or fewer | `pie` | names, then one column of non-negative numbers |
 | Steps or tasks over time, such as a build trace, a deploy, or a plan | `gantt` | the task, then a start and an end column, as numbers or dates; a column of names, such as a run or a phase, colors the bars |
 
@@ -46,7 +46,7 @@ For a before and after of one or two metrics, grouped `bar` reads best; past thr
 Point at the value the text talks about with an `::annotation` inside the chart, after the table. `at` is the row's x value copied from the table, and `series` picks one column in that row, or on a `gantt`, the group of the bar when a task repeats. `mark`, `color`, and `side` are under Marks in SKILL.md.
 
 ```md
-::chart{title="Coffee cups and commits, per month"}
+::chart{type="line" title="Coffee cups and commits, per month"}
 | month | coffee cups | commits |
 | --- | --: | --: |
 | 2026-06 | 940 | 660 |

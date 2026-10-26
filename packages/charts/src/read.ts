@@ -32,8 +32,10 @@ export interface Chart {
    */
   rows: { x: string; values: (number | undefined)[]; group?: string }[];
   marks: ChartMark[];
-  /** Whether each bar or segment prints its value, from `labels`. Only bar and stacked bar charts take it. */
+  /** Whether the chart prints its numbers on its bars, steps, or dots, from `labels`. */
   labels?: boolean;
+  /** Whether bars run sideways, from `horizontal`. Only bar and stacked bar charts take it. */
+  horizontal?: boolean;
   /** How a gantt's starts and ends read: numbers, or dates kept as milliseconds since 1970 in UTC. */
   scale?: Exclude<XKind, "name">;
   /** The column of names a gantt colors its bars by. */
@@ -81,7 +83,18 @@ export const TYPES: readonly ChartType[] = [
   "gantt",
 ];
 // A bare `{labels}` arrives as `:labels="true"`, Comark's spelling of a prop with no value.
-const PROPS = new Set(["type", "x", "y", "title", "labels", ":labels", "class", "id"]);
+const PROPS = new Set([
+  "type",
+  "x",
+  "y",
+  "title",
+  "labels",
+  ":labels",
+  "horizontal",
+  ":horizontal",
+  "class",
+  "id",
+]);
 const MARK_PROPS = new Set(["at", "series", "value", "mark", "color", "side", "class", "id"]);
 const A: Record<ChartType, string> = {
   bar: "a bar chart",
@@ -148,7 +161,7 @@ export function readChart(
     if (!spec && key !== "$" && !PROPS.has(key))
       issues.push({
         rule: "comark/charts/unknown-prop",
-        message: `${name}: ${code(key)} isn't a prop of \`::chart\`. Valid props: type, x, y, title, labels.`,
+        message: `${name}: ${code(key)} isn't a prop of \`::chart\`. Valid props: type, x, y, title, labels, horizontal.`,
       });
 
   const content = childrenOf(node).filter(isContent);
@@ -244,8 +257,18 @@ export function readChart(
     return;
   }
   if (text(attrs.type) === "gantt") {
-    readLabels(name, "gantt", attrs, issues);
-    return readGantt(name, attrs, columns, cells, x, y ? named : undefined, annotations, issues);
+    const gantt = readGantt(
+      name,
+      attrs,
+      columns,
+      cells,
+      x,
+      y ? named : undefined,
+      annotations,
+      issues,
+    );
+    const labels = readFlags(name, "gantt", attrs, issues);
+    return gantt && { ...gantt, ...labels };
   }
 
   const rows = cells.map((row, index) => {
@@ -286,8 +309,7 @@ export function readChart(
   const xKind = kindOf(points.map((row) => row.x));
 
   const typeText = text(attrs.type);
-  const fallback: ChartType = xKind === "name" ? "bar" : "line";
-  let type = TYPES.find((type) => type === typeText) ?? fallback;
+  let type = TYPES.find((type) => type === typeText) ?? "bar";
   if (typeText && type !== typeText)
     issues.push({
       rule: "comark/charts/unknown-type",
@@ -299,9 +321,9 @@ export function readChart(
   if (type === "scatter" && xKind !== "number") {
     issues.push({
       rule: "comark/charts/non-numeric-x",
-      message: `${name}: a scatter plot needs numbers in ${code(x)}, its \`x\`. Use \`type="${fallback}"\`, or make \`x\` a column of numbers.`,
+      message: `${name}: a scatter plot needs numbers in ${code(x)}, its \`x\`. Use \`type="bar"\`, or make \`x\` a column of numbers.`,
     });
-    type = fallback;
+    type = "bar";
   }
   if (type === "dumbbell" && named.length < 2) {
     issues.push({
@@ -339,6 +361,7 @@ export function readChart(
     });
     type = "bar";
   }
+  if (type === "waterfall") readTotal(name, points, issues);
   return {
     type,
     title: text(attrs.title),
@@ -347,33 +370,74 @@ export function readChart(
     series,
     rows: points.map((row) => ({ x: row.x, values: row.values.slice(0, series.length) })),
     marks: readMarks(name, type, x, annotations, points, series, issues),
-    ...(readLabels(name, type, attrs, issues) && { labels: true }),
+    ...readFlags(name, type, attrs, issues),
   };
 }
 
-/** Reads `labels`, which writes each value on its bar: true when it's on and the chart has bars to write on. */
-function readLabels(name: string, type: ChartType, attrs: ElementNode[1], issues: Issue[]) {
-  const raw = attrs.labels ?? attrs[":labels"];
+/**
+ * A waterfall's first row is its start total and its last row its end total, so the last must be the first plus every
+ * change between them, as a reader checks it.
+ */
+function readTotal(
+  name: string,
+  points: { x: string; values: (number | undefined)[] }[],
+  issues: Issue[],
+) {
+  const values = points.map((row) => row.values[0] ?? 0);
+  if (values.length < 2) return;
+  const sum = values.slice(0, -1).reduce((total, value) => total + value, 0);
+  const end = values.at(-1)!;
+  if (Math.abs(end - sum) <= Math.max(1e-9, 1e-9 * Math.abs(sum))) return;
+  const last = points.at(-1)!.x;
+  const round = (value: number) =>
+    value.toLocaleString("en-US", { maximumFractionDigits: 12, useGrouping: false });
+  issues.push({
+    rule: "comark/charts/waterfall-total",
+    message: `${name}: a waterfall's last row is its end total, and ${code(last)} is ${round(end)} while ${code(points[0]!.x)} and the changes after it add up to ${round(sum)}. Fix the total, add the missing change, or end the table with a total row of ${round(sum)}.`,
+  });
+}
+
+/** Reads a prop written alone, such as `{labels}`: true when it's on, and its problems when it has a value. */
+function readFlag(name: string, prop: string, attrs: ElementNode[1], issues: Issue[]) {
+  const raw = attrs[prop] ?? attrs[`:${prop}`];
   if (raw === undefined) return false;
   const value = text(raw);
   if (value === "false") return false;
-  if (value !== "" && value !== "true")
-    issues.push({
-      rule: "comark/charts/invalid-labels",
-      message: `${name}: \`labels\` takes no value. Write \`labels\` alone, as in \`::chart{type="stacked" labels}\`.`,
-    });
-  else if (type === "dumbbell" || type === "waterfall" || type === "gantt")
-    issues.push({
-      rule: "comark/charts/invalid-labels",
-      message: `${name}: ${A[type]} prints its numbers itself, so \`labels\` changes nothing. Remove it.`,
-    });
-  else if (type !== "bar" && type !== "stacked")
-    issues.push({
-      rule: "comark/charts/invalid-labels",
-      message: `${name}: \`labels\` writes each value on its bar, and ${A[type]} has no bars. Remove it, or use \`type="bar"\`.`,
-    });
-  else return true;
+  if (value === "" || value === "true") return true;
+  issues.push({
+    rule: `comark/charts/invalid-${prop}`,
+    message: `${name}: \`${prop}\` takes no value. Write \`${prop}\` alone, as in \`::chart{type="bar" ${prop}}\`.`,
+  });
   return false;
+}
+
+// The types with bars, steps, or dots to print a number on; lines, areas, scatter plots, and pies are read off their axis
+// or legend and the data table.
+const LABELED = new Set<ChartType>(["bar", "stacked", "waterfall", "dumbbell", "gantt"]);
+
+/** Reads `labels` and `horizontal`, each on the types that take it. */
+function readFlags(name: string, type: ChartType, attrs: ElementNode[1], issues: Issue[]) {
+  const flags: { labels?: true; horizontal?: true } = {};
+  if (readFlag(name, "labels", attrs, issues)) {
+    if (LABELED.has(type)) flags.labels = true;
+    else
+      issues.push({
+        rule: "comark/charts/invalid-labels",
+        message: `${name}: \`labels\` prints each number on its bar, step, or dot, and ${A[type]} has none. Remove it, or use \`type="bar"\`.`,
+      });
+  }
+  if (readFlag(name, "horizontal", attrs, issues)) {
+    if (type === "bar" || type === "stacked") flags.horizontal = true;
+    else
+      issues.push({
+        rule: "comark/charts/invalid-horizontal",
+        message:
+          type === "dumbbell" || type === "gantt"
+            ? `${name}: ${A[type]} always runs sideways, so \`horizontal\` changes nothing. Remove it.`
+            : `${name}: \`horizontal\` turns bars sideways, and ${A[type]} has no bars to turn. Remove it, or use \`type="bar"\`.`,
+      });
+  }
+  return flags;
 }
 
 /**
