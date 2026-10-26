@@ -19,12 +19,13 @@ const markdown = [
   '::sources{title="References"}\n1. [Magnetoreception](https://en.wikipedia.org/wiki/Magnetoreception)\n2. [Homing](https://example.com/homing)\n::',
   "After",
 ].join("\n\n");
-// Drops what differs only in serialization: comments, whitespace between tags, the HTML renderer's inline styles, and
-// whether a bare `&` is escaped.
+// Drops what differs only in serialization: comments, whitespace between tags, the HTML renderer's inline styles and
+// script, which the components add when they mount, and whether a bare `&` is escaped.
 const normalize = (html: string) =>
   html
     .replace(/<!--.*?-->/g, "")
     .replace(/<style[^>]*>.*?<\/style>/g, "")
+    .replace(/<script>.*?<\/script>/gs, "")
     .replace(/\s*\n\s*/g, "")
     .replaceAll("&amp;", "&")
     .replace(/\s+/g, " ")

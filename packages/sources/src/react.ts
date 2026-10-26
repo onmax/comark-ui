@@ -1,5 +1,5 @@
 import { Children, createElement, type ReactNode, useEffect } from "react";
-import { addStyles } from "./client.ts";
+import { css, start } from "./client.ts";
 import type { SourcesAttributes } from "./index.ts";
 
 export { default } from "./index.ts";
@@ -7,7 +7,7 @@ export type { SourcesAttributes, SourcesMeta } from "./index.ts";
 
 /** `::sources` for `@comark/react`. */
 export function Sources({ title, children }: SourcesAttributes & { children?: ReactNode }) {
-  useEffect(addStyles, []);
+  useEffect(() => start(css), []);
   if (!Children.count(children)) return null;
   const label = title || "Sources";
   return createElement(
