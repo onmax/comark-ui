@@ -1,7 +1,6 @@
 ---
 title: Badge builder
-description: Create and share SVG badges for your project.
-tagline: Create a badge, then copy it into your README or Comark document.
+description: Create and share SVG badges for your project. (ViteHub pilot check, not for merge.)
 ---
 
 ::badge-builder
