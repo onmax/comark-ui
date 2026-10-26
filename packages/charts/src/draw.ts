@@ -395,7 +395,7 @@ interface SceneItem {
   y?: number;
   bounds?: { x1: number; y1: number; x2: number; y2: number };
   datum?: { row?: unknown; series?: unknown; y?: unknown; value?: unknown };
-  fill?: unknown;
+  fill?: string;
   mark?: { marktype?: string; role?: string };
   items?: SceneItem[];
 }
@@ -632,7 +632,7 @@ function zeroBars(chart: Chart, view: vega.View): Stub[] {
   const stubs: Stub[] = [];
   walk(view, (item, dx, dy) => {
     const { datum, bounds, fill } = item;
-    if (item.mark?.marktype !== "rect" || !bounds || typeof fill !== "string") return;
+    if (item.mark?.marktype !== "rect" || !bounds || !fill) return;
     if (datum?.y === undefined || Number(datum.y) !== 0) return;
     const [x, y] = [bounds.x1 + dx, bounds.y1 + dy];
     stubs.push({
