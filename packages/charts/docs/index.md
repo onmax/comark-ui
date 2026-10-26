@@ -26,7 +26,7 @@ credits: 'Laid out by Microsoft Research''s <a href="https://github.com/microsof
 
 :::example{label="Lines"}
 ```md
-::chart{title="Coffee cups and commits, per month (r = 0.99)"}
+::chart{type="line" title="Coffee cups and commits, per month (r = 0.99)"}
 | month | coffee cups | commits |
 | --- | --: | --: |
 | 2026-04 | 820 | 610 |
@@ -109,13 +109,13 @@ x values in the form `2026`, `2026-04`, `2026-04-15`, or an ISO date and time si
 
 ### Type
 
-Use the `type` prop to pick the chart. Without it, names on x make bars, and dates or numbers make a line.
+Use the `type` prop to pick the chart. It defaults to `bar`, whatever the table holds.
 
 | `type` | Use it for | Table |
 | --- | --- | --- |
 | `bar` | One or more numbers per name: sizes, counts, timings. | Names, then one column per series. Several series make grouped bars. |
 | `stacked` | Parts that add up to a total per name. | Names, then one column per part. |
-| `line` | A trend over time or over a number. | Dates or numbers, then one column per series. Each line is labelled at its end. |
+| `line` | A trend over time or over a number. | Dates or numbers, then one column per series. |
 | `area` | Totals over time that add up. | Dates, then one column per part, stacked. |
 | `scatter` | One measure against another. | Numbers, then one column per series. |
 | `dumbbell` | Before and after for several metrics. | Metric names, then two or more columns, such as `before` and `after`. |
@@ -126,7 +126,7 @@ Use the `type` prop to pick the chart. Without it, names on x make bars, and dat
 ::examples
 :::example{label="Sideways bars"}
 ```md
-::chart{title="Longest review threads (min)"}
+::chart{horizontal title="Longest review threads (min)"}
 | first comment | minutes |
 | --- | --: |
 | nit: this file uses tabs and the rest of the repo uses spaces | 84 |
@@ -203,9 +203,7 @@ Use the `type` prop to pick the chart. Without it, names on x make bars, and dat
 :::
 ::
 
-Bars turn sideways when their labels are long or there are many of them, so file paths and test names stay whole.
-
-In a waterfall, the first row is a total, and so is the last when it equals the running sum. The other rows are changes, green up and red down.
+In a waterfall, the first row is the start total and the last row the end total. The rows between are changes, green up and red down, and the plugin reports an end total that isn't the start plus every change.
 
 ### X axis
 
@@ -225,11 +223,11 @@ Use the `x` prop to pick the column along the x axis. It defaults to the first c
 
 ### Series
 
-Use the `y` prop to pick the columns to draw, separated by commas. It defaults to every column but `x`.
+Use the `y` prop to pick the columns to draw, separated by commas. It defaults to every column but `x`. A chart of two or more series names them in a legend over the plot, as a pie names its slices and a gantt its groups.
 
 ::example
 ```md
-::chart{y="commits" title="Commits per month"}
+::chart{type="line" y="commits" title="Commits per month"}
 | month | coffee cups | commits |
 | --- | --: | --: |
 | 2026-04 | 820 | 610 |
@@ -255,9 +253,27 @@ Use the `title` prop to caption the chart. It's also the chart's name for screen
 ```
 ::
 
-### Values on the bars
+### Horizontal
 
-Use the `labels` prop to write every value on its bar. Write it alone, with no value.
+Use the `horizontal` prop to turn a `bar` or `stacked` chart's bars sideways, so long names such as file paths and test names stay whole. Write it alone, with no value.
+
+::example
+```md
+::chart{horizontal title="Slowest tests (s)"}
+| test | seconds |
+| --- | --: |
+| e2e/annotate.e2e.ts › copies a zoomed screenshot with its marks | 41.2 |
+| packages/lint/test/cli.test.ts › exits with 1 | 12.9 |
+| tests/integration/checkout-flow.spec.ts › applies a coupon | 8.4 |
+::
+```
+::
+
+Upright bars wrap a long name onto up to three lines under its bar, and cut it short past that. A chart of more than 40 bars runs sideways without `horizontal`, since an upright plot can't hold them all. Dumbbells and gantts always run sideways, so the plugin reports `horizontal` on them.
+
+### Labels
+
+Use the `labels` prop to print the chart's numbers on it. Write it alone, with no value. Without it, no chart prints its numbers: the value axis and the **Data** table carry them.
 
 ::example
 ```md
@@ -270,14 +286,115 @@ Use the `labels` prop to write every value on its bar. Write it alone, with no v
 ```
 ::
 
-Without `labels`, bars print their values past their ends when there's room, and crowded bars, stacked bars, and bars with negative numbers print none. With `labels`, every bar and segment writes its value inside itself, in white. A bar too short or too thin for its value writes it just past its end instead. The value axis goes, since every value is on the chart.
+Each type prints its numbers where they belong:
 
-A `bar` worth zero draws as a thin, faded stroke in its series' color at the base, so a grouped chart keeps a lane for it and its `0` sits beside it.
+- **Bars and stacked bars** write each value inside its bar or segment, in white, and the value axis goes. A bar too short or too thin for its value writes it just past its end instead. A stack has one end, so only its outermost part writes past it; a thinner part elsewhere, or a value that would cover another bar's, leaves its value to the **Data** table.
+- **Waterfalls** print each step's change and each total's value beside it, when the numbers fit their steps.
+- **Dumbbells** print each row's least and most values beside its outer dots, when the plot has room for them.
+- **Gantts** print how long each bar lasts past its end.
 
-A stack has one end, so its first series, drawn at the end, is the only part that writes its value past it. A thinner part elsewhere in the stack, or a value that would cover another bar's, leaves its value to the **Data** table.
+A `bar` worth zero draws as a thin, faded stroke in its series' color at the base, so a grouped chart keeps a lane for it.
 
 > [!NOTE]
-> `labels` applies to `bar` and `stacked` charts. Other types have no bars to write on, or print their numbers already: a dumbbell its ends, a waterfall each step, and a gantt each duration. The plugin reports it there.
+> Lines, areas, scatter plots, and pies have no bars, steps, or dots to print on, so the plugin reports `labels` on them.
+
+### Gantt charts
+
+Use `type="gantt"` with a table of three columns: the bar's name, where it starts, and where it ends. The chart draws one bar per row, top to bottom in table order. The start and end columns hold numbers or dates.
+
+```md
+::chart{type="gantt" title="A Friday deploy, minutes after 16:55"}
+| step | start | end |
+| --- | --: | --: |
+| tests | 0 | 6 |
+| build | 6 | 11 |
+| deploy | 11 | 13 |
+::
+```
+
+Use the `y` prop to name the start and end columns when the table has other numbers too, such as a duration: `y="start, end"`.
+
+A column of names, such as a phase, an owner, or a run, colors the bars, one color per name, with a legend over the chart. A task may then repeat in another group, like the same step in two runs. To mark a task that repeats, name its group in the [note](/charts/notes/#series)'s `series`.
+
+> [!NOTE]
+> A column of numbers reads as times, so write numbered groups as names, like `shard 1`.
+
+A row that ends where it starts is a milestone, and draws as a diamond. With `labels`, every other bar prints how long it lasts past its end. For numbers that's the difference, and for dates it's a span in the table's unit, such as `3y`, `2mo`, `7d`, or `1.5h`. A gantt has no value axis, so it takes no target line.
+
+Dates take the forms x takes: `2026`, `2026-04`, `2026-04-15`, or an ISO date and time. A time without a zone is UTC, and the axis shows UTC, so the chart reads the same wherever it's drawn.
+
+::example
+```md
+::chart{type="gantt" labels title="nuxt build, before and after the worker (s)"}
+| step | run | start | end |
+| --- | --- | --: | --: |
+| compile client | before | 0 | 3.7 |
+| compile server | before | 3.7 | 7.8 |
+| compile client | after | 0 | 3.7 |
+| compile server | after | 0.2 | 4.6 |
+| ready | after | 4.6 | 4.6 |
+::
+```
+::
+
+### Notes
+
+Put an `::annotation` after the table to mark a row or a value with a hand-drawn mark and a note, or to draw a target across the plot. [Notes](/charts/notes/) has their props.
+
+::example
+```md
+::chart{labels title="Minutes to the first review comment"}
+| team | minutes |
+| --- | --: |
+| frontend | 38 |
+| backend | 64 |
+| design | 12 |
+:::annotation{at="backend" mark="circle" color="red"}
+Two reviewers were on leave.
+:::
+:::annotation{mark="line" value="45" color="red" side="right"}
+Team goal: 45 min.
+:::
+::
+```
+::
+
+### Vega-Lite
+
+For a chart the types don't cover, such as a box plot, a heatmap, or error bands, put a [Vega-Lite](https://vega.github.io/vega-lite/) spec after the table in a `vega-lite` block. The table is still its data, so it stays in the page: each row becomes one data point, with a field per column named by its header. Cells that read as numbers become numbers, empty ones become null, and the rest stay text.
+
+Leave `data` out of the spec, because the table replaces it, and name the columns in the spec's `encoding`. The spec can't load files or URLs.
+
+::example
+````md
+::chart{title="Latency per request (ms)"}
+| endpoint | ms |
+| --- | --: |
+| /search | 120 |
+| /search | 180 |
+| /search | 210 |
+| /search | 260 |
+| /search | 410 |
+| /login | 40 |
+| /login | 45 |
+| /login | 52 |
+| /login | 58 |
+| /login | 61 |
+
+```vega-lite
+{
+  "mark": "boxplot",
+  "encoding": {
+    "x": { "field": "ms", "type": "quantitative" },
+    "y": { "field": "endpoint", "type": "nominal" }
+  }
+}
+```
+::
+````
+::
+
+The chart takes the same card, colors, and typeface as the other types wherever the spec sets none. Use the spec's own `config` to change them, since it wins over the chart's. A chart drawn from a spec takes only `title` from the props, and no notes: draw them with a `text` or `rule` layer in the spec.
 
 ### Gantt charts
 
@@ -395,12 +512,11 @@ To check documents without drawing them, as comark-linter does, pass `charts({ d
 
 ### Fit the column
 
-A chart keeps the size its text was set for instead of stretching to the column, so labels read the same in every chart. It's sized to fit its card, with room for its labels.
+Every chart is laid out the same way, so two charts of one table look alike wherever they are:
 
-- Values sit on the marks when they fit. On crowded or stacked bars, or with negative numbers, you read them off the value axis instead.
-- Lines name their series at their ends. When the ends sit close together, a legend names them.
+- A chart keeps the size its text was set for instead of stretching to the column, so labels read the same in every chart.
+- A narrower column, or a printed page, shrinks it to fit, as it does a screenshot.
 - No row is ever dropped. A long sideways chart grows taller.
-- A narrower column scrolls the chart sideways, and print shrinks it to the page. A chart with marks shrinks to fit instead, since its marks sit at percentages of the chart.
 
 ## Accessibility
 
@@ -412,11 +528,12 @@ Each chart's SVG is an image named by its `title`. Without one, the name says wh
 
 | Prop | Default | Description |
 | --- | --- | --- |
-| `type` | `bar` for names on x, else `line` | `bar`, `stacked`, `line`, `area`, `scatter`, `dumbbell`, `waterfall`, `pie`, or `gantt`. |
+| `type` | `bar` | `bar`, `stacked`, `line`, `area`, `scatter`, `dumbbell`, `waterfall`, `pie`, or `gantt`. |
 | `x` | The first column | The column along the x axis. |
 | `y` | Every column but `x` | The columns to draw, separated by commas. |
 | `title` | — | The chart's caption, and its name for screen readers. |
-| `labels` | Off | Writes each value on its bar. Takes no value. Only `bar` and `stacked` charts take it. |
+| `labels` | Off | Prints the numbers on the chart: on each bar, beside each waterfall step and dumbbell row, and past each gantt bar. Takes no value. Lines, areas, scatter plots, and pies don't take it. |
+| `horizontal` | Off, or on past 40 bars | Turns bars sideways. Takes no value. Only `bar` and `stacked` charts take it; dumbbells and gantts always run sideways. |
 
 ### Options
 
@@ -441,7 +558,8 @@ The plugin adds these problems to `meta.issues`. Each issue names its chart by i
 - An x value that appears twice.
 - Content besides the table and its annotations.
 - Data that doesn't fit the type, such as a line or an area of one row, a scatter without numbers on x, a dumbbell with one column, a pie or a waterfall with several, and a pie with a negative number or nothing but zeros.
-- `labels` with a value, or on a type without bars.
+- `labels` or `horizontal` with a value, or on a type that doesn't take it.
+- A waterfall whose last row isn't its first plus every change.
 - A chart that couldn't be drawn, which shows its table alone.
 - A gantt without one start and one end column, a row missing its start or its end, a bar that ends before it starts, and two columns of names to color by.
 - A Vega-Lite spec that isn't one JSON object, has `data`, reads a field that's neither a column nor made by a transform, or that Vega-Lite can't draw, and a spec chart with `type`, `x`, `y`, or an `::annotation`.
@@ -451,7 +569,9 @@ The plugin adds these problems to `meta.issues`. Each issue names its chart by i
 Rendering never throws. A chart with a problem draws what it can:
 
 - A cell that isn't a number is left out.
-- A type that doesn't fit falls back to the default.
+- A type that doesn't fit draws bars.
+- A waterfall whose end total doesn't add up still draws its last row as a total.
+- `labels` or `horizontal` on a type that doesn't take it is ignored.
 - A pie or a waterfall draws only its first column.
 - A gantt row without a start or an end isn't drawn, and a gantt colors by its first column of names.
 - A Vega-Lite spec loses its links.

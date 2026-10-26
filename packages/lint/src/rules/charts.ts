@@ -112,10 +112,18 @@ export default {
   },
   "comark/charts/invalid-labels": {
     code: "COMARK0431",
-    title: "Put `labels` on bar and stacked bar charts",
+    title: "Put `labels` on a chart with bars, steps, or dots",
   },
   "comark/charts/invalid-line": {
     code: "COMARK0432",
     title: "Cross a chart with a line at a number on its value axis",
+  },
+  "comark/charts/invalid-horizontal": {
+    code: "COMARK0433",
+    title: "Put `horizontal` on bar and stacked bar charts",
+  },
+  "comark/charts/waterfall-total": {
+    code: "COMARK0434",
+    title: "End a waterfall with its start plus every change",
   },
 } satisfies Record<`comark/charts/${string}`, RuleInfo>;

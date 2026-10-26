@@ -1,4 +1,4 @@
-`labels` writes each value inside its bar or segment, or just past the bar's end where it doesn't fit, so it only applies to `bar` and `stacked` charts. Lines, areas, scatter plots, and pies have no bars to write on, and dumbbells, waterfalls, and gantts print their numbers already. Write it alone, with no value.
+`labels` prints a chart's numbers on its bars, beside its waterfall steps and dumbbell rows, or past its gantt bars. Lines, areas, scatter plots, and pies have none of those to print on, so read their numbers off the axis and the **Data** table. Write it alone, with no value.
 
 ::incorrect
 ```md

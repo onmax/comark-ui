@@ -8,7 +8,7 @@ tagline: A hand-drawn mark on a chart's data and its note, or a line across the 
 ::examples
 :::example{label="With notes"}
 ```md
-::chart{title="Coffee cups and commits, per month (r = 0.99)"}
+::chart{type="line" title="Coffee cups and commits, per month (r = 0.99)"}
 | month | coffee cups | commits |
 | --- | --: | --: |
 | 2026-04 | 820 | 610 |
