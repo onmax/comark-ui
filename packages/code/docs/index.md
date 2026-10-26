@@ -180,7 +180,9 @@ pnpm add comark @comark/html comark-code
 
 ### Wrap
 
-Use the `wrap` attribute to start the block with Wrap on. Wrap stays on until the reader presses it again, and it isn't saved for the next visit.
+Use the `wrap` attribute to start the block with Wrap on. The reader's choice applies to every code block and is saved in localStorage for later visits to the same site, overriding the attribute. If storage is unavailable, the choice lasts for the current page.
+
+The Wrap button appears only when the unwrapped code would overflow. It stays available while those lines are wrapped, so the reader can turn wrapping off. Its visibility updates when the block resizes or its content changes.
 
 ::example
 ````md
