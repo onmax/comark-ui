@@ -233,11 +233,17 @@ const measure = (text: string) =>
  * One neutral outline for every badge, so a row of them reads as a set: the label muted, a divider, then the value.
  * A status color is a dot before the value instead of a colored outline.
  */
-function shadcn(label: string, value: string, color: string, icon: string, dark: boolean) {
+function shadcn(
+  label: string,
+  value: string,
+  color: string,
+  icon: string,
+  dark: boolean,
+  status: boolean,
+) {
   const border = dark ? "#404040" : "#e5e5e5";
   const fg = dark ? "#fafafa" : "#171717";
   const muted = dark ? "#a3a3a3" : "#737373";
-  const status = color !== badgeColors.primary && color !== badgeColors.secondary;
   const start = 9 + (icon ? 20 : 0);
   const left = label ? Math.round(start + measure(label) + 8) : 0;
   const valueStart = label ? left + 8 : start;
@@ -271,6 +277,7 @@ export function badgeSvg(input: BadgeImage): string {
       (dark && Object.entries(dots).find(([name]) => name === input.color)?.[1]) || color,
       icon,
       dark,
+      validColor(input.color) && !["primary", "secondary", "neutral"].includes(input.color),
     );
   const labelFg = solid ? textColor(labelColor) : fg;
   const valueFg = solid ? textColor(color) : fg;

@@ -39,6 +39,20 @@ describe("image badges", () => {
     expect(passing).toContain('fill="#15803d"');
     expect(await svgOf(':badge[MIT]{label="license"}')).not.toContain("<circle");
   });
+  it.each(["light", "dark"])(
+    "distinguishes custom gray colors from neutral names in %s images",
+    async (theme) => {
+      for (const color of ["#525252", "#737373", "primary", "secondary", "neutral"]) {
+        const html = await render(`:badge[ready]{label="build" color="${color}" theme="${theme}"}`);
+        const svg = decodeURIComponent(/src="data:image\/svg\+xml,([^"]+)"/.exec(html)![1]!);
+        if (color.startsWith("#")) {
+          expect(svg).toMatch(new RegExp(`<circle [^>]*fill="${color}"`));
+        } else {
+          expect(svg).not.toContain("<circle");
+        }
+      }
+    },
+  );
   it("encodes live badge options in a hosted image without fetching during parse", async () => {
     const html = await render(
       ':badge{source="github-actions" repository="onmax/comark-ui" workflow="ci.yml" branch="feat/new"}',
