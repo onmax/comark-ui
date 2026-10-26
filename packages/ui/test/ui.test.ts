@@ -14,6 +14,7 @@ import vue from "../src/vue.ts";
 // No downloads and no Kroki, so the tests stay offline.
 const offline: PresetOptions = {
   chips: { download: false },
+  badge: { download: false },
   icon: { fetch: false },
   diagrams: { draw: false },
 };
@@ -57,7 +58,7 @@ describe("comark-ui", () => {
     for (const preset of [html, vue, react]) {
       const { plugins } = preset({
         ...offline,
-        badge: { endpoint: "https://example.com/badge.svg" },
+        badge: { endpoint: "https://example.com/badge.svg", download: false },
       });
       const document = await parseMarkdown(':badge{source="npm-version" package="comark-ui"}', {
         plugins,

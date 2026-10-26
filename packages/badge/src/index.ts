@@ -2,9 +2,17 @@ import type { ElementNode, Node } from "comark";
 import { defineComarkPlugin } from "comark";
 import { resolveAttributes } from "comark/render";
 import { textContent } from "comark/utils";
-import { badgeKeys, badgeParams, badgeSvg, readBadge } from "./svg.ts";
+import { liveKey, resolveLive, ttls, type LiveResult } from "./live.ts";
+import { badgeKeys, badgeParams, badgeSvg, readBadge, type BadgeSpec } from "./svg.ts";
 
-export type BadgeOptions = { endpoint?: string };
+export type BadgeOptions = {
+  endpoint?: string;
+  /**
+   * Live badges fetch their npm or GitHub data while parsing and are drawn into the document, so a page loads no badge.
+   * `false` links them to `endpoint` instead, which stays current but costs each reader a request.
+   */
+  download?: boolean;
+};
 
 export type BadgeMeta = {
   /** One readable sentence per problem with a `:badge`. Empty when the document has none. Other plugins add theirs too. */
@@ -32,6 +40,25 @@ export type BadgeColor = (typeof colors)[number];
 export type BadgeAttributes = { color?: BadgeColor; src?: string; label?: string };
 
 type Data = Parameters<typeof resolveAttributes>[1];
+type Live = { node: ElementNode; spec: BadgeSpec };
+
+const svgSrc = (svg: string) => `data:image/svg+xml,${encodeURIComponent(svg)}`;
+
+// Each badge's data, kept across parses and instances for as long as the endpoint would cache it, so a site that
+// builds many pages asks once. Unavailable data isn't kept, so the next parse tries again.
+const fetched = new Map<string, { result: Promise<LiveResult>; expires: number }>();
+
+function fetchLive(spec: BadgeSpec) {
+  const key = liveKey(spec);
+  const stored = fetched.get(key);
+  if (stored && stored.expires > Date.now()) return stored.result;
+  const result = resolveLive(spec).then((value) => {
+    if (value.unavailable) fetched.delete(key);
+    return value;
+  });
+  fetched.set(key, { result, expires: Date.now() + ttls[spec.source] * 1000 });
+  return result;
+}
 
 const isElement = (node: Node | undefined): node is ElementNode =>
   Array.isArray(node) && node[0] !== null;
@@ -56,6 +83,7 @@ function badge(
   data: Data,
   issues: Issue[],
   options: BadgeOptions,
+  live: Live[],
 ) {
   // A block badge's content is a paragraph, which a badge, drawn inline, can't hold.
   const content = childrenOf(node)
@@ -85,7 +113,7 @@ function badge(
     }
     const spec = parsed.value;
     let src: string;
-    if (spec.source === "static") src = `data:image/svg+xml,${encodeURIComponent(badgeSvg(spec))}`;
+    if (spec.source === "static") src = svgSrc(badgeSvg(spec));
     else {
       try {
         const endpoint = new URL(options.endpoint ?? "https://comark-ui.onmax.me/badge.svg");
@@ -108,6 +136,7 @@ function badge(
         ? `${spec.label ? `${spec.label}: ` : ""}${spec.value}`
         : `${spec.label}: ${spec.package || `${spec.repository} / ${spec.workflow}`}`;
     node.splice(1, node.length - 1, { src, label });
+    if (spec.source !== "static") live.push({ node, spec });
     return;
   }
   const written = text(attrs.color);
@@ -132,19 +161,31 @@ function badge(
  */
 export default defineComarkPlugin<BadgeOptions, BadgeMeta>((options = {}) => ({
   name: "comark-badge",
-  post(state) {
+  async post(state) {
     const { tree } = state;
     const data: Data = { frontmatter: tree.frontmatter, meta: tree.meta, data: {}, props: {} };
     const issues: Issue[] = [];
+    const live: Live[] = [];
     let count = 0;
     const walk = (nodes: Node[]) => {
       for (const node of nodes) {
         if (!isElement(node)) continue;
-        if (node[0] === "badge") badge(node, ++count, data, issues, options);
+        if (node[0] === "badge") badge(node, ++count, data, issues, options, live);
         walk(childrenOf(node));
       }
     };
     walk(tree.nodes);
+    // Data that's unavailable keeps the endpoint's image, which the reader's browser may still load.
+    if (options.download !== false)
+      await Promise.all(
+        live.map(async ({ node, spec }) => {
+          const result = await fetchLive(spec);
+          if (!result.unavailable)
+            node[1].src = svgSrc(
+              badgeSvg({ ...spec, ...result, color: result.color ?? spec.color }),
+            );
+        }),
+      );
     tree.meta.issues = [...(tree.meta.issues ?? []), ...issues.map((issue) => issue.message)];
     tree.meta.issueRules = {
       ...tree.meta.issueRules,
