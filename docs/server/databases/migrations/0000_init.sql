@@ -16,47 +16,6 @@ CREATE TABLE `account` (
 );
 --> statement-breakpoint
 CREATE INDEX `account_userId_idx` ON `account` (`user_id`);--> statement-breakpoint
-CREATE TABLE `vitehub_comment_counters` (
-	`scope` text PRIMARY KEY NOT NULL,
-	`next` integer NOT NULL
-);
---> statement-breakpoint
-CREATE TABLE `vitehub_comment_messages` (
-	`id` text PRIMARY KEY NOT NULL,
-	`thread_id` text NOT NULL,
-	`body` text NOT NULL,
-	`author_id` text NOT NULL,
-	`author_name` text,
-	`author_image` text,
-	`actor` text,
-	`mentions` text NOT NULL,
-	`attachments` text NOT NULL,
-	`created_at` integer NOT NULL,
-	`edited_at` integer
-);
---> statement-breakpoint
-CREATE INDEX `vitehub_comment_messages_thread` ON `vitehub_comment_messages` (`thread_id`,`created_at`);--> statement-breakpoint
-CREATE TABLE `vitehub_comment_threads` (
-	`id` text PRIMARY KEY NOT NULL,
-	`scope` text NOT NULL,
-	`n` integer NOT NULL,
-	`subject_kind` text NOT NULL,
-	`subject_id` text NOT NULL,
-	`anchor` text NOT NULL,
-	`status` text NOT NULL,
-	`resolved_by` text,
-	`resolved_at` integer,
-	`author_id` text NOT NULL,
-	`author_name` text,
-	`author_image` text,
-	`actor` text,
-	`created_at` integer NOT NULL,
-	`updated_at` integer NOT NULL
-);
---> statement-breakpoint
-CREATE UNIQUE INDEX `vitehub_comment_threads_scope_n` ON `vitehub_comment_threads` (`scope`,`n`);--> statement-breakpoint
-CREATE INDEX `vitehub_comment_threads_subject` ON `vitehub_comment_threads` (`subject_kind`,`subject_id`);--> statement-breakpoint
-CREATE INDEX `vitehub_comment_threads_status` ON `vitehub_comment_threads` (`status`,`updated_at`);--> statement-breakpoint
 CREATE TABLE `vitehub_content_sessions` (
 	`workspace` text NOT NULL,
 	`collection` text NOT NULL,
@@ -109,4 +68,35 @@ CREATE TABLE `verification` (
 	`updated_at` integer DEFAULT (cast(unixepoch('subsecond') * 1000 as integer)) NOT NULL
 );
 --> statement-breakpoint
-CREATE INDEX `verification_identifier_idx` ON `verification` (`identifier`);
+CREATE INDEX `verification_identifier_idx` ON `verification` (`identifier`);--> statement-breakpoint
+CREATE TABLE `vitehub_comment_threads` (
+	`id` text PRIMARY KEY NOT NULL,
+	`scope` text DEFAULT 'pages' NOT NULL,
+	`number` integer DEFAULT 0 NOT NULL,
+	`page` text NOT NULL,
+	`anchor` text NOT NULL,
+	`context` text,
+	`metadata` text,
+	`status` text NOT NULL,
+	`created_by` text NOT NULL,
+	`resolved_by` text,
+	`resolved_at` integer,
+	`created_at` integer NOT NULL,
+	`updated_at` integer NOT NULL
+);
+--> statement-breakpoint
+CREATE INDEX `vitehub_comment_threads_page` ON `vitehub_comment_threads` (`page`,`status`);--> statement-breakpoint
+CREATE UNIQUE INDEX `vitehub_comment_threads_number` ON `vitehub_comment_threads` (`scope`,`number`);--> statement-breakpoint
+CREATE INDEX `vitehub_comment_threads_updated` ON `vitehub_comment_threads` (`updated_at`);--> statement-breakpoint
+CREATE TABLE `vitehub_comments` (
+	`id` text PRIMARY KEY NOT NULL,
+	`thread_id` text NOT NULL,
+	`body` text NOT NULL,
+	`mentions` text NOT NULL,
+	`author` text NOT NULL,
+	`created_at` integer NOT NULL,
+	`edited_at` integer,
+	FOREIGN KEY (`thread_id`) REFERENCES `vitehub_comment_threads`(`id`) ON UPDATE no action ON DELETE cascade
+);
+--> statement-breakpoint
+CREATE INDEX `vitehub_comments_thread` ON `vitehub_comments` (`thread_id`,`created_at`);

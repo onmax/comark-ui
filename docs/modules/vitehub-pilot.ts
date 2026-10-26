@@ -4,8 +4,8 @@ import { fileURLToPath } from "node:url";
 import type { Nuxt } from "nuxt/schema";
 
 // What the ViteHub preview build (pilot/comark-plugins, installed from pkg.pr.new) needs around it to build this site
-// on Nuxt 4, where Nitro 2 runs on h3 1. Each block names what it works around, so it can go when ViteHub fixes that.
-// With build 29b625f the `event.url` shim, the RPC request shim, the dev bundling and the `cloudflare:workers` shim are gone; what stays is below.
+// on Nuxt 4, where Nitro 2 runs on h3 1. Each block names what it works around, so it can go when ViteHub fixes that. With build 78c9348 the `event.url` shim,
+// the dev-token fix and the Auth type declaration are gone; what stays is below.
 const root = new URL("../", import.meta.url);
 
 type Resolver = {
@@ -31,6 +31,34 @@ export default function viteHubPilot(_: unknown, nuxt: Nuxt) {
     config.plugins = config.plugins?.map((plugin) =>
       plugin?.startsWith(".vitehub/") ? fileURLToPath(new URL(plugin, root)) : plugin,
     );
+  });
+
+  // `nuxt dev` leaves ViteHub's packages external. Their pnpm folders are named after the URLs they install from, and Nitro
+  // mangles those paths, so Node can't load them; Auth's Nitro plugin also needs Nitro's alias for `#vitehub/env/server`.
+  // Bundled, both work.
+  nuxt.hook("nitro:config", (config) => {
+    if (!nuxt.options.dev) return;
+    const externals = (config.externals ??= {});
+    externals.inline = [...(externals.inline ?? []), (id: string) => /vite-hub/.test(id)];
+    // Nitro's own dev shim for `cloudflare:workers` only applies when its preset is `cloudflare-dev`, which the cloudflare
+    // preset of ViteHub's module doesn't select under `nuxt dev`, and Nitro treats the scheme as external before aliases.
+    const shim = fileURLToPath(new URL("./shims/cloudflare-workers.dev.ts", import.meta.url));
+    const rollup = (config.rollupConfig ??= {});
+    // SAFETY: a Rollup plugin; Nitro's own type for the list is a union of Rollup's and Rolldown's.
+    rollup.plugins = [
+      {
+        // Rollup asks `external` about the raw specifier before any plugin resolves it, so the import is rewritten instead.
+        name: "docs:cloudflare-workers-shim",
+        transform: (code: string) =>
+          code.includes("cloudflare:workers")
+            ? {
+                code: code.replaceAll(/(["'])cloudflare:workers\1/g, JSON.stringify(shim)),
+                map: null,
+              }
+            : null,
+      },
+      ...[rollup.plugins ?? []].flat(),
+    ] as never;
   });
 
   nuxt.hook("nitro:config", (config) => {
@@ -60,22 +88,15 @@ export default function viteHubPilot(_: unknown, nuxt: Nuxt) {
 
   // Nitro's prerenderer is a Node build that can't bundle ViteHub's packages (their pnpm folders are named after the
   // URLs they install from, and bundled they hit a circular import), and no page needs them. It leaves ViteHub's handlers
-  // and plugins out and adds the one thing ViteHub's comments plugin does to a page: the loader tag, so the prerendered
-  // files carry it like the Worker's rendered ones would.
+  // and plugins out. The prerendered files carry nothing of Comments: the Worker adds the overlay to a page it serves,
+  // only for the team in comment mode (server/middleware/site.ts).
   nuxt.hook("nitro:init", (nitro) => {
     nitro.hooks.hook("prerender:config", (config) => {
       const viteHub = (path: unknown) =>
         typeof path === "string" && /vite-hub|(^|[/\\])\.vitehub[/\\]/.test(path);
       config.handlers = config.handlers?.filter((handler) => !viteHub(handler?.handler));
       config.devHandlers = config.devHandlers?.filter((handler) => !viteHub(handler?.handler));
-      config.plugins = [
-        ...(config.plugins ?? []).filter((plugin) => !viteHub(plugin)),
-        fileURLToPath(new URL("./server/prerender/comments-loader.ts", root)),
-      ];
-      // The loader's URL carries a hash of its content, which ViteHub generated.
-      const generated = new URL(".vitehub/comments/inject-overlay.mjs", root);
-      const commentsLoader = /const url = "([^"]+)"/.exec(readFileSync(generated, "utf8"))?.[1];
-      config.runtimeConfig = { ...config.runtimeConfig, commentsLoader };
+      config.plugins = config.plugins?.filter((plugin) => !viteHub(plugin));
       config.modules = config.modules?.filter(
         (module) => typeof module !== "function" || !viteHub(module.name),
       );

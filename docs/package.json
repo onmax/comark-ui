@@ -35,7 +35,7 @@
     "vue": "catalog:"
   },
   "devDependencies": {
-    "@vite-hub/source": "https://pkg.pr.new/vite-hub/vitehub/@vite-hub/source@29b625f",
+    "@vite-hub/source": "https://pkg.pr.new/vite-hub/vitehub/@vite-hub/source@b6062af",
     "drizzle-kit": "catalog:",
     "h3-v2": "npm:h3@2.0.1-rc.33",
     "typescript": "catalog:",

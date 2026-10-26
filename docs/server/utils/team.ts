@@ -8,9 +8,9 @@ const TEAM = ["onmax"];
 
 type Person = { id?: string; login?: unknown } | null | undefined;
 
-// Auth stores the login with the user (server/auth.ts). The Console passes it to its policy, but Comments passes only
-// the user's id, name, and image, so the login is read from the database by id then. `nuxt dev` has no GitHub OAuth
-// app and runs every call as the user `local`; a build never does.
+// Auth stores the login with the user (server/auth.ts). The Console's policy gets it, and Comments takes its people from
+// the Console; a policy that gets the user without it reads the login from the database by id. `nuxt dev` has no GitHub
+// OAuth app and runs every call as the user `local`; a build never does.
 export async function inTeam(user: Person): Promise<boolean> {
   if (import.meta.dev === true && user?.id === "local") return true;
   const login =
