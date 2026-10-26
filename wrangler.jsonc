@@ -1,5 +1,4 @@
 {
-  // Renamed from comark-annotate in Cloudflare, so its Workers Builds connection, secrets, and domains stayed.
   "name": "comark-ui",
   "main": "docs/worker.ts",
   "compatibility_date": "2026-10-01",
