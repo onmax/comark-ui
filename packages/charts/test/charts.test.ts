@@ -1041,6 +1041,23 @@ No axis.
     expect(html).toContain("Everything passes through here.");
   });
 
+  it("rejects overflowing sankey amounts before layout", async () => {
+    for (const validRow of ["", "\n| income | savings | 100 |"]) {
+      const markdown = chart(
+        `| from | to | amount |\n| --- | --- | --: |\n| income | spending | ${"9".repeat(309)} |${validRow}`,
+        '{type="sankey"}',
+      );
+      const { meta } = await parseMarkdown(markdown, { plugins: [charts()] });
+      expect(meta.issues).toHaveLength(1);
+      expect(meta.issues[0]).toContain("row 1");
+      expect(Object.values(meta.issueRules)).toEqual(["comark/charts/invalid-flow"]);
+      const html = await render(markdown);
+      expect(html).not.toMatch(/NaN|Infinity/);
+      expect(html.includes('<svg role="img"')).toBe(Boolean(validRow));
+      expect(html).toContain(`${"9".repeat(309)}</td>`);
+    }
+  });
+
   it("reports a sankey's problems, naming the row and the fix", async () => {
     const markdown = [
       chart(`| pond | ducks |\n| --- | --: |\n| north | 12 |`, '{type="sankey"}'),

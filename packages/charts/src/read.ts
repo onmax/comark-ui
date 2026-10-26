@@ -851,6 +851,13 @@ function readFlow(
       });
       continue;
     }
+    if (value !== undefined && !Number.isFinite(value)) {
+      issues.push({
+        rule: "comark/charts/invalid-flow",
+        message: `${name}: row ${index + 1} has ${code(cell)} in ${code(amount)}, which is too large to represent as a finite number. Use a smaller unit scale, or remove the row.`,
+      });
+      continue;
+    }
     if (value === undefined || value <= 0) {
       issues.push({
         rule: "comark/charts/invalid-flow",
