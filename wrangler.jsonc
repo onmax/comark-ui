@@ -1,9 +1,13 @@
 {
   // The Worker keeps its first name so its Workers Builds connection stays.
   "name": "comark-annotate",
-  "main": "docs/worker.ts",
+  // Nitro's output, from `pnpm docs:generate`. Nitro reads this file when it builds, so it keeps the settings below in
+  // docs/dist/server/wrangler.json too.
+  "main": "docs/dist/server/index.mjs",
   "compatibility_date": "2026-10-01",
-  // The Worker runs first so the old hosts can redirect before an asset answers.
+  "compatibility_flags": ["nodejs_compat"],
+  // The Worker runs first so the old hosts can redirect before an asset answers. Nitro's middleware then serves the
+  // prerendered file through ASSETS (docs/server/middleware/site.ts).
   "assets": { "directory": "./docs/dist/public", "binding": "ASSETS", "run_worker_first": true },
   "routes": [
     { "pattern": "comark-ui.onmax.me", "custom_domain": true },

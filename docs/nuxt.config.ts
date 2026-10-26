@@ -101,6 +101,9 @@ export default defineNuxtConfig({
     skills: { dir: "../skills" },
   },
   nitro: {
+    preset: "cloudflare_module",
+    // The Worker's own settings are in the root wrangler.jsonc, which Nitro merges into docs/dist/server/wrangler.json.
+    cloudflare: { deployConfig: true, nodeCompat: true },
     output: { dir: fileURLToPath(new URL("dist/", root)) },
     // The playground is a static app copied into the output, not a Nuxt page.
     prerender: {
