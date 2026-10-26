@@ -1,8 +1,5 @@
 {
-  "extends": [
-    "auto",
-    "vite-doctor/typescript/strict"
-  ],
+  "extends": ["auto", "vite-doctor/typescript/strict"],
   "suppressions": [
     {
       "ruleId": "typescript/strict/no-runtime-typeof",
