@@ -8,6 +8,7 @@ import { parseMarkdown } from "comark";
 import security from "comark/plugins/security";
 import { describe, expect, it } from "vite-plus/test";
 import annotate, { components } from "../src/html.ts";
+import { draw } from "../src/marks.ts";
 import { css } from "../src/styles.ts";
 
 async function run(markdown: string) {
@@ -746,5 +747,41 @@ Duck
       "comark/annotate/box-as-fraction",
       "comark/annotate/compare-same-image",
     ]);
+  });
+
+  it("loops a circle around its whole area, and only a little past a long one's ends", () => {
+    // The points the loop passes through, from its path's curve ends.
+    const loop = (width: number, height: number) =>
+      [
+        ...draw("circle", width, height, 7).paths[0]!.matchAll(
+          /(?:^M| )(-?[\d.]+) (-?[\d.]+)(?=C|$)/g,
+        ),
+      ].map(([, x, y]) => [Number(x), Number(y)] as const);
+    // Even-odd ray casting: a point inside the loop crosses its outline an odd number of times.
+    const inside = (points: (readonly [number, number])[], [x, y]: readonly [number, number]) =>
+      points.reduce((odd, [x1, y1], index) => {
+        const [x2, y2] = points[(index + 1) % points.length]!;
+        return y1 > y !== y2 > y && x < ((x2 - x1) * (y - y1)) / (y2 - y1) + x1 ? !odd : odd;
+      }, false);
+    for (const [width, height] of [
+      [40, 40],
+      [120, 30],
+      [400, 40],
+      [24, 300],
+    ] as const) {
+      const points = loop(width, height);
+      for (const corner of [
+        [0, 0],
+        [width, 0],
+        [width, height],
+        [0, height],
+      ] as const)
+        expect(inside(points, corner), `${width}x${height} at ${corner.join(",")}`).toBe(true);
+      const [long, from, to] =
+        width >= height
+          ? [width, Math.min(...points.map(([x]) => x)), Math.max(...points.map(([x]) => x))]
+          : [height, Math.min(...points.map(([, y]) => y)), Math.max(...points.map(([, y]) => y))];
+      expect(to - from - long, `${width}x${height}`).toBeLessThan(Math.max(40, long * 0.2));
+    }
   });
 });

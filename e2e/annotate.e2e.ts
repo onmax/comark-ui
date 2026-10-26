@@ -1,4 +1,7 @@
+import { readFile } from "node:fs/promises";
+import { createHtmlRenderer } from "@comark/html";
 import { expect, test } from "@playwright/test";
+import annotate, { components } from "../packages/annotate/src/html.ts";
 
 test("a comparison lines up its screenshots and zooms them with their marks and colors, and their notes beside them", async ({
   page,
@@ -211,4 +214,62 @@ test("Copy puts a screenshot on the clipboard with its marks, and a right-click 
   await expect(page.locator(".cz-dialog")).toBeVisible();
   await page.keyboard.press("ControlOrMeta+c");
   await expect(page.locator(".cz-item .ca-copy-status")).toHaveText("Copied");
+});
+
+test("Copy keeps a circle's whole loop, where it reaches past its area", async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  const render = createHtmlRenderer({ plugins: [annotate()], components });
+  // A wide, short area, which the loop overshoots most.
+  const body =
+    await render(`::screenshot{src="/fixture/shot.png" alt="Dashboard" viewport="1280x800"}
+:::annotation{x=30 y=40 w=40 h=6 mark="circle" color="red"}
+A wide row.
+:::
+::`);
+  const shot = await readFile(new URL("../docs/public/dashboard.png", import.meta.url));
+  await page.route("**/fixture/shot.png", (route) =>
+    route.fulfill({ contentType: "image/png", body: shot }),
+  );
+  await page.route("**/fixture/", (route) =>
+    route.fulfill({
+      contentType: "text/html",
+      body: `<!doctype html><meta charset="utf-8"><style>main{width:720px;padding:80px}</style><main>${body}</main>`,
+    }),
+  );
+  await page.goto("/fixture/", { waitUntil: "domcontentloaded" });
+  const figure = page.locator(".ca-screenshot").first();
+  await figure.hover();
+  await expect(figure.locator(".ca-overlay")).toHaveAttribute("src", /^blob:/);
+  await figure.locator(".ca-copy").click();
+  await expect(figure.locator(".ca-copy-status")).toHaveText("Copied");
+
+  // The loop's left end lies outside its viewBox; the copy shows red there, as the page does.
+  const found = await figure.evaluate(async (node) => {
+    const [item] = await navigator.clipboard.read();
+    const bitmap = await createImageBitmap(await item!.getType("image/png"));
+    const box = node.getBoundingClientRect();
+    const svg = node.querySelector(".ca-mark svg")!.getBoundingClientRect();
+    const loop = node.querySelector(".ca-mark svg path")!.getBoundingClientRect();
+    const scale = bitmap.width / (box.width + 32);
+    const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+    const context = canvas.getContext("2d")!;
+    context.drawImage(bitmap, 0, 0);
+    const x = Math.round((loop.left + 1 - box.left + 16) * scale);
+    let red = 0;
+    for (let y = loop.top; y <= loop.bottom; y++) {
+      const [r = 0, g = 0, b = 0] = context.getImageData(
+        x,
+        Math.round((y - box.top + 16) * scale),
+        1,
+        1,
+      ).data;
+      if (r > 150 && g < 110 && b < 110) red++;
+    }
+    return { outside: loop.left < svg.left - 4, red };
+  });
+  expect(found.outside).toBe(true);
+  expect(found.red).toBeGreaterThan(0);
 });

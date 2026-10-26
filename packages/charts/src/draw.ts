@@ -377,21 +377,26 @@ export interface Box {
   h: number;
 }
 
-// Shapes drawn one per value; lines, areas, and labels span several or don't mark a value.
+// Shapes drawn one per value; lines, areas, and labels span several or don't mark a value. A mark also takes in the
+// values printed on or beside its shapes, the text items of its row, so its stroke never runs through a number.
 const SHAPES = new Set(["rect", "symbol", "arc"]);
 // A mark keeps clear of the shape it circles, and a point gets a box big enough to draw around. A mark that draws
 // nothing only leaves its arrow a hair short of the point, so the arrow reaches the data.
 const PAD = 6;
 const PADDING = { left: 12, right: 12, top: 12, bottom: 12 };
 const SMALLEST = 18;
+// A circle mark loops a little past its box, so a chart with one keeps room under the plot for a loop around a bar
+// and its name on the axis, above the notes.
+const RING_ROOM = 20;
 const BARE = 3;
 
 interface SceneItem {
   x?: number;
   y?: number;
   bounds?: { x1: number; y1: number; x2: number; y2: number };
-  datum?: { row?: unknown; series?: unknown; y?: unknown };
-  mark?: { marktype?: string };
+  datum?: { row?: unknown; series?: unknown; y?: unknown; value?: unknown };
+  fill?: string;
+  mark?: { marktype?: string; role?: string };
   items?: SceneItem[];
 }
 
@@ -412,6 +417,8 @@ function walk(view: vega.View, visit: (item: SceneItem, dx: number, dy: number) 
 
 // The axis a chart's numbers run along: across when its bars or rows run sideways. Pies and gantts take no line.
 const valueAxis = (chart: Chart) => (layout(chart).flip ? "x" : "y");
+// Charts with a band per row, whose axis names each row.
+const BANDED = new Set(["bar", "stacked", "waterfall", "dumbbell"]);
 // A line's box reaches this far to each side of it, so its stamp and its arrow sit on the line.
 const LINE = 4;
 
@@ -433,8 +440,20 @@ function boxes(chart: Chart, view: vega.View, width: number, height: number): Ma
     } else
       walk(view, (item, dx, dy) => {
         const { datum, bounds } = item;
-        if (!bounds || !datum || !SHAPES.has(item.mark?.marktype ?? "")) return;
-        if (datum.row !== mark.row || (mark.series && datum.series !== mark.series)) return;
+        if (!bounds || !datum) return;
+        // A ring around a whole row of bars takes in the row's name on the axis too, so the stroke goes around it, not
+        // through it. Elsewhere the axis holds ticks, which only share a row's name by chance.
+        const name =
+          mark.mark === "circle" &&
+          BANDED.has(chart.type) &&
+          !mark.series &&
+          item.mark?.role === "axis-label" &&
+          mark.row !== undefined &&
+          String(datum.value) === chart.rows[mark.row]?.x;
+        if (!name) {
+          if (!SHAPES.has(item.mark?.marktype ?? "") && item.mark?.marktype !== "text") return;
+          if (datum.row !== mark.row || (mark.series && datum.series !== mark.series)) return;
+        }
         x1 = Math.min(x1, bounds.x1 + dx + left);
         y1 = Math.min(y1, bounds.y1 + dy + top);
         x2 = Math.max(x2, bounds.x2 + dx + left);
@@ -474,6 +493,8 @@ interface Label {
   y: number;
   text: string;
   fill: string;
+  row: unknown;
+  series: unknown;
 }
 
 /**
@@ -484,14 +505,22 @@ interface Label {
 function valueLabels(chart: Chart, view: vega.View): Label[] {
   const { flip } = layout(chart);
   const stacked = chart.type === "stacked" && chart.series.length > 1;
-  const bars: { row: unknown; value: number; x1: number; y1: number; x2: number; y2: number }[] =
-    [];
+  const bars: {
+    row: unknown;
+    series: unknown;
+    value: number;
+    x1: number;
+    y1: number;
+    x2: number;
+    y2: number;
+  }[] = [];
   walk(view, (item, dx, dy) => {
     const { datum, bounds } = item;
     const value = Number(datum?.y ?? Number.NaN);
     if (item.mark?.marktype !== "rect" || !bounds || !Number.isFinite(value)) return;
     bars.push({
       row: datum?.row,
+      series: datum?.series,
       value,
       x1: bounds.x1 + dx,
       y1: bounds.y1 + dy,
@@ -548,7 +577,14 @@ function valueLabels(chart: Chart, view: vega.View): Label[] {
     )
       continue;
     taken.push(box);
-    labels.push({ x, y, text, fill: fits ? INK.background : INK.foreground });
+    labels.push({
+      x,
+      y,
+      text,
+      fill: fits ? INK.background : INK.foreground,
+      row: bar.row,
+      series: bar.series,
+    });
   }
   return labels;
 }
@@ -569,6 +605,61 @@ const LABELS: vega.Mark = {
       font: { value: "sans-serif" },
       fontSize: { value: 12 },
       fontWeight: { value: 500 },
+    },
+  },
+};
+
+interface Stub {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  fill: string;
+  row: unknown;
+  series: unknown;
+}
+
+// How thick a zero bar draws: thinner than any bar that holds a value, so it reads as none.
+const STUB = 1.5;
+
+/**
+ * A thin stroke in its series' color at the base of each bar worth zero, in the root group's frame. Vega draws such a
+ * bar zero wide, so a grouped bar's empty lane looked like the gap between two steps, and its 0 like a stray label.
+ */
+function zeroBars(chart: Chart, view: vega.View): Stub[] {
+  if (chart.type !== "bar") return [];
+  const { flip } = layout(chart);
+  const stubs: Stub[] = [];
+  walk(view, (item, dx, dy) => {
+    const { datum, bounds, fill } = item;
+    if (item.mark?.marktype !== "rect" || !bounds || !fill) return;
+    if (datum?.y === undefined || Number(datum.y) !== 0) return;
+    const [x, y] = [bounds.x1 + dx, bounds.y1 + dy];
+    stubs.push({
+      ...(flip
+        ? { x: x - STUB / 2, y, width: STUB, height: bounds.y2 - bounds.y1 }
+        : { x, y: y - STUB / 2, width: bounds.x2 - bounds.x1, height: STUB }),
+      fill,
+      row: datum.row,
+      series: datum.series,
+    });
+  });
+  return stubs;
+}
+
+const ZEROS: vega.Mark = {
+  type: "rect",
+  from: { data: "cch_zeros" },
+  aria: false,
+  encode: {
+    enter: {
+      x: { field: "x" },
+      y: { field: "y" },
+      width: { field: "width" },
+      height: { field: "height" },
+      fill: { field: "fill" },
+      fillOpacity: { value: 0.5 },
+      cornerRadius: { value: STUB / 2 },
     },
   },
 };
@@ -948,7 +1039,9 @@ export async function draw(chart: Chart): Promise<{ svg: string; boxes: Map<numb
   spec.background = "transparent";
   // Flint leaves room above for a headline; the figure's caption is the title, so only the axis title and legend
   // need it, and Vega-Lite's autosize makes room for those.
-  spec.padding = PADDING;
+  spec.padding = chart.marks.some((mark) => mark.mark === "circle")
+    ? { ...PADDING, bottom: PADDING.bottom + RING_ROOM }
+    : PADDING;
   // With several series no one header names the numbers, and Flint would title the axis with the field, `y`. A
   // waterfall's legend sits where its axis title would, and its layers draw running totals rather than `y`.
   const waterfall = chart.type === "waterfall";
@@ -1190,9 +1283,18 @@ export async function draw(chart: Chart): Promise<{ svg: string; boxes: Map<numb
     ({ view, svg } = await render(compiled));
   }
   const labels = chart.labels ? valueLabels(chart, view) : [];
-  if (labels.length) {
-    compiled.data = [...(compiled.data ?? []), { name: "cch_labels", values: labels }];
-    compiled.marks = [...(compiled.marks ?? []), LABELS];
+  const zeros = zeroBars(chart, view);
+  if (labels.length || zeros.length) {
+    compiled.data = [
+      ...(compiled.data ?? []),
+      ...(zeros.length ? [{ name: "cch_zeros", values: zeros }] : []),
+      ...(labels.length ? [{ name: "cch_labels", values: labels }] : []),
+    ];
+    compiled.marks = [
+      ...(compiled.marks ?? []),
+      ...(zeros.length ? [ZEROS] : []),
+      ...(labels.length ? [LABELS] : []),
+    ];
     view.finalize();
     ({ view, svg } = await render(compiled));
   }

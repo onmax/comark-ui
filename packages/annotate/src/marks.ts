@@ -73,11 +73,50 @@ export const marks = {
     viewBox: `-5 -5 ${round(width + 10)} ${round(height + 10)}`,
     paths: outline(width, height, 3, random, 4).map(({ from, curve }) => `M${point(from)}${curve}`),
   }),
-  circle: wobbly(
-    "0 0 200 100",
-    ["M46 16C12 24 6 56 42 74C92 96 172 84 190 52C200 30 156 10 98 10C74 10 56 12 44 17"],
-    5,
-  ),
+  // A loop drawn around the area: a rounded square stretched to it, through its corners with the same room past each
+  // side, so it hugs a long bar or a short word alike. It starts at the top left and runs on a little past its start,
+  // outside it, the way a pen does.
+  circle: (width, height, random) => {
+    const [half, halfHeight] = [width / 2, height / 2];
+    // How square the loop is: round around a square area, squarer along a long one, since an ellipse around a long
+    // area leaves its corners far inside it and has to reach well past its ends.
+    const ratio = Math.max(half, halfHeight) / Math.max(1, Math.min(half, halfHeight));
+    const loop = 2 + Math.min(0.6, (ratio - 1) * 0.3);
+    // The room `d` that puts the corners on the curve with half-axes `half + d` and `halfHeight + d`.
+    let [low, high] = [0, Math.max(half, halfHeight, 1)];
+    for (let step = 0; step < 24; step++) {
+      const d = (low + high) / 2;
+      if ((half / (half + d)) ** loop + (halfHeight / (halfHeight + d)) ** loop > 1) low = d;
+      else high = d;
+    }
+    const room = Math.max(high, 4) + 3;
+    const [a, b] = [half + room, halfHeight + room];
+    const along = (value: number) => Math.sign(value) * Math.abs(value) ** (2 / loop);
+    const phase = random() * Math.PI;
+    const start = -0.72 * Math.PI + random() * 0.1;
+    const sweep = 2 * Math.PI + 0.3 + random() * 0.1;
+    const points: Point[] = [];
+    for (let index = 0; index <= 40; index++) {
+      const done = index / 40;
+      const angle = start - done * sweep;
+      // Wider as it goes, so its end passes outside its start, and a slow sway so no two loops match.
+      const grow = 1 + 0.06 * done + 0.02 * (1 + Math.sin(2 * angle + phase));
+      points.push([
+        half + a * grow * along(Math.cos(angle)),
+        halfHeight + b * grow * along(Math.sin(angle)),
+      ]);
+    }
+    // Catmull-Rom through the points, as cubic curves.
+    const curves = points.slice(1).map((to, index) => {
+      const from = points[index]!;
+      const [before, after] = [points[index - 1] ?? from, points[index + 2] ?? to];
+      return `C${point([from[0] + (to[0] - before[0]) / 6, from[1] + (to[1] - before[1]) / 6])} ${point([to[0] - (after[0] - from[0]) / 6, to[1] - (after[1] - from[1]) / 6])} ${point(to)}`;
+    });
+    return {
+      viewBox: `-5 -5 ${round(width + 10)} ${round(height + 10)}`,
+      paths: [`M${point(points[0]!)}${curves.join("")}`],
+    };
+  },
   underline: wobbly("0 0 200 60", ["M8 32C58 22 142 40 192 26"], 6),
   // A straight stroke through the middle of the area, along its longer side, end to end: a limit across a screenshot,
   // or a target across a chart.
