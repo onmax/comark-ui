@@ -385,19 +385,9 @@ function readTotal(
 ) {
   const values = points.map((row) => row.values[0] ?? 0);
   if (values.length < 2) return;
-  let sum = 0;
-  let roundoff = 0;
-  for (const value of values.slice(0, -1)) {
-    const next = sum + value;
-    // TwoSum recovers the actual rounding residual, so exact additions (even large ones) add no tolerance.
-    const added = next - sum;
-    const error = (sum - (next - added)) + (value - added);
-    // Allow the reported decimal total to round in the opposite direction, too (for example 0.1 + 0.2 = 0.3).
-    roundoff += 2 * Math.abs(error);
-    sum = next;
-  }
+  const sum = sumDecimals(values.slice(0, -1));
   const end = values.at(-1)!;
-  if (Math.abs(end - sum) <= roundoff) return;
+  if (end === sum) return;
   const last = points.at(-1)!.x;
   const round = (value: number) =>
     value.toLocaleString("en-US", { maximumFractionDigits: 12, useGrouping: false });
@@ -405,6 +395,25 @@ function readTotal(
     rule: "comark/charts/waterfall-total",
     message: `${name}: a waterfall's last row is its end total, and ${code(last)} is ${round(end)} while ${code(points[0]!.x)} and the changes after it add up to ${round(sum)}. Fix the total, add the missing change, or end the table with a total row of ${round(sum)}.`,
   });
+}
+
+/** Add the numbers as readers see them in decimal, rounding only the final total to a Number. */
+function sumDecimals(values: number[]): number {
+  if (!values.every(Number.isFinite)) return values.reduce((sum, value) => sum + value, 0);
+  const decimals = values.map((value) => {
+    const [mantissa, exponent = "0"] = String(value).split("e");
+    const fraction = mantissa!.split(".")[1]?.length ?? 0;
+    return {
+      coefficient: BigInt(mantissa!.replace(".", "")),
+      exponent: Number(exponent) - fraction,
+    };
+  });
+  const exponent = Math.min(...decimals.map((value) => value.exponent));
+  const coefficient = decimals.reduce(
+    (sum, value) => sum + value.coefficient * 10n ** BigInt(value.exponent - exponent),
+    0n,
+  );
+  return Number(`${coefficient}e${exponent}`);
 }
 
 /** Reads a prop written alone, such as `{labels}`: true when it's on, and its problems when it has a value. */
