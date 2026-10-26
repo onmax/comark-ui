@@ -1,7 +1,8 @@
 import { cp, mkdir, rm } from "node:fs/promises";
-import { existsSync, readdirSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { defineNuxtConfig } from "nuxt/config";
+import { env } from "vite-hub/env";
 
 const root = new URL("./", import.meta.url);
 const generated = new URL(".generated/public/", root);
@@ -52,6 +53,15 @@ function pageRoutes() {
   ];
 }
 
+// The D1 database is declared once, in the root wrangler.jsonc, which Nitro merges into the Worker's config too.
+const [database] = (
+  JSON.parse(
+    readFileSync(new URL("../wrangler.jsonc", root), "utf8")
+      .replace(/^\s*\/\/.*$/gm, "")
+      .replace(/,(\s*[}\]])/g, "$1"),
+  ) as { d1_databases: { database_id: string; database_name: string }[] }
+).d1_databases;
+
 export default defineNuxtConfig({
   compatibilityDate: "2026-10-01",
   devtools: { enabled: false },
@@ -83,6 +93,7 @@ export default defineNuxtConfig({
     },
   },
   modules: [
+    "vite-hub/nuxt",
     "nuxt-agent-discovery",
     async (_, nuxt) => {
       await writeAssets();
@@ -90,6 +101,32 @@ export default defineNuxtConfig({
       nuxt.options.nitro.publicAssets.push({ dir: fileURLToPath(generated), maxAge: 0 });
     },
   ],
+  vitehub: {
+    preset: "cloudflare",
+    // Comments, the editor's sessions in the Content cms preset (server/content.ts), and nothing else use the database.
+    database: {
+      driver: "d1",
+      databaseId: database!.database_id,
+      databaseName: database!.database_name,
+    },
+    auth: true,
+    // The editor is the Console's Content section: the team signs in with the site's own session (server/auth.ts).
+    console: { auth: "app", authorize: "./server/console-authorize.ts" },
+  },
+  vite: {
+    env: {
+      server: {
+        auth: {
+          // Declared as secrets so the Worker passes them through.
+          github: {
+            clientId: env({ secret: true, source: env.source("GITHUB_CLIENT_ID") }),
+            clientSecret: env({ secret: true, source: env.source("GITHUB_CLIENT_SECRET") }),
+          },
+          secret: env({ secret: true, source: env.source("BETTER_AUTH_SECRET") }),
+        },
+      },
+    },
+  },
   // Only the agent skill at the repository's root, under /.well-known/skills/; the pages are built by docs/build.ts.
   agentDiscovery: {
     siteUrl: "https://comark-ui.onmax.me",
@@ -101,7 +138,6 @@ export default defineNuxtConfig({
     skills: { dir: "../skills" },
   },
   nitro: {
-    preset: "cloudflare_module",
     // The Worker's own settings are in the root wrangler.jsonc, which Nitro merges into docs/dist/server/wrangler.json.
     cloudflare: { deployConfig: true, nodeCompat: true },
     output: { dir: fileURLToPath(new URL("dist/", root)) },

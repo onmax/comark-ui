@@ -9,6 +9,14 @@
   // The Worker runs first so the old hosts can redirect before an asset answers. Nitro's middleware then serves the
   // prerendered file through ASSETS (docs/server/middleware/site.ts).
   "assets": { "directory": "./docs/dist/public", "binding": "ASSETS", "run_worker_first": true },
+  // The IDs are placeholders until the database exists: `wrangler d1 create comark-ui-docs`, then paste its ID here.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "comark-ui-docs",
+      "database_id": "00000000-0000-4000-8000-000000000000",
+    },
+  ],
   "routes": [
     { "pattern": "comark-ui.onmax.me", "custom_domain": true },
     { "pattern": "comark.onmax.me", "custom_domain": true },

@@ -12,6 +12,7 @@
     "@comark/html": "catalog:",
     "@fontsource-variable/caveat": "catalog:",
     "@iconify-json/lucide": "catalog:",
+    "better-auth": "catalog:",
     "comark": "catalog:",
     "comark-annotate": "workspace:*",
     "comark-carousel": "workspace:*",
@@ -24,10 +25,12 @@
     "comark-include": "workspace:*",
     "comark-tabs": "workspace:*",
     "comark-zoom": "workspace:*",
+    "drizzle-orm": "catalog:",
     "geist": "catalog:",
     "nuxt": "^4.6.2",
     "nuxt-agent-discovery": "catalog:",
     "shiki": "catalog:",
+    "valibot": "catalog:",
     "vue": "catalog:"
   },
   "devDependencies": {

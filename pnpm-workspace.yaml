@@ -51,6 +51,9 @@ catalog:
   "@tiptap/y-tiptap": ^3.0.9
   yjs: ^13.6.33
   nuxt-agent-discovery: ^0.8.0
+  valibot: ^1.4.2
+  better-auth: 1.7.10
+  drizzle-orm: 0.45.3
   wrangler: ^4.152.0
 
 overrides:
