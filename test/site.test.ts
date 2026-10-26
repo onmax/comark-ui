@@ -36,7 +36,10 @@ describe("redirects", () => {
       "https://comark-ui.onmax.me/getting-started/",
     );
     expect(target("https://comark-ui.onmax.me/charts/components/gantt")).toBe(
-      "https://comark-ui.onmax.me/charts/gantt/",
+      "https://comark-ui.onmax.me/charts/#gantt-charts",
+    );
+    expect(target("https://comark-ui.onmax.me/charts/vega-lite/?x=1")).toBe(
+      "https://comark-ui.onmax.me/charts/?x=1#vega-lite",
     );
   });
   it("leaves current pages, the linter, the guides, and the badge alone", () => {
