@@ -26,7 +26,7 @@ Pigeons find home by the sun and by the earth's magnetic field :cite[1], and som
 ## Features
 
 - `:cite[1]` cites a source by its number, and `:cite[1,3]` cites several.
-- Each citation links to its source and shows the source's title on hover.
+- Each citation links to its source. Resting the pointer on it, or focusing it, shows a card with the source's title, its site, and the site's icon.
 - Each source links back to every place it's cited.
 - A citation of a source the list doesn't have is an issue, not a dead link. That matters when an agent writes the document and the numbers drift.
 - The citations are plain `sup` links, so they work in any renderer.
@@ -43,7 +43,7 @@ Pigeons find home by the sun :cite[1].
 ::
 ```
 
-`:cite[n]` cites the nth source. It becomes a superscript `[1]` that links to its source and shows the source's title on hover.
+`:cite[n]` cites the nth source. It becomes a superscript `[1]` that links to its source in the list.
 
 A `::sources` holds one numbered list, and each item is one source with its link. The list renders where the block sits. Each item gets a ↩ link back to each citation of it, numbered ↩1, ↩2 when it's cited more than once.
 
@@ -63,6 +63,14 @@ Homing works by the sun :cite[1], and by smell :cite[2,3].
 3. [How do homing pigeons navigate?](https://www.sciencefocus.com/nature/how-do-homing-pigeons-navigate)
 ::
 ```
+
+### Card
+
+Rest the pointer on a citation, or move to it with the keyboard, and a card shows its source: the site's icon, the site, and the title. The card stays open while the pointer moves onto it, and a click on it opens the source. Escape closes it. On a touch screen, a tap follows the citation to the list instead.
+
+The icon is the one the list shows. [comark-chips](/chips/) gives each link in the list its site's favicon, or an account's avatar, and comark-ui turns it on. When the list shows no icon, the card shows a globe.
+
+Without the script, such as in a feed reader, the browser shows the source's title as the citation's tooltip.
 
 ### Title
 
@@ -125,25 +133,26 @@ import sources, { components } from "comark-sources/html";
 const render = createHtmlRenderer({ plugins: [sources()], components });
 ```
 
-For Vue, React, or Svelte, import from `comark-sources/vue`, `comark-sources/react`, or `comark-sources/svelte`. The components add the styles when they mount. Import `comark-sources/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-sources/vue`, `comark-sources/react`, or `comark-sources/svelte`. The components add the styles and start the card when they mount. Import `comark-sources/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
 
-The citations are plain `sup` links, so they work in any renderer. The component draws the list and carries the styles for both.
+The citations are plain `sup` links, so they work in any renderer. The component draws the list and carries the styles and the card's script for both. The HTML renderer inlines them once per document.
 
 ## Theme
 
-Citations and sources read the [shared tokens](/guide/theming/). The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
+Citations and sources read the [shared tokens](/guide/theming/). The rules sit in a `comark` CSS layer, so any plain rule of your own wins. The card sits at the end of the page and takes the tokens its citation sees, so a theme set on the document's container reaches it too.
 
 ### Shared tokens
 
 | Token | Used for |
 | --- | --- |
-| `--comark-foreground` | Links and the title |
-| `--comark-muted` | The list and the citations |
-| `--comark-border` | The rule above the list |
+| `--comark-background` | The card |
+| `--comark-foreground` | Links, the list's title, and the card's title |
+| `--comark-muted` | The list, the citations, and the card's site |
+| `--comark-border` | The rule above the list, and the card's edge |
 | `--comark-accent` | Behind a source just jumped to |
 | `--comark-ring` | Focus rings |
-| `--comark-radius` | The corners of a focus ring and of a source just jumped to |
-| `--comark-font` | The list |
+| `--comark-radius` | The corners of the card, a focus ring, and a source just jumped to |
+| `--comark-font` | The list and the card |
 
 ### Classes
 
@@ -153,3 +162,6 @@ Citations and sources read the [shared tokens](/guide/theming/). The rules sit i
 | `.cso` | The sources' `section` |
 | `.cso-title` | Its title |
 | `.cso-back` | A link back to a citation |
+| `.cso-card` | The card, a popover the script adds at the end of the page |
+| `.cso-card-site` | Its row with the icon and the site |
+| `.cso-card-title` | Its title |

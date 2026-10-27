@@ -17,7 +17,7 @@ export type BadgeSpec = {
   color: string;
   labelColor: string;
   icon: (typeof icons)[number];
-  theme: "light" | "dark";
+  theme: "auto" | "light" | "dark";
   style: "shadcn" | "subtle" | "solid";
   package: string;
   repository: string;
@@ -99,11 +99,11 @@ export function readBadge(
       field: "icon",
       error: "Use icon none, package, npm, github, comark, shadcn, or check.",
     };
-  const theme = field("theme", "light");
+  const theme = field("theme", "auto");
   const style = field("style", "shadcn");
   const period = field("period", "month");
-  if (theme !== "light" && theme !== "dark")
-    return { ok: false, field: "theme", error: "Use theme light or dark." };
+  if (theme !== "auto" && theme !== "light" && theme !== "dark")
+    return { ok: false, field: "theme", error: "Use theme auto, light, or dark." };
   if (style !== "shadcn" && style !== "subtle" && style !== "solid")
     return { ok: false, field: "style", error: "Use style shadcn, subtle, or solid." };
   if (period !== "day" && period !== "week" && period !== "month")
@@ -168,7 +168,7 @@ export function badgeParams(spec: BadgeSpec): URLSearchParams {
     source: "static",
     color: "primary",
     labelColor: "neutral",
-    theme: "light",
+    theme: "auto",
     style: "shadcn",
     period: "month",
   };
@@ -230,6 +230,22 @@ const measure = (text: string) =>
   }, 0);
 
 /**
+ * Colors live in a `<style>` instead of attributes so an `auto` badge can carry both palettes: inside an `<img>`, the
+ * SVG's `prefers-color-scheme` follows the embedding page's `color-scheme`, which GitHub sets from the reader's theme.
+ */
+function paints(theme: BadgeSpec["theme"], tones: (dark: boolean) => Record<string, string>) {
+  const rules = (dark: boolean) =>
+    Object.entries(tones(dark))
+      .map(([name, declarations]) => `.${name}{${declarations}}`)
+      .join("");
+  return `<style>${
+    theme === "auto"
+      ? `${rules(false)}@media (prefers-color-scheme:dark){${rules(true)}}`
+      : rules(theme === "dark")
+  }</style>`;
+}
+
+/**
  * One neutral outline for every badge, so a row of them reads as a set: the label muted, a divider, then the value.
  * A status color is a dot before the value instead of a colored outline.
  */
@@ -238,21 +254,28 @@ function shadcn(
   value: string,
   color: string,
   icon: string,
-  dark: boolean,
+  theme: BadgeSpec["theme"],
   status: boolean,
 ) {
-  const border = dark ? "#404040" : "#e5e5e5";
-  const fg = dark ? "#fafafa" : "#171717";
-  const muted = dark ? "#a3a3a3" : "#737373";
+  const dot = (dark: boolean) =>
+    (dark && Object.entries(dots).find(([name]) => name === color)?.[1]) || palette(color);
+  const style = paints(theme, (dark) => ({
+    b: `fill:${dark ? "#171717" : "#ffffff"};stroke:${dark ? "#404040" : "#e5e5e5"}`,
+    m: `fill:${dark ? "#a3a3a3" : "#737373"}`,
+    l: `stroke:${dark ? "#404040" : "#e5e5e5"}`,
+    d: `fill:${dot(dark)}`,
+    f: `fill:${dark ? "#fafafa" : "#171717"}`,
+    i: `color:${dark ? "#fafafa" : "#171717"}`,
+  }));
   const start = 9 + (icon ? 20 : 0);
   const left = label ? Math.round(start + measure(label) + 8) : 0;
   const valueStart = label ? left + 8 : start;
   const valueX = valueStart + (status ? 11 : 0);
   const width = Math.ceil(valueX + measure(value) + 9);
   const name = xml(label ? `${label}: ${value}` : value);
-  const text = (content: string, x: number, fill: string) =>
-    `<text x="${x}" y="17" fill="${fill}" font-family="Arial,Helvetica,sans-serif" font-size="12" textLength="${measure(content).toFixed(1)}" lengthAdjust="spacingAndGlyphs">${xml(content)}</text>`;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="26" viewBox="0 0 ${width} 26" role="img" aria-label="${name}"><title>${name}</title><rect x=".5" y=".5" width="${width - 1}" height="25" rx="6" fill="${dark ? "#171717" : "#ffffff"}" stroke="${border}"/>${icon ? `<g transform="translate(9 6) scale(.875)" color="${fg}" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${icon}</g>` : ""}${label ? `${text(label, start, muted)}<path d="M${left + 0.5} 1v24" stroke="${border}"/>` : ""}${status ? `<circle cx="${valueStart + 3}" cy="13" r="3" fill="${color}"/>` : ""}${text(value, valueX, fg)}</svg>`;
+  const text = (content: string, x: number, paint: string) =>
+    `<text x="${x}" y="17" class="${paint}" font-family="Arial,Helvetica,sans-serif" font-size="12" textLength="${measure(content).toFixed(1)}" lengthAdjust="spacingAndGlyphs">${xml(content)}</text>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="26" viewBox="0 0 ${width} 26" role="img" aria-label="${name}"><title>${name}</title>${style}<rect x=".5" y=".5" width="${width - 1}" height="25" rx="6" class="b"/>${icon ? `<g transform="translate(9 6) scale(.875)" class="i" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${icon}</g>` : ""}${label ? `${text(label, start, "m")}<path d="M${left + 0.5} 1v24" class="l"/>` : ""}${status ? `<circle cx="${valueStart + 3}" cy="13" r="3" class="d"/>` : ""}${text(value, valueX, "f")}</svg>`;
 }
 
 /** A self-contained SVG. Text uses fixed advances, so no font download or canvas is needed. */
@@ -266,22 +289,27 @@ export function badgeSvg(input: BadgeImage): string {
   const left = label ? Array.from(label).length * 7.2 + 20 + iconSpace : 0;
   const right = Array.from(value).length * 7.2 + 20 + (label ? 0 : iconSpace);
   const width = Math.ceil(left + right);
-  const dark = input.theme === "dark";
-  const bg = dark ? "#171717" : "#ffffff";
-  const fg = dark ? "#fafafa" : "#171717";
   const solid = input.style === "solid";
   if (input.style === "shadcn")
     return shadcn(
       label,
       value,
-      (dark && Object.entries(dots).find(([name]) => name === input.color)?.[1]) || color,
+      validColor(input.color) ? input.color : "primary",
       icon,
-      dark,
+      input.theme,
       validColor(input.color) && !["primary", "secondary", "neutral"].includes(input.color),
     );
-  const labelFg = solid ? textColor(labelColor) : fg;
-  const valueFg = solid ? textColor(color) : fg;
-  const text = (content: string, x: number, fill: string) =>
-    `<text x="${x}" y="17" fill="${fill}" font-family="DejaVu Sans Mono,monospace" font-size="12" textLength="${Array.from(content).length * 7.2}" lengthAdjust="spacingAndGlyphs">${xml(content)}</text>`;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="26" viewBox="0 0 ${width} 26" role="img" aria-label="${xml(label ? `${label}: ${value}` : value)}"><title>${xml(label ? `${label}: ${value}` : value)}</title><rect width="${width}" height="26" rx="6" fill="${bg}"/><svg width="${width}" height="26" viewBox="0 0 ${width} 26"><defs><clipPath id="badge"><rect width="${width}" height="26" rx="6"/></clipPath></defs><g clip-path="url(#badge)"><path d="M0 0h${left}v26H0Z" fill="${labelColor}" fill-opacity="${solid ? 1 : 0.12}"/><path d="M${left} 0h${right}v26H${left}Z" fill="${color}" fill-opacity="${solid ? 1 : 0.14}"/></g></svg>${left ? `<path d="M${left} 1v24" stroke="${fg}" stroke-opacity=".12"/>` : ""}${icon ? `<g transform="translate(9 5)" color="${label ? labelFg : valueFg}" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${icon}</g>` : ""}${label ? text(label, 10 + iconSpace, labelFg) : ""}${text(value, left + 10 + (label ? 0 : iconSpace), valueFg)}<rect x=".5" y=".5" width="${width - 1}" height="25" rx="5.5" fill="none" stroke="${fg}" stroke-opacity=".18"/></svg>`;
+  const fg = (dark: boolean) => (dark ? "#fafafa" : "#171717");
+  const labelFg = (dark: boolean) => (solid ? textColor(labelColor) : fg(dark));
+  const valueFg = (dark: boolean) => (solid ? textColor(color) : fg(dark));
+  const style = paints(input.theme, (dark) => ({
+    b: `fill:${dark ? "#171717" : "#ffffff"}`,
+    e: `stroke:${fg(dark)}`,
+    t: `fill:${labelFg(dark)}`,
+    v: `fill:${valueFg(dark)}`,
+    i: `color:${label ? labelFg(dark) : valueFg(dark)}`,
+  }));
+  const text = (content: string, x: number, paint: string) =>
+    `<text x="${x}" y="17" class="${paint}" font-family="DejaVu Sans Mono,monospace" font-size="12" textLength="${Array.from(content).length * 7.2}" lengthAdjust="spacingAndGlyphs">${xml(content)}</text>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="26" viewBox="0 0 ${width} 26" role="img" aria-label="${xml(label ? `${label}: ${value}` : value)}"><title>${xml(label ? `${label}: ${value}` : value)}</title>${style}<rect width="${width}" height="26" rx="6" class="b"/><svg width="${width}" height="26" viewBox="0 0 ${width} 26"><defs><clipPath id="badge"><rect width="${width}" height="26" rx="6"/></clipPath></defs><g clip-path="url(#badge)"><path d="M0 0h${left}v26H0Z" fill="${labelColor}" fill-opacity="${solid ? 1 : 0.12}"/><path d="M${left} 0h${right}v26H${left}Z" fill="${color}" fill-opacity="${solid ? 1 : 0.14}"/></g></svg>${left ? `<path d="M${left} 1v24" class="e" stroke-opacity=".12"/>` : ""}${icon ? `<g transform="translate(9 5)" class="i" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${icon}</g>` : ""}${label ? text(label, 10 + iconSpace, "t") : ""}${text(value, left + 10 + (label ? 0 : iconSpace), "v")}<rect x=".5" y=".5" width="${width - 1}" height="25" rx="5.5" fill="none" class="e" stroke-opacity=".18"/></svg>`;
 }

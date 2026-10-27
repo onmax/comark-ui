@@ -1,5 +1,5 @@
-import { defineComponent, h, onMounted } from "vue";
-import { addStyles } from "./client.ts";
+import { defineComponent, h, onBeforeUnmount, onMounted } from "vue";
+import { css, start } from "./client.ts";
 
 export { default } from "./index.ts";
 export type { SourcesAttributes, SourcesMeta } from "./index.ts";
@@ -10,7 +10,9 @@ export const Sources = defineComponent({
   inheritAttrs: false,
   props: { title: String },
   setup(props, { slots }) {
-    onMounted(addStyles);
+    let stop: (() => void) | undefined;
+    onMounted(() => (stop = start(css)));
+    onBeforeUnmount(() => stop?.());
     return () => {
       const list = slots.default?.();
       if (!list?.length) return null;

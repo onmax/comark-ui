@@ -154,6 +154,10 @@ Use `chips: { download: false }` when you parse in a browser, since a browser ma
 
 [critic](/critic/) has no component to add its styles. Put `criticCss`, exported by every entry, in the page.
 
+### Text styles
+
+The text around the blocks is styled too: headings, paragraphs, lists, tables, code, and quotes, on the same tokens as the blocks. Use `typeset: false` when your site already styles Markdown. [Typeset](/guide/typeset/) covers what it styles and how to change it.
+
 ## Mermaid
 
 comark-ui draws `mermaid` fences with [comark-pele](/mermaid/), a third-party plugin by farnabaz, and puts its diagrams on the shared `--comark-*` tokens. The `mermaid` option takes comark-pele's options, or `false`:

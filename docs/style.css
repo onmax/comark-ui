@@ -2841,7 +2841,7 @@ li {
 
 /* Unlayered, these would beat the embed's, the chips', the table of contents', and the sources' own link styles, which
    the page shows off. */
-a:where(:not(.ce-card, .ce a, .cp, .cto a, .cso a, .cso-cite a)) {
+a:where(:not(.ce-card, .ce a, .cp, .cto a, .cso a, .cso-cite a, .cso-card a)) {
   color: var(--fg);
   text-decoration: underline;
   text-decoration-color: var(--line);
@@ -2850,7 +2850,7 @@ a:where(:not(.ce-card, .ce a, .cp, .cto a, .cso a, .cso-cite a)) {
   transition: text-decoration-color 150ms ease;
 }
 
-a:where(:not(.ce-card, .ce a, .cp, .cto a, .cso a, .cso-cite a)):hover {
+a:where(:not(.ce-card, .ce a, .cp, .cto a, .cso a, .cso-cite a, .cso-card a)):hover {
   text-decoration-color: var(--fg);
 }
 

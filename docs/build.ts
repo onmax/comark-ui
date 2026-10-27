@@ -30,11 +30,12 @@ const dist = new URL("dist/", root);
 const fonts = new URL("../node_modules/geist/dist/fonts/", root);
 const site = "https://comark-ui.onmax.me";
 // `#123` on the site links to this repository's issues. Lucide's icons come from the installed set, so a slow Iconify
-// API can't fail the build.
-const sitePlugins = () =>
+// API can't fail the build. The site styles its own text in style.css, so its pages leave typeset off; the playground
+// keeps it, to show what a document gets.
+const sitePlugins = (typeset = false) =>
   browserPlugins(
     { "comark-github": { references: { repo: "onmax/comark-ui" } } },
-    { icon: { collections: { lucide } } },
+    { icon: { collections: { lucide } }, typeset },
   );
 // Only comark-include's examples include files, so includes resolve from its docs, where their partials sit.
 const contentPlugins = () => [
@@ -281,6 +282,7 @@ const sections: Section[] = [
           "guide/renderers",
           "guide/editor",
           "guide/theming",
+          "guide/typeset",
           "guide/accessibility",
           "guide/validation",
           "guide/agents",
@@ -1804,7 +1806,7 @@ ${tokenRow("font", "Font", "<span></span>")}
 const playSection = sections.find((section) => section.slug === "play");
 const first = presets[0];
 if (playSection && first) {
-  const document = await parseMarkdown(first.source, { plugins: sitePlugins() });
+  const document = await parseMarkdown(first.source, { plugins: sitePlugins(true) });
   await mkdir(new URL("play/", dist), { recursive: true });
   await writeFile(
     new URL("play/index.html", dist),

@@ -46,6 +46,12 @@ describe("comark-chips", () => {
     expect(html).toMatch(/\.cp-img\{[^}]*margin:0 \.3125em 0 0;/);
   });
 
+  // Rendered without their parent, comark took the label's `<code>` for a block and wrote a newline after it.
+  it("keeps code in a chip's label inline, with no space after it", async () => {
+    const html = await render("On [commit `5b5bd21`](https://vite.dev), built.");
+    expect(html).toContain(`alt="">commit <code>5b5bd21</code></a>, built.`);
+  });
+
   it("turns @user into a chip with their GitHub avatar, and a link into an account shows it too", async () => {
     const html = await render(
       "Thanks @onmax, see [the repo](https://github.com/onmax/comark-ui) and [issues](https://github.com/issues).",

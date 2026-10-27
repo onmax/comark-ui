@@ -68,10 +68,11 @@ function wobbly(viewBox: string, paths: string[], amount: number): Draw {
 export const marks = {
   // Draws nothing: the arrow from a side note does the pointing.
   none: () => ({ viewBox: "0 0 1 1", paths: [] }),
-  // Its SVG reaches 5px past the area, and the line runs 3px outside it, so it frames the target without covering it.
+  // The line runs along its SVG's edge, which CSS pads out from the area on the page, so the box
+  // frames the target with the same room at any rendered size instead of shrinking onto it as the image grows.
   box: (width, height, random) => ({
-    viewBox: `-5 -5 ${round(width + 10)} ${round(height + 10)}`,
-    paths: outline(width, height, 3, random, 4).map(({ from, curve }) => `M${point(from)}${curve}`),
+    viewBox: `0 0 ${round(width)} ${round(height)}`,
+    paths: outline(width, height, 0, random, 4).map(({ from, curve }) => `M${point(from)}${curve}`),
   }),
   // A loop drawn around the area: a rounded square stretched to it, through its corners with the same room past each
   // side, so it hugs a long bar or a short word alike. It starts at the top left and runs on a little past its start,

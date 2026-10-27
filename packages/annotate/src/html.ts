@@ -4,7 +4,7 @@ import { carouselHtml } from "comark-carousel/html";
 import { runtime as zoomRuntime } from "comark-zoom/html";
 import { start } from "./script.ts";
 import { draw } from "./marks.ts";
-import { pixels, place } from "./place.ts";
+import { BOX_PADDING, pixels, place } from "./place.ts";
 import {
   type Annotation,
   noteAt,
@@ -135,7 +135,14 @@ function markSvg(annotation: Annotation, aspect?: number) {
 }
 
 // The pieces of a screenshot, which a figure stacks and a slider lays over each other.
-async function parts(shot: Screenshot, state: State, id: string, copy = false, body?: string) {
+async function parts(
+  shot: Screenshot,
+  state: State,
+  id: string,
+  copy = false,
+  body?: string,
+  boxPadding = BOX_PADDING,
+) {
   const color = (annotation: Annotation) => paint(annotation.color);
   const style = (annotation: Annotation) =>
     annotation.color ? ` style="${color(annotation)}"` : "";
@@ -155,7 +162,9 @@ async function parts(shot: Screenshot, state: State, id: string, copy = false, b
         : "";
   // The number sits outside a corner of its mark so it never covers what the mark points at, and picks a corner that
   // keeps it off the other numbers and marks.
-  const corners = place(shot.annotations, shot.aspect).css;
+  const corners = place(shot.annotations, shot.aspect, boxPadding).css;
+  const padding =
+    boxPadding === BOX_PADDING ? "" : `;padding:${boxPadding}px;margin:${-boxPadding}px`;
   const pinned = (annotation: Annotation) => {
     const css = corners.get(annotation.n);
     return css ? stamp(annotation).replace('">', `" style="${css}">`) : stamp(annotation);
@@ -164,7 +173,7 @@ async function parts(shot: Screenshot, state: State, id: string, copy = false, b
   const pins = shot.annotations.map(
     (annotation) =>
       `<span class="ca-mark ca-${annotation.mark}" data-n="${annotation.n}" role="img" aria-label="${attr(annotation.number ? `${label(annotation)}: ${noteText(annotation)}` : label(annotation))}" title="${attr(noteText(annotation))}" ` +
-      `style="${color(annotation)}left:${annotation.x}%;top:${annotation.y}%;width:${annotation.w}%;height:${annotation.h}%">` +
+      `style="${color(annotation)}left:${annotation.x}%;top:${annotation.y}%;width:${annotation.w}%;height:${annotation.h}%${annotation.mark === "box" ? padding : ""}">` +
       `${markSvg(annotation, shot.aspect)}${pinned(annotation)}</span>`,
   );
   const listed = shot.annotations.filter((annotation) => !annotation.side);
@@ -281,9 +290,17 @@ async function figure(
   margins: readonly ("top" | "bottom")[] = [],
   body?: string,
   zoomContext?: string,
+  boxPadding = BOX_PADDING,
 ) {
   // Copying draws the image and its marks to a canvas, which only works for an image.
-  const { sides, heading, frame, callouts, notes } = await parts(shot, state, id, !body, body);
+  const { sides, heading, frame, callouts, notes } = await parts(
+    shot,
+    state,
+    id,
+    !body,
+    body,
+    boxPadding,
+  );
   const classes = [...new Set([...sides, ...margins.map((side) => ` ca-${side}`)])].join("");
   return (
     `<figure class="ca-screenshot${classes}">${heading}<div class="ca-stage" data-zoom tabindex="0" data-zoom-context=".ca,.ca-screenshot${zoomContext ? `,${zoomContext}` : ""}" data-zoom-aside="figcaption" data-zoom-title="${attr(shot.title || shot.alt)}">${frame}${callouts}</div>` +
@@ -320,6 +337,8 @@ async function slider(title: string | undefined, shots: Screenshot[], state: Sta
  * Draws annotations over any HTML the way a screenshot draws them over its image: hand-drawn marks, numbered notes
  * under it, side notes with arrows, and zoom. Each annotation's box is a percentage of `body`'s box, and `label` names
  * the figure for screen readers and the zoomed view. comark-charts draws its marks with it.
+ * `boxPadding` is the CSS-pixel clearance used for both box rendering and stamp placement; charts pass zero because
+ * their annotation areas already include clearance around the plotted shape.
  */
 export async function annotateHtml(
   body: string,
@@ -328,9 +347,10 @@ export async function annotateHtml(
   state: State,
   zoomContext?: string,
   aspect?: number,
+  boxPadding = BOX_PADDING,
 ): Promise<string> {
   const shot: Screenshot = { src: label, alt: label, annotations, caption: [], aspect };
-  return `${styles(state)}<div class="ca">${await figure(shot, state, idFor([shot], state), [], body, zoomContext)}</div>${zoomRuntime(state)}${runtime(state)}`;
+  return `${styles(state)}<div class="ca">${await figure(shot, state, idFor([shot], state), [], body, zoomContext, boxPadding)}</div>${zoomRuntime(state)}${runtime(state)}`;
 }
 
 const screenshot: NodeHandler = async (node, state) => {

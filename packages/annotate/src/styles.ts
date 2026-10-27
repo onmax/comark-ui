@@ -1,5 +1,6 @@
 import { theme } from "comark-zoom/theme";
 import { caveat } from "./font.ts";
+import { BOX_PADDING } from "./place.ts";
 
 // Hovering, focusing, or linking to a mark or its note sets `--ca-on` on both, so each lights up the other without a script.
 // The zoomed view holds the screenshot and its notes in separate copies, so the dialog links those two, and only those:
@@ -97,6 +98,9 @@ export const css = `@layer comark{${[
   // Screenshots stay light in dark mode, where the lighter dark-mode colors would wash out, so they use the deeper shade.
   "@media (prefers-color-scheme:dark){.ca-mark,.ca-arrow{--ca-stroke:var(--ca-solid,var(--ca-color))}}",
   ".ca-mark svg{position:absolute;left:-5px;top:-5px;width:calc(100% + 10px);height:calc(100% + 10px);overflow:visible;fill:none;stroke:currentColor;stroke:var(--ca-stroke,currentColor);stroke-width:calc(2.5px + .5px * var(--ca-on,0));stroke-linecap:round;stroke-linejoin:round;transition:stroke-width .15s ease}",
+  // A box's line and number sit on its padded corner. The renderer overrides the shared default when needed.
+  `.ca-mark.ca-box{box-sizing:content-box;padding:${BOX_PADDING}px;margin:${-BOX_PADDING}px}`,
+  ".ca-mark.ca-box svg{left:0;top:0;width:100%;height:100%}",
   ".ca-highlight svg{left:0;top:0;width:100%;height:100%;fill:currentColor;fill-opacity:calc(.14 + .08 * var(--ca-on,0));stroke:none}",
   ".ca-underline svg{top:calc(100% - 5px);height:12px}",
   // A tick beside the target, so it doesn't hide what it approves.

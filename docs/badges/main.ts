@@ -9,6 +9,7 @@ import {
 function start(root: HTMLElement) {
   const form = root.querySelector<HTMLFormElement>("#badge-form")!;
   const preview = root.querySelector<HTMLImageElement>("#badge-preview")!;
+  const previewDark = root.querySelector<HTMLImageElement>("#badge-preview-dark")!;
   const empty = root.querySelector<HTMLElement>("#preview-empty")!;
   const status = root.querySelector<HTMLElement>("#preview-status")!;
   const error = root.querySelector<HTMLElement>("#form-error")!;
@@ -77,7 +78,7 @@ function start(root: HTMLElement) {
   function display(svg: string, spec: BadgeSpec) {
     if (objectUrl) URL.revokeObjectURL(objectUrl);
     objectUrl = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
-    preview.src = objectUrl;
+    preview.src = previewDark.src = objectUrl;
     preview.alt =
       new DOMParser().parseFromString(svg, "image/svg+xml").querySelector("title")?.textContent ||
       spec.label;

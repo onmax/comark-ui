@@ -1047,6 +1047,21 @@ No axis.
     expect(html).toContain("Everything passes through here.");
   });
 
+  it("centers a box stamp near the chart edge using the chart's existing clearance", async () => {
+    const html = await render(`::chart{type="sankey"}
+${budget.trim()}
+:::annotation{at="salary" mark="box"}
+Salary.
+:::
+::`);
+    // The drawing already leaves room around the node. Its left corner is 4.2px into the 420px reference frame,
+    // enough to center a stamp; assuming another 6px of padding incorrectly slides it along the left edge.
+    expect(html.match(/ca-stamp" style="([^"]*)"/)?.[1]).toBe("left:0;top:0;translate:-50% -50%");
+    expect(html.match(/class="ca-mark ca-box"[^>]*style="([^"]*)"/)?.[1]).toMatch(
+      /^left:1%;.*;padding:0px;margin:0px$/,
+    );
+  });
+
   it("rejects overflowing sankey amounts before layout", async () => {
     for (const validRow of ["", "\n| income | savings | 100 |"]) {
       const markdown = chart(
