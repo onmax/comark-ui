@@ -211,8 +211,14 @@ for (const [preset, icon] of [
     await page.getByRole("button", { name: "Copy builder link" }).click();
     const shared = await page.evaluate(() => navigator.clipboard.readText());
     expect(new URL(shared).searchParams.get("icon")).toBe(icon);
+    // A prerendered page opened with a query hydrates at its bare path and gets the query back once it resolves; a
+    // reload in between would reload the bare page. Wait for the link to be back before reloading and clicking.
     await page.goto(shared);
+    await expect(page).toHaveURL(shared);
+    await page.waitForLoadState("networkidle");
     await page.reload();
+    await page.waitForLoadState("networkidle");
+    await expect(logo).toHaveValue(icon);
     await page.locator(`[data-look="${preset === "npmx" ? "nuxt" : "npmx"}"]`).click();
     await expect(logo).toHaveValue(icon);
   });
