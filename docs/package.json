@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "nuxi dev --port 4317",
-    "generate": "nuxi generate",
+    "generate": "nuxi build",
     "prepare": "nuxi prepare",
     "typecheck": "vue-tsc -b --noEmit"
   },
@@ -12,6 +12,7 @@
     "@comark/html": "catalog:",
     "@fontsource-variable/caveat": "catalog:",
     "@iconify-json/lucide": "catalog:",
+    "better-auth": "catalog:",
     "comark": "catalog:",
     "comark-annotate": "workspace:*",
     "comark-carousel": "workspace:*",
@@ -24,15 +25,21 @@
     "comark-include": "workspace:*",
     "comark-tabs": "workspace:*",
     "comark-zoom": "workspace:*",
+    "drizzle-orm": "catalog:",
     "geist": "catalog:",
     "nuxt": "^4.6.2",
     "nuxt-agent-discovery": "catalog:",
     "shiki": "catalog:",
+    "valibot": "catalog:",
+    "vite-hub": "catalog:",
     "vue": "catalog:"
   },
   "devDependencies": {
-    "@vite-hub/source": "catalog:",
+    "@vite-hub/source": "https://pkg.pr.new/vite-hub/vitehub/@vite-hub/source@3726291",
+    "drizzle-kit": "catalog:",
+    "h3-v2": "npm:h3@2.0.1-rc.33",
     "typescript": "catalog:",
-    "vue-tsc": "^3.2.0"
+    "vue-tsc": "^3.2.0",
+    "wrangler": "catalog:"
   }
 }
