@@ -47,7 +47,8 @@ pie title Birds at the pond
 
 - Mermaid is the syntax agents and GitHub already write, and it shows a flow or a schema faster than prose.
 - [comark-pele](https://github.com/farnabaz/comark-pele) turns each `mermaid` fence into SVG with [Pele](https://pele.run), a Mermaid renderer with no dependencies.
-- The page needs no script, and the diagram's source never leaves your machine.
+- The diagram reads with no script, and its source never leaves your machine.
+- Through comark-ui, Copy image and Copy source put a diagram on the clipboard as a PNG or as its Markdown, and with `comark-ui/html` a click, `Enter`, or `Space` zooms it.
 - Through comark-ui, the diagrams follow the [shared tokens](/guide/theming/), so they match the other blocks in light and dark.
 - comark-pele is a third-party plugin, by [farnabaz](https://github.com/farnabaz), not one of this repository's packages. [comark-ui](/getting-started/) registers it for you.
 
@@ -90,7 +91,7 @@ Mermaid settings, such as a diagram's own theme, go in the diagram, in its front
 
 ### Class and id
 
-Use props after the language to put a class or an id on the diagram's wrapper, so it reaches your styles and links.
+Use props after the language to put a class or an id on the diagram's card, `.pele-diagram`, so it reaches your styles and links.
 
 ````md
 ```mermaid {.wide #checkout}
@@ -98,6 +99,18 @@ flowchart LR
   cart --> pay --> done
 ```
 ````
+
+### Zoom and copy
+
+Hover a diagram, or focus it, to show its buttons in the top corner:
+
+- **Copy image** copies the diagram as a PNG at twice its size, up to 4096 pixels a side, on the page's background color. When the browser refuses the clipboard, an Open PNG link appears instead, so you can save the image.
+- **Copy source** copies the diagram as a ` ```mermaid ` fence, longer than any run of backticks inside it. When the browser refuses the clipboard, the Markdown shows under the diagram, selected, so `Ctrl+C` or `⌘C` copies it.
+
+Click the diagram itself to zoom it out of the page with [zoom](/zoom/). Pass `zoom: false` to `comarkUi()` to keep diagrams, and everything else, from zooming; the buttons stay.
+
+> [!NOTE]
+> Vue, React, and Svelte draw the same buttons, but a diagram doesn't zoom with comark-zoom there: Pele's own `mount()` zooms it in place when it had to shrink, with its buttons in the bottom corner.
 
 ## Examples
 
@@ -117,6 +130,18 @@ A diagram Pele can't draw shows its source as code, with Pele's error in the wra
 
 Comark has a built-in `mermaid` plugin too, which reads the same fences. Register only one of them for `mermaid` fences, or give comark-pele its own language with `pele({ languages: ["pele"] })`.
 
+## Accessibility
+
+A diagram that zooms is a tab stop that opens a modal dialog, and focus returns to it when the dialog closes. Copy image and Copy source are buttons with those names, and a status line tells a screen reader whether the copy worked.
+
+### Keyboard interactions
+
+| Key | Description |
+| --- | --- |
+| `Enter`, `Space` | On a diagram, opens the zoomed view. On a button, copies. |
+| `Escape` | Closes the zoomed view. |
+| `Tab`, `Shift+Tab` | Moves between diagrams and their buttons. |
+
 ## API
 
 ### Options
@@ -126,6 +151,12 @@ In `comarkUi()`, the `mermaid` option takes comark-pele's options, or `false` to
 | Option | Default | Description |
 | --- | --- | --- |
 | `languages` | `["mermaid", "pele"]` | The fence languages that become diagrams. |
+
+The preset's own `zoom: false` turns off a diagram's zoom too.
+
+### Script
+
+`comark-ui/html` inlines one script per document for the buttons, and comark-zoom's for the zoom. `mermaidScript`, exported from `comark-ui/html`, is the buttons' script text, so a page with a strict Content Security Policy can allow it by hash; [Renderers](/guide/renderers/#content-security-policy) shows how.
 
 ### Issues
 
@@ -152,7 +183,7 @@ The HTML renderer puts static SVG in the page, so it needs no script, no browser
 
 On its own, comark-pele draws with Pele's colors. To put its diagrams on the `--comark-*` tokens, as comark-ui does, add `mermaidCss` from `comark-ui/client` to the page; [Theme](#theme) lists what it sets. [Renderers](/guide/renderers/) covers using it with other plugins.
 
-For a browser-only integration, call `addMermaidStyles()` from `comark-ui/client` to add the Mermaid styles to the document once. The Vue, React, and Svelte entries do this for you.
+For a browser-only integration, call `addMermaidStyles()` from `comark-ui/client` to add the Mermaid styles to the document once. To draw the buttons too, wrap each card in `div.cmm` with the source in `data-source` and `mermaidBar()` in a `div.cmm-bar`, then call `startMermaid()`, which adds the styles, starts the buttons, and returns a function that stops them. The Vue, React, and Svelte entries do this for you.
 
 ## Theme
 
@@ -180,7 +211,11 @@ Pele paints with its `--pele-*` variables, which comark-ui sets on `:root` from 
 
 | Selector | Is |
 | --- | --- |
-| `div.pele-diagram` | A diagram, with `data-diagram` set to its type, such as `flowchart` or `pie` |
+| `div.cmm` | The wrapper around a diagram and its buttons, with the source in `data-source`. In `comark-ui/html` a drawn one is a [wide block](/guide/typeset/) with `data-wide` |
+| `div.pele-diagram` | A diagram, with `data-diagram` set to its type, such as `flowchart` or `pie`, and `data-zoom` when it zooms |
 | `svg.pele` | The drawing |
 | `.pele-diagram[data-error]` | A diagram that failed |
 | `pre.pele-source` | A failed diagram's source |
+| `.cmm-bar` | The buttons, `.cmm-image` and `.cmm-source`, the `a.cmm-open` link to the PNG, and the `.cmm-status` line |
+| `pre.cmm-markdown` | The Markdown that Copy source shows when the clipboard refuses it |
+| `html[data-mermaid-ready]` | Set while the script runs. The buttons stay hidden without it |

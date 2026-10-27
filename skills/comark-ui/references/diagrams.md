@@ -21,9 +21,15 @@ queue -> map: pigeon pin
 | `goat` or `svgbob` | ASCII art, as lines and arrows |
 
 - The title in brackets after the language goes under the diagram and names it for screen readers. Give every diagram one.
-- Every other fence stays code, `mermaid` included, so draw flows in `d2` or `dot`.
+- Every other fence stays code, except `mermaid`, which comark-ui draws with comark-pele (see Mermaid below).
 - A diagram Kroki can't draw stays code, and `meta.issues` quotes the tool's error. So does one drawn while the server can't be reached; the next parse tries again.
 - The plugin drops anything that could run from the SVG: scripts, event handlers, embedded HTML, and animations. Write labels as plain text. A D2 Markdown label (`|md … |`) is embedded HTML, so it comes out empty, and nothing reports it.
+
+## Mermaid
+
+Through comark-ui, a ` ```mermaid ` fence is drawn as SVG by comark-pele while rendering, with no network, and themed with the other blocks. A diagram Pele can't draw shows its source, and nothing goes in `meta.issues`, so check it in a render.
+
+With `comark-ui/html`, a click, `Enter`, or `Space` zooms the diagram, and its buttons copy it as a PNG on the page's background or as its ` ```mermaid ` fence. The Vue, React, and Svelte entries draw the same buttons, and Pele zooms the diagram in place there. `zoom: false` in `comarkUi()` turns the zoom off; the buttons stay. A host with a strict Content Security Policy allows the buttons' script by the hash of `mermaidScript` from `comark-ui/html`.
 
 ## Check each diagram
 

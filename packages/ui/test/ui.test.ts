@@ -7,7 +7,7 @@ import { renderToString as renderReact } from "react-dom/server";
 import { describe, expect, it } from "vite-plus/test";
 import { createSSRApp, h } from "vue";
 import { renderToString as renderVue } from "vue/server-renderer";
-import html, { type PresetOptions } from "../src/html.ts";
+import html, { mermaidScript, type PresetOptions } from "../src/html.ts";
 import react from "../src/react.ts";
 import vue from "../src/vue.ts";
 
@@ -87,11 +87,47 @@ describe("comark-ui", () => {
     expect(out).toContain('data-diagram="sequence"');
     // A wide block with its own width, so a page that gives wide blocks room shows it at its size.
     expect(out).toMatch(
-      /<div class="pele-diagram" data-wide style="--cmm-svg:\d+px" data-diagram="flowchart">/,
+      /<div class="cmm" data-wide style="--cmm-svg:\d+px" data-source="flowchart LR/,
     );
     const off = await createHtmlRenderer(html({ ...offline, mermaid: false }))(markdown);
     expect(off).not.toContain("pele-diagram");
     expect(off).toContain('class="language-mermaid"');
+  });
+
+  it("zooms a Mermaid diagram and gives it Copy image and Copy source, with one script per document", async () => {
+    const markdown =
+      '```mermaid\nflowchart LR\n  A -->|"a & b"| B\n```\n\n```mermaid\nflowchart TD\n  C --> D\n```';
+    const render = createHtmlRenderer(html(offline));
+    const out = await render(markdown);
+    // The card zooms, and the bar sits beside it in the wrapper, so a click on a button never opens the zoom.
+    expect(out.match(/<div data-zoom tabindex="0" class="pele-diagram"/g)).toHaveLength(2);
+    expect(
+      out.match(/<\/svg><\/div><div class="cmm-bar"><button type="button" class="cmm-image"/g),
+    ).toHaveLength(2);
+    expect(out).toContain('aria-label="Copy source"');
+    expect(out).toContain('<span class="cmm-status" role="status"></span>');
+    // The source the buttons copy, escaped for the attribute.
+    expect(out).toContain('data-source="flowchart LR\n  A --&gt;|&quot;a &amp; b&quot;| B\n"');
+    // One script for the buttons and one for zoom, and the buttons' script is the exported text, on every render.
+    expect(out.split(`<script>${mermaidScript}</script>`)).toHaveLength(2);
+    expect(out.match(/<style data-comark-zoom>/g)).toHaveLength(1);
+    expect(await render(markdown)).toContain(`<script>${mermaidScript}</script>`);
+    expect(mermaidScript).toMatch(/^\(function start\(\) \{[\s\S]*\}\)\(\)$/);
+    expect(mermaidScript).not.toContain("</");
+
+    const still = await createHtmlRenderer(html({ ...offline, zoom: false }))(markdown);
+    expect(still).not.toContain("data-zoom");
+    expect(still).not.toContain("data-comark-zoom");
+    expect(still.match(/class="cmm-bar"/g)).toHaveLength(2);
+    expect(still).toContain(`<script>${mermaidScript}</script>`);
+  });
+
+  it("keeps the source of a Mermaid diagram that fails, with nothing to zoom", async () => {
+    const out = await createHtmlRenderer(html(offline))("```mermaid\nflowchart LR\n  A -->\n```");
+    expect(out).toContain("data-error=");
+    expect(out).toContain('<div class="cmm" data-source="flowchart LR\n  A --&gt;\n">');
+    expect(out).not.toContain("data-zoom");
+    expect(out).not.toContain('class="cmm" data-wide');
   });
 
   it("styles the text by default, scoped to the element the document renders into", async () => {
@@ -159,6 +195,11 @@ describe("comark-ui", () => {
       const value = await parseMarkdown(document, { plugins: preset.plugins });
       const out = await render(value as never, preset.components as never);
       for (const block of blocks) expect(out, name).toContain(block);
+      // The same wrapper and bar as the HTML renderer; Pele zooms the diagram itself in the browser.
+      expect(out, name).toMatch(
+        /<div class="cmm" data-source="flowchart LR\n {2}Draft --&gt; Review\n?">/,
+      );
+      expect(out, name).toContain('<div class="cmm-bar"><button type="button" class="cmm-image"');
       // In the server's HTML, unescaped, so the page arrives styled.
       expect(out, name).toContain("<style data-comark-typeset");
       expect(out, name).toContain("@scope{:where(:scope){");

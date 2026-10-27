@@ -1,4 +1,4 @@
-import { type ComponentType, createElement } from "react";
+import { type ComponentType, createElement, useEffect } from "react";
 import * as badge from "comark-badge/react";
 import * as cards from "comark-cards/react";
 import * as carousel from "comark-carousel/react";
@@ -20,7 +20,7 @@ import * as magicMove from "comark-magic-move/react";
 import * as mark from "comark-mark/react";
 import * as math from "comark-mathml/react";
 import * as media from "comark-media/react";
-import pele, { createPeleComponent } from "comark-pele/react";
+import pele, { Pele } from "comark-pele/react";
 import * as metrics from "comark-metrics/react";
 import * as outline from "comark-outline/react";
 import * as properties from "comark-properties/react";
@@ -31,18 +31,28 @@ import * as table from "comark-table/react";
 import * as tabs from "comark-tabs/react";
 import * as tests from "comark-tests/react";
 import * as zoom from "comark-zoom/react";
-import { addMermaidStyles } from "./client.ts";
+import { mermaidBar, startMermaid } from "./client.ts";
 import { type Preset, type PresetOptions, preset } from "./index.ts";
 import { typesetCss } from "./typeset-css.ts";
 
 export { criticCss } from "./index.ts";
 export type { PresetOptions } from "./index.ts";
 
-// Pele calls `onRender` only in the browser, after it draws, so the styles arrive like the other components' do.
-const mermaid = {
-  default: pele,
-  components: { pele: createPeleComponent({ onRender: addMermaidStyles }) },
-};
+// Pele's card in `.cmm` with the bar of buttons, as `comark-ui/html` draws it. In the browser Pele's own `mount()` zooms
+// the diagram in place, so it doesn't zoom with comark-zoom.
+function Mermaid(props: Parameters<typeof Pele>[0]) {
+  useEffect(() => startMermaid(), []);
+  return createElement(
+    "div",
+    { className: "cmm", "data-source": props.content },
+    createElement(Pele, props),
+    createElement("div", {
+      className: "cmm-bar",
+      dangerouslySetInnerHTML: { __html: mermaidBar() },
+    }),
+  );
+}
+const mermaid = { default: pele, components: { pele: Mermaid } };
 
 // oxlint-disable-next-line no-explicit-any -- the type `@comark/react` takes for its components.
 type AnyComponent = ComponentType<any>;

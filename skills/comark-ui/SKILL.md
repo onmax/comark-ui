@@ -55,7 +55,7 @@ Read the reference for each block you use before you write it. Mix the blocks fr
 | A change on screen, before and after | `::compare` | [annotate](references/annotate.md) |
 | A command's output, such as a test run or a build, as colored text | `::cast` | [cast](references/cast.md) |
 | Numbers, such as sizes, timings, before/after metrics, a trend, or a timeline | `::chart` | [charts](references/charts.md) |
-| A flow, a sequence, an architecture, or a schema as a diagram | a `d2`, `dot`, `plantuml`, `dbml`, `goat`, or `svgbob` fence | [diagrams](references/diagrams.md) |
+| A flow, a sequence, an architecture, or a schema as a diagram | a `mermaid`, `d2`, `dot`, `plantuml`, `dbml`, `goat`, or `svgbob` fence | [diagrams](references/diagrams.md) |
 | Links and `@mentions` with the site's favicon or the person's avatar | links, `@user`, `:chip` | [chips](references/chips.md) |
 | Colors, such as design tokens before and after, or a palette | a color in inline code, `::palette` | [colors](references/colors.md) |
 | A suggested change to one file, before and after | `::diff` | [diff](references/diff.md) |

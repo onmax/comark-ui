@@ -1,4 +1,5 @@
 import type { NodeHandler } from "comark";
+import { escapeHtml } from "comark/utils";
 import * as annotate from "comark-annotate/html";
 import * as badge from "comark-badge/html";
 import * as cards from "comark-cards/html";
@@ -34,42 +35,51 @@ import * as table from "comark-table/html";
 import * as tabs from "comark-tabs/html";
 import * as tests from "comark-tests/html";
 import * as zoom from "comark-zoom/html";
-import { mermaidCss } from "./client.ts";
+import { mermaidBar, mermaidCss } from "./client.ts";
 import { type Preset, type PresetOptions, preset } from "./index.ts";
+import { start } from "./script.ts";
 import { typesetCss } from "./typeset-css.ts";
 
 export { criticCss } from "./index.ts";
 export type { PresetOptions } from "./index.ts";
 
-// Each render gets a fresh `state.context`, so a document carries the styles once.
+// Each render gets a fresh `state.context`, so a document carries the styles and the script once.
 const styled = new WeakSet<object>();
 
 /**
- * Marks Pele's card as a wide block with the diagram's own width, so a page that gives wide blocks room shows a long
- * flowchart at its size rather than shrinking its labels to fit the column.
+ * The text of the inline `<script>` that runs the Mermaid diagrams' Copy image and Copy source buttons. It's the same on
+ * every render and changes only between versions, so a page with a strict Content Security Policy can allow it by its
+ * hash without rendering a document first.
  */
-function wide(html: string): string {
-  const width = /^<div class="pele-diagram"[^>]*><svg[^>]* width="([\d.]+)"/.exec(html)?.[1];
-  return width
-    ? html.replace(
-        '<div class="pele-diagram"',
-        `<div class="pele-diagram" data-wide style="--cmm-svg:${Math.ceil(Number(width))}px"`,
-      )
-    : html;
-}
+export const mermaidScript = `(${start.toString()})()`;
 
-const mermaid = {
+const attr = (value: string) => escapeHtml(value, { '"': "&quot;" });
+
+/**
+ * Wraps Pele's card in `.cmm` with the bar of buttons and the source they copy. The wrapper is a wide block with the
+ * diagram's own width, so a page that gives wide blocks room shows a long flowchart at its size rather than shrinking
+ * its labels to fit the column. A drawn diagram zooms with comark-zoom unless the preset turns zoom off.
+ */
+const mermaid = (zooms: boolean) => ({
   default: pele,
   components: {
     pele: ((node, state) => {
-      const styles = styled.has(state.context)
-        ? ""
-        : `<style data-comark-mermaid>${mermaidCss}</style>`;
+      const first = !styled.has(state.context);
       styled.add(state.context);
-      return styles + wide(Pele(node));
+      const card = Pele(node);
+      const source = node[1].content;
+      const width = /^<div[^>]*><svg[^>]* width="([\d.]+)"/.exec(card)?.[1];
+      const wide = width ? ` data-wide style="--cmm-svg:${Math.ceil(Number(width))}px"` : "";
+      // Pele writes the card as one `div`, its SVG first when it drew one.
+      const zoomed = zooms && width ? card.replace(/^<div/, '<div data-zoom tabindex="0"') : card;
+      return (
+        (first ? `<style data-comark-mermaid>${mermaidCss}</style>` : "") +
+        `<div class="cmm"${wide} data-source="${attr(typeof source === "string" ? source : "")}">${zoomed}<div class="cmm-bar">${mermaidBar()}</div>` +
+        `${first ? `<script>${mermaidScript}</script>` : ""}${zooms && width ? zoom.runtime(state) : ""}</div>`
+      );
     }) satisfies NodeHandler,
   },
-};
+});
 
 // In the document itself, so `@scope` styles the element it renders into.
 const typeset: NodeHandler = () => `<style data-comark-typeset>${typesetCss}</style>`;
@@ -101,7 +111,7 @@ export default (options?: PresetOptions): Preset<NodeHandler> =>
       mark,
       math,
       media,
-      mermaid,
+      mermaid: mermaid(options?.zoom !== false),
       metrics,
       outline,
       properties,

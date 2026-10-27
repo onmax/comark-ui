@@ -94,7 +94,7 @@ Annotate brings zoom and carousel with it, so screenshots and comparisons zoom w
 
 ## Scripts and styles
 
-Nothing needs a script to read. Zoom, carousel, tabs, code, and annotate add behavior on top: zooming, arrows and keys, switching tabs, copying and wrapping code, hover and copy. Callouts and embeds need only styles.
+Nothing needs a script to read. Zoom, carousel, tabs, code, annotate, and Mermaid add behavior on top: zooming, arrows and keys, switching tabs, copying and wrapping code, hover and copy, and copying a diagram as an image or its source. Callouts and embeds need only styles.
 
 The HTML renderers inline each plugin's styles, and its script if it has one, once per document.
 
@@ -107,5 +107,17 @@ Without a renderer, call `start()` from `comark-zoom/client` once on a page with
 ## Content Security Policy
 
 The inlined `<style>` and `<script>` elements need `'unsafe-inline'` in `style-src` and `script-src`, or a hash of each. A script's text changes only between versions. Annotate also places marks with `style` attributes, so its pages need `style-src 'unsafe-inline'`.
+
+To allow a script by hash without rendering a document first, hash the text a package exports. `mermaidScript` from `comark-ui/html` is the Mermaid buttons' script:
+
+```ts
+import { createHash } from "node:crypto";
+import { mermaidScript } from "comark-ui/html";
+
+const hash = `'sha256-${createHash("sha256").update(mermaidScript).digest("base64")}'`;
+// Content-Security-Policy: script-src 'self' <hash>, plus the hash of each other script your documents use
+```
+
+For any other script, render a document that uses it once, at startup, and hash the text between its `<script>` tags.
 
 Notes, slides, and callouts are ordinary Markdown, so raw HTML in them renders like anywhere else in the document. For untrusted input, add Comark's `security` plugin and list the tags to drop, such as `security({ blockedTags: ["script", "style", "iframe"] })`.

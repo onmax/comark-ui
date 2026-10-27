@@ -871,7 +871,7 @@ kbd {
 }
 
 /* The page's own buttons do nothing on a card. */
-.demo-page :is(.ca-copy, .ca-copy-status) {
+.demo-page :is(.ca-copy, .ca-copy-status, .cmm-bar) {
   display: none;
 }
 
@@ -891,7 +891,7 @@ kbd {
     .ccr,
     .ccr-group,
     .cdg,
-    .pele-diagram,
+    .cmm,
     .cca,
     .cdt,
     .cdt-accordion,
@@ -906,6 +906,14 @@ kbd {
   border-radius: 0;
   background: none;
   box-shadow: none;
+}
+
+/* A Mermaid diagram's card is inside its wrapper, which holds the buttons. */
+.demo-page > .cmm:only-child > .pele-diagram {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
 }
 
 .demo-page .cch {
@@ -3348,7 +3356,7 @@ dl:not([class]) > dd > :last-child {
     .ccr,
     .ccr-group,
     .cdg,
-    .pele-diagram,
+    .cmm,
     .cca,
     .cdt,
     .cdt-accordion,
@@ -3392,7 +3400,7 @@ dl:not([class]) > dd > :last-child {
       .ccr,
       .ccr-group,
       .cdg,
-      .pele-diagram,
+      .cmm,
       .cca,
       .cdt,
       .cdt-accordion,
@@ -3429,7 +3437,7 @@ dl:not([class]) > dd > :last-child {
         .ccr,
         .ccr-group,
         .cdg,
-        .pele-diagram,
+        .cmm,
         .cca,
         .cdt,
         .cdt-accordion,
@@ -3463,7 +3471,7 @@ dl:not([class]) > dd > :last-child {
       .ccr,
       .ccr-group,
       .cdg,
-      .pele-diagram,
+      .cmm,
       .cca,
       .cdt,
       .cdt-accordion,
@@ -3492,7 +3500,7 @@ dl:not([class]) > dd > :last-child {
       .ccr,
       .ccr-group,
       .cdg,
-      .pele-diagram,
+      .cmm,
       .cca,
       .cdt,
       .cdt-accordion,
