@@ -183,12 +183,12 @@ function markEdited() {
 }
 
 // The header's npmx link follows the preset, and stays on its package while you edit it. A shared link's Markdown
-// could use any of them, so it gets the page with all of them.
+// could use any of them, so it gets comark-ui, which installs all of them.
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
 function pointNpmx(npm?: string) {
-  npmx.href = `https://npmx.dev/${npm ? `package/${npm}` : "~onmax_"}`;
-  npmx.title = npm ? `${npm} on npmx` : "Every package on npmx";
-  const name = npm || "npmx";
+  const name = npm || "comark-ui";
+  npmx.href = `https://npmx.dev/package/${name}`;
+  npmx.title = `${name} on npmx`;
   if (npmxName.textContent === name) return;
   const from = npmx.offsetWidth;
   npmxName.textContent = name;

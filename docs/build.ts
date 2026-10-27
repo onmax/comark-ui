@@ -966,9 +966,9 @@ function pager(page: Page) {
 }
 
 const npmx = `<svg viewBox="0 0 153 153" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M17.6 107.2h24.1v23.7h-24zM119.8.8 116.2 11 69.9 142l-3.6 10.2h15.5l3.6-10.2 11.7-33.2L135.4.8z"/></svg>`;
-// npmx shows a page's package, or every package of the project on a page about all of them.
-const npmxLink = (npm?: string) =>
-  `<a class="npmx" href="https://npmx.dev/${npm ? `package/${npm}` : "~onmax_"}" title="${npm ? `${npm} on npmx` : "Every package on npmx"}">${npmx}<span>${npm || "npmx"}</span></a>`;
+// npmx shows a page's package, or comark-ui, which installs all of them, on a page about all of them.
+const npmxLink = (npm = "comark-ui") =>
+  `<a class="npmx" href="https://npmx.dev/package/${npm}" title="${npm} on npmx">${npmx}<span>${npm}</span></a>`;
 // Markdown's # in a hand-drawn loop, the mark comark-annotate draws around what a reviewer should look at.
 const logo = `<svg class="logo" viewBox="0 0 32 32" width="24" height="24" aria-hidden="true"><rect stroke="currentColor" x="6.5" y="11.4" width="19" height="10.2" fill="none" stroke-width="1.3"/><path fill="currentColor" d="M7.87 20.24V12.76H10.07L12.26 15.51 14.46 12.76H16.66V20.24H14.46V15.95L12.26 18.7 10.07 15.95V20.24ZM18.64 12.98h2.19v2.12h-2.19ZM18.64 17.9h2.19v2.12h-2.19ZM21.94 12.98h2.19v2.12h-2.19ZM21.94 17.9h2.19v2.12h-2.19Z"/><path d="M9.3 7.3C15.3 3.7 27.1 4.5 28.7 11.5 30.4 19.1 22 26.7 12.8 27.2 5.9 27.6 2 23.5 3.5 18.1 4.8 13.3 11.1 9.7 18.1 9.6" fill="none" stroke="#e5484d" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const menuIcon = `<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16"/></svg>`;
@@ -1615,7 +1615,7 @@ function shell(options: {
   description: string;
   head?: string;
   body: string;
-  // The package the npmx link opens; every package when it's none.
+  // The package the npmx link opens; comark-ui when it's none.
   npm?: string;
   landing?: boolean;
 }) {

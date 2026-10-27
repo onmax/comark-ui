@@ -206,20 +206,24 @@ jobs:
         run: |
           set -euo pipefail
           missing=0
+          # The registry can take minutes to list a version it just accepted, so every package shares one deadline.
+          deadline=$((SECONDS + 600))
           echo '### npm release verification' >> "$GITHUB_STEP_SUMMARY"
           for file in $(jq -r '.[]' <<<"$FILES"); do
             manifest=$(tar -xOzf "$TARBALLS/$file" package/package.json)
             name=$(jq -r .name <<<"$manifest")
             version=$(jq -r .version <<<"$manifest")
             found=false
-            for attempt in 1 2 3; do
-              if published=$(npm view "$name@$version" version --json --registry=https://registry.npmjs.org); then
+            while :; do
+              # the publish step's npm view cached the packument from before the publish
+              if published=$(npm view "$name@$version" version --json --prefer-online --registry=https://registry.npmjs.org 2>/dev/null); then
                 if jq -e --arg version "$version" '. == $version' <<<"$published" > /dev/null; then
                   found=true
                   break
                 fi
               fi
-              if [ "$attempt" -lt 3 ]; then sleep 5; fi
+              if [ "$SECONDS" -ge "$deadline" ]; then break; fi
+              sleep 15
             done
             if [ "$found" = true ]; then
               echo "- Published: $name@$version" >> "$GITHUB_STEP_SUMMARY"
