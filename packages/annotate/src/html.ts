@@ -329,7 +329,7 @@ async function slider(title: string | undefined, shots: Screenshot[], state: Sta
     `<div class="ca-handle" role="slider" tabindex="0" aria-label="${attr(`Divider between ${names.join(" and ")}`)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" aria-valuetext="${attr(`${names[0]} 50%, ${names[1]} 50%`)}">` +
     `<span class="ca-grip">${GRIP}</span></div>`;
   return (
-    `<div class="ca ca-compare ca-slider"><div class="ca-swipe" data-zoom tabindex="0" data-zoom-context=".ca"${notes ? ' data-zoom-aside=".ca-swipe-notes"' : ""} data-zoom-title="${attr(title ?? names.join(" / "))}">${sides}${shots.length === 2 ? handle : ""}</div>` +
+    `<div class="ca ca-compare ca-slider" data-wide><div class="ca-swipe" data-zoom tabindex="0" data-zoom-context=".ca"${notes ? ' data-zoom-aside=".ca-swipe-notes"' : ""} data-zoom-title="${attr(title ?? names.join(" / "))}">${sides}${shots.length === 2 ? handle : ""}</div>` +
     `${notes && `<div class="ca-swipe-notes">${notes}</div>`}</div>${zoomRuntime(state)}${runtime(state)}`
   );
 }
@@ -369,7 +369,7 @@ const compare: NodeHandler = async (node, state) => {
   const figures: string[] = [];
   for (const shot of shots) figures.push(await figure(shot, state, id, margins));
   // Side by side on a wide page, one at a time on a narrow one; both screenshots zoom as one gallery.
-  return `${styles(state)}<div class="ca ca-compare">${carouselHtml(figures, { columns: 2, title: title ?? "Comparison" }, state)}</div>${runtime(state)}`;
+  return `${styles(state)}<div class="ca ca-compare" data-wide>${carouselHtml(figures, { columns: 2, title: title ?? "Comparison" }, state)}</div>${runtime(state)}`;
 };
 
 /** HTML renderers for `::screenshot`, `::compare`, and `::annotation`. Pass them as `components`; the styles are inlined once per document. */

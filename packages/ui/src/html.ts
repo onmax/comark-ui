@@ -44,6 +44,20 @@ export type { PresetOptions } from "./index.ts";
 // Each render gets a fresh `state.context`, so a document carries the styles once.
 const styled = new WeakSet<object>();
 
+/**
+ * Marks Pele's card as a wide block with the diagram's own width, so a page that gives wide blocks room shows a long
+ * flowchart at its size rather than shrinking its labels to fit the column.
+ */
+function wide(html: string): string {
+  const width = /^<div class="pele-diagram"[^>]*><svg[^>]* width="([\d.]+)"/.exec(html)?.[1];
+  return width
+    ? html.replace(
+        '<div class="pele-diagram"',
+        `<div class="pele-diagram" data-wide style="--cmm-svg:${Math.ceil(Number(width))}px"`,
+      )
+    : html;
+}
+
 const mermaid = {
   default: pele,
   components: {
@@ -52,7 +66,7 @@ const mermaid = {
         ? ""
         : `<style data-comark-mermaid>${mermaidCss}</style>`;
       styled.add(state.context);
-      return styles + Pele(node);
+      return styles + wide(Pele(node));
     }) satisfies NodeHandler,
   },
 };

@@ -85,6 +85,10 @@ describe("comark-ui", () => {
     expect(out).toContain(":where(:root){--pele-bg:var(--_comark-background)");
     expect(out).toContain("--pele-fg:var(--_comark-foreground)");
     expect(out).toContain('data-diagram="sequence"');
+    // A wide block with its own width, so a page that gives wide blocks room shows it at its size.
+    expect(out).toMatch(
+      /<div class="pele-diagram" data-wide style="--cmm-svg:\d+px" data-diagram="flowchart">/,
+    );
     const off = await createHtmlRenderer(html({ ...offline, mermaid: false }))(markdown);
     expect(off).not.toContain("pele-diagram");
     expect(off).toContain('class="language-mermaid"');
@@ -108,6 +112,10 @@ describe("comark-ui", () => {
     expect(css).toContain('background-image:var(--comark-grain,url("data:image/svg+xml,');
     expect(css).toContain("feTurbulence type='fractalNoise' baseFrequency='0.9'");
     expect(css).not.toContain("/*");
+    // Wide blocks grow only into the room the page gives them.
+    expect(css).toContain(
+      ":scope>[data-wide]{--_ty-start:max(0px,var(--comark-wide-start,0px));--_ty-end:max(0px,var(--comark-wide-end,0px));",
+    );
     const off = await createHtmlRenderer(html({ ...offline, typeset: false }))(markdown);
     expect(off).not.toContain("data-comark-typeset");
     expect(Object.keys(html({ ...offline, typeset: false }).components)).not.toContain(

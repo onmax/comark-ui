@@ -100,6 +100,27 @@ The styles leave the column's width to you, since only the page knows what sits 
 }
 ```
 
+### Wide blocks
+
+Some blocks read better wider than a line of text: a [before/after comparison](/annotate/components/compare/) and a Mermaid diagram wider than the column, whose labels would otherwise shrink to fit. They carry a `data-wide` attribute, and they grow into the room you give them on each side of the column. Without room set, they keep to the column. For a column centered in the window:
+
+```css
+.article {
+  /* The space beside the column, less 1.5rem from the window's edge. 100% is the column. */
+  --comark-wide-start: calc((100vw - 100%) / 2 - 1.5rem);
+  --comark-wide-end: calc((100vw - 100%) / 2 - 1.5rem);
+}
+```
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `--comark-wide-start` | `0px` | How far a wide block may grow before the column, on the left in a left-to-right page. `100%` in it is the column's width. |
+| `--comark-wide-end` | `0px` | How far it may grow after the column. Keep it clear of what sits beside the text, such as a side panel or an [outline](/outline/). |
+| `--comark-wide-max` | `72rem` | The widest a wide block grows, however much room there is. |
+| `--comark-wide-width` | Set by the block | A block's own width: a diagram never grows past it. A block of your own can set it too. |
+
+A wide block stays centered on the column while both sides have room. When one side has less, such as beside a panel, it moves toward the side that has more, so a diagram keeps its size rather than shrinking. Only a document's top-level blocks grow; a diagram inside tabs or a list keeps to its parent. Mark a block of your own as wide with `data-wide` on its outer element.
+
 ## Turn it off
 
 Use `typeset: false` when your site already styles Markdown, such as with Tailwind Typography's `prose` or Nuxt UI's prose components:

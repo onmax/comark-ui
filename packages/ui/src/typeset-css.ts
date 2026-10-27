@@ -189,6 +189,20 @@ const rules = `
   .shiki:not(:where(.light *)) span[style*="--shiki-dark:"] { color: var(--shiki-dark) !important; }
 }
 
+/* A block marked data-wide, such as a before/after comparison or a diagram wider than the text, grows past the column
+   into the room the page gives it on each side, --comark-wide-start and --comark-wide-end, up to its own width
+   (--comark-wide-width) and --comark-wide-max. It stays centered on the column while both sides have room, and moves
+   toward the side that has more when one doesn't. Without room set, it keeps to the column. Only the document's own
+   blocks grow, not one inside a list or tabs. */
+:scope > [data-wide] {
+  /* Room a page works out from the window can come out negative on a phone, where the column fills it: none, then. */
+  --_ty-start: max(0px, var(--comark-wide-start, 0px));
+  --_ty-end: max(0px, var(--comark-wide-end, 0px));
+  --_ty-wide: max(100%, min(var(--comark-wide-width, 100vw), var(--comark-wide-max, 72rem), 100% + var(--_ty-start) + var(--_ty-end)));
+  width: var(--_ty-wide);
+  margin-inline: clamp(-1 * var(--_ty-start), (100% - var(--_ty-wide)) / 2, 100% + var(--_ty-end) - var(--_ty-wide)) 0;
+}
+
 /* The first child adds no space above. Last, so it wins ties. */
 :scope > :where(:first-child):not(${own}),
 :scope > :where(:first-child) > :where(:first-child):not(${own}),
