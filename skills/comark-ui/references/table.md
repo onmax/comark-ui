@@ -1,6 +1,6 @@
 # Tables from CSV, TSV, and JSON
 
-comark-table turns CSV, TSV, or JSON from a fence or a file into a plain HTML table with Copy CSV and Copy Markdown buttons. With `sort`, its headers sort the rows. Use it for benchmark results, exports, and any data a tool wrote, so the page shows the numbers the run produced.
+comark-table turns CSV, TSV, or JSON from a fence or a file into a plain HTML table with a Copy button, which pastes as cells in a spreadsheet, and a menu that copies it as Markdown or CSV. With `sort`, its headers sort the rows. Use it for benchmark results, exports, and any data a tool wrote, so the page shows the numbers the run produced.
 
 ## Syntax
 
@@ -21,17 +21,17 @@ Or read the file the run wrote, and leave the block empty:
 ::
 ```
 
-- A ` ```csv ` or ` ```tsv ` fence turns into a table anywhere, with the copy buttons and no sorting. Wrap it in `::table` to set the props below.
+- A ` ```csv ` or ` ```tsv ` fence turns into a table anywhere, with the Copy button and no sorting. Wrap it in `::table` to set the props below.
 - A ` ```json ` fence stays code unless it sits inside `::table`. It holds an array of objects, one per row. Every key becomes a column, in the order first seen, and a nested value shows as JSON.
 - `src` starts at the document's folder, or at the host's `root` when it starts with `/`. It can't leave `root` or be a URL, and the extension picks the format. The plugin drops content beside `src` and reports it.
-- A Markdown table inside `::table{sort}` or `::table{copy}` gets the buttons. A `::table` with no props renders its Markdown table plain.
+- A Markdown table inside `::table{sort}` or `::table{copy}` gets the Copy button. A `::table` with no props renders its Markdown table plain.
 
 | Prop | What it does |
 | --- | --- |
 | `src` | A `.csv`, `.tsv`, or `.json` file to read. |
 | `format` | `csv`, `tsv`, or `json`, for a file or fence whose extension or language doesn't say. |
 | `sort` | Makes every header a button that sorts the rows, up then down. Numbers sort as numbers. |
-| `copy` | On by default. `copy=false` hides the Copy CSV and Copy Markdown buttons. |
+| `copy` | On by default. `copy=false` hides the Copy button and its menu. |
 
 CSV follows RFC 4180. A cell in double quotes may hold commas and line breaks, and `""` is a quote inside one. TSV splits at tabs and has no quoting. The first row is the header, and every row needs one cell per column. A column whose cells are all numbers, with commas or a short unit such as `12 ms`, lines up on the right. A fence the plugin can't read stays code, and the plugin says why.
 

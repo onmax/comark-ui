@@ -5,7 +5,7 @@ import table, { components } from "../packages/table/src/html.ts";
 const render = createHtmlRenderer({ plugins: [table()], components });
 const markdown = '::table{sort}\n```csv\nBird,Seen\nPigeon,"1,204"\nHeron,9\nMallard,10\n```\n::';
 
-test("a table sorts by a header, numbers as numbers, and copies as CSV and Markdown", async ({
+test("a table sorts by a header, numbers as numbers, and copies as a table, Markdown, and CSV", async ({
   page,
   context,
 }) => {
@@ -25,15 +25,40 @@ test("a table sorts by a header, numbers as numbers, and copies as CSV and Markd
   expect(await column(1)).toEqual(["Heron", "Mallard", "Pigeon"]);
   await expect(page.locator("th").nth(1)).not.toHaveAttribute("aria-sort");
 
-  await page.getByRole("button", { name: "Copy as CSV" }).click();
-  await expect(page.locator(".ctb-status")).toHaveText("Copied CSV");
-  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
-    'Bird,Seen\nHeron,9\nMallard,10\nPigeon,"1,204"',
-  );
-  await page.getByRole("button", { name: "Copy as Markdown" }).click();
-  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
+  const clipboard = () => page.evaluate(() => navigator.clipboard.readText());
+  // The main button copies the table as cells for a spreadsheet, with tab-separated text beside them.
+  await page.getByRole("button", { name: "Copy table" }).click();
+  await expect(page.locator(".ctb-status")).toHaveText("Copied as table");
+  expect(await clipboard()).toBe("Bird\tSeen\nHeron\t9\nMallard\t10\nPigeon\t1,204");
+  const html = await page.evaluate(async () => {
+    const [item] = await navigator.clipboard.read();
+    return item ? (await item.getType("text/html")).text() : "";
+  });
+  expect(html).toContain("<thead><tr><th>Bird</th><th>Seen</th></tr></thead>");
+
+  const more = page.getByRole("button", { name: "More ways to copy" });
+  await more.click();
+  await expect(more).toHaveAttribute("aria-expanded", "true");
+  await expect(page.getByRole("menuitem")).toHaveCount(2);
+  await page.getByRole("menuitem", { name: /Markdown/ }).click();
+  await expect(page.getByRole("menu")).toBeHidden();
+  await expect(more).toBeFocused();
+  expect(await clipboard()).toBe(
     "| Bird | Seen |\n| --- | --- |\n| Heron | 9 |\n| Mallard | 10 |\n| Pigeon | 1,204 |",
   );
+
+  // The keyboard opens the menu on its first item, moves through it with arrows, and closes it with Escape.
+  await page.keyboard.press("ArrowDown");
+  await expect(page.getByRole("menuitem", { name: /Markdown/ })).toBeFocused();
+  await page.keyboard.press("ArrowUp");
+  await expect(page.getByRole("menuitem", { name: /CSV/ })).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page.locator(".ctb-status")).toHaveText("Copied as CSV");
+  expect(await clipboard()).toBe('Bird,Seen\nHeron,9\nMallard,10\nPigeon,"1,204"');
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("menu")).toBeHidden();
+  await expect(more).toBeFocused();
 });
 
 test("without the script, the headers read as text and the copy buttons stay hidden", async ({

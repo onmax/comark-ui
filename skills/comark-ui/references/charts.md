@@ -2,6 +2,8 @@
 
 comark-charts draws the Markdown table inside `::chart` as an SVG chart and keeps the table under it. People see the chart, and anyone reading the Markdown or the page, an agent included, reads the numbers from the table. So the table is the source of truth: write the real numbers, and name every column so its header labels the chart.
 
+On the page, a Copy button over the chart's corner copies it as a PNG, and its menu copies the data as a table for a spreadsheet or as Markdown. A chart with marks copies its data, since the PNG would leave the marks out.
+
 ## Write the table
 
 ```md

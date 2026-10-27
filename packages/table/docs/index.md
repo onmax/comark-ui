@@ -50,7 +50,7 @@ Count the pigeons,412,388
 
 - A ` ```csv ` or ` ```tsv ` fence becomes a table wherever it is.
 - `::table` reads a CSV, TSV, or JSON file or fence while parsing, so the table is plain HTML.
-- Every table it makes gets Copy CSV and Copy Markdown buttons, and headers that sort if you like.
+- Every table it makes gets a Copy button, which pastes as cells in a spreadsheet, a menu that copies it as Markdown or CSV instead, and headers that sort if you like.
 - A small script adds the buttons and sorting. Without it, the table still reads.
 - Any table, Markdown or data, can color a cell or a row by its status.
 
@@ -142,7 +142,7 @@ Heron,2
 
 ### Copy
 
-Use `copy=false` to hide the Copy CSV and Copy Markdown buttons.
+The Copy button copies the table as HTML with tab-separated text beside it, so Google Sheets, Excel, Notion, and Docs paste it as cells. The arrow beside it opens a menu with Markdown, a table that renders on GitHub, and CSV. Use `copy=false` to hide them.
 
 ::example
 ````md
@@ -195,18 +195,22 @@ Files are read while parsing, the way [comark-include](/include/) reads them: fr
 
 ### Without the script
 
-The copy buttons and the sort arrows only show once the script runs. Without it, the headers read as plain text and the table is still a table. In print, the buttons are hidden.
+The Copy button and the sort arrows only show once the script runs. Without it, the headers read as plain text and the table is still a table. In print, the buttons are hidden.
 
 ## Accessibility
 
-A sortable header is a button inside its `th`, and the `th` carries `aria-sort` once sorted. The copy buttons are named "Copy as CSV" and "Copy as Markdown". A status line beside them announces "Copied CSV", "Copied Markdown", or "Couldn't copy here".
+A sortable header is a button inside its `th`, and the `th` carries `aria-sort` once sorted. The Copy button is named "Copy table", and the arrow beside it is "More ways to copy", a button that opens a `menu` of two `menuitem`s: Markdown and CSV. A status line beside them announces "Copied as table", "Copied as Markdown", "Copied as CSV", or "Couldn't copy here".
 
 ### Keyboard interactions
 
 | Key | Description |
 | --- | --- |
-| `Tab`, `Shift+Tab` | Moves between the copy buttons and the sortable headers. |
-| `Enter`, `Space` | On a sortable header, sorts the rows up, then down. On a copy button, copies the table. |
+| `Tab`, `Shift+Tab` | Moves between the copy buttons and the sortable headers, and closes an open menu. |
+| `Enter`, `Space` | On a sortable header, sorts the rows up, then down. On Copy or a menu item, copies the table. On the arrow, opens the menu. |
+| `ArrowDown` | On the arrow, opens the menu. In the menu, moves to the next item. |
+| `ArrowUp` | In the menu, moves to the previous item. |
+| `Home`, `End` | In the menu, moves to the first or last item. |
+| `Escape` | Closes the menu and returns to the arrow. |
 
 ## API
 
@@ -217,7 +221,7 @@ A sortable header is a button inside its `th`, and the `th` carries `aria-sort` 
 | `src` | — | A CSV, TSV, or JSON file to read, relative to the document's folder, or to `root` when it starts with `/`. |
 | `format` | — | `csv`, `tsv`, or `json`, when the extension or the fence doesn't say. |
 | `sort` | `false` | Makes every header a button that sorts the rows, up then down. Numbers sort as numbers. |
-| `copy` | `true` | `false` hides the Copy CSV and Copy Markdown buttons. |
+| `copy` | `true` | `false` hides the Copy button and its menu. |
 | `tone` | — | On a span that fills a cell: `success`, `warning`, `error`, or `info`. On the first cell, it colors the whole row. |
 
 ### Formats
@@ -282,7 +286,7 @@ The HTML renderer inlines the script and styles once per document. For Vue, Reac
 
 ## Theme
 
-A table scrolls sideways in place, with its copy buttons in a bar above it, in the style of shadcn/ui's outline buttons. Sortable headers read as plain header text, with an arrow once the script runs. The rules sit in a `comark` CSS layer, so any plain rule of your own wins, except the reset that keeps a sortable header from taking a page's `button` styles.
+A table scrolls sideways in place, with its Copy button and the arrow for its menu in a bar above it, in the style of shadcn/ui's outline buttons. Sortable headers read as plain header text, with an arrow once the script runs. The rules sit in a `comark` CSS layer, so any plain rule of your own wins, except the reset that keeps a sortable header from taking a page's `button` styles.
 
 ### Shared tokens
 
@@ -290,13 +294,13 @@ Tables read these [shared tokens](/guide/theming/):
 
 | Token | Used for |
 | --- | --- |
-| `--comark-background` | The copy buttons |
-| `--comark-foreground` | A hovered copy button's text |
-| `--comark-muted` | The copy buttons' text, the status after a copy, an unsorted header's arrow |
-| `--comark-border` | The copy buttons' outline |
-| `--comark-accent` | A hovered copy button |
+| `--comark-background` | The copy buttons and the menu |
+| `--comark-foreground` | A hovered copy button's text, the menu's items |
+| `--comark-muted` | The copy buttons' icons, the menu's hints, the status after a copy, an unsorted header's arrow |
+| `--comark-border` | The copy buttons' and the menu's outline |
+| `--comark-accent` | A hovered copy button or menu item, the arrow while its menu is open |
 | `--comark-ring` | Focus rings |
-| `--comark-radius` | The copy buttons' corners |
+| `--comark-radius` | The copy buttons' and the menu's corners |
 | `--comark-font` | The bar |
 
 The table itself takes the page's own table styles.
@@ -317,6 +321,7 @@ A toned cell is tinted with its color at 20%. Set these variables in your theme 
 | Class | Element |
 | --- | --- |
 | `.ctb` | The block around a table |
-| `.ctb-bar` | The bar above it, with `.ctb-status` and the `button[data-table-copy]` buttons |
+| `.ctb-bar` | The bar above it, with `.ctb-status` and `.ctb-copy` |
+| `.ctb-copy` | The Copy button, `.ctb-copy-main`, the arrow, `.ctb-copy-more`, and the menu, `.ctb-menu`, whose items are `button[data-table-copy]` |
 | `.ctb-scroll` | The frame the table scrolls in |
 | `.ctb-sort` | A sortable header's button; its `th` carries `aria-sort` once sorted |
