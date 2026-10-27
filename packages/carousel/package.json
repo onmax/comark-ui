@@ -1,6 +1,6 @@
 {
   "name": "comark-carousel",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "A carousel of any Markdown content that scrolls and snaps, with arrows, a counter, keys, and zoom. A Comark plugin.",
   "keywords": [
     "carousel",
