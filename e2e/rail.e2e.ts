@@ -158,11 +158,15 @@ test("at the bottom of a scrolling container, the last section is the one being 
   // A short last section never reaches the top of the container on its own.
   const markdown = `## Install\n\n${text}\n\n## Usage\n\n${text}\n\n## FAQ\n\nShort.`;
   await page.setContent(
-    `<!doctype html><meta charset="utf-8"><style>body{margin:0}.scroll{height:100vh;overflow:auto}main{width:46rem;margin:auto}</style><div class="scroll"><main>${await render(markdown)}</main></div>`,
+    `<!doctype html><meta charset="utf-8"><style>body{margin:0}.scroll{height:100vh;overflow:auto}main{width:46rem;margin:auto}</style><div class="scroll"><main>${await render(markdown)}</main></div><div class="widget" style="position:fixed;bottom:0;height:40px;overflow:auto"><div style="height:200px"></div></div>`,
   );
   const current = page.locator(".cto-rail a[aria-current]");
   await expect(current).toHaveText("Install");
   await page.locator(".scroll").evaluate((scroll) => scroll.scrollTo(0, scroll.scrollHeight));
+  await expect(current).toHaveText("FAQ");
+  // A widget that scrolls on its own doesn't move the document.
+  await page.locator(".widget").evaluate((widget) => widget.scrollTo(0, 50));
+  await page.waitForTimeout(100);
   await expect(current).toHaveText("FAQ");
 });
 

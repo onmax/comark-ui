@@ -115,7 +115,7 @@ export function start(): () => void {
     // A heading counts as read once it passes a little below the outline's top.
     const line = (parseFloat(getComputedStyle(nav).top) || 0) + 40;
     // At the bottom of what scrolls, the last section is the one being read, however short it is.
-    const box = scroller?.isConnected && scroller.contains(parent) ? scroller : root;
+    const box = scroller?.contains(parent) ? scroller : root;
     const end = box.scrollTop > 0 && box.scrollTop + box.clientHeight >= box.scrollHeight - 2;
     let current = 0;
     links.forEach((link, index) => {
@@ -167,7 +167,11 @@ export function start(): () => void {
   document.addEventListener(
     "scroll",
     (event) => {
-      scroller = event.target instanceof Element ? event.target : null;
+      // Only a scroll that moves the document counts, not a code block's or another widget's.
+      const parent = rail()?.parentElement;
+      if (event.target === document) scroller = null;
+      else if (event.target instanceof Element && parent && event.target.contains(parent))
+        scroller = event.target;
       update(false);
     },
     {
