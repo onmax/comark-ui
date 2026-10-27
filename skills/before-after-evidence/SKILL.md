@@ -54,7 +54,13 @@ Image `src` must be a URL the renderer can reach: a path next to the document, o
    npx -p comark-linter -p comark-ui lint-comark evidence.md
    ```
 
-2. Open the page where it will be read, or render the screenshots alone with `npx comark-annotate render evidence.md -o evidence.html`, and take a screenshot of it.
+2. Open the page where it will be read and take a screenshot of it. For a local screenshot-only check, copy the complete `::compare` block, including its nested screenshots and annotations, into `evidence-screenshots.md` beside `evidence.md`, then run:
+
+   ```sh
+   npx comark-annotate render evidence-screenshots.md -o evidence-screenshots.html
+   ```
+
+   Open `evidence-screenshots.html` and take a screenshot of it. This CLI renders annotate, carousel, and zoom only; check any `::diff` or other blocks in the host's full Comark UI preview.
 3. Check that each mark sits on its target and each note matches what its side shows. Measure a mark that misses again, from the source, since a box moved by eye stays a guess.
 
-Done when you've looked at the rendered page and every mark lands. Name any mark you couldn't check in your report.
+Done when you've looked at the rendered page and every mark lands. Name any mark or block you couldn't check in your report.

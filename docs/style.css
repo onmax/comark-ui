@@ -3850,6 +3850,12 @@ main img {
   margin-top: 1.75rem;
 }
 
+.skill-install p {
+  margin-top: 0.5rem;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
 .skill-example {
   margin: 0 0 1rem;
 }
