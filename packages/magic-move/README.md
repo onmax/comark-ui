@@ -1,10 +1,9 @@
 # comark-magic-move
 
-[![npm version](https://npmx.dev/api/registry/badge/version/comark-magic-move)](https://npmx.dev/package/comark-magic-move)
-[![npm downloads](https://npmx.dev/api/registry/badge/downloads-month/comark-magic-move)](https://npmx.dev/package/comark-magic-move)
-[![install size](https://npmx.dev/api/registry/badge/size/comark-magic-move)](https://npmx.dev/package/comark-magic-move)
-[![license](https://npmx.dev/api/registry/badge/license/comark-magic-move)](https://npmx.dev/package/comark-magic-move)
-[![docs](https://img.shields.io/badge/docs-comark--ui.onmax.me-14b8a6?labelColor=0a0a0a)](https://comark-ui.onmax.me/magic-move/)
+[![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-magic-move&icon=npm)](https://npmx.dev/package/comark-magic-move)
+[![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-magic-move&period=month&icon=npm)](https://npmx.dev/package/comark-magic-move)
+[![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-magic-move)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/magic-move/)
 
 Code that animates between steps, written in Markdown. Every code block inside `::magic-move` is one step with a tab of its own, like a code group. Opening a tab moves the words and marks two steps share to their new places, and the rest fade, as in [Shiki Magic Move](https://antfu.me/posts/shiki-magic-move). The script reads the rendered code, so it works with any highlighter or none. Without it, the steps read one after another. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
 
