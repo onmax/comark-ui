@@ -13,7 +13,9 @@ tagline: Agents write most review documents. Install the skill so yours knows th
 npx skills add onmax/comark-ui
 ```
 
-This site serves it too, so `npx skills add https://comark-ui.onmax.me` installs the same skill.
+The CLI lists every skill in the repository. Pick `comark-ui`. This site serves it too, so `npx skills add https://comark-ui.onmax.me` installs the same skill.
+
+It teaches the blocks. To teach your agent a whole document, such as before/after evidence, a review, or a lesson, pick the [skills](/skills/) for those from the same list.
 
 ## Markdown pages
 
@@ -34,7 +36,7 @@ const skill = dirname(fileURLToPath(import.meta.resolve("comark-ui/skills/comark
 await cp(skill, "skills/comark-ui", { recursive: true });
 ```
 
-Keep the folder whole, since `SKILL.md` links each reference by its path. If your agents only write Markdown, cut each reference at its `## Register` heading, which always comes last.
+Keep the folder whole, since `SKILL.md` links each reference by its path. An app that serves skills from a Worker, where it can't read `node_modules`, imports every skill's files as text from `comark-ui/skills` instead, as [Skills](/skills/#bundle-them-in-your-app) shows. If your agents only write Markdown, cut each reference at its `## Register` heading, which always comes last.
 
 ## Check the result
 

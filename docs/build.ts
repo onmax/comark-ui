@@ -1,5 +1,5 @@
 // Renders docs/pages and each package's docs/ with the plugins themselves into docs/dist, a static site served by Cloudflare at comark-ui.onmax.me.
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { cp, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { deflateRawSync } from "node:zlib";
@@ -65,6 +65,12 @@ const lucideNames = [
   "book-open",
   "circle-check",
   "circle-x",
+  "clipboard-check",
+  "file-text",
+  "git-compare",
+  "graduation-cap",
+  "sparkles",
+  "workflow",
   "flask-conical",
   "search",
   "stethoscope",
@@ -133,6 +139,15 @@ const packageOrder = [
   "lint",
 ];
 const repo = new URL("../", root);
+// The agent skills that write a whole document, in the order the Skills section lists them. Each has a folder in
+// skills/ and a page in docs/pages/skills/ that leads with its example, rendered. comark-ui's own skill teaches the
+// blocks and has the Agents guide instead.
+const skillOrder = [
+  "before-after-evidence",
+  "review-document",
+  "visual-explanation",
+  "concept-lesson",
+];
 // Paths from the repository's root, so an error names the file.
 const fileOf = (slug: string) => {
   const [first = "", ...rest] = slug.split("/");
@@ -195,6 +210,16 @@ for (const folder of await readdir(new URL("packages/", repo))) {
       `packages/${folder}/docs has no place in the rail; add "${folder}" to packageOrder in docs/build.ts.`,
     );
 }
+for (const name of readdirSync(new URL("skills/", repo))) {
+  if (name !== "comark-ui" && !skillOrder.includes(name))
+    throw new Error(
+      `skills/${name} has no place in the Skills section; add "${name}" to skillOrder in docs/build.ts.`,
+    );
+}
+for (const name of skillOrder)
+  for (const file of [`skills/${name}/references/example.md`, `docs/pages/skills/${name}.md`])
+    if (!exists(file))
+      throw new Error(`${file} is missing; every skill in skillOrder has an example and a page.`);
 // The Renderers guide's Support table is written by hand, so a package added or given a renderer since would be missing.
 // Chat renders messages with these renderers rather than plugging into them, so its page says so instead.
 const renderersGuide = readFileSync(new URL("docs/pages/guide/renderers.md", repo), "utf8");
@@ -332,6 +357,15 @@ const sections: Section[] = [
     label: "Typography",
     icon: "type",
     lists: [{ slugs: inGroup("Markdown syntax") }],
+  },
+  {
+    slug: "skills",
+    label: "Skills",
+    icon: "sparkles",
+    lists: [
+      { slugs: ["skills"] },
+      { title: "Document skills", slugs: skillOrder.map((name) => `skills/${name}`) },
+    ],
   },
   // comark-linter's pages, then one page per rule: the core rules, then each package's.
   {
@@ -850,6 +884,91 @@ const drop: NodeHandler = async ([, , ...children], state) => {
   );
 };
 
+// A skill's page leads with its example rendered, as a package's examples are, its Markdown a switch away and the
+// command that installs it above. Images the example loads from the live site load from this build, so a branch's
+// preview shows its own. The example's title becomes the page's second level, under the page's own.
+const skillOf = (slug: string) => (slug.startsWith("skills/") ? slug.slice("skills/".length) : "");
+// No --skill: the CLI lists every skill in the repository and lets the reader pick.
+const skillCommand = "npx skills add onmax/comark-ui";
+const skillSource = (name: string) =>
+  readFileSync(new URL(`skills/${name}/references/example.md`, repo), "utf8");
+const fromThisBuild = (markdown: string) => markdown.replaceAll(`${site}/`, "/");
+const demote = (nodes: Node[]): Node[] =>
+  nodes.map((node) => {
+    if (!isElement(node)) return node;
+    const [tag, attrs, ...children] = node;
+    const level = /^h([1-5])$/.exec(tag)?.[1];
+    return [level ? `h${Number(level) + 1}` : tag, attrs, ...demote(children)] as ElementNode;
+  });
+async function skillExample(name: string) {
+  const document = await parseExample(fromThisBuild(skillSource(name)), []);
+  if (document.meta.issues.length)
+    throw new Error(`skills/${name}/references/example.md:\n${document.meta.issues.join("\n")}`);
+  return { ...document, nodes: demote(document.nodes) };
+}
+const skillFiles = (name: string) => {
+  const folder = new URL(`skills/${name}/`, repo);
+  return readdirSync(folder, { recursive: true, encoding: "utf8" })
+    .filter((path) => statSync(new URL(path, folder)).isFile())
+    .toSorted((a, b) => Number(b === "SKILL.md") - Number(a === "SKILL.md") || a.localeCompare(b))
+    .map((path) => ({
+      path,
+      lines: readFileSync(new URL(path, folder), "utf8").trimEnd().split("\n").length,
+    }));
+};
+const skill: NodeHandler = async ([, attrs], state) => {
+  const name = str(attrs.name);
+  if (!skillOrder.includes(name))
+    throw new Error(`::skill names no skill in skillOrder: "${name}".`);
+  const source = skillSource(name);
+  const preview = await skillExample(name);
+  // A fence longer than any run of backticks in the example, so it holds the example's own fences.
+  const fence = "`".repeat(
+    Math.max(3, ...[...source.matchAll(/`+/g)].map(([run]) => run.length + 1)),
+  );
+  const [code] = (
+    await parseMarkdown(`${fence}md [references/example.md]\n${source.trimEnd()}\n${fence}`, {
+      plugins,
+    })
+  ).nodes;
+  const play = playable(source)
+    ? `<a class="example-play" href="${escapeHtml(playLink(fromThisBuild(source)))}">${siteIcon("flask-conical", 13)}Playground</a>`
+    : "";
+  const files = skillFiles(name)
+    .map(
+      ({ path, lines }) =>
+        `<li><a href="https://github.com/onmax/comark-ui/blob/main/skills/${name}/${path}">${siteIcon("file-text", 14)}<code>${escapeHtml(path)}</code><span class="skill-files-lines">${lines} lines</span></a></li>`,
+    )
+    .join("");
+  return (
+    `<div class="example skill-example"><div class="example-bar"><p class="skill-file">${siteIcon("file-text", 14)}<span>The skill's example</span></p>${play}<div class="seg" role="group" aria-label="View">` +
+    `<button type="button" data-view="preview" aria-pressed="true">Preview</button><button type="button" data-view="code" aria-pressed="false">Markdown</button></div></div>` +
+    `<div class="example-body"><div class="example-preview">${await state.flow(["div", {}, ...preview.nodes], state)}</div>` +
+    `<div class="example-code" hidden>${code ? await state.one(code, state) : ""}</div></div></div>` +
+    `<div class="skill-files"><p class="nav-group">In the skill folder</p><ul>${files}</ul></div>`
+  );
+};
+// The Skills page's gallery: a card per skill with a still of its example, as the landing's canvas draws a block's.
+// The still can't hold a link, so the card's title link covers it.
+const skillStyles = new Set<string>();
+const skillCards: NodeHandler = async () => {
+  const cards = await Promise.all(
+    skillOrder.map(async (name) => {
+      const page = pageOf(`skills/${name}`);
+      const still = stillOf(
+        await renderHtmlFromDocument(await skillExample(name), { components }),
+        skillStyles,
+      );
+      return (
+        `<li class="skill-card"><div class="skill-card-screen" inert><div class="skill-card-paper"><div class="demo-page">${still}</div></div></div>` +
+        `<div class="skill-card-text"><a href="${href(page.slug)}">${siteIcon(str(page.document.frontmatter.icon) || "sparkles", 16)}<strong>${escapeHtml(page.label)}</strong></a>` +
+        `<p>${escapeHtml(page.description)}</p></div></li>`
+      );
+    }),
+  );
+  return `${[...skillStyles].join("")}<ul class="skill-cards">${cards.join("")}</ul>`;
+};
+
 const github = `<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>`;
 const starIcon = `<svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>`;
 // The repository's stars, read once per build. Offline or rate-limited, the button just says GitHub.
@@ -872,6 +991,9 @@ const botIcon = `<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="tr
 const copyIcon = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="14" height="14" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>`;
 const resetIcon = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>`;
 const checkIcon = `<svg class="check" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M20 6 9 17l-5-5"/></svg>`;
+// A skill's page opens the CLI's picker and names the skill to select, as its Markdown copy does.
+const skillInstall = (name: string) =>
+  `<div class="skill-install"><button type="button" class="install" data-copy="${skillCommand}" aria-label="Copy the install command"><span aria-hidden="true">$</span><code>${skillCommand}</code><span class="install-hint">${copyIcon}${checkIcon}</span></button><p>Pick <code>${escapeHtml(name)}</code> from the list.</p></div>`;
 // Humans install the packages with their package manager; agents install the comark-ui skill.
 function installerFor(install: string) {
   const packages = install.replace(/^pnpm add /, "");
@@ -1019,6 +1141,7 @@ for (const box of document.querySelectorAll(".installer")) {
   field.addEventListener("click", async () => { await navigator.clipboard.writeText(field.dataset.copy); field.classList.add("copied"); setTimeout(() => field.classList.remove("copied"), 1200) });
 }
 const copyTokens = new WeakMap();
+for (const field of document.querySelectorAll(".skill-install .install")) field.addEventListener("click", () => copied(field));
 const copied = async button => {
   const token = (copyTokens.get(button) ?? 0) + 1;
   copyTokens.set(button, token);
@@ -1623,7 +1746,7 @@ function shell(options: {
   const { npm } = options;
   const pageHead = options.head ?? "";
   const nav = rail(section) + column(section, slug);
-  const header = `<div class="top-start"><a class="name" href="/">${logo}comark ui</a>${options.landing ? `<nav class="top-links" aria-label="Site"><a href="/guide/renderers/">Docs</a><a href="/play/">Playground</a><a href="https://drop.vitehub.dev">Drop</a></nav>` : ""}</div>
+  const header = `<div class="top-start"><a class="name" href="/">${logo}comark ui</a>${options.landing ? `<nav class="top-links" aria-label="Site"><a href="/guide/renderers/">Docs</a><a href="/skills/">Skills</a><a href="/play/">Playground</a><a href="https://drop.vitehub.dev">Drop</a></nav>` : ""}</div>
 <button type="button" class="search-open" aria-haspopup="dialog">${siteIcon("search", 15)}<span class="search-label">Search docs</span><kbd><span class="kbd-mac">⌘K</span><span class="kbd-other">Ctrl K</span></kbd></button>
 <div class="top-end">
 <nav>${npmxLink(npm)}${githubLink}</nav>
@@ -1700,7 +1823,7 @@ for (const page of parsed) {
   // Getting started is comark-ui's page.
   const npm = page.pkg?.npm ?? (page.slug === "getting-started" ? "comark-ui" : undefined);
   // A block's name, and the package it comes in above it, unless the page is named for its package.
-  const eyebrow = npm && npm !== page.title ? npm : "";
+  const eyebrow = npm && npm !== page.title ? npm : skillOf(page.slug) ? "Agent skill" : "";
   await mkdir(out, { recursive: true });
   await writeFile(
     new URL("index.html", out),
@@ -1712,9 +1835,8 @@ for (const page of parsed) {
       description: page.tagline,
       body: `<div class="page${page.slug === "badges" ? " page-badges" : ""}">
 <div class="content">
-<div class="hero enter">${eyebrow ? `<p class="eyebrow mono">${eyebrow}</p>` : ""}${page.rule ? `<p class="eyebrow mono">${page.rule.code} · ${page.rule.severity ?? "warning"}</p>` : ""}<h1>${escapeHtml(page.title)}</h1><p>${page.rule ? inlineCode(page.rule.title) : escapeHtml(page.tagline)}</p>
-${page.slug === "badges" ? "" : pageActions(page.slug)}
-${page.install ? installerFor(page.install) : ""}</div>
+<div class="hero enter">${eyebrow ? `<p class="eyebrow mono">${eyebrow}</p>` : ""}${page.rule ? `<p class="eyebrow mono">${page.rule.code} · ${page.rule.severity ?? "warning"}</p>` : ""}<div class="hero-title"><h1>${escapeHtml(page.title)}</h1>${page.slug === "badges" ? "" : pageActions(page.slug)}</div><p>${page.rule ? inlineCode(page.rule.title) : escapeHtml(page.tagline)}</p>
+${page.install ? installerFor(page.install) : skillOf(page.slug) ? skillInstall(skillOf(page.slug)) : ""}</div>
 <main class="enter" style="--i:1">${(
         await renderHtmlFromDocument(
           { ...page.document, nodes: asFields(page.document.nodes) },
@@ -1728,6 +1850,8 @@ ${page.install ? installerFor(page.install) : ""}</div>
               incorrect: ruleExample(page, "incorrect"),
               correct: ruleExample(page, "correct"),
               rules: ruleTable,
+              skill,
+              skills: skillCards,
             },
           },
         )
@@ -1760,8 +1884,30 @@ const absolute = (markdown: string) => {
     })
     .join("\n");
 };
+// A skill's page holds its example and its gallery the cards; the copy spells both out, since an agent reads it whole.
+const skillsInMarkdown = (markdown: string) =>
+  markdown
+    .replace(/^::skill\{name="([\w-]+)"\}\n::$/m, (_, name: string) => {
+      const source = skillSource(name).trimEnd();
+      const fence = "`".repeat(
+        Math.max(3, ...[...source.matchAll(/`+/g)].map(([run]) => run.length + 1)),
+      );
+      return `\`\`\`sh\n${skillCommand}\n\`\`\`\n\nPick \`${name}\` from the list. The skill's example, \`references/example.md\`:\n\n${fence}md\n${source}\n${fence}`;
+    })
+    .replace(/^::skills\n::$/m, () =>
+      skillOrder
+        .map(
+          (name) =>
+            `- [${pageOf(`skills/${name}`).label}](/skills/${name}/): ${pageOf(`skills/${name}`).description}`,
+        )
+        .join("\n"),
+    );
 const sourceOf = async (slug: string) =>
-  (await readFile(new URL(fileOf(slug), repo), "utf8")).replace(/^---\n[\s\S]*?\n---\n/, "").trim();
+  skillsInMarkdown(
+    (await readFile(new URL(fileOf(slug), repo), "utf8"))
+      .replace(/^---\n[\s\S]*?\n---\n/, "")
+      .trim(),
+  );
 for (const page of [landing, ...parsed]) {
   const file = new URL(markdownHref(page.slug).slice(1), markdownOut);
   await mkdir(new URL("./", file), { recursive: true });
@@ -1792,7 +1938,7 @@ await writeFile(
     "## How an agent reads this site",
     "",
     `- Every page has a Markdown copy at its path plus \`.md\`, such as ${site}/zoom.md for ${site}/zoom/. A request with \`Accept: text/markdown\` gets it too.`,
-    `- The comark-ui agent skill teaches the syntax of every block: \`npx skills add onmax/comark-ui\`. See ${site}/guide/agents.md.`,
+    `- \`npx skills add onmax/comark-ui\` lists the repository's agent skills to pick from: comark-ui, which teaches the syntax of every block (see ${site}/guide/agents.md), and the skills that write a whole document, such as before/after evidence, a review, or a lesson (see ${site}/skills.md). Add \`--skill <name>\` to install one without the list.`,
     "- Check a document before anyone reads it: `npx -p comark-linter -p comark-ui lint-comark doc.md`.",
     "",
     "## When to use Comark UI",

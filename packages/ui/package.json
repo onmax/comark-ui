@@ -39,6 +39,7 @@
     },
     "./vue": "./dist/vue.mjs",
     "./package.json": "./package.json",
+    "./skills": "./dist/skills.mjs",
     "./skills/*": "./dist/skills/*"
   },
   "publishConfig": {

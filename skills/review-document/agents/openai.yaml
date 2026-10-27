@@ -1,0 +1,3 @@
+interface:
+  display_name: "Review document"
+  short_description: "Write findings as a verdict, evidence, and fixes"

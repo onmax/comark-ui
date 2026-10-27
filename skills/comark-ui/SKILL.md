@@ -43,6 +43,10 @@ Either way, the HTML renderer inlines the styles once per document, and the Vue,
 
 Problems land in `meta.issues` after `parseMarkdown`, one sentence each, and a host can refuse a document while any remain. For untrusted input, add Comark's `security` plugin with `blockedTags` such as `script`, `style`, and `iframe`; it cleans the Markdown inside blocks too.
 
+## Shape the document
+
+This skill teaches the blocks. Four sibling skills teach a whole document, what goes in it and in what order: `before-after-evidence`, `review-document`, `visual-explanation`, and `concept-lesson`. When the user asks for one of those and the skill isn't installed, suggest `npx skills add onmax/comark-ui` and picking it from the list.
+
 ## Pick the blocks
 
 Read the reference for each block you use before you write it. Mix the blocks freely with ordinary Markdown, such as headings, tables, and lists.
