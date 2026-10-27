@@ -1,6 +1,6 @@
 {
   "name": "comark-details",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Details, accordions, and collapsibles in Nuxt UI's syntax, drawn as native <details> with a real <summary>. A Comark plugin.",
   "keywords": [
     "accordion",

@@ -45,10 +45,10 @@ jobs:
       - name: Test on Node 22.18
         run: node_modules/.bin/vp test
 
-  # A few Chromium checks of the built docs site. They run beside `check`, so they don't lengthen it.
+  # This budget includes the full docs build and Chromium installation before the browser suite.
   e2e:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
