@@ -47,11 +47,12 @@ describe("comark-sources", () => {
     expect(html).toContain('href="#cso-3" id="cso-3-cite-1"');
   });
 
-  it("inlines the styles once", async () => {
+  it("inlines the styles and the card's script once", async () => {
     const html = await createHtmlRenderer({ plugins: [sources()], components })(
       `:cite[1]\n\n${list}`,
     );
     expect(html.match(/<style data-comark-sources>/g)).toHaveLength(1);
+    expect(html.match(/<script>/g)).toHaveLength(1);
   });
 
   it("reports each problem, naming the block and the fix", async () => {

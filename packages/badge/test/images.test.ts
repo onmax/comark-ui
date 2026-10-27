@@ -25,7 +25,7 @@ describe("image badges", () => {
       const html = await render(`:badge[ready]{label="build" icon="${icon}"}`);
       const svg = decodeURIComponent(/src="data:image\/svg\+xml,([^"]+)"/.exec(html)![1]!);
       expect(svg).toContain('font-family="Arial,Helvetica,sans-serif"');
-      expect(svg).toContain('stroke="#e5e5e5"');
+      expect(svg).toContain("stroke:#e5e5e5");
       expect(svg).not.toContain("href=");
       expect(svg).not.toContain("<script");
     }
@@ -36,11 +36,29 @@ describe("image badges", () => {
     const lengths = async (value: string) =>
       Number(/textLength="([\d.]+)"/.exec(await svgOf(`:badge[${value}]{icon="none"}`))![1]);
     expect(await lengths("WWW")).toBeGreaterThan((await lengths("iii")) * 3);
-    const passing = await svgOf(':badge[passing]{label="build" color="success"}');
-    expect(passing).toContain('stroke="#e5e5e5"');
+    const passing = await svgOf(':badge[passing]{label="build" color="success" theme="light"}');
+    expect(passing).toContain("stroke:#e5e5e5");
     expect(passing).toContain('<circle cx="');
-    expect(passing).toContain('fill="#15803d"');
+    expect(passing).toContain("fill:#15803d");
     expect(await svgOf(':badge[MIT]{label="license"}')).not.toContain("<circle");
+  });
+  it("carries both palettes unless a theme is set, so an image follows the page around it", async () => {
+    const svgOf = async (markdown: string) =>
+      decodeURIComponent(/src="data:image\/svg\+xml,([^"]+)"/.exec(await render(markdown))![1]!);
+    for (const style of ["shadcn", "subtle", "solid"]) {
+      const auto = await svgOf(`:badge[passing]{label="build" color="success" style="${style}"}`);
+      expect(auto).toMatch(/fill:#ffffff.*@media \(prefers-color-scheme:dark\)\{.*fill:#171717/);
+      for (const theme of ["light", "dark"]) {
+        const fixed = await svgOf(
+          `:badge[passing]{label="build" style="${style}" theme="${theme}"}`,
+        );
+        expect(fixed).not.toContain("prefers-color-scheme");
+        expect(fixed).toContain(theme === "dark" ? "fill:#171717" : "fill:#ffffff");
+      }
+    }
+    expect(await svgOf(':badge[passing]{label="build" color="success"}')).toMatch(
+      /\.d\{fill:#15803d\}.*\.d\{fill:#4ade80\}/,
+    );
   });
   it.each(["light", "dark"])(
     "distinguishes custom gray colors from neutral names in %s images",
@@ -49,7 +67,7 @@ describe("image badges", () => {
         const html = await render(`:badge[ready]{label="build" color="${color}" theme="${theme}"}`);
         const svg = decodeURIComponent(/src="data:image\/svg\+xml,([^"]+)"/.exec(html)![1]!);
         if (color.startsWith("#")) {
-          expect(svg).toMatch(new RegExp(`<circle [^>]*fill="${color}"`));
+          expect(svg).toContain(`.d{fill:${color}}`);
         } else {
           expect(svg).not.toContain("<circle");
         }

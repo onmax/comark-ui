@@ -10,6 +10,11 @@
       "ruleId": "typescript/strict/no-runtime-typeof",
       "file": "src/live.ts",
       "reason": "The upstream JSON parser validates object shapes, nonempty bounded version strings, and nonnegative integer downloads before rendering; malformed responses become unavailable badges."
+    },
+    {
+      "ruleId": "typescript/strict/no-runtime-typeof",
+      "file": "src/server.ts",
+      "reason": "isEntry validates the JSON read back from the shared cache, which any version of the handler may have written, before it is served; anything else counts as a miss."
     }
   ]
 }

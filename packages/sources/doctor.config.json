@@ -1,3 +1,10 @@
 {
-  "extends": ["auto", "vite-doctor/typescript/strict"]
+  "extends": ["auto", "vite-doctor/typescript/strict"],
+  "suppressions": [
+    {
+      "ruleId": "vue/lifecycle/require-cleanup",
+      "file": "src/client.ts",
+      "reason": "client.ts is not a Vue component. start() returns a stop function that aborts every listener, and the Vue component calls it in onBeforeUnmount."
+    }
+  ]
 }

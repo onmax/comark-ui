@@ -190,6 +190,18 @@ describe("comark-annotate", () => {
     expect((await run(source)).html).toBe(html);
   });
 
+  it("keeps box clearance fixed and places its stamp on the padded corner", async () => {
+    const { issues, html } = await run(
+      `::screenshot{src="a.png" alt="A"}\n:::annotation{x=1 y=2 w=20 h=10 mark="box"}\nNear the corner.\n:::\n::`,
+    );
+    expect(issues).toEqual([]);
+    expect(html).toContain('ca-stamp" style="left:3px;top:3px"');
+    expect(css.match(/\.ca-mark\.ca-box\{[^}]+\}/)?.[0]).toBe(
+      ".ca-mark.ca-box{box-sizing:content-box;padding:6px;margin:-6px}",
+    );
+    expect(css.includes("--ca-pad")).toBe(false);
+  });
+
   it("reports numbers that overlap at every corner", async () => {
     const pile = Array.from(
       { length: 5 },
@@ -536,7 +548,7 @@ describe("comark-annotate", () => {
     await expect(cli("check", join(dir, "bad.md"))).rejects.toMatchObject({ code: 1 });
     await cli("render", join(dir, "ok.md"));
     expect(await readFile(join(dir, "ok.html"), "utf8")).toContain(
-      '<span class="ca-stamp" style="left:0;top:-4px;translate:-50% 0">1</span>',
+      '<span class="ca-stamp" style="left:3px;top:3px">1</span>',
     );
 
     // Every file is checked, and each issue says which file it's in.

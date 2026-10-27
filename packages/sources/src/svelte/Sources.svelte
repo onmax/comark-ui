@@ -1,10 +1,10 @@
 <!-- `::sources` for `@comark/svelte`. -->
 <script>
   import { onMount } from "svelte";
-  import { addStyles } from "comark-sources/client";
+  import { css, start } from "comark-sources/client";
 
   let { title = undefined, children } = $props();
-  onMount(addStyles);
+  onMount(() => start(css));
 </script>
 
 {#if children}

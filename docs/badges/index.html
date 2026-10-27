@@ -82,6 +82,7 @@
             >
             <label
               >Badge theme<select name="theme">
+                <option value="auto">Auto</option>
                 <option value="light">Light</option>
                 <option value="dark">Dark</option>
               </select></label
@@ -138,11 +139,12 @@
           <h2>Preview</h2>
           <button class="refresh" type="submit">Refresh preview</button>
         </div>
-        <div id="preview" class="preview" data-theme="light">
-          <img id="badge-preview" alt="built with: Comark UI" height="26" hidden /><span
-            id="preview-empty"
-            >Loading preview…</span
-          >
+        <div id="preview" class="preview" data-theme="auto">
+          <img id="badge-preview" alt="built with: Comark UI" height="26" hidden /><img
+            id="badge-preview-dark"
+            alt=""
+            height="26"
+          /><span id="preview-empty">Loading preview…</span>
         </div>
         <p id="preview-status" class="hint" role="status"></p>
         <div class="export-heading">

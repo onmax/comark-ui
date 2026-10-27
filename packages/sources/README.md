@@ -29,7 +29,7 @@ Pigeons home by the sun :cite[1], and some by smell too :cite[2,3].
 ::
 ```
 
-Each citation becomes a superscript link to its source with the source's title on hover, and each source gets a ↩ link back to every citation of it. Citations are plain `sup` links, so they work in any renderer; the `::sources` component draws the list and carries the styles for both.
+Each citation becomes a superscript link to its source, and each source gets a ↩ link back to every citation of it. Resting the pointer on a citation, or focusing it, shows a card with the source's title, its site, and the icon the list shows for it, such as a [comark-chips](https://npmx.dev/package/comark-chips) favicon. Citations are plain `sup` links, so they work in any renderer; the `::sources` component draws the list and carries the styles and the card's script for both.
 
 The plugin adds every problem to `meta.issues`: a citation with no number or of a source the list doesn't have, citations with no list, a second list, a source without a link, and content beside the list. Each issue names its block and says how to fix it.
 
@@ -37,11 +37,13 @@ The plugin adds every problem to `meta.issues`: a citation with no number or of 
 
 | Renderer | Import |
 | --- | --- |
-| `@comark/html` | `comark-sources/html`: the styles are inlined once per document |
+| `@comark/html` | `comark-sources/html`: the styles and the card's script are inlined once per document |
 | `@comark/vue` | `comark-sources/vue` |
 | `@comark/react` | `comark-sources/react` |
 | `@comark/svelte` | `comark-sources/svelte` |
 
-Each entry exports the parse plugin as `default` and the renderer's `components`. The Vue, React, and Svelte components add the styles when they mount; import `comark-sources/style.css` with your styles so a server-rendered page doesn't shift.
+Each entry exports the parse plugin as `default` and the renderer's `components`. The Vue, React, and Svelte components add the styles and start the card when they mount; import `comark-sources/style.css` with your styles so a server-rendered page doesn't shift.
+
+For manual integration, `comark-sources/client` exports `css` and `start(css)`, which returns a function to stop the card. The existing `addStyles()` export still adds only the styles, once per page.
 
 The styles follow shadcn/ui: they read its CSS variables, such as `--background` and `--border`, when the page has them, and use its neutral theme otherwise. Set the shared `--comark-*` tokens to theme every plugin at once; the rules sit in a `comark` CSS layer, so any plain rule of your own wins.

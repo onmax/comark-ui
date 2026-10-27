@@ -97,6 +97,79 @@ export function start(css: string): () => void {
   }
   document.documentElement.setAttribute("data-code-ready", "");
 
+  const wrapKey = "comark-code-wrap";
+  let wrap: boolean | undefined;
+  try {
+    const saved = localStorage.getItem(wrapKey);
+    if (saved !== null) wrap = saved === "true";
+  } catch {
+    // Storage can be unavailable in embedded documents.
+  }
+  const observed = new Set<Element>();
+  const defaults = new WeakMap<Element, boolean>();
+  let frame = 0;
+  const refresh = () => {
+    frame = 0;
+    const blocks = [...document.querySelectorAll<HTMLElement>(".ck")].flatMap((root) => {
+      const pre = root.querySelector<HTMLElement>(":scope>pre");
+      const button = root.querySelector(":scope>.ck-bar>.ck-wrap");
+      if (!defaults.has(root)) defaults.set(root, root.hasAttribute("data-code-wrap"));
+      return pre && button ? [{ root, pre, button }] : [];
+    });
+    for (const pre of observed) {
+      if (pre.isConnected) continue;
+      resize.unobserve(pre);
+      observed.delete(pre);
+    }
+    // Measure without wrapping so the reader can still turn it off after the overflow disappears.
+    for (const { root, pre } of blocks) {
+      root.removeAttribute("data-code-wrap");
+      if (!observed.has(pre)) {
+        resize.observe(pre);
+        observed.add(pre);
+      }
+    }
+    const overflowing = blocks.map(
+      ({ pre }) => pre.clientWidth > 0 && pre.scrollWidth > pre.clientWidth,
+    );
+    blocks.forEach(({ root, button }, index) => {
+      root.toggleAttribute("data-code-overflow", overflowing[index]);
+      const enabled = wrap ?? defaults.get(root) ?? false;
+      root.toggleAttribute("data-code-wrap", enabled);
+      button.setAttribute("aria-pressed", String(enabled));
+    });
+  };
+  const schedule = () => {
+    if (!frame) frame = requestAnimationFrame(refresh);
+  };
+  const resize = new ResizeObserver(schedule);
+  const mutations = new MutationObserver((records) => {
+    const affectsCode = records.some(({ target, addedNodes, removedNodes }) => {
+      const element = target instanceof Element ? target : target.parentElement;
+      if (element?.closest(".ck")) return true;
+      return [...addedNodes, ...removedNodes].some(
+        (node) => node instanceof Element && (node.matches(".ck") || node.querySelector(".ck")),
+      );
+    });
+    if (affectsCode) schedule();
+  });
+  mutations.observe(document.documentElement, {
+    childList: true,
+    subtree: true,
+    characterData: true,
+  });
+  document.fonts.addEventListener("loadingdone", schedule, { signal });
+  window.addEventListener(
+    "storage",
+    (event) => {
+      if (event.key !== wrapKey && event.key !== null) return;
+      wrap = event.newValue === null ? undefined : event.newValue === "true";
+      schedule();
+    },
+    { signal },
+  );
+  schedule();
+
   const say = (root: Element, message: string, state: "done" | "failed") => {
     const button = root.querySelector(":scope>.ck-bar>.ck-copy");
     const status = root.querySelector(":scope>.ck-bar>.ck-status");
@@ -160,9 +233,13 @@ export function start(css: string): () => void {
       const code = pre.querySelector("code") ?? pre;
       if (button.classList.contains("ck-copy")) copy(root, code);
       else if (button.classList.contains("ck-wrap")) {
-        const wrap = !root.hasAttribute("data-code-wrap");
-        root.toggleAttribute("data-code-wrap", wrap);
-        button.setAttribute("aria-pressed", String(wrap));
+        wrap = !root.hasAttribute("data-code-wrap");
+        try {
+          localStorage.setItem(wrapKey, String(wrap));
+        } catch {
+          // Wrapping still works when the browser refuses to save the preference.
+        }
+        schedule();
       } else {
         const detail: CodeActionDetail = {
           action: button.getAttribute("data-code-action") ?? "",
@@ -180,6 +257,9 @@ export function start(css: string): () => void {
     stop: () => {
       if (--state.users > 0) return;
       listeners.abort();
+      cancelAnimationFrame(frame);
+      resize.disconnect();
+      mutations.disconnect();
       style?.remove();
       document.documentElement.removeAttribute("data-code-ready");
       window.__comarkCode = undefined;

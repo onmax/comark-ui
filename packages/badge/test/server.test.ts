@@ -5,6 +5,18 @@ const get = (query: string, method = "GET") =>
   new Request(`https://badges.example/badge.svg?${query}`, { method });
 const json = (value: unknown, status = 200) =>
   new Response(JSON.stringify(value), { status, headers: { "Content-Type": "application/json" } });
+// A Cache API that every handler shares, as one Worker location's instances do.
+function sharedCache() {
+  const stored = new Map<string, Response>();
+  const address = (request: RequestInfo | URL) =>
+    request instanceof Request ? request.url : String(request);
+  return {
+    match: async (request: RequestInfo | URL) => stored.get(address(request))?.clone(),
+    put: async (request: RequestInfo | URL, response: Response) => {
+      stored.set(address(request), response.clone());
+    },
+  };
+}
 
 describe("hosted badge handler", () => {
   it("renders a self-contained static image, escapes text, and supports HEAD", async () => {
@@ -22,7 +34,9 @@ describe("hosted badge handler", () => {
     const svg = await response.text();
     expect(svg).toContain("&lt;script&gt;&quot;&amp;");
     expect(svg).not.toContain("<script>");
-    expect(svg).toContain('fill="#000000"');
+    expect(svg).toContain(".v{fill:#000000}");
+    // Opened on its own, the image is a document, and its palettes are an inline style.
+    expect(response.headers.get("Content-Security-Policy")).toContain("style-src 'unsafe-inline'");
     expect(svg).not.toContain("href=");
     const head = await handle(get(query, "HEAD"));
     expect(head.headers.get("Cache-Control")).toBe(response.headers.get("Cache-Control"));
@@ -68,7 +82,7 @@ describe("hosted badge handler", () => {
       "source=npm-version&package=../secret",
       "value=x&color=url(evil)",
       "value=x&icon=evil",
-      "value=x&theme=auto",
+      "value=x&theme=sepia",
       "source=github-actions&repository=https://example.org&workflow=ci.yml",
       `value=${"x".repeat(81)}`,
       `value=x&junk=${"x".repeat(4096)}`,
@@ -96,7 +110,9 @@ describe("hosted badge handler", () => {
     expect(await recolored.text()).toContain('fill="#b91c1c"');
     expect(fetch).toHaveBeenCalledTimes(1);
     time = 100000;
-    expect((await handle(get(query))).headers.get("Cache-Control")).toBe("public, max-age=200");
+    expect((await handle(get(query))).headers.get("Cache-Control")).toBe(
+      "public, max-age=200, stale-while-revalidate=86400",
+    );
     time = 300001;
     await handle(get(query));
     expect(fetch).toHaveBeenCalledTimes(2);
@@ -112,7 +128,9 @@ describe("hosted badge handler", () => {
     expect(fetch.mock.calls[0]?.[0]).toBe(
       "https://api.npmjs.org/downloads/point/last-week/comark-ui",
     );
-    expect(response.headers.get("Cache-Control")).toBe("public, max-age=3600");
+    expect(response.headers.get("Cache-Control")).toBe(
+      "public, max-age=3600, stale-while-revalidate=86400",
+    );
   });
 
   it.each([
@@ -169,5 +187,106 @@ describe("hosted badge handler", () => {
       expect(response.headers.get("X-Badge-Status")).toBe("unavailable");
       expect(await response.text()).toContain("unavailable");
     }
+  });
+
+  it("shares data between instances through the shared cache, whatever the badge's style", async () => {
+    const fetch = vi
+      .fn<typeof globalThis.fetch>()
+      .mockImplementation(async () => json({ latest: "1.2.3" }));
+    const cache = sharedCache();
+    await createBadgeHandler({ fetch, cache })(get("source=npm-version&package=comark-ui"));
+    const other = await createBadgeHandler({ fetch, cache })(
+      get("source=npm-version&package=comark-ui&style=solid&label=release"),
+    );
+    expect(await other.text()).toContain("v1.2.3");
+    expect(fetch).toHaveBeenCalledOnce();
+  });
+
+  it("answers with the last good value while it refreshes, and keeps it when the refresh fails", async () => {
+    let time = 0;
+    const fetch = vi
+      .fn<typeof globalThis.fetch>()
+      .mockResolvedValueOnce(json({ latest: "1.0.0" }))
+      .mockResolvedValueOnce(json({ message: "rate limited" }, 429))
+      .mockResolvedValueOnce(json({ latest: "2.0.0" }));
+    const waitUntil = vi.fn<(promise: Promise<unknown>) => void>();
+    const handle = createBadgeHandler({ fetch, now: () => time, cache: sharedCache() });
+    const query = "source=npm-version&package=comark-ui";
+    await handle(get(query));
+    time = 300001;
+    const stale = await handle(get(query), { waitUntil });
+    expect(await stale.text()).toContain("v1.0.0");
+    expect(stale.headers.get("X-Badge-Status")).toBe("ok");
+    expect(waitUntil).toHaveBeenCalledOnce();
+    await waitUntil.mock.calls[0]![0];
+    const kept = await handle(get(query));
+    expect(await kept.text()).toContain("v1.0.0");
+    expect(fetch).toHaveBeenCalledTimes(2);
+    time = 330002;
+    await handle(get(query), { waitUntil });
+    await waitUntil.mock.calls[1]![0];
+    expect(await (await handle(get(query))).text()).toContain("v2.0.0");
+  });
+
+  it.each([true, undefined, "false"])(
+    "does not expose or share authenticated workflow results without public visibility (%s)",
+    async (visibility) => {
+      const fetch = vi.fn<typeof globalThis.fetch>().mockImplementation(async () =>
+        json({
+          workflow_runs: [
+            { status: "completed", conclusion: "success", repository: { private: visibility } },
+          ],
+        }),
+      );
+      const cache = sharedCache();
+      const query = "source=github-actions&repository=owner/private&workflow=ci.yml";
+      for (const token of ["broad-token", undefined]) {
+        const response = await createBadgeHandler({ fetch, token, cache })(get(query));
+        expect(response.headers.get("X-Badge-Status")).toBe("unavailable");
+        expect(await response.text()).not.toContain("passing");
+      }
+      expect(fetch).toHaveBeenCalledOnce();
+    },
+  );
+
+  it("ignores shared workflow data cached before visibility validation", async () => {
+    const cache = sharedCache();
+    const key = JSON.stringify(["github-actions", "", "month", "owner/private", "ci.yml", ""]);
+    await cache.put(
+      new URL(`/badge-data/${encodeURIComponent(key)}`, "https://badges.example"),
+      json({
+        result: { value: "passing", color: "success", unavailable: false },
+        fresh: Date.now() + 60000,
+        kept: Date.now() + 86400000,
+      }),
+    );
+    const fetch = vi.fn<typeof globalThis.fetch>().mockImplementation(async () => json({}, 404));
+    const response = await createBadgeHandler({ fetch, cache })(
+      get("source=github-actions&repository=owner/private&workflow=ci.yml"),
+    );
+    expect(response.headers.get("X-Badge-Status")).toBe("unavailable");
+    expect(fetch).toHaveBeenCalledOnce();
+  });
+
+  it("sends the token to GitHub only", async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>().mockImplementation(async (url) =>
+      typeof url === "string" && url.startsWith("https://api.github.com/")
+        ? json({
+            workflow_runs: [
+              { status: "completed", conclusion: "success", repository: { private: false } },
+            ],
+          })
+        : json({ latest: "1.0.0" }),
+    );
+    const handle = createBadgeHandler({ fetch, token: "secret" });
+    const response = await handle(
+      get("source=github-actions&repository=onmax/comark-ui&workflow=ci.yml"),
+    );
+    expect(response.headers.get("X-Badge-Status")).toBe("ok");
+    await handle(get("source=npm-version&package=comark-ui"));
+    const authorization = (call: number) =>
+      new Headers(fetch.mock.calls[call]?.[1]?.headers).get("Authorization");
+    expect(authorization(0)).toBe("Bearer secret");
+    expect(authorization(1)).toBeNull();
   });
 });
