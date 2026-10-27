@@ -34,19 +34,21 @@ describe("comark-magic-move renderers", () => {
     for (const [name, render] of Object.entries(renderers)) {
       // Up to the HTML renderer's inline styles and script, whose source mentions attributes of its own.
       const [html = ""] = (await render(value)).split("<style");
+      const [, id] = /id="(cmv-[a-z0-9]+-1)-tab-1"/.exec(html) ?? [];
       expect(html, name).toContain(
-        '<div class="cmv" role="region" aria-roledescription="code steps" aria-label="Refactor"><div class="cmv-stage">',
+        '<div class="cmv"><div class="cmv-list" role="tablist" aria-label="Refactor"><button type="button" class="cmv-tab" role="tab"',
       );
       expect(html, name).toContain(
-        '<div class="cmv-step" role="group" aria-roledescription="step" aria-label="1 of 2"><div class="cmv-label">Start</div>',
+        `id="${id}-tab-2" aria-controls="${id}-panel-2" aria-selected="false" tabindex="-1">Step 2</button>`,
+      );
+      expect(html, name).toContain(
+        `<div class="cmv-step" role="tabpanel" id="${id}-panel-1" aria-labelledby="${id}-tab-1" tabindex="0"><div class="cmv-caption">Start</div>`,
       );
       expect(html, name).toMatch(
-        /<div class="cmv-step" role="group" aria-roledescription="step" aria-label="2 of 2" data-inactive(="")?>(<!---->)?(<!--\[-->)?<pre/,
+        new RegExp(
+          `id="${id}-panel-2" aria-labelledby="${id}-tab-2" tabindex="0" data-inactive(="")?><div class="cmv-caption">Step 2</div>`,
+        ),
       );
-      expect(html, name).toMatch(
-        /<span class="cmv-count" aria-live="polite">1 \/ (<!-- -->)?2<\/span>/,
-      );
-      expect(html, name).toContain('aria-label="Previous step" aria-disabled="true"');
       expect(html, name).not.toMatch(/wide|id="id"|undefined/);
     }
   });

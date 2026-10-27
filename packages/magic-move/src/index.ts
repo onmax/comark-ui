@@ -50,6 +50,15 @@ function describe(node: Node) {
 
 const PROPS = ["title", "id", "class"];
 
+// FNV-1a of the block's text. Ids from it differ between blocks and documents on one page, and from the ids authors
+// write, yet stay the same every time a document renders.
+function hash(value: string) {
+  let result = 0x811c9dc5;
+  for (let at = 0; at < value.length; at++)
+    result = Math.imul(result ^ value.charCodeAt(at), 0x01000193);
+  return (result >>> 0).toString(36);
+}
+
 interface Walk {
   data: Data;
   issues: Issue[];
@@ -79,15 +88,21 @@ function magicMove(node: ElementNode, walk: Walk) {
       rule: "comark/magic-move/single-step",
       message: `${name} has ${steps.length ? "one code block" : "no code blocks"}, so there's nothing to move between; add a code block for each step, or use a plain code block.`,
     });
+  const labels: string[] = [];
+  const uid = `cmv-${hash(textContent(node))}-${walk.blocks}`;
   const items = steps.map((pre, index): ElementNode => {
-    // The fence's `[label]` names the step, not a file, so it leaves the code block for the step's caption.
+    // The fence's `[label]` names the step's tab, not a file, so it leaves the code block.
     const { filename, ...attrs } = pre[1];
-    const label = text(filename);
-    const step: ElementNode[1] = { index: String(index + 1), count: String(steps.length) };
-    if (label) step.label = label;
-    return ["magic-move-step", step, ["pre", attrs, ...childrenOf(pre)]];
+    const label = text(filename) || `Step ${index + 1}`;
+    labels.push(label);
+    return [
+      "magic-move-step",
+      { uid, index: String(index + 1), label },
+      ["pre", attrs, ...childrenOf(pre)],
+    ];
   });
-  node[1].count = String(steps.length);
+  node[1].uid = uid;
+  node[1].labels = labels;
   node.splice(2, node.length - 2, ...items);
 }
 
@@ -101,8 +116,8 @@ function normalize(nodes: Node[], walk: Walk) {
 }
 
 /**
- * Turns the code blocks in `::magic-move` into steps. Without a script they read one after another; the script shows
- * one at a time and moves the tokens they share into place when the step changes. Problems, such as a block with one
+ * Turns the code blocks in `::magic-move` into steps, each with the tab its label names. Without a script they read one
+ * after another; the script shows one at a time and moves the tokens they share into place when a tab opens another. Problems, such as a block with one
  * step, are added to `meta.issues`.
  */
 export default defineComarkPlugin<void, MagicMoveMeta>(() => ({

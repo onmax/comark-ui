@@ -14,7 +14,9 @@ const open = async (page: Page, options: { script?: boolean } = {}) => {
     `<!doctype html><html><body style="width:40rem;margin:2rem">${html}</body></html>`,
   );
 };
-const step = (page: Page, name: string) => page.getByRole("group").filter({ hasText: name });
+const step = (page: Page, name: string) =>
+  page.locator(".cmv-step").filter({ has: page.locator(".cmv-caption", { hasText: name }) });
+const tab = (page: Page, name: string) => page.getByRole("tab", { name });
 // The pieces of the shown step that are moving or fading, by their text.
 const moving = (page: Page) =>
   page.locator(".cmv-step:not([data-inactive])").evaluate((step) => {
@@ -30,27 +32,29 @@ const moving = (page: Page) =>
 test("without the script, every step reads in turn under its label", async ({ page }) => {
   await open(page, { script: false });
   for (const name of ["Start", "Extract", "Name"]) await expect(step(page, name)).toBeVisible();
-  await expect(page.getByRole("button", { name: "Next step" })).toBeHidden();
+  await expect(page.getByRole("tablist")).toBeHidden();
 });
 
-test("the arrows and keys page through one step at a time", async ({ page }) => {
+test("a tab opens its step, and the arrow keys, Home, and End move between tabs", async ({
+  page,
+}) => {
   await open(page);
-  const next = page.getByRole("button", { name: "Next step" });
-  const previous = page.getByRole("button", { name: "Previous step" });
+  await expect(page.getByRole("tablist", { name: "Refactor" })).toBeVisible();
+  await expect(page.getByRole("tabpanel")).toHaveCount(1);
   await expect(step(page, "Start")).toBeVisible();
-  await expect(step(page, "Extract")).toBeHidden();
-  await expect(previous).toHaveAttribute("aria-disabled", "true");
-  await next.click();
+  await tab(page, "Extract").click();
   await expect(step(page, "Extract")).toBeVisible();
   await expect(step(page, "Start")).toBeHidden();
-  await expect(page.locator(".cmv-count")).toHaveText("2 / 3");
+  await expect(tab(page, "Extract")).toHaveAttribute("aria-selected", "true");
+  await expect(tab(page, "Start")).toHaveAttribute("tabindex", "-1");
   await page.keyboard.press("ArrowRight");
+  await expect(tab(page, "Name")).toBeFocused();
   await expect(step(page, "Name")).toBeVisible();
-  await expect(next).toHaveAttribute("aria-disabled", "true");
   await page.keyboard.press("ArrowRight");
-  await expect(page.locator(".cmv-count")).toHaveText("3 / 3");
-  await page.keyboard.press("ArrowLeft");
-  await page.keyboard.press("ArrowLeft");
+  await expect(tab(page, "Start")).toBeFocused();
+  await page.keyboard.press("End");
+  await expect(step(page, "Name")).toBeVisible();
+  await page.keyboard.press("Home");
   await expect(step(page, "Start")).toBeVisible();
   // The copy text stays the code's, whatever the script wrapped.
   await expect(step(page, "Start").locator("pre")).toHaveText("const total = price * 2");
@@ -60,7 +64,7 @@ test("shared pieces move into place, new ones fade in, and old ones fade out whe
   page,
 }) => {
   await open(page);
-  await page.getByRole("button", { name: "Next step" }).click();
+  await tab(page, "Extract").click();
   const { move, fade } = await moving(page);
   // `total = price *` moves down a line, under the new `const rate = 2`.
   expect(move).toEqual(expect.arrayContaining(["total", "=", "price", "*"]));
@@ -73,8 +77,17 @@ test("shared pieces move into place, new ones fade in, and old ones fade out whe
 test("with reduced motion, the step changes without moving anything", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await open(page);
-  await page.getByRole("button", { name: "Next step" }).click();
+  await tab(page, "Extract").click();
   await expect(step(page, "Extract")).toBeVisible();
   expect(await moving(page)).toEqual({ move: [], fade: [] });
   await expect(page.locator(".cmv-ghost")).toHaveCount(0);
+});
+
+test("a tab two steps away moves straight there", async ({ page }) => {
+  await open(page);
+  await tab(page, "Name").click();
+  await expect(step(page, "Name")).toBeVisible();
+  const { move, fade } = await moving(page);
+  expect(move).toEqual(expect.arrayContaining(["total", "price"]));
+  expect(fade).toEqual(expect.arrayContaining(["export"]));
 });

@@ -2,7 +2,7 @@
 title: Magic move
 description: Code that animates between steps, like Shiki Magic Move, written in Markdown.
 keywords: shiki magic move, code animation, code transition, slidev, keynote magic move, refactor walkthrough, animated code
-tagline: Code blocks that move into each other, the tokens two steps share sliding to their new places.
+tagline: A code group whose tabs are steps, the tokens two steps share sliding to their new places.
 group: Docs blocks
 icon: wand-sparkles
 blurb: Code that moves between steps
@@ -12,21 +12,34 @@ credits: 'The idea and the approach are <a href="https://antfu.me/posts/shiki-ma
 ::examples
 :::example{label="Refactor"}
 ````md
-::magic-move{title="Extract the rate"}
-```ts [Start]
-const total = price * 2
+::magic-move{title="Cache getUser"}
+```ts [Fetch]
+export async function getUser(id: string) {
+  const res = await fetch(`/api/users/${id}`)
+  return res.json()
+}
 ```
 
-```ts [Extract the rate]
-const rate = 2
-const total = price * rate
+```ts [Handle errors]
+export async function getUser(id: string) {
+  const res = await fetch(`/api/users/${id}`)
+  if (!res.ok) throw new Error(`User ${id}: ${res.status}`)
+  return res.json()
+}
 ```
 
-```ts [Wrap it in a function]
-const rate = 2
+```ts [Cache]
+const cache = new Map<string, Promise<User>>()
 
-export function total(price: number) {
-  return price * rate
+export function getUser(id: string) {
+  if (!cache.has(id)) cache.set(id, load(id))
+  return cache.get(id)!
+}
+
+async function load(id: string) {
+  const res = await fetch(`/api/users/${id}`)
+  if (!res.ok) throw new Error(`User ${id}: ${res.status}`)
+  return res.json() as Promise<User>
 }
 ```
 ::
@@ -56,10 +69,10 @@ export default defineConfig({
 
 ## Features
 
-- Every code block inside `::magic-move` is one step, and the label after its language names it.
+- Every code block inside `::magic-move` is one step, with a tab named by the label after its language.
 - The words and marks two steps share move to their new places; new ones fade in and old ones fade out.
 - It reads the rendered code, so it works with Shiki or any other highlighter, or none.
-- Without the script, the steps read one after another under their labels.
+- Without the script, the steps read one after another, each under its label.
 - With reduced motion, the step changes without moving anything.
 
 ## Usage
@@ -82,7 +95,7 @@ const total = price * rate
 
 ### Labels
 
-Use the `[label]` after a fence's language to name its step. The label shows above the step's code.
+Use the `[label]` after a fence's language to name its step's tab. A step without one is named by its position, such as Step 2.
 
 ::example
 ````md
@@ -100,7 +113,7 @@ const total = price * rate
 
 ### Title
 
-Use the `title` prop to name the block for screen readers. The page doesn't show it.
+Use the `title` prop to name the tabs for screen readers. The page doesn't show it.
 
 ```md
 ::magic-move{title="Extract the rate"}
@@ -132,16 +145,17 @@ An animation shows one step at a time, so a reviewer can't see every removed and
 
 ## Accessibility
 
-The block is a region that screen readers announce as code steps, named by its `title`, or "Code steps" without one. Each step is a group named by its position, such as "2 of 3".
+The steps follow the [WAI-ARIA tabs pattern](https://www.w3.org/WAI/ARIA/apg/patterns/tabs/). The tabs are a tab list, named by the block's `title`, and each step is a tab panel named by its tab. Only the open tab is a tab stop, so `Tab` moves from it to the open step and then on.
 
-The counter is a polite live region, so screen readers read the new position after each step. The arrows are buttons named "Previous step" and "Next step". At either end an arrow is marked disabled but keeps its focus, so the keys keep working.
+When the reader prefers reduced motion, a tab opens its step without moving anything.
 
 ### Keyboard interactions
 
 | Key | Description |
 | --- | --- |
-| `ArrowLeft`, `ArrowRight` | On an arrow, shows the previous or next step. On a right-to-left page they follow the reading direction. |
-| `Enter`, `Space` | On an arrow, shows the previous or next step. |
+| `ArrowLeft`, `ArrowRight` | On a tab, opens the previous or next step, wrapping at either end. On a right-to-left page they follow the reading direction. |
+| `Home`, `End` | On a tab, opens the first or last step. |
+| `Tab` | Moves focus from the open tab to its step. |
 
 ## API
 
@@ -151,13 +165,13 @@ The counter is a polite live region, so screen readers read the new position aft
 
 | Prop | Default | Description |
 | --- | --- | --- |
-| `title` | `"Code steps"` | The name screen readers read. |
+| `title` | — | The name screen readers read for the tabs. |
 
 #### Code block
 
 | Attribute | Default | Description |
 | --- | --- | --- |
-| `[label]` | — | The step's name, shown above its code. |
+| `[label]` | `Step 1`, `Step 2`, … | The name of the step's tab. |
 
 ### Options
 
@@ -198,18 +212,19 @@ For Vue, React, or Svelte, import from `comark-magic-move/vue`, `comark-magic-mo
 
 ## Theme
 
-The arrows and counter follow the shared tokens in [Theming](/guide/theming/), and two variables of its own set the space and the sizes. The code keeps its highlighter's colors. The rules sit in a `comark` CSS layer, so a plain rule of your own wins over any of them.
+The tabs follow the shared tokens in [Theming](/guide/theming/), and two variables of its own set the header and the space between steps. The code keeps its highlighter's colors. The rules sit in a `comark` CSS layer, so a plain rule of your own wins over any of them.
 
 ### Shared tokens
 
 | Token | Used for |
 | --- | --- |
-| `--comark-background` | The arrows' faces |
-| `--comark-foreground` | The arrows' icons |
-| `--comark-muted` | The labels and the counter |
-| `--comark-border` | The arrows' borders |
-| `--comark-accent` | Hovered arrows |
-| `--comark-ring` | The focus ring on the arrows |
+| `--comark-background` | The open tab |
+| `--comark-foreground` | The open and hovered tabs' text |
+| `--comark-muted` | The other tabs' text, and the captions without the script |
+| `--comark-border` | The header's border |
+| `--comark-accent` | The header's surface |
+| `--comark-ring` | The focus ring |
+| `--comark-radius` | The corners |
 
 ### Variables
 
@@ -217,30 +232,29 @@ Set these on `.cmv` or any ancestor, such as `:root`:
 
 | Variable | Default | Used for |
 | --- | --- | --- |
+| `--cmv-surface` | `--comark-accent` at 50% | The header behind the tabs |
 | `--cmv-gap` | `1rem` | The space between steps when they read in turn, without the script |
-| `--cmv-button-size` | `2rem` | The arrows' width and height, at least `2.5rem` on touch screens |
 
 ### Classes and attributes
 
 | Selector | Is |
 | --- | --- |
 | `.cmv` | The block |
+| `.cmv-list` | The tabs, shown once the script runs |
+| `.cmv-tab` | A tab, with `aria-selected="true"` when its step is open |
 | `.cmv-stage` | The steps |
-| `.cmv-step` | Each step, with `data-inactive` on every step but the one shown |
-| `.cmv-label` | A step's label |
+| `.cmv-step` | Each step, with `data-inactive` on every step but the open one |
+| `.cmv-caption` | A step's label above its code, shown without the script |
 | `.cmv-t` | A word or mark the script cut from the code, on the first move |
-| `.cmv-controls` | The row under the code, shown once the script runs |
-| `.cmv-count` | The position, such as `1 / 3` |
-| `.cmv-button` | An arrow, with `aria-disabled="true"` at either end |
 | `[data-magic-move-ready]` | On `<html>` once the script runs; without it every step shows |
 
 ### Example
 
-Bigger arrows:
+A header that matches the code block:
 
 ```css
 :root {
-  --cmv-button-size: 2.5rem;
+  --cmv-surface: var(--comark-background);
 }
 ```
 

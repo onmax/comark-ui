@@ -19,41 +19,44 @@ const fence = "```";
 const steps = `::magic-move{title="Refactor"}\n${fence}ts [Start]\nconst x = 1\n${fence}\n\n${fence}ts [Extract]\nconst one = 1\nconst x = one\n${fence}\n::`;
 
 describe("comark-magic-move", () => {
-  it("renders each code block as a step under its label, the first one shown", async () => {
+  it("renders the steps as tabs over one code block, the first one open", async () => {
     const html = await markup(steps);
+    const [, id] = /id="(cmv-[a-z0-9]+-1)-tab-1"/.exec(html) ?? [];
     expect(html).toContain(
-      '<div class="cmv" role="region" aria-roledescription="code steps" aria-label="Refactor"><div class="cmv-stage">' +
-        '<div class="cmv-step" role="group" aria-roledescription="step" aria-label="1 of 2"><div class="cmv-label">Start</div><pre',
+      '<div class="cmv"><div class="cmv-list" role="tablist" aria-label="Refactor">' +
+        `<button type="button" class="cmv-tab" role="tab" id="${id}-tab-1" aria-controls="${id}-panel-1" aria-selected="true" tabindex="0">Start</button>` +
+        `<button type="button" class="cmv-tab" role="tab" id="${id}-tab-2" aria-controls="${id}-panel-2" aria-selected="false" tabindex="-1">Extract</button></div>`,
     );
     expect(html).toContain(
-      '<div class="cmv-step" role="group" aria-roledescription="step" aria-label="2 of 2" data-inactive><div class="cmv-label">Extract</div><pre',
+      `<div class="cmv-step" role="tabpanel" id="${id}-panel-1" aria-labelledby="${id}-tab-1" tabindex="0"><div class="cmv-caption">Start</div><pre`,
     );
-    expect(html).toContain('<span class="cmv-count" aria-live="polite">1 / 2</span>');
     expect(html).toContain(
-      'data-magic-move-step="-1" aria-label="Previous step" aria-disabled="true"',
+      `<div class="cmv-step" role="tabpanel" id="${id}-panel-2" aria-labelledby="${id}-tab-2" tabindex="0" data-inactive><div class="cmv-caption">Extract</div><pre`,
     );
-    expect(html).toContain('data-magic-move-step="1" aria-label="Next step">');
     // The label names the step, so the code block doesn't also show it as a file name.
     expect(html).not.toContain("filename");
     expect(await issues(steps)).toEqual([]);
   });
 
+  it("names a step without a label by its position, and gives every block its own ids", async () => {
+    const plain = `::magic-move\n${fence}ts\nx\n${fence}\n\n${fence}ts\ny\n${fence}\n::`;
+    const html = await markup(`${plain}\n\n${plain}`);
+    expect(html).toContain('<div class="cmv-list" role="tablist"><button');
+    expect(html.match(/>Step 2<\/button>/g)).toHaveLength(2);
+    const ids = [...html.matchAll(/id="(cmv-[a-z0-9]+-\d+)-tab-1"/g)].map(([, id]) => id);
+    expect(new Set(ids).size).toBe(2);
+  });
+
   it("keeps Shiki's highlighting, whichever plugin runs first", async () => {
     const html = await markup(steps, true);
     expect(html.match(/<pre[^>]* class="shiki/g)).toHaveLength(2);
-    expect(html).toContain('<div class="cmv-label">Extract</div>');
+    expect(html).toContain('<div class="cmv-caption">Extract</div>');
   });
 
   it("carries its styles and script once per document", async () => {
     const html = await render(`${steps}\n\n${steps}`);
     expect(html.match(/<style data-comark-magic-move>/g)).toHaveLength(1);
     expect(html.match(/<script>/g)).toHaveLength(1);
-  });
-
-  it("leaves the controls out when there is one step", async () => {
-    const html = await markup(`::magic-move\n${fence}ts\nx\n${fence}\n::`);
-    expect(html).toContain('aria-label="1 of 1"');
-    expect(html).not.toContain("cmv-controls");
   });
 
   it("reports a block with fewer than two steps, content that isn't code, and unknown props", async () => {

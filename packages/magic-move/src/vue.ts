@@ -1,69 +1,47 @@
-import { defineComponent, h, onBeforeUnmount, onMounted } from "vue";
+import { defineComponent, h, onBeforeUnmount, onMounted, type PropType } from "vue";
 import { css, start } from "./client.ts";
 
 export { default } from "./index.ts";
 export type { MagicMoveMeta } from "./index.ts";
-
-const chevron = (d: string) =>
-  h(
-    "svg",
-    {
-      viewBox: "0 0 24 24",
-      fill: "none",
-      stroke: "currentColor",
-      "stroke-width": "2",
-      "stroke-linecap": "round",
-      "stroke-linejoin": "round",
-      "aria-hidden": "true",
-    },
-    [h("path", { d })],
-  );
-const button = (by: number, label: string, path: string, disabled?: boolean) =>
-  h(
-    "button",
-    {
-      type: "button",
-      class: "cmv-button",
-      "data-magic-move-step": String(by),
-      "aria-label": label,
-      "aria-disabled": disabled ? "true" : undefined,
-    },
-    [chevron(path)],
-  );
 
 /** `::magic-move` for `@comark/vue`. */
 export const MagicMove = /* @__PURE__ */ defineComponent({
   name: "MagicMove",
   // The other renderers drop `{#id .class}`, so Vue drops it too instead of falling it through to the root.
   inheritAttrs: false,
-  props: { count: [String, Number], title: String },
+  props: {
+    uid: String,
+    // SAFETY: the parse plugin writes `labels` as an array of strings.
+    labels: { type: Array as PropType<string[]>, default: () => [] },
+    title: String,
+  },
   setup(props, { slots }) {
     let stop: (() => void) | undefined;
     onMounted(() => (stop = start(css)));
     onBeforeUnmount(() => stop?.());
-    return () => {
-      const count = Number(props.count) || 0;
-      const controls =
-        count > 1
-          ? h("div", { class: "cmv-controls" }, [
-              h("span", { class: "cmv-count", "aria-live": "polite" }, `1 / ${count}`),
-              h("div", { class: "cmv-steps" }, [
-                button(-1, "Previous step", "m15 18-6-6 6-6", true),
-                button(1, "Next step", "m9 18 6-6-6-6"),
-              ]),
-            ])
-          : null;
-      return h(
-        "div",
-        {
-          class: "cmv",
-          role: "region",
-          "aria-roledescription": "code steps",
-          "aria-label": props.title ?? "Code steps",
-        },
-        [h("div", { class: "cmv-stage" }, slots.default?.()), controls],
-      );
-    };
+    return () =>
+      h("div", { class: "cmv" }, [
+        h(
+          "div",
+          { class: "cmv-list", role: "tablist", "aria-label": props.title || undefined },
+          props.labels.map((label, at) =>
+            h(
+              "button",
+              {
+                type: "button",
+                class: "cmv-tab",
+                role: "tab",
+                id: `${props.uid}-tab-${at + 1}`,
+                "aria-controls": `${props.uid}-panel-${at + 1}`,
+                "aria-selected": String(at === 0),
+                tabindex: at === 0 ? "0" : "-1",
+              },
+              String(label),
+            ),
+          ),
+        ),
+        h("div", { class: "cmv-stage" }, slots.default?.()),
+      ]);
   },
 });
 
@@ -71,19 +49,20 @@ export const MagicMove = /* @__PURE__ */ defineComponent({
 export const MagicMoveStep = /* @__PURE__ */ defineComponent({
   name: "MagicMoveStep",
   inheritAttrs: false,
-  props: { index: [String, Number], count: [String, Number], label: String },
+  props: { uid: String, index: [String, Number], label: String },
   setup(props, { slots }) {
     return () =>
       h(
         "div",
         {
           class: "cmv-step",
-          role: "group",
-          "aria-roledescription": "step",
-          "aria-label": `${props.index} of ${props.count}`,
+          role: "tabpanel",
+          id: `${props.uid}-panel-${props.index}`,
+          "aria-labelledby": `${props.uid}-tab-${props.index}`,
+          tabindex: "0",
           "data-inactive": Number(props.index) > 1 ? "" : undefined,
         },
-        [props.label ? h("div", { class: "cmv-label" }, props.label) : null, slots.default?.()],
+        [h("div", { class: "cmv-caption" }, props.label), slots.default?.()],
       );
   },
 });

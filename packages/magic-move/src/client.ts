@@ -5,7 +5,7 @@ declare global {
 }
 
 /**
- * Starts the arrows and keys of every `.cmv` block on the page and returns a function that stops them. Every caller
+ * Starts the tabs and keys of every `.cmv` block on the page and returns a function that stops them. Every caller
  * shares one set of listeners, which stop with the last caller. The function is self-contained: the HTML renderer
  * inlines its source as a script, so it must not use anything from outside its body.
  */
@@ -97,16 +97,9 @@ export function start(css: string): () => void {
     return result;
   }
 
-  function sync(root: Element, index: number, count: number) {
-    const text = `${index + 1} / ${count}`;
-    const counter = root.querySelector(":scope>.cmv-controls .cmv-count");
-    // Only on a change: the counter is a live region, so each write is read out.
-    if (counter && counter.textContent !== text) counter.textContent = text;
-    for (const button of root.querySelectorAll(":scope>.cmv-controls [data-magic-move-step]")) {
-      const by = Number(button.getAttribute("data-magic-move-step"));
-      button.setAttribute("aria-disabled", String(by < 0 ? index === 0 : index === count - 1));
-    }
-  }
+  const tabsOf = (root: Element) => [
+    ...root.querySelectorAll<HTMLElement>(":scope>.cmv-list>[role=tab]"),
+  ];
 
   // FLIP: measure every piece, switch steps, measure again, then play each shared piece from where it was. Pieces only
   // in the new step fade in, and those only in the old one fade out where they stood, as copies over the stage.
@@ -129,7 +122,10 @@ export function start(css: string): () => void {
     });
     from.setAttribute("data-inactive", "");
     target.removeAttribute("data-inactive");
-    sync(root, to, steps.length);
+    for (const [at, tab] of tabsOf(root).entries()) {
+      tab.setAttribute("aria-selected", String(at === to));
+      tab.tabIndex = at === to ? 0 : -1;
+    }
     if (!moving) return;
 
     const matched = pairs(
@@ -184,41 +180,48 @@ export function start(css: string): () => void {
     }
   }
 
-  const page = (root: Element, by: number) => {
-    const steps = stepsOf(root);
-    const to = currentOf(steps) + by;
-    if (to >= 0 && to < steps.length) show(root, to);
-  };
-
-  const buttonOf = (event: Event) =>
+  const tabOf = (event: Event) =>
     event.target instanceof Element
-      ? event.target.closest<HTMLElement>(".cmv>.cmv-controls [data-magic-move-step]")
+      ? event.target.closest<HTMLElement>(".cmv>.cmv-list>[role=tab]")
       : null;
-  const rootOf = (element: Element) => element.closest(".cmv");
 
   document.addEventListener(
     "click",
     (event) => {
-      const button = buttonOf(event);
-      const root = button && rootOf(button);
-      if (root) page(root, Number(button.getAttribute("data-magic-move-step")));
+      const tab = tabOf(event);
+      const root = tab?.closest(".cmv");
+      if (tab && root) show(root, tabsOf(root).indexOf(tab));
     },
     { signal },
   );
 
-  // The arrow keys page from either button, in the reading direction.
+  // The arrow keys move between the tabs in the reading direction and open the one they reach, as in comark-tabs.
   document.addEventListener(
     "keydown",
     (event) => {
-      const button = buttonOf(event);
-      const root = button && rootOf(button);
-      if (!root || event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
-      const back = getComputedStyle(root).direction === "rtl" ? "ArrowRight" : "ArrowLeft";
+      const tab = tabOf(event);
+      const root = tab?.closest(".cmv");
+      if (!tab || !root || event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey)
+        return;
+      const tabs = tabsOf(root);
+      const at = tabs.indexOf(tab);
+      const back = getComputedStyle(tab).direction === "rtl" ? "ArrowRight" : "ArrowLeft";
       const forward = back === "ArrowLeft" ? "ArrowRight" : "ArrowLeft";
-      const by = event.key === forward ? 1 : event.key === back ? -1 : 0;
-      if (!by) return;
+      const to =
+        event.key === "Home"
+          ? 0
+          : event.key === "End"
+            ? tabs.length - 1
+            : event.key === forward
+              ? (at + 1) % tabs.length
+              : event.key === back
+                ? (at - 1 + tabs.length) % tabs.length
+                : -1;
+      const next = tabs[to];
+      if (!next) return;
       event.preventDefault();
-      page(root, by);
+      show(root, to);
+      next.focus();
     },
     { signal },
   );

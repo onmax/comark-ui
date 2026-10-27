@@ -4,13 +4,14 @@ export { default } from "comark-magic-move";
 export type { MagicMoveMeta } from "comark-magic-move";
 
 export declare const MagicMove: Component<{
-  count?: string | number;
+  uid?: string;
+  labels?: string[];
   title?: string;
   children?: Snippet;
 }>;
 export declare const MagicMoveStep: Component<{
+  uid?: string;
   index?: string | number;
-  count?: string | number;
   label?: string;
   children?: Snippet;
 }>;

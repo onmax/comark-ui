@@ -6,7 +6,7 @@
 [![license](https://npmx.dev/api/registry/badge/license/comark-magic-move)](https://npmx.dev/package/comark-magic-move)
 [![docs](https://img.shields.io/badge/docs-comark--ui.onmax.me-14b8a6?labelColor=0a0a0a)](https://comark-ui.onmax.me/magic-move/)
 
-Code that animates between steps, written in Markdown. Every code block inside `::magic-move` is one step; arrows page through them, and the words and marks two steps share move to their new places while the rest fade, as in [Shiki Magic Move](https://antfu.me/posts/shiki-magic-move). The script reads the rendered code, so it works with any highlighter or none. Without it, the steps read one after another. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
+Code that animates between steps, written in Markdown. Every code block inside `::magic-move` is one step with a tab of its own, like a code group. Opening a tab moves the words and marks two steps share to their new places, and the rest fade, as in [Shiki Magic Move](https://antfu.me/posts/shiki-magic-move). The script reads the rendered code, so it works with any highlighter or none. Without it, the steps read one after another. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
 
 ```sh
 pnpm add comark comark-magic-move
@@ -47,4 +47,4 @@ The plugin adds every problem to `meta.issues`, so a host can reject a document 
 
 Each entry exports the parse plugin as `default` and the renderer's `components`.
 
-The arrows follow the shared `--comark-*` tokens; see [Theming](https://comark-ui.onmax.me/guide/theming/). Set `--cmv-gap` and `--cmv-button-size` for the space between steps without the script and the arrows' size.
+The tabs follow the shared `--comark-*` tokens; see [Theming](https://comark-ui.onmax.me/guide/theming/). Set `--cmv-surface` and `--cmv-gap` for the header behind the tabs and the space between steps without the script.

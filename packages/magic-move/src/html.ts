@@ -24,34 +24,34 @@ const text = (value: unknown) =>
     ? undefined
     : // SAFETY: undefined, null, objects, and arrays returned above, so only a string, number, or boolean is left.
       String(value as string | number | boolean);
-const chevron = (path: string) =>
-  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${path}"/></svg>`;
 
 // `:bound` props resolve the way Comark's Vue, React, and Svelte renderers resolve them, so all four agree.
 const props = (attrs: Record<string, unknown>, state: State) =>
   resolveAttributes(attrs, state.renderData, { parseJson: true });
 
+const tab = (uid: string, label: string, index: number) =>
+  `<button type="button" class="cmv-tab" role="tab" id="${uid}-tab-${index}" aria-controls="${uid}-panel-${index}" aria-selected="${index === 1}" tabindex="${index === 1 ? 0 : -1}">${escapeHtml(label)}</button>`;
+
 const magicMove: NodeHandler = async ([, attrs, ...children], state) => {
-  const { count, title } = props(attrs, state);
-  const total = Number(count) || 0;
-  const controls =
-    total > 1
-      ? `<div class="cmv-controls"><span class="cmv-count" aria-live="polite">1 / ${total}</span><div class="cmv-steps">` +
-        `<button type="button" class="cmv-button" data-magic-move-step="-1" aria-label="Previous step" aria-disabled="true">${chevron("m15 18-6-6 6-6")}</button>` +
-        `<button type="button" class="cmv-button" data-magic-move-step="1" aria-label="Next step">${chevron("m9 18 6-6-6-6")}</button></div></div>`
-      : "";
+  const { uid, labels, title } = props(attrs, state);
+  const id = attr(text(uid) ?? "");
+  const name = text(title);
+  const tabs = (Array.isArray(labels) ? labels.map(String) : []).map((label, at) =>
+    tab(id, label, at + 1),
+  );
   return (
-    `<div class="cmv" role="region" aria-roledescription="code steps" aria-label="${attr(text(title) ?? "Code steps")}">` +
-    `<div class="cmv-stage">${await state.flow(["div", {}, ...children], state)}</div>${controls}</div>${runtime(state)}`
+    `<div class="cmv"><div class="cmv-list" role="tablist"${name ? ` aria-label="${attr(name)}"` : ""}>${tabs.join("")}</div>` +
+    `<div class="cmv-stage">${await state.flow(["div", {}, ...children], state)}</div></div>${runtime(state)}`
   );
 };
 
 const step: NodeHandler = async ([, attrs, ...children], state) => {
-  const { index, count, label } = props(attrs, state);
-  const name = text(label);
+  const { uid, index, label } = props(attrs, state);
+  const at = attr(text(index) ?? "");
+  const base = attr(text(uid) ?? "");
   return (
-    `<div class="cmv-step" role="group" aria-roledescription="step" aria-label="${attr(`${text(index) ?? ""} of ${text(count) ?? ""}`)}"${Number(index) > 1 ? " data-inactive" : ""}>` +
-    `${name ? `<div class="cmv-label">${escapeHtml(name)}</div>` : ""}${await state.flow(["div", {}, ...children], state)}</div>`
+    `<div class="cmv-step" role="tabpanel" id="${base}-panel-${at}" aria-labelledby="${base}-tab-${at}" tabindex="0"${Number(index) > 1 ? " data-inactive" : ""}>` +
+    `<div class="cmv-caption">${escapeHtml(text(label) ?? "")}</div>${await state.flow(["div", {}, ...children], state)}</div>`
   );
 };
 

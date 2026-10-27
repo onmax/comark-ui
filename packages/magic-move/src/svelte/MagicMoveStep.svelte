@@ -1,15 +1,16 @@
 <!-- Each step of a `::magic-move` for `@comark/svelte`. -->
 <script>
-  let { index = undefined, count = undefined, label = undefined, children } = $props();
+  let { uid = "", index = undefined, label = undefined, children } = $props();
 </script>
 
 <div
   class="cmv-step"
-  role="group"
-  aria-roledescription="step"
-  aria-label="{index} of {count}"
+  role="tabpanel"
+  id="{uid}-panel-{index}"
+  aria-labelledby="{uid}-tab-{index}"
+  tabindex="0"
   data-inactive={Number(index) > 1 ? "" : undefined}
 >
-  {#if label}<div class="cmv-label">{label}</div>{/if}
+  <div class="cmv-caption">{label}</div>
   {@render children?.()}
 </div>

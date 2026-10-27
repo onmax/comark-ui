@@ -17,9 +17,9 @@ const total = price * rate
 ::
 ````
 
-- `::magic-move`: every code block inside is one step, in order. Anything else inside is dropped and reported, and a block with fewer than two code blocks is reported too. `title` names the block for screen readers, default `Code steps`.
-- The `[label]` after a fence's language names its step and shows above its code. It isn't a file name there.
-- Arrows under the code page through the steps, and the arrow keys do too once a button has focus.
+- `::magic-move`: every code block inside is one step, in order. Anything else inside is dropped and reported, and a block with fewer than two code blocks is reported too. `title` names its tabs for screen readers.
+- The `[label]` after a fence's language names its step's tab, `Step 2` and so on without one. It isn't a file name there.
+- The steps are tabs over one code block, like a code group. Opening a tab moves the code there, from any step to any other.
 - Without the script, as in a feed reader, an email, or a screenshot of the page, the steps read one after another under their labels.
 
 ## Choose the steps
