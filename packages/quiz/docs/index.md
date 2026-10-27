@@ -523,8 +523,10 @@ Set these on `.cqz` or any ancestor, such as `:root`:
 | --- | --- | --- |
 | `--cqz-primary` | Nuxt UI's `--ui-primary`, else shadcn/ui's `--primary`, else `--comark-foreground` | A selected option, the Check button, a poll vote |
 | `--cqz-primary-foreground` | `--primary-foreground`, else `--comark-background` | Text on the Check button, and a checked box's tick |
-| `--cqz-correct` | `--ui-success`, else `--success`, else `oklch(0.62 0.14 155)` | A right option's icon, border, and tint, and the "Correct" verdict |
-| `--cqz-incorrect` | `--ui-error`, else `--destructive`, else shadcn/ui's red | A wrong pick's icon, border, and tint, and the "Not quite" verdict |
+| `--cqz-correct` | `--ui-success`, else `--success`, else `oklch(0.62 0.14 155)` | A right option's border and tint |
+| `--cqz-incorrect` | `--ui-error`, else `--destructive`, else shadcn/ui's red | A wrong pick's border and tint |
+| `--cqz-correct-foreground` | `--cqz-correct` at 55% mixed with `--comark-foreground` | Correct icons and verdict text |
+| `--cqz-incorrect-foreground` | `--cqz-incorrect` at 55% mixed with `--comark-foreground` | Incorrect icons and verdict text |
 | `--cqz-bar` | `--comark-foreground` at 6% | Each option's share of the results |
 | `--cqz-bar-strong` | The primary color at 14% | A poll's leading option and the reader's vote |
 | `--cqz-surface` | `--comark-foreground` at 2% over `--comark-background` | The card |
