@@ -16,7 +16,7 @@ for (const renderer of ["react", "vue", "svelte"]) {
     page.on("pageerror", (error) => errors.push(error.message));
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.setContent(
-      '<main style="width:46rem;margin:auto;--comark-wide-room:calc(100vw - 3rem)"></main>',
+      '<main style="width:46rem;margin:auto;--comark-wide-start:calc((100vw - 100%) / 2 - 1.5rem);--comark-wide-end:calc((100vw - 100%) / 2 - 1.5rem)"></main>',
     );
     await page.addScriptTag({ content: bundle });
     expect(errors).toEqual([]);
