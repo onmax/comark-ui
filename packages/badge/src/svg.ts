@@ -8,7 +8,19 @@ export const badgeColors = {
   error: "#b91c1c",
   neutral: "#525252",
 };
-export const icons = ["none", "package", "npm", "github", "comark", "shadcn", "check"] as const;
+export const icons = [
+  "none",
+  "package",
+  "npm",
+  "npmx",
+  "nuxt",
+  "github",
+  "comark",
+  "shadcn",
+  "check",
+] as const;
+export const badgePresets = ["default", "npmx", "nuxt"] as const;
+export type BadgePreset = (typeof badgePresets)[number];
 export type BadgeSource = (typeof sources)[number];
 export type BadgeSpec = {
   source: BadgeSource;
@@ -19,6 +31,7 @@ export type BadgeSpec = {
   icon: (typeof icons)[number];
   theme: "auto" | "light" | "dark";
   style: "shadcn" | "subtle" | "solid";
+  preset: BadgePreset;
   package: string;
   repository: string;
   workflow: string;
@@ -28,7 +41,7 @@ export type BadgeSpec = {
 export type BadgeImage = Pick<
   BadgeSpec,
   "label" | "value" | "color" | "labelColor" | "icon" | "theme" | "style"
->;
+> & { preset?: BadgePreset };
 export const badgeKeys = [
   "source",
   "label",
@@ -38,6 +51,7 @@ export const badgeKeys = [
   "icon",
   "theme",
   "style",
+  "preset",
   "package",
   "repository",
   "workflow",
@@ -54,6 +68,15 @@ const hasControl = (value: string) =>
   Array.from(value).some((char) => char.charCodeAt(0) < 32 || char.charCodeAt(0) === 127);
 const plain = (value: unknown) => (typeof value === "string" ? value.trim() : "");
 
+export function badgeDefaultIcon({
+  source,
+  preset,
+}: Pick<BadgeSpec, "source" | "preset">): BadgeSpec["icon"] {
+  if (source === "github-actions") return "github";
+  if (source === "static") return "none";
+  return preset === "default" ? "npm" : preset;
+}
+
 /** Reads the same options from Markdown, the builder, and an image URL. */
 export function readBadge(
   input: Record<string, unknown>,
@@ -66,15 +89,18 @@ export function readBadge(
       field: "source",
       error: "Use source static, npm-version, npm-downloads, or github-actions.",
     };
-  const defaults =
+  const preset = field("preset", "default");
+  if (!oneOf(badgePresets, preset))
+    return { ok: false, field: "preset", error: "Use preset default, npmx, or nuxt." };
+  const defaultLabel =
     source === "npm-version"
-      ? ["npm", "npm"]
+      ? "npm"
       : source === "npm-downloads"
-        ? ["downloads", "npm"]
+        ? "downloads"
         : source === "github-actions"
-          ? ["build", "github"]
-          : ["", "none"];
-  const label = field("label", defaults[0]);
+          ? "build"
+          : "";
+  const label = field("label", defaultLabel);
   const value = field("value");
   if (source === "static" && !value)
     return { ok: false, field: "value", error: "Give a static image badge a value." };
@@ -85,22 +111,22 @@ export function readBadge(
       error: "Keep label and value to 80 characters without control characters.",
     };
   const color = field("color", "primary");
-  const labelColor = field("labelColor", "neutral");
+  const labelColor = preset === "default" ? field("labelColor", "neutral") : "neutral";
   if (![color, labelColor].every(validColor))
     return {
       ok: false,
       field: validColor(color) ? "labelColor" : "color",
       error: "Use a semantic color or a six-digit hex color such as #15803d.",
     };
-  const icon = field("icon", defaults[1]);
+  const icon = field("icon", badgeDefaultIcon({ source, preset }));
   if (!oneOf(icons, icon))
     return {
       ok: false,
       field: "icon",
-      error: "Use icon none, package, npm, github, comark, shadcn, or check.",
+      error: "Use icon none, package, npm, npmx, nuxt, github, comark, shadcn, or check.",
     };
   const theme = field("theme", "auto");
-  const style = field("style", "shadcn");
+  const style = preset === "default" ? field("style", "shadcn") : "shadcn";
   const period = field("period", "month");
   if (theme !== "auto" && theme !== "light" && theme !== "dark")
     return { ok: false, field: "theme", error: "Use theme auto, light, or dark." };
@@ -153,6 +179,7 @@ export function readBadge(
       icon,
       theme,
       style,
+      preset,
       package: source.startsWith("npm-") ? pkg : "",
       repository: source === "github-actions" ? repository : "",
       workflow: source === "github-actions" ? workflow : "",
@@ -170,6 +197,7 @@ export function badgeParams(spec: BadgeSpec): URLSearchParams {
     labelColor: "neutral",
     theme: "auto",
     style: "shadcn",
+    preset: "default",
     period: "month",
   };
   return new URLSearchParams(
@@ -194,18 +222,21 @@ const paths: Record<BadgeSpec["icon"], string> = {
   npm: '<path fill="currentColor" stroke="none" transform="scale(.6667)" fill-rule="evenodd" d="M1.76 0C.79 0 0 .79 0 1.76v20.48C0 23.21.79 24 1.76 24h20.48c.97 0 1.76-.79 1.76-1.76V1.76C24 .79 23.21 0 22.24 0ZM5.13 5.32l13.84.02-.01 13.84H15.5l.01-10.38h-3.46l-.01 10.38H5.11Z"/>',
   comark:
     '<g transform="scale(.5)"><rect stroke="currentColor" x="6.5" y="11.4" width="19" height="10.2" fill="none" stroke-width="1.3"/><path fill="currentColor" d="M7.87 20.24V12.76H10.07L12.26 15.51 14.46 12.76H16.66V20.24H14.46V15.95L12.26 18.7 10.07 15.95V20.24ZM18.64 12.98h2.19v2.12h-2.19ZM18.64 17.9h2.19v2.12h-2.19ZM21.94 12.98h2.19v2.12h-2.19ZM21.94 17.9h2.19v2.12h-2.19Z"/><path d="M9.3 7.3C15.3 3.7 27.1 4.5 28.7 11.5 30.4 19.1 22 26.7 12.8 27.2 5.9 27.6 2 23.5 3.5 18.1 4.8 13.3 11.1 9.7 18.1 9.6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></g>',
+  npmx: '<path class="q" fill="currentColor" fill-opacity=".45" stroke="none" d="M1.5 10.5h4v4h-4Z"/><path fill="currentColor" stroke="none" d="M11.6 1.5h2.6L9.4 14.5H6.8Z"/>',
+  nuxt: '<path fill="currentColor" stroke="none" transform="translate(0 2.75) scale(.0625)" d="M143.618 167.029h95.166c3.023 0 5.992-.771 8.61-2.237a16.963 16.963 0 0 0 6.302-6.115 16.324 16.324 0 0 0 2.304-8.352c0-2.932-.799-5.811-2.312-8.35L189.778 34.6a16.966 16.966 0 0 0-6.301-6.113 17.626 17.626 0 0 0-8.608-2.238c-3.023 0-5.991.772-8.609 2.238a16.964 16.964 0 0 0-6.3 6.113l-16.342 27.473-31.95-53.724a16.973 16.973 0 0 0-6.304-6.112A17.638 17.638 0 0 0 96.754 0c-3.022 0-5.992.772-8.61 2.237a16.973 16.973 0 0 0-6.303 6.112L2.31 141.975A16.302 16.302 0 0 0 0 150.325c0 2.932.793 5.813 2.304 8.352a16.964 16.964 0 0 0 6.302 6.115 17.628 17.628 0 0 0 8.61 2.237h59.737c23.669 0 41.123-10.084 53.134-29.758l29.159-48.983 15.618-26.215 46.874 78.742h-62.492l-15.628 26.214Zm-67.64-26.24-41.688-.01L96.782 35.796l31.181 52.492-20.877 35.084c-7.976 12.765-17.037 17.416-31.107 17.416Z"/>',
   shadcn: '<path d="m9 2-7 7m12-7L2 14"/>',
 };
 /** A built-in logo or symbol for interfaces that offer the same badge options. */
 export function badgeIcon(name: BadgeSpec["icon"]): string {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${paths[name] ?? ""}</svg>`;
 }
-const textColor = (hex: string) => {
+const luminance = (hex: string) => {
   const rgb = [1, 3, 5]
     .map((start) => Number.parseInt(hex.slice(start, start + 2), 16) / 255)
     .map((value) => (value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4));
-  return rgb[0]! * 0.2126 + rgb[1]! * 0.7152 + rgb[2]! * 0.0722 > 0.179 ? "#000000" : "#ffffff";
+  return rgb[0]! * 0.2126 + rgb[1]! * 0.7152 + rgb[2]! * 0.0722;
 };
+const textColor = (hex: string) => (luminance(hex) > 0.179 ? "#000000" : "#ffffff");
 
 // The prose badges' dark-mode tones, since the light ones are too dim for a dot on a dark badge.
 const dots = {
@@ -278,6 +309,68 @@ function shadcn(
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="26" viewBox="0 0 ${width} 26" role="img" aria-label="${name}"><title>${name}</title>${style}<rect x=".5" y=".5" width="${width - 1}" height="25" rx="6" class="b"/>${icon ? `<g transform="translate(9 6) scale(.875)" class="i" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${icon}</g>` : ""}${label ? `${text(label, start, "m")}<path d="M${left + 0.5} 1v24" class="l"/>` : ""}${status ? `<circle cx="${valueStart + 3}" cy="13" r="3" class="d"/>` : ""}${text(value, valueX, "f")}</svg>`;
 }
 
+type PresetImage = Pick<BadgeImage, "label" | "value" | "color" | "theme"> & { icon: string };
+const imageHead = (width: number, label: string, value: string, style: string) => {
+  const name = xml(label ? `${label}: ${value}` : value);
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="26" viewBox="0 0 ${width} 26" role="img" aria-label="${name}"><title>${name}</title>${style}`;
+};
+
+function npmx({ label, value, color, icon, theme }: PresetImage) {
+  const tone = (dark: boolean) => {
+    if (color === "primary") return dark ? "#51c8fc" : "#0066b8";
+    if (color === "secondary" || color === "neutral") return dark ? "#a3a3a3" : "#525252";
+    return (dark && Object.entries(dots).find(([name]) => name === color)?.[1]) || palette(color);
+  };
+  const style = paints(theme, (dark) => ({
+    b: `fill:${dark ? "#0a0a0a" : "#ffffff"};stroke:${dark ? "#262626" : "#d4d4d4"}`,
+    m: `fill:${dark ? "#a3a3a3" : "#525252"}`,
+    f: `fill:${dark ? "#fafafa" : "#0a0a0a"}`,
+    s: `stroke:${tone(dark)}`,
+    i: `color:${dark ? "#fafafa" : "#0a0a0a"}`,
+    q: `fill:${dark ? "#525252" : "#a3a3a3"};fill-opacity:1`,
+  }));
+  const mono = (content: string) => Array.from(content).length * 7.2;
+  const start = 8 + (icon ? 20 : 0);
+  const slashX = label ? start + mono(label) + 6 : 0;
+  const valueX = label ? slashX + 12 : start;
+  const width = Math.ceil(valueX + mono(value) + 9);
+  const text = (content: string, x: number, paint: string) =>
+    `<text x="${x}" y="17" class="${paint}" font-family="'Geist Mono',ui-monospace,SFMono-Regular,Menlo,'DejaVu Sans Mono',monospace" font-size="12" textLength="${mono(content).toFixed(1)}" lengthAdjust="spacingAndGlyphs">${xml(content)}</text>`;
+  return `${imageHead(width, label, value, style)}<rect x=".5" y=".5" width="${width - 1}" height="25" rx="3.5" class="b"/>${icon ? `<g transform="translate(8 6) scale(.875)" class="i" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${icon}</g>` : ""}${label ? `${text(label, start, "m")}<path d="M${slashX + 5.5} 7.5 ${slashX + 1} 18.5" class="s" stroke-width="1.5" stroke-linecap="round"/>` : ""}${text(value, valueX, "f")}</svg>`;
+}
+
+function nuxt({ label, value, color, icon, theme }: PresetImage) {
+  const colors = {
+    primary: "#00dc82",
+    success: "#00dc82",
+    info: "#60a5fa",
+    warning: "#facc15",
+    error: "#f87171",
+    secondary: "#94a3b8",
+    neutral: "#94a3b8",
+  };
+  const fill = Object.entries(colors).find(([name]) => name === color)?.[1] ?? color;
+  const background = luminance(fill);
+  const navy = luminance("#020420");
+  const contrast = (Math.max(background, navy) + 0.05) / (Math.min(background, navy) + 0.05);
+  const ink = contrast >= 4.5 ? "#020420" : "#ffffff";
+  const style = paints(theme, (dark) => ({
+    e: dark ? "stroke:#ffffff;stroke-opacity:.18" : "stroke:none",
+  }));
+  const iconWidth = icon ? 20 : 0;
+  const left = label ? Math.round(8 + iconWidth + measure(label) + 8) : icon ? 28 : 0;
+  const width = Math.ceil(left + 8 + measure(value) + 8);
+  const text = (content: string, x: number, paint: string) =>
+    `<text x="${x}" y="17" fill="${paint}" font-family="Arial,Helvetica,sans-serif" font-size="12" textLength="${measure(content).toFixed(1)}" lengthAdjust="spacingAndGlyphs">${xml(content)}</text>`;
+  const labelShape = left
+    ? `<path d="M6 0H${left}V26H6A6 6 0 0 1 0 20V6A6 6 0 0 1 6 0Z" fill="#020420"/>`
+    : "";
+  const valueShape = left
+    ? `<path d="M${left} 0H${width - 6}A6 6 0 0 1 ${width} 6V20A6 6 0 0 1 ${width - 6} 26H${left}Z" fill="${fill}"/>`
+    : `<rect width="${width}" height="26" rx="6" fill="${fill}"/>`;
+  return `${imageHead(width, label, value, style)}${labelShape}${valueShape}${icon ? `<g transform="translate(${label ? 8 : 7} 6) scale(.875)" color="#00dc82" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${icon}</g>` : ""}${label ? text(label, 8 + iconWidth, "#ffffff") : ""}${text(value, left + 8, ink)}<rect x=".5" y=".5" width="${width - 1}" height="25" rx="5.5" fill="none" class="e"/></svg>`;
+}
+
 /** A self-contained SVG. Text uses fixed advances, so no font download or canvas is needed. */
 export function badgeSvg(input: BadgeImage): string {
   const label = input.label.slice(0, 80);
@@ -285,6 +378,16 @@ export function badgeSvg(input: BadgeImage): string {
   const color = validColor(input.color) ? palette(input.color) : badgeColors.primary;
   const labelColor = validColor(input.labelColor) ? palette(input.labelColor) : badgeColors.neutral;
   const icon = paths[input.icon] ?? "";
+  if (input.preset === "npmx" || input.preset === "nuxt") {
+    const image = {
+      label,
+      value,
+      color: validColor(input.color) ? input.color : "primary",
+      icon,
+      theme: input.theme,
+    };
+    return input.preset === "npmx" ? npmx(image) : nuxt(image);
+  }
   const iconSpace = icon ? 22 : 0;
   const left = label ? Array.from(label).length * 7.2 + 20 + iconSpace : 0;
   const right = Array.from(value).length * 7.2 + 20 + (label ? 0 : iconSpace);

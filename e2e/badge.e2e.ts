@@ -29,7 +29,7 @@ test("builds, copies, downloads, and restores a static badge", async ({ page, co
   await page.goto("/badges/");
   await expect(page.getByRole("img", { name: "built with: Comark UI" })).toBeVisible();
   await page.getByLabel("Value", { exact: true }).fill('A "quoted" release');
-  await page.getByLabel("Badge theme").selectOption("dark");
+  await page.getByLabel("Color scheme").selectOption("dark");
   await page.getByRole("button", { name: "Refresh preview" }).click();
   await page.getByLabel("Export", { exact: true }).selectOption("comark");
   await expect(page.locator("#export-code")).toHaveValue(/quoted/);
@@ -115,6 +115,8 @@ for (const input of [
   { value: "release" },
   { source: "npm-version", package: "comark-ui" },
   { source: "npm-downloads", package: "comark-ui" },
+  { source: "npm-version", package: "comark-ui", preset: "npmx" },
+  { source: "npm-downloads", package: "comark-ui", preset: "nuxt", icon: "none" },
 ]) {
   test(`restores canonical configuration ${JSON.stringify(input)}`, async ({ page }) => {
     const parsed = readBadge(input);
@@ -132,3 +134,49 @@ for (const input of [
     await expect(page.getByRole("img", { name: "build: passing" })).toBeVisible();
   });
 }
+
+test("switches presets, preserves chosen logos, and shares the rendered result", async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/badges/?source=npm-version&package=comark-ui");
+  const logo = page.getByRole("combobox", { name: "Logo", exact: true });
+  const style = page.getByRole("combobox", { name: "Style", exact: true });
+  await expect(logo).toHaveValue("npm");
+  await style.selectOption("solid");
+  await page.locator('[data-look="npmx"]').click();
+  await expect(logo).toHaveValue("npmx");
+  await expect(style).toBeHidden();
+  await expect(page.locator('[name="labelColor"]')).toBeHidden();
+  await page.locator('[data-look="nuxt"]').click();
+  await expect(logo).toHaveValue("nuxt");
+  await expect(page.getByRole("img", { name: "npm: v1.2.3" })).toBeVisible();
+  await page.getByRole("button", { name: "Copy builder link" }).click();
+  const shared = await page.evaluate(() => navigator.clipboard.readText());
+  expect(shared).toContain("preset=nuxt");
+  expect(shared).not.toContain("style=");
+  await page.goto(shared);
+  await expect(page.locator('[data-look="nuxt"]')).toHaveAttribute("aria-pressed", "true");
+  await expect(logo).toHaveValue("nuxt");
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download SVG" }).click();
+  const stream = await (await download).createReadStream();
+  const chunks: Buffer[] = [];
+  for await (const chunk of stream!) chunks.push(Buffer.from(chunk));
+  expect(Buffer.concat(chunks).toString()).toContain('fill="#00dc82"');
+  for (const icon of ["github", "none"]) {
+    await logo.selectOption(icon);
+    await page.locator('[data-look="npmx"]').click();
+    await expect(logo).toHaveValue(icon);
+    await page.locator('[data-look="nuxt"]').click();
+    await expect(logo).toHaveValue(icon);
+  }
+  await page.setViewportSize({ width: 320, height: 720 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
+    true,
+  );
+  await page.locator('[data-look="default"]').click();
+  await expect(style).toBeVisible();
+  await expect(logo).toHaveValue("none");
+});

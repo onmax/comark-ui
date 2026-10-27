@@ -1,8 +1,11 @@
 import {
   badgeKeys,
+  badgePresets,
+  badgeDefaultIcon,
   badgeParams,
   badgeSvg,
   readBadge,
+  sources,
   type BadgeSpec,
 } from "../../packages/badge/src/svg.ts";
 
@@ -27,14 +30,19 @@ function start(root: HTMLElement) {
   let exports: Record<string, string> = {};
   const presets: Record<string, Record<string, string>> = {
     custom: { source: "static", label: "built with", value: "Comark UI", icon: "comark" },
-    "npm-version": { source: "npm-version", label: "npm", icon: "npm" },
-    "npm-downloads": { source: "npm-downloads", label: "downloads", icon: "npm" },
+    "npm-version": { source: "npm-version", label: "npm" },
+    "npm-downloads": { source: "npm-downloads", label: "downloads" },
     "github-actions": { source: "github-actions", label: "build", icon: "github" },
     license: { source: "static", label: "license", value: "MIT", icon: "none" },
     docs: { source: "static", label: "docs", value: "comark-ui.onmax.me", icon: "comark" },
   };
   const control = (name: string) =>
     form.elements.namedItem(name) as HTMLInputElement | HTMLSelectElement;
+  const defaultIcon = () =>
+    badgeDefaultIcon({
+      source: sources.find((source) => source === control("source").value) ?? "static",
+      preset: badgePresets.find((preset) => preset === control("preset").value) ?? "default",
+    });
   function fields() {
     const source = control("source").value;
     for (const element of form.querySelectorAll<HTMLElement>("[data-for]")) {
@@ -45,8 +53,13 @@ function start(root: HTMLElement) {
         input.disabled = element.hidden;
     }
     const labelColor = root.querySelector<HTMLElement>("[data-label-color]")!;
-    labelColor.hidden = control("style").value === "shadcn";
+    const style = root.querySelector<HTMLElement>("[data-style]")!;
+    style.hidden = control("preset").value !== "default";
+    control("style").disabled = style.hidden;
+    labelColor.hidden = style.hidden || control("style").value === "shadcn";
     control("labelColor").disabled = labelColor.hidden;
+    for (const button of form.querySelectorAll<HTMLButtonElement>("[data-look]"))
+      button.setAttribute("aria-pressed", String(button.dataset.look === control("preset").value));
     for (const button of form.querySelectorAll<HTMLButtonElement>("[data-preset]")) {
       const selected = Object.entries(presets[button.dataset.preset!]!).every(
         ([key, value]) => control(key).value === value,
@@ -168,8 +181,17 @@ function start(root: HTMLElement) {
   }
   for (const button of form.querySelectorAll<HTMLButtonElement>("[data-preset]"))
     button.addEventListener("click", () => {
-      for (const [key, value] of Object.entries(presets[button.dataset.preset!]!))
-        control(key).value = value;
+      const template = presets[button.dataset.preset!]!;
+      for (const [key, value] of Object.entries(template)) control(key).value = value;
+      if (!template.icon) control("icon").value = defaultIcon();
+      clearTimeout(timer);
+      void refresh();
+    });
+  for (const button of form.querySelectorAll<HTMLButtonElement>("[data-look]"))
+    button.addEventListener("click", () => {
+      const automatic = control("icon").value === defaultIcon();
+      control("preset").value = button.dataset.look!;
+      if (automatic) control("icon").value = defaultIcon();
       clearTimeout(timer);
       void refresh();
     });
