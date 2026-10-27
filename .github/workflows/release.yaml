@@ -1,4 +1,9 @@
 name: Release
+run-name: >-
+  ${{ github.event_name == 'workflow_dispatch' && startsWith(github.ref, 'refs/tags/v')
+      && format('Publish {0} to npm', github.ref_name)
+      || github.event_name == 'pull_request' && format('Release PR #{0}', github.event.pull_request.number)
+      || 'Update release PR' }}
 
 on:
   push:
@@ -124,6 +129,13 @@ jobs:
           # Build once above, then keep uppt's tarballs without repeating the prepack builds.
           pnpm_config_ignore_scripts: "true"
 
+      - name: Check release tarball count
+        env:
+          FILES: ${{ steps.pack.outputs.files }}
+        run: |
+          expected=$(jq -s '[.[] | select(.private != true)] | length' packages/*/package.json)
+          jq -e --argjson expected "$expected" 'type == "array" and length == $expected and length > 0' <<<"$FILES"
+
   # publish the prebuilt tarballs straight to npm through OIDC trusted publishing
   publish:
     needs: pack
@@ -153,6 +165,7 @@ jobs:
           path: ${{ runner.temp }}/tarballs
 
       - name: Publish to npm
+        id: publish
         env:
           FILES: ${{ needs.pack.outputs.files }}
           NPM_TAG: ${{ inputs.npm-tag }}
@@ -184,3 +197,36 @@ jobs:
             fi
             npm publish "$tarball" --provenance --ignore-scripts --access public --tag "$tag"
           done
+
+      - name: Verify every release package is on npm
+        if: ${{ !cancelled() && steps.publish.outcome != 'skipped' }}
+        env:
+          FILES: ${{ needs.pack.outputs.files }}
+          TARBALLS: ${{ runner.temp }}/tarballs
+        run: |
+          set -euo pipefail
+          missing=0
+          echo '### npm release verification' >> "$GITHUB_STEP_SUMMARY"
+          for file in $(jq -r '.[]' <<<"$FILES"); do
+            manifest=$(tar -xOzf "$TARBALLS/$file" package/package.json)
+            name=$(jq -r .name <<<"$manifest")
+            version=$(jq -r .version <<<"$manifest")
+            found=false
+            for attempt in 1 2 3; do
+              if published=$(npm view "$name@$version" version --json --registry=https://registry.npmjs.org); then
+                if jq -e --arg version "$version" '. == $version' <<<"$published" > /dev/null; then
+                  found=true
+                  break
+                fi
+              fi
+              if [ "$attempt" -lt 3 ]; then sleep 5; fi
+            done
+            if [ "$found" = true ]; then
+              echo "- Published: $name@$version" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "::error::$name@$version could not be verified on npm. Check the publish error and this package's trusted publisher settings."
+              echo "- Missing or unreadable: $name@$version" >> "$GITHUB_STEP_SUMMARY"
+              missing=1
+            fi
+          done
+          exit "$missing"
