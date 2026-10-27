@@ -2955,8 +2955,9 @@ pre.cca-term {
   box-shadow: none;
 }
 
-/* Not comark-code's numbered or marked lines, which are blocks with their newline inside, so a tint covers its row. */
-pre:not(.ck[data-code-lines] > pre) .line {
+/* Not comark-code's numbered or marked lines, which are blocks with their newline inside, so a tint covers its row, nor
+   the studio's, which type out a block at a time. */
+pre:not(.ck[data-code-lines] > pre, .studio-code pre) .line {
   display: inline !important;
 }
 
