@@ -1,6 +1,6 @@
 {
   "name": "comark-tests",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Test results from a JUnit XML report: pass, fail, and skip counts, the duration, and each failure with its stack. A Comark plugin.",
   "keywords": [
     "ci",

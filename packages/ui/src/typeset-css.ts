@@ -195,8 +195,9 @@ const rules = `
    toward the side that has more when one doesn't. Without room set, it keeps to the column. Only the document's own
    blocks grow, not one inside a list or tabs. */
 :scope > [data-wide] {
-  --_ty-start: var(--comark-wide-start, 0px);
-  --_ty-end: var(--comark-wide-end, 0px);
+  /* Room a page works out from the window can come out negative on a phone, where the column fills it: none, then. */
+  --_ty-start: max(0px, var(--comark-wide-start, 0px));
+  --_ty-end: max(0px, var(--comark-wide-end, 0px));
   --_ty-wide: max(100%, min(var(--comark-wide-width, 100vw), var(--comark-wide-max, 72rem), 100% + var(--_ty-start) + var(--_ty-end)));
   width: var(--_ty-wide);
   margin-inline: clamp(-1 * var(--_ty-start), (100% - var(--_ty-wide)) / 2, 100% + var(--_ty-end) - var(--_ty-wide)) 0;
