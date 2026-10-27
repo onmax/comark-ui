@@ -21,7 +21,7 @@ const steps = `::magic-move{title="Refactor"}\n${fence}ts [Start]\nconst x = 1\n
 describe("comark-magic-move", () => {
   it("renders the steps as tabs over one code block, the first one open", async () => {
     const html = await markup(steps);
-    const [, id] = /id="(cmv-[a-z0-9]+-1)-tab-1"/.exec(html) ?? [];
+    const [, id] = /id="([^"]+)-tab-1"/.exec(html) ?? [];
     expect(html).toContain(
       '<div class="cmv"><div class="cmv-list" role="tablist" aria-label="Refactor">' +
         `<button type="button" class="cmv-tab" role="tab" id="${id}-tab-1" aria-controls="${id}-panel-1" aria-selected="true" tabindex="0">Start</button>` +
@@ -43,13 +43,13 @@ describe("comark-magic-move", () => {
     const html = await markup(`${plain}\n\n${plain}`);
     expect(html).toContain('<div class="cmv-list" role="tablist"><button');
     expect(html.match(/>Step 2<\/button>/g)).toHaveLength(2);
-    const ids = [...html.matchAll(/id="(cmv-[a-z0-9]+-\d+)-tab-1"/g)].map(([, id]) => id);
+    const ids = [...html.matchAll(/id="([^"]+)-tab-1"/g)].map(([, id]) => id);
     expect(new Set(ids).size).toBe(2);
   });
 
   it("gives the same block different ids in documents rendered apart for one page", async () => {
     const page = (await markup(`# One\n\n${steps}`)) + (await markup(`# Two\n\n${steps}`));
-    const ids = [...page.matchAll(/id="(cmv-[a-z0-9]+-\d+)-tab-1"/g)].map(([, id]) => id);
+    const ids = [...page.matchAll(/id="([^"]+)-tab-1"/g)].map(([, id]) => id);
     expect(ids).toHaveLength(2);
     expect(new Set(ids).size).toBe(2);
   });

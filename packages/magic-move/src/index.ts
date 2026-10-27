@@ -50,8 +50,7 @@ function describe(node: Node) {
 
 const PROPS = ["title", "id", "class"];
 
-// FNV-1a of the document's source. Ids from it differ between documents on one page, even ones that share a block, and
-// from the ids authors write, yet stay the same every time a document renders.
+// FNV-1a of the document's source gives stable block keys; renderers add an instance namespace for ARIA ids.
 function hash(value: string) {
   let result = 0x811c9dc5;
   for (let at = 0; at < value.length; at++)

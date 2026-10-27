@@ -1,9 +1,12 @@
 <!-- `::magic-move` for `@comark/svelte`. -->
 <script>
-  import { onMount } from "svelte";
+  import { onMount, setContext } from "svelte";
   import { css, start } from "comark-magic-move/client";
 
   let { uid = "", labels = [], title = undefined, children } = $props();
+  const instanceId = $props.id();
+  const id = $derived(`${uid || "cmv"}-${instanceId}`);
+  setContext("comark-magic-move", () => id);
 
   onMount(() => start(css));
 </script>
@@ -15,8 +18,8 @@
         type="button"
         class="cmv-tab"
         role="tab"
-        id="{uid}-tab-{at + 1}"
-        aria-controls="{uid}-panel-{at + 1}"
+        id="{id}-tab-{at + 1}"
+        aria-controls="{id}-panel-{at + 1}"
         aria-selected={String(at === 0)}
         tabindex={at === 0 ? 0 : -1}>{label}</button
       >

@@ -27,6 +27,30 @@ const renderers = {
   react: (value: MarkdownDocument) =>
     renderReact(createElement(ReactDocument, { value, components: reactComponents })),
 };
+const renderPages = {
+  html: async (values: MarkdownDocument[]) =>
+    (await Promise.all(values.map(renderers.html))).join(""),
+  vue: (values: MarkdownDocument[]) =>
+    renderVue(
+      createSSRApp({
+        render: () =>
+          h(
+            "div",
+            values.map((value) => h(VueDocument, { value, components: vueComponents })),
+          ),
+      }),
+    ),
+  react: (values: MarkdownDocument[]) =>
+    renderReact(
+      createElement(
+        "div",
+        {},
+        values.map((value, key) =>
+          createElement(ReactDocument, { key, value, components: reactComponents }),
+        ),
+      ),
+    ),
+};
 
 describe("comark-magic-move renderers", () => {
   it("renders the same steps and controls in every renderer", async () => {
@@ -34,7 +58,7 @@ describe("comark-magic-move renderers", () => {
     for (const [name, render] of Object.entries(renderers)) {
       // Up to the HTML renderer's inline styles and script, whose source mentions attributes of its own.
       const [html = ""] = (await render(value)).split("<style");
-      const [, id] = /id="(cmv-[a-z0-9]+-1)-tab-1"/.exec(html) ?? [];
+      const [, id] = /id="([^"]+)-tab-1"/.exec(html) ?? [];
       expect(html, name).toContain(
         '<div class="cmv"><div class="cmv-list" role="tablist" aria-label="Refactor"><button type="button" class="cmv-tab" role="tab"',
       );
@@ -52,6 +76,25 @@ describe("comark-magic-move renderers", () => {
       expect(html, name).not.toMatch(/wide|id="id"|undefined/);
     }
   });
+
+  for (const [name, render] of Object.entries(renderPages)) {
+    it(`keeps tabs associated with their own panels across identical documents in ${name}`, async () => {
+      const values = await Promise.all([parse(), parse()]);
+      const page = (await render(values)).replace(
+        /<style[^>]*>.*?<\/style><script>.*?<\/script>/gs,
+        "",
+      );
+      const ids = [...page.matchAll(/\bid="([^"]+)"/g)].map(([, id]) => id);
+      expect(ids).toHaveLength(8);
+      expect(new Set(ids).size).toBe(8);
+      const tabs = [...page.matchAll(/id="([^"]+)-tab-(\d+)" aria-controls="([^"]+)"/g)];
+      expect(tabs).toHaveLength(4);
+      for (const [, base, index, panel] of tabs) {
+        expect(panel).toBe(`${base}-panel-${index}`);
+        expect(page).toContain(`id="${panel}" aria-labelledby="${base}-tab-${index}"`);
+      }
+    });
+  }
 
   it("ships Svelte components that compile", async () => {
     for (const name of ["MagicMove", "MagicMoveStep"]) {
