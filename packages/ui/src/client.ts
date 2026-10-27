@@ -57,8 +57,19 @@ export const mermaidCss = `@layer comark{${[
   "@media print{.pele-diagram{break-inside:avoid}.cmm-bar{display:none}}",
 ].join("")}}`;
 
-/** Adds the Mermaid styles to the page once. `startMermaid()` calls it, so the Vue, React, and Svelte diagrams do too. */
+/** Sizes Mermaid cards after Pele draws them in Vue, React, and Svelte, and adds the styles to the page once. */
 export function addMermaidStyles(): void {
+  // Pele calls onRender after inserting the SVG, including on updates. Keep each card's width in sync even when
+  // another diagram already installed the stylesheet.
+  for (const svg of document.querySelectorAll<SVGSVGElement>(".pele-diagram > svg")) {
+    const width = Number(svg.getAttribute("width"));
+    const card = svg.parentElement!;
+    const block = card.parentElement?.classList.contains("cmm") ? card.parentElement : card;
+    if (Number.isFinite(width) && width > 0) {
+      block.dataset.wide = "";
+      block.style.setProperty("--cmm-svg", `${Math.ceil(width)}px`);
+    }
+  }
   if (document.querySelector("style[data-comark-mermaid]")) return;
   const style = document.createElement("style");
   style.dataset.comarkMermaid = "";

@@ -2,9 +2,10 @@
      zooms the diagram in place, so it doesn't zoom with comark-zoom. -->
 <script>
   import { onMount } from "svelte";
-  import { Pele } from "comark-pele/svelte";
-  import { mermaidBar, startMermaid } from "comark-ui/client";
+  import { createPeleComponent } from "comark-pele/svelte";
+  import { addMermaidStyles, mermaidBar, startMermaid } from "comark-ui/client";
 
+  const Pele = createPeleComponent({ onRender: addMermaidStyles });
   let { content = "", ...rest } = $props();
   onMount(() => startMermaid());
 </script>

@@ -20,7 +20,7 @@ import * as magicMove from "comark-magic-move/vue";
 import * as mark from "comark-mark/vue";
 import * as math from "comark-mathml/vue";
 import * as media from "comark-media/vue";
-import pele, { Pele } from "comark-pele/vue";
+import pele, { createPeleComponent } from "comark-pele/vue";
 import * as metrics from "comark-metrics/vue";
 import * as outline from "comark-outline/vue";
 import * as properties from "comark-properties/vue";
@@ -31,12 +31,14 @@ import * as table from "comark-table/vue";
 import * as tabs from "comark-tabs/vue";
 import * as tests from "comark-tests/vue";
 import * as zoom from "comark-zoom/vue";
-import { mermaidBar, startMermaid } from "./client.ts";
+import { addMermaidStyles, mermaidBar, startMermaid } from "./client.ts";
 import { type Preset, type PresetOptions, preset } from "./index.ts";
 import { typesetCss } from "./typeset-css.ts";
 
 export { criticCss } from "./index.ts";
 export type { PresetOptions } from "./index.ts";
+
+const Pele = createPeleComponent({ onRender: addMermaidStyles });
 
 // Pele's card in `.cmm` with the bar of buttons, as `comark-ui/html` draws it. In the browser Pele's own `mount()` zooms
 // the diagram in place, so it doesn't zoom with comark-zoom.
