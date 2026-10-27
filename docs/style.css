@@ -3692,83 +3692,189 @@ main img {
   color: var(--fg) !important;
 }
 
-/* The component gallery: every example in a frame of its own, in one scheme or in both side by side. */
+/* The component gallery: a canvas with a row of frames per package, in one scheme or both, dark under light, and the
+   inspector that edits the selected one. The canvas scrolls both ways, and its script scales the stage by --zoom and
+   sizes the sizer around it to match, for the scrollbars. Each row sets --frame, its frames' width. */
 .gallery {
+  --canvas: oklch(0.965 0 0);
+  --dot: oklch(0.86 0 0);
+  position: relative;
   min-width: 0;
-  padding: 2.5rem 2rem 4rem;
+  height: calc(100dvh - 3.5rem);
 }
 
-.gallery-bar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 1rem;
+@media (prefers-color-scheme: dark) {
+  .gallery {
+    --canvas: oklch(0.175 0 0);
+    --dot: oklch(0.3 0 0);
+  }
 }
 
-.gallery-bar .hero p {
+/* The dots scroll and scale with the stage, so the canvas reads as one surface. */
+.gallery-canvas {
+  --step: calc(24px * var(--zoom, 1));
+  height: 100%;
+  overflow: auto;
+  overscroll-behavior: contain;
+  background: var(--canvas) radial-gradient(circle, var(--dot) 1px, transparent 1.5px) 0 0 /
+    var(--step) var(--step) local;
+  cursor: grab;
+}
+
+.gallery-canvas[data-dragging] {
+  cursor: grabbing;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.gallery-sizer {
+  overflow: clip;
+}
+
+.gallery-stage {
+  width: max-content;
+  padding: 2.5rem 3rem 7rem;
+  transform: scale(var(--zoom, 1));
+  transform-origin: 0 0;
+}
+
+.gallery-stage .hero {
+  max-width: 36rem;
+  margin-bottom: 3rem;
+}
+
+.gallery-stage .hero h1 {
+  margin-bottom: 0.375rem;
+  font-size: 1.75rem;
+}
+
+.gallery-stage .hero p {
   margin: 0;
+  color: var(--muted);
+  font-size: 0.9375rem;
 }
 
-.gallery-group {
-  margin-top: 3rem;
+.gallery-group + .gallery-group {
+  margin-top: 4.5rem;
 }
 
 .gallery-group h2 {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin: 0;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--line);
-  font-size: 1.125rem;
+  margin: 0 0 1rem;
+  padding: 0;
+  border: 0;
+  font-size: 1.0625rem;
   font-weight: 600;
 }
 
 .gallery-group h2 small {
   color: var(--faint);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 400;
 }
 
+.gallery-cells {
+  display: flex;
+  align-items: flex-start;
+  gap: 2.5rem;
+}
+
 .gallery-item {
-  margin-top: 1.5rem;
-  scroll-margin-top: 4.5rem;
+  flex: none;
+  width: var(--frame, 24rem);
+  scroll-margin: 2.5rem;
 }
 
 .gallery-head {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 0.5rem;
+  gap: 0.5rem;
+  height: 1.75rem;
+  margin-bottom: 0.25rem;
 }
 
 .gallery-head h3 {
+  min-width: 0;
   margin: 0;
+  overflow: hidden;
   font-family: var(--sans);
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .gallery-head h3 a {
-  color: var(--fg);
+  color: var(--muted);
   text-decoration: none;
 }
 
-.gallery-head span {
+.gallery-item:is(:hover, :focus-within, [data-selected]) .gallery-head h3 a {
+  color: var(--fg);
+}
+
+.gallery-item[data-added] .gallery-head h3 a {
+  font-style: italic;
+}
+
+/* A changed cell whose Markdown has problems shows how many; the inspector lists them. */
+.gallery-head h3[data-issues]::after {
+  content: attr(data-issues);
+  margin-left: 0.375rem;
+  padding: 0 0.375rem;
+  border-radius: 999px;
+  background: color-mix(in oklch, #e5484d 14%, transparent);
+  color: #e5484d;
+  font-size: 0.6875rem;
+}
+
+.gallery-actions {
   display: flex;
-  gap: 1rem;
+  flex: none;
+}
+
+/* A pointer sees a cell's actions on the cell it's over, so the rows stay quiet. */
+@media (hover: hover) {
+  .gallery-item:not(:hover, :focus-within, [data-selected]) .gallery-actions {
+    opacity: 0;
+  }
+}
+
+.gallery-action {
+  display: inline-grid;
+  place-items: center;
+  width: 1.625rem;
+  height: 1.625rem;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--faint);
+  cursor: pointer;
+}
+
+.gallery-action:hover,
+.gallery-action:focus-visible,
+.gallery-item[data-selected] .gallery-action[data-action="edit"] {
+  background: var(--soft);
+  color: var(--fg);
 }
 
 .gallery-frames {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 0.75rem;
+  border-radius: 12px;
+  overflow: clip;
+  box-shadow:
+    0 0 0 1px var(--line),
+    0 1px 2px rgb(0 0 0 / 0.04),
+    0 12px 32px -16px rgb(0 0 0 / 0.18);
 }
 
-.gallery[data-scheme="both"] .gallery-frames {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+.gallery-item[data-selected] .gallery-frames {
+  outline: 2px solid var(--fg);
+  outline-offset: 3px;
 }
 
 .gallery[data-scheme="light"] .gallery-frame[data-scheme="dark"],
@@ -3782,11 +3888,13 @@ main img {
 .gallery-frame {
   display: block;
   width: 100%;
-  height: 12rem;
+  height: 8rem;
   border: 0;
-  border-radius: 12px;
-  box-shadow: 0 0 0 1px var(--line);
   transition: opacity 150ms ease;
+}
+
+.gallery[data-scheme="both"] .gallery-frame[data-scheme="dark"] {
+  border-top: 1px solid var(--line);
 }
 
 .gallery-frame:not([data-ready]) {
@@ -3794,8 +3902,77 @@ main img {
 }
 
 .gallery-empty {
-  margin-top: 3rem;
   color: var(--muted);
+}
+
+/* The canvas's controls float over its foot, as on the landing page's. */
+.gallery-bar {
+  position: absolute;
+  left: 50%;
+  bottom: 1rem;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  max-width: calc(100% - 2rem);
+  padding: 0.3125rem;
+  border-radius: 14px;
+  background: color-mix(in oklch, var(--bg) 82%, transparent);
+  box-shadow:
+    0 0 0 1px var(--line),
+    0 8px 24px -8px rgb(0 0 0 / 0.25);
+  backdrop-filter: blur(12px);
+  translate: -50% 0;
+}
+
+.gallery-zoom {
+  display: flex;
+  align-items: center;
+}
+
+.gallery-sharing-issue {
+  position: absolute;
+  bottom: calc(100% + 0.5rem);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--fg);
+  font-size: 0.8125rem;
+}
+
+.gallery-zoom .gallery-action {
+  width: 2rem;
+  height: 2rem;
+}
+
+.gallery-zoom-level {
+  min-width: 3.25rem;
+  height: 2rem;
+  padding: 0 0.25rem;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--fg);
+  font: 500 0.8125rem / 1 var(--mono);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.gallery-zoom-level:hover,
+.gallery-zoom-level:focus-visible {
+  background: var(--soft);
+}
+
+.gallery-bar .button {
+  gap: 0.375rem;
+  height: 2rem;
+  padding: 0 0.625rem;
+  font-size: 0.8125rem;
+  white-space: nowrap;
 }
 
 /* Stays at the top of the index as it scrolls. */
@@ -3829,13 +4006,482 @@ main img {
   outline-offset: -1px;
 }
 
-@media (max-width: 60rem) {
-  .gallery {
-    padding: 2rem 1rem 3rem;
+/* The inspector: a window over the canvas, as Framer's and Figma's floating panels are, with the selected cell's props
+   a component at a time, then its Markdown and its problems. Its script sets --x, --y, --w, and --h from where the
+   reader moved and sized it. Rows are 26px with 24px inset controls, so a component's props fit at a glance. */
+.gallery-inspector {
+  position: absolute;
+  top: var(--y);
+  left: var(--x);
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  width: var(--w);
+  height: var(--h);
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: var(--bg);
+  box-shadow:
+    0 0 0 1px var(--line),
+    0 1px 2px rgb(0 0 0 / 0.06),
+    0 16px 40px -12px rgb(0 0 0 / 0.28);
+  font-size: 0.75rem;
+}
+
+.gallery-inspector:focus {
+  outline: none;
+}
+
+.gallery-inspector[hidden] {
+  display: none;
+}
+
+/* The title bar moves the window. */
+.gallery-inspector-head {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.375rem;
+  min-width: 0;
+  height: 2.25rem;
+  padding: 0 0.25rem 0 0.75rem;
+  border-bottom: 1px solid var(--line);
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.gallery[data-moving] .gallery-inspector-head {
+  cursor: grabbing;
+}
+
+.gallery-inspector-head h2 {
+  flex: 0 1 auto;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gallery-inspector-head p {
+  flex: 0 100 auto;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: var(--faint);
+  font-size: 0.6875rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gallery-inspector-actions {
+  display: flex;
+  flex: none;
+  margin-left: auto;
+}
+
+.gallery-inspector-actions .gallery-action {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.gallery-inspector-actions [data-action="side"] {
+  margin-left: 0.25rem;
+}
+
+.gallery-inspector-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-height: 0;
+  padding: 0 0.625rem 0.75rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.gallery-props section {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.125rem;
+  padding-top: 0.5rem;
+}
+
+.gallery-props section + section {
+  margin-top: 0.25rem;
+  border-top: 1px solid var(--line);
+}
+
+.gallery-props h3 {
+  margin: 0 0 0.125rem;
+  color: var(--muted);
+  font-size: 0.6875rem;
+  font-weight: 500;
+}
+
+.gallery-prop {
+  display: grid;
+  grid-template-columns: 4.75rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 1.625rem;
+}
+
+.gallery-prop > span:first-child {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.6875rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gallery-prop-add {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* Inputs sit inset in the window: a darker fill, no border until focus. */
+.gallery-prop :is(input, select),
+.gallery-spread-other {
+  min-width: 0;
+  height: 1.5rem;
+  padding: 0 0.375rem;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: var(--soft);
+  color: var(--fg);
+  font: inherit;
+  font-size: 0.75rem;
+}
+
+.gallery-prop :is(input, select):focus-visible,
+.gallery-spread-other:focus-visible {
+  border-color: var(--fg);
+  outline: none;
+}
+
+/* Its text lines up with the prop names above it. */
+.gallery-prop-add input {
+  margin-left: -0.375rem;
+  background: none;
+  color: var(--muted);
+}
+
+.gallery-prop-add input:hover {
+  background: var(--soft);
+}
+
+.gallery-prop-actions {
+  display: flex;
+}
+
+.gallery-prop-actions button {
+  display: inline-grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--faint);
+  cursor: pointer;
+}
+
+.gallery-prop-actions button:hover,
+.gallery-prop-actions button:focus-visible,
+.gallery-prop-actions button[aria-expanded="true"] {
+  background: var(--soft);
+  color: var(--fg);
+}
+
+/* A pointer sees a row's actions on the row it's over. */
+@media (hover: hover) {
+  .gallery-prop:not(:hover, :focus-within)
+    .gallery-prop-actions
+    button:not([aria-expanded="true"]) {
+    opacity: 0;
+  }
+}
+
+/* A spread's values wrap as chips under the field, so every one stays readable in a narrow window. */
+.gallery-spread {
+  display: grid;
+  justify-items: start;
+  gap: 0.5rem;
+  margin: 0.25rem 0 0.625rem 5.125rem;
+}
+
+.gallery-spread-values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.gallery-chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.1875rem;
+  height: 1.375rem;
+  padding: 0 0.5rem 0 0.3125rem;
+  border: 1px dashed var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.6875rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.gallery-chip:has(:checked) {
+  border: 1px solid transparent;
+  background: var(--soft);
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--fg);
+}
+
+.gallery-chip input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.gallery-chip:has(:focus-visible) {
+  outline: 2px solid var(--fg);
+  outline-offset: 1px;
+}
+
+.gallery-chip > span {
+  display: inline-flex;
+}
+
+.gallery-chip:has(:checked) .gallery-chip-off,
+.gallery-chip:not(:has(:checked)) .gallery-chip-on {
+  display: none;
+}
+
+.gallery-spread-other {
+  width: 4.5rem;
+  height: 1.375rem;
+  font-size: 0.6875rem;
+  border-style: dashed;
+  border-color: var(--line);
+  border-radius: 999px;
+  background: none;
+}
+
+.gallery-spread-other:focus-visible {
+  border-style: solid;
+}
+
+.gallery-spread-other:only-child {
+  flex: 1 1 auto;
+}
+
+.gallery-spread-foot {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.gallery-spread .button {
+  height: 1.5rem;
+  padding: 0 0.625rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.gallery-spread-all {
+  height: 1.5rem;
+  padding: 0 0.5rem;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .gallery-chip:not(:has(:checked)):hover {
+    border-color: var(--faint);
+    color: var(--fg);
   }
 
-  .gallery[data-scheme="both"] .gallery-frames {
-    grid-template-columns: minmax(0, 1fr);
+  .gallery-spread-all:hover {
+    background: var(--soft);
+    color: var(--fg);
+  }
+}
+
+.gallery-inspector-label {
+  margin: 0.25rem 0 -0.25rem;
+  color: var(--muted);
+  font-size: 0.6875rem;
+  font-weight: 500;
+}
+
+/* The edges and the corner resize the window; the corner also takes the arrow keys. */
+.gallery-inspector-edge {
+  position: absolute;
+  z-index: 1;
+}
+
+.gallery-inspector-edge[data-edge="left"],
+.gallery-inspector-edge[data-edge="right"] {
+  top: 0.75rem;
+  bottom: 0.75rem;
+  width: 0.5rem;
+  cursor: ew-resize;
+}
+
+.gallery-inspector-edge[data-edge="left"] {
+  left: -0.25rem;
+}
+
+.gallery-inspector-edge[data-edge="right"] {
+  right: -0.25rem;
+}
+
+.gallery-inspector-edge[data-edge="bottom"] {
+  right: 0.75rem;
+  bottom: -0.25rem;
+  left: 0.75rem;
+  height: 0.5rem;
+  cursor: ns-resize;
+}
+
+.gallery-inspector-grip {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0 0 11px;
+  background: none;
+  color: var(--faint);
+  cursor: nwse-resize;
+}
+
+.gallery-inspector-grip:hover,
+.gallery-inspector-grip:focus-visible {
+  color: var(--fg);
+}
+
+/* A frame under the pointer would take the drag. */
+.gallery[data-moving],
+.gallery-canvas[data-dragging] {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.gallery[data-moving] .gallery-frame,
+.gallery-canvas[data-dragging] .gallery-frame {
+  pointer-events: none;
+}
+
+/* The Markdown is a transparent textarea over its own text, colored, as in the playground. */
+.gallery-source {
+  display: grid;
+  flex: none;
+  border-radius: 8px;
+  background: var(--soft);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.gallery-source:focus-within {
+  box-shadow: inset 0 0 0 1px var(--fg);
+}
+
+.gallery-source > *,
+.gallery-paint pre {
+  grid-area: 1 / 1;
+  min-width: 0;
+}
+
+.gallery-paint {
+  display: grid;
+  pointer-events: none;
+}
+
+.gallery-paint pre,
+.gallery-source textarea {
+  margin: 0;
+  padding: 0.625rem 0.75rem;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: none !important;
+  color: var(--fg);
+  font: 0.75rem/1.6 var(--mono);
+  tab-size: 2;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.gallery-paint code {
+  font: inherit;
+}
+
+.gallery-source textarea {
+  overflow: hidden;
+  outline: none;
+  color: transparent;
+  caret-color: var(--fg);
+  resize: none;
+}
+
+.gallery-source textarea::selection {
+  background: color-mix(in oklch, var(--fg) 18%, transparent);
+}
+
+.gallery-issues {
+  margin: 0;
+  padding-left: 1rem;
+  color: #e5484d;
+  font-size: 0.75rem;
+}
+
+@media (max-width: 60rem) {
+  .gallery[data-inspecting] {
+    height: calc(40dvh - 3.5rem);
+    margin-right: 0;
+  }
+
+  /* On a narrow screen the window is a sheet along the foot, and stays put. */
+  .gallery-inspector {
+    position: fixed;
+    inset: auto 0 0;
+    width: auto;
+    height: 60dvh;
+    border-radius: 12px 12px 0 0;
+  }
+
+  .gallery-inspector-head {
+    cursor: auto;
+  }
+
+  /* iOS zooms into a field whose text is under 16px. */
+  .gallery-inspector :is(input, select),
+  .gallery-paint pre,
+  .gallery-source textarea {
+    font-size: 1rem;
+  }
+
+  :is(.gallery-inspector-edge, .gallery-inspector-grip, .gallery-inspector [data-action="side"]) {
+    display: none;
   }
 }
 
