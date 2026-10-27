@@ -11,6 +11,8 @@ const DIGIT = 5.5;
 const GAP = 4;
 // Each stamp draws a 2px ring, so two stamps closer than both rings would touch.
 const CLEAR = 4;
+// How far a box stands off its area, `--ca-pad` in styles.ts; its number sits on that padded corner.
+const PAD = 6;
 
 interface Rect {
   x: number;
@@ -56,7 +58,11 @@ export interface Placement {
  */
 export function place(annotations: Annotation[], aspect = ASPECT): Placement {
   const height = WIDTH * aspect;
-  const box = (annotation: Annotation) => pixels(annotation, aspect);
+  const box = (annotation: Annotation) => {
+    const area = pixels(annotation, aspect);
+    if (annotation.mark !== "box") return area;
+    return { x: area.x - PAD, y: area.y - PAD, w: area.w + 2 * PAD, h: area.h + 2 * PAD };
+  };
   // A stamp on its own mark's corner always covers some of that mark, so only its tick and arrow count against it.
   const covered = annotations.flatMap((annotation, owner) => {
     const { x, y, w, h } = box(annotation);

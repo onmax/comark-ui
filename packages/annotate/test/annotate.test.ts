@@ -536,7 +536,7 @@ describe("comark-annotate", () => {
     await expect(cli("check", join(dir, "bad.md"))).rejects.toMatchObject({ code: 1 });
     await cli("render", join(dir, "ok.md"));
     expect(await readFile(join(dir, "ok.html"), "utf8")).toContain(
-      '<span class="ca-stamp" style="left:0;top:-4px;translate:-50% 0">1</span>',
+      '<span class="ca-stamp" style="left:3px;top:3px">1</span>',
     );
 
     // Every file is checked, and each issue says which file it's in.
