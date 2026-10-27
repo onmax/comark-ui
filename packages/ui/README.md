@@ -60,7 +60,7 @@ Vue, React, and Svelte leave out annotate and diff, which render only to HTML.
 
 ## Agents
 
-The package ships the [comark-ui agent skill](https://github.com/onmax/comark-ui/tree/main/skills/comark-ui): a `SKILL.md` that says how to install the plugins, which block shows what, and how to check the result, and a reference for each package. Install it with `npx skills add onmax/comark-ui`, or bundle it in your own app from `comark-ui/skills/comark-ui/`, which always matches the plugins it installed.
+The package ships the [comark-ui agent skill](https://github.com/onmax/comark-ui/tree/main/skills/comark-ui): a `SKILL.md` that says how to install the plugins, which block shows what, and how to check the result, and a reference for each package. Install it with `npx skills add onmax/comark-ui`, link it from `node_modules` with `npx skills experimental_sync` (experimental), or bundle it in your own app from `comark-ui/skills/comark-ui/`, which always matches the plugins it installed.
 
 ## Linting
 

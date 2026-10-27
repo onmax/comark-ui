@@ -9,15 +9,29 @@ tagline: Your agent captures both states the same way, measures each mark from t
 ::skill{name="before-after-evidence"}
 ::
 
-## Why it works
+## What it does
 
-- **Comparable or nothing.** Both sides share a viewport, a state, and a clip, so the change is the only difference. When the agent can't capture one side that way, it says so instead of sending one image and a description.
-- **Measured marks.** Each box comes from the element's position on the page, or from pixels when the image is a frame from a recording or an exported design. A guessed box on a half-width image lands on the neighbouring button.
-- **The screen's own words.** Each note says what the screen shows, so the reviewer checks it against the image instead of taking it on trust.
-- **Short on purpose.** One sentence, one line of steps, the compare. How the work went belongs in the agent's report, not the evidence.
+The skill turns a change people can see into a `::compare` of two screenshots that a reviewer checks without running the branch. It sends both sides or neither. When it can't capture the old state the same way as the new one, it stops and tells you what blocked it, instead of sending one screenshot and a description.
 
-## Use it
+## When to use it
 
-Ask the way you'd ask a teammate: "Add before and after screenshots of the invite dialog to the PR." The agent finds both states, captures them, measures the marks, writes the document, lints it, and looks at the render.
+Ask in your own words: "Add before and after screenshots of the invite dialog to the PR." Your agent loads the skill when a request is about a visible change. To be sure, name it: "Use the before-after-evidence skill."
 
-When the change is one finding among several, put the compare inside a [review document](/skills/review-document/).
+Choose by what you want:
+
+- Proof that a UI change, bug fix, or design change looks right: this skill.
+- A review with several findings, one of them visible: [Review document](/skills/review-document/), with this compare as that finding's evidence.
+- To show how a screen or a flow works, not what changed: [Visual explanation](/skills/visual-explanation/).
+
+## What your agent needs
+
+- **A browser it can drive**, such as Playwright, to capture both states and read each mark's box from the page. With only a screen recording or a design export, it measures the marks in pixels instead.
+- **Both states of the change**: deployments or commits it can run, or comparable images from a recording or design export.
+
+## It's working if
+
+- The two images are the same size and differ only where the change is.
+- Each mark sits on the field, label, or button that changed: red on the before side, green on the after side, and nothing unchanged marked. A guessed box on a half-width image lands on the neighbouring button, so the marks are measured.
+- Each note uses words you can see on its side.
+- The document is one sentence, one line of steps to reach the screen, and the compare. Test runs and retries are in the agent's report to you, not in the evidence.
+- The report names any mark the agent couldn't check in the render.

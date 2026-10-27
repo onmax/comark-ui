@@ -9,15 +9,26 @@ tagline: Your agent picks the view by the shape of the answer, draws it from the
 ::skill{name="visual-explanation"}
 ::
 
-## Why it works
+## What it does
 
-- **One question.** The title is the question or its answer, so the reader knows what they'll learn before the first diagram.
-- **The view fits the answer.** Order of events gets a sequence diagram, who calls whom a call tree, where code lives a file tree. The skill's table makes the choice.
-- **Drawn from the source.** Every box and label is something the reader can find in the code, so the picture can be checked rather than trusted.
-- **Small enough to read.** About eight nodes a diagram, and a second view only when it answers the question the first one raises.
+The skill answers **one question** about how something works with the smallest view that shows the answer: a sequence diagram for the order of events, a call tree for who calls whom, a file tree for where code lives, a marked screenshot for something on screen. Every label in the view comes from the real source, so you can check the picture instead of trusting it.
 
-## Use it
+## When to use it
 
-Ask "Show me how a document becomes HTML" or "Explain how the cache invalidates, with a diagram." The agent reads the code, then writes one page that answers the one question.
+Ask "Show me how a document becomes HTML" or "Explain how the cache invalidates, with a diagram." Your agent loads the skill when you ask to be shown how a system, a flow, or a change works. To be sure, name it: "Use the visual-explanation skill."
 
-For a concept the reader should be able to apply afterwards, write a [lesson](/skills/concept-lesson/) instead. The skill draws on the show-me skill by Dex Horthy at [Humanlayer](https://github.com/humanlayer/skills).
+Choose by what you want:
+
+- To see how something works: this skill.
+- To be able to apply an idea afterwards, and check that you can: [Concept lesson](/skills/concept-lesson/).
+- To see what a change did to a screen: [Before/after evidence](/skills/before-after-evidence/).
+
+## It's working if
+
+- The title is the question, or its answer.
+- The page reads top to bottom in under a minute, with a sentence beside each view saying what to look at.
+- Every function, file, and state in the view is one you can find in the code.
+- A diagram has about eight nodes or fewer, and its labels read at the page's width.
+- A second view appears only to answer the question the first one raises.
+
+The skill draws on the show-me skill by Dex Horthy at [Humanlayer](https://github.com/humanlayer/skills).

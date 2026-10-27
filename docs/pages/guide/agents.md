@@ -15,6 +15,8 @@ npx skills add onmax/comark-ui
 
 The CLI lists every skill in the repository. Pick `comark-ui`. This site serves it too, so `npx skills add https://comark-ui.onmax.me` installs the same skill.
 
+A project that installs `comark-ui` can link the skill from `node_modules` instead, so it matches the installed version. Run `npx skills experimental_sync` after each install; [Skills](/skills/#from-npm) shows how, and why the command is still experimental.
+
 It teaches the blocks. To teach your agent a whole document, such as before/after evidence, a review, or a lesson, pick the [skills](/skills/) for those from the same list.
 
 ## Markdown pages
