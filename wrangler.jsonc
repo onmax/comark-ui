@@ -1,8 +1,13 @@
 {
   "name": "comark-ui",
-  "main": "docs/worker.ts",
+  // Nitro's output, from `pnpm docs:generate`. The build merges this file with ViteHub's bindings (D1, the secrets) into
+  // docs/dist/server/wrangler.json and points .wrangler/deploy/config.json at it, so `wrangler deploy` from here
+  // deploys that one.
+  "main": "docs/dist/server/index.mjs",
   "compatibility_date": "2026-10-01",
-  // The Worker runs first so the old hosts can redirect before an asset answers.
+  "compatibility_flags": ["nodejs_compat"],
+  // The Worker runs first so the old hosts can redirect before an asset answers. Nitro's middleware then serves the
+  // prerendered file through ASSETS (docs/server/middleware/site.ts).
   "assets": { "directory": "./docs/dist/public", "binding": "ASSETS", "run_worker_first": true },
   "routes": [
     { "pattern": "comark-ui.onmax.me", "custom_domain": true },

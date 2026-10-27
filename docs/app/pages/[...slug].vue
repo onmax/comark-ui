@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { Page } from "#shared/pages";
 import { docsPath, slugOf } from "~/utils/body";
 import { runScripts } from "~/utils/scripts";
 import { enterSidebar, leaveSidebar } from "~/utils/sidebar";
@@ -9,7 +10,7 @@ const slug = computed(() => slugOf(route));
 const nuxtApp = useNuxtApp();
 const hydrating = nuxtApp.isHydrating;
 const [{ data: page }] = await Promise.all([
-  useFetch(() => `/api/pages/${slug.value || "index"}`, {
+  useFetch<Page>(() => `/api/pages/${slug.value || "index"}`, {
     key: () => `page:${slug.value}`,
     query: { body: 0 },
   }),

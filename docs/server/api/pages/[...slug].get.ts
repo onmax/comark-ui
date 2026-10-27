@@ -27,8 +27,9 @@ export default defineEventHandler(async (event): Promise<Page> => {
     read(`${slug.replaceAll("/", "~") || "index"}.json`),
     read("site.json"),
   ])) as [Pick<Page, "title" | "description" | "body"> | undefined, Pick<Page, "css"> | undefined];
-  if (!site) throw new Error("docs/.generated/pages/ is missing. Run `node docs/build.ts` first.");
+  // The Worker has no docs/.generated/, so a path nothing prerendered is a 404 there, not an error.
   if (!fragment) throw createError({ status: 404, message: `No page at /${slug}.` });
+  if (!site) throw new Error("docs/.generated/pages/ is missing. Run `node docs/build.ts` first.");
   // The page shell asks without the body, which the PageBody server component renders.
   return { ...fragment, ...site, slug, body: getQuery(event).body === "0" ? "" : fragment.body };
 });
