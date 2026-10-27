@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { badgeParams, readBadge } from "../packages/badge/src/svg.ts";
 import { createBadgeHandler } from "../packages/badge/src/server.ts";
 
@@ -23,6 +23,13 @@ test.beforeEach(async ({ page }) => {
     });
   });
 });
+
+// Nuxt hydrates a prerendered page on its path alone and puts the query back once it's done, so page.reload() right
+// after a load can reload the builder with no options. Load the URL the builder last wrote instead.
+async function reload(page: Page) {
+  await expect(page).toHaveURL(/\?/);
+  await page.goto(page.url());
+}
 
 test("builds, copies, downloads, and restores a static badge", async ({ page, context }) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
@@ -130,7 +137,7 @@ for (const input of [
     const imageUrl = await page.locator("#export-code").inputValue();
     expect(readBadge(Object.fromEntries(new URL(imageUrl).searchParams))).toEqual(parsed);
     await expect(page.locator('[name="color"]')).toHaveValue("primary");
-    await page.reload();
+    await reload(page);
     await expect(page.locator("#export-code")).toHaveValue(imageUrl);
     await page.getByRole("button", { name: "GitHub Actions", exact: true }).click();
     await expect(page.getByRole("img", { name: "build: passing" })).toBeVisible();
@@ -212,7 +219,7 @@ for (const [preset, icon] of [
     const shared = await page.evaluate(() => navigator.clipboard.readText());
     expect(new URL(shared).searchParams.get("icon")).toBe(icon);
     await page.goto(shared);
-    await page.reload();
+    await reload(page);
     await page.locator(`[data-look="${preset === "npmx" ? "nuxt" : "npmx"}"]`).click();
     await expect(logo).toHaveValue(icon);
   });
@@ -226,7 +233,7 @@ test("keeps automatic logos across reloads and resets them with npm templates", 
   await page.locator('[data-look="npmx"]').click();
   await expect(logo).toHaveValue("npmx");
   expect(new URL(page.url()).searchParams.has("icon")).toBe(false);
-  await page.reload();
+  await reload(page);
   await page.locator('[data-look="nuxt"]').click();
   await expect(logo).toHaveValue("nuxt");
   for (const template of ["npm-version", "npm-downloads"]) {
@@ -257,7 +264,7 @@ for (const [preset, height] of [
       .toBe(height);
     await page.getByLabel("Export", { exact: true }).selectOption("image-url");
     await expect(page.locator("#export-code")).toHaveValue(new RegExp(`preset=${preset}`));
-    await page.reload();
+    await reload(page);
     await expect(page.locator(`[data-look="${preset}"]`)).toHaveAttribute("aria-pressed", "true");
     await page.setViewportSize({ width: 320, height: 720 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
