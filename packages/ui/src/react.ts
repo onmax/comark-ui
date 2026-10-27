@@ -38,7 +38,7 @@ import { typesetCss } from "./typeset-css.ts";
 export { criticCss } from "./index.ts";
 export type { PresetOptions } from "./index.ts";
 
-const Pele = createPeleComponent({ onRender: addMermaidStyles });
+const Pele = createPeleComponent({ onRender: addMermaidStyles, onError: addMermaidStyles });
 
 // Pele's card in `.cmm` with the bar of buttons, as `comark-ui/html` draws it. In the browser Pele's own `mount()` zooms
 // the diagram in place, so it doesn't zoom with comark-zoom.

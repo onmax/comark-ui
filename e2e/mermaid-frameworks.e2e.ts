@@ -75,6 +75,24 @@ for (const renderer of ["react", "vue", "svelte"]) {
     await expect(card.locator(".cmm-markdown")).toHaveText(`\`\`\`mermaid\n${long}\n\`\`\``);
     await card.getByRole("button", { name: "Copy image" }).click();
     await expect(card.getByRole("link", { name: "Open PNG" })).toHaveAttribute("href", /^blob:/);
+
+    await page.evaluate((next) => {
+      (window as unknown as { updateDiagram: (next: string) => void }).updateDiagram(next);
+    }, "flowchart LR\n A -->");
+    await expect(card.locator(".pele-diagram")).toHaveAttribute("data-error", /.+/);
+    await expect(card).not.toHaveAttribute("data-wide");
+    expect(await card.evaluate((node) => node.style.getPropertyValue("--cmm-svg"))).toBe("");
+    expect(await card.evaluate((node) => node.getBoundingClientRect().width)).toBeCloseTo(
+      initial.column,
+      0,
+    );
+
+    await page.evaluate((next) => {
+      (window as unknown as { updateDiagram: (next: string) => void }).updateDiagram(next);
+    }, small);
+    await expect(card.locator(".pele-diagram")).not.toHaveAttribute("data-error");
+    await expect(card).toHaveAttribute("data-wide", "");
+    expect((await sizes()).width).toBe(initial.width);
     expect(errors).toEqual([]);
   });
 }

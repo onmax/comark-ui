@@ -5,7 +5,7 @@
   import { createPeleComponent } from "comark-pele/svelte";
   import { addMermaidStyles, mermaidBar, startMermaid } from "comark-ui/client";
 
-  const Pele = createPeleComponent({ onRender: addMermaidStyles });
+  const Pele = createPeleComponent({ onRender: addMermaidStyles, onError: addMermaidStyles });
   let { content = "", ...rest } = $props();
   onMount(() => startMermaid());
 </script>

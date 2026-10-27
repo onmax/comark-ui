@@ -59,15 +59,18 @@ export const mermaidCss = `@layer comark{${[
 
 /** Sizes Mermaid cards after Pele draws them in Vue, React, and Svelte, and adds the styles to the page once. */
 export function addMermaidStyles(): void {
-  // Pele calls onRender after inserting the SVG, including on updates. Keep each card's width in sync even when
-  // another diagram already installed the stylesheet.
-  for (const svg of document.querySelectorAll<SVGSVGElement>(".pele-diagram > svg")) {
-    const width = Number(svg.getAttribute("width"));
-    const card = svg.parentElement!;
+  // Pele calls onRender/onError after updating the card. On failure it can retain a dimmed SVG beside .pele-error,
+  // before the framework updates data-error, so that SVG must not keep the previous successful width.
+  for (const card of document.querySelectorAll<HTMLElement>(".pele-diagram")) {
+    const svg = card.querySelector<SVGSVGElement>(":scope > svg");
+    const width = Number(svg?.getAttribute("width"));
     const block = card.parentElement?.classList.contains("cmm") ? card.parentElement : card;
-    if (Number.isFinite(width) && width > 0) {
+    if (Number.isFinite(width) && width > 0 && !card.querySelector(":scope > .pele-error")) {
       block.dataset.wide = "";
       block.style.setProperty("--cmm-svg", `${Math.ceil(width)}px`);
+    } else {
+      delete block.dataset.wide;
+      block.style.removeProperty("--cmm-svg");
     }
   }
   if (document.querySelector("style[data-comark-mermaid]")) return;
