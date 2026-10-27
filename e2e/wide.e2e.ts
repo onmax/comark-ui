@@ -83,3 +83,34 @@ test("with room on one side only, a wide diagram keeps its size and moves toward
   expect(wide.long.right).toBeCloseTo(wide.center + wide.main / 2, 0);
   expect(wide.long.left).toBeCloseTo(24, 0);
 });
+
+test("on a phone, where the room a page works out comes to less than nothing, wide blocks keep to the column", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  const side = "calc((100vw - 100%) / 2 - 1.5rem)";
+  await page.setContent(
+    `<!doctype html><meta charset="utf-8"><style>body{margin:0}</style><main style="margin:0 .5rem;--comark-wide-start:${side};--comark-wide-end:${side}">${await render(
+      [flowchart, compare].join("\n\n"),
+    )}</main>`,
+  );
+  const {
+    main,
+    long,
+    compare: shown,
+    overflow,
+  } = await page.evaluate(() => {
+    const box = (selector: string) => document.querySelector(selector)!.getBoundingClientRect();
+    return {
+      main: box("main"),
+      long: box(".pele-diagram"),
+      compare: box(".ca-compare"),
+      overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    };
+  });
+  for (const block of [long, shown]) {
+    expect(block.left).toBeCloseTo(main.left, 0);
+    expect(block.width).toBeCloseTo(main.width, 0);
+  }
+  expect(overflow).toBe(0);
+});
