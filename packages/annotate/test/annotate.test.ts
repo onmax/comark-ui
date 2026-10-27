@@ -56,7 +56,7 @@ describe("comark-annotate", () => {
     expect(html).not.toMatch(/<figcaption><div class="ca-heading">/);
     // Side by side on a wide page, one at a time on a narrow one, and both zoom as one gallery.
     expect(html).toContain(
-      '<div class="ca ca-compare"><div class="cc" data-carousel-columns="2" data-carousel-fits data-zoom-gallery',
+      '<div class="ca ca-compare" data-wide><div class="cc" data-carousel-columns="2" data-carousel-fits data-zoom-gallery',
     );
     expect(html).toMatch(/<div class="cc"[^>]* aria-label="Comparison"/);
     expect(html.match(/class="cc-slide"/g)).toHaveLength(2);
@@ -70,7 +70,7 @@ describe("comark-annotate", () => {
     );
     expect(issues).toEqual([]);
     expect(html).toContain(
-      '<div class="ca ca-compare ca-slider"><div class="ca-swipe" data-zoom tabindex="0" data-zoom-context=".ca" data-zoom-aside=".ca-swipe-notes" data-zoom-title="Before / After"><div class="ca-side ca-side-before"><div class="ca-heading"><span class="ca-label">Before</span></div><div class="ca-stage"><div class="ca-frame"><img src="before.png"',
+      '<div class="ca ca-compare ca-slider" data-wide><div class="ca-swipe" data-zoom tabindex="0" data-zoom-context=".ca" data-zoom-aside=".ca-swipe-notes" data-zoom-title="Before / After"><div class="ca-side ca-side-before"><div class="ca-heading"><span class="ca-label">Before</span></div><div class="ca-stage"><div class="ca-frame"><img src="before.png"',
     );
     expect(html).toContain(
       '<div class="ca-side ca-side-after"><div class="ca-heading"><span class="ca-label">After</span> <a href="https://pr2.example.com/plan"',
