@@ -4,13 +4,10 @@ import { cp, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { deflateRawSync } from "node:zlib";
 import { renderHtmlFromDocument } from "@comark/html";
-import shiki from "@comark/html/plugins/shiki";
 import type { ElementNode, Node, NodeHandler } from "comark";
 import { parseMarkdown } from "comark";
 import { escapeHtml, textContent } from "comark/utils";
 import { icons as lucide } from "@iconify-json/lucide";
-import dark from "shiki/themes/vitesse-dark.mjs";
-import light from "shiki/themes/vitesse-light.mjs";
 import { build } from "vite";
 import { badgeIcon, icons as badgeIcons } from "../packages/badge/src/svg.ts";
 import { css as criticCss } from "../packages/critic/src/index.ts";
@@ -18,39 +15,28 @@ import { createIcons, css as iconCss, iconHtml } from "../packages/icon/src/html
 import include from "../packages/include/src/index.ts";
 import { lint, type Diagnostic } from "../packages/lint/src/index.ts";
 import { defaultConfig } from "./config.ts";
+import { highlighted, sitePlugins as examplePlugins, withoutFor } from "./example-plugins.ts";
 import { loadExamples, pageOrder, recipeOrder, thirdParty } from "./examples.ts";
 import { checkExample, doctorRule, doctorRules } from "./doctor.ts";
 import { highlight } from "./highlight.ts";
 import { browserPlugins, components } from "./plugins.ts";
 import { colorTokens, themePresets } from "./play-theme.ts";
-import { previewDocument } from "./preview.ts";
+import { propsOf } from "./props.ts";
+import { cellDocument, previewDocument } from "./preview.ts";
 
 const root = new URL("./", import.meta.url);
 const dist = new URL("dist/", root);
 const fonts = new URL("../node_modules/geist/dist/fonts/", root);
 const site = "https://comark-ui.onmax.me";
-// `#123` on the site links to this repository's issues. Lucide's icons come from the installed set, so a slow Iconify
-// API can't fail the build. The site styles its own text in style.css, so its pages leave typeset off; the playground
-// keeps it, to show what a document gets.
+// Lucide's icons come from the installed set, so a slow Iconify API can't fail the build.
 const sitePlugins = (typeset = false) =>
-  browserPlugins(
-    { "comark-github": { references: { repo: "onmax/comark-ui" } } },
-    { icon: { collections: { lucide } }, typeset },
-  );
+  examplePlugins(typeset, { icon: { collections: { lucide } } });
 // Only comark-include's examples include files, so includes resolve from its docs, where their partials sit.
 const contentPlugins = () => [
   include({ root: fileURLToPath(new URL("../packages/include/docs/", root)) }),
   ...sitePlugins(),
 ];
 // The site's own links stay plain; chips show in the examples and the playground.
-// Shiki goes before comark-code, which marks the lines Shiki drew. Keep this
-// tied to the plugin name so adding a renderer-only plugin after code doesn't
-// change the ordering required by code's line-marker validation.
-const highlighted = (list: ReturnType<typeof contentPlugins>) => {
-  const code = list.findIndex((plugin) => plugin.name === "comark-code");
-  if (code < 0) return list;
-  return [...list.slice(0, code), shiki({ themes: { light, dark } }), ...list.slice(code)];
-};
 const plugins = highlighted(contentPlugins().filter((plugin) => plugin.name !== "comark-chips"));
 
 // The site's own icons, drawn the way `:icon` draws them: Lucide's, and annotate's, a hand-drawn loop like its marks.
@@ -60,6 +46,18 @@ const ownIcons = {
 // The site's chrome draws these; each package's own comes from its docs' frontmatter.
 const lucideNames = [
   "code-xml",
+  "arrow-left-right",
+  "check",
+  "columns-3",
+  "copy",
+  "copy-plus",
+  "link",
+  "minus",
+  "plus",
+  "rotate-ccw",
+  "sliders-horizontal",
+  "trash",
+  "x",
   "arrow-left",
   "arrow-right",
   "arrow-up-right",
@@ -363,9 +361,6 @@ const href = (slug: string) => `/${slug}${slug ? "/" : ""}`;
 const playable = (source: string) => !/^:+include\b/m.test(source);
 const playLink = (source: string) => `/play/#md=${deflateRawSync(source).toString("base64url")}`;
 
-// comark-chips would take the `@user` that comark-github's references draw, and the links comark-links marks, so
-// those packages' examples show plain links.
-const withoutFor = (slug = "") => (["github", "links"].includes(slug) ? ["comark-chips"] : []);
 // Highlighted like the page, so a diff in an example keeps its colors.
 const parseExample = (source: string, without: string[]) =>
   parseMarkdown(source, {
@@ -1457,8 +1452,8 @@ const searchIndex = [
     t: "Component gallery",
     p: "Docs",
     h: "/play/gallery/",
-    d: "Every example in the docs on one page, in light and dark side by side.",
-    w: "storybook, showcase, all components, dark mode",
+    d: "Every example in the docs on one page, in light and dark. Change a block's props or spread one over its values.",
+    w: "storybook, showcase, all components, dark mode, props, controls, variants, lab",
   },
   {
     k: "page",
@@ -1487,6 +1482,20 @@ await build({
     outDir: fileURLToPath(new URL("play/", dist)),
     emptyOutDir: false,
     lib: { entry: fileURLToPath(new URL("play.ts", root)), formats: ["es"], fileName: "play" },
+  },
+});
+
+await build({
+  configFile: false,
+  logLevel: "warn",
+  build: {
+    outDir: fileURLToPath(new URL("play/gallery/", dist)),
+    emptyOutDir: false,
+    lib: {
+      entry: fileURLToPath(new URL("gallery.ts", root)),
+      formats: ["es"],
+      fileName: "gallery",
+    },
   },
 });
 
@@ -1859,80 +1868,12 @@ ${themePane}
   console.log("docs/dist/play/index.html written");
 }
 
-// The component gallery, as in Nuxt UI's playground: every example on the site on one page, each in a frame of its
-// own once in light and once in dark, so a maintainer can look over every block in both schemes. A frame is its own
-// document, as the playground's preview is, so the plugins' scripts run and ids don't collide. `pnpm gallery` builds
-// the packages and the site and serves it at http://127.0.0.1:4173/play/gallery/ (E2E_PORT picks another port).
-//
-// A frame can't be told its scheme: prefers-color-scheme inside it follows the system, not the frame's color-scheme.
-// So the script forces one on each frame's document, as the playground's Theme pane does, with the scheme as a class
-// on its root, and turns every prefers-color-scheme query in its styles to match. In Light or Dark, the page around
-// the frames takes the scheme too.
-const galleryScript = `{
-const gallery = document.querySelector(".gallery"), system = matchMedia("(prefers-color-scheme: dark)");
-const queries = new WeakMap();
-const force = (doc, scheme) => {
-  const root = doc.documentElement;
-  root.classList.toggle("light", scheme === "light"); root.classList.toggle("dark", scheme === "dark");
-  root.style.colorScheme = scheme ?? "";
-  const swap = scheme && scheme !== (system.matches ? "dark" : "light");
-  const walk = rules => { for (const rule of rules) {
-    if ("conditionText" in rule && rule.media) {
-      if (!queries.has(rule)) queries.set(rule, rule.media.mediaText);
-      const text = queries.get(rule);
-      if (text.includes("prefers-color-scheme")) rule.media.mediaText = swap ? text.replace(/(prefers-color-scheme:\\s*)(dark|light)/g, (_, k, v) => k + (v === "dark" ? "light" : "dark")) : text;
-    }
-    if (rule.cssRules) walk(rule.cssRules);
-  } };
-  for (const sheet of doc.styleSheets) { try { walk(sheet.cssRules) } catch {} }
-};
-const frames = [...gallery.querySelectorAll(".gallery-frame")];
-// Frames around a linked example grow as they load and push it away, so it's held in view until the reader scrolls.
-let held;
-const hold = () => { held = location.hash ? gallery.querySelector(".gallery-item#" + CSS.escape(decodeURIComponent(location.hash.slice(1)))) : undefined };
-const keep = () => held?.scrollIntoView({ behavior: "instant" });
-hold(); addEventListener("hashchange", hold);
-for (const type of ["wheel", "touchmove", "keydown", "mousedown"]) addEventListener(type, () => { held = undefined }, { passive: true });
-// Each load is a new document: it takes its scheme, opens its links outside the frame, and keeps the frame its height.
-const ready = frame => {
-  const doc = frame.contentDocument;
-  if (!doc?.body || doc.URL === "about:blank") return;
-  force(doc, frame.dataset.scheme);
-  for (const a of doc.querySelectorAll("a[href]:not([href^='#'])")) a.target = "_blank";
-  const fit = () => { frame.style.height = Math.ceil(doc.body.getBoundingClientRect().height) + "px"; keep() };
-  new frame.contentWindow.ResizeObserver(fit).observe(doc.body);
-  frame.dataset.ready = "";
-};
-for (const frame of frames) { frame.addEventListener("load", () => ready(frame)); if (frame.contentDocument?.readyState === "complete") ready(frame) }
-const show = (scheme, keep) => {
-  gallery.dataset.scheme = scheme;
-  for (const b of document.querySelectorAll(".gallery-scheme [data-scheme]")) b.setAttribute("aria-pressed", b.dataset.scheme === scheme);
-  force(document, scheme === "both" ? undefined : scheme);
-  if (keep) try { localStorage.setItem("comark-gallery-scheme", scheme) } catch {}
-};
-let saved; try { saved = localStorage.getItem("comark-gallery-scheme") } catch {}
-show(["light", "dark", "both"].includes(saved) ? saved : "both");
-document.querySelector(".gallery-scheme").addEventListener("click", e => { const b = e.target.closest("[data-scheme]"); if (b) show(b.dataset.scheme, true) });
-system.addEventListener("change", () => { show(gallery.dataset.scheme); for (const frame of frames) if (frame.dataset.ready !== undefined) force(frame.contentDocument, frame.dataset.scheme) });
-// The filter keeps the examples whose package or name holds every word typed. The sidebar and the menu each have one.
-const items = [...gallery.querySelectorAll(".gallery-item")], groups = [...gallery.querySelectorAll(".gallery-group")];
-const filters = [...document.querySelectorAll(".gallery-filter input")];
-const filter = value => {
-  const words = value.toLowerCase().split(/\\s+/).filter(Boolean);
-  for (const item of items) item.hidden = !words.every(w => item.dataset.name.includes(w));
-  for (const group of groups) group.hidden = !group.querySelector(".gallery-item:not([hidden])");
-  for (const a of document.querySelectorAll(".pages [data-gallery]")) a.hidden = document.getElementById(a.dataset.gallery).hidden;
-  for (const p of document.querySelectorAll(".pages [data-gallery-group]")) p.hidden = gallery.querySelector('.gallery-group[data-group="' + p.dataset.galleryGroup + '"]').hidden;
-  gallery.querySelector(".gallery-empty").hidden = items.some(item => !item.hidden);
-};
-for (const input of filters) input.addEventListener("input", () => { for (const other of filters) if (other !== input) other.value = input.value; filter(input.value) });
-// The index marks the example at the top of the screen.
-const links = [...document.querySelectorAll(".pages [data-gallery]")];
-const spy = new IntersectionObserver(entries => {
-  for (const e of entries) if (e.isIntersecting) for (const a of links) if (a.dataset.gallery === e.target.id) a.setAttribute("aria-current", "location"); else a.removeAttribute("aria-current");
-}, { rootMargin: "-56px 0px -70% 0px" });
-for (const item of items) spy.observe(item);
-}`;
+// The component gallery, as in Nuxt UI's and Radix Themes' playgrounds: every example on the site on one canvas, a row
+// per package that pans and zooms, each in a frame of its own in light, dark, or both. A frame is
+// its own document, as the playground's preview is, so the plugins' scripts run and ids don't collide. Its script,
+// docs/gallery.ts, edits an example's props, copies it, or spreads one prop over its values, and renders the result
+// in the browser with the plugins the page used. `pnpm gallery` builds the packages and the site and serves it at
+// http://127.0.0.1:4173/play/gallery/ (E2E_PORT picks another port); `pnpm gallery:shots` screenshots it.
 if (playSection) {
   const out = new URL("play/gallery/", dist);
   await mkdir(out, { recursive: true });
@@ -1942,25 +1883,70 @@ if (playSection) {
       if (document.meta.issues.length)
         throw new Error(`Example "${example.id}":\n${document.meta.issues.join("\n")}`);
       const html = await renderHtmlFromDocument(document, { components });
-      await writeFile(
-        new URL(`${example.id}.html`, out),
-        previewDocument(
-          `<style>body{padding:1rem}html{overflow-y:hidden}</style><div class="example-preview">${html}</div>`,
-        ),
-      );
+      await writeFile(new URL(`${example.id}.html`, out), cellDocument(html));
     }),
   );
+  // How wide a package's frames are: a screenshot, a terminal, or code needs room to read, a chart or an embed less,
+  // since it scales, and a badge or a key hardly any. Every other package takes the middle width.
+  const frameWidths: Record<string, string> = {
+    annotate: "34rem",
+    recipes: "38rem",
+    cast: "32rem",
+    diff: "32rem",
+    code: "30rem",
+    "code-notes": "30rem",
+    table: "30rem",
+    carousel: "30rem",
+    charts: "28rem",
+    embed: "28rem",
+    media: "28rem",
+    badge: "18rem",
+    chips: "18rem",
+    cjk: "18rem",
+    colors: "18rem",
+    critic: "18rem",
+    icon: "18rem",
+    keys: "18rem",
+    mark: "18rem",
+    qr: "18rem",
+  };
+  const action = (name: string, label: string, icon: string, hidden = false) =>
+    `<button type="button" class="gallery-action" data-action="${name}" aria-label="${label}" title="${label}"${hidden ? " hidden" : ""}>${siteIcon(icon, 14)}</button>`;
   const item = (example: (typeof galleryGroups)[number]["examples"][number], group: string) => {
     const frame = (scheme: string) =>
       `<iframe class="gallery-frame" data-scheme="${scheme}" src="/play/gallery/${example.id}.html" loading="lazy" title="${escapeHtml(`${example.label}, ${scheme}`)}"></iframe>`;
-    const play = example.playable
-      ? `<a class="example-play" href="${escapeHtml(playLink(example.source))}">${siteIcon("flask-conical", 13)}Playground</a>`
+    // An include reads files, which a browser can't, so its example only renders here.
+    const edit = example.playable
+      ? action("edit", "Edit props", "sliders-horizontal") +
+        action("duplicate", "Duplicate", "copy-plus") +
+        action("remove", "Remove", "x", true) +
+        `<a class="gallery-action" data-action="play" href="${escapeHtml(playLink(example.source))}" aria-label="Open in the playground" title="Open in the playground">${siteIcon("flask-conical", 14)}</a>`
       : "";
     return (
-      `<article class="gallery-item" id="${example.id}" data-name="${escapeHtml(`${group} ${example.label} ${example.id}`.toLowerCase())}">` +
-      `<div class="gallery-head"><h3><a href="#${example.id}">${escapeHtml(example.label)}</a></h3><span>${play}<a class="example-play" href="${href(example.page)}">${siteIcon("book-open", 13)}Docs</a></span></div>` +
+      `<article class="gallery-item" id="${example.id}"${example.playable ? ` data-cell="${example.id}"` : ""} data-name="${escapeHtml(`${group} ${example.label} ${example.id}`.toLowerCase())}">` +
+      `<div class="gallery-head"><h3><a href="#${example.id}">${escapeHtml(example.label)}</a></h3><span class="gallery-actions">${edit}<a class="gallery-action" href="${href(example.page)}" aria-label="Docs" title="Docs">${siteIcon("book-open", 14)}</a></span></div>` +
       `<div class="gallery-frames">${frame("light")}${frame("dark")}</div></article>`
     );
+  };
+  // What the editor needs: each example it can render, and the values each package's docs list for its props.
+  const galleryData = {
+    cells: Object.fromEntries(
+      galleryGroups.flatMap((group) =>
+        group.examples
+          .filter((example) => example.playable)
+          .map((example) => [
+            example.id,
+            { group: group.slug, label: example.label, source: example.source },
+          ]),
+      ),
+    ),
+    props: propsOf(
+      galleryGroups.map((group) => group.slug),
+      (group) =>
+        existsSync(new URL(`../packages/${group}/docs/`, root))
+          ? new URL(`../packages/${group}/docs/`, root)
+          : new URL(`pages/${group}/`, root),
+    ),
   };
   await writeFile(
     new URL("index.html", out),
@@ -1968,20 +1954,39 @@ if (playSection) {
       slug: "play/gallery",
       section: playSection,
       title: "Component gallery · Comark plugins",
-      description: "Every example in the docs on one page, in light and dark side by side.",
-      body: `<div class="gallery" data-scheme="both">
-<div class="gallery-bar"><div class="hero"><h1>Component gallery</h1><p>Every example in the docs, each rendered alone. Side by side shows each in light and dark.</p></div>
-<div class="seg gallery-scheme" role="group" aria-label="Color scheme"><button type="button" data-scheme="light" aria-pressed="false">Light</button><button type="button" data-scheme="dark" aria-pressed="false">Dark</button><button type="button" data-scheme="both" aria-pressed="true">Side by side</button></div></div>
+      description:
+        "Every example in the docs on one page, in light and dark. Change a block's props or spread one over its values.",
+      head: `\n<link rel="modulepreload" href="/play/gallery/gallery.js">`,
+      body: `<div class="gallery" data-scheme="light">
+<div class="gallery-canvas"><div class="gallery-sizer"><div class="gallery-stage">
+<div class="hero"><h1>Component gallery</h1><p>Every example in the docs, a row per package. Drag or scroll to move around, pinch to zoom, and pick one to change its props, copy it, or spread a prop over its values.</p></div>
 <p class="gallery-empty" hidden>No component matches the filter.</p>
 ${galleryGroups
   .map(
     (group) =>
-      `<section class="gallery-group" data-group="${group.slug}"><h2>${siteIcon(group.icon, 16)}${escapeHtml(group.label)}${group.npm ? `<small class="mono">${escapeHtml(group.npm)}</small>` : ""}</h2>${group.examples.map((example) => item(example, `${group.label} ${group.npm}`)).join("")}</section>`,
+      `<section class="gallery-group" data-group="${group.slug}" style="--frame:${frameWidths[group.slug] ?? "24rem"}"><h2>${siteIcon(group.icon, 15)}${escapeHtml(group.label)}${group.npm ? `<small class="mono">${escapeHtml(group.npm)}</small>` : ""}</h2><div class="gallery-cells">${group.examples.map((example) => item(example, `${group.label} ${group.npm}`)).join("")}</div></section>`,
   )
   .join("\n")}
+</div></div></div>
+<div class="gallery-bar"><div class="seg gallery-scheme" role="group" aria-label="Color scheme"><button type="button" data-scheme="light" aria-pressed="true">Light</button><button type="button" data-scheme="dark" aria-pressed="false">Dark</button><button type="button" data-scheme="both" aria-pressed="false">Both</button></div>
+<div class="gallery-zoom" role="group" aria-label="Zoom">${action("zoom-out", "Zoom out", "minus")}<button type="button" class="gallery-zoom-level" data-action="zoom-reset" aria-label="Reset zoom" title="Reset zoom">100%</button>${action("zoom-in", "Zoom in", "plus")}</div>
+<button type="button" class="button gallery-clear" hidden>${resetIcon}Clear changes</button><button type="button" class="button gallery-link" hidden>${siteIcon("link", 14)}Copy link</button><p class="gallery-sharing-issue" role="alert" hidden></p></div>
+<section class="gallery-inspector" role="dialog" aria-labelledby="gallery-inspector-title" tabindex="-1" hidden>
+<div class="gallery-inspector-head"><h2 id="gallery-inspector-title"></h2><p class="mono"></p><span class="gallery-inspector-actions">${action("duplicate", "Duplicate", "copy-plus")}${action("reset", "Reset", "rotate-ccw", true)}${action("remove", "Remove the copy", "trash", true)}${action("copy", "Copy the Markdown", "copy")}<a class="gallery-action" data-action="play" href="/play/" aria-label="Open in the playground" title="Open in the playground">${siteIcon("flask-conical", 14)}</a>${action("side", "Move to the other side", "arrow-left-right")}${action("close", "Close", "x")}</span></div>
+<div class="gallery-inspector-body">
+<div class="gallery-props"></div>
+<p class="gallery-inspector-label">Markdown</p>
+<div class="gallery-source"><div class="gallery-paint" aria-hidden="true"></div><textarea spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Markdown"></textarea></div>
+<ul class="gallery-issues" aria-label="Issues" aria-live="polite" hidden></ul>
 </div>
+<span class="gallery-inspector-edge" data-edge="left" aria-hidden="true"></span><span class="gallery-inspector-edge" data-edge="right" aria-hidden="true"></span><span class="gallery-inspector-edge" data-edge="bottom" aria-hidden="true"></span>
+<button type="button" class="gallery-inspector-grip" aria-label="Resize the inspector" title="Drag to resize, or use the arrow keys"><svg viewBox="0 0 10 10" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" aria-hidden="true"><path d="M9 2 2 9M9 6 6 9"/></svg></button>
+<template class="gallery-icons"><span data-icon="spread">${siteIcon("columns-3", 13)}</span><span data-icon="remove">${siteIcon("x", 13)}</span><span data-icon="on">${siteIcon("check", 11)}</span><span data-icon="off">${siteIcon("plus", 11)}</span></template>
+</section>
+</div>
+<script type="application/json" id="gallery-data">${JSON.stringify(galleryData).replaceAll("<", "\\u003c")}</script>
 <script>${script.trim()}</script>
-<script>${galleryScript}</script>`,
+<script type="module" src="/play/gallery/gallery.js"></script>`,
     }),
   );
   console.log(`docs/dist/play/gallery/ written (${examples.length} examples)`);

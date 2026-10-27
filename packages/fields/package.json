@@ -1,6 +1,6 @@
 {
   "name": "comark-fields",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Props, options, and parameters in Nuxt UI's ::field syntax, with types, defaults, and nested properties. A Comark plugin.",
   "keywords": [
     "api",

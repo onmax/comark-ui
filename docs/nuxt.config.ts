@@ -2,6 +2,7 @@ import { cp, mkdir, rm } from "node:fs/promises";
 import { existsSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { defineNuxtConfig } from "nuxt/config";
+import { env } from "vite-hub/env";
 
 const root = new URL("./", import.meta.url);
 const generated = new URL(".generated/public/", root);
@@ -83,6 +84,8 @@ export default defineNuxtConfig({
     },
   },
   modules: [
+    "vite-hub/nuxt",
+    "~~/modules/vitehub-pilot",
     "nuxt-agent-discovery",
     async (_, nuxt) => {
       await writeAssets();
@@ -90,6 +93,42 @@ export default defineNuxtConfig({
       nuxt.options.nitro.publicAssets.push({ dir: fileURLToPath(generated), maxAge: 0 });
     },
   ],
+  vitehub: {
+    name: "comark-ui",
+    preset: "cloudflare",
+    // Comments, the editor's sessions in the Content cms preset (server/content.ts), and nothing else use the database.
+    database: {
+      driver: "d1",
+      databaseId: "66cd474e-9408-4af3-bab9-75e06b76f099",
+      databaseName: "comark-ui-docs",
+    },
+    // Files live in the repository (server/content.ts), so there is no R2 bucket.
+    blob: false,
+    auth: true,
+    // A Durable Object holds each page's room: who else is on it and where their cursor is, for comments and the editor.
+    realtime: { authority: "cloudflare" },
+    // The editor is the Console's Content section: the team signs in with the site's own session (server/auth.ts).
+    console: {
+      auth: "app",
+      authorize: fileURLToPath(new URL("./server/console-authorize.ts", import.meta.url)),
+    },
+  },
+  // `nuxt dev` has no GitHub OAuth app: the Console runs every call as the loopback user `local`, which team.ts accepts.
+  $development: { vitehub: { console: { auth: false } } },
+  vite: {
+    env: {
+      server: {
+        auth: {
+          // Declared as secrets so the Worker passes them through.
+          github: {
+            clientId: env({ secret: true, source: env.source("GITHUB_CLIENT_ID") }),
+            clientSecret: env({ secret: true, source: env.source("GITHUB_CLIENT_SECRET") }),
+          },
+          secret: env({ secret: true, source: env.source("BETTER_AUTH_SECRET") }),
+        },
+      },
+    },
+  },
   // Only the agent skill at the repository's root, under /.well-known/skills/; the pages are built by docs/build.ts.
   agentDiscovery: {
     siteUrl: "https://comark-ui.onmax.me",
@@ -101,6 +140,16 @@ export default defineNuxtConfig({
     skills: { dir: "../skills" },
   },
   nitro: {
+    // The root wrangler.jsonc holds what ViteHub doesn't generate (name, routes, previews). Nitro merges it with ViteHub's
+    // bindings into docs/dist/server/wrangler.json, which the hook below makes `wrangler` use from the repository's root.
+    cloudflare: {
+      deployConfig: true,
+      nodeCompat: true,
+      // Wrangler bundles the output again, and ViteHub's code imports this one by a name only Nitro's aliases know.
+      wrangler: {
+        alias: { "#vitehub/env/server": fileURLToPath(new URL(".vitehub/env/server.mjs", root)) },
+      },
+    },
     output: { dir: fileURLToPath(new URL("dist/", root)) },
     // The playground is a static app copied into the output, not a Nuxt page.
     prerender: {
