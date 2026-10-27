@@ -67,14 +67,15 @@ const mermaid = (zooms: boolean) => ({
       const first = !styled.has(state.context);
       styled.add(state.context);
       const card = Pele(node);
-      const source = node[1].content;
+      // SAFETY: comark-pele writes the fence's text on every node as `content`.
+      const source = node[1].content as string;
       const width = /^<div[^>]*><svg[^>]* width="([\d.]+)"/.exec(card)?.[1];
       const wide = width ? ` data-wide style="--cmm-svg:${Math.ceil(Number(width))}px"` : "";
       // Pele writes the card as one `div`, its SVG first when it drew one.
       const zoomed = zooms && width ? card.replace(/^<div/, '<div data-zoom tabindex="0"') : card;
       return (
         (first ? `<style data-comark-mermaid>${mermaidCss}</style>` : "") +
-        `<div class="cmm"${wide} data-source="${attr(typeof source === "string" ? source : "")}">${zoomed}<div class="cmm-bar">${mermaidBar()}</div>` +
+        `<div class="cmm"${wide} data-source="${attr(source)}">${zoomed}<div class="cmm-bar">${mermaidBar()}</div>` +
         `${first ? `<script>${mermaidScript}</script>` : ""}${zooms && width ? zoom.runtime(state) : ""}</div>`
       );
     }) satisfies NodeHandler,
