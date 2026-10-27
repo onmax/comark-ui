@@ -1,9 +1,9 @@
 # comark-ui
 
-[![npm version](https://npmx.dev/api/registry/badge/version/comark-ui)](https://npmx.dev/package/comark-ui)
-[![npm downloads](https://npmx.dev/api/registry/badge/downloads-month/comark-ui)](https://npmx.dev/package/comark-ui)
-[![license](https://npmx.dev/api/registry/badge/license/comark-ui)](https://npmx.dev/package/comark-ui)
-[![docs](https://img.shields.io/badge/docs-comark--ui.onmax.me-14b8a6?labelColor=0a0a0a)](https://comark-ui.onmax.me/getting-started/)
+[![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-ui&icon=npm)](https://npmx.dev/package/comark-ui)
+[![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-ui&period=month&icon=npm)](https://npmx.dev/package/comark-ui)
+[![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-ui)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/getting-started/)
 
 Every [Comark](https://comark.dev) block from [comark-ui](https://comark-ui.onmax.me) in one install, registered in the order they need, with one icon resolver shared by `:icon`, cards, details, file trees, tabs, and code actions. It ships in lockstep with the plugins, so updating it brings their latest defaults.
 

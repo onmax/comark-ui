@@ -1,10 +1,9 @@
 # comark-linter
 
-[![npm version](https://npmx.dev/api/registry/badge/version/comark-linter)](https://npmx.dev/package/comark-linter)
-[![npm downloads](https://npmx.dev/api/registry/badge/downloads-month/comark-linter)](https://npmx.dev/package/comark-linter)
-[![install size](https://npmx.dev/api/registry/badge/size/comark-linter)](https://npmx.dev/package/comark-linter)
-[![license](https://npmx.dev/api/registry/badge/license/comark-linter)](https://npmx.dev/package/comark-linter)
-[![docs](https://img.shields.io/badge/docs-comark--ui.onmax.me-14b8a6?labelColor=0a0a0a)](https://comark-ui.onmax.me/lint/)
+[![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-linter&icon=npm)](https://npmx.dev/package/comark-linter)
+[![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-linter&period=month&icon=npm)](https://npmx.dev/package/comark-linter)
+[![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-linter)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/lint/)
 
 Finds unclosed blocks, unknown components, broken links and anchors, local URLs, and plugin issues in [Comark](https://comark.dev) documents. A library, a CLI, an [ESLint](https://eslint.org) plugin, and a [Vite Doctor](https://github.com/onmax/vite-doctor) extension. Every message names the block and says how to fix it.
 

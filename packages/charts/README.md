@@ -1,10 +1,9 @@
 # comark-charts
 
-[![npm version](https://npmx.dev/api/registry/badge/version/comark-charts)](https://npmx.dev/package/comark-charts)
-[![npm downloads](https://npmx.dev/api/registry/badge/downloads-month/comark-charts)](https://npmx.dev/package/comark-charts)
-[![install size](https://npmx.dev/api/registry/badge/size/comark-charts)](https://npmx.dev/package/comark-charts)
-[![license](https://npmx.dev/api/registry/badge/license/comark-charts)](https://npmx.dev/package/comark-charts)
-[![docs](https://img.shields.io/badge/docs-comark--ui.onmax.me-14b8a6?labelColor=0a0a0a)](https://comark-ui.onmax.me/charts/)
+[![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-charts&icon=npm)](https://npmx.dev/package/comark-charts)
+[![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-charts&period=month&icon=npm)](https://npmx.dev/package/comark-charts)
+[![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-charts)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/charts/)
 
 Charts from a Markdown table, drawn to SVG while parsing, that copy as a PNG or as data. The table stays under the chart, so people see the chart and agents read the numbers. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
 

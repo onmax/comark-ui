@@ -1,10 +1,9 @@
 # comark-annotate
 
-[![npm version](https://npmx.dev/api/registry/badge/version/comark-annotate)](https://npmx.dev/package/comark-annotate)
-[![npm downloads](https://npmx.dev/api/registry/badge/downloads-month/comark-annotate)](https://npmx.dev/package/comark-annotate)
-[![install size](https://npmx.dev/api/registry/badge/size/comark-annotate)](https://npmx.dev/package/comark-annotate)
-[![license](https://npmx.dev/api/registry/badge/license/comark-annotate)](https://npmx.dev/package/comark-annotate)
-[![docs](https://img.shields.io/badge/docs-comark--ui.onmax.me-14b8a6?labelColor=0a0a0a)](https://comark-ui.onmax.me/annotate/)
+[![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-annotate&icon=npm)](https://npmx.dev/package/comark-annotate)
+[![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-annotate&period=month&icon=npm)](https://npmx.dev/package/comark-annotate)
+[![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-annotate)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/annotate/)
 
 Hand-drawn marks, numbered notes, and arrows on screenshots, written in Markdown. A [Comark](https://comark.dev) plugin that renders static HTML.
 

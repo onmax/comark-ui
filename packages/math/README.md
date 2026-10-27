@@ -1,10 +1,9 @@
 # comark-mathml
 
-[![npm version](https://npmx.dev/api/registry/badge/version/comark-mathml)](https://npmx.dev/package/comark-mathml)
-[![npm downloads](https://npmx.dev/api/registry/badge/downloads-month/comark-mathml)](https://npmx.dev/package/comark-mathml)
-[![install size](https://npmx.dev/api/registry/badge/size/comark-mathml)](https://npmx.dev/package/comark-mathml)
-[![license](https://npmx.dev/api/registry/badge/license/comark-mathml)](https://npmx.dev/package/comark-mathml)
-[![docs](https://img.shields.io/badge/docs-comark--ui.onmax.me-14b8a6?labelColor=0a0a0a)](https://comark-ui.onmax.me/math/)
+[![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-mathml&icon=npm)](https://npmx.dev/package/comark-mathml)
+[![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-mathml&period=month&icon=npm)](https://npmx.dev/package/comark-mathml)
+[![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-mathml)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/math/)
 
 LaTeX math in [Comark](https://comark.dev), in place of `comark/plugins/math`: `$…$` and `\(…\)` inline, `$$…$$`, `\[…\]`, and `math` fences as display math, typeset to MathML while parsing, so the page loads no math script, fonts, or stylesheet. For HTML, Vue, React, and Svelte.
 

@@ -1,10 +1,9 @@
 # comark-colors
 
-[![npm version](https://npmx.dev/api/registry/badge/version/comark-colors)](https://npmx.dev/package/comark-colors)
-[![npm downloads](https://npmx.dev/api/registry/badge/downloads-month/comark-colors)](https://npmx.dev/package/comark-colors)
-[![install size](https://npmx.dev/api/registry/badge/size/comark-colors)](https://npmx.dev/package/comark-colors)
-[![license](https://npmx.dev/api/registry/badge/license/comark-colors)](https://npmx.dev/package/comark-colors)
-[![docs](https://img.shields.io/badge/docs-comark--ui.onmax.me-14b8a6?labelColor=0a0a0a)](https://comark-ui.onmax.me/colors/)
+[![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-colors&icon=npm)](https://npmx.dev/package/comark-colors)
+[![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-colors&period=month&icon=npm)](https://npmx.dev/package/comark-colors)
+[![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-colors)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/colors/)
 
 A swatch before inline code that holds a color, as GitLab draws it, and `::palette` grids of named colors. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
 

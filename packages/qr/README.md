@@ -1,10 +1,9 @@
 # comark-qr
 
-[![npm version](https://npmx.dev/api/registry/badge/version/comark-qr)](https://npmx.dev/package/comark-qr)
-[![npm downloads](https://npmx.dev/api/registry/badge/downloads-month/comark-qr)](https://npmx.dev/package/comark-qr)
-[![install size](https://npmx.dev/api/registry/badge/size/comark-qr)](https://npmx.dev/package/comark-qr)
-[![license](https://npmx.dev/api/registry/badge/license/comark-qr)](https://npmx.dev/package/comark-qr)
-[![docs](https://img.shields.io/badge/docs-comark--ui.onmax.me-14b8a6?labelColor=0a0a0a)](https://comark-ui.onmax.me/qr/)
+[![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-qr&icon=npm)](https://npmx.dev/package/comark-qr)
+[![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-qr&period=month&icon=npm)](https://npmx.dev/package/comark-qr)
+[![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-qr)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/qr/)
 
 QR codes drawn as inline SVG while parsing, for opening a preview link on a phone. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
 

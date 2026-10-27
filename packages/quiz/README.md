@@ -1,10 +1,9 @@
 # comark-quiz
 
-[![npm version](https://npmx.dev/api/registry/badge/version/comark-quiz)](https://npmx.dev/package/comark-quiz)
-[![npm downloads](https://npmx.dev/api/registry/badge/downloads-month/comark-quiz)](https://npmx.dev/package/comark-quiz)
-[![install size](https://npmx.dev/api/registry/badge/size/comark-quiz)](https://npmx.dev/package/comark-quiz)
-[![license](https://npmx.dev/api/registry/badge/license/comark-quiz)](https://npmx.dev/package/comark-quiz)
-[![docs](https://img.shields.io/badge/docs-comark--ui.onmax.me-14b8a6?labelColor=0a0a0a)](https://comark-ui.onmax.me/quiz/)
+[![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-quiz&icon=npm)](https://npmx.dev/package/comark-quiz)
+[![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-quiz&period=month&icon=npm)](https://npmx.dev/package/comark-quiz)
+[![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-quiz)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/quiz/)
 
 Questions, polls, and recall cards for lessons written in Markdown. A reader checks an answer and sees why each option is right or wrong, votes in a poll, or tests themselves on a card whose answer stays blurred until they ask. A [Comark](https://comark.dev) plugin for HTML. It reads without a script.
 
