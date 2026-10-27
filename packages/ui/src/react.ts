@@ -16,6 +16,7 @@ import * as fileTree from "comark-file-tree/react";
 import * as github from "comark-github/react";
 import * as icon from "comark-icon/react";
 import * as links from "comark-links/react";
+import * as magicMove from "comark-magic-move/react";
 import * as mark from "comark-mark/react";
 import * as math from "comark-mathml/react";
 import * as media from "comark-media/react";
@@ -74,6 +75,7 @@ export default (options?: PresetOptions): Preset<AnyComponent> =>
       github,
       icon,
       links,
+      magicMove,
       mark,
       math,
       media,

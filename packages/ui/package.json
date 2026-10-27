@@ -79,6 +79,7 @@
     "comark-include": "workspace:^",
     "comark-keys": "workspace:^",
     "comark-links": "workspace:^",
+    "comark-magic-move": "workspace:^",
     "comark-mark": "workspace:^",
     "comark-mathml": "workspace:^",
     "comark-media": "workspace:^",

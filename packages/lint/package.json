@@ -73,6 +73,7 @@
     "comark-icon": "workspace:*",
     "comark-keys": "workspace:*",
     "comark-links": "workspace:*",
+    "comark-magic-move": "workspace:*",
     "comark-mark": "workspace:*",
     "comark-mathml": "workspace:*",
     "comark-media": "workspace:*",
@@ -122,6 +123,7 @@
     "comark-icon": "workspace:^",
     "comark-keys": "workspace:^",
     "comark-links": "workspace:^",
+    "comark-magic-move": "workspace:^",
     "comark-mark": "workspace:^",
     "comark-mathml": "workspace:^",
     "comark-media": "workspace:^",
@@ -220,6 +222,9 @@
       "optional": true
     },
     "comark-links": {
+      "optional": true
+    },
+    "comark-magic-move": {
       "optional": true
     },
     "comark-mark": {

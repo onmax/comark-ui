@@ -95,6 +95,7 @@ const packageOrder = [
   "chips",
   "colors",
   "diff",
+  "magic-move",
   "embed",
   "media",
   "metrics",
