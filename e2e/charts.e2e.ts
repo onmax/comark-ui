@@ -299,3 +299,62 @@ test("a chart beside a link keeps its own card, light and dark", async ({ page }
     await expect(figure).toHaveCSS("border-top-left-radius", "10px");
   }
 });
+
+test("a chart copies as an image in the page's colors, and its data as a table or Markdown", async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  const render = createHtmlRenderer({ plugins: [charts()], components });
+  const body = await render(
+    '::chart{title="Pigeons"}\n| day | pigeons |\n| --- | --: |\n| Monday | 3 |\n| Friday | 14 |\n::',
+  );
+  // A theme color only the page's rules give the bars, so a copy that missed them would draw Flint's own.
+  await page.route("**/fixture/", (route) =>
+    route.fulfill({
+      contentType: "text/html",
+      body: `<!doctype html><meta charset="utf-8"><style>:root{--comark-chart-1:rgb(255,0,0)}</style><main>${body}</main>`,
+    }),
+  );
+  await page.goto("/fixture/", { waitUntil: "domcontentloaded" });
+  const figure = page.locator("figure.cch");
+  const copy = page.getByRole("button", { name: "Copy the chart as an image" });
+  const bar = page.locator(".cch-bar");
+  await expect(bar).toHaveCSS("opacity", "0");
+  await figure.hover();
+  await expect(bar).toHaveCSS("opacity", "1");
+
+  await copy.click();
+  await expect(page.locator(".cch-status")).toHaveText("Copied as image");
+  const image = await page.evaluate(async () => {
+    const [item] = await navigator.clipboard.read();
+    const bitmap = await createImageBitmap(await item!.getType("image/png"));
+    const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+    const context = canvas.getContext("2d")!;
+    context.drawImage(bitmap, 0, 0);
+    const { data } = context.getImageData(0, 0, bitmap.width, bitmap.height);
+    let red = 0;
+    for (let index = 0; index < data.length; index += 4)
+      if (data[index]! > 240 && data[index + 1]! < 20 && data[index + 2]! < 20) red++;
+    return { width: bitmap.width, red };
+  });
+  const plot = await page.locator(".cch-plot>svg").boundingBox();
+  expect(image.width).toBe(Math.round((plot!.width + 32) * 2));
+  expect(image.red).toBeGreaterThan(1000);
+
+  const clipboard = () => page.evaluate(() => navigator.clipboard.readText());
+  const more = page.getByRole("button", { name: "More ways to copy" });
+  await more.click();
+  await page.getByRole("menuitem", { name: /Table/ }).click();
+  await expect(page.locator(".cch-status")).toHaveText("Copied as table");
+  expect(await clipboard()).toBe("day\tpigeons\nMonday\t3\nFriday\t14");
+  await expect(more).toBeFocused();
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("End");
+  await expect(page.getByRole("menuitem", { name: /Markdown/ })).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("menu")).toBeHidden();
+  expect(await clipboard()).toBe(
+    "| day | pigeons |\n| --- | --- |\n| Monday | 3 |\n| Friday | 14 |",
+  );
+});

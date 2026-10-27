@@ -81,7 +81,18 @@ ${sizes.trim()}
     expect(html).toContain('<details class="cch-data"><summary>Data</summary><table>');
     expect(html).toContain("<td>annotate</td>");
     expect(html.match(/<style data-comark-charts>/g)).toHaveLength(1);
+    expect(html.match(/<script>/g)).toHaveLength(1);
     expect(await issues(chart(sizes))).toEqual([]);
+  });
+
+  it("copies a chart as an image by default, and its data as a table or Markdown from the menu", async () => {
+    const html = await render(chart(sizes));
+    expect(html).toContain(
+      '<div class="cch-bar"><span class="cch-status" role="status"></span><div class="cch-copy"><button type="button" class="cch-copy-main" data-chart-copy="image" aria-label="Copy the chart as an image"',
+    );
+    expect(html.match(/role="menuitem"[^>]*data-chart-copy="(\w+)"/g)).toHaveLength(3);
+    for (const format of ["image", "table", "markdown"])
+      expect(html).toContain(`role="menuitem" tabindex="-1" data-chart-copy="${format}"`);
   });
 
   it("takes the card's side padding from --cch-padding, which the Data footer spans too", async () => {
@@ -282,6 +293,9 @@ Cache on.
     expect(html).toContain("The slow month.");
     // The data stays the table, marks or not.
     expect(html).toContain('<details class="cch-data"><summary>Data</summary><table>');
+    // An image of the SVG would leave the marks out, so Copy takes the data and the menu offers no image.
+    expect(html).toContain('data-chart-copy="table" aria-label="Copy the chart\'s data"');
+    expect(html).not.toContain('data-chart-copy="image"');
   });
 
   it("draws a bar worth zero as a faded stroke at its base", async () => {
