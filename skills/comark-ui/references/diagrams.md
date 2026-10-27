@@ -29,7 +29,7 @@ queue -> map: pigeon pin
 
 Through comark-ui, a ` ```mermaid ` fence is drawn as SVG by comark-pele while rendering, with no network, and themed with the other blocks. A diagram Pele can't draw shows its source, and nothing goes in `meta.issues`, so check it in a render.
 
-With `comark-ui/html`, a click, `Enter`, or `Space` zooms the diagram, and its buttons copy it as a PNG on the page's background or as its ` ```mermaid ` fence. The Vue, React, and Svelte entries draw the same buttons, and Pele zooms the diagram in place there. `zoom: false` in `comarkUi()` turns the zoom off; the buttons stay. A host with a strict Content Security Policy allows the buttons' script by the hash of `mermaidScript` from `comark-ui/html`.
+With `comark-ui/html`, a click, `Enter`, or `Space` zooms the diagram, and its buttons copy it as a PNG on the page's background or as its ` ```mermaid ` fence. The Vue, React, and Svelte entries draw the same buttons, and Pele zooms the diagram in place there. `zoom: false` in `comarkUi()` turns the zoom off; the buttons stay. A host with a strict Content Security Policy allows the buttons' script by the hash of `mermaidScript` from `comark-ui/html`, and Copy image needs `img-src data:`.
 
 ## Check each diagram
 

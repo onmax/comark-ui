@@ -156,7 +156,7 @@ The preset's own `zoom: false` turns off a diagram's zoom too.
 
 ### Script
 
-`comark-ui/html` inlines one script per document for the buttons, and comark-zoom's for the zoom. `mermaidScript`, exported from `comark-ui/html`, is the buttons' script text, so a page with a strict Content Security Policy can allow it by hash; [Renderers](/guide/renderers/#content-security-policy) shows how.
+`comark-ui/html` inlines one script per document for the buttons, and comark-zoom's for the zoom. `mermaidScript`, exported from `comark-ui/html`, is the buttons' script text, so a page with a strict Content Security Policy can allow it by hash; [Renderers](/guide/renderers/#content-security-policy) shows how. Copy image also needs `img-src data:` in that policy.
 
 ### Issues
 

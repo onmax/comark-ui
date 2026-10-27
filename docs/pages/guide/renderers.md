@@ -118,6 +118,8 @@ const hash = `'sha256-${createHash("sha256").update(mermaidScript).digest("base6
 // Content-Security-Policy: script-src 'self' <hash>, plus the hash of each other script your documents use
 ```
 
+Copy image draws the diagram from a `data:` image before it becomes a PNG, so the policy also needs `img-src data:`.
+
 For any other script, render a document that uses it once, at startup, and hash the text between its `<script>` tags.
 
 Notes, slides, and callouts are ordinary Markdown, so raw HTML in them renders like anywhere else in the document. For untrusted input, add Comark's `security` plugin and list the tags to drop, such as `security({ blockedTags: ["script", "style", "iframe"] })`.
