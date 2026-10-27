@@ -41,6 +41,7 @@ Every plugin is on but `include`, which reads from disk, and cast, table, and te
 | [github](/github/) | `comark-github/html` | `comark-github/vue` | `comark-github/react` | `comark-github/svelte` |
 | [icon](/icon/) | `comark-icon/html` | `comark-icon/vue` | `comark-icon/react` | `comark-icon/svelte` |
 | [links](/links/) | `comark-links/html` | `comark-links/vue` | `comark-links/react` | `comark-links/svelte` |
+| [magic-move](/magic-move/) | `comark-magic-move/html` | `comark-magic-move/vue` | `comark-magic-move/react` | `comark-magic-move/svelte` |
 | [mark](/mark/) | `comark-mark/html` | `comark-mark/vue` | `comark-mark/react` | `comark-mark/svelte` |
 | [math](/math/) | `comark-mathml/html` | `comark-mathml/vue` | `comark-mathml/react` | `comark-mathml/svelte` |
 | [media](/media/) | `comark-media/html` | `comark-media/vue` | `comark-media/react` | `comark-media/svelte` |
