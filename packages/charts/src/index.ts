@@ -6,7 +6,7 @@ import type { draw } from "./draw.ts";
 import type { Issue } from "./read.ts";
 import { readChart } from "./read.ts";
 
-export type { Chart, ChartType, SpecChart, XKind } from "./read.ts";
+export type { Chart, ChartType, FlowChart, SpecChart, XKind } from "./read.ts";
 
 export type ChartsMeta = {
   /** One readable sentence per problem with a `::chart`. Other plugins add theirs too. */
@@ -76,16 +76,19 @@ export default /* @__PURE__ */ defineComarkPlugin<ChartsOptions | void, ChartsMe
         chart.title ||
         (spec
           ? `chart of ${chart.columns.join(", ")}`
-          : chart.type === "gantt"
-            ? `gantt chart of ${chart.x}, from ${chart.series.join(" to ")}`
-            : `${chart.type} chart of ${chart.series.join(", ")} by ${chart.x}`);
+          : chart.type === "sankey"
+            ? `sankey chart of ${chart.amount} from ${chart.from} to ${chart.to}`
+            : chart.type === "gantt"
+              ? `gantt chart of ${chart.x}, from ${chart.series.join(" to ")}`
+              : `${chart.type} chart of ${chart.series.join(", ")} by ${chart.x}`);
       let drawn: Awaited<ReturnType<typeof draw>>;
       try {
         // Flint and Vega take hundreds of milliseconds to load, so a document with no chart never loads them.
-        const module = await import("./draw.ts");
         drawn = spec
-          ? { ...(await module.drawSpec(chart)), boxes: new Map() }
-          : await module.draw(chart);
+          ? { ...(await (await import("./draw.ts")).drawSpec(chart)), boxes: new Map() }
+          : chart.type === "sankey"
+            ? await (await import("./sankey.ts")).drawSankey(chart)
+            : await (await import("./draw.ts")).draw(chart);
       } catch (error) {
         const fix = spec
           ? "Check its Vega-Lite spec against https://vega.github.io/vega-lite/docs/"

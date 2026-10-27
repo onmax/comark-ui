@@ -90,6 +90,31 @@ describe("comark-ui", () => {
     expect(off).toContain('class="language-mermaid"');
   });
 
+  it("styles the text by default, scoped to the element the document renders into", async () => {
+    const markdown = "# Title\n\nSome `code`.\n\n| A | B |\n| - | - |\n| 1 | 2 |";
+    const out = await createHtmlRenderer(html(offline))(markdown);
+    expect(out.match(/<style data-comark-typeset>/g)).toHaveLength(1);
+    // The styles come last, so the first heading is still the first child and adds no space above.
+    expect(out.trimEnd()).toMatch(/<style data-comark-typeset>[^<]*<\/style>$/);
+    const css = out.slice(out.indexOf("<style data-comark-typeset>"));
+    // Under every block's rules, which sit in `comark` itself, and on the tokens shared with them.
+    expect(css).toContain("@layer comark{@layer typeset{@scope{");
+    expect(css).toContain(
+      ":where(:scope){--_comark-background:var(--comark-background,var(--ui-bg,var(--background",
+    );
+    expect(css).toContain("color:var(--_comark-foreground)");
+    expect(css).toContain("calc(var(--typeset-size,1em) * 1.125)");
+    // The grain, on the document's own background, which `--comark-grain: none` turns off.
+    expect(css).toContain('background-image:var(--comark-grain,url("data:image/svg+xml,');
+    expect(css).toContain("feTurbulence type='fractalNoise' baseFrequency='0.9'");
+    expect(css).not.toContain("/*");
+    const off = await createHtmlRenderer(html({ ...offline, typeset: false }))(markdown);
+    expect(off).not.toContain("data-comark-typeset");
+    expect(Object.keys(html({ ...offline, typeset: false }).components)).not.toContain(
+      "typeset-styles",
+    );
+  });
+
   it("includes files only when asked", async () => {
     const read = (path: string) => (path === "note.md" ? "Pasted." : undefined);
     const markdown = ':include{src="note.md"}';
@@ -126,6 +151,10 @@ describe("comark-ui", () => {
       const value = await parseMarkdown(document, { plugins: preset.plugins });
       const out = await render(value as never, preset.components as never);
       for (const block of blocks) expect(out, name).toContain(block);
+      // In the server's HTML, unescaped, so the page arrives styled.
+      expect(out, name).toContain("<style data-comark-typeset");
+      expect(out, name).toContain("@scope{:where(:scope){");
+      expect(out, name).toContain(":scope>:where(:first-child)");
     }
   });
 });

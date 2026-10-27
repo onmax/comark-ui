@@ -1,5 +1,8 @@
 import { theme } from "comark-zoom/theme";
 
+/** The typeset styles, for a page that renders Markdown without comark-ui, such as a rich-text editor. */
+export { typesetCss } from "./typeset-css.ts";
+
 // comark-charts' palette, so a Mermaid pie or xychart colors its series like a chart does.
 const series = [
   "#3b82f6",

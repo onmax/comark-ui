@@ -44,19 +44,31 @@ type Live = { node: ElementNode; spec: BadgeSpec };
 
 const svgSrc = (svg: string) => `data:image/svg+xml,${encodeURIComponent(svg)}`;
 
-// Each badge's data, kept across parses and instances for as long as the endpoint would cache it, so a site that
-// builds many pages asks once. Unavailable data isn't kept, so the next parse tries again.
-const fetched = new Map<string, { result: Promise<LiveResult>; expires: number }>();
+// Keep at most 256 successful results across parses. Pending requests are separate so eviction
+// never starts a second request for a badge that's still being fetched.
+const cacheLimit = 256;
+const fetched = new Map<string, { result: LiveResult; expires: number }>();
+const pending = new Map<string, Promise<LiveResult>>();
 
 function fetchLive(spec: BadgeSpec) {
   const key = liveKey(spec);
   const stored = fetched.get(key);
-  if (stored && stored.expires > Date.now()) return stored.result;
+  if (stored && stored.expires > Date.now()) return Promise.resolve(stored.result);
+  fetched.delete(key);
+  const ongoing = pending.get(key);
+  if (ongoing) return ongoing;
   const result = resolveLive(spec).then((value) => {
-    if (value.unavailable) fetched.delete(key);
+    pending.delete(key);
+    if (!value.unavailable) {
+      fetched.set(key, { result: value, expires: Date.now() + ttls[spec.source] * 1000 });
+      if (fetched.size > cacheLimit) {
+        const oldest = fetched.keys().next().value;
+        if (oldest !== undefined) fetched.delete(oldest);
+      }
+    }
     return value;
   });
-  fetched.set(key, { result, expires: Date.now() + ttls[spec.source] * 1000 });
+  pending.set(key, result);
   return result;
 }
 

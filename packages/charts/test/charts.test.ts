@@ -74,9 +74,9 @@ ${sizes.trim()}
     expect(html).toContain(
       '<figure class="cch" data-type="bar"><figcaption>Bundle size</figcaption><div class="cch-plot"><svg role="img" aria-label="Bundle size" xmlns="http://www.w3.org/2000/svg"',
     );
-    // Names on x make bars; dates make lines.
+    // Bars are the default, whatever x holds.
     expect(html).toContain(
-      '<figure class="cch" data-type="line"><div class="cch-plot"><svg role="img" aria-label="line chart of before, after by month"',
+      '<figure class="cch" data-type="bar"><div class="cch-plot"><svg role="img" aria-label="bar chart of before, after by month"',
     );
     expect(html).toContain('<details class="cch-data"><summary>Data</summary><table>');
     expect(html).toContain("<td>annotate</td>");
@@ -107,7 +107,7 @@ ${sizes.trim()}
   });
 
   it("draws the columns `x` and `y` name, as a line, an area, or a pie", async () => {
-    const line = await render(chart(months, '{x="month" y="after"}'));
+    const line = await render(chart(months, '{type="line" x="month" y="after"}'));
     expect(line).toContain('aria-label="line chart of after by month"');
     expect(line).not.toContain(">before</text>");
     expect(await render(chart(months, '{type="area"}'))).toContain('data-type="area"');
@@ -156,13 +156,13 @@ ${sizes.trim()}
 | add charts | 38 |
 | drop moment | -24 |
 | this PR | 426 |`,
-        '{type="waterfall"}',
+        '{type="waterfall" labels}',
       ),
     );
     expect(waterfall).toContain('data-type="waterfall"');
     expect(waterfall).toContain(">increase</text>");
     expect(waterfall).toContain(">decrease</text>");
-    // Each step prints its change and each total its value, once.
+    // With `labels`, each step prints its change and each total its value, once.
     for (const value of ["412", "+38", "\u221224", "426"])
       expect(waterfall.split(`>${value}</text>`)).toHaveLength(2);
   });
@@ -177,7 +177,7 @@ ${sizes.trim()}
 | debugging alone | 1,450 | 980 |
 | meetings about bugs | 2,100 | 1,320 |
 | standup | 380 | 160 |`,
-        '{type="dumbbell"}',
+        '{type="dumbbell" labels}',
       ),
     );
     const group = (role: string) =>
@@ -227,7 +227,8 @@ ${sizes.trim()}
 
   it("names every month, with the year on the first and wherever it turns", async () => {
     const html = await render(
-      chart(`
+      chart(
+        `
 | month | commits |
 | --- | --: |
 | 2026-10 | 610 |
@@ -236,7 +237,9 @@ ${sizes.trim()}
 | 2027-01 | 715 |
 | 2027-02 | 720 |
 | 2027-03 | 768 |
-| 2027-04 | 760 |`),
+| 2027-04 | 760 |`,
+        '{type="line"}',
+      ),
     );
     const labels = [...html.matchAll(/>([A-Z][a-z]{2}(?: \d{4})?)<\/text>/g)].map(
       ([, label]) => label,
@@ -244,12 +247,13 @@ ${sizes.trim()}
     expect(labels).toEqual(["Oct 2026", "Nov", "Dec", "Jan 2027", "Feb", "Mar", "Apr"]);
   });
 
-  it("turns bars sideways when their labels are long, keeping every label whole", async () => {
+  it("turns bars sideways with `horizontal`, keeping every label whole", async () => {
     const label = "packages/annotate/test/diff.test.ts › renders rows";
-    const html = await render(
-      chart(`| test | s |\n| --- | --- |\n| ${label} | 1.3 |\n| zoom | 5.1 |`),
-    );
+    const table = `| test | s |\n| --- | --- |\n| ${label} | 1.3 |\n| zoom | 5.1 |`;
+    const html = await render(chart(table, "{horizontal}"));
     expect(html).toContain(`>${label}</text>`);
+    // Upright, the default, a long name wraps under its bar instead.
+    expect(await render(chart(table))).not.toContain(`>${label}</text>`);
     const [, width] = /viewBox="0 0 ([\d.]+) /.exec(html) ?? [];
     expect(Number(width)).toBeLessThanOrEqual(700);
   });
@@ -297,7 +301,7 @@ Cache on.
     const html = await createHtmlRenderer({
       plugins: [charts(), annotate()],
       components: { ...annotateComponents, ...components },
-    })(`::chart
+    })(`::chart{horizontal labels}
 | step | cache miss | cache hit |
 | --- | --: | --: |
 | Client build | 8.8 | 0 |
@@ -408,7 +412,7 @@ The first slice.
       plugins: [charts(), annotate()],
       components: { ...annotateComponents, ...components },
     })(markdown);
-    expect(html).toContain('viewBox="0 0 544 396"');
+    expect(html).toContain('viewBox="0 0 544 397"');
     expect(html).toContain('ca-stamp" style="left:0;top:0;translate:-50% -50%"');
   });
 
@@ -514,8 +518,8 @@ ${sizes.trim()}
       chart(months, '{type="waterfall"}'),
     ].join("\n\n");
     expect(await issues(markdown)).toEqual([
-      "`::chart` 1: `colour` isn't a prop of `::chart`. Valid props: type, x, y, title, labels.",
-      '`::chart` 1: `type="donut"` isn\'t a chart type. Use `bar`, `stacked`, `line`, `area`, `scatter`, `dumbbell`, `waterfall`, `pie` or `gantt`.',
+      "`::chart` 1: `colour` isn't a prop of `::chart`. Valid props: type, x, y, title, labels, horizontal.",
+      '`::chart` 1: `type="donut"` isn\'t a chart type. Use `bar`, `stacked`, `line`, `area`, `scatter`, `dumbbell`, `waterfall`, `pie`, `gantt` or `sankey`.',
       '`::chart` 2: `y` names column `befor`, but its table has `month`, `before` and `after`. Separate several with commas, as in `y="before, after"`.',
       "`::chart` 3: row 1 has `41 kB` in `size`, which isn't a number. Write the number alone, such as `1200` or `1,200`, and put the unit in the header, such as `size (ms)`.",
       '`::chart` 4: a pie shows one column of numbers, and this one has `before` and `after`. Name one with `y`, or use `type="bar"`.',
@@ -523,9 +527,10 @@ ${sizes.trim()}
       '`::chart` 6: a scatter plot needs numbers in `package`, its `x`. Use `type="bar"`, or make `x` a column of numbers.',
       '`::chart` 7: a dumbbell joins two or more columns of numbers per row, such as `before` and `after`, and this one has `size (kB)`. Add a column, or use `type="bar"`.',
       '`::chart` 8: a waterfall shows one column of numbers, and this one has `before` and `after`. Name one with `y`, or use `type="bar"`.',
+      "`::chart` 8: a waterfall's last row is its end total, and `2026-06` is 990 while `2026-04` and the changes after it add up to 1840. Fix the total, add the missing change, or end the table with a total row of 1840.",
     ]);
     const html = await render(markdown);
-    // An unknown or unfit type falls back to the default, a bad cell is left out, and a pie or a waterfall draws its
+    // An unknown or unfit type draws bars, a bad cell is left out, and a pie or a waterfall draws its
     // first column. A missing column leaves nothing to draw.
     expect(html.match(/<svg role="img"/g)).toHaveLength(6);
     expect(html).toContain("Just text.");
@@ -544,7 +549,8 @@ ${sizes.trim()}
       '`::chart` 2: a line needs at least two rows to draw, and this one has one. Add a row, or use `type="bar"`.',
       '`::chart` 3: a pie of `n` has nothing to divide, since every number is 0 or empty. Use `type="bar"`, or check the numbers.',
     ]);
-    expect((await render(markdown)).match(/data-type="bar"/g)).toHaveLength(2);
+    // The first is bars too, since bars are the default.
+    expect((await render(markdown)).match(/data-type="bar"/g)).toHaveLength(3);
   });
 
   it("gives every grouped bar over dates its own lane", async () => {
@@ -583,8 +589,8 @@ ${sizes.trim()}
   const durations = (html: string) => texts(html, "mark").flat();
 
   it("draws a gantt top to bottom in table order, with each bar's duration and a diamond for a milestone", async () => {
-    const html = await render(chart(build, '{type="gantt"}'));
-    expect(await issues(chart(build, '{type="gantt"}'))).toEqual([]);
+    const html = await render(chart(build, '{type="gantt" labels}'));
+    expect(await issues(chart(build, '{type="gantt" labels}'))).toEqual([]);
     expect(html).toContain(
       '<figure class="cch" data-type="gantt"><div class="cch-plot"><svg role="img" aria-label="gantt chart of step, from start to end"',
     );
@@ -601,6 +607,11 @@ ${sizes.trim()}
     expect(ticks).not.toContain("−2");
     expect(durations(html)).toEqual(["1.12", "3.67", "4.12", "1.94"]);
     expect(html.match(/class="mark-symbol role-mark/g)).toHaveLength(1);
+    // Without `labels`, the bars print no durations, and keep their names and milestone.
+    const bare = await render(chart(build, '{type="gantt"}'));
+    expect(durations(bare)).toEqual([]);
+    expect(axes(bare).names).toEqual(names);
+    expect(bare.match(/class="mark-symbol role-mark/g)).toHaveLength(1);
   });
 
   it("colors a gantt's bars by its column of names, where a task may repeat", async () => {
@@ -633,7 +644,7 @@ ${sizes.trim()}
 | Design | 2026-10-01 | 2026-10-08 |
 | Build | 2026-10-12 | 2026-11-02 |
 | Release | 2026-11-09 | 2026-11-10 |`,
-      '{type="gantt"}',
+      '{type="gantt" labels}',
     );
     const hours = chart(
       `
@@ -641,7 +652,7 @@ ${sizes.trim()}
 | --- | --- | --- |
 | Backup | 2026-10-24T01:00 | 2026-10-24T02:30 |
 | Migrate | 2026-10-24 02:30 | 2026-10-24T03:10 |`,
-      '{type="gantt"}',
+      '{type="gantt" labels}',
     );
     const years = chart(
       `
@@ -649,7 +660,7 @@ ${sizes.trim()}
 | --- | --- | --- |
 | Node 22 | 2024 | 2027 |
 | Node 24 | 2025 | 2028 |`,
-      '{type="gantt"}',
+      '{type="gantt" labels}',
     );
     expect(await issues([days, hours, years].join("\n\n"))).toEqual([]);
     const day = await render(days);
@@ -816,7 +827,7 @@ No such run.
 | --- | --: |
 | nit: this file uses tabs and the rest of the repo uses spaces | 1,284 |
 | why does the deploy script check for pigeons | 3 |`,
-        "{labels}",
+        "{horizontal labels}",
       ),
     );
     expect(value(sideways, "1,284")).toBe("#ffffff");
@@ -824,26 +835,75 @@ No such run.
     expect(await issues(chart(sizes, '{type="stacked" labels}'))).toEqual([]);
   });
 
-  it("reports `labels` on a chart with no bars to write on", async () => {
+  it("reports `labels` and `horizontal` on a chart that doesn't take them", async () => {
     expect(
       await issues(
         [
-          chart(months, "{labels}"),
-          chart(months, '{type="waterfall" y="after" labels}'),
+          chart(months, '{type="line" labels}'),
           chart(sizes, '{labels="inside"}'),
+          chart(months, '{type="dumbbell" horizontal}'),
+          chart(months, '{type="area" horizontal}'),
+          chart(sizes, '{labels="false"}'),
+          chart(sizes, '{horizontal="yes"}'),
           chart(
             `| step | start | end |\n| --- | --: | --: |\n| build | 0 | 4 |`,
             '{type="gantt" labels}',
           ),
-          chart(sizes, '{labels="false"}'),
+          chart(months, '{type="waterfall" y="after" labels}'),
         ].join("\n\n"),
       ),
     ).toEqual([
-      '`::chart` 1: `labels` writes each value on its bar, and a line has no bars. Remove it, or use `type="bar"`.',
-      "`::chart` 2: a waterfall prints its numbers itself, so `labels` changes nothing. Remove it.",
-      '`::chart` 3: `labels` takes no value. Write `labels` alone, as in `::chart{type="stacked" labels}`.',
-      "`::chart` 4: a gantt prints its numbers itself, so `labels` changes nothing. Remove it.",
+      '`::chart` 1: `labels` prints each number on its bar, step, dot, or node, and a line has none. Remove it, or use `type="bar"`.',
+      '`::chart` 2: `labels` takes no value. Write `labels` alone, as in `::chart{type="bar" labels}`.',
+      "`::chart` 3: a dumbbell always runs sideways, so `horizontal` changes nothing. Remove it.",
+      '`::chart` 4: `horizontal` turns bars sideways, and an area has no bars to turn. Remove it, or use `type="bar"`.',
+      '`::chart` 6: `horizontal` takes no value. Write `horizontal` alone, as in `::chart{type="bar" horizontal}`.',
+      "`::chart` 8: a waterfall's last row is its end total, and `2026-06` is 640 while `2026-04` and the changes after it add up to 1208. Fix the total, add the missing change, or end the table with a total row of 1208.",
     ]);
+  });
+
+  it("draws a waterfall's first and last rows as totals, and reports an end total that doesn't add up", async () => {
+    const waterfall = (end: string) =>
+      chart(
+        `| step | ducks |\n| --- | --: |\n| July | 41 |\n| bulk order | 12 |\n| taken home | -4 |\n| October | ${end} |`,
+        '{type="waterfall" labels}',
+      );
+    expect(await issues(waterfall("49"))).toEqual([]);
+    expect(await issues(waterfall("-3"))).toEqual([
+      "`::chart` 1: a waterfall's last row is its end total, and `October` is -3 while `July` and the changes after it add up to 49. Fix the total, add the missing change, or end the table with a total row of 49.",
+    ]);
+    // The end is still a total, so the start and the end are the only bars in the totals' color.
+    const totals = (html: string) => html.match(/<path d="M[^"]*" fill="#737373"/g)?.length;
+    expect(totals(await render(waterfall("-3")))).toBe(2);
+  });
+
+  it("checks large waterfall totals without hiding changes or reporting floating-point roundoff", async () => {
+    const waterfall = (values: number[]) =>
+      chart(
+        `| step | value |\n| --- | --: |\n${values.map((value, i) => `| step ${i} | ${value} |`).join("\n")}`,
+        '{type="waterfall"}',
+      );
+    for (const values of [
+      [1e16, 1, -1e16, 2],
+      [1e16, 1, -1e16, 0],
+      [1e12, 1, 1e12],
+      [1e15, 1, 1e15],
+      [1e16, 1e16, -1e16, -1e16, 5],
+      [-1e12, -1, -1e12],
+      [0.000001, 0.000001, 0.0000020001],
+    ]) {
+      expect(await issues(waterfall(values))).toHaveLength(1);
+    }
+    for (const values of [
+      [1.9, -2, -0.1],
+      [1e16, 1, -1e16, 1],
+      [1e12, 1, 1e12 + 1],
+      [1e16, 1e16, -1e16, -1e16, 0],
+      [0.1, 0.2, 0.3],
+      [0.1, 0.2, -0.3, 0],
+    ]) {
+      expect(await issues(waterfall(values))).toEqual([]);
+    }
   });
 
   it("crosses the plot with a line at a value, growing the axis to reach it", async () => {
@@ -871,7 +931,8 @@ No such run.
     const [left, low, width, height] = box(await draw(line("30")));
     expect(width).toBeGreaterThan(80);
     expect(height).toBeLessThan(5);
-    expect(left).toBeLessThan(10);
+    // It starts past the value axis's labels.
+    expect(left).toBeLessThan(15);
     const [, high] = box(await draw(line("90")));
     expect(high).toBeLessThan(low!);
     expect(high).toBeGreaterThanOrEqual(0);
@@ -882,6 +943,7 @@ No such run.
         marked(
           ':::annotation{mark="line" value="50"}\nSLA.\n:::',
           `| first comment | minutes |\n| --- | --: |\n| nit: this file uses tabs and the rest of the repo uses spaces | 84 |\n| why does the deploy script check for pigeons | 47 |`,
+          "{horizontal}",
         ),
       ),
     );
@@ -909,6 +971,138 @@ No such run.
       '`::chart` 4, annotation 1: `value` places a line across the plot. Add `mark="line"`, or remove `value` and mark a row with `at`.',
       '`::chart` 5, annotation 1: `mark="line"` crosses the plot at a number on its value axis, and a pie has none. Mark a slice with `at` and another mark, such as `box`.',
     ]);
+  });
+
+  const budget = `
+| from | to | amount |
+| --- | --- | --: |
+| salary | budget | 3,000 |
+| freelance | budget | 200 |
+| budget | rent | 1,200 |
+| budget | savings | 2,000 |`;
+  const words = (html: string) =>
+    [...html.matchAll(/<text[^>]*>([^<]+)<\/text>/g)].map(([, text]) => text);
+
+  it("draws a sankey's nodes in table order, as tall as their flows, with their amounts under `labels`", async () => {
+    expect(await issues(chart(budget, '{type="sankey" labels}'))).toEqual([]);
+    const html = await render(chart(budget, '{type="sankey" labels}'));
+    expect(html).toContain(
+      '<figure class="cch" data-type="sankey"><div class="cch-plot"><svg role="img" aria-label="sankey chart of amount from from to to"',
+    );
+    // Each node takes its place from the row that first names it.
+    expect(words(html)).toEqual([
+      "salary",
+      "budget",
+      "freelance",
+      "rent",
+      "savings",
+      "3,000",
+      "3,200",
+      "200",
+      "1,200",
+      "2,000",
+    ]);
+    // A flow per row, and a node per name.
+    expect(html.match(/class="mark-path role-mark/g)).toHaveLength(1);
+    expect(html.match(/<path [^>]*stroke-opacity="0.3"/g)).toHaveLength(4);
+    expect(html.match(/class="mark-rect role-mark/g)).toHaveLength(1);
+    // Without `labels`, the nodes keep their names and drop their amounts.
+    expect(words(await render(chart(budget, '{type="sankey"}')))).toEqual([
+      "salary",
+      "budget",
+      "freelance",
+      "rent",
+      "savings",
+    ]);
+    expect(await render(chart(budget, '{type="sankey"}'))).toContain("<td>freelance</td>");
+  });
+
+  it("marks a sankey's node by its name", async () => {
+    const markdown = `::chart{type="sankey"}
+${budget.trim()}
+:::annotation{at="budget" mark="circle"}
+Everything passes through here.
+:::
+:::annotation{at="budget" series="amount"}
+Not a column.
+:::
+:::annotation{at="taxes"}
+Not a node.
+:::
+:::annotation{mark="line" value="1000"}
+No axis.
+:::
+::`;
+    const plugins = [charts(), annotate()];
+    expect((await parseMarkdown(markdown, { plugins })).meta.issues).toEqual([
+      "`::chart` 1, annotation 2: `series` doesn't apply to a sankey, where `at` names the node. Leave `series` out.",
+      '`::chart` 1, annotation 3: `at="taxes"` isn\'t a node in `from` or `to` in the table. Copy it from the table, such as `salary`, `budget`, `freelance`.',
+      '`::chart` 1, annotation 4: `mark="line"` crosses the plot at a number on its value axis, and a sankey has none. Mark a node with `at` and another mark, such as `box`.',
+    ]);
+    const html = await createHtmlRenderer({
+      plugins,
+      components: { ...annotateComponents, ...components },
+    })(markdown);
+    expect(html).toMatch(/class="ca-mark ca-circle[^"]*" data-n="1"[^>]*left:[\d.]+%;top:[\d.]+%/);
+    expect(html).toContain("Everything passes through here.");
+  });
+
+  it("rejects overflowing sankey amounts before layout", async () => {
+    for (const validRow of ["", "\n| income | savings | 100 |"]) {
+      const markdown = chart(
+        `| from | to | amount |\n| --- | --- | --: |\n| income | spending | ${"9".repeat(309)} |${validRow}`,
+        '{type="sankey"}',
+      );
+      const { meta } = await parseMarkdown(markdown, { plugins: [charts()] });
+      expect(meta.issues).toHaveLength(1);
+      expect(meta.issues[0]).toContain("row 1");
+      expect(Object.values(meta.issueRules)).toEqual(["comark/charts/invalid-flow"]);
+      const html = await render(markdown);
+      expect(html).not.toMatch(/NaN|Infinity/);
+      expect(html.includes('<svg role="img"')).toBe(Boolean(validRow));
+      expect(html).toContain(`${"9".repeat(309)}</td>`);
+    }
+  });
+
+  it("reports a sankey's problems, naming the row and the fix", async () => {
+    const markdown = [
+      chart(`| pond | ducks |\n| --- | --: |\n| north | 12 |`, '{type="sankey"}'),
+      chart(
+        `
+| from | to | amount |
+| --- | --- | --: |
+| salary | budget | 3,000 |
+| budget | budget | 10 |
+| budget | rent | 0 |
+| budget | refund | -50 |
+| budget | savings | lots |
+| budget | | 5 |
+| budget | savings | 1,000 |
+| budget | savings | 900 |
+| budget | holidays | 2,500 |`,
+        '{type="sankey" horizontal}',
+      ),
+      chart(
+        `| from | to | ducks |\n| --- | --- | --: |\n| north | south | 12 |\n| south | east | 3 |\n| east | north | 4 |`,
+        '{type="sankey"}',
+      ),
+    ].join("\n\n");
+    expect(await issues(markdown)).toEqual([
+      "`::chart` 1: a sankey reads three columns, where each flow comes from, where it goes, and how much, as in `| from | to | amount |`, and its table has `pond` and `ducks`. Add a column naming where each flow goes.",
+      "`::chart` 2: row 2 flows from `budget` back into itself, which a sankey can't draw. Point it at another node, or remove the row.",
+      "`::chart` 2: row 3 flows `0` from `budget` to `rent`, and a flow needs an amount above 0. Fill in the amount, or remove the row.",
+      "`::chart` 2: row 4 flows `-50` from `budget` to `refund`, and a flow needs an amount above 0. Swap `from` and `to` and write the amount without its sign, or remove the row.",
+      "`::chart` 2: row 5 has `lots` in `amount`, which isn't a number. Write the number alone, such as `1200` or `1,200`, and put the unit in the header, such as `amount ($)`.",
+      "`::chart` 2: row 6 has no `to`. Fill it in, or remove the row.",
+      "`::chart` 2: rows 7 and 8 both flow from `budget` to `savings`. Add them up into one row.",
+      "`::chart` 2: `budget` sends out 3,500 but takes in 3,000. Add the flow into it that's missing, or check the amounts.",
+      '`::chart` 2: `horizontal` turns bars sideways, and a sankey has no bars to turn. Remove it, or use `type="bar"`.',
+      "`::chart` 3: its flows run in a loop, `north` to `south` to `east` to `north`, and a sankey only runs one way. Remove one of those rows, or split a node in two, such as `north (in)` and `north (out)`.",
+    ]);
+    // The second still draws what it can, and a loop shows its table.
+    const html = await render(markdown);
+    expect(html.match(/<svg role="img"/g)).toHaveLength(1);
+    expect(html).toContain("<td>east</td>");
   });
 
   it("renders the content as it is when there's nothing to draw", async () => {

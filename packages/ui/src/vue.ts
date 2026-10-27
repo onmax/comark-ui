@@ -1,4 +1,4 @@
-import type { Component } from "vue";
+import { type Component, defineComponent, h } from "vue";
 import * as badge from "comark-badge/vue";
 import * as cards from "comark-cards/vue";
 import * as carousel from "comark-carousel/vue";
@@ -32,6 +32,7 @@ import * as tests from "comark-tests/vue";
 import * as zoom from "comark-zoom/vue";
 import { addMermaidStyles } from "./client.ts";
 import { type Preset, type PresetOptions, preset } from "./index.ts";
+import { typesetCss } from "./typeset-css.ts";
 
 export { criticCss } from "./index.ts";
 export type { PresetOptions } from "./index.ts";
@@ -41,6 +42,12 @@ const mermaid = {
   default: pele,
   components: { pele: createPeleComponent({ onRender: addMermaidStyles }) },
 };
+
+// Rendered with the document rather than added on mount, so `@scope` styles its root and server renders arrive styled.
+const typeset = defineComponent({
+  name: "ComarkTypeset",
+  setup: () => () => h("style", { "data-comark-typeset": "", innerHTML: typesetCss }),
+});
 
 /** Every plugin with components for `@comark/vue`, which leaves out annotate and diff. */
 export default (options?: PresetOptions): Preset<Component> =>
@@ -76,6 +83,7 @@ export default (options?: PresetOptions): Preset<Component> =>
       table,
       tabs,
       tests,
+      typeset,
       zoom,
     },
     options,

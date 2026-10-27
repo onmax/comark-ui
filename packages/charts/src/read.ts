@@ -12,14 +12,15 @@ export type ChartType =
   | "dumbbell"
   | "waterfall"
   | "pie"
-  | "gantt";
+  | "gantt"
+  | "sankey";
 
 /** How the x values read: dates and numbers sit on a scale, anything else is a name. */
 export type XKind = "year" | "month" | "date" | "time" | "number" | "name";
 
 /** A chart as the plugin checked it and the renderer draws it. */
 export interface Chart {
-  type: ChartType;
+  type: Exclude<ChartType, "sankey">;
   title: string;
   /** The x column's header. */
   x: string;
@@ -32,8 +33,10 @@ export interface Chart {
    */
   rows: { x: string; values: (number | undefined)[]; group?: string }[];
   marks: ChartMark[];
-  /** Whether each bar or segment prints its value, from `labels`. Only bar and stacked bar charts take it. */
+  /** Whether the chart prints its numbers on its bars, steps, or dots, from `labels`. */
   labels?: boolean;
+  /** Whether bars run sideways, from `horizontal`. Only bar and stacked bar charts take it. */
+  horizontal?: boolean;
   /** How a gantt's starts and ends read: numbers, or dates kept as milliseconds since 1970 in UTC. */
   scale?: Exclude<XKind, "name">;
   /** The column of names a gantt colors its bars by. */
@@ -48,6 +51,22 @@ export interface ChartMark extends Omit<Annotation, "x" | "y" | "w" | "h"> {
   row?: number;
   series?: string;
   value?: number;
+}
+
+/** A sankey: flows between named nodes, one per row, each as wide as its amount. */
+export interface FlowChart {
+  type: "sankey";
+  title: string;
+  /** The headers of the columns a flow comes from, goes to, and its amount. */
+  from: string;
+  to: string;
+  amount: string;
+  /** Every node, in the order the table first names it; a mark's `row` is its index here. */
+  nodes: string[];
+  flows: { from: number; to: number; value: number }[];
+  marks: ChartMark[];
+  /** Whether each node prints its amount, from `labels`. */
+  labels?: boolean;
 }
 
 /** A chart drawn from a Vega-Lite spec over the table: any chart Vega-Lite draws, with the table as its data. */
@@ -79,9 +98,21 @@ export const TYPES: readonly ChartType[] = [
   "waterfall",
   "pie",
   "gantt",
+  "sankey",
 ];
 // A bare `{labels}` arrives as `:labels="true"`, Comark's spelling of a prop with no value.
-const PROPS = new Set(["type", "x", "y", "title", "labels", ":labels", "class", "id"]);
+const PROPS = new Set([
+  "type",
+  "x",
+  "y",
+  "title",
+  "labels",
+  ":labels",
+  "horizontal",
+  ":horizontal",
+  "class",
+  "id",
+]);
 const MARK_PROPS = new Set(["at", "series", "value", "mark", "color", "side", "class", "id"]);
 const A: Record<ChartType, string> = {
   bar: "a bar chart",
@@ -93,6 +124,7 @@ const A: Record<ChartType, string> = {
   waterfall: "a waterfall",
   pie: "a pie",
   gantt: "a gantt",
+  sankey: "a sankey",
 };
 
 const KINDS: [XKind, RegExp][] = [
@@ -125,6 +157,8 @@ const list = (values: string[], last = "and") =>
 export const readNumber = (cell: string): number | undefined =>
   NUMBER.test(cell) ? Number(cell.replaceAll(",", "")) : undefined;
 
+const format = (value: number) => value.toLocaleString("en-US", { maximumFractionDigits: 12 });
+
 function kindOf(values: string[]): XKind {
   for (const [kind, pattern] of KINDS)
     if (values.every((value) => pattern.test(value))) return kind;
@@ -139,7 +173,7 @@ export function readChart(
   node: ElementNode,
   number: number,
   issues: Issue[],
-): Chart | SpecChart | undefined {
+): Chart | FlowChart | SpecChart | undefined {
   const name = `\`::chart\` ${number}`;
   const attrs = node[1];
   // A chart drawn from a spec checks its props itself.
@@ -148,7 +182,7 @@ export function readChart(
     if (!spec && key !== "$" && !PROPS.has(key))
       issues.push({
         rule: "comark/charts/unknown-prop",
-        message: `${name}: ${code(key)} isn't a prop of \`::chart\`. Valid props: type, x, y, title, labels.`,
+        message: `${name}: ${code(key)} isn't a prop of \`::chart\`. Valid props: type, x, y, title, labels, horizontal.`,
       });
 
   const content = childrenOf(node).filter(isContent);
@@ -243,9 +277,33 @@ export function readChart(
     });
     return;
   }
+  if (text(attrs.type) === "sankey") {
+    const flow = readFlow(
+      name,
+      attrs,
+      columns,
+      cells,
+      x,
+      y ? named : undefined,
+      annotations,
+      issues,
+    );
+    const flags = readFlags(name, "sankey", attrs, issues);
+    return flow && { ...flow, ...flags };
+  }
   if (text(attrs.type) === "gantt") {
-    readLabels(name, "gantt", attrs, issues);
-    return readGantt(name, attrs, columns, cells, x, y ? named : undefined, annotations, issues);
+    const gantt = readGantt(
+      name,
+      attrs,
+      columns,
+      cells,
+      x,
+      y ? named : undefined,
+      annotations,
+      issues,
+    );
+    const labels = readFlags(name, "gantt", attrs, issues);
+    return gantt && { ...gantt, ...labels };
   }
 
   const rows = cells.map((row, index) => {
@@ -286,8 +344,8 @@ export function readChart(
   const xKind = kindOf(points.map((row) => row.x));
 
   const typeText = text(attrs.type);
-  const fallback: ChartType = xKind === "name" ? "bar" : "line";
-  let type = TYPES.find((type) => type === typeText) ?? fallback;
+  let type =
+    TYPES.find((type): type is Chart["type"] => type === typeText && type !== "sankey") ?? "bar";
   if (typeText && type !== typeText)
     issues.push({
       rule: "comark/charts/unknown-type",
@@ -299,9 +357,9 @@ export function readChart(
   if (type === "scatter" && xKind !== "number") {
     issues.push({
       rule: "comark/charts/non-numeric-x",
-      message: `${name}: a scatter plot needs numbers in ${code(x)}, its \`x\`. Use \`type="${fallback}"\`, or make \`x\` a column of numbers.`,
+      message: `${name}: a scatter plot needs numbers in ${code(x)}, its \`x\`. Use \`type="bar"\`, or make \`x\` a column of numbers.`,
     });
-    type = fallback;
+    type = "bar";
   }
   if (type === "dumbbell" && named.length < 2) {
     issues.push({
@@ -339,6 +397,7 @@ export function readChart(
     });
     type = "bar";
   }
+  if (type === "waterfall") readTotal(name, points, issues);
   return {
     type,
     title: text(attrs.title),
@@ -347,33 +406,93 @@ export function readChart(
     series,
     rows: points.map((row) => ({ x: row.x, values: row.values.slice(0, series.length) })),
     marks: readMarks(name, type, x, annotations, points, series, issues),
-    ...(readLabels(name, type, attrs, issues) && { labels: true }),
+    ...readFlags(name, type, attrs, issues),
   };
 }
 
-/** Reads `labels`, which writes each value on its bar: true when it's on and the chart has bars to write on. */
-function readLabels(name: string, type: ChartType, attrs: ElementNode[1], issues: Issue[]) {
-  const raw = attrs.labels ?? attrs[":labels"];
+/**
+ * A waterfall's first row is its start total and its last row its end total, so the last must be the first plus every
+ * change between them, as a reader checks it.
+ */
+function readTotal(
+  name: string,
+  points: { x: string; values: (number | undefined)[] }[],
+  issues: Issue[],
+) {
+  const values = points.map((row) => row.values[0] ?? 0);
+  if (values.length < 2) return;
+  const sum = sumDecimals(values.slice(0, -1));
+  const end = values.at(-1)!;
+  if (end === sum) return;
+  const last = points.at(-1)!.x;
+  const round = (value: number) =>
+    value.toLocaleString("en-US", { maximumFractionDigits: 12, useGrouping: false });
+  issues.push({
+    rule: "comark/charts/waterfall-total",
+    message: `${name}: a waterfall's last row is its end total, and ${code(last)} is ${round(end)} while ${code(points[0]!.x)} and the changes after it add up to ${round(sum)}. Fix the total, add the missing change, or end the table with a total row of ${round(sum)}.`,
+  });
+}
+
+/** Add the numbers as readers see them in decimal, rounding only the final total to a Number. */
+function sumDecimals(values: number[]): number {
+  if (!values.every(Number.isFinite)) return values.reduce((sum, value) => sum + value, 0);
+  const decimals = values.map((value) => {
+    const [mantissa, exponent = "0"] = String(value).split("e");
+    const fraction = mantissa!.split(".")[1]?.length ?? 0;
+    return {
+      coefficient: BigInt(mantissa!.replace(".", "")),
+      exponent: Number(exponent) - fraction,
+    };
+  });
+  const exponent = Math.min(...decimals.map((value) => value.exponent));
+  const coefficient = decimals.reduce(
+    (sum, value) => sum + value.coefficient * 10n ** BigInt(value.exponent - exponent),
+    0n,
+  );
+  return Number(`${coefficient}e${exponent}`);
+}
+
+/** Reads a prop written alone, such as `{labels}`: true when it's on, and its problems when it has a value. */
+function readFlag(name: string, prop: string, attrs: ElementNode[1], issues: Issue[]) {
+  const raw = attrs[prop] ?? attrs[`:${prop}`];
   if (raw === undefined) return false;
   const value = text(raw);
   if (value === "false") return false;
-  if (value !== "" && value !== "true")
-    issues.push({
-      rule: "comark/charts/invalid-labels",
-      message: `${name}: \`labels\` takes no value. Write \`labels\` alone, as in \`::chart{type="stacked" labels}\`.`,
-    });
-  else if (type === "dumbbell" || type === "waterfall" || type === "gantt")
-    issues.push({
-      rule: "comark/charts/invalid-labels",
-      message: `${name}: ${A[type]} prints its numbers itself, so \`labels\` changes nothing. Remove it.`,
-    });
-  else if (type !== "bar" && type !== "stacked")
-    issues.push({
-      rule: "comark/charts/invalid-labels",
-      message: `${name}: \`labels\` writes each value on its bar, and ${A[type]} has no bars. Remove it, or use \`type="bar"\`.`,
-    });
-  else return true;
+  if (value === "" || value === "true") return true;
+  issues.push({
+    rule: `comark/charts/invalid-${prop}`,
+    message: `${name}: \`${prop}\` takes no value. Write \`${prop}\` alone, as in \`::chart{type="bar" ${prop}}\`.`,
+  });
   return false;
+}
+
+// The types with bars, steps, or dots to print a number on; lines, areas, scatter plots, and pies are read off their axis
+// or legend and the data table.
+const LABELED = new Set<ChartType>(["bar", "stacked", "waterfall", "dumbbell", "gantt", "sankey"]);
+
+/** Reads `labels` and `horizontal`, each on the types that take it. */
+function readFlags(name: string, type: ChartType, attrs: ElementNode[1], issues: Issue[]) {
+  const flags: { labels?: true; horizontal?: true } = {};
+  if (readFlag(name, "labels", attrs, issues)) {
+    if (LABELED.has(type)) flags.labels = true;
+    else
+      issues.push({
+        rule: "comark/charts/invalid-labels",
+        message: `${name}: \`labels\` prints each number on its bar, step, dot, or node, and ${A[type]} has none. Remove it, or use \`type="bar"\`.`,
+      });
+  }
+  if (readFlag(name, "horizontal", attrs, issues)) {
+    if (type === "bar" || type === "stacked") flags.horizontal = true;
+    else
+      issues.push({
+        rule: "comark/charts/invalid-horizontal",
+        message:
+          type === "dumbbell" || type === "gantt"
+            ? `${name}: ${A[type]} always runs sideways, so \`horizontal\` changes nothing. Remove it.`
+            : `${name}: \`horizontal\` turns bars sideways, and ${A[type]} has no bars to turn. Remove it, or use \`type="bar"\`.`,
+      });
+  }
+  return flags;
 }
 
 /**
@@ -410,11 +529,11 @@ function readMarks(
     const valueText = text(markAttrs.value);
     if (mark.mark === "line") {
       const value = readNumber(valueText);
-      const axis = type !== "pie" && type !== "gantt";
+      const axis = type !== "pie" && type !== "gantt" && type !== "sankey";
       if (!axis)
         found.push({
           rule: "comark/charts/invalid-line",
-          message: `\`mark="line"\` crosses the plot at a number on its value axis, and ${A[type]} has none. Mark a ${type === "pie" ? "slice" : "bar"} with \`at\` and another mark, such as \`box\`.`,
+          message: `\`mark="line"\` crosses the plot at a number on its value axis, and ${A[type]} has none. Mark a ${type === "pie" ? "slice" : type === "sankey" ? "node" : "bar"} with \`at\` and another mark, such as \`box\`.`,
         });
       else if (!valueText)
         found.push({
@@ -454,22 +573,29 @@ function readMarks(
       .slice(0, 3)
       .map((point) => code(point.x))
       .join(", ");
+    // A sankey's marks name a node, which the table writes in either of two columns.
+    const what = type === "sankey" ? `node in ${x}` : code(x);
     if (!at)
       found.push({
         rule: "comark/charts/invalid-at",
-        message: `\`at\` is required: the ${code(x)} of the row it marks, one of ${sample}${among.length > 3 ? "…" : ""}.`,
+        message: `\`at\` is required: the ${type === "sankey" ? `node it marks, in ${x}` : `${code(x)} of the row it marks`}, one of ${sample}${among.length > 3 ? "…" : ""}.`,
       });
     else if (row === -1)
       found.push({
         rule: "comark/charts/invalid-at",
-        message: `\`at="${at}"\` isn't a ${code(x)} ${group === undefined ? "in the table" : `of the ${code(group)} rows`}. Copy it from the table, such as ${sample}.`,
+        message: `\`at="${at}"\` isn't a ${what} ${group === undefined ? "in the table" : `of the ${code(group)} rows`}. Copy it from the table, such as ${sample}.`,
       });
     else if (groups?.column && !seriesName && matches.length > 1)
       found.push({
         rule: "comark/charts/invalid-at",
         message: `\`at="${at}"\` names a row in ${list(matches.map((point) => code(point.group ?? "")))}. Add \`series\` with the ${code(groups.column)} of the one it marks.`,
       });
-    if (seriesName && groups && group === undefined)
+    if (seriesName && type === "sankey")
+      found.push({
+        rule: "comark/charts/unknown-series",
+        message: `\`series\` doesn't apply to a sankey, where \`at\` names the node. Leave \`series\` out.`,
+      });
+    else if (seriesName && groups && group === undefined)
       found.push({
         rule: "comark/charts/unknown-series",
         message: groups.column
@@ -663,6 +789,154 @@ function readGantt(
     marks,
     scale,
     ...(group !== undefined && { group }),
+  };
+}
+
+/**
+ * Reads a sankey's table: a row per flow, from the node in `x` to the node in the next column of names, as wide as the
+ * column of numbers `y` names, or the first one.
+ */
+function readFlow(
+  name: string,
+  attrs: ElementNode[1],
+  columns: string[],
+  cells: string[][],
+  x: string,
+  named: string[] | undefined,
+  annotations: ElementNode[],
+  issues: Issue[],
+): FlowChart | undefined {
+  const cellsOf = (column: string) => cells.flatMap((row) => row[columns.indexOf(column)] || []);
+  // A column is of numbers when most of its cells are, so a typo in one is reported rather than taking the column.
+  const numeric = (column: string) => {
+    const filled = cellsOf(column);
+    return filled.filter((cell) => readNumber(cell) !== undefined).length * 2 >= filled.length;
+  };
+  const others = columns.filter((column) => column !== x);
+  const to = others.find((column) => !named?.includes(column) && !numeric(column));
+  const amounts = named ?? others.filter(numeric).slice(0, 1);
+  if (!to || amounts.length !== 1) {
+    issues.push({
+      rule: "comark/charts/flow-columns",
+      message:
+        named && named.length !== 1
+          ? `${name}: \`y\` names a sankey's one column of amounts, and it names ${named.length}, ${list(named.map(code))}. Name one, as in \`y="amount"\`.`
+          : `${name}: a sankey reads three columns, where each flow comes from, where it goes, and how much, as in \`| from | to | amount |\`, and its table has ${list(columns.map(code))}. ${to ? "Add a column of amounts." : "Add a column naming where each flow goes."}`,
+    });
+    return;
+  }
+  // SAFETY: amounts holds exactly one column, since every other length returned above.
+  const [amount] = amounts as [string];
+  const nodes: string[] = [];
+  const node = (label: string) => {
+    if (!nodes.includes(label)) nodes.push(label);
+    return nodes.indexOf(label);
+  };
+  const flows: FlowChart["flows"] = [];
+  const firstOf = new Map<string, number>();
+  for (const [index, row] of cells.entries()) {
+    const [source = "", target = "", cell = ""] = [x, to, amount].map(
+      (column) => row[columns.indexOf(column)] ?? "",
+    );
+    const missing = [!source && x, !target && to].filter((column): column is string => !!column);
+    if (missing.length) {
+      issues.push({
+        rule: "comark/charts/missing-x",
+        message: `${name}: row ${index + 1} has no ${list(missing.map(code), "or")}. Fill ${missing.length > 1 ? "them" : "it"} in, or remove the row.`,
+      });
+      continue;
+    }
+    const value = readNumber(cell);
+    if (cell && value === undefined) {
+      issues.push({
+        rule: "comark/charts/non-numeric-value",
+        message: `${name}: row ${index + 1} has ${code(cell)} in ${code(amount)}, which isn't a number. Write the number alone, such as \`1200\` or \`1,200\`, and put the unit in the header, such as \`${amount} ($)\`.`,
+      });
+      continue;
+    }
+    if (source === target) {
+      issues.push({
+        rule: "comark/charts/invalid-flow",
+        message: `${name}: row ${index + 1} flows from ${code(source)} back into itself, which a sankey can't draw. Point it at another node, or remove the row.`,
+      });
+      continue;
+    }
+    if (value !== undefined && !Number.isFinite(value)) {
+      issues.push({
+        rule: "comark/charts/invalid-flow",
+        message: `${name}: row ${index + 1} has ${code(cell)} in ${code(amount)}, which is too large to represent as a finite number. Use a smaller unit scale, or remove the row.`,
+      });
+      continue;
+    }
+    if (value === undefined || value <= 0) {
+      issues.push({
+        rule: "comark/charts/invalid-flow",
+        message: `${name}: row ${index + 1} flows ${value === undefined ? "nothing" : code(cell)} from ${code(source)} to ${code(target)}, and a flow needs an amount above 0. ${value !== undefined && value < 0 ? `Swap ${code(x)} and ${code(to)} and write the amount without its sign, or remove the row.` : "Fill in the amount, or remove the row."}`,
+      });
+      continue;
+    }
+    const key = JSON.stringify([source, target]);
+    const first = firstOf.get(key);
+    if (first !== undefined) {
+      issues.push({
+        rule: "comark/charts/duplicate-x",
+        message: `${name}: rows ${first + 1} and ${index + 1} both flow from ${code(source)} to ${code(target)}. Add them up into one row.`,
+      });
+      continue;
+    }
+    firstOf.set(key, index);
+    flows.push({ from: node(source), to: node(target), value });
+  }
+  // A sankey runs one way, so a flow back to a node it came from has no column to land in.
+  const next = (from: number) => flows.filter((flow) => flow.from === from).map((flow) => flow.to);
+  const loop = (start: number, path: number[]): number[] | undefined => {
+    for (const to of next(path.at(-1)!)) {
+      if (to === start) return [...path, to];
+      if (!path.includes(to)) {
+        const found = loop(start, [...path, to]);
+        if (found) return found;
+      }
+    }
+  };
+  for (const start of nodes.keys()) {
+    const found = loop(start, [start]);
+    if (!found) continue;
+    issues.push({
+      rule: "comark/charts/flow-cycle",
+      message: `${name}: its flows run in a loop, ${found.map((index) => code(nodes[index]!)).join(" to ")}, and a sankey only runs one way. Remove one of those rows, or split a node in two, such as \`${nodes[start]} (in)\` and \`${nodes[start]} (out)\`.`,
+    });
+    // With nothing it can draw, the table shows as it is.
+    return;
+  }
+  // A node in the middle passes on what it takes in, so sending out more means a flow into it is missing.
+  for (const [index, label] of nodes.entries()) {
+    const sum = (key: "from" | "to") =>
+      flows.filter((flow) => flow[key] === index).reduce((total, flow) => total + flow.value, 0);
+    const [out, into] = [sum("from"), sum("to")];
+    if (into > 0 && out > into * (1 + 1e-9))
+      issues.push({
+        rule: "comark/charts/flow-imbalance",
+        message: `${name}: ${code(label)} sends out ${format(out)} but takes in ${format(into)}. Add the flow into it that's missing, or check the amounts.`,
+      });
+  }
+  if (!flows.length) return;
+  return {
+    type: "sankey",
+    title: text(attrs.title),
+    from: x,
+    to,
+    amount,
+    nodes,
+    flows,
+    marks: readMarks(
+      name,
+      "sankey",
+      `${code(x)} or ${code(to)}`,
+      annotations,
+      nodes.map((label) => ({ x: label, blank: [false] })),
+      [amount],
+      issues,
+    ),
   };
 }
 

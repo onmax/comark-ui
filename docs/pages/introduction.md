@@ -52,7 +52,7 @@ Each package is a parse plugin and a set of components.
 | Docs blocks | Badges, cards, details, fields, file trees, steps, and quizzes for documentation. |
 | Page behavior | Zoom, carousels, tabs, code buttons, heading links, and a table of contents. |
 | Typography | Markdown syntax: footnotes, definition lists, highlights, keys, figures, CriticMarkup, and CJK emphasis. |
-| Linter | comark-linter, which checks documents from a script, the command line, or Vite Doctor. |
+| Linter | comark-linter, which checks documents from a script, the command line, ESLint, or Vite Doctor. |
 
 Each block's page starts with its demos. Open any demo in the [playground](/play/) to edit it live.
 

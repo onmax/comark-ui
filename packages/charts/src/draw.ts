@@ -7,7 +7,7 @@ import type { Field } from "vega-lite/types_unstable/channeldef.js";
 import type { LayerSpec, UnitSpec } from "vega-lite/types_unstable/spec/index.js";
 import { compile } from "vega-lite";
 import { INK, SERIES } from "./colors.ts";
-import type { Chart, SpecChart, XKind } from "./read.ts";
+import type { Chart, FlowChart, SpecChart, XKind } from "./read.ts";
 
 const { logger, None, parse, View } = vega;
 
@@ -26,7 +26,7 @@ const EM = [
 ] as const;
 // Graphemes, so a family or a flag emoji counts as the one glyph it draws.
 const graphemes = new Intl.Segmenter();
-const guess = (text: string, size: number) => {
+export const guess = (text: string, size: number) => {
   let width = 0;
   for (const { segment } of graphemes.segment(text))
     width += EM.find(([kind]) => kind.test(segment))?.[1] ?? 0.58;
@@ -88,8 +88,8 @@ const theme: ThemeSpec = {
     fillOpacity: 0.4,
     point: { presence: "omit" },
   },
-  // A value that doesn't fit beside its mark is left to the axis and the data table.
-  dataLabels: { show: "whenTheyFit", placement: "outsideMark", inkMode: "fixed" },
+  // Values print only with `labels`; without it the axis and the data table carry them.
+  dataLabels: { show: "never", placement: "outsideMark", inkMode: "fixed" },
   labels: { angle: "horizontal" },
   type: {
     headline: { family: "sans-serif", color: INK.foreground },
@@ -112,11 +112,6 @@ const SEMANTIC: Record<XKind, string> = {
 
 const quiet = logger(None);
 
-// Bars turn sideways when their labels would crowd under them, so long names, such as file paths, stay readable.
-const sideways = (chart: Chart) =>
-  chart.rows.length * Math.max(1, chart.series.length) > 12 ||
-  chart.rows.some((row) => row.x.length > 12);
-
 const longest = (chart: Chart) => Math.max(...chart.rows.map((row) => row.x.length));
 
 /** A label broken between words into lines no wider than `room`, as far as a long word allows. */
@@ -129,6 +124,14 @@ function wrap(text: string, room: number) {
     else lines.push(word);
   }
   return lines;
+}
+
+/** The first three of a label's lines, the third cut back by words to fit `room` with an ellipsis. */
+function clip(lines: string[], room: number) {
+  if (lines.length <= 3) return lines;
+  const words = lines.slice(2).join(" ").split(" ");
+  while (words.length > 1 && guess(`${words.join(" ")}…`, 12) > room) words.pop();
+  return [lines[0]!, lines[1]!, `${words.join(" ")}…`];
 }
 
 // A top legend is one row unless told otherwise, so it wraps into as many columns as fit the card.
@@ -145,29 +148,8 @@ function legendColumns(chart: Chart, room = 520) {
   return Math.max(1, Math.min(names.length, Math.floor(room / widest)));
 }
 
-// Lines are named at their ends, which only reads when the ends sit apart; otherwise a legend names them.
-function endsCrowd(chart: Chart) {
-  if (chart.series.length > 6) return true;
-  // An area names each part inside its last slice, which needs a slice thick enough to hold the name.
-  if (chart.type === "area") {
-    const total = (row: Chart["rows"][number]) =>
-      row.values.reduce<number>((sum, value) => sum + (value ?? 0), 0);
-    const tallest = Math.max(...chart.rows.map(total));
-    const last = chart.rows.at(-1)?.values ?? [];
-    return (
-      chart.series.length > 4 || tallest <= 0 || last.some((value) => (value ?? 0) / tallest < 0.1)
-    );
-  }
-  // A series that stops early is named where it stops, among the other lines rather than at the end.
-  if (chart.rows.at(-1)?.values.some((value) => value === undefined)) return true;
-  const values = chart.rows.flatMap((row) => row.values.filter((value) => value !== undefined));
-  const span = Math.max(0, ...values) - Math.min(0, ...values) || 1;
-  const ends = chart.series
-    .map((_, index) => chart.rows.findLast((row) => row.values[index] !== undefined)?.values[index])
-    .filter((value) => value !== undefined)
-    .sort((a, b) => a - b);
-  return ends.some((value, index) => index > 0 && (value - ends[index - 1]!) / span < 0.1);
-}
+// The most bars an upright plot holds at a readable width.
+const MOST_UPRIGHT = 40;
 
 /** The decisions a chart's shape forces before Flint lays it out. */
 function layout(chart: Chart) {
@@ -177,32 +159,21 @@ function layout(chart: Chart) {
     return {
       flip: true,
       bars: chart.rows.length,
-      crowded: true,
-      legend: chart.group !== undefined,
       width: Math.round(Math.max(200, Math.min(520, 600 - (7 * longest(chart) + 40)))),
     };
-  const many = chart.series.length > 1;
-  const flip = type === "dumbbell" || ((type === "bar" || type === "stacked") && sideways(chart));
   const bars = chart.rows.length * (type === "bar" ? chart.series.length : 1);
-  // A value printed past a negative bar's end lands among the axis labels when the bar reaches the edge.
-  const negative = chart.rows.some((row) => row.values.some((value) => (value ?? 0) < 0));
-  // Bars thinner than a line of text can't hold their values, so the value axis reads them instead. Stacked parts are
-  // often thinner still, so they never print theirs, as in shadcn/ui.
-  const crowded = (type === "bar" && bars > 12) || type === "stacked" || negative;
-  // A dumbbell names its series over the first row, where equal values pile the names up, and lines and areas name
-  // theirs at their ends, which only reads when the ends sit apart.
-  const legend =
-    type === "dumbbell" || ((type === "line" || type === "area") && many && endsCrowd(chart));
+  // Bars stand upright unless `horizontal` turns them, or there are more than a plot's width holds, which would drop some.
+  const flip =
+    type === "dumbbell" ||
+    ((type === "bar" || type === "stacked") && (!!chart.horizontal || bars > MOST_UPRIGHT));
   // The card leaves about 670px. Labels sit beside the plot, so the plot gets what the widest of them leaves: names on
-  // a sideways chart, values on an upright one, and series names at the ends of lines.
+  // a sideways chart, and values on an upright one.
   const numbers = chart.rows.flatMap((row) => row.values.filter((value) => value !== undefined));
   const valueLabel =
     Math.max(...numbers.map((value) => Math.round(value).toLocaleString("en-US").length)) * 7;
-  const endLabels =
-    type === "line" && !legend ? Math.max(...chart.series.map((name) => name.length)) * 7 + 12 : 0;
-  const labels = flip ? 7 * longest(chart) + 40 : valueLabel + 40 + endLabels;
+  const labels = flip ? 7 * longest(chart) + 40 : valueLabel + 40;
   const width = Math.round(Math.max(200, Math.min(520, 600 - labels)));
-  return { flip, bars, crowded, legend, width };
+  return { flip, bars, width };
 }
 
 // Field names are fixed, since Vega-Lite reads dots and brackets in a column's name as a path into the row.
@@ -210,7 +181,7 @@ function input(chart: Chart): ChartAssemblyInput {
   const { type } = chart;
   if (type === "gantt") return ganttInput(chart);
   const many = chart.series.length > 1;
-  const { flip, bars, crowded, legend, width } = layout(chart);
+  const { flip, bars, width } = layout(chart);
   // A bar, a step, or a dot row per value, so a numeric x on those is a name.
   const banded =
     type === "bar" || type === "stacked" || type === "waterfall" || type === "dumbbell";
@@ -255,26 +226,27 @@ function input(chart: Chart): ChartAssemblyInput {
       // Flint packs a band's bars together when some rows lack a series, but it finds the band from the column's
       // type, so over dates it sorts bars into lanes by their value, and some draw zero wide. Every band gets a lane per
       // series instead, as in most grouped bar charts.
-      // A waterfall prints its numbers itself, apart from the theme's value labels, and only when asked.
-      chartProperties: { dodge: "global", ...(type === "waterfall" && { showTextLabels: true }) },
+      // A waterfall prints its numbers itself, apart from the theme's value labels, and only when asked. Its first and
+      // last rows are always its totals, as the plugin checks them.
+      chartProperties: {
+        dodge: "global",
+        ...(type === "waterfall" && { showTextLabels: !!chart.labels, totals: "both" }),
+      },
     },
     options: { maxColorValues: SERIES.length },
     theme_spec: {
       ...theme,
-      ...((crowded || (legend && type === "area")) && {
-        dataLabels: { ...theme.dataLabels, show: "never" },
-      }),
       // With `labels` every bar prints its value, so Flint hides the value axis and leaves room past the bars. The
       // labels are the plugin's own, placed once the bars are drawn.
-      ...(chart.labels && { dataLabels: { ...theme.dataLabels, show: "always" } }),
+      ...(chart.labels &&
+        (type === "bar" || type === "stacked") && {
+          dataLabels: { ...theme.dataLabels, show: "always" },
+        }),
       // The New York Times theme dots a line's ends, and on a dumbbell, which is all ends, that layer repaints some dots
       // in the first series' color.
       ...(type === "dumbbell" && { annotation: { ...theme.annotation, pointEmphasis: "never" } }),
-      legend: {
-        ...theme.legend,
-        maxSwatches: SERIES.length,
-        ...(legend && { placement: ["top"] }),
-      },
+      // Every chart with more than one series names them in a legend over the plot.
+      legend: { ...theme.legend, maxSwatches: SERIES.length, placement: ["top"] },
     },
   };
 }
@@ -349,16 +321,13 @@ function ganttInput(chart: Chart): ChartAssemblyInput {
       },
       baseSize: { width, height: chart.rows.length * GANTT_STEP },
       canvasSize: { width, height: Math.max(640, chart.rows.length * GANTT_STEP + 200) },
+      // The durations' layer keeps the spec layered, as the gantt's own layers need; without `labels` it's removed.
       chartProperties: { intervalLabels: true },
     },
     options: { maxColorValues: SERIES.length },
     theme_spec: {
       ...theme,
-      legend: {
-        ...theme.legend,
-        maxSwatches: SERIES.length,
-        ...(grouped && { placement: ["top"] }),
-      },
+      legend: { ...theme.legend, maxSwatches: SERIES.length, placement: ["top"] },
     },
   };
 }
@@ -383,7 +352,7 @@ const SHAPES = new Set(["rect", "symbol", "arc"]);
 // A mark keeps clear of the shape it circles, and a point gets a box big enough to draw around. A mark that draws
 // nothing only leaves its arrow a hair short of the point, so the arrow reaches the data.
 const PAD = 6;
-const PADDING = { left: 12, right: 12, top: 12, bottom: 12 };
+export const PADDING = { left: 12, right: 12, top: 12, bottom: 12 };
 const SMALLEST = 18;
 // A circle mark loops a little past its box, so a chart with one keeps room under the plot for a loop around a bar
 // and its name on the axis, above the notes.
@@ -422,14 +391,19 @@ const BANDED = new Set(["bar", "stacked", "waterfall", "dumbbell"]);
 // A line's box reaches this far to each side of it, so its stamp and its arrow sit on the line.
 const LINE = 4;
 
-function boxes(chart: Chart, view: vega.View, width: number, height: number): Map<number, Box> {
+export function boxes(
+  chart: Chart | FlowChart,
+  view: vega.View,
+  width: number,
+  height: number,
+): Map<number, Box> {
   const found = new Map<number, Box>();
   // Vega draws the scene at its origin plus its padding, and origin() leaves the padding out.
   const [x0, y0] = view.origin();
   const [left, top] = [x0 + PADDING.left, y0 + PADDING.top];
   for (const mark of chart.marks) {
     let [x1, y1, x2, y2] = [Infinity, Infinity, -Infinity, -Infinity];
-    if (mark.value !== undefined) {
+    if (mark.value !== undefined && chart.type !== "sankey") {
       // A line runs across the whole plot at its value.
       const at = Number(view.scale(valueAxis(chart))?.(mark.value));
       if (!Number.isFinite(at)) continue;
@@ -445,6 +419,7 @@ function boxes(chart: Chart, view: vega.View, width: number, height: number): Ma
         // through it. Elsewhere the axis holds ticks, which only share a row's name by chance.
         const name =
           mark.mark === "circle" &&
+          chart.type !== "sankey" &&
           BANDED.has(chart.type) &&
           !mark.series &&
           item.mark?.role === "axis-label" &&
@@ -486,7 +461,8 @@ function boxes(chart: Chart, view: vega.View, width: number, height: number): Ma
   return found;
 }
 
-const format = (value: number) => value.toLocaleString("en-US", { maximumFractionDigits: 12 });
+export const format = (value: number) =>
+  value.toLocaleString("en-US", { maximumFractionDigits: 12 });
 
 interface Label {
   x: number;
@@ -530,7 +506,19 @@ function valueLabels(chart: Chart, view: vega.View): Label[] {
   });
   const HEIGHT = 12;
   const GAP = 6;
+  // Values keep this far from each other and from the axes' labels.
+  const MARGIN = 3;
   const taken: Box[] = [];
+  walk(view, (item, dx, dy) => {
+    const { bounds } = item;
+    if (item.mark?.role === "axis-label" && bounds)
+      taken.push({
+        x: bounds.x1 + dx,
+        y: bounds.y1 + dy,
+        w: bounds.x2 - bounds.x1,
+        h: bounds.y2 - bounds.y1,
+      });
+  });
   const labels: Label[] = [];
   for (const bar of bars) {
     const text = format(bar.value);
@@ -561,18 +549,18 @@ function valueLabels(chart: Chart, view: vega.View): Label[] {
     const x = !flip || middle ? cx : (up ? bar.x2 : bar.x1) + out * (GAP + width / 2);
     const y = flip || middle ? cy : (up ? bar.y1 : bar.y2) - out * (GAP + HEIGHT / 2);
     const box = { x: x - width / 2, y: y - HEIGHT / 2, w: width, h: HEIGHT };
-    const covers = (other: Box) =>
-      box.x < other.x + other.w &&
-      other.x < box.x + box.w &&
-      box.y < other.y + other.h &&
-      other.y < box.y + box.h;
+    const covers = (other: Box, margin = MARGIN) =>
+      box.x - margin < other.x + other.w &&
+      other.x < box.x + box.w + margin &&
+      box.y - margin < other.y + other.h &&
+      other.y < box.y + box.h + margin;
     if (
       taken.some(covers) ||
       (!fits &&
         bars.some(
           (other) =>
             other !== bar &&
-            covers({ x: other.x1, y: other.y1, w: other.x2 - other.x1, h: other.y2 - other.y1 }),
+            covers({ x: other.x1, y: other.y1, w: other.x2 - other.x1, h: other.y2 - other.y1 }, 0),
         ))
     )
       continue;
@@ -749,6 +737,7 @@ function dumbbell(chart: Chart, spec: TopLevelSpec) {
   // On a plot too narrow for the text, padding for it would squeeze the dots into a sliver, so where the text would
   // take more than 60% of the plot, the table under the chart carries the numbers instead.
   const printed =
+    !!chart.labels &&
     Math.max(...ends.map((end) => end.left)) + Math.max(...ends.map((end) => end.right)) <= 0.6;
   if (printed) {
     // The span depends on the room, and the room on the span, so the span is found by iterating; with the shares at
@@ -933,7 +922,7 @@ function gantt(chart: Chart, spec: TopLevelSpec) {
   const from = values[0]!;
   let to = values.at(-1)!;
   for (const { start, end } of spans) {
-    if (end <= start) continue;
+    if (!chart.labels || end <= start) continue;
     const room = guess(duration(chart, start, end), 12) + 12;
     to = Math.max(to, from + ((end - from) * width) / (width - room));
   }
@@ -986,7 +975,8 @@ function gantt(chart: Chart, spec: TopLevelSpec) {
   };
   // Flint prints a date's duration in days whatever its span, so the plugin's own takes its place.
   spec.transform = spec.transform?.filter((step) => !("as" in step && step.as === "__gantt_label"));
-  if (durations && "mark" in durations && durations.encoding?.x) {
+  if (!chart.labels) spec.layer.splice(1, 1);
+  else if (durations && "mark" in durations && durations.encoding?.x) {
     durations.transform = [{ filter: "datum.end > datum.start" }];
     durations.encoding.text = { field: "duration", type: "nominal" };
     durations.mark = { type: "text", align: "left", baseline: "middle", dx: 6, fill: INK.muted };
@@ -1006,7 +996,7 @@ function gantt(chart: Chart, spec: TopLevelSpec) {
 }
 
 /** Draws a compiled Vega spec to an SVG string, and returns the view for finding where its marks sit. */
-async function render(compiled: vega.Spec, loader?: vega.Loader) {
+export async function render(compiled: vega.Spec, loader?: vega.Loader) {
   // Vega compiles its expressions with `new Function` unless told to interpret them, and Cloudflare Workers, where
   // documents like these often render, forbid that.
   const options: vega.ViewOptions = {
@@ -1058,11 +1048,12 @@ export async function draw(chart: Chart): Promise<{ svg: string; boxes: Map<numb
   const step =
     Number(Reflect.get(Object(planned), "step")) ||
     (Number(planned) || layout(chart).width) / chart.rows.length;
-  // A step's few words wrap onto up to three lines under it before its labels turn sideways.
-  const wrapped = chart.rows.map((row) => wrap(row.x, step - 12));
-  const flat = wrapped.every(
-    (lines) => lines.length <= 3 && lines.every((line) => guess(line, 12) <= step - 12),
-  );
+  const upright =
+    waterfall || ((chart.type === "bar" || chart.type === "stacked") && !layout(chart).flip);
+  // A step's words wrap onto up to three lines under it, the third cut short, and its labels turn sideways only when
+  // a single word is wider than its step.
+  const wrapped = chart.rows.map((row) => clip(wrap(row.x, step - 12), step - 12));
+  const flat = wrapped.every((lines) => lines.every((line) => guess(line, 12) <= step - 12));
   const labelExpr = wrapped.reduceRight(
     (rest, lines, index) =>
       lines.length > 1
@@ -1088,8 +1079,9 @@ export async function draw(chart: Chart): Promise<{ svg: string; boxes: Map<numb
       // Labels that would touch are dropped, every other one, rather than drawn over each other.
       labelOverlap: "greedy",
       labelSeparation: 6,
-      // Flint anchors a waterfall's labels at their end, for angled text; flat ones center under their step.
-      ...(waterfall &&
+      // Flint anchors a waterfall's labels at their end, for angled text; flat ones center under their step. Upright bars
+      // wrap theirs the same way.
+      ...(upright &&
         (flat
           ? {
               labelAngle: 0,
@@ -1112,7 +1104,7 @@ export async function draw(chart: Chart): Promise<{ svg: string; boxes: Map<numb
       ...TYPE,
       columns: legendColumns(chart, layout(chart).width),
       columnPadding: 20,
-      rowPadding: 10,
+      rowPadding: 12,
       labelLimit: 200,
     },
     // An area is outlined along its top, so overlapping series stay readable through the translucent fill.
@@ -1152,8 +1144,7 @@ export async function draw(chart: Chart): Promise<{ svg: string; boxes: Map<numb
     // a label so the first doesn't meet the value axis's 0 in the corner. Padding a scale whose ticks Vega picks would
     // add one before the first point, in that corner.
     const time =
-      (chart.type === "line" || chart.type === "area") &&
-      pinned &&
+      (((chart.type === "line" || chart.type === "area") && pinned) || upright) &&
       x &&
       "type" in x &&
       x.type === "temporal"
@@ -1212,15 +1203,8 @@ export async function draw(chart: Chart): Promise<{ svg: string; boxes: Map<numb
       layer.encoding.text.field === "__wf_delta_text";
     // Numbers wider than their step would run into their neighbors', so a crowded waterfall leaves them to the axis.
     const values = chart.rows.map((row) => row.values[0] ?? 0);
-    // Keep the inferred final-total rule in sync with Flint: a final value is a
-    // total when it reconciles with the preceding cumulative within 0.5%.
-    let preceding = 0;
-    for (const value of values.slice(0, -1)) preceding += value;
-    const finalIsTotal =
-      values.length > 1 &&
-      Number.isFinite(preceding) &&
-      Number.isFinite(values.at(-1)) &&
-      Math.abs(values.at(-1)! - preceding) <= Math.max(1e-6, 0.005 * Math.abs(preceding));
+    // The last row is a total, as `totals: "both"` tells Flint, whether or not it adds up.
+    const finalIsTotal = values.length > 1;
     const widest = Math.max(
       ...chart.rows.map((row, index) => {
         const value = row.values[0] ?? 0;
@@ -1229,7 +1213,7 @@ export async function draw(chart: Chart): Promise<{ svg: string; boxes: Map<numb
         return guess(`${signed}${Math.round(value).toLocaleString("en-US")}`, 12);
       }),
     );
-    const numbers = widest + 6 <= step;
+    const numbers = !!chart.labels && widest + 6 <= step;
     spec.layer = spec.layer.filter((layer) => !isText(layer) || (numbers && !inside(layer)));
     // Flint pads the value axis for the labels from levels that add the end total to the sum it closes, so it runs
     // to twice the top and below zero. The levels here stop at the end total, and only a side with a label is padded.
@@ -1282,7 +1266,11 @@ export async function draw(chart: Chart): Promise<{ svg: string; boxes: Map<numb
     view.finalize();
     ({ view, svg } = await render(compiled));
   }
-  const labels = chart.labels ? valueLabels(chart, view) : [];
+  // Waterfalls, dumbbells, and gantts print their own numbers in their layers.
+  const labels =
+    chart.labels && (chart.type === "bar" || chart.type === "stacked")
+      ? valueLabels(chart, view)
+      : [];
   const zeros = zeroBars(chart, view);
   if (labels.length || zeros.length) {
     compiled.data = [

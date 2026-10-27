@@ -29,6 +29,7 @@ export const pageOrder = [
   "syntax",
   "guides",
   "theming",
+  "eslint",
   "vite-doctor",
 ];
 export const recipeOrder = ["review", "pull-request", "share", "zoom", "carousel"];

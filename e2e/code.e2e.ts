@@ -42,7 +42,7 @@ test("without the clipboard, Copy selects the code and says how to copy it", asy
   await expect(page.getByRole("status")).toContainText("Press Ctrl+C or ⌘C");
 });
 
-test("Wrap breaks the block's long lines and unwraps them again", async ({ page }) => {
+test("Wrap remembers the preference for every block and later pages", async ({ page }) => {
   await open(page, `${sh}\n\n${sh}`);
   const [first, second] = [page.locator(".ck pre").first(), page.locator(".ck pre").nth(1)];
   const overflows = (pre: typeof first) =>
@@ -52,10 +52,115 @@ test("Wrap breaks the block's long lines and unwraps them again", async ({ page 
   await wrap.click();
   await expect(wrap).toHaveAttribute("aria-pressed", "true");
   expect(await overflows(first)).toBe(false);
-  expect(await overflows(second)).toBe(true);
+  expect(await overflows(second)).toBe(false);
+  await expect(wrap).toBeVisible();
+  await open(page, `${sh}\n\n${sh}`);
+  await expect(wrap).toHaveAttribute("aria-pressed", "true");
+  expect(await overflows(first)).toBe(false);
+  expect(await overflows(second)).toBe(false);
   await wrap.click();
   await expect(wrap).toHaveAttribute("aria-pressed", "false");
   expect(await overflows(first)).toBe(true);
+  expect(await overflows(second)).toBe(true);
+  await open(page, sh.replace("```sh", "```sh wrap"));
+  await expect(wrap).toHaveAttribute("aria-pressed", "false");
+  expect(await overflows(first)).toBe(true);
+});
+
+test("Wrap appears only where unwrapped code overflows, including after resize and edits", async ({
+  page,
+}) => {
+  await open(page, `${sh}\n\n\`\`\`ts\nconst a = 1\n\`\`\``);
+  const first = page.locator(".ck").first().locator(".ck-wrap");
+  const second = page.locator(".ck").nth(1).locator(".ck-wrap");
+  await expect(first).toBeVisible();
+  await expect(second).toBeHidden();
+  await first.click();
+  await expect(first).toHaveAttribute("aria-pressed", "true");
+  await page.evaluate(() => {
+    document.body.style.width = "200rem";
+  });
+  await expect(first).toBeHidden();
+  await page.evaluate(() => {
+    document.body.style.width = "30rem";
+  });
+  await expect(first).toBeVisible();
+  await expect(first).toHaveAttribute("aria-pressed", "true");
+  await page
+    .locator(".ck")
+    .nth(1)
+    .locator("code")
+    .evaluate((element, text) => {
+      element.textContent = text;
+    }, long);
+  await expect(second).toBeVisible();
+  await expect(second).toHaveAttribute("aria-pressed", "true");
+});
+
+test("unrelated DOM updates do not remeasure code blocks", async ({ page }) => {
+  await open(page, sh.replace("```sh", "```sh wrap"));
+  await expect(page.locator(".ck-wrap")).toHaveAttribute("aria-pressed", "true");
+  const measurements = await page.evaluate(async () => {
+    const settle = async () => {
+      for (let i = 0; i < 5; i++) await new Promise(requestAnimationFrame);
+    };
+    await settle();
+    let changes = 0;
+    const observer = new MutationObserver((records) => {
+      changes += records.length;
+    });
+    observer.observe(document.querySelector(".ck")!, {
+      attributes: true,
+      attributeFilter: ["data-code-wrap"],
+    });
+    const unrelated = document.createElement("div");
+    unrelated.style.position = "fixed";
+    document.body.append(unrelated);
+    unrelated.textContent = "Loading";
+    await settle();
+    unrelated.firstChild!.textContent = "Done";
+    await settle();
+    unrelated.remove();
+    await settle();
+    observer.disconnect();
+    return changes;
+  });
+  expect(measurements).toBe(0);
+});
+
+test("inserted code blocks and character edits update Wrap", async ({ page }) => {
+  await open(page, sh);
+  await page.evaluate(() => {
+    const container = document.createElement("section");
+    const block = document.querySelector(".ck")!.cloneNode(true) as Element;
+    block.removeAttribute("data-code-overflow");
+    block.querySelector("code")!.textContent = "short";
+    container.append(block);
+    document.body.append(container);
+  });
+  const wrap = page.locator("section .ck-wrap");
+  await expect(wrap).toBeHidden();
+  await page.locator("section code").evaluate((element, text) => {
+    element.firstChild!.textContent = text;
+  }, long);
+  await expect(wrap).toBeVisible();
+});
+
+test("Wrap works when localStorage is unavailable", async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(window, "localStorage", {
+      get() {
+        throw new DOMException("Blocked", "SecurityError");
+      },
+    });
+  });
+  await open(page, sh);
+  const wrap = page.getByRole("button", { name: "Wrap lines" });
+  await wrap.click();
+  await expect(wrap).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator("pre")).toHaveCSS("white-space", "pre-wrap");
+  await wrap.click();
+  await expect(wrap).toHaveAttribute("aria-pressed", "false");
 });
 
 test("an action sends the block's code and language to the page", async ({ page }) => {
@@ -159,9 +264,10 @@ test.describe("touch targets", () => {
   test.use({ hasTouch: true });
 
   test("Wrap owns its visible face and extra vertical tap area", async ({ page }) => {
-    await open(page, "```ts\nconst a = 1\n```");
+    await open(page, sh);
     expect(await page.evaluate(() => matchMedia("(pointer:coarse)").matches)).toBe(true);
     const wrap = page.getByRole("button", { name: "Wrap lines" });
+    await expect(wrap).toBeVisible();
     const box = await wrap.boundingBox();
     expect(box).not.toBeNull();
     expect(box!.height).toBe(24);

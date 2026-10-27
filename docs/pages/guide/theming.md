@@ -42,7 +42,7 @@ Set the `--comark-*` tokens to theme annotate, carousel, charts, chips, code, di
 | `--comark-accent` | `--ui-bg-elevated`, `--accent` | Hovered buttons, the diff header |
 | `--comark-ring` | `--ui-primary`, `--ring` | Focus rings, the edge of a highlighted diff line |
 | `--comark-radius` | twice `--ui-radius`, `--radius` | Image and code block corners; some controls use a smaller radius |
-| `--comark-font` | `--font-sans` | The zoomed view's header, callouts, and the links under players |
+| `--comark-font` | `--font-sans` | The text around the blocks, the zoomed view's header, callouts, and the links under players |
 
 ```css
 :root {
@@ -54,6 +54,8 @@ Set the `--comark-*` tokens to theme annotate, carousel, charts, chips, code, di
 Try them in the [playground's Theme pane](/play/): it shows them in light and dark and copies the CSS for what you change.
 
 To theme one part only, set the tokens on its root instead: `.ca` for annotate, `.cc` for a carousel, `.cch` for charts, `.cp` for chips, `.ck` for code headers, `.cd` for diffs, `.ce` and `.ce-card` for embeds, `.cgc` for callouts, `.ct` for tabs, and `.cz-dialog` for the zoomed view.
+
+The same tokens color the text around the blocks. [Typeset](/guide/typeset/) lists its own variables for size, spacing, and fonts.
 
 ## Your own rules
 
