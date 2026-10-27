@@ -1,6 +1,6 @@
 {
   "name": "comark-colors",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "Color swatches next to inline code that holds a color, like GitLab, and ::palette grids of named colors. A Comark plugin.",
   "keywords": [
     "color",
