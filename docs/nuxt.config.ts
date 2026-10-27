@@ -107,8 +107,6 @@ export default defineNuxtConfig({
     auth: true,
     // A Durable Object holds each page's room: who else is on it and where their cursor is, for comments and the editor.
     realtime: { authority: "cloudflare" },
-    // A Cron Trigger runs server/schedules/publish.ts, which publishes the pages the editor scheduled.
-    schedule: true,
     // The editor is the Console's Content section: the team signs in with the site's own session (server/auth.ts).
     console: {
       auth: "app",
