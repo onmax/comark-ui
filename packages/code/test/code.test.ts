@@ -64,7 +64,7 @@ describe("comark-code", () => {
     );
     expect(style).toContain("height:var(--_ck-bar)");
     expect(style).toContain(
-      ".ck-title{min-width:0;margin-right:auto;overflow:hidden;color:color-mix(in srgb,var(--_comark-foreground) 72%,transparent);font:.6875rem/1 var(--ck-title-font,ui-monospace,SFMono-Regular,Menlo,monospace);",
+      ".ck-title{min-width:0;margin-right:auto;overflow:hidden;color:color-mix(in srgb,var(--_comark-foreground) 72%,transparent);font:.6875rem/1.5 var(--ck-title-font,ui-monospace,SFMono-Regular,Menlo,monospace);",
     );
   });
 
