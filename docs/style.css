@@ -3930,6 +3930,20 @@ main img {
   align-items: center;
 }
 
+.gallery-sharing-issue {
+  position: absolute;
+  bottom: calc(100% + 0.5rem);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--fg);
+  font-size: 0.8125rem;
+}
+
 .gallery-zoom .gallery-action {
   width: 2rem;
   height: 2rem;

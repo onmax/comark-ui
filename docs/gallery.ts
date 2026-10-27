@@ -38,6 +38,7 @@ const paint = find(".gallery-paint", HTMLDivElement);
 const issueList = find(".gallery-issues", HTMLUListElement);
 const clear = find(".gallery-clear", HTMLButtonElement);
 const share = find(".gallery-link", HTMLButtonElement);
+const sharingIssue = find(".gallery-sharing-issue", HTMLParagraphElement);
 const data: {
   cells: Record<string, Cell>;
   props: Record<string, Record<string, string[]>>;
@@ -376,7 +377,7 @@ function setProp(source: string, component: Component, name: string, value: stri
   if (!component.braces)
     return `${source.slice(0, component.insert)}{${text}}${source.slice(component.insert)}`;
   const close = component.braces.end - 1;
-  const spaced = component.props.length ? " " : "";
+  const spaced = close > component.braces.start + 1 && !/\s/.test(source[close - 1]!) ? " " : "";
   return source.slice(0, close) + spaced + text + source.slice(close);
 }
 
@@ -407,8 +408,22 @@ const article = (id: string) => document.getElementById(id);
 let selected: string | undefined;
 
 // A shared link carries the changes in the URL, deflated, as the playground's does.
+const sharingUnsupported = "Sharing is unavailable in this browser (raw deflate is not supported).";
+function compressionStream(kind: "compress" | "decompress") {
+  const Stream =
+    kind === "compress" ? globalThis.CompressionStream : globalThis.DecompressionStream;
+  try {
+    return new Stream("deflate-raw");
+  } catch {
+    throw new Error(sharingUnsupported);
+  }
+}
+function reportSharing(error: unknown, message = "Could not create a sharing link.") {
+  sharingIssue.textContent = `${message} ${error instanceof Error ? error.message : String(error)}`;
+  sharingIssue.hidden = false;
+}
 async function pack(text: string) {
-  const stream = new Blob([text]).stream().pipeThrough(new CompressionStream("deflate-raw"));
+  const stream = new Blob([text]).stream().pipeThrough(compressionStream("compress"));
   const bytes = new Uint8Array(await new Response(stream).arrayBuffer());
   let binary = "";
   for (const byte of bytes) binary += String.fromCharCode(byte);
@@ -417,33 +432,53 @@ async function pack(text: string) {
 async function unpack(code: string) {
   const binary = atob(code.replaceAll("-", "+").replaceAll("_", "/"));
   const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
-  const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
+  const stream = new Blob([bytes]).stream().pipeThrough(compressionStream("decompress"));
   return new Response(stream).text();
 }
 
 let saving: ReturnType<typeof setTimeout> | undefined;
-function save() {
+let saveVersion = 0;
+function savedState() {
   const edits = Object.fromEntries(
     [...sources].filter(([id, source]) => data.cells[id] && data.cells[id].source !== source),
   );
-  const changed = Object.keys(edits).length > 0 || added.length > 0;
-  clear.hidden = share.hidden = !changed;
+  return Object.keys(edits).length || added.length
+    ? {
+        edits,
+        added: added.map((cell) => ({ ...cell, source: sources.get(cell.id) ?? cell.source })),
+      }
+    : undefined;
+}
+async function saveNow(): Promise<string> {
   clearTimeout(saving);
-  saving = setTimeout(async () => {
-    const url = new URL(location.href);
-    if (changed) url.searchParams.set("edit", await pack(JSON.stringify({ edits, added })));
-    else url.searchParams.delete("edit");
-    history.replaceState(history.state, "", url);
-  }, 250);
+  const version = saveVersion;
+  const state = savedState();
+  const code = state ? await pack(JSON.stringify(state)) : undefined;
+  // Compression can finish after another edit or reset. Only the current snapshot may reach the URL.
+  if (version !== saveVersion) return saveNow();
+  const url = new URL(location.href);
+  if (code) url.searchParams.set("edit", code);
+  else url.searchParams.delete("edit");
+  history.replaceState(history.state, "", url);
+  return url.href;
+}
+function save() {
+  saveVersion++;
+  clear.hidden = share.hidden = !savedState();
+  clearTimeout(saving);
+  saving = setTimeout(() => void saveNow().catch((error) => reportSharing(error)), 250);
 }
 
 // A cell's Playground link, and the inspector's while it's open, take the cell's Markdown as it is now.
-async function link(id: string) {
-  const href = `/play/#md=${await pack(sources.get(id) ?? "")}`;
+async function link(id: string): Promise<string> {
+  const source = sources.get(id) ?? "";
+  const href = `/play/#md=${await pack(source)}`;
+  if (source !== (sources.get(id) ?? "")) return link(id);
   const own = article(id)?.querySelector<HTMLAnchorElement>('[data-action="play"]');
   if (own) own.href = href;
   if (id === selected)
     find('.gallery-inspector [data-action="play"]', HTMLAnchorElement).href = href;
+  return href;
 }
 
 // The plugins load with the first change. A slower render of older Markdown must not replace a newer one.
@@ -488,7 +523,7 @@ function change(id: string, source: string) {
     id,
     setTimeout(() => {
       void render(id);
-      void link(id);
+      void link(id).catch((error) => reportSharing(error));
     }, 120),
   );
   save();
@@ -566,7 +601,7 @@ function resetCell(id: string) {
     frame.removeAttribute("srcdoc");
   }
   save();
-  void link(id);
+  void link(id).catch((error) => reportSharing(error));
   if (selected === id) open(id);
 }
 
@@ -956,7 +991,7 @@ function open(id: string) {
     highlight = module.highlight;
     repaint();
   });
-  void link(id);
+  void link(id).catch((error) => reportSharing(error));
 }
 function close() {
   for (const other of gallery.querySelectorAll("[data-selected]"))
@@ -987,11 +1022,16 @@ function duplicate(id: string) {
   if (copy) open(copy);
 }
 
-document.addEventListener("click", (event) => {
+function act(event: MouseEvent) {
   const target =
     event.target instanceof Element ? event.target.closest<HTMLElement>("[data-action]") : null;
   const action = target?.dataset.action;
-  if (!target || !action || action === "play") return;
+  if (
+    !target ||
+    !action ||
+    (event.type === "auxclick" && (event.button !== 1 || action !== "play"))
+  )
+    return;
   if (action === "zoom-in") return zoomIn();
   if (action === "zoom-out") return zoomOut();
   if (action === "zoom-reset") return zoomTo(1);
@@ -1001,12 +1041,31 @@ document.addEventListener("click", (event) => {
   if (action === "close") return close();
   if (action === "side") return swapSide();
   if (!id) return;
+  if (action === "play") {
+    event.preventDefault();
+    const newTab = event.button === 1 || event.ctrlKey || event.metaKey || event.shiftKey;
+    // Open during the gesture so a modified click keeps the browser's new-tab behavior.
+    const tab = newTab ? window.open("about:blank", "_blank") : null;
+    if (tab) tab.opener = null;
+    void link(id)
+      .then((href) => {
+        if (newTab) tab?.location.replace(new URL(href, location.href).href);
+        else location.assign(href);
+      })
+      .catch((error) => {
+        tab?.close();
+        reportSharing(error, "Could not open the playground.");
+      });
+    return;
+  }
   if (action === "edit") return id === selected ? close() : open(id);
   if (action === "duplicate") return duplicate(id);
   if (action === "remove") return removeCell(id);
   if (action === "reset") return resetCell(id);
   if (action === "copy") void navigator.clipboard.writeText(sources.get(id) ?? "");
-});
+}
+document.addEventListener("click", act);
+document.addEventListener("auxclick", act);
 addEventListener("keydown", (event) => {
   if (event.key === "Escape" && selected && !(event.target instanceof HTMLTextAreaElement)) close();
 });
@@ -1017,7 +1076,11 @@ clear.addEventListener("click", () => {
     if (sources.get(id) !== data.cells[id]?.source) resetCell(id);
   close();
 });
-share.addEventListener("click", () => void navigator.clipboard.writeText(location.href));
+share.addEventListener("click", () => {
+  void saveNow()
+    .then((href) => navigator.clipboard.writeText(href))
+    .catch((error) => reportSharing(error, "Could not copy the gallery link."));
+});
 
 // A link's changes render as the page opens.
 const edit = new URLSearchParams(location.search).get("edit");
@@ -1037,8 +1100,6 @@ if (edit) {
       hold();
       keep();
     })
-    .catch(() => {
-      // A cut-off or hand-edited link shows the gallery as built.
-    })
+    .catch((error) => reportSharing(error, "Could not load the edits from this link."))
     .finally(() => settle(""));
 }
