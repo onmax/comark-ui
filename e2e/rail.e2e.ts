@@ -150,3 +150,42 @@ test("the outline marks the heading being read, and its links scroll to them", a
     .toBeLessThan(96);
   expect(await current.getAttribute("aria-current")).toBe("location");
 });
+
+test("at the bottom of a scrolling container, the last section is the one being read", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 800 });
+  // A short last section never reaches the top of the container on its own.
+  const markdown = `## Install\n\n${text}\n\n## Usage\n\n${text}\n\n## FAQ\n\nShort.`;
+  await page.setContent(
+    `<!doctype html><meta charset="utf-8"><style>body{margin:0}.scroll{height:100vh;overflow:auto}main{width:46rem;margin:auto}</style><div class="scroll"><main>${await render(markdown)}</main></div>`,
+  );
+  const current = page.locator(".cto-rail a[aria-current]");
+  await expect(current).toHaveText("Install");
+  await page.locator(".scroll").evaluate((scroll) => scroll.scrollTo(0, scroll.scrollHeight));
+  await expect(current).toHaveText("FAQ");
+});
+
+test("when the document with the outline goes, the next one's outline takes over", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 800 });
+  const doc = async (title: string) =>
+    `<main style="width:46rem;margin:auto">${await render(`## ${title}\n\n${text}\n\n## ${title} too`)}</main>`;
+  await page.setContent(
+    `<!doctype html><meta charset="utf-8"><style>body{margin:0}</style>${await doc("First")}${await doc("Second")}`,
+  );
+  await expect(page.locator(".cto-rail").first()).toBeVisible();
+  await page
+    .locator("main")
+    .first()
+    .evaluate((main) => main.remove());
+  const rail = page.locator(".cto-rail");
+  await expect(rail).toHaveCount(1);
+  await expect(rail).toBeVisible();
+  await expect(rail.locator("a[aria-current]")).toHaveText("Second");
+  // It follows the remaining document's column: it moves with it when the window narrows.
+  const before = await box(page, ".cto-rail");
+  await page.setViewportSize({ width: 1300, height: 800 });
+  await expect.poll(async () => (await box(page, ".cto-rail")).left).toBeLessThan(before.left);
+});

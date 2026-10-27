@@ -114,7 +114,9 @@ export function start(): () => void {
     const links = [...nav.querySelectorAll<HTMLAnchorElement>("a[href^='#']")];
     // A heading counts as read once it passes a little below the outline's top.
     const line = (parseFloat(getComputedStyle(nav).top) || 0) + 40;
-    const end = innerHeight + scrollY >= root.scrollHeight - 2 && scrollY > 0;
+    // At the bottom of what scrolls, the last section is the one being read, however short it is.
+    const box = scroller?.isConnected && scroller.contains(parent) ? scroller : root;
+    const end = box.scrollTop > 0 && box.scrollTop + box.clientHeight >= box.scrollHeight - 2;
     let current = 0;
     links.forEach((link, index) => {
       const heading = target(link, parent);
@@ -127,6 +129,8 @@ export function start(): () => void {
     );
   }
 
+  // The element whose scroll moved the text last, when the page scrolls it in a container of its own.
+  let scroller: Element | null = null;
   let frame = 0;
   let placing = false;
   const update = (again: boolean) => {
@@ -134,11 +138,12 @@ export function start(): () => void {
     if (frame) return;
     frame = requestAnimationFrame(() => {
       frame = 0;
-      const nav = rail();
-      if (!nav) return;
-      if (placing) place(nav);
+      if (placing) watch();
+      else {
+        const nav = rail();
+        if (nav) mark(nav);
+      }
       placing = false;
-      mark(nav);
     });
   };
 
@@ -159,11 +164,18 @@ export function start(): () => void {
 
   addEventListener("resize", () => update(true), { signal });
   // Captured on the document, so a page that scrolls its text in a container of its own marks the heading too.
-  document.addEventListener("scroll", () => update(false), {
-    capture: true,
-    passive: true,
-    signal,
-  });
+  document.addEventListener(
+    "scroll",
+    (event) => {
+      scroller = event.target instanceof Element ? event.target : null;
+      update(false);
+    },
+    {
+      capture: true,
+      passive: true,
+      signal,
+    },
+  );
   // The page sets --comark-inset-end with a style or a class on the root, and may slide its column when it does.
   const inset = new MutationObserver(() => update(true));
   inset.observe(root, { attributes: true, attributeFilter: ["style", "class"] });
