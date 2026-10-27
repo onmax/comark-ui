@@ -118,3 +118,8 @@ allowBuilds:
   node-liblzma: false
   ssh2: false
   workerd: true
+
+# The pilot build reads every file from GitHub on every listing; this keeps each blob once read. Drop it when the pin
+# moves to a ViteHub build that caches them (test/github-store.test.ts checks it).
+patchedDependencies:
+  "@vite-hub/workspace": patches/@vite-hub__workspace.patch
