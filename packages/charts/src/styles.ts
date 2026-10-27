@@ -22,7 +22,10 @@ export const css = `@layer comark{${[
   // `height:auto` would stretch them to their viewBox. A chart narrower than its card sits in the middle.
   ":is(.cch-plot,.cch-marked .ca-frame)>svg{display:block;max-width:100%;height:auto;margin-inline:auto}",
   ".cch-plot text{font-family:var(--_comark-font)}",
-  ".cch-marked .ca-frame{width:fit-content;max-width:100%;margin-inline:auto}",
+  // comark-annotate pins side notes to its stage's edges, so the stage is what sits in the middle, with the notes'
+  // gutters beside the chart rather than at the card's edges.
+  ".cch-marked .ca-stage{box-sizing:border-box;width:fit-content;max-width:100%;margin-inline:auto}",
+  ".cch-marked .ca-frame{width:fit-content;max-width:100%}",
   // A narrow column outlines a mark that draws nothing, which on a screenshot shows its area; on a chart it marks a
   // point, so it would be a broken ring under the letter, which marks the point alone.
   ".cch-marked .ca .ca-mark.ca-none{outline:none}",

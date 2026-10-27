@@ -121,6 +121,9 @@ export const css = `@layer comark{${[
   ".ca-arrow-top .ca-arrow-head{top:auto;bottom:0;left:6px}",
   ".ca-arrow-bottom{width:24px;height:auto;transform:translateX(-50%)}",
   ".ca-arrow-bottom .ca-arrow-head{top:0;left:6px}",
+  // A head stops short of the mark it points at, so the two read as separate strokes. One that points at a spot, with
+  // `to` or a mark that draws nothing, reaches it.
+  ".ca-arrow-right:not(.ca-reach){margin-left:6px}.ca-arrow-left:not(.ca-reach){margin-right:6px}.ca-arrow-top:not(.ca-reach){margin-bottom:6px}.ca-arrow-bottom:not(.ca-reach){margin-top:6px}",
   // A curved leader fills the box between its note and its point; html.ts puts the head on the right corner.
   ".ca-arrow.ca-curve{width:auto;height:auto;transform:none}",
   ".ca-curve .ca-arrow-head{inset:auto;transform:none}",
