@@ -1,6 +1,6 @@
 {
   "name": "comark-outline",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "A table of contents in the body of a page: ::toc becomes a nested list of links to the headings. A Comark plugin.",
   "keywords": [
     "comark",

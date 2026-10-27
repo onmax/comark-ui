@@ -1,6 +1,6 @@
 {
   "name": "comark-cjk",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "Bold and italics that work next to Chinese, Japanese, and Korean punctuation in Comark, as in **この文は太字。**次の文.",
   "keywords": [
     "chinese",
