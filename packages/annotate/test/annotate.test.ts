@@ -190,6 +190,18 @@ describe("comark-annotate", () => {
     expect((await run(source)).html).toBe(html);
   });
 
+  it("keeps box clearance fixed and places its stamp on the padded corner", async () => {
+    const { issues, html } = await run(
+      `::screenshot{src="a.png" alt="A"}\n:::annotation{x=1 y=2 w=20 h=10 mark="box"}\nNear the corner.\n:::\n::`,
+    );
+    expect(issues).toEqual([]);
+    expect(html).toContain('ca-stamp" style="left:3px;top:3px"');
+    expect(css.match(/\.ca-mark\.ca-box\{[^}]+\}/)?.[0]).toBe(
+      ".ca-mark.ca-box{box-sizing:content-box;padding:6px;margin:-6px}",
+    );
+    expect(css.includes("--ca-pad")).toBe(false);
+  });
+
   it("reports numbers that overlap at every corner", async () => {
     const pile = Array.from(
       { length: 5 },

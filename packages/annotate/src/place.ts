@@ -11,8 +11,8 @@ const DIGIT = 5.5;
 const GAP = 4;
 // Each stamp draws a 2px ring, so two stamps closer than both rings would touch.
 const CLEAR = 4;
-// How far a box stands off its area, `--ca-pad` in styles.ts; its number sits on that padded corner.
-const PAD = 6;
+// Default CSS-pixel clearance, shared with styles.ts; the number sits on that padded corner.
+export const BOX_PADDING = 6;
 
 interface Rect {
   x: number;
@@ -56,12 +56,21 @@ export interface Placement {
  * one that covers the least of the other marks, the ticks, and the arrows. Where that would push it past the image's
  * edge it lines up with the mark's edge instead, and in a corner of the image it moves inside its mark.
  */
-export function place(annotations: Annotation[], aspect = ASPECT): Placement {
+export function place(
+  annotations: Annotation[],
+  aspect = ASPECT,
+  boxPadding = BOX_PADDING,
+): Placement {
   const height = WIDTH * aspect;
   const box = (annotation: Annotation) => {
     const area = pixels(annotation, aspect);
     if (annotation.mark !== "box") return area;
-    return { x: area.x - PAD, y: area.y - PAD, w: area.w + 2 * PAD, h: area.h + 2 * PAD };
+    return {
+      x: area.x - boxPadding,
+      y: area.y - boxPadding,
+      w: area.w + 2 * boxPadding,
+      h: area.h + 2 * boxPadding,
+    };
   };
   // A stamp on its own mark's corner always covers some of that mark, so only its tick and arrow count against it.
   const covered = annotations.flatMap((annotation, owner) => {

@@ -32,7 +32,7 @@ const chart: NodeHandler = async (node, state) => {
   const [, width, height] = /viewBox="0 0 ([\d.]+) ([\d.]+)"/.exec(svg) ?? [];
   const aspect = width && height ? Number(height) / Number(width) : undefined;
   const plot = marks?.length
-    ? `<div class="cch-plot cch-marked">${await annotateHtml(svg, marks, label ?? "", state, ".cch-plot", aspect)}</div>`
+    ? `<div class="cch-plot cch-marked">${await annotateHtml(svg, marks, label ?? "", state, ".cch-plot", aspect, 0)}</div>`
     : `<div class="cch-plot">${svg}</div>`;
   return (
     `${styles}<figure class="cch" data-type="${type}">${caption}${plot}` +

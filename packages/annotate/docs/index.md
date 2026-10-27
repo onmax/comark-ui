@@ -302,7 +302,6 @@ Set them on `.ca`, the root of every block:
 | `--ca-note-font` | `comark-caveat, cursive` | Side notes and titles. `inherit` uses the page font. |
 | `--ca-note-size` | `1.25em` | Side notes |
 | `--ca-label-size` | `1.5em` | A screenshot's title |
-| `--ca-pad` | `6px` | How far a `box` mark stands off its area, at any image size |
 | `--ca-gutter` | `10rem` | The room beside the image for `side="left"` and `side="right"` notes |
 | `--ca-top-gutter` | `5rem` | The room above the image for `side="top"` notes |
 | `--ca-bottom-gutter` | `5rem` | The room below the image for `side="bottom"` notes |

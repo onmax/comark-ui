@@ -68,7 +68,7 @@ function wobbly(viewBox: string, paths: string[], amount: number): Draw {
 export const marks = {
   // Draws nothing: the arrow from a side note does the pointing.
   none: () => ({ viewBox: "0 0 1 1", paths: [] }),
-  // The line runs along its SVG's edge, which styles.ts pads out from the area by `--ca-pad` on the page, so the box
+  // The line runs along its SVG's edge, which CSS pads out from the area on the page, so the box
   // frames the target with the same room at any rendered size instead of shrinking onto it as the image grows.
   box: (width, height, random) => ({
     viewBox: `0 0 ${round(width)} ${round(height)}`,
