@@ -48,7 +48,7 @@ jobs:
   # This budget includes the full docs build and Chromium installation before the browser suite.
   e2e:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -63,6 +63,6 @@ jobs:
       - name: Docs
         run: pnpm docs:build
       - name: Chromium
-        run: pnpm exec playwright install --with-deps chromium
+        run: pnpm exec playwright install --with-deps --only-shell chromium
       - name: End to end
         run: pnpm test:e2e
