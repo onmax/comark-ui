@@ -244,7 +244,8 @@ async function parts(
         head = tip(HEAD_RIGHT, `${corner};right:-1px`);
       }
     }
-    return `<span class="ca-arrow ca-arrow-${side}${way ? " ca-curve" : ""}" data-n="${annotation.n}" style="${color(annotation)}${place}" aria-hidden="true">${line}${head}</span>`;
+    const reach = annotation.to || annotation.mark === "none" ? " ca-reach" : "";
+    return `<span class="ca-arrow ca-arrow-${side}${way ? " ca-curve" : ""}${reach}" data-n="${annotation.n}" style="${color(annotation)}${place}" aria-hidden="true">${line}${head}</span>`;
   });
   // Side notes live outside the frame so the frame, and every percentage inside it, stays the size of the image.
   // A note's x or y is a share of the frame, which sits between the gutters for notes beside, above, and below it.

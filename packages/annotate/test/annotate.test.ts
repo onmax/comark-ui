@@ -269,7 +269,7 @@ describe("comark-annotate", () => {
     expect(issues).toEqual([]);
     expect(html).toContain('class="ca-screenshot ca-top"');
     expect(html).toMatch(
-      /class="ca-arrow ca-arrow-top" data-n="1" style="left:50%;top:calc\(-1 \* var\(--ca-gap\)\);bottom:50%"/,
+      /class="ca-arrow ca-arrow-top ca-reach" data-n="1" style="left:50%;top:calc\(-1 \* var\(--ca-gap\)\);bottom:50%"/,
     );
     expect(html).toContain('class="ca-mark ca-none"');
     expect(html).not.toMatch(/ca-mark ca-none"[^>]*><svg[^>]*><path/);
@@ -296,7 +296,7 @@ describe("comark-annotate", () => {
     expect(issues).toEqual([]);
     // The point lies left of the note, so the note reads rightward from where its leader leaves it.
     expect(html).toMatch(
-      /class="ca-arrow ca-arrow-top ca-curve" data-n="1" style="left:12%;right:60%;top:calc\(-1 \* var\(--ca-lead\)\);bottom:79%"[^>]*><svg class="ca-arrow-line" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M100 0C55 0 0 20 0 100"/,
+      /class="ca-arrow ca-arrow-top ca-curve ca-reach" data-n="1" style="left:12%;right:60%;top:calc\(-1 \* var\(--ca-lead\)\);bottom:79%"[^>]*><svg class="ca-arrow-line" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M100 0C55 0 0 20 0 100"/,
     );
     expect(html).toMatch(
       /class="ca-callout ca-callout-top ca-callout-east" id="ca-[a-z0-9]+-1" data-n="1" style="left:calc\(var\(--ca-pl,0px\) \+ \(100% - var\(--ca-pl,0px\) - var\(--ca-pr,0px\)\) \* 0.4\)"/,

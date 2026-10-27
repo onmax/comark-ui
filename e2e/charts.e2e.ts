@@ -360,3 +360,29 @@ test("a chart copies as an image in the page's colors, and its data as a table o
     "| day | pigeons |\n| --- | --- |\n| Monday | 3 |\n| Friday | 14 |",
   );
 });
+
+test("a side note on a chart narrower than its card starts where its arrow ends", async ({
+  page,
+}) => {
+  const render = createHtmlRenderer({ plugins: [charts()], components });
+  const chart = (side: string) =>
+    `::chart{labels title="Minutes to the first review comment"}\n| team | minutes |\n| --- | --: |\n| frontend | 38 |\n| backend | 64 |\n| design | 12 |\n:::annotation{mark="line" value="45" color="red" side="${side}"}\nTeam goal: 45 min.\n:::\n::`;
+  const body = await render(`${chart("right")}\n\n${chart("left")}`);
+  await page.route("**/fixture/", (route) =>
+    route.fulfill({
+      contentType: "text/html",
+      body: `<!doctype html><meta charset="utf-8"><main style="max-width:768px;margin:auto">${body}</main>`,
+    }),
+  );
+  await page.goto("/fixture/", { waitUntil: "domcontentloaded" });
+  const gaps = await page.locator("figure.cch").evaluateAll((figures) =>
+    figures.map((figure) => {
+      const arrow = figure.querySelector(".ca-arrow")!.getBoundingClientRect();
+      const note = figure.querySelector(".ca-callout")!.getBoundingClientRect();
+      return Math.round(
+        Math.min(Math.abs(note.left - arrow.right), Math.abs(arrow.left - note.right)),
+      );
+    }),
+  );
+  expect(gaps).toEqual([0, 0]);
+});
