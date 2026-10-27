@@ -13,9 +13,9 @@ tagline: Agents write most review documents. Install the skill so yours knows th
 npx skills add onmax/comark-ui
 ```
 
-This site serves it too, so `npx skills add https://comark-ui.onmax.me` installs the same skill.
+The CLI lists every skill in the repository. Pick `comark-ui`. This site serves it too, so `npx skills add https://comark-ui.onmax.me` installs the same skill.
 
-It teaches the blocks. To teach your agent a whole document, such as before/after evidence, a review, or a lesson, add the [skills](/skills/) for those too.
+It teaches the blocks. To teach your agent a whole document, such as before/after evidence, a review, or a lesson, pick the [skills](/skills/) for those from the same list.
 
 ## Markdown pages
 

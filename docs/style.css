@@ -2125,12 +2125,33 @@ nav > .nav-group:first-child {
   color: #16a34a;
 }
 
-/* Copy page and View as Markdown, under the tagline, as on ui.nuxt.com. */
+/* Copy page and View as Markdown: under the landing's tagline, and on a page level with its title at the far right, as
+   on ui.nuxt.com. A title too long to leave them room pushes them under it, at the start. */
 .page-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
   margin-top: 1rem;
+}
+
+.hero-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.hero .hero-title h1 {
+  flex: 1 1 18rem;
+  margin: 0;
+  text-wrap: balance;
+}
+
+.hero-title .page-actions {
+  flex: none;
+  margin: 0;
 }
 
 .page-actions .button {

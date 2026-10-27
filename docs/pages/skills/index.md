@@ -11,13 +11,13 @@ tagline: Each skill teaches your agent one kind of document, what goes in it and
 
 ## Install
 
-Each skill installs on its own, with the `skills` CLI:
+Install them with the `skills` CLI:
 
 ```sh
-npx skills add onmax/comark-ui --skill review-document
+npx skills add onmax/comark-ui
 ```
 
-Leave out `--skill` to pick from every skill in the repository, the [comark-ui skill](/guide/agents/) included. That one teaches the syntax of every block; these teach a whole document. Each carries the syntax of the blocks it uses, so it works without the other.
+It lists every skill in the repository, the [comark-ui skill](/guide/agents/) included, and installs the ones you pick. That one teaches the syntax of every block; these teach a whole document. Each carries the syntax of the blocks it uses, so it works without the other.
 
 ## How they're written
 

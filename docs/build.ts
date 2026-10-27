@@ -362,7 +362,10 @@ const sections: Section[] = [
     slug: "skills",
     label: "Skills",
     icon: "sparkles",
-    lists: [{ slugs: ["skills", ...skillOrder.map((name) => `skills/${name}`)] }],
+    lists: [
+      { slugs: ["skills"] },
+      { title: "Document skills", slugs: skillOrder.map((name) => `skills/${name}`) },
+    ],
   },
   // comark-linter's pages, then one page per rule: the core rules, then each package's.
   {
@@ -885,7 +888,8 @@ const drop: NodeHandler = async ([, , ...children], state) => {
 // command that installs it above. Images the example loads from the live site load from this build, so a branch's
 // preview shows its own. The example's title becomes the page's second level, under the page's own.
 const skillOf = (slug: string) => (slug.startsWith("skills/") ? slug.slice("skills/".length) : "");
-const skillCommand = (name: string) => `npx skills add onmax/comark-ui --skill ${name}`;
+// No --skill: the CLI lists every skill in the repository and lets the reader pick.
+const skillCommand = "npx skills add onmax/comark-ui";
 const skillSource = (name: string) =>
   readFileSync(new URL(`skills/${name}/references/example.md`, repo), "utf8");
 const fromThisBuild = (markdown: string) => markdown.replaceAll(`${site}/`, "/");
@@ -912,8 +916,6 @@ const skillFiles = (name: string) => {
       lines: readFileSync(new URL(path, folder), "utf8").trimEnd().split("\n").length,
     }));
 };
-const skillInstall = (name: string) =>
-  `<div class="skill-install"><button type="button" class="install" data-copy="${escapeHtml(skillCommand(name))}" aria-label="Copy the install command"><span aria-hidden="true">$</span><code>${escapeHtml(skillCommand(name))}</code><span class="install-hint">${copyIcon}${checkIcon}</span></button></div>`;
 const skill: NodeHandler = async ([, attrs], state) => {
   const name = str(attrs.name);
   if (!skillOrder.includes(name))
@@ -989,6 +991,8 @@ const botIcon = `<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="tr
 const copyIcon = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="14" height="14" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>`;
 const resetIcon = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>`;
 const checkIcon = `<svg class="check" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M20 6 9 17l-5-5"/></svg>`;
+// A skill's page installs it with the skills CLI, as the installer below does for agents.
+const skillInstall = `<div class="skill-install"><button type="button" class="install" data-copy="${skillCommand}" aria-label="Copy the install command"><span aria-hidden="true">$</span><code>${skillCommand}</code><span class="install-hint">${copyIcon}${checkIcon}</span></button></div>`;
 // Humans install the packages with their package manager; agents install the comark-ui skill.
 function installerFor(install: string) {
   const packages = install.replace(/^pnpm add /, "");
@@ -1830,9 +1834,8 @@ for (const page of parsed) {
       description: page.tagline,
       body: `<div class="page${page.slug === "badges" ? " page-badges" : ""}">
 <div class="content">
-<div class="hero enter">${eyebrow ? `<p class="eyebrow mono">${eyebrow}</p>` : ""}${page.rule ? `<p class="eyebrow mono">${page.rule.code} · ${page.rule.severity ?? "warning"}</p>` : ""}<h1>${escapeHtml(page.title)}</h1><p>${page.rule ? inlineCode(page.rule.title) : escapeHtml(page.tagline)}</p>
-${page.slug === "badges" ? "" : pageActions(page.slug)}
-${page.install ? installerFor(page.install) : skillOf(page.slug) ? skillInstall(skillOf(page.slug)) : ""}</div>
+<div class="hero enter">${eyebrow ? `<p class="eyebrow mono">${eyebrow}</p>` : ""}${page.rule ? `<p class="eyebrow mono">${page.rule.code} · ${page.rule.severity ?? "warning"}</p>` : ""}<div class="hero-title"><h1>${escapeHtml(page.title)}</h1>${page.slug === "badges" ? "" : pageActions(page.slug)}</div><p>${page.rule ? inlineCode(page.rule.title) : escapeHtml(page.tagline)}</p>
+${page.install ? installerFor(page.install) : skillOf(page.slug) ? skillInstall : ""}</div>
 <main class="enter" style="--i:1">${(
         await renderHtmlFromDocument(
           { ...page.document, nodes: asFields(page.document.nodes) },
@@ -1888,7 +1891,7 @@ const skillsInMarkdown = (markdown: string) =>
       const fence = "`".repeat(
         Math.max(3, ...[...source.matchAll(/`+/g)].map(([run]) => run.length + 1)),
       );
-      return `\`\`\`sh\n${skillCommand(name)}\n\`\`\`\n\nThe skill's example, \`references/example.md\`:\n\n${fence}md\n${source}\n${fence}`;
+      return `\`\`\`sh\n${skillCommand}\n\`\`\`\n\nPick \`${name}\` from the list. The skill's example, \`references/example.md\`:\n\n${fence}md\n${source}\n${fence}`;
     })
     .replace(/^::skills\n::$/m, () =>
       skillOrder
@@ -1934,8 +1937,7 @@ await writeFile(
     "## How an agent reads this site",
     "",
     `- Every page has a Markdown copy at its path plus \`.md\`, such as ${site}/zoom.md for ${site}/zoom/. A request with \`Accept: text/markdown\` gets it too.`,
-    `- The comark-ui agent skill teaches the syntax of every block: \`npx skills add onmax/comark-ui\`. See ${site}/guide/agents.md.`,
-    `- Skills that write a whole document, such as before/after evidence, a review, or a lesson, install with \`npx skills add onmax/comark-ui --skill <name>\`. See ${site}/skills.md.`,
+    `- \`npx skills add onmax/comark-ui\` lists the repository's agent skills to pick from: comark-ui, which teaches the syntax of every block (see ${site}/guide/agents.md), and the skills that write a whole document, such as before/after evidence, a review, or a lesson (see ${site}/skills.md). Add \`--skill <name>\` to install one without the list.`,
     "- Check a document before anyone reads it: `npx -p comark-linter -p comark-ui lint-comark doc.md`.",
     "",
     "## When to use Comark UI",
