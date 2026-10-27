@@ -15,6 +15,7 @@
     "docs:generate": "node docs/build.ts && pnpm --filter comark-ui-docs generate",
     "docs:images": "node docs/images.ts",
     "gallery": "pnpm build && node docs/build.ts && node e2e/serve.ts",
+    "gallery:shots": "node e2e/shots.ts",
     "lint": "vp lint",
     "typecheck": "tsc --noEmit",
     "test": "vp test",

@@ -1,6 +1,6 @@
 {
   "name": "comark-zoom",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Zoom images and any block like medium-zoom, with Escape, Back, and click-outside to close. A Comark plugin.",
   "keywords": [
     "comark",
