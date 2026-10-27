@@ -45,10 +45,11 @@ export const content = defineContent({
     }),
   },
   authorize: ({ user }) => inTeam(user),
-  // /sitemap.xml lists the published pages; robots.txt keeps crawlers out of the Console, the API, and sign-in.
+  // Keep the sitemap off until the GitHub store can load pages without one blob request per file.
+  // robots.txt keeps crawlers out of the Console, the API, and sign-in.
   seo: {
     site: "https://comark-ui.onmax.me",
-    sitemap: true,
+    sitemap: false,
     robots: { disallow: ["/_vitehub", "/api", "/sign-in"] },
   },
 });

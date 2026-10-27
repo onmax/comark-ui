@@ -141,8 +141,6 @@ export default defineNuxtConfig({
     robots: { aiPolicy: false },
     skills: { dir: "../skills" },
   },
-  // The sitemap lists the repository's published pages through the GitHub API, so it's kept for an hour.
-  routeRules: { "/sitemap.xml": { swr: 3600 } },
   nitro: {
     // The root wrangler.jsonc holds what ViteHub doesn't generate (name, routes, previews). Nitro merges it with ViteHub's
     // bindings into docs/dist/server/wrangler.json, which the hook below makes `wrangler` use from the repository's root.
