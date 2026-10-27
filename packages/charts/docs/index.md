@@ -1,6 +1,6 @@
 ---
 title: Charts
-description: Charts from a Markdown table, drawn to SVG with no script.
+description: Charts from a Markdown table, drawn to SVG while parsing.
 keywords: graph, plot, bar chart, line chart, pie chart, scatter plot, area chart, gantt, timeline, roadmap, schedule, sankey, flow diagram, alluvial, cashflow, box plot, heatmap, benchmark, data visualization, dataviz, Vega, Vega-Lite
 tagline: A chart drawn to SVG from a Markdown table, with the table kept under it.
 group: Charts and diagrams
@@ -100,7 +100,8 @@ credits: 'Laid out by Microsoft Research''s <a href="https://github.com/microsof
 
 - The chart's source is a plain Markdown table, so a person or an agent reading the Markdown reads the numbers, not a chart spec.
 - The page shows the same table under the chart, folded into **Data**, so a tool that turns the page into text keeps the numbers too.
-- Vega draws every chart while parsing, so the page needs no script.
+- Vega draws every chart while parsing, so the browser never loads it.
+- A Copy button copies the chart as a PNG, and its menu copies the data as a table for a spreadsheet or as Markdown.
 - [Notes](/charts/notes/) mark a row or a value, or draw a line across the chart at a target.
 - Ten types cover bars, lines, pies, [gantt charts](#gantt-charts), and [sankeys](#sankey), and a [Vega-Lite spec](#vega-lite) draws anything else, all in the same card, colors, and type.
 - Without the plugin, the table still renders as a table.
@@ -438,6 +439,10 @@ Leave `data` out of the spec, because the table replaces it, and name the column
 
 The chart takes the same card, colors, and typeface as the other types wherever the spec sets none. Use the spec's own `config` to change them, since it wins over the chart's. A chart drawn from a spec takes only `title` from the props, and no notes: draw them with a `text` or `rule` layer in the spec.
 
+### Copy
+
+Hover a chart, or tab to it, for its Copy button in the top corner. It copies the chart as a PNG at twice its size, in the page's colors. The arrow beside it opens a menu that also copies the **Data** table: as a table, which Google Sheets, Excel, Notion, and Docs paste as cells, or as Markdown, a table that renders on GitHub. A chart with [notes](/charts/notes/) copies its data instead, since the PNG would leave the notes out. The button only shows once the script runs.
+
 ## Examples
 
 ### Reject a document before publishing
@@ -465,6 +470,19 @@ Every chart is laid out the same way, so two charts of one table look alike wher
 ## Accessibility
 
 Each chart's SVG is an image named by its `title`. Without one, the name says what it draws, such as "bar chart of ducks by team". Charts are static: they have no tooltips, and the **Data** table under the chart holds every number for a screen reader. A chart with marks zooms like a [screenshot](/annotate/components/screenshot/#accessibility).
+
+The Copy button is named "Copy the chart as an image", or "Copy the chart's data" on a chart with notes, and the arrow beside it is "More ways to copy", a button that opens a `menu` of `menuitem`s. A status line beside them announces "Copied as image", "Copied as table", "Copied as Markdown", or "Couldn't copy here". The bar shows while the chart has focus, so a keyboard reaches it the way a pointer does.
+
+### Keyboard interactions
+
+| Key | Description |
+| --- | --- |
+| `Tab`, `Shift+Tab` | Moves to the Copy button and the arrow, and closes an open menu. |
+| `Enter`, `Space` | On Copy or a menu item, copies. On the arrow, opens the menu. |
+| `ArrowDown` | On the arrow, opens the menu. In the menu, moves to the next item. |
+| `ArrowUp` | In the menu, moves to the previous item. |
+| `Home`, `End` | In the menu, moves to the first or last item. |
+| `Escape` | Closes the menu and returns to the arrow. |
 
 ## API
 
@@ -531,12 +549,12 @@ The parse plugin draws every chart, so Vega runs where you parse, on the server 
 
 | Renderer | Entry |
 | --- | --- |
-| `@comark/html` | `comark-charts/html`, which inlines the styles once per document |
+| `@comark/html` | `comark-charts/html`, which inlines the styles and the Copy button's script once per document |
 | `@comark/vue` | `comark-charts/vue` |
 | `@comark/react` | `comark-charts/react` |
 | `@comark/svelte` | `comark-charts/svelte` |
 
-The Vue, React, and Svelte components add the styles when they mount. When you render on a server, import `comark-charts/style.css` with your own styles so the page doesn't shift.
+The Vue, React, and Svelte components add the styles and start the Copy button when they mount. When you render on a server, import `comark-charts/style.css` with your own styles so the page doesn't shift.
 
 Marks come from comark-annotate, which renders only to HTML, so the other renderers draw the chart without them.
 
@@ -570,11 +588,12 @@ Charts read these [shared tokens](/guide/theming/), and their series read Nuxt U
 | Token | Falls back to | Used for |
 | --- | --- | --- |
 | `--comark-foreground` | `--ui-text-highlighted`, `--foreground` | Values, the caption, the data table |
-| `--comark-muted` | `--ui-text-muted`, `--muted-foreground` | Axis labels, the **Data** toggle, waterfall totals |
-| `--comark-border` | `--ui-border`, `--border` | The card, grid lines, and the data table's rules |
-| `--comark-background` | `--ui-bg`, `--background` | The card, and the edges between slices and around points |
-| `--comark-ring` | `--ui-primary`, `--ring` | The focus ring on the **Data** toggle |
-| `--comark-radius` | twice `--ui-radius`, `--radius` | The card's corners |
+| `--comark-muted` | `--ui-text-muted`, `--muted-foreground` | Axis labels, the **Data** toggle, waterfall totals, the copy buttons' icons and the menu's hints |
+| `--comark-border` | `--ui-border`, `--border` | The card, grid lines, the data table's rules, and the copy buttons' and the menu's outline |
+| `--comark-background` | `--ui-bg`, `--background` | The card, the edges between slices and around points, the copy buttons, the menu, and a copied PNG's background |
+| `--comark-accent` | `--ui-bg-elevated`, `--accent` | A hovered copy button or menu item, and the arrow while its menu is open |
+| `--comark-ring` | `--ui-primary`, `--ring` | The focus ring on the **Data** toggle and the copy buttons |
+| `--comark-radius` | twice `--ui-radius`, `--radius` | The card's, the copy buttons', and the menu's corners |
 | `--comark-font` | `--font-sans` | All text |
 | `--comark-chart-1` to `-6` | `--ui-chart-1` to `-6`, `--chart-1` to `-6` | Series, in column order |
 
@@ -590,7 +609,7 @@ Marks on a chart use comark-annotate's styles, and its [variables](/annotate/#va
 
 ### Classes
 
-A chart is a `figure.cch` with `data-type`, such as `data-type="bar"`, holding a `figcaption`, the SVG in `.cch-plot`, and the table in `details.cch-data` as its footer. A chart with marks adds `.cch-marked` to `.cch-plot`.
+A chart is a `figure.cch` with `data-type`, such as `data-type="bar"`, holding a `figcaption`, the SVG in `.cch-plot`, and the table in `details.cch-data` as its footer. A chart with marks adds `.cch-marked` to `.cch-plot`. `.cch-bar`, over the card's top corner, holds `.cch-status` and `.cch-copy`: the Copy button, `.cch-copy-main`, the arrow, `.cch-copy-more`, and the menu, `.cch-menu`, whose items are `button[data-chart-copy]`.
 
 ```css
 :root {

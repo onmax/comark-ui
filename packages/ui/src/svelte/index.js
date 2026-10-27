@@ -1,4 +1,4 @@
-// Every plugin with components for `@comark/svelte`, which leaves out annotate and diff.
+// Every plugin with components for `@comark/svelte`, which leaves out annotate, diff, and quiz.
 import { preset } from "comark-ui";
 import { addMermaidStyles } from "comark-ui/client";
 import * as badge from "comark-badge/svelte";

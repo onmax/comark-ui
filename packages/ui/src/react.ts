@@ -54,7 +54,7 @@ const typeset = () =>
     dangerouslySetInnerHTML: { __html: typesetCss },
   });
 
-/** Every plugin with components for `@comark/react`, which leaves out annotate and diff. */
+/** Every plugin with components for `@comark/react`, which leaves out annotate, diff, and quiz. */
 export default (options?: PresetOptions): Preset<AnyComponent> =>
   preset<AnyComponent>(
     {

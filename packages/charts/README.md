@@ -5,7 +5,7 @@
 [![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-charts)
 [![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/charts/)
 
-Charts from a Markdown table, drawn to SVG with no script. The table stays under the chart, so people see the chart and agents read the numbers. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
+Charts from a Markdown table, drawn to SVG while parsing, that copy as a PNG or as data. The table stays under the chart, so people see the chart and agents read the numbers. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
 
 ```sh
 pnpm add comark @comark/html comark-charts

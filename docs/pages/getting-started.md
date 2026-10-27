@@ -96,7 +96,7 @@ export function Doc({ source }: { source: string }) {
 For Svelte, import `comarkUi` from `comark-ui/svelte`.
 
 > [!NOTE]
-> The Vue, React, and Svelte entries leave out [annotate](/annotate/) and [diff](/diff/), which render only to HTML.
+> The Vue, React, and Svelte entries leave out [annotate](/annotate/), [diff](/diff/), and [quiz](/quiz/), which render only to HTML.
 
 ### Write a block
 

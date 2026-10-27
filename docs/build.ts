@@ -197,6 +197,27 @@ for (const folder of await readdir(new URL("packages/", repo))) {
       `packages/${folder}/docs has no place in the rail; add "${folder}" to packageOrder in docs/build.ts.`,
     );
 }
+// The Renderers guide's Support table is written by hand, so a package added or given a renderer since would be missing.
+// Chat renders messages with these renderers rather than plugging into them, so its page says so instead.
+const renderersGuide = readFileSync(new URL("docs/pages/guide/renderers.md", repo), "utf8");
+for (const slug of [...packageOrder].sort()) {
+  if (slug in thirdParty || slug === "chat") continue;
+  // SAFETY: every package in packageOrder that isn't third-party has a package.json with a name and exports.
+  const { name, exports } = JSON.parse(
+    readFileSync(new URL(`packages/${slug}/package.json`, repo), "utf8"),
+  ) as { name: string; exports: Record<string, unknown> };
+  const entries = ["html", "vue", "react", "svelte"].map((renderer) =>
+    `./${renderer}` in exports ? ` \`${name}/${renderer}\` ` : " ",
+  );
+  const row = `| [${slug}](/${slug}/) |${entries.join("|")}|`;
+  if (entries.some((entry) => entry !== " ")) {
+    if (!renderersGuide.includes(row))
+      throw new Error(`docs/pages/guide/renderers.md needs this row in its Support table: ${row}`);
+  } else if (renderersGuide.includes(`| [${slug}](/${slug}/) |`))
+    throw new Error(
+      `docs/pages/guide/renderers.md lists ${name} in its Support table, but it has no renderer entry; remove its row.`,
+    );
+}
 const packages = await Promise.all(
   packageOrder
     .filter((slug) => exists(fileOf(slug)))
