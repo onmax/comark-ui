@@ -23,19 +23,21 @@ describe("hosted badge handler", () => {
     const fetch = vi.fn<typeof globalThis.fetch>().mockResolvedValue(json({ latest: "1.2.3" }));
     const handle = createBadgeHandler({ fetch });
     const images = [];
-    for (const preset of ["default", "npmx", "nuxt"]) {
+    for (const preset of ["default", "npmx", "nuxt", "flat", "for-the-badge"]) {
       const response = await handle(get(`source=npm-version&package=comark-ui&preset=${preset}`));
       expect(response.status).toBe(200);
       images.push(await response.text());
     }
     expect(fetch).toHaveBeenCalledOnce();
-    expect(new Set(images).size).toBe(3);
+    expect(new Set(images).size).toBe(5);
     for (const image of images) expect(image).toContain("v1.2.3");
     expect(images[1]).toContain("Geist Mono");
     expect(images[2]).toContain('fill="#00dc82"');
+    expect(images[3]).toContain('height="20"');
+    expect(images[4]).toContain('height="28"');
     const invalid = await handle(get("value=ready&preset=unknown"));
     expect(invalid.status).toBe(400);
-    expect(await invalid.text()).toContain("Use preset default, npmx, or nuxt.");
+    expect(await invalid.text()).toContain("for-the-badge");
     expect(fetch).toHaveBeenCalledOnce();
   });
   it("renders a self-contained static image, escapes text, and supports HEAD", async () => {

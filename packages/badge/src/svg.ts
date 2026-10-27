@@ -19,7 +19,7 @@ export const icons = [
   "shadcn",
   "check",
 ] as const;
-export const badgePresets = ["default", "npmx", "nuxt"] as const;
+export const badgePresets = ["default", "npmx", "nuxt", "flat", "for-the-badge"] as const;
 export type BadgePreset = (typeof badgePresets)[number];
 export type BadgeSource = (typeof sources)[number];
 export type BadgeSpec = {
@@ -74,7 +74,7 @@ export function badgeDefaultIcon({
 }: Pick<BadgeSpec, "source" | "preset">): BadgeSpec["icon"] {
   if (source === "github-actions") return "github";
   if (source === "static") return "none";
-  return preset === "default" ? "npm" : preset;
+  return preset === "npmx" || preset === "nuxt" ? preset : "npm";
 }
 
 /** Reads the same options from Markdown, the builder, and an image URL. */
@@ -91,7 +91,11 @@ export function readBadge(
     };
   const preset = field("preset", "default");
   if (!oneOf(badgePresets, preset))
-    return { ok: false, field: "preset", error: "Use preset default, npmx, or nuxt." };
+    return {
+      ok: false,
+      field: "preset",
+      error: "Use preset default, npmx, nuxt, flat, or for-the-badge.",
+    };
   const defaultLabel =
     source === "npm-version"
       ? "npm"
@@ -310,9 +314,9 @@ function shadcn(
 }
 
 type PresetImage = Pick<BadgeImage, "label" | "value" | "color" | "theme"> & { icon: string };
-const imageHead = (width: number, label: string, value: string, style: string) => {
+const imageHead = (width: number, label: string, value: string, style: string, height = 26) => {
   const name = xml(label ? `${label}: ${value}` : value);
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="26" viewBox="0 0 ${width} 26" role="img" aria-label="${name}"><title>${name}</title>${style}`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-label="${name}"><title>${name}</title>${style}`;
 };
 
 function npmx({ label, value, color, icon, theme }: PresetImage) {
@@ -371,6 +375,51 @@ function nuxt({ label, value, color, icon, theme }: PresetImage) {
   return `${imageHead(width, label, value, style)}${labelShape}${valueShape}${icon ? `<g transform="translate(${label ? 8 : 7} 6) scale(.875)" color="#00dc82" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${icon}</g>` : ""}${label ? text(label, 8 + iconWidth, "#ffffff") : ""}${text(value, left + 8, ink)}<rect x=".5" y=".5" width="${width - 1}" height="25" rx="5.5" fill="none" class="e"/></svg>`;
 }
 
+// Shields.io's hues, darkened where white text on them falls under 4.5:1; its yellow and light grey keep black text.
+const shieldsColors = {
+  primary: "#0071b3",
+  info: "#0071b3",
+  success: "#15803d",
+  warning: "#dfb317",
+  error: "#b91c1c",
+  secondary: "#9f9f9f",
+  neutral: "#9f9f9f",
+};
+// Shields.io colors whole badges and has no theme, so a dark page only gets a faint edge, like nuxt's.
+function shields({ label, value, color, icon, theme }: PresetImage, tall: boolean) {
+  const fill = Object.entries(shieldsColors).find(([name]) => name === color)?.[1] ?? color;
+  const ink = textColor(fill);
+  const style = paints(theme, (dark) => ({
+    e: dark ? "stroke:#ffffff;stroke-opacity:.18" : "stroke:none",
+  }));
+  const shown = (text: string) => (tall ? text.toUpperCase() : text);
+  // for-the-badge spaces its capitals 1.25px apart, and `lengthAdjust="spacing"` absorbs the bold value's wider glyphs.
+  const size = (text: string) =>
+    tall ? measure(text) * (10 / 12) + Array.from(text).length * 1.25 : measure(text) * (11 / 12);
+  const height = tall ? 28 : 20;
+  const pad = tall ? 12 : 5;
+  const iconX = tall ? 9 : 5;
+  const start = icon ? iconX + 14 + (tall ? 6 : 3) : pad;
+  const left = label ? Math.round(start + size(shown(label)) + pad) : 0;
+  const valueX = label ? left + pad : start;
+  const width = Math.ceil(valueX + size(shown(value)) + pad);
+  const text = (content: string, x: number, paint: string, bold = false) => {
+    const attributes = `x="${x}" font-family="Arial,Helvetica,sans-serif" font-size="${tall ? 10 : 11}"${bold ? ' font-weight="bold"' : ""} textLength="${size(content).toFixed(1)}" lengthAdjust="${tall ? "spacing" : "spacingAndGlyphs"}"`;
+    const shadow = paint === "#ffffff" ? "#010101" : "#cccccc";
+    return tall
+      ? `<text ${attributes} y="17.5" fill="${paint}">${xml(content)}</text>`
+      : `<text ${attributes} y="15" fill="${shadow}" fill-opacity=".3" aria-hidden="true">${xml(content)}</text><text ${attributes} y="14" fill="${paint}">${xml(content)}</text>`;
+  };
+  const rx = tall ? 0 : 3;
+  const shapes = left
+    ? `<path d="M${rx} 0H${left}V${height}H${rx}A${rx} ${rx} 0 0 1 0 ${height - rx}V${rx}A${rx} ${rx} 0 0 1 ${rx} 0Z" fill="#555555"/><path d="M${left} 0H${width - rx}A${rx} ${rx} 0 0 1 ${width} ${rx}V${height - rx}A${rx} ${rx} 0 0 1 ${width - rx} ${height}H${left}Z" fill="${fill}"/>`
+    : `<rect width="${width}" height="${height}" rx="${rx}" fill="${fill}"/>`;
+  const gloss = tall
+    ? ""
+    : `<linearGradient id="s" x2="0" y2="100%"><stop offset="0" stop-color="#bbbbbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect width="${width}" height="${height}" rx="${rx}" fill="url(#s)"/>`;
+  return `${imageHead(width, label, value, style, height)}${shapes}${gloss}${icon ? `<g transform="translate(${iconX} ${(height - 14) / 2}) scale(.875)" color="${label ? "#ffffff" : ink}" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${icon}</g>` : ""}${label ? text(shown(label), start, "#ffffff") : ""}${text(shown(value), valueX, ink, tall)}<rect x=".5" y=".5" width="${width - 1}" height="${height - 1}" rx="${Math.max(rx - 0.5, 0)}" fill="none" class="e"/></svg>`;
+}
+
 /** A self-contained SVG. Text uses fixed advances, so no font download or canvas is needed. */
 export function badgeSvg(input: BadgeImage): string {
   const label = input.label.slice(0, 80);
@@ -378,7 +427,7 @@ export function badgeSvg(input: BadgeImage): string {
   const color = validColor(input.color) ? palette(input.color) : badgeColors.primary;
   const labelColor = validColor(input.labelColor) ? palette(input.labelColor) : badgeColors.neutral;
   const icon = paths[input.icon] ?? "";
-  if (input.preset === "npmx" || input.preset === "nuxt") {
+  if (input.preset && input.preset !== "default") {
     const image = {
       label,
       value,
@@ -386,7 +435,8 @@ export function badgeSvg(input: BadgeImage): string {
       icon,
       theme: input.theme,
     };
-    return input.preset === "npmx" ? npmx(image) : nuxt(image);
+    if (input.preset === "npmx") return npmx(image);
+    return input.preset === "nuxt" ? nuxt(image) : shields(image, input.preset === "for-the-badge");
   }
   const iconSpace = icon ? 22 : 0;
   const left = label ? Array.from(label).length * 7.2 + 20 + iconSpace : 0;

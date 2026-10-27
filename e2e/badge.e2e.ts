@@ -116,6 +116,8 @@ for (const input of [
   { source: "npm-version", package: "comark-ui" },
   { source: "npm-downloads", package: "comark-ui" },
   { source: "npm-version", package: "comark-ui", preset: "npmx" },
+  { source: "npm-version", package: "comark-ui", preset: "flat" },
+  { source: "npm-downloads", package: "comark-ui", preset: "for-the-badge", icon: "nuxt" },
   { source: "npm-downloads", package: "comark-ui", preset: "nuxt", icon: "none" },
 ]) {
   test(`restores canonical configuration ${JSON.stringify(input)}`, async ({ page }) => {
@@ -179,4 +181,50 @@ test("switches presets, preserves chosen logos, and shares the rendered result",
   await page.locator('[data-look="default"]').click();
   await expect(style).toBeVisible();
   await expect(logo).toHaveValue("none");
+});
+
+for (const [preset, height] of [
+  ["flat", 20],
+  ["for-the-badge", 28],
+] as const) {
+  test(`exports ${preset} at its intended size`, async ({ page }) => {
+    await page.goto("/badges/?source=npm-version&package=comark-ui");
+    await page.locator(`[data-look="${preset}"]`).click();
+    await expect(page.getByRole("combobox", { name: "Logo", exact: true })).toHaveValue("npm");
+    await expect(page.getByRole("combobox", { name: "Style", exact: true })).toBeHidden();
+    await expect(page.locator("#badge-preview")).toBeVisible();
+    await expect
+      .poll(() =>
+        page.locator("#badge-preview").evaluate((img: HTMLImageElement) => img.naturalHeight),
+      )
+      .toBe(height);
+    await page.getByLabel("Export", { exact: true }).selectOption("image-url");
+    await expect(page.locator("#export-code")).toHaveValue(new RegExp(`preset=${preset}`));
+    await page.reload();
+    await expect(page.locator(`[data-look="${preset}"]`)).toHaveAttribute("aria-pressed", "true");
+    await page.setViewportSize({ width: 320, height: 720 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+  });
+}
+
+test("renders document badge images at their preset heights", async ({ page }) => {
+  await page.goto("/badge/");
+  await expect
+    .poll(() =>
+      page.locator(".cb-image").evaluateAll((images) =>
+        images.map((image) => ({
+          natural: image instanceof HTMLImageElement ? image.naturalHeight : 0,
+          rendered: Math.round(image.getBoundingClientRect().height),
+        })),
+      ),
+    )
+    .toEqual(
+      expect.arrayContaining([
+        { natural: 20, rendered: 20 },
+        { natural: 26, rendered: 26 },
+        { natural: 28, rendered: 28 },
+      ]),
+    );
 });

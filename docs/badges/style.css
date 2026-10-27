@@ -109,6 +109,15 @@
 .badge-builder [data-swatch="nuxt"] {
   background: linear-gradient(90deg, #020420 50%, #00dc82 50%);
 }
+.badge-builder [data-swatch="flat"] {
+  height: 0.75rem;
+  border-radius: 0.125rem;
+  background: linear-gradient(90deg, #555 50%, #0071b3 50%);
+}
+.badge-builder [data-swatch="for-the-badge"] {
+  border-radius: 0;
+  background: linear-gradient(90deg, #555 50%, #0071b3 50%);
+}
 .badge-builder .builder-grid {
   display: grid;
   grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);

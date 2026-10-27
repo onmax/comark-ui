@@ -6,7 +6,7 @@ tagline: A small label in one of Nuxt UI's seven colors, for a version, a status
 group: Docs blocks
 icon: tag
 blurb: Badges
-credits: 'Syntax and colors from <a href="https://ui.nuxt.com/docs/typography">Nuxt UI</a>''s prose badge. npmx and Nuxt marks from <a href="https://github.com/npmx-dev/npmx.dev">npmx</a> and <a href="https://github.com/nuxt/nuxt.com">Nuxt</a>, under MIT licenses.'
+credits: 'Syntax and colors from <a href="https://ui.nuxt.com/docs/typography">Nuxt UI</a>''s prose badge. npmx and Nuxt marks from <a href="https://github.com/npmx-dev/npmx.dev">npmx</a> and <a href="https://github.com/nuxt/nuxt.com">Nuxt</a>, under MIT licenses. Flat and For the badge inspired by <a href="https://shields.io/">Shields.io</a>.'
 ---
 
 ::examples
@@ -169,16 +169,18 @@ Use the `style` prop to choose shadcn outlines, subtle tints, or solid backgroun
 
 ### Preset
 
-Use the `preset` prop to choose `default`, `npmx`, or `nuxt`. The default keeps the existing styles. npmx uses monospace text and a colored slash; Nuxt uses a navy label and a green value block. Both show status colors for CI and accept a custom color. Branded presets ignore `style` and `labelColor`.
+Use the `preset` prop to choose `default`, `npmx`, `nuxt`, `flat`, or `for-the-badge`. The default keeps the existing styles. npmx uses monospace text and a colored slash; Nuxt uses a navy label and a green value block. Flat uses the compact 20px label/value shape familiar from Shields.io. For the badge uses a 28px block with uppercase text. Every preset supports status colors for CI and a custom color. Presets other than default ignore `style` and `labelColor`.
 
 ::example
 ```md
 :badge[v1.2.3]{label="npm" preset="npmx" icon="npmx"}
 :badge[v1.2.3]{label="npm" preset="nuxt" icon="nuxt"}
+:badge[v1.2.3]{label="npm" preset="flat" icon="npm"}
+:badge[v1.2.3]{label="npm" preset="for-the-badge" icon="npm"}
 ```
 ::
 
-For live npm badges, the preset supplies the matching logo:
+For live npm badges, npmx and Nuxt supply their matching logo; the other presets use npm:
 
 ```md
 :badge{source="npm-version" package="comark-ui" preset="npmx"}
@@ -187,7 +189,7 @@ For live npm badges, the preset supplies the matching logo:
 
 ### Theme
 
-Images follow the reader's light or dark theme by default, on GitHub too: the SVG carries both palettes and picks one from the page around it. Use the `theme` prop to lock an image to `light` or `dark`. Nuxt keeps its navy and green palette in both modes, with a faint outline in dark mode.
+Images follow the reader's light or dark theme by default, on GitHub too: the SVG carries both palettes and picks one from the page around it. Use the `theme` prop to lock an image to `light` or `dark`. Nuxt, Flat, and For the badge keep their palettes in both modes, with a faint outline in dark mode.
 
 ::example
 ```md
@@ -265,7 +267,7 @@ Data is kept apart from the badge's look, so every style of one package shares i
 | `branch` | — | Optional workflow branch filter. |
 | `icon` | Source icon | `none`, `package`, `npm`, `npmx`, `nuxt`, `github`, `comark`, `shadcn`, or `check`. npm sources default to the preset's logo; GitHub Actions defaults to GitHub. Brand marks are embedded in the SVG. |
 | `labelColor` | `neutral` | Semantic or six-digit hex color for the label background in the default preset's subtle and solid styles. |
-| `preset` | `default` | `default`, `npmx`, or `nuxt`. Branded presets ignore `style` and `labelColor`. |
+| `preset` | `default` | `default`, `npmx`, `nuxt`, `flat`, or `for-the-badge`. All but default ignore `style` and `labelColor`. |
 | `style` | `shadcn` | In the default preset: `shadcn`, `subtle`, or `solid`. shadcn uses a neutral outline and text, with a dot in the value's color unless it is primary, secondary, or neutral. Solid automatically chooses black or white text for contrast. |
 | `theme` | `auto` | `auto` follows the page's light or dark theme; `light` or `dark` locks the image to one. |
 
@@ -280,7 +282,7 @@ In `comarkUi()`, `badge: false` turns it off, and `badge: { endpoint, download }
 
 ### Functions
 
-`comark-badge/svg` exports `readBadge(options)`, returning `{ ok, value }` or `{ ok, error, field }`; `badgeSvg(image)` renders resolved text as SVG; `badgeParams(spec)` writes canonical query parameters; `badgeIcon(name)` renders a built-in logo or symbol for option controls. `badgePresets` lists the three presets; `badgeDefaultIcon({ source, preset })` returns their source-specific default icon. This entry has no framework or server dependency. `comark-badge/server` exports `createBadgeHandler(options?)` separately.
+`comark-badge/svg` exports `readBadge(options)`, returning `{ ok, value }` or `{ ok, error, field }`; `badgeSvg(image)` renders resolved text as SVG; `badgeParams(spec)` writes canonical query parameters; `badgeIcon(name)` renders a built-in logo or symbol for option controls. `badgePresets` lists the presets; `badgeDefaultIcon({ source, preset })` returns their source-specific default icon. This entry has no framework or server dependency. `comark-badge/server` exports `createBadgeHandler(options?)` separately.
 
 ### Your own renderer
 
