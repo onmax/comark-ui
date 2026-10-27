@@ -1,7 +1,7 @@
 <div class="badge-builder" data-badge-builder>
   <form id="badge-form" autocomplete="off">
     <fieldset class="builder-presets">
-      <legend>Preset</legend>
+      <legend>Start from</legend>
       <div class="preset-grid">
         <button type="button" data-preset="custom" aria-pressed="true">
           <span data-logo="comark"></span>Custom
@@ -72,8 +72,30 @@
         </fieldset>
         <fieldset>
           <legend>Appearance</legend>
+          <div class="look-field">
+            <span id="look-label">Preset</span>
+            <input type="hidden" name="preset" value="default" />
+            <div class="preset-grid look-grid" role="group" aria-labelledby="look-label">
+              <button type="button" data-look="default" aria-pressed="true">
+                <span class="look-swatch" data-swatch="default" aria-hidden="true"></span>Default
+              </button>
+              <button type="button" data-look="npmx" aria-pressed="false">
+                <span class="look-swatch" data-swatch="npmx" aria-hidden="true"></span>npmx
+              </button>
+              <button type="button" data-look="nuxt" aria-pressed="false">
+                <span class="look-swatch" data-swatch="nuxt" aria-hidden="true"></span>Nuxt
+              </button>
+              <button type="button" data-look="flat" aria-pressed="false">
+                <span class="look-swatch" data-swatch="flat" aria-hidden="true"></span>Flat
+              </button>
+              <button type="button" data-look="for-the-badge" aria-pressed="false">
+                <span class="look-swatch" data-swatch="for-the-badge" aria-hidden="true"></span>For
+                the badge
+              </button>
+            </div>
+          </div>
           <div class="pair">
-            <label
+            <label data-style
               >Style<select name="style">
                 <option value="shadcn">shadcn</option>
                 <option value="subtle">Subtle</option>
@@ -81,7 +103,7 @@
               </select></label
             >
             <label
-              >Badge theme<select name="theme">
+              >Color scheme<select name="theme">
                 <option value="auto">Auto</option>
                 <option value="light">Light</option>
                 <option value="dark">Dark</option>
@@ -93,6 +115,8 @@
               <option value="none">None</option>
               <option value="comark" selected>Comark</option>
               <option value="npm">npm</option>
+              <option value="npmx">npmx</option>
+              <option value="nuxt">Nuxt</option>
               <option value="github">GitHub</option>
               <option value="shadcn">shadcn</option>
               <option value="package">Package</option>

@@ -83,6 +83,41 @@
   height: 1rem;
   display: block;
 }
+.badge-builder .look-field {
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+.badge-builder .look-grid {
+  margin-top: 0.375rem;
+}
+.badge-builder .look-grid button {
+  flex-wrap: wrap;
+}
+.badge-builder .look-swatch {
+  display: block;
+  flex: 0 0 1.875rem;
+  height: 1rem;
+  border: 1px solid var(--edge-field);
+  border-radius: 0.25rem;
+  background: linear-gradient(135deg, #fff 50%, #171717 50%);
+}
+.badge-builder [data-swatch="npmx"] {
+  background:
+    radial-gradient(circle at 75% 50%, #51c8fc 2px, transparent 2.5px),
+    linear-gradient(135deg, #fff 50%, #0a0a0a 50%);
+}
+.badge-builder [data-swatch="nuxt"] {
+  background: linear-gradient(90deg, #020420 50%, #00dc82 50%);
+}
+.badge-builder [data-swatch="flat"] {
+  height: 0.75rem;
+  border-radius: 0.125rem;
+  background: linear-gradient(90deg, #555 50%, #0071b3 50%);
+}
+.badge-builder [data-swatch="for-the-badge"] {
+  border-radius: 0;
+  background: linear-gradient(90deg, #555 50%, #0071b3 50%);
+}
 .badge-builder .builder-grid {
   display: grid;
   grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
