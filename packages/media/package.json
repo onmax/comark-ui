@@ -1,6 +1,6 @@
 {
   "name": "comark-media",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Videos and audio from image syntax, and GitHub attachment links that play. Both get controls on the shadcn/ui tokens. A Comark plugin.",
   "keywords": [
     "audio",
