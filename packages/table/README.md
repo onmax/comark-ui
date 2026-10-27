@@ -6,7 +6,7 @@
 [![license](https://npmx.dev/api/registry/badge/license/comark-table)](https://npmx.dev/package/comark-table)
 [![docs](https://img.shields.io/badge/docs-comark--ui.onmax.me-14b8a6?labelColor=0a0a0a)](https://comark-ui.onmax.me/table/)
 
-Tables from CSV, TSV, and JSON files or fences, read while parsing, with Copy CSV and Copy Markdown buttons and headers that sort. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
+Tables from CSV, TSV, and JSON files or fences, read while parsing, with a Copy button that pastes as cells in a spreadsheet, a menu that copies it as Markdown or CSV, and headers that sort. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
 
 ```sh
 pnpm add comark comark-table
@@ -35,7 +35,7 @@ Parse,"1,204",980
 ::
 ````
 
-`src` reads a file relative to the document, under `root`, as comark-include does; pass `read` in a browser or an edge runtime. A ` ```csv ` or ` ```tsv ` fence becomes a table anywhere (`fences: false` keeps them as code); a ` ```json ` fence, an array of objects, becomes one inside `::table`, and so does a Markdown table. `sort` makes the headers sort the rows, and `copy=false` hides the copy buttons. Number columns line up on the right.
+`src` reads a file relative to the document, under `root`, as comark-include does; pass `read` in a browser or an edge runtime. A ` ```csv ` or ` ```tsv ` fence becomes a table anywhere (`fences: false` keeps them as code); a ` ```json ` fence, an array of objects, becomes one inside `::table`, and so does a Markdown table. `sort` makes the headers sort the rows, and `copy=false` hides the Copy button and its menu. Number columns line up on the right.
 
 The plugin adds every problem to `meta.issues`, so a host can reject a document before publishing it: a missing file, a path outside the root, a URL, an unknown format, JSON that isn't an array of objects, an unclosed quote, and rows of the wrong length. A fence it can't read stays code. Each issue names its table and says how to fix it.
 

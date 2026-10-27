@@ -30,7 +30,7 @@ type Issue = { rule: `comark/table/${string}`; message: string };
 
 /**
  * What a `::table` or a data fence becomes: a `data-table` node around a plain `table`. `sort` makes the headers
- * buttons, and `copy` shows the Copy CSV and Copy Markdown buttons.
+ * buttons, and `copy` shows the Copy button and its menu of formats.
  */
 export type TableAttributes = { sort?: boolean; copy?: boolean };
 
