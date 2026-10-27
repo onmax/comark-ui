@@ -3701,6 +3701,230 @@ main img {
   color: var(--fg) !important;
 }
 
+/* The Skills page: a card per skill, its example as a sheet of paper on a soft ground that fades out at the bottom,
+   and its name and blurb under it. The name's link covers the card, so the still holds no link of its own. */
+.skill-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 2rem 0 3rem;
+  padding: 0;
+  list-style: none;
+}
+
+.skill-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  border-radius: 16px;
+  background: var(--card);
+  box-shadow:
+    0 0 0 1px var(--line),
+    0 1px 2px rgb(0 0 0 / 0.04);
+  transition: box-shadow 150ms ease;
+}
+
+.skill-card:has(a:focus-visible) {
+  outline: 2px solid var(--fg);
+  outline-offset: 2px;
+}
+
+.skill-card-screen {
+  position: relative;
+  height: 15rem;
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--soft);
+}
+
+.skill-card-screen::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 3.5rem;
+  background: linear-gradient(transparent, var(--soft));
+}
+
+.skill-card-paper {
+  position: absolute;
+  inset: 1.25rem 1.25rem -1rem;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--bg);
+  box-shadow:
+    0 0 0 1px var(--line),
+    0 12px 24px -16px rgb(0 0 0 / 0.25);
+  transition: translate 200ms var(--ease-out);
+}
+
+.skill-card-paper > .demo-page {
+  --z: 0.6;
+  padding: 1.5rem 1.75rem;
+}
+
+.skill-card-text {
+  padding: 0.875rem 0.75rem 0.625rem;
+}
+
+.skill-card-text a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--fg);
+  font-size: 0.9375rem;
+  text-decoration: none;
+}
+
+.skill-card-text a:focus-visible {
+  outline: none;
+}
+
+.skill-card-text a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.skill-card-text strong {
+  font-weight: 600;
+}
+
+.skill-card-text p {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+
+@media (hover: hover) {
+  .skill-card:hover {
+    box-shadow:
+      0 0 0 1px var(--faint),
+      0 1px 2px rgb(0 0 0 / 0.04);
+  }
+
+  .skill-card:hover .skill-card-paper {
+    translate: 0 -4px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skill-card-paper {
+    transition: none;
+  }
+}
+
+@media (max-width: 40rem) {
+  .skill-cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* A skill's page: its install command in the hero, its example in a frame, and the files it installs. */
+.skill-install {
+  max-width: 40rem;
+  margin-top: 1.75rem;
+}
+
+.skill-example {
+  margin: 0 0 1rem;
+}
+
+.skill-example .example-bar {
+  align-items: center;
+  gap: 1rem;
+}
+
+.skill-file {
+  display: inline-flex;
+  white-space: nowrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 auto 0 0;
+  color: var(--faint);
+  font-size: 0.8125rem;
+}
+
+/* A whole document, so it keeps its frame even when it holds blocks that draw their own. */
+.skill-example > .example-body > .example-preview {
+  padding: 2rem 2.25rem;
+  border-radius: 10px;
+  box-shadow: 0 0 0 1px var(--line);
+}
+
+.skill-files {
+  margin: 0 0 2.5rem;
+}
+
+.skill-files ul {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.25rem;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.skill-files li {
+  margin: 0;
+}
+
+.skill-files a {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.5rem;
+  padding: 0 0.625rem;
+  border-radius: 8px;
+  color: var(--faint);
+  font-size: 0.8125rem;
+  text-decoration: none;
+  transition: background-color 150ms ease;
+}
+
+.skill-files code {
+  min-width: 0;
+  overflow: hidden;
+  padding: 0;
+  background: none;
+  color: var(--fg);
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.skill-files-lines {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.skill-files a:hover {
+  background: var(--soft);
+}
+
+.skill-files a:focus-visible {
+  outline: 2px solid var(--fg);
+  outline-offset: -2px;
+}
+
+@media (max-width: 40rem) {
+  .skill-file {
+    display: none;
+  }
+
+  .skill-example > .example-body > .example-preview {
+    padding: 1.25rem;
+  }
+
+  .skill-files ul {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 /* The component gallery: a canvas with a row of frames per package, in one scheme or both, dark under light, and the
    inspector that edits the selected one. The canvas scrolls both ways, and its script scales the stage by --zoom and
    sizes the sizer around it to match, for the scrollbars. Each row sets --frame, its frames' width. */

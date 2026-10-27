@@ -15,6 +15,8 @@ npx skills add onmax/comark-ui
 
 This site serves it too, so `npx skills add https://comark-ui.onmax.me` installs the same skill.
 
+It teaches the blocks. To teach your agent a whole document, such as before/after evidence, a review, or a lesson, add the [skills](/skills/) for those too.
+
 ## Markdown pages
 
 Every page on this site has a Markdown copy at its path plus `.md`, such as [`/zoom.md`](/zoom.md) for [`/zoom/`](/zoom/). A request for a page with `Accept: text/markdown` gets the copy too. The **Copy page** button on each page copies it, to paste into a chat.
@@ -34,7 +36,7 @@ const skill = dirname(fileURLToPath(import.meta.resolve("comark-ui/skills/comark
 await cp(skill, "skills/comark-ui", { recursive: true });
 ```
 
-Keep the folder whole, since `SKILL.md` links each reference by its path. If your agents only write Markdown, cut each reference at its `## Register` heading, which always comes last.
+Keep the folder whole, since `SKILL.md` links each reference by its path. An app that serves skills from a Worker, where it can't read `node_modules`, imports every skill's files as text from `comark-ui/skills` instead, as [Skills](/skills/#bundle-them-in-your-app) shows. If your agents only write Markdown, cut each reference at its `## Register` heading, which always comes last.
 
 ## Check the result
 

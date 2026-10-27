@@ -37,7 +37,7 @@ Promise callbacks are microtasks, and a timer's callback is a task.
 
 A question uses radios when one option is marked `[x]`; `multiple` makes it a checkbox question. Options are shuffled deterministically unless `shuffle="false"`. Questions and recall cards share numbering, while polls are not numbered. A missing id is derived from the block content. Use `#hint` and `#explain` on questions, and `#answer` on recall cards. Polls accept `multiple` and a date in `closes`.
 
-The HTML renderer inlines the quiz script and styles. Hosts can listen for `comark-quiz:answer` and `comark-quiz:ready`, and restore answers or results with `comark-quiz:state`; see the package [getting started guide](../../packages/quiz/docs/getting-started.md) for the event shapes and storage behavior.
+The HTML renderer inlines the quiz script and styles. Hosts can listen for `comark-quiz:answer` and `comark-quiz:ready`, and restore answers or results with `comark-quiz:state`; see [Saving answers](https://comark-ui.onmax.me/quiz/#saving-answers) on its page for the event shapes and storage behavior.
 
 ## Register
 

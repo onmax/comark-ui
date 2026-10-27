@@ -23,6 +23,8 @@ export default defineDoctorConfig({
         "matrix",
         "packages",
         "rules",
+        "skill",
+        "skills",
         "usage",
       ],
       links: {

@@ -1,0 +1,3 @@
+interface:
+  display_name: "Before/after evidence"
+  short_description: "Show a visible change with comparable, measured screenshots"
