@@ -1,6 +1,6 @@
 import { createBadgeHandler } from "../packages/badge/src/server.ts";
 
-const badge = createBadgeHandler();
+let badge: ReturnType<typeof createBadgeHandler> | undefined;
 // The docs moved from comark-annotate.onmax.me to comark.onmax.me/annotate, then to comark-ui.onmax.me. Old links
 // redirect; the skill, images, and fonts keep their paths, so agents that installed the skill from an old address still
 // find it.
@@ -28,12 +28,20 @@ const RENAMED: Record<string, string | undefined> = {
 export default {
   async fetch(
     request: Request,
-    env: { ASSETS: { fetch: (request: Request) => Promise<Response> } },
+    env: { ASSETS: { fetch: (request: Request) => Promise<Response> }; GITHUB_TOKEN?: string },
+    context?: { waitUntil(promise: Promise<unknown>): void },
   ) {
     const url = new URL(request.url);
     const prefix = MOVED[url.hostname];
     if (prefix === undefined) {
-      if (url.pathname === "/badge.svg") return badge(request);
+      if (url.pathname === "/badge.svg") {
+        badge ??= createBadgeHandler({
+          token: env.GITHUB_TOKEN,
+          // Node, which runs the tests, has no Cache API.
+          cache: "caches" in globalThis ? await caches.open("badges") : undefined,
+        });
+        return badge(request, context);
+      }
       const merged = MERGED.exec(url.pathname);
       const moved = merged ? `/${merged[1]}/` : RENAMED[url.pathname.replace(/\/?$/, "/")];
       if (moved) {
