@@ -91,3 +91,16 @@ test("a tab two steps away moves straight there", async ({ page }) => {
   expect(move).toEqual(expect.arrayContaining(["total", "price"]));
   expect(fade).toEqual(expect.arrayContaining(["export"]));
 });
+
+test("a tab opened mid-move keeps the stage clipped until its own move ends", async ({ page }) => {
+  await open(page);
+  const clipped = await page.locator(".cmv-stage").evaluate(async (stage) => {
+    const tabs = [...stage.parentElement!.querySelectorAll<HTMLElement>("[role=tab]")];
+    tabs[1]!.click();
+    tabs[2]!.click();
+    await new Promise(requestAnimationFrame);
+    return stage.hasAttribute("data-moving");
+  });
+  expect(clipped).toBe(true);
+  await expect(page.locator(".cmv-stage")).not.toHaveAttribute("data-moving");
+});

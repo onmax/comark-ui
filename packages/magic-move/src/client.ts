@@ -113,6 +113,8 @@ export function start(css: string): () => void {
     if (!stage || !from || !target || from === target) return;
     // Only this script's own animations settle: the code's or the page's may run forever, and finishing one throws.
     for (const animation of playing.get(stage) ?? []) animation.finish();
+    // A finished animation's callbacks run later, so the old move's cleanup can't be left to undo this one's.
+    stage.removeAttribute("data-moving");
     const owned: Animation[] = [];
     playing.set(stage, owned);
     for (const ghost of stage.querySelectorAll(":scope>.cmv-ghost")) ghost.remove();
@@ -182,7 +184,9 @@ export function start(css: string): () => void {
     const height = stage.getBoundingClientRect().height;
     if (height !== box.height) {
       stage.setAttribute("data-moving", "");
-      const done = () => stage.removeAttribute("data-moving");
+      const done = () => {
+        if (playing.get(stage) === owned) stage.removeAttribute("data-moving");
+      };
       const grow = stage.animate(
         { height: [`${box.height}px`, `${height}px`] },
         { duration, easing },
