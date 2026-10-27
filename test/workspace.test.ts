@@ -62,6 +62,14 @@ describe.each(folders)("packages/%s", (folder) => {
     expect(read(`packages/${folder}/LICENSE`).startsWith(read("LICENSE").trimEnd())).toBe(true);
   });
 
+  // comark-ui installs every package, so one peer range left behind on a release makes npm refuse comark-ui itself.
+  it("accepts the same Comark versions as comark-ui", () => {
+    const ui = manifest("ui").peerDependencies ?? {};
+    for (const [name, range] of Object.entries(pkg.peerDependencies ?? {}))
+      if (name in ui && (name === "comark" || name.startsWith("@comark/")))
+        expect(range, name).toBe(ui[name]);
+  });
+
   // A package with no renderer runs from the preset's core, so it works in every renderer.
   // comark-chat renders AI SDK messages, not documents, so the preset leaves it out.
   it("comes with the preset", () => {
