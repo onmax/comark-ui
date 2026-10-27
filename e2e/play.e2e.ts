@@ -21,7 +21,7 @@ test("the playground renders a preset, reports issues as you type, and opens a s
   await page.goto("/");
   await page.goto(shared);
   await expect(editor).toHaveValue('::screenshot{src="/after.png"}\n::');
-  await expect(npmx).toHaveAttribute("href", "https://npmx.dev/~onmax_");
+  await expect(npmx).toHaveAttribute("href", "https://npmx.dev/package/comark-ui");
   await expect(page.getByRole("list", { name: "Issues" })).toContainText("`alt` is required");
 });
 
