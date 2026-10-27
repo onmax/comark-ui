@@ -2,14 +2,13 @@ import { createElement, Fragment } from "react";
 import { createRoot } from "react-dom/client";
 import { mount } from "svelte";
 import { createApp, h, ref } from "vue";
-import { createPeleComponent as reactPele } from "comark-pele/react";
-import { createPeleComponent as vuePele } from "comark-pele/vue";
-import { addMermaidStyles, typesetCss } from "../../src/client.ts";
+import { typesetCss } from "../../src/client.ts";
+import react from "../../src/react.ts";
+import vue from "../../src/vue.ts";
 import SvelteDiagram from "./Mermaid.svelte";
 
-// The same Pele components and render callback used by the three comark-ui presets.
-const ReactDiagram = reactPele({ onRender: addMermaidStyles });
-const VueDiagram = vuePele({ onRender: addMermaidStyles });
+const ReactDiagram = react().components.pele!;
+const VueDiagram = vue().components.pele!;
 
 export function diagram(renderer: string, target: HTMLElement, content: string) {
   if (renderer === "react") {
