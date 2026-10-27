@@ -30,7 +30,15 @@ The redesign moves the filters into one row and adds an empty state.
 - Every `::toc` lists the whole document, wherever it sits. With no heading from h2 to `depth`, it renders nothing, and the plugin reports it.
 - Write `::toc` where other tools use `[[toc]]`, which Comark reads as a span.
 
+## Side outline
+
+The `rail` option adds an "On this page" outline beside the text of every document with two headings or more to list, and marks the section being read. It isn't Markdown: a document can't turn it on, and `::toc` still works beside it. Write short h2 and h3 headings, since they become its links.
+
+- Options: `rail: true`, or `{ title, depth }` (default "On this page" and 3).
+- The page sets `--comark-inset-end` on `:root` for a panel that covers its right edge. While the outline keeps a column beside wide blocks, it sets `data-comark-rail` and `--comark-rail-width` on `<html>`, and the page moves its text left by half of it and shrinks `--comark-wide-room` by it.
+- It hides where it doesn't fit, and rather than narrow a diagram.
+
 ## Register
 
-- In `comark-ui`: on in every entry, with no options.
+- In `comark-ui`: on in every entry; `outline: { rail: true }` adds the side outline.
 - Alone: `pnpm add comark @comark/html comark-outline`, then `createHtmlRenderer({ plugins: [outline()], components })` with both from `comark-outline/html`. `comark-outline/vue`, `/react`, and `/svelte` render it too. It reads the headings itself, so it works in any plugin order and without Comark's toc plugin, which only fills `meta.toc` for a sidebar. The npm name is `comark-outline` because npm refused `comark-toc`.

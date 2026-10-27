@@ -17,5 +17,11 @@ export const css = `@layer comark{${[
   ".cto a:focus-visible{border-radius:calc(var(--_comark-radius)/4);outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--_comark-ring) 50%,transparent)}",
   ".cto ul ul a{color:var(--_comark-muted)}",
   ".cto ul ul a:hover{color:var(--_comark-foreground)}",
-  "@media print{.cto{break-inside:avoid}}",
+  // The side outline: fixed beside the text, shown only once its script finds it room (data-fits).
+  ".cto-rail{position:fixed;top:3.5rem;display:none;box-sizing:border-box;max-height:calc(100vh - 7rem);margin:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;font-size:.8125rem;line-height:1.25rem}",
+  ".cto-rail[data-fits]{display:block}",
+  ".cto-rail a{display:block;color:var(--_comark-muted);text-wrap:pretty}",
+  ".cto-rail :is(a:hover,a[aria-current]){color:var(--_comark-foreground)}",
+  ":root[data-comark-rail]{--comark-rail-width:264px}",
+  "@media print{.cto{break-inside:avoid}.cto-rail{display:none!important}}",
 ].join("")}}`;

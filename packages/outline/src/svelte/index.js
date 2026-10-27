@@ -1,6 +1,8 @@
-// `::toc` for `@comark/svelte`. Pass `components` to it; the parse plugin comes from `comark-outline`.
+// `::toc` and the side outline for `@comark/svelte`. Pass `components` to it; the parse plugin comes from
+// `comark-outline`.
 import Toc from "./Toc.svelte";
+import TocRail from "./TocRail.svelte";
 
-export { default } from "comark-outline";
-export { Toc };
-export const components = { Toc };
+export { default, RAIL_TAG } from "comark-outline";
+export { Toc, TocRail };
+export const components = { Toc, TocRail };

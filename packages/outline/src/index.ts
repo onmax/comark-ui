@@ -15,6 +15,27 @@ type Issue = { rule: `comark/outline/${string}`; message: string };
 /** What a `::toc` becomes, and all its renderers read. Its children are the nested list of links. */
 export type TocAttributes = { title?: string; empty?: boolean };
 
+/** What the side outline becomes, and all its renderers read. Its children are the nested list of links. */
+export type RailAttributes = { title: string };
+
+export interface RailOptions {
+  /** The title above the links, which also names the `nav` for screen readers. Default "On this page". */
+  title?: string;
+  /** The deepest heading it lists, from 2 to 6. Default `3`, so h2 and h3. */
+  depth?: 2 | 3 | 4 | 5 | 6;
+}
+
+export interface OutlineOptions {
+  /**
+   * Adds a side outline at the end of every document with at least two headings to list: an "On this page" column
+   * beside the text that marks the section being read. `true` lists h2 and h3. Default `false`.
+   */
+  rail?: RailOptions | boolean;
+}
+
+/** The node of the side outline. The plugin adds one at the end of a document when `rail` is on. */
+export const RAIL_TAG = "toc-rail";
+
 type Data = Parameters<typeof resolveAttributes>[1];
 interface Heading {
   level: number;
@@ -42,7 +63,7 @@ function headingsOf(nodes: Node[], found: Heading[] = []) {
     const level = HEADING.exec(tag)?.[1];
     const id = text(attrs.id);
     if (level && id) found.push({ level: Number(level), id, text: textContent(node).trim() });
-    else if (tag !== "toc") headingsOf(childrenOf(node), found);
+    else if (tag !== "toc" && tag !== RAIL_TAG) headingsOf(childrenOf(node), found);
   }
   return found;
 }
@@ -107,11 +128,20 @@ function toc(
   return ["toc", title ? { title } : {}, list(listed)];
 }
 
+/** The side outline's node, or none when fewer than two headings would be listed. */
+function rail(options: RailOptions, headings: Heading[]): ElementNode | undefined {
+  const depth = options.depth && [2, 3, 4, 5, 6].includes(options.depth) ? options.depth : 3;
+  const listed = headings.filter((heading) => heading.level >= 2 && heading.level <= depth);
+  if (listed.length < 2) return undefined;
+  return [RAIL_TAG, { title: options.title?.trim() || "On this page" }, list(listed)];
+}
+
 /**
  * Turns `::toc` into a nested list of links to the document's h2 and h3 headings, or down to `depth`. It reads the
  * headings itself, so it doesn't depend on running after Comark's toc plugin. Problems are added to `meta.issues`.
+ * With `rail`, it also adds a side outline at the end of the document.
  */
-export default defineComarkPlugin<void, OutlineMeta>(() => ({
+export default defineComarkPlugin<OutlineOptions, OutlineMeta>((options = {}) => ({
   name: "comark-outline",
   post(state) {
     const { tree } = state;
@@ -131,6 +161,13 @@ export default defineComarkPlugin<void, OutlineMeta>(() => ({
       }
     };
     walk(tree.nodes, 0);
+    if (options.rail) {
+      // A second pass over the same tree, such as a second instance of the plugin, keeps one outline.
+      const old = tree.nodes.findIndex((node) => isElement(node) && node[0] === RAIL_TAG);
+      if (old !== -1) tree.nodes.splice(old, 1);
+      const node = rail(options.rail === true ? {} : options.rail, headings);
+      if (node) tree.nodes.push(node);
+    }
     tree.meta.issues = [...(tree.meta.issues ?? []), ...issues.map((issue) => issue.message)];
     tree.meta.issueRules = {
       ...tree.meta.issueRules,
