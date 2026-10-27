@@ -119,7 +119,7 @@ Some blocks read better wider than a line of text: a [before/after comparison](/
 | `--comark-wide-max` | `72rem` | The widest a wide block grows, however much room there is. |
 | `--comark-wide-width` | Set by the block | A block's own width: a diagram never grows past it. A block of your own can set it too. |
 
-A wide block stays centered on the column while both sides have room. When one side has less, such as beside a panel, it moves toward the side that has more, so a diagram keeps its size rather than shrinking. Only a document's top-level blocks grow; a diagram inside tabs or a list keeps to its parent. Mark a block of your own as wide with `data-wide` on its outer element.
+A wide block stays centered on the column while both sides have room. When one side has less, such as beside a panel, it moves toward the side that has more, so a diagram keeps its size rather than shrinking. The [side outline](/outline/#side-outline) tells the page when it needs a column beside wide blocks. Only a document's top-level blocks grow; a diagram inside tabs or a list keeps to its parent. Mark a block of your own as wide with `data-wide` on its outer element.
 
 ## Turn it off
 

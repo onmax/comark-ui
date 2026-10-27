@@ -168,6 +168,16 @@ describe("comark-ui", () => {
     expect(on).toContain("Pasted.");
   });
 
+  it("adds the side outline only when asked", async () => {
+    const markdown = "## Install\n\n## Usage";
+    expect(await createHtmlRenderer(html(offline))(markdown)).not.toContain("cto-rail");
+    for (const preset of [html, vue, react]) {
+      const { plugins } = preset({ ...offline, outline: { rail: true } });
+      const { nodes } = await parseMarkdown(markdown, { plugins });
+      expect(nodes.some((node) => Array.isArray(node) && node[0] === "toc-rail")).toBe(true);
+    }
+  });
+
   it("reads a table's file only when given a reader", async () => {
     const read = (path: string) => (path === "birds.csv" ? "Bird,Seen\nHeron,2" : undefined);
     const markdown = '::table{src="birds.csv"}\n::';

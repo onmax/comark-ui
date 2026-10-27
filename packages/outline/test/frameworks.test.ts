@@ -21,6 +21,7 @@ const markdown = [
   "## FAQ",
   "::toc{depth=9}\n::",
 ].join("\n\n");
+const railed = "## Install & run\n\n### Options\n\n## FAQ";
 // Drops what differs only in serialization: comments, whitespace between tags, the HTML renderer's inline styles, and
 // whether a bare `&` is escaped.
 const normalize = (html: string) =>
@@ -53,8 +54,28 @@ describe("comark-outline renderers", async () => {
       expect(normalize(await render(value))).toContain(expected);
     });
 
-  it("ships a Svelte component that compiles", async () => {
-    const source = await readFile(new URL("../src/svelte/Toc.svelte", import.meta.url), "utf8");
-    expect(() => compile(source, { filename: "Toc.svelte", generate: "server" })).not.toThrow();
+  it("ships Svelte components that compile", async () => {
+    for (const name of ["Toc.svelte", "TocRail.svelte"]) {
+      const source = await readFile(new URL(`../src/svelte/${name}`, import.meta.url), "utf8");
+      expect(() => compile(source, { filename: name, generate: "server" })).not.toThrow();
+    }
   });
+});
+
+describe("comark-outline side outline renderers", async () => {
+  const value = await parseMarkdown(railed, { plugins: [toc({ rail: true })] });
+  const expected = normalize(await renderHtmlFromDocument(value, { components: htmlComponents }))
+    .replace(/<script>.*?<\/script>/g, "")
+    .replace(/^.*?(?=<nav)/, "");
+
+  it("renders the outline as a nav in HTML", () => {
+    expect(expected).toMatch(
+      /^<nav class="cto cto-rail" aria-label="On this page"><p class="cto-title">On this page<\/p><ul><li><a href="#install-run">Install & run<\/a>/,
+    );
+  });
+
+  for (const [name, render] of Object.entries(renderers))
+    it(`renders the same outline in ${name}`, async () => {
+      expect(normalize(await render(value))).toContain(expected);
+    });
 });

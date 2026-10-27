@@ -1,7 +1,7 @@
 import { createHtmlRenderer } from "@comark/html";
 import { parseMarkdown } from "comark";
 import { describe, expect, it } from "vite-plus/test";
-import toc, { components } from "../src/html.ts";
+import toc, { components, railScript } from "../src/html.ts";
 
 const render = createHtmlRenderer({ plugins: [toc()], components });
 const issues = async (markdown: string) =>
@@ -92,5 +92,53 @@ describe("comark-outline", () => {
     const { meta } = await parseMarkdown("::toc\n::", { plugins: [earlier, toc()] });
     expect(meta.issues[0]).toBe("An earlier issue.");
     expect(meta.issues).toHaveLength(2);
+  });
+
+  describe("side outline", () => {
+    const withRail = createHtmlRenderer({ plugins: [toc({ rail: true })], components });
+    const rail = async (markdown: string, render = withRail) =>
+      /<nav class="cto cto-rail"[^>]*>(.*?)<\/nav>/s.exec(
+        (await render(markdown)).replace(/>\s+</g, "><"),
+      );
+
+    it('adds an "On this page" outline after the document, with the script once', async () => {
+      const html = (await withRail(`${page}\n\n::toc\n::`)).replace(/>\s+</g, "><");
+      expect(html).toContain(
+        '<nav class="cto cto-rail" aria-label="On this page"><p class="cto-title">On this page</p><ul>',
+      );
+      expect(html).toContain(
+        '<li><a href="#usage-now">Usage now</a><ul><li><a href="#options">Options</a></li>',
+      );
+      expect(html).not.toContain('href="#deep"');
+      expect(html.trimEnd().endsWith(`<script>${railScript}</script>`)).toBe(true);
+      expect(html.split(railScript)).toHaveLength(2);
+      expect(html.match(/<style data-comark-outline>/g)).toHaveLength(1);
+      expect(railScript).toMatch(/^\(function start\(\)/);
+    });
+
+    it("needs the option and two headings to list", async () => {
+      expect(await rail(page, render)).toBeNull();
+      expect(await rail("# Title\n\n## Only one\n\n#### Too deep")).toBeNull();
+      expect(await rail("## One\n\n### Two")).not.toBeNull();
+    });
+
+    it("takes a title and a depth", async () => {
+      const custom = createHtmlRenderer({
+        plugins: [toc({ rail: { title: "Sections", depth: 2 } })],
+        components,
+      });
+      const [, list] = (await rail(page, custom)) ?? [];
+      expect(list).toBe(
+        '<p class="cto-title">Sections</p><ul><li><a href="#install">Install</a></li><li><a href="#usage-now">Usage now</a></li><li><a href="#faq">FAQ</a></li></ul>',
+      );
+      expect(await custom(page)).toContain('aria-label="Sections"');
+    });
+
+    it("adds one outline when the tree is parsed again", async () => {
+      const { nodes } = await parseMarkdown(page, {
+        plugins: [toc({ rail: true }), toc({ rail: true })],
+      });
+      expect(nodes.filter((node) => Array.isArray(node) && node[0] === "toc-rail")).toHaveLength(1);
+    });
   });
 });

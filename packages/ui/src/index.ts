@@ -19,6 +19,7 @@ import keys, { type KeysOptions } from "comark-keys";
 import type { AnchorsOptions, ExternalOptions } from "comark-links";
 import type { MathOptions } from "comark-mathml";
 import type { MediaOptions } from "comark-media";
+import type { OutlineOptions } from "comark-outline";
 import type { PeleConfig } from "comark-pele";
 import type { PropertiesOptions } from "comark-properties";
 import type { QuizOptions } from "comark-quiz";
@@ -94,7 +95,8 @@ export type PresetOptions = {
   steps?: boolean;
   readingTime?: ReadingTimeOptions | boolean;
   tabs?: TabsOptions | boolean;
-  outline?: boolean;
+  /** `{ rail: true }` adds a side outline beside the text of every document with two headings or more. Off by default. */
+  outline?: OutlineOptions | boolean;
   xref?: XrefOptions | boolean;
   /** Reads no JUnit reports unless you pass `{ root }` or `{ read }`; inline reports render either way. */
   tests?: TestsOptions | boolean;
@@ -154,7 +156,7 @@ export type Renderer<C> = {
   sources: Part<C>;
   steps: Part<C>;
   tabs: Part<C, TabsOptions>;
-  outline: Part<C>;
+  outline: Part<C, OutlineOptions>;
   tests: Part<C, TestsOptions>;
   zoom: Part<C, ZoomOptions>;
   code: Part<C, CodeOptions>;
