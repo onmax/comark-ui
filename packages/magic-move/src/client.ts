@@ -101,6 +101,8 @@ export function start(css: string): () => void {
     ...root.querySelectorAll<HTMLElement>(":scope>.cmv-list>[role=tab]"),
   ];
 
+  const playing = new WeakMap<Element, Animation[]>();
+
   // FLIP: measure every piece, switch steps, measure again, then play each shared piece from where it was. Pieces only
   // in the new step fade in, and those only in the old one fade out where they stood, as copies over the stage.
   function show(root: Element, to: number) {
@@ -109,7 +111,10 @@ export function start(css: string): () => void {
     const from = steps[currentOf(steps)];
     const target = steps[to];
     if (!stage || !from || !target || from === target) return;
-    for (const animation of stage.getAnimations({ subtree: true })) animation.finish();
+    // Only this script's own animations settle: the code's or the page's may run forever, and finishing one throws.
+    for (const animation of playing.get(stage) ?? []) animation.finish();
+    const owned: Animation[] = [];
+    playing.set(stage, owned);
     for (const ghost of stage.querySelectorAll(":scope>.cmv-ghost")) ghost.remove();
     const moving = !matchMedia("(prefers-reduced-motion: reduce)").matches;
     const before = moving ? tokensOf(from) : [];
@@ -141,16 +146,20 @@ export function start(css: string): () => void {
       const dy = first[i]!.top - last.top;
       const { color } = getComputedStyle(token);
       if (dx || dy || looks[i]!.color !== color)
-        token.animate(
-          { transform: [`translate(${dx}px,${dy}px)`, "none"], color: [looks[i]!.color, color] },
-          { duration, easing },
+        owned.push(
+          token.animate(
+            { transform: [`translate(${dx}px,${dy}px)`, "none"], color: [looks[i]!.color, color] },
+            { duration, easing },
+          ),
         );
     }
     for (const [j, token] of after.entries())
       if (!placed.has(j))
-        token.animate(
-          { opacity: [0, 1] },
-          { duration: duration / 2, delay: duration / 2, easing: "ease-out", fill: "backwards" },
+        owned.push(
+          token.animate(
+            { opacity: [0, 1] },
+            { duration: duration / 2, delay: duration / 2, easing: "ease-out", fill: "backwards" },
+          ),
         );
     for (const [i, token] of before.entries()) {
       if (kept.has(i)) continue;
@@ -163,20 +172,23 @@ export function start(css: string): () => void {
       });
       stage.append(ghost);
       const remove = () => ghost.remove();
-      ghost
-        .animate(
-          { opacity: [1, 0] },
-          { duration: duration / 2, easing: "ease-in", fill: "forwards" },
-        )
-        .finished.then(remove, remove);
+      const fade = ghost.animate(
+        { opacity: [1, 0] },
+        { duration: duration / 2, easing: "ease-in", fill: "forwards" },
+      );
+      owned.push(fade);
+      fade.finished.then(remove, remove);
     }
     const height = stage.getBoundingClientRect().height;
     if (height !== box.height) {
       stage.setAttribute("data-moving", "");
       const done = () => stage.removeAttribute("data-moving");
-      stage
-        .animate({ height: [`${box.height}px`, `${height}px`] }, { duration, easing })
-        .finished.then(done, done);
+      const grow = stage.animate(
+        { height: [`${box.height}px`, `${height}px`] },
+        { duration, easing },
+      );
+      owned.push(grow);
+      grow.finished.then(done, done);
     }
   }
 

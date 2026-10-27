@@ -47,6 +47,13 @@ describe("comark-magic-move", () => {
     expect(new Set(ids).size).toBe(2);
   });
 
+  it("gives the same block different ids in documents rendered apart for one page", async () => {
+    const page = (await markup(`# One\n\n${steps}`)) + (await markup(`# Two\n\n${steps}`));
+    const ids = [...page.matchAll(/id="(cmv-[a-z0-9]+-\d+)-tab-1"/g)].map(([, id]) => id);
+    expect(ids).toHaveLength(2);
+    expect(new Set(ids).size).toBe(2);
+  });
+
   it("keeps Shiki's highlighting, whichever plugin runs first", async () => {
     const html = await markup(steps, true);
     expect(html.match(/<pre[^>]* class="shiki/g)).toHaveLength(2);

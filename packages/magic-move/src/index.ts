@@ -50,8 +50,8 @@ function describe(node: Node) {
 
 const PROPS = ["title", "id", "class"];
 
-// FNV-1a of the block's text. Ids from it differ between blocks and documents on one page, and from the ids authors
-// write, yet stay the same every time a document renders.
+// FNV-1a of the document's source. Ids from it differ between documents on one page, even ones that share a block, and
+// from the ids authors write, yet stay the same every time a document renders.
 function hash(value: string) {
   let result = 0x811c9dc5;
   for (let at = 0; at < value.length; at++)
@@ -63,6 +63,7 @@ interface Walk {
   data: Data;
   issues: Issue[];
   blocks: number;
+  prefix: string;
 }
 
 function magicMove(node: ElementNode, walk: Walk) {
@@ -89,7 +90,7 @@ function magicMove(node: ElementNode, walk: Walk) {
       message: `${name} has ${steps.length ? "one code block" : "no code blocks"}, so there's nothing to move between; add a code block for each step, or use a plain code block.`,
     });
   const labels: string[] = [];
-  const uid = `cmv-${hash(textContent(node))}-${walk.blocks}`;
+  const uid = `${walk.prefix}-${walk.blocks}`;
   const items = steps.map((pre, index): ElementNode => {
     // The fence's `[label]` names the step's tab, not a file, so it leaves the code block.
     const { filename, ...attrs } = pre[1];
@@ -128,6 +129,7 @@ export default defineComarkPlugin<void, MagicMoveMeta>(() => ({
       data: { frontmatter: tree.frontmatter, meta: tree.meta, data: {}, props: {} },
       issues: [],
       blocks: 0,
+      prefix: `cmv-${hash(state.markdown)}`,
     };
     normalize(tree.nodes, walk);
     tree.meta.issues = [...(tree.meta.issues ?? []), ...walk.issues.map((issue) => issue.message)];
