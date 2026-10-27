@@ -29,7 +29,7 @@ test("builds, copies, downloads, and restores a static badge", async ({ page, co
   await page.goto("/badges/");
   await expect(page.getByRole("img", { name: "built with: Comark UI" })).toBeVisible();
   await page.getByLabel("Value", { exact: true }).fill('A "quoted" release');
-  await page.getByLabel("Badge theme").selectOption("dark");
+  await page.getByLabel("Color scheme").selectOption("dark");
   await page.getByRole("button", { name: "Refresh preview" }).click();
   await page.getByLabel("Export", { exact: true }).selectOption("comark");
   await expect(page.locator("#export-code")).toHaveValue(/quoted/);
@@ -115,6 +115,10 @@ for (const input of [
   { value: "release" },
   { source: "npm-version", package: "comark-ui" },
   { source: "npm-downloads", package: "comark-ui" },
+  { source: "npm-version", package: "comark-ui", preset: "npmx" },
+  { source: "npm-version", package: "comark-ui", preset: "flat" },
+  { source: "npm-downloads", package: "comark-ui", preset: "for-the-badge", icon: "nuxt" },
+  { source: "npm-downloads", package: "comark-ui", preset: "nuxt", icon: "none" },
 ]) {
   test(`restores canonical configuration ${JSON.stringify(input)}`, async ({ page }) => {
     const parsed = readBadge(input);
@@ -132,3 +136,152 @@ for (const input of [
     await expect(page.getByRole("img", { name: "build: passing" })).toBeVisible();
   });
 }
+
+test("switches presets, preserves chosen logos, and shares the rendered result", async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/badges/?source=npm-version&package=comark-ui");
+  const logo = page.getByRole("combobox", { name: "Logo", exact: true });
+  const style = page.getByRole("combobox", { name: "Style", exact: true });
+  await expect(logo).toHaveValue("npm");
+  await style.selectOption("solid");
+  await page.locator('[data-look="npmx"]').click();
+  await expect(logo).toHaveValue("npmx");
+  await expect(style).toBeHidden();
+  await expect(page.locator('[name="labelColor"]')).toBeHidden();
+  await page.locator('[data-look="nuxt"]').click();
+  await expect(logo).toHaveValue("nuxt");
+  await expect(page.getByRole("img", { name: "npm: v1.2.3" })).toBeVisible();
+  await page.getByRole("button", { name: "Copy builder link" }).click();
+  const shared = await page.evaluate(() => navigator.clipboard.readText());
+  expect(shared).toContain("preset=nuxt");
+  expect(shared).not.toContain("style=");
+  await page.goto(shared);
+  await expect(page.locator('[data-look="nuxt"]')).toHaveAttribute("aria-pressed", "true");
+  await expect(logo).toHaveValue("nuxt");
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download SVG" }).click();
+  const stream = await (await download).createReadStream();
+  const chunks: Buffer[] = [];
+  for await (const chunk of stream!) chunks.push(Buffer.from(chunk));
+  expect(Buffer.concat(chunks).toString()).toContain('fill="#00dc82"');
+  for (const icon of ["github", "none"]) {
+    await logo.selectOption(icon);
+    await page.locator('[data-look="npmx"]').click();
+    await expect(logo).toHaveValue(icon);
+    await page.locator('[data-look="nuxt"]').click();
+    await expect(logo).toHaveValue(icon);
+  }
+  await page.setViewportSize({ width: 320, height: 720 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
+    true,
+  );
+  await page.locator('[data-look="default"]').click();
+  await expect(style).toBeVisible();
+  await expect(logo).toHaveValue("none");
+});
+
+for (const [preset, icon] of [
+  ["default", "npm"],
+  ["npmx", "npmx"],
+  ["nuxt", "nuxt"],
+] as const) {
+  test(`preserves an explicit ${icon} logo matching the ${preset} default`, async ({ page }) => {
+    await page.goto(`/badges/?source=npm-version&package=comark-ui&preset=${preset}`);
+    const logo = page.getByRole("combobox", { name: "Logo", exact: true });
+    await expect(logo).toHaveValue(icon);
+    await logo.selectOption("github");
+    await logo.selectOption(icon);
+    for (const look of ["flat", "for-the-badge", "npmx", "nuxt", "default"]) {
+      await page.locator(`[data-look="${look}"]`).click();
+      await expect(logo).toHaveValue(icon);
+    }
+  });
+
+  test(`restores an explicit ${icon} logo matching the ${preset} default`, async ({
+    page,
+    context,
+  }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await page.goto(`/badges/?source=npm-version&package=comark-ui&preset=${preset}&icon=${icon}`);
+    const logo = page.getByRole("combobox", { name: "Logo", exact: true });
+    await expect(logo).toHaveValue(icon);
+    await page.getByRole("button", { name: "Copy builder link" }).click();
+    const shared = await page.evaluate(() => navigator.clipboard.readText());
+    expect(new URL(shared).searchParams.get("icon")).toBe(icon);
+    await page.goto(shared);
+    await page.reload();
+    await page.locator(`[data-look="${preset === "npmx" ? "nuxt" : "npmx"}"]`).click();
+    await expect(logo).toHaveValue(icon);
+  });
+}
+
+test("keeps automatic logos across reloads and resets them with npm templates", async ({
+  page,
+}) => {
+  await page.goto("/badges/?source=npm-version&package=comark-ui");
+  const logo = page.getByRole("combobox", { name: "Logo", exact: true });
+  await page.locator('[data-look="npmx"]').click();
+  await expect(logo).toHaveValue("npmx");
+  expect(new URL(page.url()).searchParams.has("icon")).toBe(false);
+  await page.reload();
+  await page.locator('[data-look="nuxt"]').click();
+  await expect(logo).toHaveValue("nuxt");
+  for (const template of ["npm-version", "npm-downloads"]) {
+    await logo.selectOption("github");
+    await page.locator(`[data-preset="${template}"]`).click();
+    await expect(logo).toHaveValue("nuxt");
+    await page.locator('[data-look="default"]').click();
+    await expect(logo).toHaveValue("npm");
+    await page.locator('[data-look="nuxt"]').click();
+    await expect(logo).toHaveValue("nuxt");
+  }
+});
+
+for (const [preset, height] of [
+  ["flat", 20],
+  ["for-the-badge", 28],
+] as const) {
+  test(`exports ${preset} at its intended size`, async ({ page }) => {
+    await page.goto("/badges/?source=npm-version&package=comark-ui");
+    await page.locator(`[data-look="${preset}"]`).click();
+    await expect(page.getByRole("combobox", { name: "Logo", exact: true })).toHaveValue("npm");
+    await expect(page.getByRole("combobox", { name: "Style", exact: true })).toBeHidden();
+    await expect(page.locator("#badge-preview")).toBeVisible();
+    await expect
+      .poll(() =>
+        page.locator("#badge-preview").evaluate((img: HTMLImageElement) => img.naturalHeight),
+      )
+      .toBe(height);
+    await page.getByLabel("Export", { exact: true }).selectOption("image-url");
+    await expect(page.locator("#export-code")).toHaveValue(new RegExp(`preset=${preset}`));
+    await page.reload();
+    await expect(page.locator(`[data-look="${preset}"]`)).toHaveAttribute("aria-pressed", "true");
+    await page.setViewportSize({ width: 320, height: 720 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+  });
+}
+
+test("renders document badge images at their preset heights", async ({ page }) => {
+  await page.goto("/badge/");
+  await expect
+    .poll(() =>
+      page.locator(".cb-image").evaluateAll((images) =>
+        images.map((image) => ({
+          natural: image instanceof HTMLImageElement ? image.naturalHeight : 0,
+          rendered: Math.round(image.getBoundingClientRect().height),
+        })),
+      ),
+    )
+    .toEqual(
+      expect.arrayContaining([
+        { natural: 20, rendered: 20 },
+        { natural: 26, rendered: 26 },
+        { natural: 28, rendered: 28 },
+      ]),
+    );
+});
