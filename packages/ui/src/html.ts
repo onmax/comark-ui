@@ -18,6 +18,7 @@ import * as fileTree from "comark-file-tree/html";
 import * as github from "comark-github/html";
 import * as icon from "comark-icon/html";
 import * as links from "comark-links/html";
+import * as magicMove from "comark-magic-move/html";
 import * as mark from "comark-mark/html";
 import * as math from "comark-mathml/html";
 import * as media from "comark-media/html";
@@ -82,6 +83,7 @@ export default (options?: PresetOptions): Preset<NodeHandler> =>
       github,
       icon,
       links,
+      magicMove,
       mark,
       math,
       media,

@@ -71,6 +71,7 @@ export type PresetOptions = {
     | boolean;
   /** Also resolves the icons of cards, details, file trees, tabs, and code actions, so they share its options. */
   icon?: IconOptions | boolean;
+  magicMove?: boolean;
   mark?: boolean;
   /** Typesets `$…$`, `$$…$$`, and `math` fences as MathML while parsing, in place of Comark's math plugin. */
   math?: MathOptions | boolean;
@@ -142,6 +143,7 @@ export type Renderer<C> = {
   properties: Part<C, PropertiesOptions>;
   quiz?: Part<C, QuizOptions>;
   badge: Part<C, BadgeOptions>;
+  magicMove: Part<C>;
   mark: Part<C>;
   math: Part<C, MathOptions>;
   media: Part<C, MediaOptions>;
@@ -242,6 +244,7 @@ export function preset<C>(renderer: Renderer<C>, options: PresetOptions = {}): P
   add(renderer.quiz, options.quiz);
   parse(readingTime, options.readingTime);
   add(renderer.tabs, options.tabs, { iconResolver: icons, ...optionsOf(options.tabs) });
+  add(renderer.magicMove, options.magicMove);
   add(renderer.outline, options.outline);
   parse(xref, options.xref);
   add(renderer.tests, options.tests, optionsOf(options.tests) ?? noFiles);

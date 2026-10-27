@@ -18,6 +18,7 @@ import * as fileTree from "comark-file-tree/svelte";
 import * as github from "comark-github/svelte";
 import * as icon from "comark-icon/svelte";
 import * as links from "comark-links/svelte";
+import * as magicMove from "comark-magic-move/svelte";
 import * as mark from "comark-mark/svelte";
 import * as math from "comark-mathml/svelte";
 import * as media from "comark-media/svelte";
@@ -62,6 +63,7 @@ export default (options) =>
       github,
       icon,
       links,
+      magicMove,
       mark,
       math,
       media,

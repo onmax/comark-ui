@@ -129,6 +129,7 @@ const packages = [
     () => import("comark-links/html").then((module) => ({ ...module, default: module.anchors })),
     [],
   ],
+  ["comark-magic-move/html", () => import("comark-magic-move/html"), []],
   ["comark-mark/html", () => import("comark-mark/html"), []],
   ["comark-mathml/html", () => import("comark-mathml/html"), []],
   ["comark-media/html", () => import("comark-media/html"), []],

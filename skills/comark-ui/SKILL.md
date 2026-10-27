@@ -91,6 +91,7 @@ Read the reference for each block you use before you write it. Mix the blocks fr
 | A version, status, or deprecation tag in a heading or a sentence | `:badge` | [badge](references/badge.md) |
 | Links to the next pages as cards, or blocks side by side | `::card-group`, `::columns` | [cards](references/cards.md) |
 | Instructions the reader follows in order, such as repro or setup steps | `::steps` | [steps](references/steps.md) |
+| Code that changes over several steps, such as a refactor told one move at a time | `::magic-move` | [magic-move](references/magic-move.md) |
 | An interactive lesson question, poll, or recall card | `::question`, `::poll`, `::recall` | [quiz](references/quiz.md) |
 
 ### Markdown syntax
