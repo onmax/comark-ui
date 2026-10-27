@@ -38,6 +38,7 @@ const formats = [
  */
 export function bar(): string {
   const items = formats
+    .filter(([format]) => format !== "table")
     .map(
       ([format, name, hint, path]) =>
         `<button type="button" role="menuitem" tabindex="-1" data-table-copy="${format}">${icon(path)}<span><b>${name}</b><small>${hint}</small></span></button>`,

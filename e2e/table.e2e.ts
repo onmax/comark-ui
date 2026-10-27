@@ -39,6 +39,7 @@ test("a table sorts by a header, numbers as numbers, and copies as a table, Mark
   const more = page.getByRole("button", { name: "More ways to copy" });
   await more.click();
   await expect(more).toHaveAttribute("aria-expanded", "true");
+  await expect(page.getByRole("menuitem")).toHaveCount(2);
   await page.getByRole("menuitem", { name: /Markdown/ }).click();
   await expect(page.getByRole("menu")).toBeHidden();
   await expect(more).toBeFocused();
@@ -48,7 +49,7 @@ test("a table sorts by a header, numbers as numbers, and copies as a table, Mark
 
   // The keyboard opens the menu on its first item, moves through it with arrows, and closes it with Escape.
   await page.keyboard.press("ArrowDown");
-  await expect(page.getByRole("menuitem", { name: /Table/ })).toBeFocused();
+  await expect(page.getByRole("menuitem", { name: /Markdown/ })).toBeFocused();
   await page.keyboard.press("ArrowUp");
   await expect(page.getByRole("menuitem", { name: /CSV/ })).toBeFocused();
   await page.keyboard.press("Enter");

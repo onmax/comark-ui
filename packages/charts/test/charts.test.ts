@@ -90,9 +90,9 @@ ${sizes.trim()}
     expect(html).toContain(
       '<div class="cch-bar"><span class="cch-status" role="status"></span><div class="cch-copy"><button type="button" class="cch-copy-main" data-chart-copy="image" aria-label="Copy the chart as an image"',
     );
-    expect(html.match(/role="menuitem"[^>]*data-chart-copy="(\w+)"/g)).toHaveLength(3);
-    for (const format of ["image", "table", "markdown"])
-      expect(html).toContain(`role="menuitem" tabindex="-1" data-chart-copy="${format}"`);
+    expect(
+      [...html.matchAll(/role="menuitem"[^>]*data-chart-copy="(\w+)"/g)].map((match) => match[1]),
+    ).toEqual(["table", "markdown"]);
   });
 
   it("takes the card's side padding from --cch-padding, which the Data footer spans too", async () => {
@@ -296,6 +296,9 @@ Cache on.
     // An image of the SVG would leave the marks out, so Copy takes the data and the menu offers no image.
     expect(html).toContain('data-chart-copy="table" aria-label="Copy the chart\'s data"');
     expect(html).not.toContain('data-chart-copy="image"');
+    expect(
+      [...html.matchAll(/role="menuitem"[^>]*data-chart-copy="(\w+)"/g)].map((match) => match[1]),
+    ).toEqual(["markdown"]);
   });
 
   it("draws a bar worth zero as a faded stroke at its base", async () => {

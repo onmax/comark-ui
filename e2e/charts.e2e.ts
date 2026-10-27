@@ -345,6 +345,8 @@ test("a chart copies as an image in the page's colors, and its data as a table o
   const clipboard = () => page.evaluate(() => navigator.clipboard.readText());
   const more = page.getByRole("button", { name: "More ways to copy" });
   await more.click();
+  await expect(page.getByRole("menuitem")).toHaveCount(2);
+  await expect(page.getByRole("menuitem", { name: /Table/ })).toBeFocused();
   await page.getByRole("menuitem", { name: /Table/ }).click();
   await expect(page.locator(".cch-status")).toHaveText("Copied as table");
   expect(await clipboard()).toBe("day\tpigeons\nMonday\t3\nFriday\t14");

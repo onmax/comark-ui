@@ -199,7 +199,7 @@ The Copy button and the sort arrows only show once the script runs. Without it, 
 
 ## Accessibility
 
-A sortable header is a button inside its `th`, and the `th` carries `aria-sort` once sorted. The Copy button is named "Copy table", and the arrow beside it is "More ways to copy", a button that opens a `menu` of three `menuitem`s: Table, Markdown, and CSV. A status line beside them announces "Copied as table", "Copied as Markdown", "Copied as CSV", or "Couldn't copy here".
+A sortable header is a button inside its `th`, and the `th` carries `aria-sort` once sorted. The Copy button is named "Copy table", and the arrow beside it is "More ways to copy", a button that opens a `menu` of two `menuitem`s: Markdown and CSV. A status line beside them announces "Copied as table", "Copied as Markdown", "Copied as CSV", or "Couldn't copy here".
 
 ### Keyboard interactions
 

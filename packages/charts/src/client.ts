@@ -42,6 +42,7 @@ const formats = [
 export function bar(image = true): string {
   const shown = image ? formats : formats.slice(1);
   const items = shown
+    .filter(([format]) => format !== (image ? "image" : "table"))
     .map(
       ([format, name, hint, path]) =>
         `<button type="button" role="menuitem" tabindex="-1" data-chart-copy="${format}">${icon(path)}<span><b>${name}</b><small>${hint}</small></span></button>`,
