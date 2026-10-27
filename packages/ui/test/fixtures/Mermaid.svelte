@@ -1,12 +1,11 @@
 <script lang="ts">
-  import { createPeleComponent } from "comark-pele/svelte";
-  import { addMermaidStyles, typesetCss } from "../../src/client.ts";
+  import { typesetCss } from "../../src/client.ts";
+  import Mermaid from "../../src/svelte/Mermaid.svelte";
 
-  const Pele = createPeleComponent({ onRender: addMermaidStyles });
   let { initial }: { initial: string } = $props();
   let content = $state(initial);
   export function update(next: string) { content = next; }
 </script>
 
 {@html `<style>${typesetCss}</style>`}
-<Pele {content} />
+<Mermaid {content} />

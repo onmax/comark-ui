@@ -1,6 +1,5 @@
 // Every plugin with components for `@comark/svelte`, which leaves out annotate, diff, and quiz.
 import { preset } from "comark-ui";
-import { addMermaidStyles } from "comark-ui/client";
 import * as badge from "comark-badge/svelte";
 import * as cards from "comark-cards/svelte";
 import * as carousel from "comark-carousel/svelte";
@@ -22,7 +21,7 @@ import * as magicMove from "comark-magic-move/svelte";
 import * as mark from "comark-mark/svelte";
 import * as math from "comark-mathml/svelte";
 import * as media from "comark-media/svelte";
-import pele, { createPeleComponent } from "comark-pele/svelte";
+import pele from "comark-pele/svelte";
 import * as metrics from "comark-metrics/svelte";
 import * as outline from "comark-outline/svelte";
 import * as properties from "comark-properties/svelte";
@@ -33,15 +32,12 @@ import * as table from "comark-table/svelte";
 import * as tabs from "comark-tabs/svelte";
 import * as tests from "comark-tests/svelte";
 import * as zoom from "comark-zoom/svelte";
+import Mermaid from "./Mermaid.svelte";
 import typeset from "./Typeset.svelte";
 
 export { criticCss } from "comark-ui";
 
-// Pele calls `onRender` only in the browser, after it draws, so the styles arrive like the other components' do.
-const mermaid = {
-  default: pele,
-  components: { pele: createPeleComponent({ onRender: addMermaidStyles }) },
-};
+const mermaid = { default: pele, components: { pele: Mermaid } };
 
 export default (options) =>
   preset(
