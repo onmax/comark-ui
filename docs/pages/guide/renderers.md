@@ -16,26 +16,51 @@ import comarkUi from "comark-ui/html"; // or /vue, /react, /svelte
 const render = createHtmlRenderer(comarkUi({ zoom: false, github: { references: { repo: "owner/name" } } }));
 ```
 
-Every plugin is on but `include`, which reads from disk, and cast, table, and tests read no files until you give them options. `false` turns one off along with its components, and an object passes it options. The Vue, React, and Svelte entries leave out annotate and diff, which render only to HTML. comark-ui ships with the plugins, so its version is theirs.
+Every plugin is on but `include`, which reads from disk, and cast, table, and tests read no files until you give them options. `false` turns one off along with its components, and an object passes it options. The Vue, React, and Svelte entries leave out annotate, diff, and quiz, which render only to HTML. comark-ui ships with the plugins, so its version is theirs.
 
 ## Support
 
 | Package | `@comark/html` | `@comark/vue` | `@comark/react` | `@comark/svelte` |
 | --- | --- | --- | --- | --- |
 | [annotate](/annotate/) | `comark-annotate/html` | | | |
+| [badge](/badge/) | `comark-badge/html` | `comark-badge/vue` | `comark-badge/react` | `comark-badge/svelte` |
+| [cards](/cards/) | `comark-cards/html` | `comark-cards/vue` | `comark-cards/react` | `comark-cards/svelte` |
 | [carousel](/carousel/) | `comark-carousel/html` | `comark-carousel/vue` | `comark-carousel/react` | `comark-carousel/svelte` |
+| [cast](/cast/) | `comark-cast/html` | `comark-cast/vue` | `comark-cast/react` | `comark-cast/svelte` |
 | [charts](/charts/) | `comark-charts/html` | `comark-charts/vue` | `comark-charts/react` | `comark-charts/svelte` |
+| [chips](/chips/) | `comark-chips/html` | `comark-chips/vue` | `comark-chips/react` | `comark-chips/svelte` |
 | [code](/code/) | `comark-code/html` | `comark-code/vue` | `comark-code/react` | `comark-code/svelte` |
+| [code-notes](/code-notes/) | `comark-code-notes/html` | `comark-code-notes/vue` | `comark-code-notes/react` | `comark-code-notes/svelte` |
+| [colors](/colors/) | `comark-colors/html` | `comark-colors/vue` | `comark-colors/react` | `comark-colors/svelte` |
+| [details](/details/) | `comark-details/html` | `comark-details/vue` | `comark-details/react` | `comark-details/svelte` |
+| [diagrams](/diagrams/) | `comark-diagrams/html` | `comark-diagrams/vue` | `comark-diagrams/react` | `comark-diagrams/svelte` |
+| [diff](/diff/) | `comark-diff/html` | | | |
 | [embed](/embed/) | `comark-embed/html` | `comark-embed/vue` | `comark-embed/react` | `comark-embed/svelte` |
+| [fields](/fields/) | `comark-fields/html` | `comark-fields/vue` | `comark-fields/react` | `comark-fields/svelte` |
+| [file-tree](/file-tree/) | `comark-file-tree/html` | `comark-file-tree/vue` | `comark-file-tree/react` | `comark-file-tree/svelte` |
 | [github](/github/) | `comark-github/html` | `comark-github/vue` | `comark-github/react` | `comark-github/svelte` |
+| [icon](/icon/) | `comark-icon/html` | `comark-icon/vue` | `comark-icon/react` | `comark-icon/svelte` |
+| [links](/links/) | `comark-links/html` | `comark-links/vue` | `comark-links/react` | `comark-links/svelte` |
+| [mark](/mark/) | `comark-mark/html` | `comark-mark/vue` | `comark-mark/react` | `comark-mark/svelte` |
+| [math](/math/) | `comark-mathml/html` | `comark-mathml/vue` | `comark-mathml/react` | `comark-mathml/svelte` |
+| [media](/media/) | `comark-media/html` | `comark-media/vue` | `comark-media/react` | `comark-media/svelte` |
+| [metrics](/metrics/) | `comark-metrics/html` | `comark-metrics/vue` | `comark-metrics/react` | `comark-metrics/svelte` |
+| [outline](/outline/) | `comark-outline/html` | `comark-outline/vue` | `comark-outline/react` | `comark-outline/svelte` |
+| [properties](/properties/) | `comark-properties/html` | `comark-properties/vue` | `comark-properties/react` | `comark-properties/svelte` |
+| [qr](/qr/) | `comark-qr/html` | `comark-qr/vue` | `comark-qr/react` | `comark-qr/svelte` |
+| [quiz](/quiz/) | `comark-quiz/html` | | | |
+| [sources](/sources/) | `comark-sources/html` | `comark-sources/vue` | `comark-sources/react` | `comark-sources/svelte` |
+| [steps](/steps/) | `comark-steps/html` | `comark-steps/vue` | `comark-steps/react` | `comark-steps/svelte` |
+| [table](/table/) | `comark-table/html` | `comark-table/vue` | `comark-table/react` | `comark-table/svelte` |
 | [tabs](/tabs/) | `comark-tabs/html` | `comark-tabs/vue` | `comark-tabs/react` | `comark-tabs/svelte` |
+| [tests](/tests/) | `comark-tests/html` | `comark-tests/vue` | `comark-tests/react` | `comark-tests/svelte` |
 | [zoom](/zoom/) | `comark-zoom/html` | `comark-zoom/vue` | `comark-zoom/react` | `comark-zoom/svelte` |
 
-Each entry exports the parse plugin as `default` and the renderer's `components`.
+Each entry exports the parse plugin as `default` and the renderer's `components`. [github](/github/) and [links](/links/) export their plugins by name instead, since each has several.
 
-Annotate renders only to HTML. A screenshot's notes are Markdown, and a Vue, React, or Svelte version would each have to copy the whole figure. Annotate also draws the marks on a chart, so those marks show only in `@comark/html`. The other renderers draw the chart without them.
+Annotate renders only to HTML. A screenshot's notes are Markdown, and a Vue, React, or Svelte version would each have to copy the whole figure. Annotate also draws the marks on a chart, so those marks show only in `@comark/html`. The other renderers draw the chart without them. [diff](/diff/) and [quiz](/quiz/) render only to HTML too.
 
-[include](/include/) has no components, because what it pastes renders like the rest of the page. It works with any renderer. [lint](/lint/) checks documents and doesn't render them.
+[cjk](/cjk/), [critic](/critic/), [deflist](/deflist/), [figure](/figure/), [footnotes](/footnotes/), [keys](/keys/), [reading-time](/reading-time/), and [xref](/xref/) have no components: they turn their syntax into plain HTML elements, or write to the document's meta, so they work with any renderer. [include](/include/) has none either, because what it pastes renders like the rest of the page. [chat](/chat/) renders AI SDK messages with `@comark/vue`, `@comark/react`, or `@comark/svelte` rather than plugging into them. [lint](/lint/) checks documents and doesn't render them.
 
 ## Several plugins
 
