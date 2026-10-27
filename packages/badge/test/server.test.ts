@@ -143,7 +143,7 @@ describe("hosted badge handler", () => {
     const fetch = vi
       .fn<typeof globalThis.fetch>()
       .mockImplementation(async () => json({ downloads: 0 }));
-    const handle = createBadgeHandler({ fetch });
+    const handle = createBadgeHandler({ fetch, now: () => 0 });
     const response = await handle(get("source=npm-downloads&package=comark-ui&period=week"));
     expect(await response.text()).toContain("0/wk");
     expect(fetch.mock.calls[0]?.[0]).toBe(
