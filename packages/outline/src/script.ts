@@ -12,7 +12,7 @@ declare global {
  *
  * The page talks to it through `--comark-inset-end` on `:root`, the width it covers at the right edge, such as a side
  * panel. When the outline needs a column of its own beside wide blocks, it sets `data-comark-rail` on `<html>`, and the
- * page moves its text left and shrinks `--comark-wide-room` by `--comark-rail-width`.
+ * page shrinks `--comark-wide-end` by `--comark-rail-width`, so wide blocks move toward the room before the text.
  */
 export function start(): () => void {
   const root = document.documentElement;

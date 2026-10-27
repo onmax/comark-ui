@@ -141,24 +141,23 @@ The page tells the outline what it covers, and the outline tells the page when i
 | Variable | Set by | Description |
 | --- | --- | --- |
 | `--comark-inset-end` | The page, on `:root` | The width the page covers at the right edge, such as a side panel, in `px` or `rem`. The outline keeps clear of it, or hides, and moves when it changes. |
-| `data-comark-rail` | The outline, on `<html>` | Set while the outline keeps a column beside [wide blocks](/guide/typeset/#wide-blocks). Move your text left and shrink `--comark-wide-room` while it's there. |
+| `data-comark-rail` | The outline, on `<html>` | Set while the outline keeps a column beside [wide blocks](/guide/typeset/#wide-blocks). Shrink `--comark-wide-end` by `--comark-rail-width` while it's there. |
 | `--comark-rail-width` | The outline, on `<html>` | The column it keeps with its gap, `264px`, while `data-comark-rail` is set. |
 
 ### Beside wide blocks
 
-A wide block, such as a long Mermaid diagram, can grow into the room right of the text, where the outline goes. When the outline doesn't fit beside it, it keeps a 200px column 4rem right of the widest wide block and sets `data-comark-rail`. Move the text left by half that column, and keep wide blocks out of it:
+A wide block, such as a long Mermaid diagram, can grow into the room right of the text, where the outline goes. When the outline doesn't fit beside it, it keeps a 200px column 4rem right of the widest wide block and sets `data-comark-rail`. Keep wide blocks out of that column by taking it off the room after the text; they move toward the room before the text instead, and the text stays where it is:
 
 ```css
 main {
   width: min(100% - 3rem, 46rem);
   margin-inline: auto;
-  --comark-wide-room: calc(100vw - 3rem);
+  --comark-wide-start: calc((100vw - 100%) / 2 - 1.5rem);
+  --comark-wide-end: calc((100vw - 100%) / 2 - 1.5rem);
 }
 
 :root[data-comark-rail] main {
-  position: relative;
-  left: calc(var(--comark-rail-width) / -2);
-  --comark-wide-room: calc(100vw - 3rem - var(--comark-rail-width));
+  --comark-wide-end: calc((100vw - 100%) / 2 - 1.5rem - var(--comark-rail-width));
 }
 ```
 

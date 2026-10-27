@@ -33,13 +33,14 @@ const sections = (extra = "") =>
     .filter(Boolean)
     .join("\n\n");
 
-// A 46rem column, the way a review doc lays out its text. With `room`, the page gives wide blocks room, and moves its
-// column left when the outline keeps a column of its own, as the outline page's docs show.
+// A 46rem column, the way a review doc lays out its text. With `room`, the page gives wide blocks the room on each side
+// of it, and takes the outline's column off the room after it while the outline keeps one, as the outline page's docs
+// show.
 async function open(page: Page, width: number, { room = false, diagram = false } = {}) {
   await page.setViewportSize({ width, height: 800 });
   const css = room
-    ? "main{--comark-wide-room:calc(100vw - 3rem)}" +
-      ":root[data-comark-rail] main{position:relative;left:calc(var(--comark-rail-width) / -2);--comark-wide-room:calc(100vw - 3rem - var(--comark-rail-width))}"
+    ? "main{--comark-wide-start:calc((100vw - 100%) / 2 - 1.5rem);--comark-wide-end:calc((100vw - 100%) / 2 - 1.5rem)}" +
+      ":root[data-comark-rail] main{--comark-wide-end:calc((100vw - 100%) / 2 - 1.5rem - var(--comark-rail-width))}"
     : "";
   await page.setContent(
     `<!doctype html><meta charset="utf-8"><style>body{margin:0}main{width:46rem;margin:auto}${css}</style><main>${await render(
@@ -94,7 +95,7 @@ test("the outline keeps clear of what the page covers at its right edge", async 
   expect(nav.right).toBeLessThanOrEqual(edge - 100 - 24);
 });
 
-test("beside a long diagram, the outline keeps a column right of it and asks the page to move the text", async ({
+test("beside a long diagram, the outline keeps a column right of it, and the diagram moves toward the room before the text", async ({
   page,
 }) => {
   await open(page, 1440, { room: true, diagram: true });
@@ -109,11 +110,13 @@ test("beside a long diagram, the outline keeps a column right of it and asks the
   const natural = await page
     .locator(".pele-diagram svg")
     .evaluate((svg) => Number(svg.getAttribute("width")));
-  // The diagram keeps its own width, and the outline sits 4rem right of it, inside the window.
+  // The diagram keeps its own width, and the outline sits 2.5rem to 4rem right of it (it closes the gap when the page
+  // measures its room from 100vw, scrollbar included), inside the window.
   expect(
     await page.locator(".pele-diagram svg").evaluate((svg) => svg.getBoundingClientRect().width),
   ).toBeCloseTo(natural, 0);
-  expect(nav.left - diagram.right).toBeCloseTo(64, 0);
+  expect(nav.left - diagram.right).toBeGreaterThanOrEqual(40);
+  expect(nav.left - diagram.right).toBeLessThanOrEqual(64);
   expect(nav.width).toBe(200);
   expect(nav.right).toBeLessThanOrEqual(edge - 24);
   expect(
