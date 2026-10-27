@@ -11,7 +11,7 @@ tagline: Your agent picks the view by the shape of the answer, draws it from the
 
 ## What it does
 
-The skill answers **one question** about how something works with the smallest view that shows the answer: a sequence diagram for the order of events, a call tree for who calls whom, a file tree for where code lives, a marked screenshot for something on screen. Every label in the view comes from the real source, so you can check the picture instead of trusting it. Asked two questions, it answers the one you asked and offers the other.
+The skill answers **one question** about how something works with the smallest view that shows the answer: a sequence diagram for the order of events, a call tree for who calls whom, a file tree for where code lives, a marked screenshot for something on screen. Every label in the view comes from the real source, so you can check the picture instead of trusting it.
 
 ## When to use it
 

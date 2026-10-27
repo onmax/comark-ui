@@ -26,7 +26,7 @@ Choose by what you want:
 ## What your agent needs
 
 - **A browser it can drive**, such as Playwright, to capture both states and read each mark's box from the page. With only a screen recording or a design export, it measures the marks in pixels instead.
-- **The old behavior, still running**: a deployment, a preview of the base branch, or a commit it can start.
+- **Both states of the change**: deployments or commits it can run, or comparable images from a recording or design export.
 
 ## It's working if
 
