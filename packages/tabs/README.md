@@ -1,10 +1,9 @@
 # comark-tabs
 
-[![npm version](https://npmx.dev/api/registry/badge/version/comark-tabs)](https://npmx.dev/package/comark-tabs)
-[![npm downloads](https://npmx.dev/api/registry/badge/downloads-month/comark-tabs)](https://npmx.dev/package/comark-tabs)
-[![install size](https://npmx.dev/api/registry/badge/size/comark-tabs)](https://npmx.dev/package/comark-tabs)
-[![license](https://npmx.dev/api/registry/badge/license/comark-tabs)](https://npmx.dev/package/comark-tabs)
-[![docs](https://img.shields.io/badge/docs-comark--ui.onmax.me-14b8a6?labelColor=0a0a0a)](https://comark-ui.onmax.me/tabs/)
+[![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-tabs&icon=npm)](https://npmx.dev/package/comark-tabs)
+[![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-tabs&period=month&icon=npm)](https://npmx.dev/package/comark-tabs)
+[![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-tabs)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/tabs/)
 
 Tabs and code groups, written in Markdown. Without a script every tab shows under its label, one after another; the script adds the tab strip, the arrow keys, and `sync`, which switches every block with the same key at once and remembers the choice. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
 

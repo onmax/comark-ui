@@ -1,10 +1,9 @@
 # comark-xref
 
-[![npm version](https://npmx.dev/api/registry/badge/version/comark-xref)](https://npmx.dev/package/comark-xref)
-[![npm downloads](https://npmx.dev/api/registry/badge/downloads-month/comark-xref)](https://npmx.dev/package/comark-xref)
-[![install size](https://npmx.dev/api/registry/badge/size/comark-xref)](https://npmx.dev/package/comark-xref)
-[![license](https://npmx.dev/api/registry/badge/license/comark-xref)](https://npmx.dev/package/comark-xref)
-[![docs](https://img.shields.io/badge/docs-comark--ui.onmax.me-14b8a6?labelColor=0a0a0a)](https://comark-ui.onmax.me/xref/)
+[![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-xref&icon=npm)](https://npmx.dev/package/comark-xref)
+[![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-xref&period=month&icon=npm)](https://npmx.dev/package/comark-xref)
+[![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-xref)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/xref/)
 
 Numbered figures and tables, and references to them. A [Comark](https://comark.dev) plugin for any renderer.
 

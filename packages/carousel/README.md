@@ -1,10 +1,9 @@
 # comark-carousel
 
-[![npm version](https://npmx.dev/api/registry/badge/version/comark-carousel)](https://npmx.dev/package/comark-carousel)
-[![npm downloads](https://npmx.dev/api/registry/badge/downloads-month/comark-carousel)](https://npmx.dev/package/comark-carousel)
-[![install size](https://npmx.dev/api/registry/badge/size/comark-carousel)](https://npmx.dev/package/comark-carousel)
-[![license](https://npmx.dev/api/registry/badge/license/comark-carousel)](https://npmx.dev/package/comark-carousel)
-[![docs](https://img.shields.io/badge/docs-comark--ui.onmax.me-14b8a6?labelColor=0a0a0a)](https://comark-ui.onmax.me/carousel/)
+[![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-carousel&icon=npm)](https://npmx.dev/package/comark-carousel)
+[![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-carousel&period=month&icon=npm)](https://npmx.dev/package/comark-carousel)
+[![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-carousel)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/carousel/)
 
 A carousel of any Markdown content, written in Markdown. Slides scroll and snap without a script, with a scrollbar to reach the others; the script swaps it for arrows, a slide counter, and arrow keys that follow the reading direction, and zooms a slide with the others in a strip at the bottom. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
 

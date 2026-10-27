@@ -1,10 +1,9 @@
 # comark-fields
 
-[![npm version](https://npmx.dev/api/registry/badge/version/comark-fields)](https://npmx.dev/package/comark-fields)
-[![npm downloads](https://npmx.dev/api/registry/badge/downloads-month/comark-fields)](https://npmx.dev/package/comark-fields)
-[![install size](https://npmx.dev/api/registry/badge/size/comark-fields)](https://npmx.dev/package/comark-fields)
-[![license](https://npmx.dev/api/registry/badge/license/comark-fields)](https://npmx.dev/package/comark-fields)
-[![docs](https://img.shields.io/badge/docs-comark--ui.onmax.me-14b8a6?labelColor=0a0a0a)](https://comark-ui.onmax.me/fields/)
+[![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-fields&icon=npm)](https://npmx.dev/package/comark-fields)
+[![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-fields&period=month&icon=npm)](https://npmx.dev/package/comark-fields)
+[![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-fields)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/fields/)
 
 Props, options, and parameters in Nuxt UI's `::field` syntax: each with its type, whether it's required, and its default, with an object's properties nested under it. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
 

@@ -1,10 +1,9 @@
 # comark-figure
 
-[![npm version](https://npmx.dev/api/registry/badge/version/comark-figure)](https://npmx.dev/package/comark-figure)
-[![npm downloads](https://npmx.dev/api/registry/badge/downloads-month/comark-figure)](https://npmx.dev/package/comark-figure)
-[![install size](https://npmx.dev/api/registry/badge/size/comark-figure)](https://npmx.dev/package/comark-figure)
-[![license](https://npmx.dev/api/registry/badge/license/comark-figure)](https://npmx.dev/package/comark-figure)
-[![docs](https://img.shields.io/badge/docs-comark--ui.onmax.me-14b8a6?labelColor=0a0a0a)](https://comark-ui.onmax.me/figure/)
+[![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-figure&icon=npm)](https://npmx.dev/package/comark-figure)
+[![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-figure&period=month&icon=npm)](https://npmx.dev/package/comark-figure)
+[![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-figure)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/figure/)
 
 Image captions in [Comark](https://comark.dev): an image alone in its paragraph with a title, `![alt](src "Caption")`, becomes a native `<figure>` with the title as its `<figcaption>`. A parse plugin with no components and no styles, so it works in any renderer.
 

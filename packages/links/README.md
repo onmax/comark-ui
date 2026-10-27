@@ -1,10 +1,9 @@
 # comark-links
 
-[![npm version](https://npmx.dev/api/registry/badge/version/comark-links)](https://npmx.dev/package/comark-links)
-[![npm downloads](https://npmx.dev/api/registry/badge/downloads-month/comark-links)](https://npmx.dev/package/comark-links)
-[![install size](https://npmx.dev/api/registry/badge/size/comark-links)](https://npmx.dev/package/comark-links)
-[![license](https://npmx.dev/api/registry/badge/license/comark-links)](https://npmx.dev/package/comark-links)
-[![docs](https://img.shields.io/badge/docs-comark--ui.onmax.me-14b8a6?labelColor=0a0a0a)](https://comark-ui.onmax.me/links/)
+[![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-links&icon=npm)](https://npmx.dev/package/comark-links)
+[![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-links&period=month&icon=npm)](https://npmx.dev/package/comark-links)
+[![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-links)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/links/)
 
 Links in [Comark](https://comark.dev): a `#` link beside each heading, and external links with the `target` and `rel` you choose and a warning before one opens a new tab. For HTML, Vue, React, and Svelte.
 

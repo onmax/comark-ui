@@ -1,5 +1,10 @@
 # comark-icon
 
+[![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-icon&icon=npm)](https://www.npmjs.com/package/comark-icon)
+[![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-icon&period=month&icon=npm)](https://www.npmjs.com/package/comark-icon)
+[![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://github.com/onmax/comark-ui/blob/main/LICENSE)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/icon/)
+
 Iconify icons in Markdown, written as `:icon{name="lucide:apple"}`. Icons are resolved while parsing and drawn as CSS images, so the page asks no server for them and they show without a script. An icon in one color takes the color of the text around it; a logo keeps its own. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
 
 ```sh

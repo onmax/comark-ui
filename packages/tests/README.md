@@ -1,10 +1,9 @@
 # comark-tests
 
-[![npm version](https://npmx.dev/api/registry/badge/version/comark-tests)](https://npmx.dev/package/comark-tests)
-[![npm downloads](https://npmx.dev/api/registry/badge/downloads-month/comark-tests)](https://npmx.dev/package/comark-tests)
-[![install size](https://npmx.dev/api/registry/badge/size/comark-tests)](https://npmx.dev/package/comark-tests)
-[![license](https://npmx.dev/api/registry/badge/license/comark-tests)](https://npmx.dev/package/comark-tests)
-[![docs](https://img.shields.io/badge/docs-comark--ui.onmax.me-14b8a6?labelColor=0a0a0a)](https://comark-ui.onmax.me/tests/)
+[![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-tests&icon=npm)](https://npmx.dev/package/comark-tests)
+[![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-tests&period=month&icon=npm)](https://npmx.dev/package/comark-tests)
+[![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-tests)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/tests/)
 
 Test results from a JUnit XML report: how many tests passed, failed, and were skipped, how long they took, and each failure as a `<details>` with its message and stack. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
 

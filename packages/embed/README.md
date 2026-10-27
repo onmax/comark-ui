@@ -1,10 +1,9 @@
 # comark-embed
 
-[![npm version](https://npmx.dev/api/registry/badge/version/comark-embed)](https://npmx.dev/package/comark-embed)
-[![npm downloads](https://npmx.dev/api/registry/badge/downloads-month/comark-embed)](https://npmx.dev/package/comark-embed)
-[![install size](https://npmx.dev/api/registry/badge/size/comark-embed)](https://npmx.dev/package/comark-embed)
-[![license](https://npmx.dev/api/registry/badge/license/comark-embed)](https://npmx.dev/package/comark-embed)
-[![docs](https://img.shields.io/badge/docs-comark--ui.onmax.me-14b8a6?labelColor=0a0a0a)](https://comark-ui.onmax.me/embed/)
+[![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-embed&icon=npm)](https://npmx.dev/package/comark-embed)
+[![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-embed&period=month&icon=npm)](https://npmx.dev/package/comark-embed)
+[![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-embed)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/embed/)
 
 Video, audio, and live code from a link: YouTube, Vimeo, Loom, Spotify, CodePen, StackBlitz, and Figma players, read from the link alone with no network fetch. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
 
