@@ -1,10 +1,9 @@
 # comark-include
 
-[![npm version](https://npmx.dev/api/registry/badge/version/comark-include)](https://npmx.dev/package/comark-include)
-[![npm downloads](https://npmx.dev/api/registry/badge/downloads-month/comark-include)](https://npmx.dev/package/comark-include)
-[![install size](https://npmx.dev/api/registry/badge/size/comark-include)](https://npmx.dev/package/comark-include)
-[![license](https://npmx.dev/api/registry/badge/license/comark-include)](https://npmx.dev/package/comark-include)
-[![docs](https://img.shields.io/badge/docs-comark--ui.onmax.me-14b8a6?labelColor=0a0a0a)](https://comark-ui.onmax.me/include/)
+[![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-include&icon=npm)](https://npmx.dev/package/comark-include)
+[![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-include&period=month&icon=npm)](https://npmx.dev/package/comark-include)
+[![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-include)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/include/)
 
 Include Markdown partials and code snippets from files, with `:include{src="./part.md"}`. A [Comark](https://comark.dev) parse plugin: the included text renders as the rest of the document does, in any renderer.
 

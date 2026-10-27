@@ -1,10 +1,9 @@
 # comark-footnotes
 
-[![npm version](https://npmx.dev/api/registry/badge/version/comark-footnotes)](https://npmx.dev/package/comark-footnotes)
-[![npm downloads](https://npmx.dev/api/registry/badge/downloads-month/comark-footnotes)](https://npmx.dev/package/comark-footnotes)
-[![install size](https://npmx.dev/api/registry/badge/size/comark-footnotes)](https://npmx.dev/package/comark-footnotes)
-[![license](https://npmx.dev/api/registry/badge/license/comark-footnotes)](https://npmx.dev/package/comark-footnotes)
-[![docs](https://img.shields.io/badge/docs-comark--ui.onmax.me-14b8a6?labelColor=0a0a0a)](https://comark-ui.onmax.me/footnotes/)
+[![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-footnotes&icon=npm)](https://npmx.dev/package/comark-footnotes)
+[![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-footnotes&period=month&icon=npm)](https://npmx.dev/package/comark-footnotes)
+[![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-footnotes)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/footnotes/)
 
 Footnotes in [Comark](https://comark.dev), in place of `comark/plugins/footnotes`: `[^1]` references, `[^1]:` definitions that hold any Markdown over several lines and blocks, and `^[inline notes]`. A parse plugin with no components, so it works in any renderer.
 

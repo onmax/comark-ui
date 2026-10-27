@@ -1,10 +1,9 @@
 # comark-cards
 
-[![npm version](https://npmx.dev/api/registry/badge/version/comark-cards)](https://npmx.dev/package/comark-cards)
-[![npm downloads](https://npmx.dev/api/registry/badge/downloads-month/comark-cards)](https://npmx.dev/package/comark-cards)
-[![install size](https://npmx.dev/api/registry/badge/size/comark-cards)](https://npmx.dev/package/comark-cards)
-[![license](https://npmx.dev/api/registry/badge/license/comark-cards)](https://npmx.dev/package/comark-cards)
-[![docs](https://img.shields.io/badge/docs-comark--ui.onmax.me-14b8a6?labelColor=0a0a0a)](https://comark-ui.onmax.me/cards/)
+[![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-cards&icon=npm)](https://npmx.dev/package/comark-cards)
+[![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-cards&period=month&icon=npm)](https://npmx.dev/package/comark-cards)
+[![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-cards)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/cards/)
 
 Cards, link cards, and columns in Nuxt UI's syntax, with no script. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
 

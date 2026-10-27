@@ -1,10 +1,9 @@
 # comark-diff
 
-[![npm version](https://npmx.dev/api/registry/badge/version/comark-diff)](https://npmx.dev/package/comark-diff)
-[![npm downloads](https://npmx.dev/api/registry/badge/downloads-month/comark-diff)](https://npmx.dev/package/comark-diff)
-[![install size](https://npmx.dev/api/registry/badge/size/comark-diff)](https://npmx.dev/package/comark-diff)
-[![license](https://npmx.dev/api/registry/badge/license/comark-diff)](https://npmx.dev/package/comark-diff)
-[![docs](https://img.shields.io/badge/docs-comark--ui.onmax.me-14b8a6?labelColor=0a0a0a)](https://comark-ui.onmax.me/diff/)
+[![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-diff&icon=npm)](https://npmx.dev/package/comark-diff)
+[![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-diff&period=month&icon=npm)](https://npmx.dev/package/comark-diff)
+[![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-diff)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/diff/)
 
 A code change in Markdown, shown the way a pull request review shows a suggested change: the file and its counts in a header, removed lines red, added lines green, and the changed words marked within a pair of lines. A [Comark](https://comark.dev) plugin for HTML, with no script.
 

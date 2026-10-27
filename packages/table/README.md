@@ -1,10 +1,9 @@
 # comark-table
 
-[![npm version](https://npmx.dev/api/registry/badge/version/comark-table)](https://npmx.dev/package/comark-table)
-[![npm downloads](https://npmx.dev/api/registry/badge/downloads-month/comark-table)](https://npmx.dev/package/comark-table)
-[![install size](https://npmx.dev/api/registry/badge/size/comark-table)](https://npmx.dev/package/comark-table)
-[![license](https://npmx.dev/api/registry/badge/license/comark-table)](https://npmx.dev/package/comark-table)
-[![docs](https://img.shields.io/badge/docs-comark--ui.onmax.me-14b8a6?labelColor=0a0a0a)](https://comark-ui.onmax.me/table/)
+[![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-table&icon=npm)](https://npmx.dev/package/comark-table)
+[![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-table&period=month&icon=npm)](https://npmx.dev/package/comark-table)
+[![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-table)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/table/)
 
 Tables from CSV, TSV, and JSON files or fences, read while parsing, with Copy CSV and Copy Markdown buttons and headers that sort. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
 

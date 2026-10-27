@@ -1,10 +1,9 @@
 # comark-cast
 
-[![npm version](https://npmx.dev/api/registry/badge/version/comark-cast)](https://npmx.dev/package/comark-cast)
-[![npm downloads](https://npmx.dev/api/registry/badge/downloads-month/comark-cast)](https://npmx.dev/package/comark-cast)
-[![install size](https://npmx.dev/api/registry/badge/size/comark-cast)](https://npmx.dev/package/comark-cast)
-[![license](https://npmx.dev/api/registry/badge/license/comark-cast)](https://npmx.dev/package/comark-cast)
-[![docs](https://img.shields.io/badge/docs-comark--ui.onmax.me-14b8a6?labelColor=0a0a0a)](https://comark-ui.onmax.me/cast/)
+[![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-cast&icon=npm)](https://npmx.dev/package/comark-cast)
+[![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-cast&period=month&icon=npm)](https://npmx.dev/package/comark-cast)
+[![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-cast)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/cast/)
 
 Terminal recordings from [asciinema](https://asciinema.org) casts, shown as the terminal's final screen or its whole log in colored text, with no player and no script. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
 

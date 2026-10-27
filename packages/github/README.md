@@ -1,10 +1,9 @@
 # comark-github
 
-[![npm version](https://npmx.dev/api/registry/badge/version/comark-github)](https://npmx.dev/package/comark-github)
-[![npm downloads](https://npmx.dev/api/registry/badge/downloads-month/comark-github)](https://npmx.dev/package/comark-github)
-[![install size](https://npmx.dev/api/registry/badge/size/comark-github)](https://npmx.dev/package/comark-github)
-[![license](https://npmx.dev/api/registry/badge/license/comark-github)](https://npmx.dev/package/comark-github)
-[![docs](https://img.shields.io/badge/docs-comark--ui.onmax.me-14b8a6?labelColor=0a0a0a)](https://comark-ui.onmax.me/github/)
+[![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-github&icon=npm)](https://npmx.dev/package/comark-github)
+[![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-github&period=month&icon=npm)](https://npmx.dev/package/comark-github)
+[![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-github)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/github/)
 
 The parts of GitHub's Markdown that [Comark](https://comark.dev) doesn't render like GitHub: alerts as callouts, `@user` and `#123` as links, and raw HTML limited to what GitHub allows. For HTML, Vue, React, and Svelte.
 
