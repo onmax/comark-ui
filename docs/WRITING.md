@@ -21,6 +21,18 @@ The sections, in this order. Leave out a section the block has nothing for.
 
 Every fact on the page now has one place: a prop's sentence and example in Usage, its default and values in the Props table. A constraint that would make a reader's example fail, such as "`none` needs a `side`", goes in a `> [!NOTE]` right under its prop, and stays in the table's description too.
 
+## A skill's page
+
+A skill's page helps a reader choose the skill, ask for it, and judge what their agent wrote. The shape adapts [the docs pages of Matt Pocock's skills](https://github.com/mattpocock/skills/blob/main/.agents/writing-docs.md).
+
+1. **Frontmatter and `::skill`.** The header shows the install command, so the body never repeats it. The example stays first.
+2. **`## What it does`**: the skill's job and the one fact that sets it apart from what an agent does without it, such as "it doesn't review anything".
+3. **`## When to use it`**: a request in the reader's words, a line on naming the skill, and a list of the neighbouring skills it's confused with, each "situation: skill". Site tables are styled for props, so a sentence-long first column scrolls off a phone.
+4. **`## What your agent needs`**, only when the skill needs more than Node and a browser.
+5. **`## It's working if`**: bullets a reader checks in the document, without opening `SKILL.md`.
+
+Describe what the reader gets, not the skill's steps, and promise nothing its `SKILL.md` doesn't do. Credit any skill this one draws on.
+
 ## Other pages
 
 A guide, recipe, or Getting started page opens with one sentence on what the reader gets from it, uses the same `###`-per-step shape, and ends with links to the pages a reader goes to next.

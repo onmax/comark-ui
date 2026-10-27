@@ -9,6 +9,16 @@ tagline: Each skill teaches your agent one kind of document, what goes in it and
 ::skills
 ::
 
+## Which one
+
+- A change people can see needs proof on a pull request: [Before/after evidence](/skills/before-after-evidence/).
+- A review is done, and someone has to decide what to do: [Review document](/skills/review-document/).
+- Someone asked how a system, a flow, or a change works: [Visual explanation](/skills/visual-explanation/).
+- Someone needs to learn one concept and check that they did: [Concept lesson](/skills/concept-lesson/).
+- Your agent needs the syntax of a block, not a whole document: the [comark-ui skill](/guide/agents/).
+- A diff needs reviewing: your review process. These skills write documents; they don't find problems.
+- The document needs a link, comments, or saved answers: your host, such as [Drop](https://drop.vitehub.dev/?utm_source=comark-ui&utm_medium=skills).
+
 ## Install
 
 Install them with the `skills` CLI:
@@ -17,14 +27,13 @@ Install them with the `skills` CLI:
 npx skills add onmax/comark-ui
 ```
 
-It lists every skill in the repository, the [comark-ui skill](/guide/agents/) included, and installs the ones you pick. That one teaches the syntax of every block; these teach a whole document. Each carries the syntax of the blocks it uses, so it works without the other.
+It lists every skill in the repository, the comark-ui skill included, and installs the ones you pick. Each document skill carries the syntax of the blocks it uses, so it works without comark-ui.
 
-## How they're written
+## Use them
 
-- **A finished example first.** Each skill holds a complete document in `references/example.md`, the one rendered on its page, and the agent starts from its shape.
-- **Judgment first.** The steps are the decisions that make a document trustworthy: two comparable captures, marks measured rather than guessed, evidence the reader can check, one question per explanation, one concept per lesson.
-- **Done means checkable.** Every step ends with what done looks like, and every skill ends by linting the document and looking at the render.
-- **Writing only.** Where a document lives and who opens it belongs to your host, such as [Drop](https://drop.vitehub.dev/?utm_source=comark-ui&utm_medium=skills).
+Ask in your own words, such as "Write up your review of #418." Your agent loads the skill whose description matches the request. To be sure it does, name the skill: "Use the review-document skill." The skills work together: a review document carries a before/after compare as one finding's evidence.
+
+Each skill starts from a finished example, the one rendered on its page, and every step ends with a condition the agent checks before the next. Before it hands the document over, the agent lints it with `npx` and looks at the render, so it needs Node and a browser it can open a page in.
 
 ## Bundle them in your app
 

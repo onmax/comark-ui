@@ -9,15 +9,25 @@ tagline: Your agent writes a five-minute lesson that ends with the reader applyi
 ::skill{name="concept-lesson"}
 ::
 
-## Why it works
+## What it does
 
-- **A testable outcome.** The lesson opens with what the reader will be able to do, written as a verb a question can test: predict, explain, choose.
-- **A worked example with real values.** Each step shows the value that changed, so the reader follows the idea instead of nodding at it.
-- **A check that applies the idea.** The question changes one input of the example and asks what happens. Every wrong option is a real misconception with a reason, and the options are shaped alike so the answer can't be spotted.
-- **One concept at a time.** A second concept crowds out the first, so it gets its own lesson, linked at the end with the primary source.
+The skill writes **one lesson on one concept**, short enough to finish in five minutes: the outcome, why it matters, the idea, a worked example with real values, and a question that asks you to apply the idea to a changed version of the example. It writes one lesson and keeps no record of what you've learned. A second concept gets its own lesson, linked at the end. Answers to the question are kept in the reader's browser, or by a host such as [Drop](https://drop.vitehub.dev/?utm_source=comark-ui&utm_medium=skills) that saves them.
 
-## Use it
+## When to use it
 
-Ask "Teach me how ETags prevent lost updates" or "Write a lesson on React keys for new hires." Answers to the question are kept in the reader's browser, or by a host such as [Drop](https://drop.vitehub.dev/?utm_source=comark-ui&utm_medium=skills) that saves them.
+Ask "Teach me how ETags prevent lost updates" or "Write a lesson on React keys for new hires." Your agent loads the skill when someone asks to learn or understand a concept. To be sure, name it: "Use the concept-lesson skill."
 
-To show how a system works rather than teach an idea, write a [visual explanation](/skills/visual-explanation/). The skill draws on Matt Pocock's [teach skill](https://github.com/mattpocock/skills).
+Choose by what you want:
+
+- One idea, learned and checked in a few minutes: this skill.
+- To see how a system works, with no check: [Visual explanation](/skills/visual-explanation/).
+- A course over many sessions that remembers what you've learned: a tutor skill such as Matt Pocock's [teach](https://github.com/mattpocock/skills/tree/main/skills/productivity/teach), which this skill draws on.
+
+## It's working if
+
+- The outcome under the title uses a verb a question can test, such as predict, explain, or choose.
+- Each step of the worked example shows the value that changed.
+- The question changes one input of the example instead of asking for the definition back.
+- Each wrong option is a mistake someone would make, and picking it says why it's tempting and why it's wrong.
+- You can't spot the right answer by its length or its place, since comark-quiz shuffles the options.
+- The lesson ends with one primary source, linked to the exact section.
