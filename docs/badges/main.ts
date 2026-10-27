@@ -27,6 +27,7 @@ function start(root: HTMLElement) {
   let timer: ReturnType<typeof setTimeout>;
   let objectUrl = "";
   let currentSpec: BadgeSpec | undefined;
+  let automaticIcon = false;
   let exports: Record<string, string> = {};
   const presets: Record<string, Record<string, string>> = {
     custom: { source: "static", label: "built with", value: "Comark UI", icon: "comark" },
@@ -75,6 +76,8 @@ function start(root: HTMLElement) {
   function shareUrl() {
     const url = new URL(location.href);
     url.search = currentSpec ? badgeParams(currentSpec).toString() : "";
+    // Keep automatic logos implicit so restored builder links still follow the preset.
+    if (automaticIcon) url.searchParams.delete("icon");
     if (format.value !== "markdown") url.searchParams.set("format", format.value);
     return url;
   }
@@ -183,20 +186,21 @@ function start(root: HTMLElement) {
     button.addEventListener("click", () => {
       const template = presets[button.dataset.preset!]!;
       for (const [key, value] of Object.entries(template)) control(key).value = value;
-      if (!template.icon) control("icon").value = defaultIcon();
+      automaticIcon = !template.icon;
+      if (automaticIcon) control("icon").value = defaultIcon();
       clearTimeout(timer);
       void refresh();
     });
   for (const button of form.querySelectorAll<HTMLButtonElement>("[data-look]"))
     button.addEventListener("click", () => {
-      const automatic = control("icon").value === defaultIcon();
       control("preset").value = button.dataset.look!;
-      if (automatic) control("icon").value = defaultIcon();
+      if (automaticIcon) control("icon").value = defaultIcon();
       clearTimeout(timer);
       void refresh();
     });
   form.addEventListener("input", (event) => {
     if (event.target === format || event.target === code) return;
+    if (event.target === control("icon")) automaticIcon = false;
     clear();
     fields();
     copyStatus.textContent = "";
@@ -231,7 +235,9 @@ function start(root: HTMLElement) {
     if (location.pathname !== path) return;
     form.reset();
     const initial = new URLSearchParams(location.search);
+    automaticIcon = false;
     if (badgeKeys.some((key) => initial.has(key))) {
+      automaticIcon = !initial.get("icon")?.trim();
       const restored = readBadge(Object.fromEntries(initial));
       if (restored.ok) {
         for (const key of badgeKeys) {

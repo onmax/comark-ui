@@ -183,6 +183,63 @@ test("switches presets, preserves chosen logos, and shares the rendered result",
   await expect(logo).toHaveValue("none");
 });
 
+for (const [preset, icon] of [
+  ["default", "npm"],
+  ["npmx", "npmx"],
+  ["nuxt", "nuxt"],
+] as const) {
+  test(`preserves an explicit ${icon} logo matching the ${preset} default`, async ({ page }) => {
+    await page.goto(`/badges/?source=npm-version&package=comark-ui&preset=${preset}`);
+    const logo = page.getByRole("combobox", { name: "Logo", exact: true });
+    await expect(logo).toHaveValue(icon);
+    await logo.selectOption("github");
+    await logo.selectOption(icon);
+    for (const look of ["flat", "for-the-badge", "npmx", "nuxt", "default"]) {
+      await page.locator(`[data-look="${look}"]`).click();
+      await expect(logo).toHaveValue(icon);
+    }
+  });
+
+  test(`restores an explicit ${icon} logo matching the ${preset} default`, async ({
+    page,
+    context,
+  }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await page.goto(`/badges/?source=npm-version&package=comark-ui&preset=${preset}&icon=${icon}`);
+    const logo = page.getByRole("combobox", { name: "Logo", exact: true });
+    await expect(logo).toHaveValue(icon);
+    await page.getByRole("button", { name: "Copy builder link" }).click();
+    const shared = await page.evaluate(() => navigator.clipboard.readText());
+    expect(new URL(shared).searchParams.get("icon")).toBe(icon);
+    await page.goto(shared);
+    await page.reload();
+    await page.locator(`[data-look="${preset === "npmx" ? "nuxt" : "npmx"}"]`).click();
+    await expect(logo).toHaveValue(icon);
+  });
+}
+
+test("keeps automatic logos across reloads and resets them with npm templates", async ({
+  page,
+}) => {
+  await page.goto("/badges/?source=npm-version&package=comark-ui");
+  const logo = page.getByRole("combobox", { name: "Logo", exact: true });
+  await page.locator('[data-look="npmx"]').click();
+  await expect(logo).toHaveValue("npmx");
+  expect(new URL(page.url()).searchParams.has("icon")).toBe(false);
+  await page.reload();
+  await page.locator('[data-look="nuxt"]').click();
+  await expect(logo).toHaveValue("nuxt");
+  for (const template of ["npm-version", "npm-downloads"]) {
+    await logo.selectOption("github");
+    await page.locator(`[data-preset="${template}"]`).click();
+    await expect(logo).toHaveValue("nuxt");
+    await page.locator('[data-look="default"]').click();
+    await expect(logo).toHaveValue("npm");
+    await page.locator('[data-look="nuxt"]').click();
+    await expect(logo).toHaveValue("nuxt");
+  }
+});
+
 for (const [preset, height] of [
   ["flat", 20],
   ["for-the-badge", 28],
