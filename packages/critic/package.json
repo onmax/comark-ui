@@ -1,6 +1,6 @@
 {
   "name": "comark-critic",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "CriticMarkup in Comark: insertions, deletions, substitutions, highlights, and comments as native <ins>, <del>, and <mark>, shown, accepted, or rejected.",
   "keywords": [
     "comark",

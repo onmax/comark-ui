@@ -1,6 +1,6 @@
 {
   "name": "comark-links",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Links in Comark: external links with the rel and target you choose and a warning before a new tab, and a # link beside each heading. For HTML, Vue, React, and Svelte.",
   "keywords": [
     "anchor",

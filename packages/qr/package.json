@@ -1,6 +1,6 @@
 {
   "name": "comark-qr",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "QR codes drawn as inline SVG while parsing, for opening a preview link on a phone. A Comark plugin.",
   "keywords": [
     "comark",

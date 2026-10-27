@@ -1,6 +1,6 @@
 {
   "name": "comark-cast",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Terminal recordings from asciinema casts as their final screen or full log, in colored text with no player. A Comark plugin.",
   "keywords": [
     "ansi",
