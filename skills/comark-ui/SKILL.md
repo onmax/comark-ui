@@ -45,7 +45,7 @@ Problems land in `meta.issues` after `parseMarkdown`, one sentence each, and a h
 
 ## Shape the document
 
-This skill teaches the blocks. Four sibling skills teach a whole document, what goes in it and in what order: `before-after-evidence`, `review-document`, `visual-explanation`, and `concept-lesson`. When the user asks for one of those and the skill isn't installed, suggest `npx skills add onmax/comark-ui` and picking it from the list.
+This skill teaches the blocks. Four sibling skills teach a whole document, what goes in it and in what order: `before-after-evidence`, `review-document`, `visual-explanation`, and `teach-lesson`. When the user asks for one of those and the skill isn't installed, suggest `npx skills add onmax/comark-ui` and picking it from the list.
 
 ## Pick the blocks
 

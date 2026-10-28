@@ -14,7 +14,7 @@ tagline: Each skill teaches your agent one kind of document, what goes in it and
 - A change people can see needs proof on a pull request: [Before/after evidence](/skills/before-after-evidence/).
 - A review is done, and someone has to decide what to do: [Review document](/skills/review-document/).
 - Someone asked how a system, a flow, or a change works: [Visual explanation](/skills/visual-explanation/).
-- Someone needs to learn one concept and check that they did: [Concept lesson](/skills/concept-lesson/).
+- Someone needs to learn one concept and check that they did: [Teach lesson](/skills/teach-lesson/).
 - Your agent needs the syntax of a block, not a whole document: the [comark-ui skill](/guide/agents/).
 - A diff needs reviewing: your review process. These skills write documents; they don't find problems.
 - The document needs a link, comments, or saved answers: your host, such as [Drop](https://drop.vitehub.dev/?utm_source=comark-ui&utm_medium=skills).
@@ -53,7 +53,7 @@ An app that serves skills to its own agents imports them from `comark-ui`, so th
 ```ts
 import { skills, version } from "comark-ui/skills";
 
-const lesson = skills.find((skill) => skill.name === "concept-lesson");
+const lesson = skills.find((skill) => skill.name === "teach-lesson");
 for (const file of lesson.files) serve(`/skills/${lesson.name}/${file.path}`, file.text);
 ```
 

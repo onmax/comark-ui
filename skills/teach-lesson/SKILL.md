@@ -1,10 +1,10 @@
 ---
-name: concept-lesson
-description: Teaches one concept as a short lesson, with why it matters, the idea in plain words, a worked example traced step by step, and a question the reader answers before seeing the answer. Use when someone asks to learn or understand a concept, wants a tutorial they can test themselves on, or needs onboarding on one idea.
+name: teach-lesson
+description: Teaches one concept in simplified English, with a worked example and a question that checks the reader can apply it. Use when someone asks to learn a concept, wants a lesson they can test themselves on, or needs onboarding on one idea.
 license: MIT
 ---
 
-# Concept lesson
+# Teach lesson
 
 A lesson is a single win: the reader finishes able to do one thing they couldn't before, and proves it by answering a question. It's short enough to finish in five minutes, because working memory is small and a second concept crowds out the first. A course is many lessons; this skill writes one.
 
@@ -34,6 +34,20 @@ Follow [references/example.md](references/example.md), in this order:
 6. **Read next**: one primary source, linked to the exact section, and the lesson that naturally follows.
 
 Done when the lesson reads in five minutes and every term in the check was defined above it.
+
+### Use STE 100 writing rules
+
+Apply [ASD-STE100 Simplified Technical English](https://asd-ste100.org/) writing rules to the whole lesson, including the example, question, hints, and answer explanations.
+
+- Give each sentence one idea. Give each instruction one action.
+- Keep instructions within 20 words and descriptive sentences within 25 words. Use short paragraphs.
+- Use common words and active voice. Write instructions as direct commands.
+- Explain each technical term at first use. Use one term for each concept and keep its meaning consistent.
+- Keep technical names, code, units, and UI labels exact.
+- Put a condition before the action it controls. Make each pronoun refer to one clear subject.
+- Avoid idioms, unexplained abbreviations, long noun groups, and unnecessary words.
+
+Done when the lesson follows these writing rules and keeps the example's technical meaning.
 
 ## 4. Write the check
 

@@ -20,7 +20,7 @@ Ask "Show me how a document becomes HTML" or "Explain how the cache invalidates,
 Choose by what you want:
 
 - To see how something works: this skill.
-- To be able to apply an idea afterwards, and check that you can: [Concept lesson](/skills/concept-lesson/).
+- To be able to apply an idea afterwards, and check that you can: [Teach lesson](/skills/teach-lesson/).
 - To see what a change did to a screen: [Before/after evidence](/skills/before-after-evidence/).
 
 ## It's working if

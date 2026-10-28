@@ -14,6 +14,8 @@ const KEEP = /^\/(\.well-known\/|fonts\/)|\.(png|svg|woff2)$/;
 const MERGED =
   /^\/(?!lint\/|guide\/)([\w-]+)\/(?:getting-started|syntax|components|guides|theming)\/?$/;
 const RENAMED: Record<string, string | undefined> = {
+  "/skills/concept-lesson/": "/skills/teach-lesson/",
+  "/skills/concept-lesson.md/": "/skills/teach-lesson.md",
   "/preset/": "/getting-started/",
   "/charts/components/annotation/": "/charts/notes/",
   "/charts/components/gantt/": "/charts/#gantt-charts",
