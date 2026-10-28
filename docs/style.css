@@ -3917,6 +3917,7 @@ main img {
   overflow: hidden;
   padding: 0;
   background: none;
+  box-shadow: none;
   color: var(--fg);
   font-size: 0.8125rem;
   white-space: nowrap;

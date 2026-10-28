@@ -40,9 +40,6 @@ npx skills experimental_sync -a claude-code -y
 
 Sync links each skill into `.agents/skills/`, plus the directory of every agent you pass with `-a`, and records them in `skills-lock.json`. Installing the package alone changes nothing: run the sync again after each upgrade, or add it to a `prepare` script, as [the CLI reference](https://github.com/vercel-labs/skills/blob/main/docs/commands.md#skills-experimental_sync) shows. The command came from Anthony Fu's [skills-npm](https://github.com/antfu/skills-npm), which is merging into the `skills` CLI. It is experimental, so its name and options may change.
 
-> [!NOTE]
-> comark-ui 0.7.2 ships only the comark-ui skill. The four document skills arrive in the next release; until then, install them with `npx skills add`.
-
 ## Use them
 
 Ask in your own words, such as "Write up your review of #418." Your agent loads the skill whose description matches the request. To be sure it does, name the skill: "Use the review-document skill." The skills work together: a review document carries a before/after compare as one finding's evidence.
