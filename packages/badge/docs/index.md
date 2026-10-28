@@ -250,6 +250,26 @@ The handler accepts GET and HEAD, rejects malformed options with HTTP 400, and f
 
 Data is kept apart from the badge's look, so every style of one package shares it. Once its lifetime ends, the handler answers with the last value it has and refreshes it in the background; if the refresh fails, it keeps that value for up to a day and tries again 30 seconds later. Without one, a missing package, missing workflow, no runs, rate limit, or failed request displays `unavailable`, never a passing status. Image responses include `X-Badge-Status: ok` or `unavailable`. Responses allow `stale-while-revalidate` for a day, so browsers and image proxies show the last image while they fetch the next. An image reload checks the cache; there is no polling script.
 
+### Serve badges behind Cloudflare
+
+Allow anonymous GET and HEAD requests to your badge endpoint. README image proxies and scripts cannot solve browser challenges. Cloudflare's Browser Integrity Check can reject them with HTTP 403 and error code 1010 before the request reaches the handler.
+
+If Security Events identifies Browser Integrity Check as the cause, add a Configuration Rule for your badge's hostname, path, and methods. For the hosted endpoint, use this rule in the `http_config_settings` phase:
+
+```json
+{
+  "description": "Allow badge image clients without Browser Integrity Check",
+  "expression": "http.host eq \"comark-ui.onmax.me\" and http.request.uri.path eq \"/badge.svg\" and http.request.method in {\"GET\" \"HEAD\"}",
+  "action": "set_config",
+  "action_parameters": { "bic": false },
+  "enabled": true
+}
+```
+
+Use your own hostname and path when self-hosting. This rule changes only Browser Integrity Check for matching requests. Other paths, methods, and security settings keep their existing configuration. Wrangler's Worker configuration does not apply zone Configuration Rules; manage this rule separately in Cloudflare.
+
+Verify the endpoint from the client that failed. A valid badge request returns HTTP 200, `Content-Type: image/svg+xml`, and `X-Badge-Status: ok`. A remaining 403 requires checking Security Events for the blocking feature; changing the badge handler cannot fix a rejection at Cloudflare's edge.
+
 ## API
 
 ### Props
