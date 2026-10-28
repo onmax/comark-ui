@@ -110,7 +110,6 @@ export default defineNuxtConfig({
     // The editor is the Console's Content section: the team signs in with the site's own session (server/auth.ts).
     console: {
       auth: "app",
-      signInPage: "/sign-in",
       authorize: fileURLToPath(new URL("./server/console-authorize.ts", import.meta.url)),
     },
   },

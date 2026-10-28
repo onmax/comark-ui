@@ -2,7 +2,7 @@
 
 The documentation site uses the [Personal Project CMS GitHub App](https://github.com/apps/personal-project-cms) for sign-in. Maxi owns the App under `onmax`. The same App can serve more personal projects by adding each project's exact callback URL.
 
-For comark-ui, the callback is `https://comark-ui.onmax.me/api/auth/callback/github`. Visit `/sign-in` to sign in. The Console points to this page through `vitehub.console.signInPage`. A `redirect` query parameter returns the visitor to a page on this site after sign-in.
+For comark-ui, the callback is `https://comark-ui.onmax.me/api/auth/callback/github`. Open `/_vitehub` to sign in. ViteHub provides the provider button, retry state, return URL, and account sign-out using the existing server Auth Definition. There is no project-specific sign-in page or Console Auth client. The Console authorization file keeps the existing team restriction and local development behavior.
 
 Each project needs these private runtime bindings:
 
