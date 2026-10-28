@@ -1,4 +1,5 @@
 import { theme } from "comark-zoom/theme";
+import { disclosureMotion } from "../../../shared/disclosure.ts";
 
 // The parts that hold an author's Markdown. A page's own paragraph and list margins are almost always unlayered, so
 // only `!important` keeps their first and last blocks flush with the part's edges.
@@ -23,6 +24,7 @@ const ring = "0 0 0 3px color-mix(in oklab,var(--_comark-ring) 50%,transparent)"
  * `--cqz-surface`. The rules sit in the `comark` layer, so any unlayered rule of the host's wins.
  */
 export const css = `@layer comark{${[
+  disclosureMotion(".cqz-disclosure"),
   theme(".cqz"),
   // Resolved into private variables, so a `--cqz-*` set on `:root` or any ancestor reaches every block.
   ":where(.cqz){--_cqz-primary:var(--cqz-primary,var(--ui-primary,var(--primary,var(--_comark-foreground))));--_cqz-on-primary:var(--cqz-primary-foreground,var(--primary-foreground,var(--_comark-background)));--_cqz-correct:var(--cqz-correct,var(--ui-success,var(--success,oklch(.62 .14 155))));--_cqz-incorrect:var(--cqz-incorrect,var(--ui-error,var(--destructive,oklch(.577 .245 27.325))));--_cqz-correct-foreground:var(--cqz-correct-foreground,color-mix(in oklab,var(--_cqz-correct) 55%,var(--_comark-foreground)));--_cqz-incorrect-foreground:var(--cqz-incorrect-foreground,color-mix(in oklab,var(--_cqz-incorrect) 55%,var(--_comark-foreground)));--_cqz-bar:var(--cqz-bar,color-mix(in oklab,var(--_comark-foreground) 6%,transparent));--_cqz-bar-strong:var(--cqz-bar-strong,color-mix(in oklab,var(--_cqz-primary) 14%,transparent));--_cqz-surface:var(--cqz-surface,color-mix(in oklab,var(--_comark-foreground) 2%,var(--_comark-background)));--_cqz-ease:cubic-bezier(.23,1,.32,1)}",

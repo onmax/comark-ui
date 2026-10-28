@@ -1,4 +1,5 @@
 import { theme } from "comark-zoom/theme";
+import { disclosureMotion } from "../../../shared/disclosure.ts";
 import { INK, SERIES } from "./colors.ts";
 
 // Rules of the host's stylesheet beat an SVG's presentation attributes, so each ink is swapped by its color.
@@ -10,6 +11,7 @@ const swap = (hex: string, color: string, props = ["fill", "stroke"]) =>
  * Nuxt UI's `--ui-chart-1` to `-6`, then shadcn/ui's `--chart-1` to `-6`. The rules sit in the `comark` layer, so any unlayered rule of the host's wins.
  */
 export const css = `@layer comark{${[
+  disclosureMotion(".cch-data"),
   theme(".cch"),
   // The Data footer runs to the card's edges, so it spans the same side padding the card has.
   ":where(.cch){--cch-padding:1.5rem}",

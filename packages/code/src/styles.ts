@@ -1,5 +1,6 @@
 import { css as icons } from "comark-icon/client";
 import { theme } from "comark-zoom/theme";
+import { disclosureMotion } from "../../../shared/disclosure.ts";
 
 // Lucide's chevrons-up-down, drawn as a mask in the text's color.
 const chevrons = `url("data:image/svg+xml,${encodeURIComponent(
@@ -18,6 +19,7 @@ const terminal = ".ck[data-code-frame=terminal]:not([data-tabs-code] .ck)";
  * wrap the lines.
  */
 export const css = `${icons}@layer comark{${[
+  disclosureMotion(".ck[data-code-lines] .ck-fold"),
   theme(".ck"),
   ".ck>pre{border-radius:var(--_comark-radius)}",
   // No padding, border, or new formatting context, so the block's own margins collapse through the wrapper and the
