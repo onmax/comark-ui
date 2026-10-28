@@ -1,4 +1,4 @@
-# ViteHub backports
+# Dependency backports
 
 These pnpm patches keep the docs integration fixes available before their upstream PRs merge.
 
@@ -11,3 +11,7 @@ These pnpm patches keep the docs integration fixes available before their upstre
 The integration patches were generated with `pnpm patch` and `pnpm patch-commit` against preview `3726291`. Preview builds use hashed distribution filenames. Refresh these patches when changing that pin, then run Nuxt preparation and the docs build. Remove each patch and its `patchedDependencies` entry once the preview contains the corresponding upstream fix.
 
 The older Workspace cache patch is managed separately by the preview upgrade.
+
+## Comark syntax highlighting
+
+`comark@0.8.1` is patched with [comarkdown/comark#523](https://github.com/comarkdown/comark/pull/523). It removes exponential backtracking from the component attribute grammar, so Markdown samples followed by punctuation cannot stall docs generation. The patch was generated with `pnpm patch` and `pnpm patch-commit`. Remove `patches/comark.patch` and its `patchedDependencies` entry after upgrading to a Comark release containing that fix.

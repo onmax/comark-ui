@@ -1,0 +1,31 @@
+diff --git a/dist/plugins/shiki/language-comark.js b/dist/plugins/shiki/language-comark.js
+index 1cfc110ac78c5651ca054a4591ccf64f03b22b52..65169365448767d4f47d52e6a68f2317894db88f 100644
+--- a/dist/plugins/shiki/language-comark.js
++++ b/dist/plugins/shiki/language-comark.js
+@@ -114,7 +114,7 @@ export const comarkLanguage = {
+             },
+         },
+         attributes: {
+-            match: '(?x)(               # attributes\n    ({)\n      ((?:[^{}\'"]+|\'[^\']*\'|"[^"]*")*)\n    (})\n  )',
++            match: '(?x)(               # attributes\n    ({)\n      ((?:[^{}\'"]|\'[^\']*\'|"[^"]*")*)\n    (})\n  )',
+             name: 'attributes.mdc',
+             captures: {
+                 '1': {
+@@ -133,7 +133,7 @@ export const comarkLanguage = {
+             },
+         },
+         component_inline: {
+-            match: '(?x)\n  (^|\\G|\\s+)\n  (:)              # component colon\n  (?i:             # component name\n    (\\w[\\w\\d-]*)\n  )\n  (\n      (\\{(?:[^{}\'"]+|\'[^\']*\'|"[^"]*")*\\}) # attributes\n      (\\[[^\\]]*\\])?                          # slot\n    | (\\[[^\\]]*\\])                           # slot\n      (\\{(?:[^{}\'"]+|\'[^\']*\'|"[^"]*")*\\})? # attributes\n  )?\n  \\s',
++            match: '(?x)\n  (^|\\G|\\s+)\n  (:)              # component colon\n  (?i:             # component name\n    (\\w[\\w\\d-]*)\n  )\n  (\n      (\\{(?:[^{}\'"]|\'[^\']*\'|"[^"]*")*\\}) # attributes\n      (\\[[^\\]]*\\])?                          # slot\n    | (\\[[^\\]]*\\])                           # slot\n      (\\{(?:[^{}\'"]|\'[^\']*\'|"[^"]*")*\\})? # attributes\n  )?\n  \\s',
+             name: 'inline.component.mdc',
+             captures: {
+                 '2': {
+@@ -173,7 +173,7 @@ export const comarkLanguage = {
+             },
+         },
+         component_block: {
+-            begin: '(?x)\n  (^|\\G)(\\s*)\n  (:{2,})     # component colons\n  (?i:\n    (\\w[\\w\\d-]+)   # component name\n    (                 # folowing spaces or attributes\n        \\s*\n      | \\s*(\\{(?:[^{}\'"]+|\'[^\']*\'|"[^"]*")*\\})\n    )\n    $\n  )',
++            begin: '(?x)\n  (^|\\G)(\\s*)\n  (:{2,})     # component colons\n  (?i:\n    (\\w[\\w\\d-]+)   # component name\n    (                 # folowing spaces or attributes\n        \\s*\n      | \\s*(\\{(?:[^{}\'"]|\'[^\']*\'|"[^"]*")*\\})\n    )\n    $\n  )',
+             name: 'block.component.mdc',
+             end: '(^|\\G)(\\2)(\\3)\\s*$',
+             beginCaptures: {
