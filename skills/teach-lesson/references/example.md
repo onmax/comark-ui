@@ -1,6 +1,6 @@
-# ETags stop lost updates
+# Keep both writers' changes
 
-After this lesson, you can predict how a server handles two changes to the same record with or without `If-Match`.
+After this lesson, you can predict how a server handles two changes to the same record, with or without a version check.
 
 ## Why it matters
 
@@ -8,7 +8,7 @@ In this example, Ana and Ben open the same help article. Ana corrects a spelling
 
 ## The idea
 
-An **ETag** is a version label, such as `"v7"`, that the server sends with a resource. To change that resource safely, the client sends the label back in the `If-Match` header. If the labels match, the server saves the change. If the labels differ, the server returns `412 Precondition Failed` and keeps the resource unchanged.
+An **ETag** is a version label, such as `"v7"`, that the server sends with a resource. The **If-Match** header carries that label back to require the same version before saving a change. If the labels match, the server saves the change. If the labels differ, the server returns `412 Precondition Failed` and keeps the resource unchanged.
 
 ## Worked example
 

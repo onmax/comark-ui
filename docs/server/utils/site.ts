@@ -23,9 +23,14 @@ const RENAMED: Record<string, string | undefined> = {
   "/charts/gantt/": "/charts/#gantt-charts",
   "/charts/vega-lite/": "/charts/#vega-lite",
 };
+const OLD_LESSON_SKILL = "/.well-known/skills/concept-lesson/";
 
 /** Where an old host or an old path now lives, or nothing when the request is current. */
 export function redirectTarget(url: URL): string | undefined {
+  if (url.pathname.startsWith(OLD_LESSON_SKILL)) {
+    const path = `/.well-known/skills/teach-lesson/${url.pathname.slice(OLD_LESSON_SKILL.length)}`;
+    return `${SITE}${path}${url.search}${url.hash}`;
+  }
   const prefix = MOVED[url.hostname];
   if (prefix !== undefined) {
     const path = KEEP.test(url.pathname) ? url.pathname : `${prefix}${url.pathname}`;
