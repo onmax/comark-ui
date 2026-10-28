@@ -1,49 +1,41 @@
 ---
 name: teach-lesson
-description: Teaches one concept in simplified English, with a worked example and a question that checks the reader can apply it. Use when someone asks to learn a concept, wants a lesson they can test themselves on, or needs onboarding on one idea.
+description: Write a short lesson on one concept, with simplified English, a worked example, and an application question. Use for a lesson, a self-check, or onboarding on one idea.
 license: MIT
 ---
 
 # Teach lesson
 
-A lesson is a single win: the reader finishes able to do one thing they couldn't before, and proves it by answering a question. It's short enough to finish in five minutes, because working memory is small and a second concept crowds out the first. A course is many lessons; this skill writes one.
+A lesson teaches one concept through a worked example and an application question. Keep it short enough to finish in five minutes.
 
 ## 1. Pin the concept and the outcome
 
-Infer the reader's purpose and existing knowledge from the conversation. Put detail where their question is, and skip what they already know.
+Infer the reader's purpose and existing knowledge from the conversation. Focus on the gap their question reveals.
 
-Name one concept and write the outcome as a verb the check can test: "After this lesson you can predict what a server does when two people save the same record." Prefer predict, explain, choose, or spot over know or understand, which no question can test.
+Name one concept and write a testable outcome, such as "Predict what happens when two people save the same record." Use a verb such as predict, explain, choose, or spot.
 
-If the outcome needs two concepts, write the prerequisite's lesson first or link to it, and keep this one to the other.
+If the outcome depends on another concept, link to its prerequisite lesson or teach that prerequisite first.
 
-Done when the outcome is one sentence with a testable verb.
+Done when one sentence names the action the reader will perform and the situation they will apply it to.
 
 ## 2. Find a worked example
 
-Pick a case from the reader's world where the concept changes what happens: without it something visibly goes wrong, with it the thing works. Use real values (names, status codes, numbers) so each step can be followed, not just nodded at.
+Pick a case from the reader's world where the concept prevents a visible failure. Trace it in three or four moves with concrete names, status codes, or numbers. Label invented values as illustrative.
 
-Verify how the concept works against a primary source, such as code or a specification. For an existing design, find recorded reasons when available. Separate observed behavior from inferred reasons, and say when the reason is unknown. Label invented example values as illustrative.
+Verify behavior against a primary source, such as code or a specification. For an existing design, find recorded reasons when available. Distinguish verified behavior, recorded reasons, and inferred reasons. Preserve uncertainty such as "likely", and say when a reason is unknown.
 
-Done when you can tell the example's story in three or four moves, each with a concrete value.
+Done when each move has a concrete value, its behavior matches the source, and each design reason is sourced or qualified.
 
 ## 3. Write the lesson
 
-Follow [references/example.md](references/example.md), in this order:
+Read [references/example.md](references/example.md) as a model for the complete lesson. Write these parts in order:
 
 1. **The outcome**, one sentence under the title.
 2. **Why it matters**: the failure the concept prevents, told as the worked example's problem. Three or four sentences.
-3. **The idea**: start with a plain definition, then connect it to the reader's case. Explain how it works and why it solves the problem. Use at most four sentences, defining each new term in bold once, where it's first used. One term per lesson is plenty; a second needs its own lesson.
-4. **The worked example**, one move per step, each showing the value that changed. Use `::steps` for text and code. For a diagram series, use numbered Markdown headings with Mermaid fences outside `::steps`.
+3. **The idea**: give the smallest complete explanation in at most four sentences. Start with a plain definition, connect it to the reader's case, and explain how it solves the problem.
+4. **The worked example**: add the supporting detail, one move per step, showing the value that changed. For text and code, use [`::steps`](references/blocks.md#the-worked-example-steps). When diagrams help explain interacting parts, use the [diagram series guidance](references/blocks.md#build-a-diagram-across-steps).
 5. **The check**, below.
 6. **Read next**: one primary source, linked to the exact section, and the lesson that naturally follows.
-
-Give the smallest complete explanation in the idea section. Put the supporting detail in the worked example. Describe what happens as someone uses the system, with the values that change.
-
-When a diagram helps explain several interacting parts, build it across the worked example's steps. Redraw the previous diagram and add the next part or relationship. Keep existing labels and positions consistent. Use the Mermaid syntax in [references/blocks.md](references/blocks.md).
-
-State the explanation directly. Cut stock framing such as "the key insight" and announcements such as "this is the tricky part".
-
-Done when the lesson reads in five minutes and every term in the check was defined above it.
 
 ### Use STE 100 writing rules
 
@@ -52,26 +44,24 @@ Apply [ASD-STE100 Simplified Technical English](https://asd-ste100.org/) writing
 - Give each sentence one idea. Give each instruction one action.
 - Keep instructions within 20 words and descriptive sentences within 25 words. Use short paragraphs.
 - Use common words and active voice. Write instructions as direct commands.
-- Explain each technical term at first use. Use one term for each concept and keep its meaning consistent.
+- Define each technical term in bold at first use. Use one term for each concept and keep its meaning consistent.
 - Keep technical names, code, units, and UI labels exact.
-- Preserve uncertainty from the evidence. Keep "likely" or "unknown" when simplifying an inferred explanation.
 - Put a condition before the action it controls. Make each pronoun refer to one clear subject.
-- Avoid idioms, unexplained abbreviations, long noun groups, and unnecessary words.
+- Use literal wording and explain abbreviations. Split long noun groups into phrases.
+- State the mechanism directly, with the detail needed to follow it.
 
-Done when the lesson follows these writing rules and keeps the example's technical meaning.
+Done when the outcome, problem, idea, worked example, and source link are present. Each term must have a definition before use, and each sentence must meet the applicable word limit. Preserve the example's behavior and evidence confidence.
 
 ## 4. Write the check
 
-The check is what turns reading into learning, since recalling and applying an idea is what makes it stick. Use `::question` and ask the reader to **apply** the idea to a variant of the worked example: change one input and ask what happens. A question that only asks for the definition back tests recall of words, not the concept.
+Use [`::question`](references/blocks.md#the-check-question) to test the outcome. Change one input of the worked example and ask the reader to predict, explain, choose, or spot the result.
 
 - Make each wrong option a real misconception, and give it a `>` rationale that says why it's tempting and why it's wrong.
-- Keep the options parallel, one idea each and close in length, so the right one can't be spotted by its shape. comark-quiz shuffles them.
+- Keep the options parallel, one idea each and close in length, so their shape gives no clue to the answer.
 - Add `#explain` for the one thing the reader should take away whatever they picked.
-- Optionally, add one `::recall` card for the single fact worth remembering a week from now.
+- For a fact worth remembering a week later, optionally add a [`::recall` card](references/blocks.md#the-fact-to-keep-recall).
 
-[references/blocks.md](references/blocks.md) has the syntax for `::steps`, `::question`, and `::recall`.
-
-Done when a reader who skipped the idea section would likely pick a wrong option, and one who read it would pick the right one.
+Done when the question tests the stated outcome with one changed input, every option has a rationale, and the shared explanation resolves each misconception.
 
 ## 5. Check the render
 
@@ -81,6 +71,6 @@ Done when a reader who skipped the idea section would likely pick a wrong option
    npx -p comark-linter -p comark-ui lint-comark lesson.md
    ```
 
-2. Open the rendered page where it will be read, answer the question once wrongly and once rightly, and read each rationale as the reader would.
+2. Open the rendered page where it will be read. Select each option and check its rationale and the shared explanation.
 
-Done when every option's rationale makes sense after picking it.
+Done when lint reports no problems, every worked step and diagram is visible, and each option reveals the expected result and rationale. Confirm that the correct answer follows from the example and that the lesson fits a five-minute read.

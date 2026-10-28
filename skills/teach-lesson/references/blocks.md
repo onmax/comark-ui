@@ -23,7 +23,9 @@ Each `###` heading starts a step that holds everything up to the next one, code 
 
 ## Build a diagram across steps
 
-Use a `mermaid` fence when a diagram helps explain the example. Keep these fences outside `::steps`, using numbered Markdown headings for the worked example. Repeat the previous diagram and add the next relationship:
+Use a `mermaid` fence when a diagram helps explain interacting parts. Redraw the previous diagram and add one part or relationship at each move. Keep existing labels and participant order consistent.
+
+Use numbered Markdown headings for the worked example. Mermaid fences currently disappear inside `::steps`, so place them directly under these headings:
 
 ````md
 ### 1. The client requests the article
@@ -46,7 +48,7 @@ sequenceDiagram
 ```
 ````
 
-These paths and version labels are illustrative. Keep the same participant names and order across steps. Use `sequenceDiagram` for messages or `flowchart LR` for a flow. comark-ui renders Mermaid as SVG, so the reader needs no diagram script.
+These paths and version labels are illustrative. Use `sequenceDiagram` for messages or `flowchart LR` for a flow. comark-ui renders Mermaid as SVG, so the reader needs no diagram script.
 
 ## The check: `::question`
 
