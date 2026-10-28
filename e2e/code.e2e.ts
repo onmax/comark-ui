@@ -224,6 +224,40 @@ test("a diff copies as the code after it, and a collapsed range opens on a click
   expect(new Set(heights).size).toBe(1);
 });
 
+test("opening a folded range never pulls following lines above the placeholder", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await open(page, "```ts collapse={2-4}\nfirst()\nsecond()\nthird()\nfourth()\nlast()\n```");
+  await page.addStyleTag({ content: "pre{font:16px/24px monospace}" });
+  const fold = page.locator(".ck-fold");
+  const motion = await fold.evaluate(async (element) => {
+    const following = element.nextElementSibling!;
+    const closed = element.getBoundingClientRect().height;
+    const followingTop = following.getBoundingClientRect().top;
+    element.querySelector("summary")!.click();
+    // Include the first opening layout, before an animation frame can advance the transition.
+    const frames = [];
+    for (let i = 0; i < 4; i++) {
+      frames.push({
+        height: element.getBoundingClientRect().height,
+        followingTop: following.getBoundingClientRect().top,
+      });
+      await new Promise(requestAnimationFrame);
+    }
+    return { closed, followingTop, frames };
+  });
+  for (const frame of motion.frames) {
+    expect(frame.height).toBeGreaterThanOrEqual(motion.closed);
+    expect(frame.followingTop).toBeGreaterThanOrEqual(motion.followingTop);
+  }
+  expect(motion.frames[0].height).toBe(motion.closed);
+  await expect
+    .poll(() => fold.evaluate((element) => element.getBoundingClientRect().height))
+    .toBe(3 * motion.closed);
+  await expect(fold.locator("summary")).toBeHidden();
+});
+
 test("a numbered line wraps under its own code", async ({ page }) => {
   await open(page, `\`\`\`ts wrap showLineNumbers\nconst a = "${"word ".repeat(30)}"\n\`\`\``);
   await expect(page.getByRole("button", { name: "Wrap lines" })).toHaveAttribute(
