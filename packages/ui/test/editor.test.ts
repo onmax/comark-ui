@@ -19,6 +19,20 @@ const offline = { chips: { download: false }, icon: { fetch: false }, diagrams: 
 const roundTrip = async (markdown: string) => toMarkdown((await fromMarkdown(markdown)).doc);
 
 describe("fromMarkdown and toMarkdown", () => {
+  it("keeps bold and italic code through the actual schema and Yjs", async () => {
+    const markdown = "See **`bold code`** and *`italic code`* and ***`both`***.\n";
+    const codec = createEditorCodec();
+    const schema = getSchema(codec.extensions());
+    const doc = schema.nodeFromJSON(await codec.fromMarkdown(markdown));
+    const shared = prosemirrorJSONToYDoc(schema, doc.toJSON());
+    try {
+      expect(await codec.toMarkdown(yDocToProsemirrorJSON(shared))).toBe(markdown);
+      expect(await codec.verify(markdown)).toMatchObject({ writable: true });
+    } finally {
+      shared.destroy();
+    }
+  });
+
   it("keeps Markdown's blocks and marks", async () => {
     const markdown = [
       "# Hello **World** [link](https://x.dev)",
