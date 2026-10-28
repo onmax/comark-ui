@@ -1,4 +1,5 @@
 import { theme } from "comark-zoom/theme";
+import { disclosureMotion } from "../../../shared/disclosure.ts";
 
 /**
  * A message as a column: text, files, and each trace of steps as a list of quiet lines, a reasoning or a tool call
@@ -7,6 +8,7 @@ import { theme } from "comark-zoom/theme";
  * layer, so any unlayered rule of the host's wins.
  */
 export const css = `@layer comark{${[
+  disclosureMotion(".cht-step>details"),
   theme(".cht"),
   ":where(.cht){--cht-error:var(--ui-error,var(--destructive,#dc2626))}",
   "@media (prefers-color-scheme:dark){:where(.cht){--cht-error:var(--ui-error,var(--destructive,#f87171))}}",

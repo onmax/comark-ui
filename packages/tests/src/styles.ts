@@ -1,4 +1,5 @@
 import { theme } from "comark-zoom/theme";
+import { disclosureMotion } from "../../../shared/disclosure.ts";
 
 /**
  * A card in the style of shadcn/ui's, with the counts as badges tinted green, red (shadcn/ui's `--destructive` when the
@@ -7,6 +8,7 @@ import { theme } from "comark-zoom/theme";
  * wins.
  */
 export const css = `@layer comark{${[
+  disclosureMotion(".ctr-failure"),
   theme(".ctr"),
   ":where(.ctr){--ctr-pass:#259f56;--ctr-fail:var(--destructive,#ee3533);--ctr-skip:var(--_comark-muted)}",
   "@media (prefers-color-scheme:dark){:where(.ctr){--ctr-pass:#59d38c;--ctr-fail:var(--destructive,#fd736d)}}",

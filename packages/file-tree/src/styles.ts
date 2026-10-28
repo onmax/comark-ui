@@ -1,4 +1,5 @@
 import { theme } from "comark-zoom/theme";
+import { disclosureMotion } from "../../../shared/disclosure.ts";
 
 /**
  * A tree in a bordered box, with a guide line down each open folder, on the shared `--comark-*` tokens. Added, removed,
@@ -6,6 +7,7 @@ import { theme } from "comark-zoom/theme";
  * `--destructive`. The rules sit in the `comark` layer, so any unlayered rule of the host's wins.
  */
 export const css = `@layer comark{${[
+  disclosureMotion(".cft details"),
   theme(".cft"),
   ":where(.cft){--cft-added:#16a34a;--cft-removed:var(--destructive,#dc2626);--cft-changed:#d97706}",
   "@media (prefers-color-scheme:dark){:where(.cft){--cft-added:#4ade80;--cft-removed:var(--destructive,#f87171);--cft-changed:#fbbf24}}",

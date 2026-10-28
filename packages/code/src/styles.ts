@@ -1,5 +1,6 @@
 import { css as icons } from "comark-icon/client";
 import { theme } from "comark-zoom/theme";
+import { disclosureMotion } from "../../../shared/disclosure.ts";
 
 // Lucide's chevrons-up-down, drawn as a mask in the text's color.
 const chevrons = `url("data:image/svg+xml,${encodeURIComponent(
@@ -18,6 +19,7 @@ const terminal = ".ck[data-code-frame=terminal]:not([data-tabs-code] .ck)";
  * wrap the lines.
  */
 export const css = `${icons}@layer comark{${[
+  disclosureMotion(".ck[data-code-lines] .ck-fold"),
   theme(".ck"),
   ".ck>pre{border-radius:var(--_comark-radius)}",
   // No padding, border, or new formatting context, so the block's own margins collapse through the wrapper and the
@@ -74,7 +76,8 @@ export const css = `${icons}@layer comark{${[
   `${lines}[data-code-numbers] .line{padding-left:calc(var(--_ck-digits) * 1ch + 2ch)}`,
   `${lines}[data-code-numbers] .line::before{content:attr(data-line);position:absolute;left:0;width:calc(var(--_ck-digits) * 1ch);color:var(--_comark-muted);text-align:right;user-select:none}`,
   `${lines}[data-code-numbers] .line::after{left:calc(var(--_ck-digits) * 1ch + .25ch)}`,
-  `${lines} .ck-fold{display:block}`,
+  // Keep the summary's line of space while opening hides it and the content animates from zero.
+  `${lines} .ck-fold{display:block;min-block-size:1lh}`,
   // A page's own `details` and `summary` rules are unlayered and would box a fold or shift it off the lines' grid, so
   // only `!important` keeps its margins, padding, and border.
   `${lines} .ck-fold{margin:0!important;padding:0!important;border:0!important}`,
