@@ -146,7 +146,7 @@ const skillOrder = [
   "before-after-evidence",
   "review-document",
   "visual-explanation",
-  "concept-lesson",
+  "teach-lesson",
 ];
 // Paths from the repository's root, so an error names the file.
 const fileOf = (slug: string) => {

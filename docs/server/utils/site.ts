@@ -14,6 +14,8 @@ const KEEP = /^\/(\.well-known\/|fonts\/)|\.(png|svg|woff2)$/;
 const MERGED =
   /^\/(?!lint\/|guide\/)([\w-]+)\/(?:getting-started|syntax|components|guides|theming)\/?$/;
 const RENAMED: Record<string, string | undefined> = {
+  "/skills/concept-lesson/": "/skills/teach-lesson/",
+  "/skills/concept-lesson.md/": "/skills/teach-lesson.md",
   "/preset/": "/getting-started/",
   "/charts/components/annotation/": "/charts/notes/",
   "/charts/components/gantt/": "/charts/#gantt-charts",
@@ -21,9 +23,14 @@ const RENAMED: Record<string, string | undefined> = {
   "/charts/gantt/": "/charts/#gantt-charts",
   "/charts/vega-lite/": "/charts/#vega-lite",
 };
+const OLD_LESSON_SKILL = "/.well-known/skills/concept-lesson/";
 
 /** Where an old host or an old path now lives, or nothing when the request is current. */
 export function redirectTarget(url: URL): string | undefined {
+  if (url.pathname.startsWith(OLD_LESSON_SKILL)) {
+    const path = `/.well-known/skills/teach-lesson/${url.pathname.slice(OLD_LESSON_SKILL.length)}`;
+    return `${SITE}${path}${url.search}${url.hash}`;
+  }
   const prefix = MOVED[url.hostname];
   if (prefix !== undefined) {
     const path = KEEP.test(url.pathname) ? url.pathname : `${prefix}${url.pathname}`;

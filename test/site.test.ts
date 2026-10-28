@@ -26,6 +26,12 @@ describe("redirects", () => {
     );
   });
   it("sends the pages that merged or were renamed to their new home", () => {
+    expect(target("https://comark-ui.onmax.me/skills/concept-lesson/?x=1#the-idea")).toBe(
+      "https://comark-ui.onmax.me/skills/teach-lesson/?x=1#the-idea",
+    );
+    expect(target("https://comark-ui.onmax.me/skills/concept-lesson.md?x=1#the-idea")).toBe(
+      "https://comark-ui.onmax.me/skills/teach-lesson.md?x=1#the-idea",
+    );
     expect(target("https://comark-ui.onmax.me/zoom/getting-started/")).toBe(
       "https://comark-ui.onmax.me/zoom/",
     );
@@ -42,8 +48,25 @@ describe("redirects", () => {
       "https://comark-ui.onmax.me/charts/?x=1#vega-lite",
     );
   });
+  it.each(["SKILL.md", "agents/openai.yaml", "references/example.md"])(
+    "redirects the old installable lesson's %s, keeping the query and fragment",
+    (file) => {
+      for (const host of ["comark-ui.onmax.me", "comark.onmax.me", "comark-annotate.onmax.me"])
+        expect(
+          target(`https://${host}/.well-known/skills/concept-lesson/${file}?raw=1#the-idea`),
+        ).toBe(`https://comark-ui.onmax.me/.well-known/skills/teach-lesson/${file}?raw=1#the-idea`);
+    },
+  );
   it("leaves current pages, the linter, the guides, and the badge alone", () => {
-    for (const path of ["/", "/zoom/", "/lint/getting-started/", "/guide/theming/", "/badge.svg"])
+    for (const path of [
+      "/",
+      "/zoom/",
+      "/lint/getting-started/",
+      "/guide/theming/",
+      "/badge.svg",
+      "/.well-known/skills/teach-lesson/SKILL.md",
+      "/.well-known/skills/concept-lesson-extra/SKILL.md",
+    ])
       expect(target(`https://comark-ui.onmax.me${path}`)).toBeUndefined();
   });
 });
