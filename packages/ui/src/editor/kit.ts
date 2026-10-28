@@ -127,7 +127,13 @@ export const ComarkKit = Extension.create<ComarkKitOptions>({
   addGlobalAttributes: () => [{ types: typesWithProps, attributes: { props } }],
   addExtensions() {
     return [
-      StarterKit.configure({ ...this.options.starterKit, underline: false }),
+      StarterKit.extend({
+        addExtensions() {
+          return (this.parent?.() ?? []).map((extension) =>
+            extension.name === "code" ? extension.extend({ excludes: "" }) : extension,
+          );
+        },
+      }).configure({ ...this.options.starterKit, underline: false }),
       TaskList,
       TaskItem.configure({ nested: true }),
       ComarkImage,

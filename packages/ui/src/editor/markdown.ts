@@ -452,7 +452,11 @@ function writeInline(content: JSONContent[] = []): AstNode[] {
       append(open.at(-1)?.children ?? root, writeMark(frame.mark, frame.children));
   };
   for (const json of content) {
-    const active: Mark[] = json.marks ?? [];
+    // ProseMirror orders marks by schema rank. Code must wrap only text in Markdown,
+    // so formatting goes outside it even when the schema ranks code before italic.
+    const active: Mark[] = [...(json.marks ?? [])].sort(
+      (left, right) => Number(left.type === "code") - Number(right.type === "code"),
+    );
     const same = (index: number) => {
       const frame = open[index];
       const mark = active[index];
