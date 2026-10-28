@@ -13,6 +13,10 @@ tagline: Your agent writes a five-minute lesson that ends with the reader applyi
 
 The skill writes **one lesson on one concept**, short enough to finish in five minutes. You get the outcome, the idea, a worked example, and a question that changes one input of that example.
 
+It adapts the depth to your question and what you already know. A plain definition leads into how the concept works and why it solves your problem. The worked example adds detail. When diagrams help, each step redraws the previous diagram and adds the next part.
+
+For an existing system, the skill checks behavior against sources and looks for recorded design reasons. It labels inferred reasons and preserves uncertainty.
+
 The lesson uses ASD-STE100 Simplified Technical English writing rules. Sentences are short, each term keeps one meaning, and technical names stay exact. These rules also apply to the question and answer explanations.
 
 The skill keeps no record of what you've learned. A second concept gets its own lesson, linked at the end. Your browser can save answers, or a host such as [Drop](https://drop.vitehub.dev/?utm_source=comark-ui&utm_medium=skills) can save them.
@@ -27,9 +31,13 @@ Choose by what you want:
 - To see how a system works, with no check: [Visual explanation](/skills/visual-explanation/).
 - A course over many sessions that remembers what you've learned: a tutor skill such as Matt Pocock's [teach](https://github.com/mattpocock/skills/tree/main/skills/productivity/teach), which this skill draws on.
 
+The reader context, how-and-why explanation, evidence handling, and gradual diagrams draw on [pstack's teach skill](https://github.com/cursor/plugins/blob/main/pstack/skills/teach/SKILL.md). These ideas are included here, so you can install this skill on its own. The worked example and application question remain part of every lesson.
+
 ## It's working if
 
 - The outcome under the title uses a verb a question can test, such as predict, explain, or choose.
+- The idea starts with a plain definition and connects it to your case.
+- The explanation distinguishes verified behavior from inferred design reasons.
 - Each step of the worked example shows the value that changed.
 - Instructions have no more than 20 words, and descriptive sentences have no more than 25 words.
 - Each technical term is explained at first use and keeps the same meaning throughout the lesson.

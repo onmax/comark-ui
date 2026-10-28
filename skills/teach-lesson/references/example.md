@@ -4,7 +4,7 @@ After this lesson, you can predict how a server handles two changes to the same 
 
 ## Why it matters
 
-Ana and Ben open the same help article. Ana corrects a spelling error and saves the article. Ben adds a paragraph to his older copy and saves it. His save removes Ana's correction without a warning. This is a **lost update**.
+In this example, Ana and Ben open the same help article. Ana corrects a spelling error and saves the article. Ben adds a paragraph to his older copy and saves it. His save removes Ana's correction without a warning. This is a **lost update**.
 
 ## The idea
 

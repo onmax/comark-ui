@@ -10,6 +10,8 @@ A lesson is a single win: the reader finishes able to do one thing they couldn't
 
 ## 1. Pin the concept and the outcome
 
+Infer the reader's purpose and existing knowledge from the conversation. Put detail where their question is, and skip what they already know.
+
 Name one concept and write the outcome as a verb the check can test: "After this lesson you can predict what a server does when two people save the same record." Prefer predict, explain, choose, or spot over know or understand, which no question can test.
 
 If the outcome needs two concepts, write the prerequisite's lesson first or link to it, and keep this one to the other.
@@ -20,6 +22,8 @@ Done when the outcome is one sentence with a testable verb.
 
 Pick a case from the reader's world where the concept changes what happens: without it something visibly goes wrong, with it the thing works. Use real values (names, status codes, numbers) so each step can be followed, not just nodded at.
 
+Verify how the concept works against a primary source, such as code or a specification. For an existing design, find recorded reasons when available. Separate observed behavior from inferred reasons, and say when the reason is unknown. Label invented example values as illustrative.
+
 Done when you can tell the example's story in three or four moves, each with a concrete value.
 
 ## 3. Write the lesson
@@ -28,10 +32,16 @@ Follow [references/example.md](references/example.md), in this order:
 
 1. **The outcome**, one sentence under the title.
 2. **Why it matters**: the failure the concept prevents, told as the worked example's problem. Three or four sentences.
-3. **The idea**: at most four sentences, defining each new term in bold once, where it's first used. One term per lesson is plenty; a second needs its own lesson.
-4. **The worked example** in `::steps`, one move per step, each showing the value that changed.
+3. **The idea**: start with a plain definition, then connect it to the reader's case. Explain how it works and why it solves the problem. Use at most four sentences, defining each new term in bold once, where it's first used. One term per lesson is plenty; a second needs its own lesson.
+4. **The worked example**, one move per step, each showing the value that changed. Use `::steps` for text and code. For a diagram series, use numbered Markdown headings with Mermaid fences outside `::steps`.
 5. **The check**, below.
 6. **Read next**: one primary source, linked to the exact section, and the lesson that naturally follows.
+
+Give the smallest complete explanation in the idea section. Put the supporting detail in the worked example. Describe what happens as someone uses the system, with the values that change.
+
+When a diagram helps explain several interacting parts, build it across the worked example's steps. Redraw the previous diagram and add the next part or relationship. Keep existing labels and positions consistent. Use the Mermaid syntax in [references/blocks.md](references/blocks.md).
+
+State the explanation directly. Cut stock framing such as "the key insight" and announcements such as "this is the tricky part".
 
 Done when the lesson reads in five minutes and every term in the check was defined above it.
 
@@ -44,6 +54,7 @@ Apply [ASD-STE100 Simplified Technical English](https://asd-ste100.org/) writing
 - Use common words and active voice. Write instructions as direct commands.
 - Explain each technical term at first use. Use one term for each concept and keep its meaning consistent.
 - Keep technical names, code, units, and UI labels exact.
+- Preserve uncertainty from the evidence. Keep "likely" or "unknown" when simplifying an inferred explanation.
 - Put a condition before the action it controls. Make each pronoun refer to one clear subject.
 - Avoid idioms, unexplained abbreviations, long noun groups, and unnecessary words.
 

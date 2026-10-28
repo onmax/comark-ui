@@ -1,6 +1,6 @@
 # Blocks for a lesson
 
-These blocks come with `comark-ui`, or alone with `comark-steps` and `comark-quiz`. The comark-ui skill (`npx skills add onmax/comark-ui`) documents every block in full.
+These blocks come with `comark-ui`. The steps and questions also come separately with `comark-steps` and `comark-quiz`.
 
 ## The worked example: `::steps`
 
@@ -20,6 +20,33 @@ If-Match: "v7"
 ````
 
 Each `###` heading starts a step that holds everything up to the next one, code blocks included. Put any introduction above the block, since a paragraph before the first heading is reported. For steps of one line each, a numbered list inside `::steps` works too.
+
+## Build a diagram across steps
+
+Use a `mermaid` fence when a diagram helps explain the example. Keep these fences outside `::steps`, using numbered Markdown headings for the worked example. Repeat the previous diagram and add the next relationship:
+
+````md
+### 1. The client requests the article
+
+```mermaid
+sequenceDiagram
+  participant Client
+  participant Server
+  Client->>Server: GET /articles/42
+```
+
+### 2. The server returns a version label
+
+```mermaid
+sequenceDiagram
+  participant Client
+  participant Server
+  Client->>Server: GET /articles/42
+  Server-->>Client: ETag v7
+```
+````
+
+These paths and version labels are illustrative. Keep the same participant names and order across steps. Use `sequenceDiagram` for messages or `flowchart LR` for a flow. comark-ui renders Mermaid as SVG, so the reader needs no diagram script.
 
 ## The check: `::question`
 
