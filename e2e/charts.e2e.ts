@@ -4,6 +4,30 @@ import annotate, { components as annotateComponents } from "../packages/annotate
 import charts, { components } from "../packages/charts/src/html.ts";
 import chips, { components as chipsComponents } from "../packages/chips/src/html.ts";
 
+test("opening chart data includes its table margin in the animated height", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  const render = createHtmlRenderer({ plugins: [charts()], components });
+  await page.setContent(
+    await render(
+      '::chart{type="bar"}\n| Use | Value |\n| --- | ---: |\n| Gift cards | 1071 |\n| Hotel | 597 |\n::',
+    ),
+  );
+  await page.addStyleTag({
+    content: ".cch-data::details-content{transition-duration:5s,5s}",
+  });
+  const jump = await page.locator(".cch-data").evaluate(async (element) => {
+    if (!(element instanceof HTMLDetailsElement)) throw new Error("Expected chart data details");
+    await new Promise(requestAnimationFrame);
+    const closed = element.getBoundingClientRect().height;
+    element.open = true;
+    for (let frame = 0; frame < 3; frame++) await new Promise(requestAnimationFrame);
+    const height = element.getBoundingClientRect().height;
+    const content = Number.parseFloat(getComputedStyle(element, "::details-content").blockSize);
+    return height - closed - content;
+  });
+  expect(Math.abs(jump)).toBeLessThan(1);
+});
+
 // Worst-case tables a review really holds: file paths and test names, other scripts and emoji, one-letter names,
 // a single row and sixty, two years of months and three days of hours, numbers from thousandths to millions, negatives,
 // zeros, ties, empty cells, more series than the palette, and marks on the first and last rows.
