@@ -119,7 +119,9 @@ allowBuilds:
   ssh2: false
   workerd: true
 
-# The pilot build reads every file from GitHub on every listing; this keeps each blob once read. Drop it when the pin
-# moves to a ViteHub build that caches them (test/github-store.test.ts checks it).
+# Temporary ViteHub backports. See patches/README.md for upstream PRs and removal conditions.
 patchedDependencies:
+  '@vite-hub/content@0.0.4': patches/@vite-hub__content@0.0.4.patch
+  '@vite-hub/source@0.0.4': patches/@vite-hub__source@0.0.4.patch
   "@vite-hub/workspace": patches/@vite-hub__workspace.patch
+  vite-hub@0.0.4: patches/vite-hub@0.0.4.patch

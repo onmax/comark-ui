@@ -1,0 +1,58 @@
+diff --git a/dist/index-BKhGO4RE.d.ts b/dist/index-BKhGO4RE.d.ts
+index 8d0eac1d6ace2734d04191e59ccd37fee64b33c3..67ab23cb3679c885f1fca8d64c5bd3e825d28cde 100644
+--- a/dist/index-BKhGO4RE.d.ts
++++ b/dist/index-BKhGO4RE.d.ts
+@@ -216,6 +216,8 @@ type CollectionName<TCollections> = Extract<keyof TCollections, string>;
+ type CollectionOf<TDefinition> = TDefinition extends SingletonDefinition<infer TFields> ? ContentSingleton<TFields> : TDefinition extends DocumentsDefinition<infer TFields> ? ContentCollection<TFields> : AnyContentCollection;
+ type DefineContentOptions<TPlugins extends ReadonlyArray<ContentPlugin<any, any>> = ReadonlyArray<ContentPlugin<any, any>>, TCollections extends ContentCollections = ContentCollections> = Omit<ContentOptions, "basePath" | "plugins" | "source" | "sources"> & {
+   plugins?: TPlugins;
++  /** Disable the public API while keeping server reads and Console editing. */
++  route?: boolean;
+   /** One read-only Source, served as the `default` instance. */
+   source?: ContentSourceInput;
+   /** Named read-only Sources. Each name becomes a Content instance. */
+@@ -297,6 +299,7 @@ interface ContentDocumentsRuntime<TCollections extends ContentCollections = Cont
+   /** Draft preview: a signed cookie that makes every Content read in its requests use the `draft` ref. */
+   readonly preview: ContentPreview;
+   /** `defineContent({ live })`: `auto` edits Markdown documents live where the host can, `false` never does. */
++  readonly route: boolean;
+   readonly live: "auto" | false;
+   /**
+    * Whether `defineContent({ authorize })` defines a policy. Without one, `can()` denies every action, so surfaces such
+@@ -333,6 +336,7 @@ declare function defineContent<const TPlugins extends ReadonlyArray<ContentPlugi
+  */
+ declare function defineContentHandler(content: Pick<ComarkContent, "handler"> & {
+   preview?: ContentPreview;
++  route?: boolean;
+ }): ContentHandler;
+ type SeoRuntime = Pick<ContentDocumentsRuntime, "robots" | "seo" | "sitemap">;
+ /**
+diff --git a/dist/index.js b/dist/index.js
+index 10a8d9f41590a428b9bbef0046e18a7cf4c4dfdc..afba504e463c2479a9c0cf3c7f7c75a5e1c15f88 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -565,7 +565,7 @@ const contentActions = /* @__PURE__ */ new Set([
+ function defineContent(options = {}) {
+ 	if (options.source && options.sources) throw new Error("Define either source or sources, not both.");
+ 	if (options.extends !== void 0 && options.workspace !== void 0) throw contentErrorDiagnostics.CONTENT_R0006({ message: "[vitehub] defineContent({ extends }) sets workspace. Remove workspace, or name the Workspace in the preset options." });
+-	const { source, sources, collections, authorize, seo: seoOptions, live = "auto", ...sharedOptions } = options;
++	const { source, sources, collections, authorize, seo: seoOptions, live = "auto", route = true, ...sharedOptions } = options;
+ 	if (live !== "auto" && live !== false) throw contentErrorDiagnostics.CONTENT_R0006({ message: "[vitehub] defineContent({ live }) must be 'auto' or false." });
+ 	const seo = normalizeSeoOptions(seoOptions);
+ 	const presetDefaults = options.extends === void 0 ? {} : resolveContentPreset(options.extends);
+@@ -690,6 +690,7 @@ function defineContent(options = {}) {
+ 		preview,
+ 		seo,
+ 		live,
++		route,
+ 		hasPolicy: authorize !== void 0,
+ 		sitemap: async (sitemapOptions) => documentsRuntime ? await contentSitemapEntries([...documentsRuntime.collections.values()], siteFor(sitemapOptions)) : [],
+ 		robots: (sitemapOptions) => {
+@@ -785,6 +786,7 @@ function defineContent(options = {}) {
+ */
+ function defineContentHandler(content) {
+ 	return defineEventHandler(async (event) => {
++		if (content.route === false) return new Response("Not Found", { status: 404 });
+ 		const dispatch = () => serveContent(content, event);
+ 		return await (content.preview ? content.preview.run(event, dispatch) : dispatch());
+ 	});
