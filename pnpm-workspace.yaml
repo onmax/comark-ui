@@ -122,3 +122,4 @@ allowBuilds:
 # Temporary dependency backports. See patches/README.md for upstream PRs and removal conditions.
 patchedDependencies:
   comark@0.8.1: patches/comark.patch
+  vite-hub@0.0.4: patches/vite-hub@0.0.4.patch
