@@ -65,6 +65,7 @@
     "comark-code": "workspace:^",
     "comark-code-notes": "workspace:^",
     "comark-colors": "workspace:^",
+    "comark-comments": "workspace:^",
     "comark-critic": "workspace:^",
     "comark-deflist": "workspace:^",
     "comark-details": "workspace:^",

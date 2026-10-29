@@ -66,7 +66,7 @@ const typeset = defineComponent({
   setup: () => () => h("style", { "data-comark-typeset": "", innerHTML: typesetCss }),
 });
 
-/** Every plugin with components for `@comark/vue`, which leaves out annotate, diff, and quiz. */
+/** Every plugin with components for `@comark/vue`, which leaves out annotate, comments, diff, and quiz. */
 export default (options?: PresetOptions): Preset<Component> =>
   preset<Component>(
     {

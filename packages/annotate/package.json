@@ -29,6 +29,7 @@
   "sideEffects": false,
   "exports": {
     ".": "./dist/index.mjs",
+    "./font": "./dist/font.mjs",
     "./html": "./dist/html.mjs",
     "./package.json": "./package.json"
   },
