@@ -148,6 +148,7 @@ export default defineNuxtConfig({
     // bindings into docs/dist/server/wrangler.json, which the local Wrangler module selects for commands run from the repository's root.
     cloudflare: {
       deployConfig: true,
+      nodeCompat: true,
     },
     output: { dir: fileURLToPath(new URL("dist/", root)) },
     // The playground is a static app copied into the output, not a Nuxt page.

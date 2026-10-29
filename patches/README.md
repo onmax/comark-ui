@@ -10,4 +10,4 @@ The Console also imports the unused Teams connector and its optional KV drivers.
 
 ## Cloudflare Node compatibility
 
-`vite-hub@0.0.4` is patched on preview `2862ffe428dde04c5d64d76b7b26e5224a170e17` to emit only `nodejs_compat`. Wrangler rejects a config that also emits `nodejs_compat_v2`; the modern compatibility date already selects that behavior. Remove the patch when ViteHub stops generating the conflicting flags. CI checks the generated config and worker bundle with `wrangler deploy --dry-run`.
+`docs/modules/wrangler-output.ts` removes ViteHub's redundant `nodejs_compat_v2` flag and Nitro 2's `no_nodejs_compat_v2` opt-out from the generated Wrangler config. The root config's `nodejs_compat` flag and modern compatibility date select the required Node APIs. Nitro still builds with Node compatibility enabled. Remove this normalization when ViteHub and Nitro generate the correct flags themselves. CI checks the final flags and runs `wrangler deploy --dry-run`.

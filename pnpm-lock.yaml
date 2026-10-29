@@ -201,7 +201,6 @@ overrides:
 
 patchedDependencies:
   comark@0.8.1: 6c9890f7570c7aaaa79d238b0ee935d63ab2b09f0198153109f29d1b7310433f
-  vite-hub@0.0.4: b32211df7e4ea003b87ced02669f6b7cb5b2dbbba6c55824fb7b751eff3f7221
 
 importers:
 
@@ -329,7 +328,7 @@ importers:
         version: 1.5.0(typescript@6.0.3)
       vite-hub:
         specifier: 'catalog:'
-        version: https://pkg.pr.new/vite-hub/vitehub/vite-hub@2862ffe428dde04c5d64d76b7b26e5224a170e17(patch_hash=b32211df7e4ea003b87ced02669f6b7cb5b2dbbba6c55824fb7b751eff3f7221)(f6dce5a4f4d98414bb3ed30067242166)
+        version: https://pkg.pr.new/vite-hub/vitehub/vite-hub@2862ffe428dde04c5d64d76b7b26e5224a170e17(f6dce5a4f4d98414bb3ed30067242166)
       vue:
         specifier: 'catalog:'
         version: 3.5.44(typescript@6.0.3)
@@ -23423,7 +23422,7 @@ snapshots:
     dependencies:
       vite: '@voidzero-dev/vite-plus-core@1.1.0(@types/node@24.19.2)(@volar/typescript@2.4.28)(@vue/language-core@3.3.13)(esbuild@0.28.2)(jiti@2.7.0)(publint@0.3.25)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3))(yaml@2.9.1)'
 
-  vite-hub@https://pkg.pr.new/vite-hub/vitehub/vite-hub@2862ffe428dde04c5d64d76b7b26e5224a170e17(patch_hash=b32211df7e4ea003b87ced02669f6b7cb5b2dbbba6c55824fb7b751eff3f7221)(f6dce5a4f4d98414bb3ed30067242166):
+  vite-hub@https://pkg.pr.new/vite-hub/vitehub/vite-hub@2862ffe428dde04c5d64d76b7b26e5224a170e17(f6dce5a4f4d98414bb3ed30067242166):
     dependencies:
       '@better-auth/oauth-provider': 1.7.7(66c7f459ab058918ef5d14253fd88d5b)
       '@cfworker/json-schema': 4.1.1
