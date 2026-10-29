@@ -72,7 +72,7 @@ const STROKES = [
 ];
 const CARET =
   '<span class="cr-caret" aria-hidden="true"><svg viewBox="0 0 10 8"><path d="M1 7.4L5.2 1.2 9.1 7"/></svg></span>';
-// Avatars are an initial on a color from the name, so nothing is downloaded.
+// Without an image from `avatars`, an avatar is an initial on a color from the name, so nothing is downloaded.
 const COLORS = [
   "#d97757",
   "#2563eb",
@@ -84,9 +84,11 @@ const COLORS = [
   "#4f46e5",
 ];
 
-function who(by: string) {
+function who(by: string, avatar?: string) {
   const name = by.replace(/^@/, "");
   if (!name) return "";
+  if (avatar)
+    return `<img class="cr-av" src="${attr(avatar)}" alt="" width="18" height="18"><b>${escapeHtml(name)}</b>`;
   const initial = [...new Intl.Segmenter().segment(name)][0]?.segment.toUpperCase() ?? "";
   const color = COLORS[Number.parseInt(hash(name.toLowerCase()), 36) % COLORS.length];
   return `<span class="cr-av" style="--cr-av:${color}" aria-hidden="true">${escapeHtml(initial)}</span><b>${escapeHtml(name)}</b>`;
@@ -100,7 +102,10 @@ function thread(attrs: Record<string, unknown>, state: State) {
   // SAFETY: the parse plugin writes `thread` as the card's entries whenever it writes `uid`.
   const entries = attrs.thread as Entry[];
   const card = entries
-    .map((entry) => `<span class="cr-entry">${who(entry.by)}${escapeHtml(entry.note)}</span>`)
+    .map(
+      (entry) =>
+        `<span class="cr-entry">${who(entry.by, entry.avatar)}${escapeHtml(entry.note)}</span>`,
+    )
     .join("");
   return (
     `&#8288;<input class="cr-tg" type="checkbox" id="${attr(uid)}" aria-label="${attr(read(attrs, "label") ?? "")}">` +

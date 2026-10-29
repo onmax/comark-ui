@@ -47,7 +47,10 @@ export const css = `@layer comark{${[
   ".cr-card{display:none;box-sizing:border-box;padding:.5rem .75rem;border:1px solid var(--_comark-border);border-radius:var(--_comark-radius);background:var(--_comark-background);color:var(--_comark-foreground);font:400 .8125rem/1.5 var(--_comark-font);text-align:left;text-indent:0;white-space:normal;transition:border-color .12s,box-shadow .12s}",
   ".cr-entry{display:block}.cr-entry+.cr-entry{margin-top:.5rem;padding-top:.5rem;border-top:1px solid var(--_comark-border)}",
   ".cr-entry b{margin-right:.375rem;font-weight:600}",
-  ".cr-av{display:inline-grid;place-items:center;width:1.125rem;height:1.125rem;margin-right:.375rem;border-radius:999px;background:var(--cr-av);color:#fff;font:600 .5625rem/1 var(--_comark-font);vertical-align:-.2em}",
+  ".cr-av{display:inline-grid;place-items:center;width:1.125rem;height:1.125rem;margin-right:.375rem;border-radius:999px;background:var(--cr-av);color:#fff;font:600 .5625rem/1 var(--_comark-font);vertical-align:calc(.722cap - .5625rem)}",
+  // Centered on the name's capitals: the card's text is 1.444 times the avatar's, so its cap height is .722cap here.
+  // A ring keeps a white logo or a transparent photo apart from the card.
+  "img.cr-av{display:inline-block;background:#fff;object-fit:cover;outline:1px solid color-mix(in srgb,var(--_comark-foreground) 12%,transparent);outline-offset:-1px}",
   // Narrow: a checked bubble opens its card as a block under the line.
   ".cr-tg:checked+.cr-bub+.cr-card{display:block;float:left;clear:both;width:100%;margin:.5rem 0}",
   // Wide: every block leaves a margin, and each card floats into it from its anchor's line. Crowded cards stack down.

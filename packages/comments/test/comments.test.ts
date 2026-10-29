@@ -59,6 +59,19 @@ describe("comark-comments", () => {
     expect(await parse(review)).toEqual({ issues: [], rules: {} });
   });
 
+  it("draws an author's image from `avatars`, in any case and with or without @, in replies too", async () => {
+    const html = await render(review, {
+      avatars: { "@ONMAX": "https://github.com/onmax.png", claude: "/claude.svg" },
+    });
+    expect(html).toContain(
+      '<img class="cr-av" src="https://github.com/onmax.png" alt="" width="18" height="18"><b>onmax</b>Is 15 minutes enough?',
+    );
+    expect(html).toContain(
+      '<img class="cr-av" src="/claude.svg" alt="" width="18" height="18"><b>Claude</b>Keeping 15.',
+    );
+    expect(html).not.toContain('aria-hidden="true">C</span>');
+  });
+
   it("draws a deletion and an insertion", async () => {
     expect(await render(':suggestion[]{from="simply"} enter :suggestion[and works once]')).toBe(
       '<p><span class="cr-sg" data-mark="track" data-kind="delete"><del>simply</del></span> enter <span class="cr-sg" data-mark="track" data-kind="insert"><ins>and works once</ins></span></p>',
