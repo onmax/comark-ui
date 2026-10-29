@@ -1,6 +1,15 @@
 import type { NodeHandler, State } from "comark";
 import { escapeHtml } from "comark/utils";
-import { type Entry, hash, nativeAttributes, ROOT } from "./read.ts";
+import {
+  childrenOf,
+  DEFERRED,
+  type DeferredMetadata,
+  type Entry,
+  hash,
+  nativeAttributes,
+  ROOT,
+  transform,
+} from "./read.ts";
 import { css, fontCss } from "./styles.ts";
 
 export { default } from "./index.ts";
@@ -20,7 +29,7 @@ const attr = (value: string) => escapeHtml(value, { '"': "&quot;" });
 const valueOf = (value: unknown): string =>
   value === undefined || value === null
     ? ""
-    : typeof value === "object"
+    : value instanceof Object
       ? JSON.stringify(value)
       : // SAFETY: objects and nullish values returned above; native scalar attributes stringify as in Comark.
         String(value as string | number | boolean);
@@ -136,12 +145,25 @@ const comment: NodeHandler = async (node, state) => {
 const root: NodeHandler = async (node, state) =>
   `${styles(state)}<div class="cr">${await state.flow(node, state)}</div>`;
 
+const deferred: NodeHandler = async (node, state) => {
+  // SAFETY: only the parse plugin emits this wrapper and its settings in the reserved metadata.
+  const { comments: settings } = node[1].$ as DeferredMetadata;
+  // Normalization moves replies and replaces attributes, so each render needs its own copy.
+  const nodes = structuredClone(childrenOf(node));
+  transform(nodes, { ...settings, data: state.renderData });
+  return state.render(nodes);
+};
+
 /**
  * The HTML renderer for `:suggestion` and `:comment`. Pass it as `components`; it inlines the styles once per
  * document, and the handwriting font only when a suggestion draws with `pen`.
  */
-export const components: Record<"suggestion" | "comment" | typeof ROOT, NodeHandler> = {
+export const components: Record<
+  "suggestion" | "comment" | typeof ROOT | typeof DEFERRED,
+  NodeHandler
+> = {
   suggestion,
   comment,
   [ROOT]: root,
+  [DEFERRED]: deferred,
 };

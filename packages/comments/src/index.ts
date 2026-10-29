@@ -1,5 +1,5 @@
 import { defineComarkPlugin } from "comark";
-import { hash, type Mark, transform } from "./read.ts";
+import { defer, hasRenderBindings, hash, type Mark, transform } from "./read.ts";
 
 export type { Entry, Mark } from "./read.ts";
 
@@ -30,11 +30,16 @@ export default defineComarkPlugin<CommentsOptions, CommentsMeta>((options = {}) 
     name: "comark-comments",
     post(state) {
       const { tree } = state;
-      const found = transform(tree.nodes, {
+      const settings = {
         mark,
         prefix: `cr-${hash(state.markdown)}`,
         data: { frontmatter: tree.frontmatter, meta: tree.meta, data: {}, props: {} },
-      });
+        parsing: true,
+      };
+      // Diagnose static authoring errors now, but keep the authored tree for render-time bindings.
+      const deferred = hasRenderBindings(tree.nodes);
+      const found = transform(deferred ? structuredClone(tree.nodes) : tree.nodes, settings);
+      if (deferred) tree.nodes = [defer(tree.nodes, settings)];
       if (!found.length) return;
       // Several plugins report into the same list, so each one appends.
       tree.meta.issues = [...(tree.meta.issues ?? []), ...found.map((issue) => issue.message)];

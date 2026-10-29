@@ -13,6 +13,8 @@ export type Entry = { by: string; note: string };
 
 /** The root node the plugin wraps a document's blocks in when any card goes in the margin. */
 export const ROOT = "comments";
+/** Holds authored nodes until the renderer supplies data and inherited props. */
+export const DEFERRED = "comments-render";
 
 const MARKS: readonly string[] = ["track", "pen"];
 const PROPS = {
@@ -56,6 +58,16 @@ const text = (value: unknown) =>
     ? ""
     : // SAFETY: undefined, null, objects, and arrays returned above, so only a string, number, or boolean is left.
       String(value as string | number | boolean).trim();
+const later = (path: unknown) => /^(?:data|props)(?:\.|$)/.test(text(path));
+const pending = (raw: Record<string, unknown>, key: string) => later(raw[`:${key}`]);
+export const hasRenderBindings = (nodes: Node[]): boolean =>
+  nodes.some(
+    (node) =>
+      isElement(node) &&
+      (((node[0] === "comment" || node[0] === "suggestion") &&
+        Object.entries(node[1]).some(([key, value]) => key.startsWith(":") && later(value))) ||
+        hasRenderBindings(childrenOf(node))),
+  );
 const isMark = (value: string): value is Mark => MARKS.includes(value);
 const words = (nodes: Node[]) =>
   nodes
@@ -139,8 +151,11 @@ function collect(
     const node = parent[index] as Node | undefined;
     if (!isElement(node)) continue;
     const [tag, raw] = node;
-    if (tag === "suggestion" || tag === "comment")
-      node[1] = resolveAttributes(raw, data, { parseJson: true });
+    const attrs = resolveAttributes(raw, data, { parseJson: true });
+    const innerData = Object.keys(raw).some((key) => key !== "$")
+      ? { ...data, props: attrs }
+      : data;
+    if (tag === "suggestion" || tag === "comment") node[1] = attrs;
     if (tag === "comment" && (Object.hasOwn(raw, "reply") || Object.hasOwn(raw, ":reply"))) {
       const children = childrenOf(node);
       found.replies.push({ node, raw, text: words(children) });
@@ -161,7 +176,7 @@ function collect(
         entries: [],
       };
       found.threads.push(thread);
-      collect(node, 2, { ...place, inside: thread }, found, data);
+      collect(node, 2, { ...place, inside: thread }, found, innerData);
       continue;
     }
     const inner = collect(
@@ -173,7 +188,7 @@ function collect(
         cell: place.cell || tag === "td" || tag === "th",
       },
       found,
-      data,
+      innerData,
     );
     if (inner && tag === "p" && !words(childrenOf(node)) && !childrenOf(node).some(isElement)) {
       parent.splice(index, 1);
@@ -195,7 +210,7 @@ function checkProps(
     const key = raw.replace(/^:/, "");
     if (key === "$") continue;
     if (valid.includes(key) || NATIVE.test(key)) {
-      if (raw.startsWith(":") && attrs[key] === undefined)
+      if (raw.startsWith(":") && attrs[key] === undefined && !later(rawAttrs[raw]))
         issues.push({
           rule: "comark/comments/undefined-binding",
           message: `${name} has \`${raw}\` pointing at ${text(rawAttrs[raw])}, which is undefined. Fix the path or set \`${key}\` directly.`,
@@ -213,7 +228,17 @@ function checkProps(
 }
 
 /** What the renderer needs from the document: the default mark, and a prefix that keeps its ids apart from others. */
-export type Settings = { mark: Mark; prefix: string; data: Data };
+export type Settings = { mark: Mark; prefix: string; data: Data; parsing?: boolean };
+export type DeferredMetadata = NonNullable<ElementNode[1]["$"]> & {
+  comments: Pick<Settings, "mark" | "prefix">;
+};
+
+export function defer(nodes: Node[], settings: Settings): ElementNode {
+  const metadata: DeferredMetadata = {
+    comments: { mark: settings.mark, prefix: settings.prefix },
+  };
+  return [DEFERRED, { $: metadata }, ...nodes];
+}
 
 /**
  * Reads every `:suggestion` and `:comment` in `nodes`, moves each reply into its thread, and rewrites the nodes'
@@ -244,7 +269,7 @@ export function transform(nodes: Node[], settings: Settings): Issue[] {
     const body = words(childrenOf(node));
     if (kind === "suggestion") {
       const from = text(attrs.from);
-      if (!from && !childrenOf(node).length) {
+      if (!from && !childrenOf(node).length && !(settings.parsing && pending(thread.raw, "from"))) {
         thread.plain = true;
         issues.push({
           rule: "comark/comments/empty-suggestion",
@@ -269,7 +294,7 @@ export function transform(nodes: Node[], settings: Settings): Issue[] {
           rule: "comark/comments/missing-anchor",
           message: `${name} has nothing in its brackets to point at, so it renders nothing. Put the words it's about in its brackets, as \`:comment[words]{note="…"}\`, or answer a thread with \`reply="id"\`.`,
         });
-      } else if (!note)
+      } else if (!note && !(settings.parsing && pending(thread.raw, "note")))
         issues.push({
           rule: "comark/comments/missing-note",
           message: `${name} has no \`note\`, so its card has nothing to say. Add \`note="…"\` with the comment.`,
@@ -317,6 +342,11 @@ export function transform(nodes: Node[], settings: Settings): Issue[] {
       });
     const thread = ids.get(target);
     if (!thread) {
+      if (
+        settings.parsing &&
+        (pending(raw, "reply") || found.threads.some((item) => pending(item.raw, "id")))
+      )
+        continue;
       let near: { id: string; far: number } | undefined;
       for (const id of ids.keys()) {
         const far = distance(id.toLowerCase(), target.toLowerCase());
@@ -330,6 +360,7 @@ export function transform(nodes: Node[], settings: Settings): Issue[] {
     }
     const note = text(attrs.note);
     if (!note) {
+      if (settings.parsing && pending(raw, "note")) continue;
       issues.push({
         rule: "comark/comments/missing-note",
         message: `${name} has no \`note\`, so it renders nothing. Add \`note="…"\` with the reply.`,

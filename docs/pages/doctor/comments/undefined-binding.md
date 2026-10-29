@@ -1,4 +1,4 @@
-A prop written with a `:` reads a value from the document's frontmatter or meta, or a JSON literal. If the path is undefined, the prop has no value. Fix the path or write the prop directly.
+A prop written with a `:` reads a value from the document's frontmatter or meta, or a JSON literal. If the path is undefined, the prop has no value. Fix the path or write the prop directly. Bindings to `data.*` and inherited `props.*` resolve when rendering, so they aren't reported as undefined while parsing.
 
 ::incorrect
 ```md

@@ -190,6 +190,87 @@ describe("comark-comments", () => {
     }
   });
 
+  it("resolves render-time data for every prop and rejoins replies on each render", async () => {
+    const markdown =
+      ':suggestion[new]{:from="data.old" :note="data.note" :by="data.by" :mark="data.mark" :id="data.id" :class="data.class"} ' +
+      ':comment[anchor]{:id="data.comment" :by="data.by" :note="data.note"}\n\n' +
+      ':comment{:reply="data.id" :by="data.by" :note="data.reply"}\n\n' +
+      ':comment{:reply="data.comment" :by="data.by" :note="data.reply"}';
+    const document = await parseMarkdown(markdown, { plugins: [comments({ mark: "pen" })] });
+    expect(document.meta.issues ?? []).toEqual([]);
+    const before = JSON.stringify(document);
+    for (const data of [
+      {
+        old: "old",
+        note: "Why?",
+        by: "sam",
+        mark: "track",
+        id: "s",
+        comment: "c",
+        reply: "Yes.",
+        class: "edit",
+      },
+      {
+        old: "was",
+        note: "Again?",
+        by: "lee",
+        mark: "pen",
+        id: "s2",
+        comment: "c2",
+        reply: "No.",
+        class: "change",
+      },
+    ]) {
+      const literal =
+        `:suggestion[new]{from="${data.old}" note="${data.note}" by="${data.by}" mark="${data.mark}" #${data.id} .${data.class}} ` +
+        `:comment[anchor]{#${data.comment} by="${data.by}" note="${data.note}"}\n\n` +
+        `:comment{reply="${data.id}" by="${data.by}" note="${data.reply}"}\n\n` +
+        `:comment{reply="${data.comment}" by="${data.by}" note="${data.reply}"}`;
+      expect(flat(await renderHtmlFromDocument(document, { components, data }))).toBe(
+        await render(literal),
+      );
+    }
+    expect(JSON.stringify(document)).toBe(before);
+  });
+
+  it("uses inherited props for render-time bindings and keeps redlines without a margin", async () => {
+    const document = await parseMarkdown(
+      '::section{old=before note=Why? id=s}\n:suggestion[after]{:from="props.old" :note="props.note" :id="props.id"}\n::\n\n:comment{:reply="data.id" note=Answer}',
+      { plugins: [comments()] },
+    );
+    const html = flat(await renderHtmlFromDocument(document, { components, data: { id: "s" } }));
+    expect(html).toContain("<del>before</del><ins>after</ins>");
+    expect(html).toContain('aria-label="2 comments on “after”"');
+    expect(html).toContain("Why?");
+    expect(html).toContain("Answer");
+    const redline = await parseMarkdown(':suggestion[]{:from="data.old"}', {
+      plugins: [comments({ mark: "pen" })],
+    });
+    expect(redline.meta.issues ?? []).toEqual([]);
+    const redlineHtml = flat(
+      await renderHtmlFromDocument(redline, { components, data: { old: "gone" } }),
+    );
+    expect(redlineHtml).toContain('data-mark="pen" data-kind="delete"');
+    expect(redlineHtml).not.toContain('class="cr"');
+  });
+
+  it("keeps static binding diagnostics and literals in a deferred document", async () => {
+    const markdown =
+      ':suggestion[new]{:from=\'"old"\' :note="data.note"} ' +
+      ':comment[anchor]{:note="frontmatter.missing"}';
+    const document = await parseMarkdown(markdown, { plugins: [comments()] });
+    expect(Object.values(document.meta.issueRules ?? {})).toContain(
+      "comark/comments/undefined-binding",
+    );
+    expect(document.meta.issues?.some((issue) => issue.includes("frontmatter.missing"))).toBe(true);
+    expect(document.meta.issues?.some((issue) => issue.includes("data.note"))).toBe(false);
+    const html = flat(
+      await renderHtmlFromDocument(document, { components, data: { note: "Why?" } }),
+    );
+    expect(html).toContain("<del>old</del><ins>new</ins>");
+    expect(html).toContain("Why?");
+  });
+
   it("gives identical fragments their own control ids, even when reusing a parsed document", async () => {
     const markdown = ':comment[a]{note="x"} :suggestion[b]{from="c" note="y"}';
     const renderer = createHtmlRenderer({ plugins: [comments()], components });
