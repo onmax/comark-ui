@@ -185,6 +185,13 @@ test("a package's card links to its docs without a copy control", async ({ page 
   await expect(page.getByRole("button", { name: "Copy pnpm add comark-github" })).toHaveCount(0);
 });
 
+test("the GitHub HTML example keeps its explicit image width", async ({ page }) => {
+  await page.goto("/github/");
+  await expect(
+    page.locator('main img[alt="Office correlations: ducks vs. bugs, r = 0.94"]'),
+  ).toHaveAttribute("width", "480");
+});
+
 test("Getting started installs comark-ui, and a block's page ends with its own package instead", async ({
   page,
 }) => {

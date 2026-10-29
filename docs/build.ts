@@ -679,9 +679,11 @@ const imageSizes = new Map(
   ),
 );
 const sized = (html: string) =>
-  html.replace(/<img\b([^>]*?) src="\/([\w-]+\.png)"/g, (tag, rest: string, file: string) => {
+  html.replace(/<img\b[^>]*? src="\/([\w-]+\.png)"[^>]*>/g, (tag, file: string) => {
     const size = imageSizes.get(file);
-    return size && !/\swidth=/.test(rest) ? `${tag} width="${size[0]}" height="${size[1]}"` : tag;
+    return size && !/\s(?:width|height)=/.test(tag)
+      ? tag.replace(/ src=/, ` width="${size[0]}" height="${size[1]}" src=`)
+      : tag;
   });
 // A page's first image is often its largest paint, so it loads at once; the rest wait until they're near.
 const eagerFirst = (html: string) =>
