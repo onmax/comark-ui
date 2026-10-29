@@ -101,6 +101,18 @@ test("a video plays with its own controls, from its bar or a click, and goes ful
   await expect(player).not.toHaveAttribute("data-fullscreen");
 });
 
+test("a video in a frame that can't go full screen has no full screen button", async ({ page }) => {
+  await open(page, "![A gray clip](clip.webm)");
+  const html = await page.content();
+  await page.setContent(
+    `<iframe sandbox="allow-scripts" srcdoc="${html.replaceAll("&", "&amp;").replaceAll('"', "&quot;")}"></iframe>`,
+  );
+  const player = page.frameLocator("iframe").getByRole("group", { name: "A gray clip" });
+  await expect(player).toHaveAttribute("data-media-ready");
+  await expect(player.getByRole("button", { name: "Play" })).toBeVisible();
+  await expect(player.getByRole("button", { name: "Full screen" })).toBeHidden();
+});
+
 test("one player with sound plays at a time, and a muted loop plays on", async ({ page }) => {
   await open(page, "![Loop](clip.webm){autoplay loop muted}\n\n![One](silence.wav)");
   await expect(page.getByRole("group", { name: "Loop" })).toHaveAttribute("data-playing");
