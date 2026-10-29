@@ -3856,6 +3856,12 @@ main img {
   font-size: 0.875rem;
 }
 
+.install-prerequisite {
+  margin: 0.5rem 0;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
 .skill-example {
   margin: 0 0 1rem;
 }

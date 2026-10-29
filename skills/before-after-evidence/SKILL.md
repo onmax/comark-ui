@@ -54,13 +54,17 @@ Image `src` must be a URL the renderer can reach: a path next to the document, o
    vp dlx --package comark-linter --package comark-ui lint-comark evidence.md
    ```
 
-   Without Vite+, `pnpm dlx` takes the same arguments, here and in the next step.
+   These commands use the [global Vite+ CLI](https://viteplus.dev/guide/global-cli). Without it, `pnpm dlx` takes the same arguments.
 
-2. Open the page where it will be read and take a screenshot of it. For a local screenshot-only check, copy the complete `::compare` block, including its nested screenshots and annotations, into `evidence-screenshots.md` beside `evidence.md`, then run:
+2. Open the page where it will be read and take a screenshot of it. For a local screenshot-only check, copy the complete `::compare` block, including its nested screenshots and annotations, into `evidence-screenshots.md` beside `evidence.md`.
+
+   Ensure comark-annotate is a direct dependency of this workspace package. If it is only transitive, read the installed Comark UI version and add that exact version with the project's package manager: for pnpm, `pnpm add -D comark-annotate@<version>`, substituting that version. Add `-w` when installing at the workspace root. With no Comark UI packages installed, omit `@<version>`. This links the executable without fetching a different renderer release via `@latest`. Then run:
 
    ```sh
-   vp dlx comark-annotate render evidence-screenshots.md -o evidence-screenshots.html
+   vp exec comark-annotate render evidence-screenshots.md -o evidence-screenshots.html
    ```
+
+   Without Vite+, use `pnpm exec` with the same arguments.
 
    Open `evidence-screenshots.html` and take a screenshot of it. This CLI renders annotate, carousel, and zoom only; check any `::diff` or other blocks in the host's full Comark UI preview.
 3. Check that each mark sits on its target and each note matches what its side shows. Measure a mark that misses again, from the source, since a box moved by eye stays a guess.

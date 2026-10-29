@@ -53,11 +53,13 @@ For a clipped capture, `getBoundingClientRect()` and Playwright's main-frame `cl
 
 ## Preview
 
+Ensure comark-annotate is a direct dependency of the workspace package where you run the CLI. If it is only transitive, read the installed Comark UI version and add that exact version with the project's package manager: for pnpm, `pnpm add -D comark-annotate@<version>`, substituting that version. Add `-w` when installing at the workspace root. With no Comark UI packages installed, omit `@<version>`. This links the executable without fetching a different renderer release via `@latest`.
+
 ```sh
-vp dlx comark-annotate render report.md -o report.html
+vp exec comark-annotate render report.md -o report.html
 ```
 
-`render` writes a standalone page of the screenshots and compares, and relative `src` paths resolve next to it. Without comark-linter, `vp dlx comark-annotate check report.md` lists these blocks' problems on its own. It names each one like `screenshot "after.png", annotation 2`, counting annotations within their screenshot, and exits with 1 while any remain.
+`render` writes a standalone page of the screenshots and compares, and relative `src` paths resolve next to it. Without comark-linter, `vp exec comark-annotate check report.md` lists these blocks' problems on its own. It names each one like `screenshot "after.png", annotation 2`, counting annotations within their screenshot, and exits with 1 while any remain.
 
 ## Register
 

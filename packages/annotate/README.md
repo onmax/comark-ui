@@ -48,14 +48,16 @@ The styles follow shadcn/ui: they read its CSS variables, such as `--background`
 
 ## Agents
 
-The comark-ui agent skill knows the syntax, how to measure marks from the page, and how to check the result. `vp dlx skills add onmax/comark-ui` installs it, and an app that serves skills to its own agents can bundle it from `comark-ui/skills/comark-ui/`, which always matches the renderers it installed. The CLI checks and previews documents:
+The comark-ui agent skill knows the syntax, how to measure marks from the page, and how to check the result. `vp dlx skills add onmax/comark-ui` installs it, and an app that serves skills to its own agents can bundle it from `comark-ui/skills/comark-ui/`, which always matches the renderers it installed.
+
+Before using the CLI, install comark-annotate directly in the workspace package where you will run it. With pnpm, use `pnpm add -D comark-annotate@<version>`, replacing `<version>` with the exact version of the project's installed Comark UI packages. Add `-w` when installing at the workspace root. For a standalone preview with no Comark UI packages installed, omit `@<version>`. A direct dependency links the local executable; a transitive dependency alone does not in a pnpm workspace. Then check and preview documents with that installed release:
 
 ```sh
-vp dlx comark-annotate check report.md other.md        # one line per problem, exit 1 if any
-vp dlx comark-annotate render report.md -o report.html # standalone page to screenshot
+vp exec comark-annotate check report.md other.md        # one line per problem, exit 1 if any
+vp exec comark-annotate render report.md -o report.html # standalone page to screenshot
 ```
 
-`vp` comes with [Vite+](https://viteplus.dev/guide/global-cli); without it, `pnpm dlx` takes the same arguments.
+`vp` comes with the [global Vite+ CLI](https://viteplus.dev/guide/global-cli). Without it, use `pnpm dlx` for `vp dlx` and `pnpm exec` for `vp exec`.
 
 ## Development
 

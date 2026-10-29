@@ -15,7 +15,7 @@ Prefer `comark-ui`, every plugin in one install, registered in the order they ne
 pnpm add comark @comark/html comark-ui
 ```
 
-Run the comark CLIs with Vite+: `vp dlx` for a package the project doesn't install, `vp exec` for one it does. Without Vite+, `pnpm dlx` and `pnpm exec` take the same arguments.
+Run the comark CLIs with the [global Vite+ CLI](https://viteplus.dev/guide/global-cli): `vp dlx` for a package the project doesn't install, `vp exec` for one it does. Without Vite+, `pnpm dlx` and `pnpm exec` take the same arguments.
 
 ```ts
 import { createHtmlRenderer } from "@comark/html";

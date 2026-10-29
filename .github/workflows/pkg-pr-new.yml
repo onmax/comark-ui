@@ -4,9 +4,13 @@ on:
   pull_request:
   push:
     branches:
-      - "**"
-    tags-ignore:
-      - "**"
+      - main
+      # Release PRs created with GITHUB_TOKEN may not trigger pull_request workflows.
+      - "release/v*"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read

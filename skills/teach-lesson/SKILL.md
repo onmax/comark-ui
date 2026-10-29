@@ -71,7 +71,7 @@ Done when the question tests the stated outcome with one changed input, every op
    vp dlx --package comark-linter --package comark-ui lint-comark lesson.md
    ```
 
-   Without Vite+, `pnpm dlx` takes the same arguments.
+   These commands use the [global Vite+ CLI](https://viteplus.dev/guide/global-cli). Without it, `pnpm dlx` takes the same arguments.
 
 2. Open the rendered page where it will be read. Select each option and check its rationale and the shared explanation.
 

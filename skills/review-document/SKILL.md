@@ -57,7 +57,7 @@ Follow [references/example.md](references/example.md):
    vp dlx --package comark-linter --package comark-ui lint-comark review.md
    ```
 
-   Without Vite+, `pnpm dlx` takes the same arguments.
+   These commands use the [global Vite+ CLI](https://viteplus.dev/guide/global-cli). Without it, `pnpm dlx` takes the same arguments.
 
 2. Open the rendered page where it will be read and read it top to bottom as the reader would. Each finding's evidence should be visible without expanding anything except a long log, and each `::diff` should start at the line its finding names.
 

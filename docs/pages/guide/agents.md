@@ -9,11 +9,13 @@ tagline: Agents write most review documents. Install the skill so yours knows th
 
 [onmax](https://github.com/onmax)'s agent skill collects every package in one place: which block to use, its syntax, and how to check the result. Install it, or copy the command from the **For agents** button on any package's page:
 
+Install the global Vite+ CLI once with `curl -fsSL https://vite.plus | bash`, or as [its guide](https://viteplus.dev/guide/global-cli) shows on Windows. The commands here use `vp dlx` to fetch packages and `vp exec` to run installed tools, through your project's package manager. Without Vite+, use `pnpm dlx` and `pnpm exec` with the same arguments.
+
 ```sh
 vp dlx skills add onmax/comark-ui
 ```
 
-The commands here run packages with `vp dlx` from Vite+, through your project's package manager. Install Vite+ once with `curl -fsSL https://vite.plus | bash`, or as [its guide](https://viteplus.dev/guide/global-cli) shows on Windows. Without it, `pnpm dlx` takes the same arguments. In a pnpm workspace that has a package only through another one, `npx` finds the package but not its command, and stops with `not found`.
+In a pnpm workspace that has a package only through another one, `npx` finds the package but not its command, and stops with `not found`.
 
 The CLI lists every skill in the repository. Pick `comark-ui`. This site serves it too, so `vp dlx skills add https://comark-ui.onmax.me` installs the same skill.
 
@@ -50,10 +52,10 @@ An agent should check a document before it hands it over. comark-linter lists ev
 vp dlx --package comark-linter --package comark-ui lint-comark duck-audit.md
 ```
 
-Marks also need a look, because a box can sit inside the image and still miss its target. `comark-annotate render` writes a standalone page next to the file. The agent opens it in a browser and takes a screenshot to confirm each mark sits on its target:
+Marks also need a look, because a box can sit inside the image and still miss its target. First [install the CLI directly](/annotate/#cli) at the same version as the project's Comark UI packages. `comark-annotate render` writes a standalone page next to the file. The agent opens it in a browser and takes a screenshot to confirm each mark sits on its target:
 
 ```sh
-vp dlx comark-annotate render duck-audit.md -o duck-audit.html
+vp exec comark-annotate render duck-audit.md -o duck-audit.html
 ```
 
 ## Writing for reviewers

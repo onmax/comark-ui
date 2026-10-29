@@ -60,7 +60,7 @@ Done when the explanation reads top to bottom in under a minute and every visual
    vp dlx --package comark-linter --package comark-ui lint-comark explanation.md
    ```
 
-   Without Vite+, `pnpm dlx` takes the same arguments.
+   These commands use the [global Vite+ CLI](https://viteplus.dev/guide/global-cli). Without it, `pnpm dlx` takes the same arguments.
 
 2. Open the rendered page where it will be read and look at each view at the width the reader has. A diagram whose labels are too small to read needs fewer nodes, not a wider page.
 
