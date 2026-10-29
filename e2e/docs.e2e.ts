@@ -165,6 +165,15 @@ test("hovering the rail shows every section's name over the pages, without movin
   await expect(label).toHaveCSS("opacity", "0");
 });
 
+test("the rail opens the badge builder and marks it, not the docs, on its page", async ({
+  page,
+}) => {
+  await page.goto("/lint/");
+  await page.locator(".sidebar .rail a", { hasText: "Badge builder" }).click();
+  await expect(page).toHaveURL(/\/badges\/(\?|$)/);
+  await expect(page.locator(".sidebar .rail [aria-current]")).toHaveText("Badge builder");
+});
+
 test("a package's card links to its docs without a copy control", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "List", exact: true }).click();

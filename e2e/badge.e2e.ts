@@ -98,7 +98,7 @@ test("uses the docs shell and survives client navigation with a shared configura
   await page.getByRole("link", { name: "builder", exact: true }).first().click();
   await expect(page.getByRole("heading", { name: "Badge builder", exact: true })).toBeVisible();
   await expect(
-    page.locator(".sidebar a[aria-current]").filter({ hasText: "Badge builder" }),
+    page.locator(".sidebar .pages a[aria-current]").filter({ hasText: "Badge builder" }),
   ).toBeVisible();
   expect(
     await page.evaluate(() => (window as Window & { badgeNavigation?: boolean }).badgeNavigation),

@@ -76,6 +76,7 @@ const lucideNames = [
   "stethoscope",
   "tv-minimal-play",
   "type",
+  "tag",
 ];
 const iconId = (name: string) => (name in ownIcons ? `site:${name}` : `lucide:${name}`);
 const str = (value: unknown) =>
@@ -1011,22 +1012,23 @@ function installerFor(install: string) {
 <div class="installer-bar"><div class="seg" role="group" aria-label="Audience"><button type="button" data-audience="humans" aria-pressed="true">${userIcon}For humans</button><button type="button" data-audience="agents" aria-pressed="false">${botIcon}For agents</button></div>
 <div class="seg installer-pm" role="group" aria-label="Package manager">${["pnpm", "npm", "yarn", "bun"].map((pm, i) => `<button type="button" data-pm="${pm}" aria-pressed="${i === 0}">${pm}</button>`).join("")}</div></div>
 <p class="install-prerequisite" hidden>${skillPrerequisite}</p>
-<button type="button" class="install" data-copy="${escapeHtml(commands.pnpm)}" aria-label="Copy the install command"><span aria-hidden="true">$</span><code>${escapeHtml(commands.pnpm)}</code><span class="install-hint">${copyIcon}${checkIcon}</span></button>
+<button type="button" class="install" data-copy="${escapeHtml(commands.pnpm)}" title="Copy the install command"><span aria-hidden="true">$</span><code>${escapeHtml(commands.pnpm)}</code><span class="install-hint">${copyIcon}${checkIcon}</span></button>
 </div>`;
 }
 
 // The first column: one icon per section. Hovering or focusing it widens it over the second column to show every
 // section's name, as on vitehub.dev. The current section's is marked. Drop sits at the bottom: it renders the
 // review documents these plugins make, and it's by the same author.
-const rail = (current: Section) =>
+// The badge builder is a tool like the playground, so it sits beside it, though its page lists under the docs' Utilities.
+const rail = (current: Section, slug: string) =>
   `<nav class="rail" aria-label="Sections">${sections
     .map(
       (section) =>
-        `${section.slug === "play" ? "<hr>" : ""}<a href="${href(section.lists[0]?.slugs[0] ?? section.slug)}"${section === current ? ' aria-current="true"' : ""}>${siteIcon(section.icon)}<span class="rail-label">${escapeHtml(section.label)}</span></a>`,
+        `${section.slug === "play" ? "<hr>" : ""}<a href="${href(section.lists[0]?.slugs[0] ?? section.slug)}"${section === current && slug !== "badges" ? ' aria-current="true"' : ""}>${siteIcon(section.icon)}<span class="rail-label">${escapeHtml(section.label)}</span></a>`,
     )
     .join(
       "",
-    )}<a class="rail-drop" href="https://drop.vitehub.dev/?utm_source=comark-ui&amp;utm_medium=sidebar"><img src="/drop.svg" alt="" width="18" height="18"><span class="rail-label"><strong>Review on Drop</strong><span>Comment on the exact spot</span></span></a></nav>`;
+    )}<a href="/badges/"${slug === "badges" ? ' aria-current="true"' : ""}>${siteIcon("tag")}<span class="rail-label">Badge builder</span></a><a class="rail-drop" href="https://drop.vitehub.dev/?utm_source=comark-ui&amp;utm_medium=sidebar"><img src="/drop.svg" alt="" width="18" height="18"><span class="rail-label"><strong>Review on Drop</strong><span>Comment on the exact spot</span></span></a></nav>`;
 // The second column: the current section's pages, or the playground's presets.
 const column = (section: Section, current: string) => {
   const presetCard = (preset: (typeof presets)[number], href: string) =>
@@ -1752,12 +1754,12 @@ function shell(options: {
   const { slug, section } = options;
   const { npm } = options;
   const pageHead = options.head ?? "";
-  const nav = rail(section) + column(section, slug);
+  const nav = rail(section, slug) + column(section, slug);
   // The playground's column is a third of its page in stills, so its menu holds the rail alone and the playground
   // copies the column in when the menu first opens.
-  const menuNav = slug === "play" ? rail(section) : nav;
+  const menuNav = slug === "play" ? rail(section, slug) : nav;
   const header = `<div class="top-start"><a class="name" href="/">${logo}comark ui</a>${options.landing ? `<nav class="top-links" aria-label="Site"><a href="/guide/renderers/">Docs</a><a href="/play/">Playground</a><a href="/skills/">Skills</a></nav>` : ""}</div>
-<button type="button" class="search-open" aria-haspopup="dialog">${siteIcon("search", 15)}<span class="search-label">Search docs</span><kbd><span class="kbd-mac">⌘K</span><span class="kbd-other">Ctrl K</span></kbd></button>
+<button type="button" class="search-open" aria-haspopup="dialog" aria-label="Search docs">${siteIcon("search", 15)}<span class="search-label">Search docs</span><kbd><span class="kbd-mac">⌘K</span><span class="kbd-other">Ctrl K</span></kbd></button>
 <div class="top-end">
 <nav>${npmxLink(npm)}${githubLink}</nav>
 <details class="menu"><summary aria-label="Menu" title="Menu">${menuIcon}</summary><div class="menu-panel"><button type="button" class="search-open menu-search" aria-haspopup="dialog">${siteIcon("search", 15)}<span>Search docs</span></button>${menuNav}</div></details>
