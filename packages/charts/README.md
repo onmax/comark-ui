@@ -59,4 +59,4 @@ The page holds a `figure.cch` with the title, the SVG, and the table folded into
 
 Only `@comark/html` has a renderer: Vega draws on the server, and a framework component would ship it to the browser.
 
-The comark-ui agent skill covers charts; install it with `npx skills add onmax/comark-ui`, or bundle it in your own app from `comark-ui/skills/comark-ui/`.
+The comark-ui agent skill covers charts; install it with `vp dlx skills add onmax/comark-ui`, or bundle it in your own app from `comark-ui/skills/comark-ui/`.

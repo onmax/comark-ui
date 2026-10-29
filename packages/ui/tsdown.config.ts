@@ -64,7 +64,7 @@ export default definePackage({
     __COMARK_UI_VERSION__: JSON.stringify(version),
   },
   // Svelte entries ship as source, like every package's. The skills ship as folders too, for an app that copies one
-  // whole into its own skills, as `npx skills add` would install it.
+  // whole into its own skills, as `vp dlx skills add` would install it.
   copy: [
     { from: "src/svelte", to: "dist" },
     { from: "../../skills", to: "dist" },

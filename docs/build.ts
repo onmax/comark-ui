@@ -889,7 +889,7 @@ const drop: NodeHandler = async ([, , ...children], state) => {
 // preview shows its own. The example's title becomes the page's second level, under the page's own.
 const skillOf = (slug: string) => (slug.startsWith("skills/") ? slug.slice("skills/".length) : "");
 // No --skill: the CLI lists every skill in the repository and lets the reader pick.
-const skillCommand = "npx skills add onmax/comark-ui";
+const skillCommand = "vp dlx skills add onmax/comark-ui";
 const skillSource = (name: string) =>
   readFileSync(new URL(`skills/${name}/references/example.md`, repo), "utf8");
 const fromThisBuild = (markdown: string) => markdown.replaceAll(`${site}/`, "/");
@@ -1002,7 +1002,7 @@ function installerFor(install: string) {
     npm: `npm install ${packages}`,
     yarn: `yarn add ${packages}`,
     bun: `bun add ${packages}`,
-    agents: "npx skills add onmax/comark-ui",
+    agents: "vp dlx skills add onmax/comark-ui",
   };
   return `<div class="installer" data-commands='${escapeHtml(JSON.stringify(commands))}'>
 <div class="installer-bar"><div class="seg" role="group" aria-label="Audience"><button type="button" data-audience="humans" aria-pressed="true">${userIcon}For humans</button><button type="button" data-audience="agents" aria-pressed="false">${botIcon}For agents</button></div>
@@ -1938,8 +1938,8 @@ await writeFile(
     "## How an agent reads this site",
     "",
     `- Every page has a Markdown copy at its path plus \`.md\`, such as ${site}/zoom.md for ${site}/zoom/. A request with \`Accept: text/markdown\` gets it too.`,
-    `- \`npx skills add onmax/comark-ui\` lists the repository's agent skills to pick from: comark-ui, which teaches the syntax of every block (see ${site}/guide/agents.md), and the skills that write a whole document, such as before/after evidence, a review, or a lesson (see ${site}/skills.md). Add \`--skill <name>\` to install one without the list.`,
-    "- Check a document before anyone reads it: `npx -p comark-linter -p comark-ui lint-comark doc.md`.",
+    `- \`vp dlx skills add onmax/comark-ui\` lists the repository's agent skills to pick from: comark-ui, which teaches the syntax of every block (see ${site}/guide/agents.md), and the skills that write a whole document, such as before/after evidence, a review, or a lesson (see ${site}/skills.md). Add \`--skill <name>\` to install one without the list.`,
+    "- Check a document before anyone reads it: `vp dlx --package comark-linter --package comark-ui lint-comark doc.md`.",
     "",
     "## When to use Comark UI",
     "",

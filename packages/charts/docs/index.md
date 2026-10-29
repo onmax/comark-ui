@@ -575,7 +575,7 @@ const render = createHtmlRenderer({ plugins: [charts()], components });
 
 [Flint](https://github.com/microsoft/flint-chart) and [Vega](https://vega.github.io) draw each chart while parsing, on the server or at build time, so the browser runs no chart code. The package installs both. Vue, React, and Svelte have renderers too, as [Renderers](#renderers) shows.
 
-The comark-ui agent skill knows the table shape for each chart type and how to check the result. Agents install it with `npx skills add onmax/comark-ui`. Agents read charts without the skill: in the Markdown and in the page, each chart's data is a table.
+The comark-ui agent skill knows the table shape for each chart type and how to check the result. Agents install it with `vp dlx skills add onmax/comark-ui`. Agents read charts without the skill: in the Markdown and in the page, each chart's data is a table.
 
 ## Theme
 

@@ -224,8 +224,8 @@ The package comes with a small CLI that knows zoom and carousel too.
 | `render` | Writes a standalone page next to each file, or to `-o` for one file. Open it and take a screenshot to confirm each mark sits on its target. |
 
 ```sh
-npx comark-annotate check duck-audit.md pigeons.md
-npx comark-annotate render duck-audit.md -o duck-audit.html
+vp dlx comark-annotate check duck-audit.md pigeons.md
+vp dlx comark-annotate render duck-audit.md -o duck-audit.html
 ```
 
 ### Issues
@@ -266,7 +266,7 @@ const html = await render(markdown);
 
 The renderer inlines its styles and script once per document. Annotate renders only to HTML. [Renderers](/guide/renderers/) covers using it with other plugins, a strict Content Security Policy, and untrusted notes.
 
-The comark-ui agent skill knows the syntax, how to measure marks from the page, and how to check the result. Agents install it with `npx skills add onmax/comark-ui`, and [Agents](/guide/agents/) covers the rest.
+The comark-ui agent skill knows the syntax, how to measure marks from the page, and how to check the result. Agents install it with `vp dlx skills add onmax/comark-ui`, and [Agents](/guide/agents/) covers the rest.
 
 ## Theme
 
