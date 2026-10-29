@@ -45,8 +45,10 @@ Keep the folder whole, since `SKILL.md` links each reference by its path. An app
 An agent should check a document before it hands it over. comark-linter lists every problem, each with its line. Outside a project that installs it, fetch it together with comark-ui, so it knows every block:
 
 ```sh
-npx -p comark-linter -p comark-ui lint-comark duck-audit.md
+npx -p comark-linter@latest -p comark-ui@latest lint-comark duck-audit.md
 ```
+
+`@latest` on both makes npx install them together. Without it, npx skips a package the project already has through another one, such as comark-ui in a pnpm workspace. Then lint-comark either runs without comark-ui and calls its blocks unknown, or npx stops with `lint-comark: not found`.
 
 Marks also need a look, because a box can sit inside the image and still miss its target. `comark-annotate render` writes a standalone page next to the file. The agent opens it in a browser and takes a screenshot to confirm each mark sits on its target:
 
