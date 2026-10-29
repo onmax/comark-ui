@@ -68,7 +68,7 @@ Done when the question tests the stated outcome with one changed input, every op
 1. Lint it, and fix until it reports no problems:
 
    ```sh
-   npx -p comark-linter -p comark-ui lint-comark lesson.md
+   npx -p comark-linter@latest -p comark-ui@latest lint-comark lesson.md
    ```
 
 2. Open the rendered page where it will be read. Select each option and check its rationale and the shared explanation.

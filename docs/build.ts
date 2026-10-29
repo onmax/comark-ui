@@ -1939,7 +1939,7 @@ await writeFile(
     "",
     `- Every page has a Markdown copy at its path plus \`.md\`, such as ${site}/zoom.md for ${site}/zoom/. A request with \`Accept: text/markdown\` gets it too.`,
     `- \`npx skills add onmax/comark-ui\` lists the repository's agent skills to pick from: comark-ui, which teaches the syntax of every block (see ${site}/guide/agents.md), and the skills that write a whole document, such as before/after evidence, a review, or a lesson (see ${site}/skills.md). Add \`--skill <name>\` to install one without the list.`,
-    "- Check a document before anyone reads it: `npx -p comark-linter -p comark-ui lint-comark doc.md`.",
+    "- Check a document before anyone reads it: `npx -p comark-linter@latest -p comark-ui@latest lint-comark doc.md`.",
     "",
     "## When to use Comark UI",
     "",

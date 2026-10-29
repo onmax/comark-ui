@@ -57,7 +57,7 @@ Done when the explanation reads top to bottom in under a minute and every visual
 1. Lint it, and fix until it reports no problems:
 
    ```sh
-   npx -p comark-linter -p comark-ui lint-comark explanation.md
+   npx -p comark-linter@latest -p comark-ui@latest lint-comark explanation.md
    ```
 
 2. Open the rendered page where it will be read and look at each view at the width the reader has. A diagram whose labels are too small to read needs fewer nodes, not a wider page.
