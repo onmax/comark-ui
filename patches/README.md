@@ -1,16 +1,6 @@
 # Dependency backports
 
-These pnpm patches keep the docs integration fixes available before their upstream PRs merge.
-
-| Package | Upstream fix |
-| --- | --- |
-| `vite-hub@0.0.4` | [#3006](https://github.com/vite-hub/vitehub/pull/3006) resolves generated Nitro plugins and keeps framework H3 imports together. [#3009](https://github.com/vite-hub/vitehub/pull/3009) preserves Cloudflare Node compatibility and passes the generated Env alias to Wrangler. [#3010](https://github.com/vite-hub/vitehub/pull/3010) respects each package's optional dependency metadata. |
-| `@vite-hub/content@0.0.4` | [#3007](https://github.com/vite-hub/vitehub/pull/3007) supports `defineContent({ route: false })` while retaining server reads and Console editing. |
-| `@vite-hub/source@0.0.4` | [#3007](https://github.com/vite-hub/vitehub/pull/3007) omits the disabled public API route and removes stale output. |
-
-The integration patches were generated with `pnpm patch` and `pnpm patch-commit` against preview `9d5fc686d6293defd07e25edf1312aa925f5fed0`. Preview builds use hashed distribution filenames. When changing that pin, first install the new preview without the ViteHub patch registrations, then extract fresh directories with `pnpm patch --ignore-existing`. Regenerate and commit each patch before running Nuxt preparation and the docs build. Remove each patch and its `patchedDependencies` entry once the preview contains the corresponding upstream fix.
-
-The older Workspace cache patch is removed because the pinned pilot stack includes the upstream cache and blob-integrity fixes.
+The docs use ViteHub preview `2862ffe428dde04c5d64d76b7b26e5224a170e17`. It includes the Console app Auth sign-in and the Nuxt, Cloudflare, Content route, optional dependency, and Workspace cache fixes, so the ViteHub integration patches have been removed. Keep every ViteHub package on the same preview build.
 
 ## Comark syntax highlighting
 

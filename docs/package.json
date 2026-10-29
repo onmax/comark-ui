@@ -35,7 +35,7 @@
     "vue": "catalog:"
   },
   "devDependencies": {
-    "@vite-hub/source": "https://pkg.pr.new/vite-hub/vitehub/@vite-hub/source@9d5fc686d6293defd07e25edf1312aa925f5fed0",
+    "@vite-hub/source": "https://pkg.pr.new/vite-hub/vitehub/@vite-hub/source@2862ffe428dde04c5d64d76b7b26e5224a170e17",
     "drizzle-kit": "catalog:",
     "typescript": "catalog:",
     "vue-tsc": "^3.2.0",
