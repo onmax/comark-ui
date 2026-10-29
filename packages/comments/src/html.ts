@@ -1,4 +1,5 @@
-import type { NodeHandler, State } from "comark";
+import type { ElementNode, NodeHandler, State } from "comark";
+import { resolveAttributes } from "comark/render";
 import { escapeHtml } from "comark/utils";
 import {
   childrenOf,
@@ -6,9 +7,11 @@ import {
   type DeferredMetadata,
   type Entry,
   hash,
+  isElement,
   nativeAttributes,
   ROOT,
   transform,
+  wrapParagraphs,
 } from "./read.ts";
 import { css, fontCss } from "./styles.ts";
 
@@ -150,8 +153,82 @@ const deferred: NodeHandler = async (node, state) => {
   const { comments: settings } = node[1].$ as DeferredMetadata;
   // Normalization moves replies and replaces attributes, so each render needs its own copy.
   const nodes = structuredClone(childrenOf(node));
-  transform(nodes, { ...settings, data: state.renderData });
-  return state.render(nodes);
+  wrapParagraphs(nodes);
+  const rendered = new WeakMap<ElementNode, Record<string, unknown>>();
+  const fragments: { node: ElementNode; body: string; reply: boolean }[] = [];
+  const marker = `\uE000${idFor("comments", state)}:`;
+  const slots = new RegExp(`${marker}(\\d+)\uE001`, "g");
+  const isReply = (child: ElementNode) =>
+    child[0] === "comment" &&
+    (Object.hasOwn(child[1], "reply") || Object.hasOwn(child[1], ":reply"));
+  const emptyReplyParagraph = (element: ElementNode) => {
+    const children = childrenOf(element);
+    return (
+      element[0] === "p" &&
+      children.some((child) => isElement(child) && isReply(child)) &&
+      children.every((child) =>
+        !Array.isArray(child)
+          ? !child.trim()
+          : isElement(child) &&
+            isReply(child) &&
+            childrenOf(child).every((text) => !Array.isArray(text) && !text.trim()),
+      )
+    );
+  };
+  const one = state.one;
+  const flow = state.flow;
+  // Comark's default flow closes over its own one(), so route it through the scoped interceptor too.
+  state.flow = async (element, current, parent) => {
+    let html = "";
+    for (const child of childrenOf(element))
+      html += await current.one(child, current, parent ?? element);
+    return html;
+  };
+  // Capture each annotation where its parent actually renders it. Component handlers may establish props
+  // immediately before flow(), and must run only once. Slots let later replies join earlier cards.
+  state.one = async (child, current, parent, atLineStart) => {
+    if (isElement(child) && (child[0] === "comment" || child[0] === "suggestion")) {
+      const previous = current.renderData;
+      const attrs = resolveAttributes(child[1], previous, { parseJson: true });
+      rendered.set(child, attrs);
+      if (Object.keys(child[1]).some((key) => key !== "$"))
+        current.renderData = { ...previous, props: attrs };
+      let body: string;
+      try {
+        body = await current.flow(child, current);
+      } finally {
+        current.renderData = previous;
+      }
+      const slot = fragments.length;
+      fragments.push({ node: child, body, reply: isReply(child) });
+      return `${marker}${slot}\uE001`;
+    }
+    const html = await one(child, current, parent, atLineStart);
+    return isElement(child) && emptyReplyParagraph(child) ? "" : html;
+  };
+  let html: string;
+  try {
+    html = await state.render(nodes);
+  } finally {
+    state.one = one;
+    state.flow = flow;
+  }
+  transform(nodes, { ...settings, data: state.renderData, rendered });
+  const margin = isElement(nodes[0]) && nodes[0][0] === ROOT;
+  const leading = margin ? styles(state) : "";
+  const replacements: string[] = [];
+  const fill = (value: string) =>
+    value.replace(slots, (_, index: string) => replacements[Number(index)]!);
+  // Children are captured before their parents, so their slots are already filled here.
+  for (const fragment of fragments) {
+    const body = fill(fragment.body);
+    const handler = fragment.node[0] === "suggestion" ? suggestion : comment;
+    replacements.push(
+      fragment.reply ? body : await handler(fragment.node, { ...state, flow: async () => body }),
+    );
+  }
+  html = fill(html);
+  return margin ? `${leading}<div class="cr">${html}</div>` : html;
 };
 
 /**

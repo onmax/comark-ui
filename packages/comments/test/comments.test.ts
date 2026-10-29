@@ -1,5 +1,5 @@
 import { createHtmlRenderer, renderHtmlFromDocument } from "@comark/html";
-import { defineComarkPlugin, parseMarkdown } from "comark";
+import { defineComarkPlugin, type NodeHandler, parseMarkdown } from "comark";
 import { describe, expect, it } from "vite-plus/test";
 import comments, { type CommentsOptions, components } from "../src/html.ts";
 
@@ -252,6 +252,41 @@ describe("comark-comments", () => {
     );
     expect(redlineHtml).toContain('data-mark="pen" data-kind="delete"');
     expect(redlineHtml).not.toContain('class="cr"');
+  });
+
+  it("uses props established by component handlers and joins replies across their scopes", async () => {
+    const document = await parseMarkdown(
+      '::scope\n:suggestion[after]{:from="props.old" :note="props.note" :by="props.by" :id="props.id" :mark="props.mark"}\n::\n\n' +
+        '::answer\n:comment{:reply="props.id" :note="props.reply" :by="props.by"}\n::',
+      { plugins: [comments()] },
+    );
+    expect(document.meta.issues ?? []).toEqual([]);
+    const before = JSON.stringify(document);
+    for (const data of [
+      { old: "before", note: "Why?", by: "sam", id: "one", mark: "track", reply: "Yes." },
+      { old: "was", note: "Again?", by: "lee", id: "two", mark: "pen", reply: "No." },
+    ]) {
+      const calls: string[] = [];
+      const scope: NodeHandler = async (node, state) => {
+        calls.push(node[0]);
+        state.renderData = { ...state.renderData, props: state.renderData.data };
+        return `<section>${await state.flow(node, state)}</section>`;
+      };
+      const html = flat(
+        await renderHtmlFromDocument(document, {
+          components: { ...components, scope, answer: scope },
+          data,
+        }),
+      );
+      expect(calls).toEqual(["scope", "answer"]);
+      expect(html).toBe(
+        await render(
+          `::section\n:suggestion[after]{from="${data.old}" note="${data.note}" by="${data.by}" #${data.id} mark="${data.mark}"}\n::\n\n` +
+            `::section\n:comment{reply="${data.id}" note="${data.reply}" by="${data.by}"}\n::`,
+        ),
+      );
+    }
+    expect(JSON.stringify(document)).toBe(before);
   });
 
   it("keeps static binding diagnostics and literals in a deferred document", async () => {

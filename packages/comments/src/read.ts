@@ -144,6 +144,7 @@ function collect(
   place: Place,
   found: { threads: Thread[]; replies: Reply[] },
   data: Data,
+  rendered?: WeakMap<ElementNode, Record<string, unknown>>,
 ): boolean {
   let moved = false;
   for (let index = start; index < parent.length; index++) {
@@ -151,7 +152,10 @@ function collect(
     const node = parent[index] as Node | undefined;
     if (!isElement(node)) continue;
     const [tag, raw] = node;
-    const attrs = resolveAttributes(raw, data, { parseJson: true });
+    const annotation = tag === "suggestion" || tag === "comment";
+    // A conditional component may leave authored children unrendered.
+    if (annotation && rendered && !rendered.has(node)) continue;
+    const attrs = rendered?.get(node) ?? resolveAttributes(raw, data, { parseJson: true });
     const innerData = Object.keys(raw).some((key) => key !== "$")
       ? { ...data, props: attrs }
       : data;
@@ -176,7 +180,7 @@ function collect(
         entries: [],
       };
       found.threads.push(thread);
-      collect(node, 2, { ...place, inside: thread }, found, innerData);
+      collect(node, 2, { ...place, inside: thread }, found, innerData, rendered);
       continue;
     }
     const inner = collect(
@@ -189,6 +193,7 @@ function collect(
       },
       found,
       innerData,
+      rendered,
     );
     if (inner && tag === "p" && !words(childrenOf(node)) && !childrenOf(node).some(isElement)) {
       parent.splice(index, 1);
@@ -228,7 +233,13 @@ function checkProps(
 }
 
 /** What the renderer needs from the document: the default mark, and a prefix that keeps its ids apart from others. */
-export type Settings = { mark: Mark; prefix: string; data: Data; parsing?: boolean };
+export type Settings = {
+  mark: Mark;
+  prefix: string;
+  data: Data;
+  parsing?: boolean;
+  rendered?: WeakMap<ElementNode, Record<string, unknown>>;
+};
 export type DeferredMetadata = NonNullable<ElementNode[1]["$"]> & {
   comments: Pick<Settings, "mark" | "prefix">;
 };
@@ -240,15 +251,8 @@ export function defer(nodes: Node[], settings: Settings): ElementNode {
   return [DEFERRED, { $: metadata }, ...nodes];
 }
 
-/**
- * Reads every `:suggestion` and `:comment` in `nodes`, moves each reply into its thread, and rewrites the nodes'
- * attributes into the ones the renderer draws from. Wraps the blocks in one root node when any card goes in the
- * margin. Returns the problems; it never throws.
- */
-export function transform(nodes: Node[], settings: Settings): Issue[] {
-  const issues: Issue[] = [];
-  const found: { threads: Thread[]; replies: Reply[] } = { threads: [], replies: [] };
-  // Comark lifts an inline component that fills its paragraph out of it, so it would render outside any paragraph.
+/** Comark lifts an inline component that fills its paragraph; put its anchor back in a paragraph. */
+export function wrapParagraphs(nodes: Node[]) {
   for (const [index, node] of nodes.entries())
     if (
       isElement(node) &&
@@ -257,7 +261,18 @@ export function transform(nodes: Node[], settings: Settings): Issue[] {
       !Object.hasOwn(node[1], ":reply")
     )
       nodes[index] = ["p", {}, node];
-  collect(nodes, 0, { heading: false, cell: false }, found, settings.data);
+}
+
+/**
+ * Reads every `:suggestion` and `:comment` in `nodes`, moves each reply into its thread, and rewrites the nodes'
+ * attributes into the ones the renderer draws from. Wraps the blocks in one root node when any card goes in the
+ * margin. Returns the problems; it never throws.
+ */
+export function transform(nodes: Node[], settings: Settings): Issue[] {
+  const issues: Issue[] = [];
+  const found: { threads: Thread[]; replies: Reply[] } = { threads: [], replies: [] };
+  wrapParagraphs(nodes);
+  collect(nodes, 0, { heading: false, cell: false }, found, settings.data, settings.rendered);
   const ids = new Map<string, Thread>();
 
   for (const thread of found.threads) {
