@@ -51,7 +51,7 @@ Image `src` must be a URL the renderer can reach: a path next to the document, o
 1. Lint it, and fix until it reports no problems:
 
    ```sh
-   npx -p comark-linter -p comark-ui lint-comark evidence.md
+   npx -p comark-linter@latest -p comark-ui@latest lint-comark evidence.md
    ```
 
 2. Open the page where it will be read and take a screenshot of it. For a local screenshot-only check, copy the complete `::compare` block, including its nested screenshots and annotations, into `evidence-screenshots.md` beside `evidence.md`.
