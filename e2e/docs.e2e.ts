@@ -77,7 +77,10 @@ test("the index's canvas has a card for every playground example, each once on s
 }) => {
   await page.goto("/");
   await page.locator(".canvas-viewport").scrollIntoViewIfNeeded();
-  const { cards, onScreen, unsized } = await page.evaluate(() => {
+  await page.locator(".canvas-stage .demo").first().waitFor();
+  const { cards, onScreen, unsized } = await page.evaluate(async () => {
+    const fetched = document.createElement("template");
+    fetched.innerHTML = await (await fetch("/canvas-cards.json")).json();
     const view = document.querySelector(".canvas-viewport")!.getBoundingClientRect();
     const live = [...document.querySelectorAll<HTMLElement>(".canvas-stage .demo")];
     const seen = live.filter((demo) => {
@@ -87,9 +90,9 @@ test("the index's canvas has a card for every playground example, each once on s
       );
     });
     return {
-      cards: [
-        ...document.querySelector<HTMLTemplateElement>("template.canvas-cards")!.content.children,
-      ].map((demo) => (demo as HTMLElement).dataset.example!),
+      cards: [...fetched.content.querySelectorAll<HTMLElement>(".demo")].map(
+        (demo) => demo.dataset.example!,
+      ),
       onScreen: seen.map((demo) => demo.dataset.example),
       unsized: live.filter((demo) => !demo.style.height).length,
     };
@@ -165,12 +168,28 @@ test("hovering the rail shows every section's name over the pages, without movin
   await expect(label).toHaveCSS("opacity", "0");
 });
 
+test("the rail opens the badge builder and marks it, not the docs, on its page", async ({
+  page,
+}) => {
+  await page.goto("/lint/");
+  await page.locator(".sidebar .rail a", { hasText: "Badge builder" }).click();
+  await expect(page).toHaveURL(/\/badges\/(\?|$)/);
+  await expect(page.locator(".sidebar .rail [aria-current]")).toHaveText("Badge builder");
+});
+
 test("a package's card links to its docs without a copy control", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "List", exact: true }).click();
   const card = page.locator(".grid a", { has: page.getByText("GitHub", { exact: true }) });
   await expect(card).toHaveAttribute("href", "/github/");
   await expect(page.getByRole("button", { name: "Copy pnpm add comark-github" })).toHaveCount(0);
+});
+
+test("the GitHub HTML example keeps its explicit image width", async ({ page }) => {
+  await page.goto("/github/");
+  await expect(
+    page.locator('main img[alt="Office correlations: ducks vs. bugs, r = 0.94"]'),
+  ).toHaveAttribute("width", "480");
 });
 
 test("Getting started installs comark-ui, and a block's page ends with its own package instead", async ({

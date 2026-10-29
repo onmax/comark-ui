@@ -17,7 +17,7 @@
   --bg: #fff;
   --fg: oklch(0.205 0 0);
   --muted: oklch(0.48 0 0);
-  --faint: oklch(0.62 0 0);
+  --faint: oklch(0.54 0 0);
   --line: oklch(0.92 0 0);
   --soft: oklch(0.975 0 0);
   --raised: #fff;
@@ -52,7 +52,7 @@
   --bg: #fff;
   --fg: oklch(0.205 0 0);
   --muted: oklch(0.48 0 0);
-  --faint: oklch(0.62 0 0);
+  --faint: oklch(0.54 0 0);
   --line: oklch(0.92 0 0);
   --soft: oklch(0.975 0 0);
   --raised: #fff;
@@ -2434,7 +2434,6 @@ a.window-play:hover {
   font-variant-numeric: tabular-nums;
   text-align: right;
   user-select: none;
-  opacity: 0.6;
   transition: color 200ms ease;
 }
 
@@ -2581,7 +2580,7 @@ a.window-play:hover {
 .studio:not([data-phase]) .studio-fixed {
   display: inline;
   margin-right: 0.5rem;
-  color: #16a34a;
+  color: light-dark(#15803d, #16a34a);
   font-weight: 500;
 }
 
@@ -2590,8 +2589,7 @@ a.window-play:hover {
 }
 
 .studio:not([data-phase]) .studio-gutter [data-fix] {
-  color: #16a34a;
-  opacity: 1;
+  color: light-dark(#15803d, #16a34a);
 }
 
 /* Waiting to scroll into view: nothing typed, nothing drawn. */
