@@ -566,8 +566,8 @@ const hero: NodeHandler = async ([, , ...children], state) => {
     `<div class="studio" style="--typed:${typed}ms"><div class="studio-bar">` +
     `<span class="studio-file">${siteIcon("file-input", 13)}review.md</span>` +
     `<ol class="studio-steps" aria-label="Steps">${steps.map((step) => `<li data-step="${step.toLowerCase()}">${step}</li>`).join("")}</ol>` +
-    `<button type="button" class="studio-replay" hidden>${resetIcon}<span>Play</span></button>` +
-    `<a class="window-play" href="${escapeHtml(playLink(source))}">${siteIcon("flask-conical", 13)}<span>Open in playground</span></a></div>` +
+    `<button type="button" class="studio-replay" aria-label="Play" hidden>${resetIcon}<span>Play</span></button>` +
+    `<a class="window-play" href="${escapeHtml(playLink(source))}" aria-label="Open in playground">${siteIcon("flask-conical", 13)}<span>Open in playground</span></a></div>` +
     `<div class="studio-body"><div class="studio-source"><div class="studio-code"><div class="studio-gutter" aria-hidden="true">${gutter}</div>${highlighted}</div>` +
     `<div class="studio-problems"><p class="studio-issue" aria-hidden="true"><span class="studio-dot" aria-hidden="true"></span><span><span class="studio-fixed">Fixed</span><strong>${escapeHtml(issue.slice(0, issue.indexOf(": ") + 1))}</strong>${escapeHtml(issue.slice(issue.indexOf(": ") + 1))}</span></p>` +
     `<p class="studio-ok">${checkIcon}No problems</p></div></div>` +
@@ -678,20 +678,24 @@ const imageSizes = new Map(
       }),
   ),
 );
+const sized = (html: string) =>
+  html.replace(/<img\b([^>]*?) src="\/([\w-]+\.png)"/g, (tag, rest: string, file: string) => {
+    const size = imageSizes.get(file);
+    return size && !/\swidth=/.test(rest) ? `${tag} width="${size[0]}" height="${size[1]}"` : tag;
+  });
+// A page's first image is often its largest paint, so it loads at once; the rest wait until they're near.
+const eagerFirst = (html: string) =>
+  html.replace(/(<img\b[^>]*?) loading="lazy"/, '$1 fetchpriority="high"');
 // A still of a rendered document: no scripts, its plugins' styles collected into `styles` to go in the page once,
 // no ids, since a page holds many, and a chart without its data table, so the still is all plot. Nothing in it zooms
 // or takes focus, so the page's zoom never adds a still to a gallery or a group.
 const stillOf = (html: string, styles: Set<string>) =>
-  html
+  sized(html)
     .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, (style) => (styles.add(style), ""))
     .replace(/<script>[\s\S]*?<\/script>/g, "")
     .replace(/<details class="cch-data">[\s\S]*?<\/details>/g, "")
     .replace(/\s(id|for|aria-controls|aria-labelledby|tabindex|data-zoom[\w-]*)="[^"]*"/g, "")
     .replace(/(<[a-z][^>]*?)\sdata-zoom(?=[\s>])/g, "$1")
-    .replace(/<img\b([^>]*?) src="\/([\w-]+\.png)"/g, (tag, rest: string, file: string) => {
-      const size = imageSizes.get(file);
-      return size && !/\swidth=/.test(rest) ? `${tag} width="${size[0]}" height="${size[1]}"` : tag;
-    })
     .replace(/<img\b/g, '<img loading="lazy" draggable="false"');
 // A small still of each preset for the playground's column, with a gray box for each player, so the column
 // loads nothing but the pages' own images. The playground scales each still to its card.
@@ -857,6 +861,12 @@ const packageGrid: NodeHandler = async ([, , ...children]) => {
     };
   });
   const demos = await Promise.all(deal([...cards, ...extra]).map(demoCard));
+  // The cards and their styles are nearly half the index's bytes and draw nothing until the canvas does, so they're a file
+  // of their own that the canvas fetches.
+  await writeFile(
+    new URL("canvas-cards.json", dist),
+    JSON.stringify([...demoStyles, ...demos].join("")),
+  );
   const list = packages
     .map(
       (pkg) =>
@@ -864,9 +874,8 @@ const packageGrid: NodeHandler = async ([, , ...children]) => {
     )
     .join("");
   return (
-    `<section class="canvas" data-view="list" aria-label="Packages">${[...demoStyles].join("")}` +
+    `<section class="canvas" data-view="list" aria-label="Packages">` +
     `<div class="canvas-viewport" aria-hidden="true"><div class="canvas-dots"></div><div class="canvas-stage"></div><p class="canvas-hint">Drag to explore</p></div>` +
-    `<template class="canvas-cards">${demos.join("")}</template>` +
     `<ul class="grid">${list}</ul>` +
     `<div class="canvas-bar" hidden><div class="seg" role="group" aria-label="View"><button type="button" data-view="canvas" aria-pressed="false" aria-label="Canvas" title="Canvas">${canvasIcon}</button><button type="button" data-view="list" aria-pressed="true" aria-label="List" title="List">${listIcon}</button></div>` +
     `</div>` +
@@ -997,7 +1006,7 @@ const resetIcon = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" s
 const checkIcon = `<svg class="check" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M20 6 9 17l-5-5"/></svg>`;
 // A skill's page opens the CLI's picker and names the skill to select, as its Markdown copy does.
 const skillInstall = (name: string) =>
-  `<div class="skill-install"><p class="install-prerequisite">${skillPrerequisite}</p><button type="button" class="install" data-copy="${skillCommand}" aria-label="Copy the install command"><span aria-hidden="true">$</span><code>${skillCommand}</code><span class="install-hint">${copyIcon}${checkIcon}</span></button><p>Pick <code>${escapeHtml(name)}</code> from the list.</p></div>`;
+  `<div class="skill-install"><p class="install-prerequisite">${skillPrerequisite}</p><button type="button" class="install" data-copy="${skillCommand}" title="Copy the install command"><span aria-hidden="true">$</span><code>${skillCommand}</code><span class="install-hint">${copyIcon}${checkIcon}</span></button><p>Pick <code>${escapeHtml(name)}</code> from the list.</p></div>`;
 // Humans install the packages with their package manager; agents install the comark-ui skill.
 function installerFor(install: string) {
   const packages = install.replace(/^pnpm add /, "");
@@ -1159,14 +1168,20 @@ const copied = async button => {
   }, 1200);
 };
 // The index's canvas: columns of package cards without end, each running through every card from its own start, so
-// neighbours differ from column to column. Only the cards in view are in the page, cloned from the template as they
-// come in, at heights known before any is shown. It holds still: it follows a drag and coasts to rest after it, and
-// pans sideways with a trackpad.
+// neighbours differ from column to column. Only the cards in view are in the page, cloned from the fetched cards as
+// they come in, at heights known before any is shown. It holds still: it follows a drag and coasts to rest after it,
+// and pans sideways with a trackpad. The cards are fetched once per visit, preloaded as the page starts, so the page
+// doesn't parse them before its first paint; without them the index stays a list.
 const mod = (a, n) => ((a % n) + n) % n;
-for (const canvas of document.querySelectorAll(".canvas")) {
+const canvasCards = () => window.comarkCanvasCards ??= fetch("/canvas-cards.json").then(r => r.ok ? r.json() : Promise.reject(new Error(r.status)));
+for (const canvas of document.querySelectorAll(".canvas")) canvasCards().then(html => {
+  if (!canvas.isConnected) return;
   const viewport = canvas.querySelector(".canvas-viewport"), stage = canvas.querySelector(".canvas-stage"), dots = canvas.querySelector(".canvas-dots");
   const list = canvas.querySelector(".grid");
-  const cards = [...canvas.querySelector(".canvas-cards").content.children];
+  const fetched = document.createElement("template");
+  fetched.innerHTML = html;
+  canvas.prepend(...fetched.content.querySelectorAll("style"));
+  const cards = [...fetched.content.children];
   const n = cards.length, gap = 20, pitch = 300 + gap, pad = 160;
   let heights = [], period = 0;
   // A card without a height in its markup is measured off screen at the canvas's first draw, once per visit, so
@@ -1293,7 +1308,7 @@ for (const canvas of document.querySelectorAll(".canvas")) {
   // The canvas is for pointers; a keyboard reaching the list shows it.
   list.addEventListener("focusin", () => { if (canvas.dataset.view === "canvas") view("list") });
   view(canvas.dataset.view);
-}
+}, () => { delete window.comarkCanvasCards; canvas.dataset.view = "list" });
 // The index's studio plays while the pointer is on it, or on Play: data-phase steps through writing, checking, fixing,
 // and rendering, and the stylesheet animates each.
 for (const studio of document.querySelectorAll(".studio")) {
@@ -1819,7 +1834,8 @@ await writeFile(
     landing: true,
     title: `${landing.title} · ${landing.description}`,
     description: landing.tagline,
-    body: `<div class="landing">
+    body: `<link rel="preload" href="/canvas-cards.json" as="fetch" crossorigin>
+<div class="landing">
 <div class="landing-hero enter"><div><h1>${escapeHtml(landing.headline)}</h1><p>${escapeHtml(landing.tagline)}</p>${pageActions("")}</div>
 <div>${installerFor(landing.install)}<div class="actions"><a class="button primary" href="/play/">${siteIcon("flask-conical", 15)}Open the playground</a><a class="button" href="/introduction/">Read the docs${siteIcon("arrow-right", 15)}</a></div></div></div>
 <main class="enter" style="--i:1">${await renderHtmlFromDocument(landing.document, { components: { ...components, packages: packageGrid, drop, hero } })}</main>
@@ -1849,24 +1865,26 @@ for (const page of parsed) {
 <div class="content">
 <div class="hero enter">${eyebrow ? `<p class="eyebrow mono">${eyebrow}</p>` : ""}${page.rule ? `<p class="eyebrow mono">${page.rule.code} · ${page.rule.severity ?? "warning"}</p>` : ""}<div class="hero-title"><h1>${escapeHtml(page.title)}</h1>${page.slug === "badges" ? "" : pageActions(page.slug)}</div><p>${page.rule ? inlineCode(page.rule.title) : escapeHtml(page.tagline)}</p>
 ${page.install ? installerFor(page.install) : skillOf(page.slug) ? skillInstall(skillOf(page.slug)) : ""}</div>
-<main class="enter" style="--i:1">${(
-        await renderHtmlFromDocument(
-          { ...page.document, nodes: asFields(page.document.nodes) },
-          {
-            components: {
-              ...components,
-              example: exampleWithout(withoutFor(page.pkg?.slug)),
-              examples: exampleTabs,
-              matrix,
-              "badge-builder": badgeBuilder,
-              incorrect: ruleExample(page, "incorrect"),
-              correct: ruleExample(page, "correct"),
-              rules: ruleTable,
-              skill,
-              skills: skillCards,
+<main class="enter" style="--i:1">${eagerFirst(
+        sized(
+          await renderHtmlFromDocument(
+            { ...page.document, nodes: asFields(page.document.nodes) },
+            {
+              components: {
+                ...components,
+                example: exampleWithout(withoutFor(page.pkg?.slug)),
+                examples: exampleTabs,
+                matrix,
+                "badge-builder": badgeBuilder,
+                incorrect: ruleExample(page, "incorrect"),
+                correct: ruleExample(page, "correct"),
+                rules: ruleTable,
+                skill,
+                skills: skillCards,
+              },
             },
-          },
-        )
+          ),
+        ),
       ).replace(
         /<table>[\s\S]*?<\/table>/g,
         (table) => `<div class="table-scroll">${table}</div>`,

@@ -77,7 +77,10 @@ test("the index's canvas has a card for every playground example, each once on s
 }) => {
   await page.goto("/");
   await page.locator(".canvas-viewport").scrollIntoViewIfNeeded();
-  const { cards, onScreen, unsized } = await page.evaluate(() => {
+  await page.locator(".canvas-stage .demo").first().waitFor();
+  const { cards, onScreen, unsized } = await page.evaluate(async () => {
+    const fetched = document.createElement("template");
+    fetched.innerHTML = await (await fetch("/canvas-cards.json")).json();
     const view = document.querySelector(".canvas-viewport")!.getBoundingClientRect();
     const live = [...document.querySelectorAll<HTMLElement>(".canvas-stage .demo")];
     const seen = live.filter((demo) => {
@@ -87,9 +90,9 @@ test("the index's canvas has a card for every playground example, each once on s
       );
     });
     return {
-      cards: [
-        ...document.querySelector<HTMLTemplateElement>("template.canvas-cards")!.content.children,
-      ].map((demo) => (demo as HTMLElement).dataset.example!),
+      cards: [...fetched.content.querySelectorAll<HTMLElement>(".demo")].map(
+        (demo) => demo.dataset.example!,
+      ),
       onScreen: seen.map((demo) => demo.dataset.example),
       unsized: live.filter((demo) => !demo.style.height).length,
     };

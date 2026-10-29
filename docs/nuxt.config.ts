@@ -32,7 +32,7 @@ async function writeAssets() {
   // Each page's Markdown copy and llms.txt, at the site's root.
   const markdown = new URL("dist/markdown/", root);
   if (existsSync(markdown)) await cp(markdown, generated, { recursive: true });
-  for (const file of ["search.json", "style.css"]) {
+  for (const file of ["search.json", "style.css", "canvas-cards.json"]) {
     const built = new URL(`dist/${file}`, root);
     if (existsSync(built)) await cp(built, new URL(file, generated));
   }
