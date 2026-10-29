@@ -13,7 +13,7 @@ tagline: Agents write most review documents. Install the skill so yours knows th
 vp dlx skills add onmax/comark-ui
 ```
 
-The commands here run packages with `vp dlx` from [Vite+](https://viteplus.dev/), through your project's package manager. Without Vite+, `pnpm dlx` takes the same arguments. In a pnpm workspace that has a package only through another one, `npx` finds the package but not its command, and stops with `not found`.
+The commands here run packages with `vp dlx` from Vite+, through your project's package manager. Install Vite+ once with `curl -fsSL https://vite.plus | bash`, or as [its guide](https://viteplus.dev/guide/global-cli) shows on Windows. Without it, `pnpm dlx` takes the same arguments. In a pnpm workspace that has a package only through another one, `npx` finds the package but not its command, and stops with `not found`.
 
 The CLI lists every skill in the repository. Pick `comark-ui`. This site serves it too, so `vp dlx skills add https://comark-ui.onmax.me` installs the same skill.
 

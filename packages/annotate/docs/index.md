@@ -228,6 +228,8 @@ vp dlx comark-annotate check duck-audit.md pigeons.md
 vp dlx comark-annotate render duck-audit.md -o duck-audit.html
 ```
 
+`vp` comes with [Vite+](https://viteplus.dev/guide/global-cli); without it, `pnpm dlx` takes the same arguments.
+
 ### Issues
 
 The plugin adds a problem with any block to `meta.issues`, as [Validation](/guide/validation/) describes. Each issue names its block:

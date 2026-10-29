@@ -27,6 +27,8 @@ Install them with the `skills` CLI:
 vp dlx skills add onmax/comark-ui
 ```
 
+`vp` comes with [Vite+](https://viteplus.dev/guide/global-cli); without it, `pnpm dlx` and `pnpm exec` take the same arguments.
+
 It lists every skill in the repository, the comark-ui skill included, and installs the ones you pick. Each document skill carries the syntax of the blocks it uses, so it works without comark-ui.
 
 ### From npm
@@ -34,8 +36,8 @@ It lists every skill in the repository, the comark-ui skill included, and instal
 The `comark-ui` package ships every skill in `dist/skills/`. A project that installs it can link them from `node_modules` with the `skills` CLI's sync command, so the skills always match the comark-ui version you render with:
 
 ```sh
-npm install -D skills comark-ui
-vp dlx skills experimental_sync -a claude-code -y
+pnpm add -D skills comark-ui
+vp exec skills experimental_sync -a claude-code -y
 ```
 
 Sync links each skill into `.agents/skills/`, plus the directory of every agent you pass with `-a`, and records them in `skills-lock.json`. Installing the package alone changes nothing: run the sync again after each upgrade, or add it to a `prepare` script, as [the CLI reference](https://github.com/vercel-labs/skills/blob/main/docs/commands.md#skills-experimental_sync) shows. The command came from Anthony Fu's [skills-npm](https://github.com/antfu/skills-npm), which is merging into the `skills` CLI. It is experimental, so its name and options may change.

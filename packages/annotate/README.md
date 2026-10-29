@@ -55,6 +55,8 @@ vp dlx comark-annotate check report.md other.md        # one line per problem, e
 vp dlx comark-annotate render report.md -o report.html # standalone page to screenshot
 ```
 
+`vp` comes with [Vite+](https://viteplus.dev/guide/global-cli); without it, `pnpm dlx` takes the same arguments.
+
 ## Development
 
 ```sh

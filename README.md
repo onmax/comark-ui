@@ -113,7 +113,7 @@ It detects your installed `comark-ui` and checks documents with its plugins. Use
 
 ## Agents
 
-[`skills/comark-ui`](./skills/comark-ui) teaches an agent every package, with a reference per package. Install it with `vp dlx skills add onmax/comark-ui`, or bundle it in an app from `comark-ui/skills/comark-ui/`.
+[`skills/comark-ui`](./skills/comark-ui) teaches an agent every package, with a reference per package. Install it with `vp dlx skills add onmax/comark-ui`, or bundle it in an app from `comark-ui/skills/comark-ui/`. `vp` comes with [Vite+](https://viteplus.dev/guide/global-cli); without it, `pnpm dlx` takes the same arguments.
 
 ## Develop
 

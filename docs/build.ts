@@ -1940,6 +1940,7 @@ await writeFile(
     `- Every page has a Markdown copy at its path plus \`.md\`, such as ${site}/zoom.md for ${site}/zoom/. A request with \`Accept: text/markdown\` gets it too.`,
     `- \`vp dlx skills add onmax/comark-ui\` lists the repository's agent skills to pick from: comark-ui, which teaches the syntax of every block (see ${site}/guide/agents.md), and the skills that write a whole document, such as before/after evidence, a review, or a lesson (see ${site}/skills.md). Add \`--skill <name>\` to install one without the list.`,
     "- Check a document before anyone reads it: `vp dlx --package comark-linter --package comark-ui lint-comark doc.md`.",
+    "- `vp` comes with Vite+ (https://viteplus.dev/guide/global-cli). Without it, `pnpm dlx` takes the same arguments.",
     "",
     "## When to use Comark UI",
     "",
