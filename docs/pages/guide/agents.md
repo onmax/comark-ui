@@ -9,13 +9,17 @@ tagline: Agents write most review documents. Install the skill so yours knows th
 
 [onmax](https://github.com/onmax)'s agent skill collects every package in one place: which block to use, its syntax, and how to check the result. Install it, or copy the command from the **For agents** button on any package's page:
 
+Install the global Vite+ CLI once with `curl -fsSL https://vite.plus | bash`, or as [its guide](https://viteplus.dev/guide/global-cli) shows on Windows. The commands here use `vp dlx` to fetch packages and `vp exec` to run installed tools, through your project's package manager. Without Vite+, use `pnpm dlx` and `pnpm exec` with the same arguments.
+
 ```sh
-npx skills add onmax/comark-ui
+vp dlx skills add onmax/comark-ui
 ```
 
-The CLI lists every skill in the repository. Pick `comark-ui`. This site serves it too, so `npx skills add https://comark-ui.onmax.me` installs the same skill.
+In a pnpm workspace that has a package only through another one, `npx` finds the package but not its command, and stops with `not found`.
 
-A project that installs `comark-ui` can link the skill from `node_modules` instead, so it matches the installed version. Run `npx skills experimental_sync` after each install; [Skills](/skills/#from-npm) shows how, and why the command is still experimental.
+The CLI lists every skill in the repository. Pick `comark-ui`. This site serves it too, so `vp dlx skills add https://comark-ui.onmax.me` installs the same skill.
+
+A project that installs `comark-ui` can link the skill from `node_modules` instead, so it matches the installed version. Run `vp dlx skills experimental_sync` after each install; [Skills](/skills/#from-npm) shows how, and why the command is still experimental.
 
 It teaches the blocks. To teach your agent a whole document, such as before/after evidence, a review, or a lesson, pick the [skills](/skills/) for those from the same list.
 
@@ -45,15 +49,13 @@ Keep the folder whole, since `SKILL.md` links each reference by its path. An app
 An agent should check a document before it hands it over. comark-linter lists every problem, each with its line. Outside a project that installs it, fetch it together with comark-ui, so it knows every block:
 
 ```sh
-npx -p comark-linter@latest -p comark-ui@latest lint-comark duck-audit.md
+vp dlx --package comark-linter --package comark-ui lint-comark duck-audit.md
 ```
-
-`@latest` on both makes npx install them together. Without it, npx skips a package the project already has through another one, such as comark-ui in a pnpm workspace. Then lint-comark either runs without comark-ui and calls its blocks unknown, or npx stops with `lint-comark: not found`.
 
 Marks also need a look, because a box can sit inside the image and still miss its target. First [install the CLI directly](/annotate/#cli) at the same version as the project's Comark UI packages. `comark-annotate render` writes a standalone page next to the file. The agent opens it in a browser and takes a screenshot to confirm each mark sits on its target:
 
 ```sh
-npx comark-annotate render duck-audit.md -o duck-audit.html
+vp exec comark-annotate render duck-audit.md -o duck-audit.html
 ```
 
 ## Writing for reviewers

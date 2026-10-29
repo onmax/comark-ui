@@ -226,9 +226,11 @@ The package comes with a small CLI that knows zoom and carousel too.
 Install comark-annotate directly in the workspace package where you will run the CLI. With pnpm, use `pnpm add -D comark-annotate@<version>`, replacing `<version>` with the exact version of the project's installed Comark UI packages. Add `-w` when installing at the workspace root. For a standalone preview with no Comark UI packages installed, omit `@<version>`. Then run the local executable:
 
 ```sh
-npx comark-annotate check duck-audit.md pigeons.md
-npx comark-annotate render duck-audit.md -o duck-audit.html
+vp exec comark-annotate check duck-audit.md pigeons.md
+vp exec comark-annotate render duck-audit.md -o duck-audit.html
 ```
+
+`vp` comes with the [global Vite+ CLI](https://viteplus.dev/guide/global-cli). Without it, use `pnpm dlx` for `vp dlx` and `pnpm exec` for `vp exec`.
 
 A direct dependency links the executable in pnpm workspaces. When comark-annotate is only transitive, npx can find the package without finding a linked command and stop with `comark-annotate: not found`. Using `@latest` to bypass that discovery can instead run a different release from the project's renderers.
 
@@ -270,7 +272,7 @@ const html = await render(markdown);
 
 The renderer inlines its styles and script once per document. Annotate renders only to HTML. [Renderers](/guide/renderers/) covers using it with other plugins, a strict Content Security Policy, and untrusted notes.
 
-The comark-ui agent skill knows the syntax, how to measure marks from the page, and how to check the result. Agents install it with `npx skills add onmax/comark-ui`, and [Agents](/guide/agents/) covers the rest.
+The comark-ui agent skill knows the syntax, how to measure marks from the page, and how to check the result. Agents install it with `vp dlx skills add onmax/comark-ui`, and [Agents](/guide/agents/) covers the rest.
 
 ## Theme
 

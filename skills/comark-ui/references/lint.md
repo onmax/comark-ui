@@ -5,7 +5,7 @@ comark-linter reports what Comark forgives, such as a `::` block never closed, a
 ## Run the command
 
 ```sh
-npx lint-comark "docs/**/*.md" --format json --check-urls
+vp exec lint-comark "docs/**/*.md" --format json --check-urls
 ```
 
 - Pass files or globs. Quote a glob so the shell passes it as written; lint-comark expands it and skips `node_modules` and `dist`.

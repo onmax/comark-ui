@@ -1,6 +1,6 @@
 # Blocks for a visual explanation
 
-These blocks come with `comark-ui`. The comark-ui skill (`npx skills add onmax/comark-ui`) documents every block in full.
+These blocks come with `comark-ui`. The comark-ui skill (`vp dlx skills add onmax/comark-ui`) documents every block in full.
 
 ## Diagrams: a `mermaid` fence
 
