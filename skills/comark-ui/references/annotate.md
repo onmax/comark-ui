@@ -54,10 +54,10 @@ For a clipped capture, `getBoundingClientRect()` and Playwright's main-frame `cl
 ## Preview
 
 ```sh
-npx comark-annotate render report.md -o report.html
+npx comark-annotate@latest render report.md -o report.html
 ```
 
-`render` writes a standalone page of the screenshots and compares, and relative `src` paths resolve next to it. Without comark-linter, `npx comark-annotate check report.md` lists these blocks' problems on its own. It names each one like `screenshot "after.png", annotation 2`, counting annotations within their screenshot, and exits with 1 while any remain.
+`render` writes a standalone page of the screenshots and compares, and relative `src` paths resolve next to it. Without comark-linter, `npx comark-annotate@latest check report.md` lists these blocks' problems on its own. It names each one like `screenshot "after.png", annotation 2`, counting annotations within their screenshot, and exits with 1 while any remain. `@latest` makes npx fetch the CLI even when the project has comark-annotate only through another package, such as comark-ui in a pnpm workspace; without it, npx stops with `comark-annotate: not found`.
 
 ## Register
 

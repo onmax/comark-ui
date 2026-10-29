@@ -51,7 +51,7 @@ npx -p comark-linter -p comark-ui lint-comark duck-audit.md
 Marks also need a look, because a box can sit inside the image and still miss its target. `comark-annotate render` writes a standalone page next to the file. The agent opens it in a browser and takes a screenshot to confirm each mark sits on its target:
 
 ```sh
-npx comark-annotate render duck-audit.md -o duck-audit.html
+npx comark-annotate@latest render duck-audit.md -o duck-audit.html
 ```
 
 ## Writing for reviewers

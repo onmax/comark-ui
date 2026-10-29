@@ -224,9 +224,11 @@ The package comes with a small CLI that knows zoom and carousel too.
 | `render` | Writes a standalone page next to each file, or to `-o` for one file. Open it and take a screenshot to confirm each mark sits on its target. |
 
 ```sh
-npx comark-annotate check duck-audit.md pigeons.md
-npx comark-annotate render duck-audit.md -o duck-audit.html
+npx comark-annotate@latest check duck-audit.md pigeons.md
+npx comark-annotate@latest render duck-audit.md -o duck-audit.html
 ```
+
+`@latest` makes npx fetch the CLI even when comark-annotate is only a dependency of another package, as with comark-ui in a pnpm workspace. Without it, npx takes that copy as installed, finds no `comark-annotate` command linked for the project, and stops with `comark-annotate: not found`.
 
 ### Issues
 
