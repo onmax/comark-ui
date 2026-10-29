@@ -140,6 +140,8 @@ export default defineNuxtConfig({
     skills: { dir: "../skills" },
   },
   nitro: {
+    // The Console imports the optional KV runtime even without a store; Nitro still needs its disabled config.
+    virtual: { "#vitehub/kv/config": "export const kv = false" },
     // The root wrangler.jsonc holds what ViteHub doesn't generate (name, routes, previews). Nitro merges it with ViteHub's
     // bindings into docs/dist/server/wrangler.json, which the local Wrangler module selects for commands run from the repository's root.
     cloudflare: {
