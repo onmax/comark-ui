@@ -36,7 +36,7 @@ comarkUi({
 | `@comark/react` | `comark-ui/react` |
 | `@comark/svelte` | `comark-ui/svelte` |
 
-The Vue, React, and Svelte entries leave out annotate and diff, which render only to HTML. Screenshots, compares, diffs, and the marks on charts need `comark-ui/html`.
+The Vue, React, and Svelte entries leave out annotate, comments, diff, and quiz, which render only to HTML. Screenshots, compares, diffs, suggestions and comments, and the marks on charts need `comark-ui/html`.
 
 To use another renderer, install it in place of `@comark/html`, such as `pnpm add comark @comark/vue comark-ui`, and pass it `plugins` and `components` as you would one package's. The preset needs Vue 3.5, React 18, or Svelte 5.20 or later. Every entry exports the `PresetOptions` type, and `comark-ui` itself exports `preset(renderer, options)`, which builds the same pair from renderer entries you pass.
 

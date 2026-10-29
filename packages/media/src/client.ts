@@ -75,8 +75,13 @@ export function start(css: string): () => void {
     player.toggleAttribute("data-playing", !media.paused);
     player.toggleAttribute("data-muted", media.muted);
     player.toggleAttribute("data-error", Boolean(media.error));
-    // A video that can't play gets the browser's controls back, so they can say why.
-    if (media instanceof HTMLVideoElement) media.controls = Boolean(media.error);
+    if (media instanceof HTMLVideoElement) {
+      // A video that can't play gets the browser's controls back, so they can say why.
+      media.controls = Boolean(media.error);
+      // A frame without the fullscreen permission can't go full screen, so the button would do nothing.
+      const full = player.querySelector<HTMLElement>(".cm-full");
+      if (full) full.hidden = !document.fullscreenEnabled && !media.webkitEnterFullscreen;
+    }
     player.querySelector(".cm-play")?.setAttribute("aria-label", media.paused ? "Play" : "Pause");
     player.querySelector(".cm-mute")?.setAttribute("aria-label", media.muted ? "Unmute" : "Mute");
     const [now, end] = player.querySelectorAll(".cm-time");

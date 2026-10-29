@@ -1,6 +1,6 @@
 # Blocks for before/after evidence
 
-These blocks come with `comark-ui`, or alone with `comark-annotate` and `comark-diff`. The comark-ui skill (`npx skills add onmax/comark-ui`) documents every block in full.
+These blocks come with `comark-ui`, or alone with `comark-annotate` and `comark-diff`. The comark-ui skill (`vp dlx skills add onmax/comark-ui`) documents every block in full.
 
 ## `::compare`
 

@@ -1,6 +1,6 @@
 # Blocks for a review document
 
-These blocks come with `comark-ui`, or alone with `comark-github`, `comark-tests`, `comark-diff`, and `comark-code`. The comark-ui skill (`npx skills add onmax/comark-ui`) documents every block in full.
+These blocks come with `comark-ui`, or alone with `comark-github`, `comark-tests`, `comark-diff`, and `comark-code`. The comark-ui skill (`vp dlx skills add onmax/comark-ui`) documents every block in full.
 
 ## The verdict: a callout
 

@@ -5,6 +5,7 @@ import type { ChartsOptions } from "comark-charts";
 import type { ChipsOptions } from "comark-chips";
 import cjk from "comark-cjk";
 import type { CodeOptions } from "comark-code";
+import type { CommentsOptions } from "comark-comments";
 import critic, { type CriticOptions } from "comark-critic";
 import deflist from "comark-deflist";
 import type { DetailsOptions } from "comark-details";
@@ -55,6 +56,11 @@ export type PresetOptions = {
   /** Pass `{ download: false }` when parsing in a browser, which may not download another site's images. */
   chips?: ChipsOptions | boolean;
   colors?: boolean;
+  /**
+   * HTML only: Vue, React, and Svelte have no comments components. `{ mark: "pen" }` draws suggestions with a
+   * hand-drawn pen unless one sets its own `mark`.
+   */
+  comments?: CommentsOptions | boolean;
   /** Sends each diagram's source to `https://kroki.io` unless you pass your own `server`, or `{ draw: false }`. */
   diagrams?: DiagramsOptions | boolean;
   /** Draws `mermaid` fences with comark-pele, on the server and offline. */
@@ -123,6 +129,7 @@ export type Renderer<C> = {
   charts: Part<C, ChartsOptions>;
   chips: Part<C, ChipsOptions>;
   colors: Part<C>;
+  comments?: Part<C, CommentsOptions>;
   diagrams: Part<C, DiagramsOptions>;
   mermaid: Part<C, PeleConfig>;
   diff?: Part<C>;
@@ -253,6 +260,8 @@ export function preset<C>(renderer: Renderer<C>, options: PresetOptions = {}): P
   add(renderer.zoom, options.zoom);
   add(renderer.code, options.code, { iconResolver: icons, ...optionsOf(options.code) });
   add(renderer.codeNotes, options.codeNotes);
+  // Last of the plugins that draw, since it wraps the document's blocks in one root when a card needs the margin.
+  add(renderer.comments, options.comments);
   if (on(options.typeset)) {
     plugins.push(typeset());
     components[TYPESET_TAG] = renderer.typeset;
