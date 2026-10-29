@@ -53,6 +53,8 @@ For a clipped capture, `getBoundingClientRect()` and Playwright's main-frame `cl
 
 ## Preview
 
+Ensure comark-annotate is a direct dependency of the workspace package where you run the CLI. If it is only transitive, read the installed Comark UI version and add that exact version with the project's package manager: for pnpm, `pnpm add -D comark-annotate@<version>`, substituting that version. Add `-w` when installing at the workspace root. With no Comark UI packages installed, omit `@<version>`. This links the executable without fetching a different renderer release via `@latest`.
+
 ```sh
 npx comark-annotate render report.md -o report.html
 ```

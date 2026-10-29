@@ -50,7 +50,7 @@ npx -p comark-linter@latest -p comark-ui@latest lint-comark duck-audit.md
 
 `@latest` on both makes npx install them together. Without it, npx skips a package the project already has through another one, such as comark-ui in a pnpm workspace. Then lint-comark either runs without comark-ui and calls its blocks unknown, or npx stops with `lint-comark: not found`.
 
-Marks also need a look, because a box can sit inside the image and still miss its target. `comark-annotate render` writes a standalone page next to the file. The agent opens it in a browser and takes a screenshot to confirm each mark sits on its target:
+Marks also need a look, because a box can sit inside the image and still miss its target. First [install the CLI directly](/annotate/#cli) at the same version as the project's Comark UI packages. `comark-annotate render` writes a standalone page next to the file. The agent opens it in a browser and takes a screenshot to confirm each mark sits on its target:
 
 ```sh
 npx comark-annotate render duck-audit.md -o duck-audit.html
