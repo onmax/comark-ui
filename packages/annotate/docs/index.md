@@ -223,12 +223,14 @@ The package comes with a small CLI that knows zoom and carousel too.
 | `check` | Lists every problem in one or more files, and exits with 1 if there are any. |
 | `render` | Writes a standalone page next to each file, or to `-o` for one file. Open it and take a screenshot to confirm each mark sits on its target. |
 
+Install comark-annotate directly in the workspace package where you will run the CLI. With pnpm, use `pnpm add -D comark-annotate@<version>`, replacing `<version>` with the exact version of the project's installed Comark UI packages. Add `-w` when installing at the workspace root. For a standalone preview with no Comark UI packages installed, omit `@<version>`. Then run the local executable:
+
 ```sh
-npx comark-annotate@latest check duck-audit.md pigeons.md
-npx comark-annotate@latest render duck-audit.md -o duck-audit.html
+npx comark-annotate check duck-audit.md pigeons.md
+npx comark-annotate render duck-audit.md -o duck-audit.html
 ```
 
-`@latest` makes npx fetch the CLI even when comark-annotate is only a dependency of another package, as with comark-ui in a pnpm workspace. Without it, npx takes that copy as installed, finds no `comark-annotate` command linked for the project, and stops with `comark-annotate: not found`.
+A direct dependency links the executable in pnpm workspaces. When comark-annotate is only transitive, npx can find the package without finding a linked command and stop with `comark-annotate: not found`. Using `@latest` to bypass that discovery can instead run a different release from the project's renderers.
 
 ### Issues
 

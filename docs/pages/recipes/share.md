@@ -23,10 +23,10 @@ tagline: Get a review document in front of reviewers. Publish it to Drop, where 
 :::
 
 :::tabs-item{label="Your own page"}
-Render the document with the plugins it uses, as [Renderers](/guide/renderers/#several-plugins) shows, and deploy the page with your preview. For a document of screenshots, `comark-annotate render` writes the page for you. Keep the images next to it:
+Render the document with the plugins it uses, as [Renderers](/guide/renderers/#several-plugins) shows, and deploy the page with your preview. For a document of screenshots, first [install the CLI directly](/annotate/#cli) at the same version as the project's Comark UI packages. `comark-annotate render` writes the page for you. Keep the images next to it:
 
 ```sh
-npx comark-annotate@latest render review.md -o review.html
+npx comark-annotate render review.md -o review.html
 ```
 
 Link the page from the pull request, or upload it as a CI artifact. GitHub shows HTML files as source, so for evidence that sits in the pull request itself, attach a screenshot of the rendered page.

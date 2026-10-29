@@ -54,10 +54,12 @@ Image `src` must be a URL the renderer can reach: a path next to the document, o
    npx -p comark-linter -p comark-ui lint-comark evidence.md
    ```
 
-2. Open the page where it will be read and take a screenshot of it. For a local screenshot-only check, copy the complete `::compare` block, including its nested screenshots and annotations, into `evidence-screenshots.md` beside `evidence.md`, then run:
+2. Open the page where it will be read and take a screenshot of it. For a local screenshot-only check, copy the complete `::compare` block, including its nested screenshots and annotations, into `evidence-screenshots.md` beside `evidence.md`.
+
+   Ensure comark-annotate is a direct dependency of this workspace package. If it is only transitive, read the installed Comark UI version and add that exact version with the project's package manager: for pnpm, `pnpm add -D comark-annotate@<version>`, substituting that version. Add `-w` when installing at the workspace root. With no Comark UI packages installed, omit `@<version>`. This links the executable without fetching a different renderer release via `@latest`. Then run:
 
    ```sh
-   npx comark-annotate@latest render evidence-screenshots.md -o evidence-screenshots.html
+   npx comark-annotate render evidence-screenshots.md -o evidence-screenshots.html
    ```
 
    Open `evidence-screenshots.html` and take a screenshot of it. This CLI renders annotate, carousel, and zoom only; check any `::diff` or other blocks in the host's full Comark UI preview.
