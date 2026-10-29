@@ -65,6 +65,7 @@ Read the reference for each block you use before you write it. Mix the blocks fr
 | Links and `@mentions` with the site's favicon or the person's avatar | links, `@user`, `:chip` | [chips](references/chips.md) |
 | Colors, such as design tokens before and after, or a palette | a color in inline code, `::palette` | [colors](references/colors.md) |
 | A suggested change to one file, before and after | `::diff` | [diff](references/diff.md) |
+| Suggested edits and comment threads on prose, such as a copy review, each note in a card in the margin | `:suggestion`, `:comment` | [comments](references/comments.md) |
 | A video, a design file, or a live reproduction from its link | `::embed` | [embed](references/embed.md) |
 | A screen recording or a sound that a screenshot can't show | `![alt](clip.mp4)` | [media](references/media.md) |
 | A number before and after, a table of befores and afters, or progress | `:delta`, `::stats`, `:progress` | [metrics](references/metrics.md) |

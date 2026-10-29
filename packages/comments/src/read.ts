@@ -1,0 +1,356 @@
+import type { ElementNode, Node } from "comark";
+import { textContent } from "comark/utils";
+
+/** How a suggestion draws: a red strike and a green insert, or a hand-drawn strike with the new words written above. */
+export type Mark = "track" | "pen";
+
+/** One problem: the comark-linter rule it falls under, and the sentence that names its block and the fix. */
+export type Issue = { rule: `comark/comments/${string}`; message: string };
+
+/** One message in a card: its author as written in `by`, and its `note`. */
+export type Entry = { by: string; note: string };
+
+/** The root node the plugin wraps a document's blocks in when any card goes in the margin. */
+export const ROOT = "comments";
+
+const MARKS: readonly string[] = ["track", "pen"];
+const PROPS = {
+  suggestion: ["from", "by", "note", "mark", "id"],
+  comment: ["by", "note", "id"],
+  reply: ["reply", "by", "note"],
+} as const;
+type Kind = keyof typeof PROPS;
+// Comark's own attributes, which a host may style or test by, so they aren't reported.
+const NATIVE = /^(?:id|class|style|data-.+|aria-.+)$/i;
+// Names an author is likely to guess, and what to write instead.
+const HINTS = new Map([
+  ["reason", "Did you mean `note`?"],
+  ["comment", "Did you mean `note`?"],
+  ["message", "Did you mean `note`?"],
+  ["body", "Did you mean `note`?"],
+  ["author", "Did you mean `by`?"],
+  ["user", "Did you mean `by`?"],
+  ["old", "Did you mean `from`?"],
+  ["original", "Did you mean `from`?"],
+  ["to", "Put the new text in the brackets."],
+  ["new", "Put the new text in the brackets."],
+  ["text", "Put the text in the brackets."],
+  ["reply-to", "Did you mean `reply`?"],
+  ["thread", "Did you mean `reply`?"],
+]);
+// Pen writes the new words above the old ones on one line, so it only fits short, plain changes.
+const PEN_MAX = 24;
+const HEADING = /^h[1-6]$/;
+
+export const isElement = (node: Node | undefined): node is ElementNode =>
+  Array.isArray(node) && node[0] !== null;
+// SAFETY: an element node is [tag, attributes, ...children], so everything after index 1 is a child node.
+export const childrenOf = (node: ElementNode) => node.slice(2) as Node[];
+const text = (value: unknown) =>
+  value === undefined || value === null || value instanceof Object
+    ? ""
+    : // SAFETY: undefined, null, objects, and arrays returned above, so only a string, number, or boolean is left.
+      String(value as string | number | boolean).trim();
+const isMark = (value: string): value is Mark => MARKS.includes(value);
+const words = (nodes: Node[]) =>
+  nodes
+    .map((node) => textContent(node))
+    .join("")
+    .replace(/\s+/g, " ")
+    .trim();
+const clip = (value: string) => (value.length > 40 ? `${value.slice(0, 39)}…` : value);
+// Quotes what an author wrote, so a quote inside it can't blur where it ends.
+const quote = (value: string) => JSON.stringify(clip(value));
+const list = (names: readonly string[]) =>
+  names.map((name) => (name === "id" ? "`#id`" : `\`${name}\``)).join(", ");
+const graphemes = (value: string) => [...new Intl.Segmenter().segment(value)].length;
+
+/** FNV-1a, in base 36: short, and the same every time the same text is hashed. */
+export function hash(source: string) {
+  let value = 0x811c9dc5;
+  for (let at = 0; at < source.length; at++)
+    value = Math.imul(value ^ source.charCodeAt(at), 0x01000193);
+  return (value >>> 0).toString(36);
+}
+
+function distance(a: string, b: string) {
+  const row = Array.from({ length: b.length + 1 }, (_, index) => index);
+  for (let i = 1; i <= a.length; i++) {
+    let previous = row[0]!;
+    row[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const current = row[j]!;
+      row[j] = Math.min(row[j]! + 1, row[j - 1]! + 1, previous + (a[i - 1] === b[j - 1] ? 0 : 1));
+      previous = current;
+    }
+  }
+  return row[b.length]!;
+}
+
+type Thread = {
+  node: ElementNode;
+  kind: "suggestion" | "comment";
+  name: string;
+  /** No card: it sits inside another thread, a heading, or a table cell. */
+  cardless: boolean;
+  /** The thread it sits inside, if any. */
+  inside?: Thread;
+  /** Its id is another thread's too. */
+  duplicate?: boolean;
+  /** Renders only its children, or nothing. */
+  plain: boolean;
+  entries: Entry[];
+};
+type Reply = { node: ElementNode; text: string };
+type Place = { heading: boolean; cell: boolean; inside?: Thread };
+
+function nameOf(node: ElementNode): string {
+  const [tag, attrs] = node;
+  const body = words(childrenOf(node));
+  if (tag === "suggestion") {
+    const from = text(attrs.from);
+    if (from && body) return `suggestion ${quote(from)} → ${quote(body)}`;
+    if (from) return `suggestion removing ${quote(from)}`;
+    if (body) return `suggestion adding ${quote(body)}`;
+    return "suggestion with no text";
+  }
+  if (body) return `comment ${quote(body)}`;
+  const note = text(attrs.note);
+  return note ? `comment with the note ${quote(note)}` : "comment with no text";
+}
+
+// Moves every reply out of the text, leaving the words in its brackets, and drops a paragraph it leaves empty.
+function collect(
+  parent: Node[] | ElementNode,
+  start: number,
+  place: Place,
+  found: { threads: Thread[]; replies: Reply[] },
+): boolean {
+  let moved = false;
+  for (let index = start; index < parent.length; index++) {
+    // SAFETY: a list's items, and an element's from index 2 on, are nodes.
+    const node = parent[index] as Node | undefined;
+    if (!isElement(node)) continue;
+    const [tag, attrs] = node;
+    if (tag === "comment" && attrs.reply !== undefined) {
+      const children = childrenOf(node);
+      found.replies.push({ node, text: words(children) });
+      parent.splice(index, 1, ...children);
+      index += children.length - 1;
+      moved = true;
+      continue;
+    }
+    if (tag === "suggestion" || tag === "comment") {
+      const thread: Thread = {
+        node,
+        kind: tag,
+        name: nameOf(node),
+        cardless: Boolean(place.inside) || place.heading || place.cell,
+        inside: place.inside,
+        plain: false,
+        entries: [],
+      };
+      found.threads.push(thread);
+      collect(node, 2, { ...place, inside: thread }, found);
+      continue;
+    }
+    const inner = collect(
+      node,
+      2,
+      {
+        ...place,
+        heading: place.heading || HEADING.test(tag),
+        cell: place.cell || tag === "td" || tag === "th",
+      },
+      found,
+    );
+    if (inner && tag === "p" && !words(childrenOf(node)) && !childrenOf(node).some(isElement)) {
+      parent.splice(index, 1);
+      index--;
+    }
+  }
+  return moved;
+}
+
+function checkProps(kind: Kind, name: string, attrs: Record<string, unknown>, issues: Issue[]) {
+  const valid: readonly string[] = PROPS[kind];
+  for (const raw of Object.keys(attrs)) {
+    const key = raw.replace(/^:/, "");
+    if (key === "$" || valid.includes(key) || NATIVE.test(key)) continue;
+    const lower = key.toLowerCase();
+    const close = valid.find((prop) => lower.length >= 3 && distance(lower, prop) <= 1);
+    const hint = HINTS.has(lower) ? HINTS.get(lower) : close ? `Did you mean \`${close}\`?` : "";
+    issues.push({
+      rule: "comark/comments/unknown-prop",
+      message: `${name} has \`${key}\`, which isn't one of its props, so it's ignored.${hint ? ` ${hint}` : ""} Use ${list(valid)}.`,
+    });
+  }
+}
+
+/** What the renderer needs from the document: the default mark, and a prefix that keeps its ids apart from others. */
+export type Settings = { mark: Mark; prefix: string };
+
+/**
+ * Reads every `:suggestion` and `:comment` in `nodes`, moves each reply into its thread, and rewrites the nodes'
+ * attributes into the ones the renderer draws from. Wraps the blocks in one root node when any card goes in the
+ * margin. Returns the problems; it never throws.
+ */
+export function transform(nodes: Node[], settings: Settings): Issue[] {
+  const issues: Issue[] = [];
+  const found: { threads: Thread[]; replies: Reply[] } = { threads: [], replies: [] };
+  // Comark lifts an inline component that fills its paragraph out of it, so it would render outside any paragraph.
+  for (const [index, node] of nodes.entries())
+    if (
+      isElement(node) &&
+      (node[0] === "suggestion" || node[0] === "comment") &&
+      node[1].reply === undefined
+    )
+      nodes[index] = ["p", {}, node];
+  collect(nodes, 0, { heading: false, cell: false }, found);
+  const ids = new Map<string, Thread>();
+
+  for (const thread of found.threads) {
+    const { node, kind, name } = thread;
+    const attrs = node[1];
+    checkProps(kind, name, attrs, issues);
+    const by = text(attrs.by);
+    const note = text(attrs.note);
+    const body = words(childrenOf(node));
+    if (kind === "suggestion") {
+      const from = text(attrs.from);
+      if (!from && !childrenOf(node).length) {
+        thread.plain = true;
+        issues.push({
+          rule: "comark/comments/empty-suggestion",
+          message: `${name} has no new text and no \`from\`, so it changes nothing and renders nothing. Put the new text in its brackets, the text it replaces in \`from\`, or both.`,
+        });
+      } else if (from && from === body) {
+        thread.plain = true;
+        issues.push({
+          rule: "comark/comments/unchanged-suggestion",
+          message: `${name} has the same text in \`from\` and in its brackets, so it changes nothing and renders as plain text. Change one of them, or remove the suggestion.`,
+        });
+      }
+      if (attrs.mark !== undefined && !MARKS.includes(text(attrs.mark)))
+        issues.push({
+          rule: "comark/comments/invalid-mark",
+          message: `${name} has \`mark="${text(attrs.mark)}"\`, which isn't a mark, so it draws as "${settings.mark}". Write \`mark="track"\` or \`mark="pen"\`.`,
+        });
+    } else {
+      if (!body && !childrenOf(node).some(isElement)) {
+        thread.plain = true;
+        issues.push({
+          rule: "comark/comments/missing-anchor",
+          message: `${name} has nothing in its brackets to point at, so it renders nothing. Put the words it's about in its brackets, as \`:comment[words]{note="…"}\`, or answer a thread with \`reply="id"\`.`,
+        });
+      } else if (!note)
+        issues.push({
+          rule: "comark/comments/missing-note",
+          message: `${name} has no \`note\`, so its card has nothing to say. Add \`note="…"\` with the comment.`,
+        });
+    }
+    if (thread.cardless && !thread.plain) {
+      const container = thread.inside;
+      issues.push(
+        container
+          ? {
+              rule: "comark/comments/nested-thread",
+              message: `${name} sits inside ${container.name}, so it has no card of its own. Move it out, after the other one.`,
+            }
+          : {
+              rule: "comark/comments/outside-margin",
+              message: `${name} is in a heading or a table cell, where its card can't reach the margin, so it has none. Move it to a paragraph or a list item.`,
+            },
+      );
+      if (kind === "comment") thread.plain = true;
+    }
+    const id = text(attrs.id);
+    if (id) {
+      const first = ids.get(id);
+      if (first)
+        issues.push({
+          rule: "comark/comments/duplicate-id",
+          message: `${name} has the id "${id}", which ${first.name} has too, so replies go to the first one. Give each comment and suggestion its own \`#id\`.`,
+        });
+      else ids.set(id, thread);
+      // An id two elements share is invalid HTML, so only the first one keeps it.
+      if (first) thread.duplicate = true;
+    }
+    if (note && !thread.plain) thread.entries.push({ by, note });
+  }
+
+  for (const { node, text: written } of found.replies) {
+    const attrs = node[1];
+    const target = text(attrs.reply);
+    const name = `reply to ${quote(target)}`;
+    checkProps("reply", name, attrs, issues);
+    if (written)
+      issues.push({
+        rule: "comark/comments/reply-with-text",
+        message: `${name} has text in its brackets, which a reply doesn't point at, so the text stays where it is. Remove the brackets and put what it says in \`note\`.`,
+      });
+    const thread = ids.get(target);
+    if (!thread) {
+      let near: { id: string; far: number } | undefined;
+      for (const id of ids.keys()) {
+        const far = distance(id.toLowerCase(), target.toLowerCase());
+        if (far <= 2 && (!near || far < near.far)) near = { id, far };
+      }
+      issues.push({
+        rule: "comark/comments/unknown-reply",
+        message: `${name} matches no comment or suggestion's \`#id\`, so it renders nothing. ${near ? `Did you mean \`reply="${near.id}"\`?` : `Give the comment or suggestion it answers \`#${target || "id"}\`.`}`,
+      });
+      continue;
+    }
+    const note = text(attrs.note);
+    if (!note) {
+      issues.push({
+        rule: "comark/comments/missing-note",
+        message: `${name} has no \`note\`, so it renders nothing. Add \`note="…"\` with the reply.`,
+      });
+      continue;
+    }
+    if (!thread.plain && !thread.cardless) thread.entries.push({ by: text(attrs.by), note });
+  }
+
+  let cards = 0;
+  let pens = 0;
+  for (const thread of found.threads) {
+    const { node, kind, entries } = thread;
+    const attrs = node[1];
+    const next: Record<string, unknown> = {};
+    const id = text(attrs.id);
+    if (id && !thread.duplicate) next.id = id;
+    if (thread.plain) {
+      node[1] = { plain: "true" };
+      continue;
+    }
+    if (kind === "suggestion") {
+      const from = text(attrs.from);
+      const body = words(childrenOf(node));
+      const written = text(attrs.mark);
+      const asked = isMark(written) ? written : settings.mark;
+      const plain = (value: string) => !value.includes("\n") && graphemes(value) <= PEN_MAX;
+      const pen =
+        asked === "pen" &&
+        plain(from) &&
+        plain(body) &&
+        !childrenOf(node).some(
+          (child) => Array.isArray(child) || textContent(child).includes("\n"),
+        );
+      next.mark = pen ? "pen" : "track";
+      if (pen) next.stroke = String(pens++ % 3);
+      if (from) next.from = from;
+    }
+    if (entries.length && !thread.cardless) {
+      next.uid = `${settings.prefix}-${++cards}`;
+      const about =
+        kind === "comment" ? words(childrenOf(node)) : words(childrenOf(node)) || text(attrs.from);
+      next.label = `${entries.length} ${entries.length === 1 ? "comment" : "comments"} on “${clip(about)}”`;
+      next.thread = entries;
+    }
+    node[1] = next;
+  }
+  if (cards) nodes.splice(0, nodes.length, [ROOT, {}, ...nodes]);
+  return issues;
+}

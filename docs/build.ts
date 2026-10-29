@@ -127,6 +127,7 @@ const packageOrder = [
   "figure",
   "mark",
   "critic",
+  "comments",
   "deflist",
   "footnotes",
   "math",
@@ -2040,6 +2041,8 @@ if (playSection) {
   // since it scales, and a badge or a key hardly any. Every other package takes the middle width.
   const frameWidths: Record<string, string> = {
     annotate: "34rem",
+    // The cards go in a margin that opens at 50rem.
+    comments: "56rem",
     recipes: "38rem",
     cast: "32rem",
     diff: "32rem",

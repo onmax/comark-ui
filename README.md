@@ -66,6 +66,7 @@ Browse the [docs and live examples](https://comark-ui.onmax.me) for component sy
 | [`comark-code`](./packages/code) | Copy and Wrap buttons on code blocks, and buttons of your own that hand the code to your app. |
 | [`comark-code-notes`](./packages/code-notes) | Numbered notes on lines of code: a `// <1>` marker in a fence links to the numbered list after it, and back. |
 | [`comark-colors`](./packages/colors) | A swatch next to inline code that holds a color, like GitLab, and `::palette` grids of named colors. |
+| [`comark-comments`](./packages/comments) | Suggested edits and comment threads in the text, with each note in a card in the margin beside its line, as a redline or a hand-drawn pen, and no script. |
 | [`comark-critic`](./packages/critic) | CriticMarkup: `{++insertions++}`, `{--deletions--}`, `{~~old~>new~~}`, highlights, and comments as native `<ins>`, `<del>`, and `<mark>`, shown, accepted, or rejected. |
 | [`comark-deflist`](./packages/deflist) | Definition lists: a term, then `: definition` lines, rendered as native `<dl>`, `<dt>`, and `<dd>`. |
 | [`comark-details`](./packages/details) | Details, accordions, and collapsibles in Nuxt UI's syntax, drawn as native `<details>` with a real `<summary>`, so they open with no script. |
