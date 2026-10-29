@@ -12,13 +12,15 @@ credits: 'Margin comments as in Google Docs and Microsoft Word. The handwriting 
 ::examples
 :::example{label="Sign-in copy review"}
 ```md
-To :suggestion[sign in]{from="log in" by="Claude" note="The button says Sign in."}, :suggestion[]{from="simply" by="Claude" note="“Simply” tells a stuck reader it should have been easy."} enter the email you signed up with and we’ll send you a link. The link expires after :comment[15 minutes]{#ttl by="@onmax" note="Is 15 minutes enough when email is slow? Support gets tickets about expired links."} :suggestion[and works once]{by="Claude" note="People reuse old links and hit an error."}.
+To :suggestion[sign in]{from="log in" by="Claude" note="The button says Sign in."}, :suggestion[]{from="simply" by="Claude" note="“Simply” tells a stuck reader it should have been easy."} enter the email you signed up with and we’ll send you a link. The link expires after :comment[15 minutes]{#ttl by="@onmax" note="Is 15 minutes enough when email is slow? Support gets tickets about expired links."} :suggestion[and works once]{by="Codex" note="People reuse old links and hit an error."}.
 
-:suggestion[If you forget]{from="In the event that you forget" by="Claude" note="Shorter, same meaning."} which email you used, ask :comment[a workspace admin]{by="sam" note="Can we link to the list of admins here?"}.
+:suggestion[If you forget]{from="In the event that you forget" by="Claude" note="Shorter, same meaning."} which email you used, ask :comment[a workspace admin]{by="@farnabaz" note="Can we link to the list of admins here?"}.
 
-Your session lasts 30 days on this device. Signing out on one device doesn’t sign you out on :suggestion[your other devices]{from="the others" by="Claude"}.
+Your session lasts 30 days on this device. Signing out on one device doesn’t sign you out on :suggestion[your other devices]{from="the others" by="Codex"}.
 
 :comment{reply="ttl" by="Claude" note="Keeping 15. The email has a resend button, and a longer-lived link is riskier."}
+
+:comment{reply="ttl" by="@atinux" note="Agreed. Mention the resend button in the email itself."}
 ```
 :::
 
@@ -37,7 +39,7 @@ Signing out on one device doesn’t sign you out on :suggestion[your other devic
 - A note opens a card in the margin that starts on its anchor's line, and crowded cards stack down without opening gaps in the text.
 - A reply written anywhere in the document joins its thread, and the bubble counts the messages.
 - On a phone, a click on a bubble opens its card under the line. In print, the cards stay in a narrower margin.
-- No script, and nothing is downloaded: an avatar is the author's initial on a color from the name.
+- No script. An avatar is the image you give the author in `avatars`, or else their initial on a color from the name.
 - A screen reader hears "removed" and "added" around each change, and each card is a note that starts with its author.
 
 ## Usage
@@ -82,7 +84,7 @@ Signing out doesn’t sign you out on :suggestion[your other devices]{from="the 
 
 ### Author
 
-Use the `by` prop to name who wrote it. It shows as written, without a leading `@`, beside an avatar of its initial:
+Use the `by` prop to name who wrote it. It shows as written, without a leading `@`, beside an avatar of its initial, or the image you give that name in the plugin's `avatars`:
 
 ::example
 ```md
@@ -184,6 +186,7 @@ The bubble is a checkbox named by its thread, such as "2 comments on “15 minut
 | Option | Default | Description |
 | --- | --- | --- |
 | `mark` | `track` | How suggestions draw unless one sets its own `mark`: `track` or `pen`. |
+| `avatars` | `{}` | An image URL per author, by the name in `by` without `@`, in any case: `{ onmax: "https://github.com/onmax.png" }`. |
 
 `comments: false` in `comarkUi()` turns it off.
 

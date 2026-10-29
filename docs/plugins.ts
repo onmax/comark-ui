@@ -3,6 +3,7 @@
 // the preset's cast, table, and tests read no files, which a browser doesn't have.
 import comarkUi from "../packages/ui/src/html.ts";
 import type { IconOptions } from "comark-icon";
+import { avatars } from "./avatars.ts";
 import type { PlayConfig } from "./config.ts";
 
 // Google's favicon service has none for this site, which only declares an SVG icon, so its chips would look like code.
@@ -26,6 +27,7 @@ export const browserPlugins = (
     chips: { download, favicon },
     icon,
     code: config["comark-code"],
+    comments: { avatars },
     github: config["comark-github"],
     links: config["comark-links"],
     zoom: config["comark-zoom"],

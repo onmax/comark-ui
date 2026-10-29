@@ -8,8 +8,8 @@ export type Mark = "track" | "pen";
 /** One problem: the comark-linter rule it falls under, and the sentence that names its block and the fix. */
 export type Issue = { rule: `comark/comments/${string}`; message: string };
 
-/** One message in a card: its author as written in `by`, and its `note`. */
-export type Entry = { by: string; note: string };
+/** One message in a card: its author as written in `by`, its `note`, and the author's image from `avatars`. */
+export type Entry = { by: string; note: string; avatar?: string };
 
 /** The root node the plugin wraps a document's blocks in when any card goes in the margin. */
 export const ROOT = "comments";
@@ -236,19 +236,26 @@ function checkProps(
 export type Settings = {
   mark: Mark;
   prefix: string;
+  /** Image URLs by author name, lowercase and without `@`. */
+  avatars: Record<string, string>;
   data: Data;
   parsing?: boolean;
   rendered?: WeakMap<ElementNode, Record<string, unknown>>;
 };
 export type DeferredMetadata = NonNullable<ElementNode[1]["$"]> & {
-  comments: Pick<Settings, "mark" | "prefix">;
+  comments: Pick<Settings, "mark" | "prefix" | "avatars">;
 };
 
 export function defer(nodes: Node[], settings: Settings): ElementNode {
   const metadata: DeferredMetadata = {
-    comments: { mark: settings.mark, prefix: settings.prefix },
+    comments: { mark: settings.mark, prefix: settings.prefix, avatars: settings.avatars },
   };
   return [DEFERRED, { $: metadata }, ...nodes];
+}
+
+function entry(by: string, note: string, settings: Settings): Entry {
+  const avatar = settings.avatars[by.replace(/^@/, "").toLowerCase()];
+  return avatar ? { by, note, avatar } : { by, note };
 }
 
 /** Comark lifts an inline component that fills its paragraph; put its anchor back in a paragraph. */
@@ -342,7 +349,7 @@ export function transform(nodes: Node[], settings: Settings): Issue[] {
       // An id two elements share is invalid HTML, so only the first one keeps it.
       if (first) thread.duplicate = true;
     }
-    if (note && !thread.plain) thread.entries.push({ by, note });
+    if (note && !thread.plain) thread.entries.push(entry(by, note, settings));
   }
 
   for (const { node, raw, text: written } of found.replies) {
@@ -382,7 +389,8 @@ export function transform(nodes: Node[], settings: Settings): Issue[] {
       });
       continue;
     }
-    if (!thread.plain && !thread.cardless) thread.entries.push({ by: text(attrs.by), note });
+    if (!thread.plain && !thread.cardless)
+      thread.entries.push(entry(text(attrs.by), note, settings));
   }
 
   let cards = 0;

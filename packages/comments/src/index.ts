@@ -10,6 +10,11 @@ export type CommentsOptions = {
    * characters, across lines, or with code or links. Default `track`.
    */
   mark?: Mark;
+  /**
+   * An image per author, by the name written in `by` without `@`, such as `{ onmax: "https://github.com/onmax.png" }`.
+   * Names match in any case. An author without one gets an initial on a color from the name.
+   */
+  avatars?: Record<string, string>;
 };
 
 export type CommentsMeta = {
@@ -26,12 +31,19 @@ export type CommentsMeta = {
  */
 export default defineComarkPlugin<CommentsOptions, CommentsMeta>((options = {}) => {
   const mark: Mark = options.mark === "pen" ? "pen" : "track";
+  const avatars = Object.fromEntries(
+    Object.entries(options.avatars ?? {}).map(([name, src]) => [
+      name.replace(/^@/, "").toLowerCase(),
+      src,
+    ]),
+  );
   return {
     name: "comark-comments",
     post(state) {
       const { tree } = state;
       const settings = {
         mark,
+        avatars,
         prefix: `cr-${hash(state.markdown)}`,
         data: { frontmatter: tree.frontmatter, meta: tree.meta, data: {}, props: {} },
         parsing: true,
