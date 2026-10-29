@@ -39,6 +39,14 @@ test("client navigation preserves the app and reinitializes page scripts", async
 
 test("the landing canvas paints its cards centered after a client navigation", async ({ page }) => {
   await page.goto("/zoom/");
+  // The scripted click must reach the client router rather than the server-rendered anchor.
+  await page.waitForFunction(() => {
+    if (!("useNuxtApp" in window) || typeof window.useNuxtApp !== "function") return false;
+    const app: unknown = window.useNuxtApp();
+    return (
+      typeof app === "object" && app !== null && "isHydrating" in app && app.isHydrating === false
+    );
+  });
   // Every frame's position of the first card, from the click until the canvas has settled.
   const positions = await page.evaluate(async () => {
     const seen: number[] = [];

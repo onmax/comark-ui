@@ -18,6 +18,7 @@ const url =
 const fields = { title: v.optional(v.string()), description: v.optional(v.string()) };
 
 export const content = defineContent({
+  route: false,
   extends: [
     cms,
     {
