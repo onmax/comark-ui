@@ -1,6 +1,6 @@
 {
   "name": "comark-charts",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "description": "Charts from a Markdown table, drawn to SVG while parsing, that copy as a PNG or as data: bars, stacked bars, lines, areas, scatter plots, dumbbells, waterfalls, pies, gantt charts, and sankeys. The table stays in the page, so people see the chart and agents read the numbers. A Comark plugin.",
   "keywords": [
     "chart",

@@ -1,6 +1,6 @@
 {
   "name": "comark-figure",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "description": "Image captions in Comark: an image alone in its paragraph with a title becomes a native <figure> with a <figcaption>.",
   "keywords": [
     "caption",
