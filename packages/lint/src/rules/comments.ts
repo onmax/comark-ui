@@ -48,4 +48,8 @@ export default {
     code: "COMARK4311",
     title: "Keep comments and suggestions out of headings and table cells",
   },
+  "comark/comments/undefined-binding": {
+    code: "COMARK4312",
+    title: "Point bound comment props at defined values",
+  },
 } satisfies Record<`comark/comments/${string}`, RuleInfo>;

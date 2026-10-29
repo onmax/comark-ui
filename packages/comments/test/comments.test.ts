@@ -1,4 +1,4 @@
-import { createHtmlRenderer } from "@comark/html";
+import { createHtmlRenderer, renderHtmlFromDocument } from "@comark/html";
 import { defineComarkPlugin, parseMarkdown } from "comark";
 import { describe, expect, it } from "vite-plus/test";
 import comments, { type CommentsOptions, components } from "../src/html.ts";
@@ -8,7 +8,7 @@ const flat = (html: string) =>
   html
     .replace(/<style[^>]*>[\s\S]*?<\/style>/g, "")
     .replace(/\s*\n\s*/g, "")
-    .replace(/cr-[a-z0-9]+-(\d+)/g, "cr-x-$1");
+    .replace(/cr-[a-z0-9]+-(\d+)-[a-f0-9]{32}/g, "cr-x-$1");
 const render = async (markdown: string, options: CommentsOptions = {}) =>
   flat(await createHtmlRenderer({ plugins: [comments(options)], components })(markdown));
 const raw = async (markdown: string, options: CommentsOptions = {}) =>
@@ -125,11 +125,90 @@ describe("comark-comments", () => {
     expect(html).toContain("<b>&lt;b&gt;</b>a &lt;script&gt; &amp;");
   });
 
-  it("gives every document its own ids", async () => {
-    const one = await raw(':comment[a]{note="x"}');
-    const two = await raw(':comment[b]{note="x"}');
-    const id = (html: string) => /id="(cr-[^"]+)"/.exec(html)![1];
-    expect(id(one)).not.toBe(id(two));
+  it("keeps native attributes on anchors, including plain fallbacks", async () => {
+    const html = await render(
+      ':comment[x]{#c .custom style="color:red" data-test="yes" aria-label="A & B" note="n"} ' +
+        ':suggestion[new]{#s .edit data-test="change" from="old" data-kind="delete"}',
+    );
+    expect(html).toContain('class="cr-cm custom"');
+    expect(html).toContain('id="c"');
+    expect(html).toContain('style="color:red"');
+    expect(html).toContain('data-test="yes"');
+    expect(html).toContain('aria-label="A &amp; B"');
+    expect(html).toContain('class="cr-sg edit"');
+    expect(html).toContain('data-test="change"');
+    expect(html).toContain('data-kind="replace"');
+    expect(html).not.toContain('data-kind="delete"');
+    expect(await render(':suggestion[same]{#plain .kept from="same"}')).toContain(
+      '<span class="kept" id="plain">same</span>',
+    );
+    expect(await render('# Title :comment[x]{#plain .kept note="n"}')).toContain(
+      '<span class="kept" id="plain">x</span>',
+    );
+    expect(await render(':comment[x]{:class=\'"bound"\' :data-test=\'"yes"\' note="n"}')).toContain(
+      '<mark class="cr-cm bound" data-test="yes">x</mark>',
+    );
+    const controlled = await render(
+      ':suggestion[new]{from="old" note="n" plain="true" uid="forged" thread="forged" label="forged"}',
+    );
+    expect(controlled).toContain("<del>old</del><ins>new</ins>");
+    expect(controlled).toContain('aria-label="1 comment on “new”"');
+    expect(controlled).not.toContain("forged");
+  });
+
+  it("resolves all documented props for threads and replies before normalization", async () => {
+    const frontmatter =
+      "---\nold: old\nnote: Why?\nby: sam\nmark: pen\nsuggestion: s\ncomment: c\n---\n";
+    const bound =
+      ':suggestion[new]{:from="frontmatter.old" :note="frontmatter.note" :by="frontmatter.by" :mark="frontmatter.mark" :id="frontmatter.suggestion"} ' +
+      ':comment[anchor]{:id="frontmatter.comment" :by="frontmatter.by" :note="frontmatter.note"}\n\n' +
+      ':comment{:reply="frontmatter.suggestion" :by="frontmatter.by" :note="frontmatter.note"}\n\n' +
+      ':comment{:reply="frontmatter.comment" :by="frontmatter.by" :note="frontmatter.note"}';
+    const plain =
+      ':suggestion[new]{from="old" note="Why?" by="sam" mark="pen" #s} ' +
+      ':comment[anchor]{#c by="sam" note="Why?"}\n\n' +
+      ':comment{reply="s" by="sam" note="Why?"}\n\n' +
+      ':comment{reply="c" by="sam" note="Why?"}';
+    expect(await render(frontmatter + bound)).toBe(await render(plain));
+    expect(await rules(frontmatter + bound)).toEqual([]);
+    expect(await render(":suggestion[new]{:from='\"old\"' :note='\"Why?\"'}")).toBe(
+      await render(':suggestion[new]{from="old" note="Why?"}'),
+    );
+  });
+
+  it("reports undefined bindings instead of silently losing their values", async () => {
+    for (const markdown of [
+      ':suggestion[new]{:from="frontmatter.missing"}',
+      ':comment[x]{:note="frontmatter.missing"}',
+      ':comment{:reply="frontmatter.missing" note="Why?"}',
+    ]) {
+      const result = await parse(markdown);
+      expect(
+        result.issues.some((issue) => issue.includes("frontmatter.missing, which is undefined")),
+      ).toBe(true);
+      expect(Object.values(result.rules)).toContain("comark/comments/undefined-binding");
+    }
+  });
+
+  it("gives identical fragments their own control ids, even when reusing a parsed document", async () => {
+    const markdown = ':comment[a]{note="x"} :suggestion[b]{from="c" note="y"}';
+    const renderer = createHtmlRenderer({ plugins: [comments()], components });
+    const document = await parseMarkdown(markdown, { plugins: [comments()] });
+    const fragments = [
+      await renderer(markdown),
+      await renderer(markdown),
+      await renderHtmlFromDocument(document, { components }),
+      await renderHtmlFromDocument(document, { components }),
+    ];
+    const ids = fragments.flatMap((html) =>
+      [...html.matchAll(/id="(cr-[^"]+)"/g)].map((match) => match[1]),
+    );
+    expect(new Set(ids).size).toBe(8);
+    for (const html of fragments) {
+      expect([...html.matchAll(/for="(cr-[^"]+)"/g)].map((match) => match[1])).toEqual(
+        [...html.matchAll(/id="(cr-[^"]+)"/g)].map((match) => match[1]),
+      );
+    }
   });
 
   describe("issues", () => {

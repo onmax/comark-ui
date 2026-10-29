@@ -30,7 +30,11 @@ export default defineComarkPlugin<CommentsOptions, CommentsMeta>((options = {}) 
     name: "comark-comments",
     post(state) {
       const { tree } = state;
-      const found = transform(tree.nodes, { mark, prefix: `cr-${hash(state.markdown)}` });
+      const found = transform(tree.nodes, {
+        mark,
+        prefix: `cr-${hash(state.markdown)}`,
+        data: { frontmatter: tree.frontmatter, meta: tree.meta, data: {}, props: {} },
+      });
       if (!found.length) return;
       // Several plugins report into the same list, so each one appends.
       tree.meta.issues = [...(tree.meta.issues ?? []), ...found.map((issue) => issue.message)];

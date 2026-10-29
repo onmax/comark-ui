@@ -62,6 +62,23 @@ test("on a phone, a bubble opens its card under the line", async ({ page }) => {
   await expect(card).toBeHidden();
 });
 
+test("identical fragments toggle their own cards", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const render = createHtmlRenderer({ plugins: [comments()], components });
+  const markdown = ':comment[anchor]{note="Why?"}';
+  const first = await render(markdown);
+  const second = await render(markdown);
+  await page.goto("/no-such-page");
+  await page.setContent(`<main>${first}${second}</main>`);
+  const toggles = page.locator(".cr-tg");
+  const cards = page.locator(".cr-card");
+  await page.locator(".cr-bub").nth(1).click();
+  await expect(toggles.nth(0)).not.toBeChecked();
+  await expect(toggles.nth(1)).toBeChecked();
+  await expect(cards.nth(0)).toBeHidden();
+  await expect(cards.nth(1)).toBeVisible();
+});
+
 for (const mark of ["track", "pen"] as const) {
   test(`the bubble stays on its anchor's last line at every line edge (${mark})`, async ({
     page,

@@ -1,6 +1,6 @@
 import type { NodeHandler, State } from "comark";
 import { escapeHtml } from "comark/utils";
-import { type Entry, hash, ROOT } from "./read.ts";
+import { type Entry, hash, nativeAttributes, ROOT } from "./read.ts";
 import { css, fontCss } from "./styles.ts";
 
 export { default } from "./index.ts";
@@ -17,8 +17,41 @@ function once(set: WeakSet<object>, state: State, html: string) {
 const styles = (state: State) => once(styled, state, `<style data-comark-comments>${css}</style>`);
 
 const attr = (value: string) => escapeHtml(value, { '"': "&quot;" });
+const valueOf = (value: unknown): string =>
+  value === undefined || value === null
+    ? ""
+    : typeof value === "object"
+      ? JSON.stringify(value)
+      : // SAFETY: objects and nullish values returned above; native scalar attributes stringify as in Comark.
+        String(value as string | number | boolean);
+const classOf = (name: string, attrs: Record<string, unknown>) =>
+  attr([name, valueOf(attrs.class)].filter(Boolean).join(" "));
+const attributes = (attrs: Record<string, unknown>, omit: readonly string[] = []) =>
+  Object.entries(nativeAttributes(attrs))
+    .filter(
+      ([key, value]) =>
+        /^[a-zA-Z_][a-zA-Z0-9:._-]*$/.test(key) &&
+        !omit.includes(key.toLowerCase()) &&
+        value !== undefined &&
+        value !== null,
+    )
+    .map(([key, value]) => ` ${key}="${attr(valueOf(value))}"`)
+    .join("");
 // SAFETY: the parse plugin writes every attribute the renderer reads as a string, and `thread` as entries.
 const read = (state: Record<string, unknown>, key: string) => state[key] as string | undefined;
+
+// Parsed documents can be rendered repeatedly, and independent fragments can share a page.
+const namespaces = new WeakMap<object, string>();
+function idFor(uid: string, state: State) {
+  let namespace = namespaces.get(state.context);
+  if (!namespace) {
+    namespace = Array.from(crypto.getRandomValues(new Uint32Array(4)), (part) =>
+      part.toString(16).padStart(8, "0"),
+    ).join("");
+    namespaces.set(state.context, namespace);
+  }
+  return `${uid}-${namespace}`;
+}
 
 const STROKES = [
   "M1 6.5C24 4.8 61 6.9 99 3.9",
@@ -48,9 +81,10 @@ function who(by: string) {
 }
 
 // The anchor, then a word joiner so nothing breaks before the bubble, the hidden toggle, the bubble, and the card.
-function thread(attrs: Record<string, unknown>) {
-  const uid = read(attrs, "uid");
-  if (!uid) return "";
+function thread(attrs: Record<string, unknown>, state: State) {
+  const base = read(attrs, "uid");
+  if (!base) return "";
+  const uid = idFor(base, state);
   // SAFETY: the parse plugin writes `thread` as the card's entries whenever it writes `uid`.
   const entries = attrs.thread as Entry[];
   const card = entries
@@ -63,14 +97,15 @@ function thread(attrs: Record<string, unknown>) {
   );
 }
 
-const id = (attrs: Record<string, unknown>) => {
-  const value = read(attrs, "id");
-  return value ? ` id="${attr(value)}"` : "";
+const plain: NodeHandler = async (node, state) => {
+  const body = await state.flow(node, state);
+  const native = attributes(node[1]);
+  return native ? `<span${native}>${body}</span>` : body;
 };
 
 const suggestion: NodeHandler = async (node, state) => {
   const attrs = node[1];
-  if (attrs.plain) return state.flow(node, state);
+  if (attrs.plain) return plain(node, state);
   const from = read(attrs, "from") ?? "";
   const body = node.length > 2 ? await state.flow(node, state) : "";
   const pen = attrs.mark === "pen";
@@ -80,8 +115,8 @@ const suggestion: NodeHandler = async (node, state) => {
     ? `<del>${escapeHtml(from)}${pen ? `<svg class="cr-strike" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true"><path d="${stroke}"/></svg>` : ""}</del>`
     : "";
   const ins = body ? `${pen && !from ? CARET : ""}<ins>${body}</ins>` : "";
-  const mark = `<span class="cr-sg" data-mark="${pen ? "pen" : "track"}" data-kind="${kind}"${id(attrs)}>${del}${ins}</span>`;
-  const tail = thread(attrs);
+  const mark = `<span class="${classOf("cr-sg", attrs)}" data-mark="${pen ? "pen" : "track"}" data-kind="${kind}"${attributes(attrs, ["class", "data-mark", "data-kind"])}>${del}${ins}</span>`;
+  const tail = thread(attrs, state);
   return (
     styles(state) +
     (pen ? once(fonted, state, `<style data-comark-comments-font>${fontCss}</style>`) : "") +
@@ -93,8 +128,8 @@ const suggestion: NodeHandler = async (node, state) => {
 
 const comment: NodeHandler = async (node, state) => {
   const attrs = node[1];
-  if (attrs.plain) return state.flow(node, state);
-  return `${styles(state)}<mark class="cr-cm"${id(attrs)}>${await state.flow(node, state)}</mark>${thread(attrs)}`;
+  if (attrs.plain) return plain(node, state);
+  return `${styles(state)}<mark class="${classOf("cr-cm", attrs)}"${attributes(attrs, ["class"])}>${await state.flow(node, state)}</mark>${thread(attrs, state)}`;
 };
 
 // The root is the container the cards measure against, so the margin opens only when the document is wide enough.
