@@ -70,11 +70,13 @@ function repaint(textarea = editor) {
   if (highlight) paint.innerHTML = highlight(text, textarea === editor ? "mdc" : "json");
   else paint.replaceChildren(Object.assign(document.createElement("pre"), { textContent: text }));
 }
-void import("./highlight.ts").then((module) => {
-  highlight = module.highlight;
-  repaint(editor);
-  repaint(configEditor);
-});
+// The grammar is as big as the rest of the playground, so it loads after the first render instead of delaying it.
+const loadHighlight = () =>
+  import("./highlight.ts").then((module) => {
+    highlight = module.highlight;
+    repaint(editor);
+    repaint(configEditor);
+  });
 
 // The Markdown, the config, and the theme share the editor's column; the bar's switch shows one of them. The theme
 // has its own Reset and Copy, so the corner's are for the code panes.
@@ -146,10 +148,29 @@ const fitting = new ResizeObserver((entries) =>
     ),
   ),
 );
-for (const thumb of document.querySelectorAll(".preset-thumb")) {
-  fitting.observe(thumb);
-  if (thumb.firstElementChild) fitting.observe(thumb.firstElementChild);
-}
+// A still is fitted once it nears the screen, so opening the playground lays out a screenful of stills, not all of
+// them.
+const nearing = new IntersectionObserver(
+  (entries) => {
+    for (const { target, isIntersecting } of entries) {
+      if (!isIntersecting) continue;
+      nearing.unobserve(target);
+      fitting.observe(target);
+      if (target.firstElementChild) fitting.observe(target.firstElementChild);
+    }
+  },
+  { rootMargin: "50% 0px" },
+);
+for (const thumb of document.querySelectorAll(".preset-thumb")) nearing.observe(thumb);
+const menu = document.querySelector<HTMLDetailsElement>(".menu");
+menu?.addEventListener("toggle", () => {
+  const panel = menu.querySelector(".menu-panel");
+  const column = document.querySelector(".sidebar .pages");
+  if (!menu.open || !panel || !column || panel.querySelector(".pages")) return;
+  const copy = panel.appendChild(column.cloneNode(true));
+  if (copy instanceof Element)
+    for (const thumb of copy.querySelectorAll(".preset-thumb")) nearing.observe(thumb);
+});
 
 function showIssues(list: string[]) {
   issues.replaceChildren(
@@ -541,3 +562,4 @@ else {
   base = presets[0];
   markPreset(base?.id);
 }
+void loadHighlight();

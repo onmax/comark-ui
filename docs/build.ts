@@ -1608,6 +1608,8 @@ await build({
   build: {
     outDir: fileURLToPath(new URL("play/", dist)),
     emptyOutDir: false,
+    // Vite leaves whitespace in an ES library, which made the playground's script a quarter larger.
+    rolldownOptions: { output: { minify: true } },
     lib: { entry: fileURLToPath(new URL("play.ts", root)), formats: ["es"], fileName: "play" },
   },
 });
@@ -1618,6 +1620,7 @@ await build({
   build: {
     outDir: fileURLToPath(new URL("play/gallery/", dist)),
     emptyOutDir: false,
+    rolldownOptions: { output: { minify: true } },
     lib: {
       entry: fileURLToPath(new URL("gallery.ts", root)),
       formats: ["es"],
@@ -1750,11 +1753,14 @@ function shell(options: {
   const { npm } = options;
   const pageHead = options.head ?? "";
   const nav = rail(section) + column(section, slug);
+  // The playground's column is a third of its page in stills, so its menu holds the rail alone and the playground
+  // copies the column in when the menu first opens.
+  const menuNav = slug === "play" ? rail(section) : nav;
   const header = `<div class="top-start"><a class="name" href="/">${logo}comark ui</a>${options.landing ? `<nav class="top-links" aria-label="Site"><a href="/guide/renderers/">Docs</a><a href="/play/">Playground</a><a href="/skills/">Skills</a></nav>` : ""}</div>
 <button type="button" class="search-open" aria-haspopup="dialog">${siteIcon("search", 15)}<span class="search-label">Search docs</span><kbd><span class="kbd-mac">⌘K</span><span class="kbd-other">Ctrl K</span></kbd></button>
 <div class="top-end">
 <nav>${npmxLink(npm)}${githubLink}</nav>
-<details class="menu"><summary aria-label="Menu" title="Menu">${menuIcon}</summary><div class="menu-panel"><button type="button" class="search-open menu-search" aria-haspopup="dialog">${siteIcon("search", 15)}<span>Search docs</span></button>${nav}</div></details>
+<details class="menu"><summary aria-label="Menu" title="Menu">${menuIcon}</summary><div class="menu-panel"><button type="button" class="search-open menu-search" aria-haspopup="dialog">${siteIcon("search", 15)}<span>Search docs</span></button>${menuNav}</div></details>
 </div>`;
   const body = `<header class="top">
 ${header}
