@@ -1,6 +1,6 @@
 {
   "name": "comark-code-notes",
-  "version": "0.7.3",
+  "version": "0.7.4",
   "description": "Numbered notes on lines of code: a // <1> marker in a fence links to the numbered list after it. A Comark plugin.",
   "keywords": [
     "annotations",
