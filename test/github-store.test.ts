@@ -1,11 +1,15 @@
-// The Content editor reads the docs through ViteHub's GitHub store, on a token whose hourly limit `gh` and every agent
-// share. patches/@vite-hub__workspace.patch keeps each blob once read; without it, every listing spends one request per
-// file again.
+import { createHash } from "node:crypto";
 import { createGitHubWorkspaceStore } from "@vite-hub/workspace/internal/stores/github";
 import { afterEach, expect, it, vi } from "vite-plus/test";
 
 const files: Record<string, string> = { "a.md": "# A", "b.md": "# B", "c.md": "# C" };
-const sha = (path: string) => path.replace(/\W/g, "").padEnd(40, "0");
+const sha = (path: string) => {
+  const text = files[path]!;
+  return createHash("sha1")
+    .update(`blob ${Buffer.byteLength(text)}\0`)
+    .update(text)
+    .digest("hex");
+};
 const json = (body: unknown) =>
   new Response(JSON.stringify(body), { headers: { "content-type": "application/json" } });
 
