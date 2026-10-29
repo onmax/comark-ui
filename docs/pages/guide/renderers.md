@@ -16,7 +16,7 @@ import comarkUi from "comark-ui/html"; // or /vue, /react, /svelte
 const render = createHtmlRenderer(comarkUi({ zoom: false, github: { references: { repo: "owner/name" } } }));
 ```
 
-Every plugin is on but `include`, which reads from disk, and cast, table, and tests read no files until you give them options. `false` turns one off along with its components, and an object passes it options. The Vue, React, and Svelte entries leave out annotate, diff, and quiz, which render only to HTML. comark-ui ships with the plugins, so its version is theirs.
+Every plugin is on but `include`, which reads from disk, and cast, table, and tests read no files until you give them options. `false` turns one off along with its components, and an object passes it options. The Vue, React, and Svelte entries leave out annotate, comments, diff, and quiz, which render only to HTML. comark-ui ships with the plugins, so its version is theirs.
 
 ## Support
 
@@ -32,6 +32,7 @@ Every plugin is on but `include`, which reads from disk, and cast, table, and te
 | [code](/code/) | `comark-code/html` | `comark-code/vue` | `comark-code/react` | `comark-code/svelte` |
 | [code-notes](/code-notes/) | `comark-code-notes/html` | `comark-code-notes/vue` | `comark-code-notes/react` | `comark-code-notes/svelte` |
 | [colors](/colors/) | `comark-colors/html` | `comark-colors/vue` | `comark-colors/react` | `comark-colors/svelte` |
+| [comments](/comments/) | `comark-comments/html` | | | |
 | [details](/details/) | `comark-details/html` | `comark-details/vue` | `comark-details/react` | `comark-details/svelte` |
 | [diagrams](/diagrams/) | `comark-diagrams/html` | `comark-diagrams/vue` | `comark-diagrams/react` | `comark-diagrams/svelte` |
 | [diff](/diff/) | `comark-diff/html` | | | |

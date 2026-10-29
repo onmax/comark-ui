@@ -49,6 +49,7 @@ export const css = `@layer comark{${[
   ".cm-video .cm-bar button:hover{opacity:1;background:color-mix(in srgb,var(--_comark-foreground) 8%,transparent);color:var(--_comark-foreground)}",
   ":is(.cm-mute,.cm-full){border-radius:calc(var(--_comark-radius) - 2px);background:none;color:var(--_comark-muted)}",
   ":is(.cm-mute,.cm-full):hover{background:var(--_comark-accent);color:var(--_comark-foreground)}",
+  ".cm-bar button[hidden]{display:none}",
   ".cm-icon-pause,.cm-icon-muted,.cm-icon-exit,[data-playing] .cm-icon-play,[data-muted] .cm-icon-volume,[data-fullscreen] .cm-icon-full{display:none}",
   "[data-playing] .cm-icon-pause,[data-muted] .cm-icon-muted,[data-fullscreen] .cm-icon-exit{display:block}",
   ".cm-time{flex:none;color:var(--_comark-muted);font-variant-numeric:tabular-nums}",

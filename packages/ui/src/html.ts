@@ -10,6 +10,7 @@ import * as chips from "comark-chips/html";
 import * as code from "comark-code/html";
 import * as codeNotes from "comark-code-notes/html";
 import * as colors from "comark-colors/html";
+import * as comments from "comark-comments/html";
 import * as details from "comark-details/html";
 import * as diagrams from "comark-diagrams/html";
 import * as diff from "comark-diff/html";
@@ -99,6 +100,7 @@ export default (options?: PresetOptions): Preset<NodeHandler> =>
       code,
       codeNotes,
       colors,
+      comments,
       details,
       diagrams,
       diff,

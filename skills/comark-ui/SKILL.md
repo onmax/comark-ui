@@ -15,6 +15,8 @@ Prefer `comark-ui`, every plugin in one install, registered in the order they ne
 pnpm add comark @comark/html comark-ui
 ```
 
+Run the comark CLIs with the [global Vite+ CLI](https://viteplus.dev/guide/global-cli): `vp dlx` for a package the project doesn't install, `vp exec` for one it does. Without Vite+, `pnpm dlx` and `pnpm exec` take the same arguments.
+
 ```ts
 import { createHtmlRenderer } from "@comark/html";
 import comarkUi from "comark-ui/html";
@@ -45,7 +47,7 @@ Problems land in `meta.issues` after `parseMarkdown`, one sentence each, and a h
 
 ## Shape the document
 
-This skill teaches the blocks. Four sibling skills teach a whole document, what goes in it and in what order: `before-after-evidence`, `review-document`, `visual-explanation`, and `teach-lesson`. When the user asks for one of those and the skill isn't installed, suggest `npx skills add onmax/comark-ui` and picking it from the list.
+This skill teaches the blocks. Four sibling skills teach a whole document, what goes in it and in what order: `before-after-evidence`, `review-document`, `visual-explanation`, and `teach-lesson`. When the user asks for one of those and the skill isn't installed, suggest `vp dlx skills add onmax/comark-ui` and picking it from the list.
 
 ## Pick the blocks
 
@@ -63,6 +65,7 @@ Read the reference for each block you use before you write it. Mix the blocks fr
 | Links and `@mentions` with the site's favicon or the person's avatar | links, `@user`, `:chip` | [chips](references/chips.md) |
 | Colors, such as design tokens before and after, or a palette | a color in inline code, `::palette` | [colors](references/colors.md) |
 | A suggested change to one file, before and after | `::diff` | [diff](references/diff.md) |
+| Suggested edits and comment threads on prose, such as a copy review, each note in a card in the margin | `:suggestion`, `:comment` | [comments](references/comments.md) |
 | A video, a design file, or a live reproduction from its link | `::embed` | [embed](references/embed.md) |
 | A screen recording or a sound that a screenshot can't show | `![alt](clip.mp4)` | [media](references/media.md) |
 | A number before and after, a table of befores and afters, or progress | `:delta`, `::stats`, `:progress` | [metrics](references/metrics.md) |
@@ -138,5 +141,5 @@ Mark only what your text talks about. Each note says what changed or what is wro
 
 ## Check the result
 
-1. Lint the file: `npx lint-comark report.md`, in a project with `comark-linter` and the plugins installed, where `comark-ui` counts as every plugin. It prints one line per problem with its line, its rule, and how to fix it, and exits with 1 while any remain. Fix every one, and run it again until it exits with 0. The [lint reference](references/lint.md) covers its flags, its config file, the library, ESLint, and Vite Doctor.
+1. Lint the file: `vp exec lint-comark report.md`, in a project with `comark-linter` and the plugins installed, where `comark-ui` counts as every plugin. It prints one line per problem with its line, its rule, and how to fix it, and exits with 1 while any remain. Fix every one, and run it again until it exits with 0. The [lint reference](references/lint.md) covers its flags, its config file, the library, ESLint, and Vite Doctor.
 2. Look at the render, made as the block's reference says. Open it in a browser and take a screenshot: each mark sits on its target, each number matches its note, and each chart says what your text says. If you can't verify something, say so when you hand the document over instead of guessing.

@@ -127,6 +127,7 @@ const packageOrder = [
   "figure",
   "mark",
   "critic",
+  "comments",
   "deflist",
   "footnotes",
   "math",
@@ -889,7 +890,9 @@ const drop: NodeHandler = async ([, , ...children], state) => {
 // preview shows its own. The example's title becomes the page's second level, under the page's own.
 const skillOf = (slug: string) => (slug.startsWith("skills/") ? slug.slice("skills/".length) : "");
 // No --skill: the CLI lists every skill in the repository and lets the reader pick.
-const skillCommand = "npx skills add onmax/comark-ui";
+const skillCommand = "vp dlx skills add onmax/comark-ui";
+const skillPrerequisite =
+  'Install the <a href="https://viteplus.dev/guide/global-cli">global Vite+ CLI</a> before running this command. Without it, replace <code>vp dlx</code> with <code>pnpm dlx</code>.';
 const skillSource = (name: string) =>
   readFileSync(new URL(`skills/${name}/references/example.md`, repo), "utf8");
 const fromThisBuild = (markdown: string) => markdown.replaceAll(`${site}/`, "/");
@@ -993,7 +996,7 @@ const resetIcon = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" s
 const checkIcon = `<svg class="check" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M20 6 9 17l-5-5"/></svg>`;
 // A skill's page opens the CLI's picker and names the skill to select, as its Markdown copy does.
 const skillInstall = (name: string) =>
-  `<div class="skill-install"><button type="button" class="install" data-copy="${skillCommand}" aria-label="Copy the install command"><span aria-hidden="true">$</span><code>${skillCommand}</code><span class="install-hint">${copyIcon}${checkIcon}</span></button><p>Pick <code>${escapeHtml(name)}</code> from the list.</p></div>`;
+  `<div class="skill-install"><p class="install-prerequisite">${skillPrerequisite}</p><button type="button" class="install" data-copy="${skillCommand}" aria-label="Copy the install command"><span aria-hidden="true">$</span><code>${skillCommand}</code><span class="install-hint">${copyIcon}${checkIcon}</span></button><p>Pick <code>${escapeHtml(name)}</code> from the list.</p></div>`;
 // Humans install the packages with their package manager; agents install the comark-ui skill.
 function installerFor(install: string) {
   const packages = install.replace(/^pnpm add /, "");
@@ -1002,11 +1005,12 @@ function installerFor(install: string) {
     npm: `npm install ${packages}`,
     yarn: `yarn add ${packages}`,
     bun: `bun add ${packages}`,
-    agents: "npx skills add onmax/comark-ui",
+    agents: "vp dlx skills add onmax/comark-ui",
   };
   return `<div class="installer" data-commands='${escapeHtml(JSON.stringify(commands))}'>
 <div class="installer-bar"><div class="seg" role="group" aria-label="Audience"><button type="button" data-audience="humans" aria-pressed="true">${userIcon}For humans</button><button type="button" data-audience="agents" aria-pressed="false">${botIcon}For agents</button></div>
 <div class="seg installer-pm" role="group" aria-label="Package manager">${["pnpm", "npm", "yarn", "bun"].map((pm, i) => `<button type="button" data-pm="${pm}" aria-pressed="${i === 0}">${pm}</button>`).join("")}</div></div>
+<p class="install-prerequisite" hidden>${skillPrerequisite}</p>
 <button type="button" class="install" data-copy="${escapeHtml(commands.pnpm)}" aria-label="Copy the install command"><span aria-hidden="true">$</span><code>${escapeHtml(commands.pnpm)}</code><span class="install-hint">${copyIcon}${checkIcon}</span></button>
 </div>`;
 }
@@ -1136,7 +1140,7 @@ for (const button of document.querySelectorAll(".copy-page")) button.addEventLis
 });
 for (const box of document.querySelectorAll(".installer")) {
   const commands = JSON.parse(box.dataset.commands); const field = box.querySelector(".install"); let audience = "humans", pm = "pnpm";
-  const update = () => { const cmd = audience === "agents" ? commands.agents : commands[pm]; field.dataset.copy = cmd; field.querySelector("code").textContent = cmd; box.querySelector(".installer-pm").hidden = audience === "agents"; for (const b of box.querySelectorAll("[data-audience]")) b.setAttribute("aria-pressed", b.dataset.audience === audience); for (const b of box.querySelectorAll("[data-pm]")) b.setAttribute("aria-pressed", b.dataset.pm === pm) };
+  const update = () => { const cmd = audience === "agents" ? commands.agents : commands[pm]; field.dataset.copy = cmd; field.querySelector("code").textContent = cmd; box.querySelector(".installer-pm").hidden = audience === "agents"; box.querySelector(".install-prerequisite").hidden = audience !== "agents"; for (const b of box.querySelectorAll("[data-audience]")) b.setAttribute("aria-pressed", b.dataset.audience === audience); for (const b of box.querySelectorAll("[data-pm]")) b.setAttribute("aria-pressed", b.dataset.pm === pm) };
   box.addEventListener("click", e => { const b = e.target.closest("[data-audience],[data-pm]"); if (!b) return; if (b.dataset.audience) audience = b.dataset.audience; if (b.dataset.pm) pm = b.dataset.pm; update() });
   field.addEventListener("click", async () => { await navigator.clipboard.writeText(field.dataset.copy); field.classList.add("copied"); setTimeout(() => field.classList.remove("copied"), 1200) });
 }
@@ -1604,6 +1608,8 @@ await build({
   build: {
     outDir: fileURLToPath(new URL("play/", dist)),
     emptyOutDir: false,
+    // Vite leaves whitespace in an ES library, which made the playground's script a quarter larger.
+    rolldownOptions: { output: { minify: true } },
     lib: { entry: fileURLToPath(new URL("play.ts", root)), formats: ["es"], fileName: "play" },
   },
 });
@@ -1614,6 +1620,7 @@ await build({
   build: {
     outDir: fileURLToPath(new URL("play/gallery/", dist)),
     emptyOutDir: false,
+    rolldownOptions: { output: { minify: true } },
     lib: {
       entry: fileURLToPath(new URL("gallery.ts", root)),
       formats: ["es"],
@@ -1746,11 +1753,14 @@ function shell(options: {
   const { npm } = options;
   const pageHead = options.head ?? "";
   const nav = rail(section) + column(section, slug);
+  // The playground's column is a third of its page in stills, so its menu holds the rail alone and the playground
+  // copies the column in when the menu first opens.
+  const menuNav = slug === "play" ? rail(section) : nav;
   const header = `<div class="top-start"><a class="name" href="/">${logo}comark ui</a>${options.landing ? `<nav class="top-links" aria-label="Site"><a href="/guide/renderers/">Docs</a><a href="/play/">Playground</a><a href="/skills/">Skills</a></nav>` : ""}</div>
 <button type="button" class="search-open" aria-haspopup="dialog">${siteIcon("search", 15)}<span class="search-label">Search docs</span><kbd><span class="kbd-mac">⌘K</span><span class="kbd-other">Ctrl K</span></kbd></button>
 <div class="top-end">
 <nav>${npmxLink(npm)}${githubLink}</nav>
-<details class="menu"><summary aria-label="Menu" title="Menu">${menuIcon}</summary><div class="menu-panel"><button type="button" class="search-open menu-search" aria-haspopup="dialog">${siteIcon("search", 15)}<span>Search docs</span></button>${nav}</div></details>
+<details class="menu"><summary aria-label="Menu" title="Menu">${menuIcon}</summary><div class="menu-panel"><button type="button" class="search-open menu-search" aria-haspopup="dialog">${siteIcon("search", 15)}<span>Search docs</span></button>${menuNav}</div></details>
 </div>`;
   const body = `<header class="top">
 ${header}
@@ -1938,8 +1948,9 @@ await writeFile(
     "## How an agent reads this site",
     "",
     `- Every page has a Markdown copy at its path plus \`.md\`, such as ${site}/zoom.md for ${site}/zoom/. A request with \`Accept: text/markdown\` gets it too.`,
-    `- \`npx skills add onmax/comark-ui\` lists the repository's agent skills to pick from: comark-ui, which teaches the syntax of every block (see ${site}/guide/agents.md), and the skills that write a whole document, such as before/after evidence, a review, or a lesson (see ${site}/skills.md). Add \`--skill <name>\` to install one without the list.`,
-    "- Check a document before anyone reads it: `npx -p comark-linter -p comark-ui lint-comark doc.md`.",
+    `- \`vp dlx skills add onmax/comark-ui\` lists the repository's agent skills to pick from: comark-ui, which teaches the syntax of every block (see ${site}/guide/agents.md), and the skills that write a whole document, such as before/after evidence, a review, or a lesson (see ${site}/skills.md). Add \`--skill <name>\` to install one without the list.`,
+    "- Check a document before anyone reads it: `vp dlx --package comark-linter --package comark-ui lint-comark doc.md`.",
+    "- `vp` comes with Vite+ (https://viteplus.dev/guide/global-cli). Without it, `pnpm dlx` takes the same arguments.",
     "",
     "## When to use Comark UI",
     "",
@@ -2036,6 +2047,8 @@ if (playSection) {
   // since it scales, and a badge or a key hardly any. Every other package takes the middle width.
   const frameWidths: Record<string, string> = {
     annotate: "34rem",
+    // The cards go in a margin that opens at 50rem.
+    comments: "56rem",
     recipes: "38rem",
     cast: "32rem",
     diff: "32rem",

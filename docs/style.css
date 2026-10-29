@@ -3856,6 +3856,12 @@ main img {
   font-size: 0.875rem;
 }
 
+.install-prerequisite {
+  margin: 0.5rem 0;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
 .skill-example {
   margin: 0 0 1rem;
 }
@@ -5214,9 +5220,11 @@ main img {
   box-shadow: inset 0 0 0 1.5px var(--fg);
 }
 
+/* Its size comes from the grid and its height, so the browser can skip laying out a still that's off screen. */
 .preset-thumb {
   height: 6rem;
   overflow: hidden;
+  content-visibility: auto;
   border-radius: 10px 10px 0 0;
   background: var(--bg);
   pointer-events: none;

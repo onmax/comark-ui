@@ -1,0 +1,62 @@
+{
+  "name": "comark-comments",
+  "version": "0.7.3",
+  "description": "Suggested edits and comment threads in Markdown, drawn as redlines or a hand-drawn pen with notes in the margin, and no script. A Comark plugin.",
+  "keywords": [
+    "comark",
+    "comments",
+    "markdown",
+    "mdc",
+    "plugin",
+    "review",
+    "suggestions",
+    "track-changes"
+  ],
+  "homepage": "https://comark-ui.onmax.me/comments",
+  "bugs": "https://github.com/onmax/comark-ui/issues",
+  "license": "MIT",
+  "author": "onmax",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/onmax/comark-ui.git",
+    "directory": "packages/comments"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./html": "./dist/html.mjs",
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "doctor": "vite-doctor . --no-cache --max-warnings 0 --format text",
+    "prepack": "pnpm --filter comark-zoom build && pnpm --filter comark-carousel build && pnpm --filter comark-annotate build && pnpm --filter comark-comments build"
+  },
+  "devDependencies": {
+    "@comark/html": "catalog:",
+    "comark": "catalog:",
+    "comark-annotate": "workspace:*",
+    "comark-zoom": "workspace:*"
+  },
+  "peerDependencies": {
+    "@comark/html": "^0.8.0",
+    "comark": "^0.8.0"
+  },
+  "peerDependenciesMeta": {
+    "@comark/html": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}

@@ -1,6 +1,6 @@
 {
   "name": "comark-ui",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "description": "Every comark-ui block in one install: annotated screenshots, charts, diffs, tabs, zoom, and more, registered in the order they need with shared icons. Turn any of them off or pass its options.",
   "keywords": [
     "comark",
@@ -65,6 +65,7 @@
     "comark-code": "workspace:^",
     "comark-code-notes": "workspace:^",
     "comark-colors": "workspace:^",
+    "comark-comments": "workspace:^",
     "comark-critic": "workspace:^",
     "comark-deflist": "workspace:^",
     "comark-details": "workspace:^",
