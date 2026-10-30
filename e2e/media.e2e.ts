@@ -2,6 +2,7 @@ import { createHtmlRenderer } from "@comark/html";
 import { readFile } from "node:fs/promises";
 import { expect, type Page, type Route, test } from "@playwright/test";
 import media, { components } from "../packages/media/src/html.ts";
+import { typesetCss } from "../packages/ui/src/typeset-css.ts";
 
 const render = createHtmlRenderer({ plugins: [media()], components });
 // Four seconds of silence as a WAV, so the player has a length without a server.
@@ -43,13 +44,14 @@ const serve = (body: Buffer, type: string) => (route: Route) => {
 const open = async (
   page: Page,
   markdown: string,
-  options: { script?: boolean; width?: string } = {},
+  options: { script?: boolean; typeset?: boolean; width?: string } = {},
 ) => {
   await page.route("**/silence.wav*", serve(silence, "audio/wav"));
   await page.route("**/clip.webm", serve(clip, "video/webm"));
   await page.route("**/missing.wav", (route) => route.fulfill({ status: 404 }));
   let html = await render(markdown);
   if (options.script === false) html = html.replace(/<script>[\s\S]*?<\/script>/g, "");
+  if (options.typeset) html = `<main><style>${typesetCss}</style>${html}</main>`;
   await page.route("http://media.test/", (route) =>
     route.fulfill({
       contentType: "text/html",
@@ -195,6 +197,16 @@ test("a video plays with its own controls, from its bar or a click, and goes ful
   await expect(player).toHaveAttribute("data-fullscreen");
   await player.getByRole("button", { name: "Exit full screen" }).click();
   await expect(player).not.toHaveAttribute("data-fullscreen");
+});
+
+test("a video fills its frame under the typeset, with no margin above it", async ({ page }) => {
+  await open(page, "Intro.\n\n![A gray clip](clip.webm)", { typeset: true });
+  const player = page.getByRole("group", { name: "A gray clip" });
+  await expect(player.locator(".cm-time").last()).toHaveText("0:04");
+  const frame = (await player.boundingBox())!;
+  const video = (await player.locator("video").boundingBox())!;
+  expect(video.y - frame.y).toBeLessThanOrEqual(1);
+  expect(frame.y + frame.height - (video.y + video.height)).toBeLessThanOrEqual(1);
 });
 
 test("a narrow player gives its seek bar a row of its own, above the buttons", async ({ page }) => {

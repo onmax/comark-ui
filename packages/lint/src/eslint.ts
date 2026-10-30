@@ -18,7 +18,7 @@ export type Settings = {
 };
 
 export type Request = { text: string; file?: string; root: string; config?: string; urls: boolean };
-export type Reply = { diagnostics: Omit<Diagnostic, "cause">[] } | { error: string };
+export type Reply = { diagnostics: Omit<Diagnostic, "cause" | "severity">[] } | { error: string };
 
 // SAFETY: built from every entry of the catalog, whose keys are exactly the rules.
 const ids = Object.keys(catalog) as Rule[];
@@ -61,7 +61,7 @@ function call(request: Request): Reply {
 }
 
 // Every rule reads one result per file, and `comark/dead-url` its own, since only it requests URLs.
-const results = new WeakMap<object, Map<boolean, Omit<Diagnostic, "cause">[]>>();
+const results = new WeakMap<object, Map<boolean, Omit<Diagnostic, "cause" | "severity">[]>>();
 
 function diagnosticsOf(context: RuleModule.RuleContext, urls: boolean) {
   const { sourceCode } = context;

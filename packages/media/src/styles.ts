@@ -27,7 +27,8 @@ export const css = `@layer comark{${[
   "video.cm{height:auto}",
   // Round the video itself so the volume panel can extend above a short frame.
   ".cm-video{position:relative;width:fit-content}",
-  ".cm-video>video{display:block;max-width:100%;height:auto;border-radius:inherit}",
+  // Typeset gives a video a top margin, which inside the frame would push it down and crop its bottom.
+  ".cm-video>video{display:block;max-width:100%;height:auto;margin:0;border-radius:inherit}",
   ".cm-video[data-media-ready]:not([data-error])>video{cursor:pointer}",
   ".cm-video:fullscreen{display:grid;place-items:center;width:100%;max-width:none;margin:0;border:0;border-radius:0;background:#000}",
   ".cm-video:fullscreen>video{width:100%;height:100%;max-width:none;object-fit:contain}",

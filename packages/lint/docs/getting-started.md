@@ -61,7 +61,13 @@ import { lint } from "comark-linter";
 import annotate, { components } from "comark-annotate/html";
 
 const diagnostics = await lint(markdown, { plugins: [annotate()], components });
-// [{ rule: "comark/unclosed-block", line: 8, column: 1, message: "…", fix: "…" }]
+// [{ rule: "comark/unclosed-block", severity: "warn", line: 8, column: 1, message: "…", fix: "…" }]
+```
+
+Each diagnostic carries its rule's `severity`, `error` or `warn`, the same one Vite Doctor and ESLint report, so a script can fail on errors alone:
+
+```ts
+if (diagnostics.some((diagnostic) => diagnostic.severity === "error")) process.exitCode = 1;
 ```
 
 `lint()` never throws. If a rule crashes on a document, that rule reports one diagnostic saying so, and the others still run.

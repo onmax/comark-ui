@@ -20,6 +20,20 @@ const check = async (markdown: string) =>
     message: `${message} ${fix}`,
   }));
 
+describe("severity", () => {
+  it("gives each problem its rule's severity, a package's rules included", async () => {
+    const found = await lint(
+      `<a href="javascript:x">x</a>\n\n![](a.png)\n\n::screenshot{src="a.png" alt="A"}\n:::annotation{x=120 y=10}\nA.\n:::\n::`,
+      options,
+    );
+    expect(Object.fromEntries(found.map(({ rule, severity }) => [rule, severity]))).toEqual({
+      "comark/unsafe-url": "error",
+      "comark/missing-alt": "warn",
+      "comark/annotate/invalid-position": "warn",
+    });
+  });
+});
+
 describe("comark/unclosed-block", () => {
   it("passes closed blocks, nested ones included", async () => {
     expect(
@@ -572,6 +586,7 @@ describe("lint-comark CLI", () => {
               {
                 file: join(dir, "page.md"),
                 rule: "comark/plugin-issue",
+                severity: "warn",
                 line: 1,
                 message: "Comark could not parse this document: Plugin failed",
                 fix: "Fix what the error names; a plugin that throws stops the whole document from rendering.",

@@ -66,8 +66,8 @@ const results: (Omit<Diagnostic, "cause"> & { file: string })[] = [];
 for (const { file, text, diagnostics } of await lintFiles([...new Set(files)], options)) {
   if (text === undefined) fail(`can't read ${file}`);
   // Exceptions can contain cycles; the CLI keeps its results serializable.
-  for (const { rule, line, column, message, fix } of diagnostics)
-    results.push({ file, rule, line, column, message, fix });
+  for (const { rule, severity, line, column, message, fix } of diagnostics)
+    results.push({ file, rule, severity, line, column, message, fix });
 }
 
 if (values.format === "json") console.log(JSON.stringify(results, null, 2));
