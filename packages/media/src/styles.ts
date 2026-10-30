@@ -1,7 +1,8 @@
 import { theme } from "comark-zoom/theme";
 
+// The rest of the track is the foreground, faded, since the accent barely shows on the bar.
 const track =
-  "height:.375rem;border-radius:999px;background:linear-gradient(var(--_cm-fill),var(--_cm-primary) var(--cm-at,0%),var(--_comark-accent) var(--cm-at,0%))";
+  "height:.375rem;border-radius:999px;background:linear-gradient(var(--_cm-fill),var(--_cm-primary) var(--cm-at,0%),color-mix(in srgb,var(--_comark-foreground) 25%,transparent) var(--cm-at,0%))";
 const thumb =
   "box-sizing:border-box;width:1rem;height:1rem;border:1px solid var(--_cm-primary);border-radius:50%;background:var(--_comark-background);box-shadow:0 1px 2px rgb(0 0 0/.1)";
 const ring = "box-shadow:0 0 0 3px color-mix(in srgb,var(--_comark-ring) 50%,transparent)";
