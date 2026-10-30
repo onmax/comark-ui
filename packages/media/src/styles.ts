@@ -23,7 +23,8 @@ export const css = `@layer comark{${[
   "video.cm,.cm-video>video{aspect-ratio:auto 16/9}",
   "video.cm{height:auto}",
   ".cm-video{position:relative;width:fit-content;overflow:hidden}",
-  ".cm-video>video{display:block;max-width:100%;height:auto}",
+  // Typeset gives a video a top margin, which inside the frame would push it down and crop its bottom.
+  ".cm-video>video{display:block;max-width:100%;height:auto;margin:0}",
   ".cm-video[data-media-ready]:not([data-error])>video{cursor:pointer}",
   ".cm-video:fullscreen{display:grid;place-items:center;width:100%;max-width:none;margin:0;border:0;border-radius:0;background:#000}",
   ".cm-video:fullscreen>video{width:100%;height:100%;max-width:none;object-fit:contain}",
