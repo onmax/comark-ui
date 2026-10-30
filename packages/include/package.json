@@ -1,6 +1,6 @@
 {
   "name": "comark-include",
-  "version": "0.7.5",
+  "version": "0.7.6",
   "description": "Include Markdown partials and code snippets from files, by lines or by region, with :include{src=\"./part.md\"}. A Comark plugin.",
   "keywords": [
     "comark",
