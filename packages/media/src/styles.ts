@@ -31,7 +31,7 @@ export const css = `@layer comark{${[
   ".cm-bar{display:none}",
   ".cm-audio[data-media-ready]:not([data-error])>audio{display:none}",
   ":is(.cm-audio,.cm-video)[data-media-ready]:not([data-error])>.cm-bar{display:flex}",
-  ".cm-bar{container-type:inline-size;align-items:center;gap:.75rem;box-sizing:border-box;padding:.5rem .75rem .5rem .5rem;border:1px solid var(--_comark-border);border-radius:var(--_comark-radius);background:var(--_comark-background);color:var(--_comark-foreground);font:.875rem/1.25rem var(--_comark-font)}",
+  ".cm-bar{container-type:inline-size;flex-wrap:wrap;align-items:center;gap:.75rem;box-sizing:border-box;padding:.5rem .75rem .5rem .5rem;border:1px solid var(--_comark-border);border-radius:var(--_comark-radius);background:var(--_comark-background);color:var(--_comark-foreground);font:.875rem/1.25rem var(--_comark-font)}",
   ".cm-bar button{display:inline-grid;place-items:center;flex:none;width:2rem;height:2rem;margin:0;padding:0;border:0;cursor:pointer;touch-action:manipulation;transition:background .15s,opacity .15s}",
   `.cm-bar button:focus-visible{outline:none;${ring}}`,
   ".cm-bar svg{width:1rem;height:1rem}",
@@ -53,7 +53,7 @@ export const css = `@layer comark{${[
   ".cm-icon-pause,.cm-icon-muted,.cm-icon-exit,[data-playing] .cm-icon-play,[data-muted] .cm-icon-volume,[data-fullscreen] .cm-icon-full{display:none}",
   "[data-playing] .cm-icon-pause,[data-muted] .cm-icon-muted,[data-fullscreen] .cm-icon-exit{display:block}",
   ".cm-time{flex:none;color:var(--_comark-muted);font-variant-numeric:tabular-nums}",
-  ".cm-seek{--_cm-fill:to right;flex:1;min-width:0;height:1rem;margin:0;background:none;appearance:none;cursor:pointer}",
+  ".cm-seek{--_cm-fill:to right;flex:1 1 0;min-width:0;height:1rem;margin:0;background:none;appearance:none;cursor:pointer}",
   ".cm-seek:dir(rtl){--_cm-fill:to left}",
   ".cm-seek:disabled{opacity:.5;cursor:default}",
   ".cm-seek:focus-visible{outline:none}",
@@ -64,7 +64,9 @@ export const css = `@layer comark{${[
   `.cm-seek::-moz-range-thumb{${thumb}}`,
   `.cm-seek:focus-visible::-webkit-slider-thumb{${ring}}`,
   `.cm-seek:focus-visible::-moz-range-thumb{${ring}}`,
-  // A narrow player keeps the seek bar and drops the times.
-  "@container (width<18rem){.cm-time{display:none}}",
+  // A narrow player can't fit the seek bar between the times and the buttons, so it gets a row of its own above them,
+  // with the times together after the play button. A very narrow one drops the times.
+  '@container (width<24rem){.cm-seek{flex-basis:100%;order:-1}.cm-bar>.cm-mute{margin-inline-start:auto}.cm-seek+.cm-time{margin-inline-start:-.75rem}.cm-video .cm-seek+.cm-time{margin-inline-start:-.5rem}.cm-seek+.cm-time::before{content:"\\a0/\\a0"}}',
+  "@container (width<16rem){.cm-time{display:none}}",
   "@media (pointer:coarse){.cm-bar button{width:2.5rem;height:2.5rem}}",
 ].join("")}}`;
