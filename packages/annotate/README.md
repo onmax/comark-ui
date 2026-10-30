@@ -46,6 +46,8 @@ The output is static HTML with one inlined `<style>` per document and `style` at
 
 The styles follow shadcn/ui: they read its CSS variables, such as `--background` and `--border`, when the page has them, and use its neutral theme otherwise. Set `--comark-background`, `--comark-foreground`, `--comark-muted`, `--comark-border`, `--comark-accent`, `--comark-ring`, `--comark-radius`, or `--comark-font` to theme zoom, carousel, and annotate at once; the rules sit in a `comark` CSS layer, so any plain rule of your own wins. See [Theming](https://comark-ui.onmax.me/guide/theming/) for the Nuxt UI mapping. The mark colors are separate: override them with a plain rule such as `.ca { --ca-color: #0070f3; --ca-solid: #0070f3; --ca-ink: #fff }`, which sets the marks, the stamps, and the stamp numbers; see the annotations' [Theming page](https://comark-ui.onmax.me/annotate/#theme).
 
+Screenshots reserve their authored `viewport`, or their dimensions read from a data URI. `annotate({ size: true })` also measures remote screenshots at render time; enable it only for trusted documents, since requests follow redirects and can reach private networks. `annotate({ size: false })` disables measurement and still uses authored viewports.
+
 ## Agents
 
 The comark-ui agent skill knows the syntax, how to measure marks from the page, and how to check the result. `vp dlx skills add onmax/comark-ui` installs it, and an app that serves skills to its own agents can bundle it from `comark-ui/skills/comark-ui/`, which always matches the renderers it installed.

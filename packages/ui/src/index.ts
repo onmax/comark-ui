@@ -1,4 +1,5 @@
 import type { BadgeOptions } from "comark-badge";
+import type { AnnotateOptions } from "comark-annotate";
 import type { ComarkPlugin } from "comark";
 import type { CastOptions } from "comark-cast";
 import type { ChartsOptions } from "comark-charts";
@@ -44,7 +45,7 @@ export type PresetOptions = {
   /** Pastes files into the Markdown before the other plugins read it. Off, since it reads from disk by default. */
   include?: IncludeOptions | boolean;
   /** HTML only: Vue, React, and Svelte have no annotate components. */
-  annotate?: boolean;
+  annotate?: AnnotateOptions | boolean;
   carousel?: boolean;
   /** Reads no cast files unless you pass `{ root }` or `{ read }`; inline casts render either way. */
   cast?: CastOptions | boolean;
@@ -123,7 +124,7 @@ type Part<C, O = void> = { default: (options?: O) => AnyPlugin; components: Reco
 
 /** One renderer's entry of each package with components, by the option that turns it on. */
 export type Renderer<C> = {
-  annotate?: Part<C>;
+  annotate?: Part<C, AnnotateOptions>;
   carousel: Part<C>;
   cast: Part<C, CastOptions>;
   charts: Part<C, ChartsOptions>;

@@ -6,13 +6,13 @@ import { promisify } from "node:util";
 import { renderHtmlFromDocument } from "@comark/html";
 import { parseMarkdown } from "comark";
 import security from "comark/plugins/security";
-import { describe, expect, it } from "vite-plus/test";
+import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 import annotate, { components } from "../src/html.ts";
 import { draw } from "../src/marks.ts";
 import { css } from "../src/styles.ts";
 
-async function run(markdown: string) {
-  const document = await parseMarkdown(markdown, { plugins: [annotate()] });
+async function run(markdown: string, options?: Parameters<typeof annotate>[0]) {
+  const document = await parseMarkdown(markdown, { plugins: [annotate(options)] });
   return {
     issues: document.meta.issues,
     html: await renderHtmlFromDocument(document, { components }),
@@ -795,5 +795,50 @@ Duck
           : [height, Math.min(...points.map(([, y]) => y)), Math.max(...points.map(([, y]) => y))];
       expect(to - from - long, `${width}x${height}`).toBeLessThan(Math.max(40, long * 0.2));
     }
+  });
+});
+
+describe("screenshot sizes", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+  const png = new Uint8Array([
+    0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13, 0x49, 0x48, 0x44, 0x52, 0, 0, 0x0b,
+    0x40, 0, 0, 0x07, 0x08, 8, 6, 0, 0, 0,
+  ]);
+
+  it("keeps an image's room before it loads: its viewport, or the size read from the file", async () => {
+    const fetch = vi.fn(async () => new Response(png));
+    vi.stubGlobal("fetch", fetch);
+    const shot = (attrs: string) => run(`::screenshot{${attrs} alt="Toolbar"}\n::`, { size: true });
+    expect((await shot('src="a.png" viewport="1440x900"')).html).toContain(
+      '<img src="a.png" alt="Toolbar" width="1440" height="900" loading="lazy"',
+    );
+    expect((await shot('src="https://cdn.test/shot.png"')).html).toContain(
+      'alt="Toolbar" width="2880" height="1800" loading="lazy"',
+    );
+    expect((await shot('src="b.png"')).html).toContain(
+      '<img src="b.png" alt="Toolbar" loading="lazy"',
+    );
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("uses data URIs and viewports by default, with remote reads controlled by host options", async () => {
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+    const remote = '::screenshot{src="http://127.0.0.1/private.png" alt="Private" size=true}\n::';
+    expect((await run(remote)).html).not.toMatch(/<img[^>]* width=/);
+    const inline = `::screenshot{src="data:image/png;base64,${btoa(String.fromCharCode(...png))}" alt="Toolbar"}\n::`;
+    expect((await run(inline)).html).toMatch(/<img[^>]* width="2880" height="1800"/);
+    expect((await run(inline, { size: false })).html).not.toMatch(/<img[^>]* width=/);
+    const viewport =
+      '::screenshot{src="http://127.0.0.1/viewport.png" alt="Toolbar" viewport="1440x900"}\n::';
+    expect((await run(viewport, { size: false })).html).toMatch(
+      /<img[^>]* width="1440" height="900"/,
+    );
+    expect((await run(viewport, { size: true })).html).toMatch(
+      /<img[^>]* width="1440" height="900"/,
+    );
+    expect(fetch).not.toHaveBeenCalled();
   });
 });

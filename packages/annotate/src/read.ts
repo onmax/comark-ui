@@ -33,6 +33,8 @@ export interface Screenshot {
   href?: string;
   /** The image's height over its width, from `viewport`, which places the stamps. */
   aspect?: number;
+  /** The capture size in pixels, from `viewport`. */
+  viewport?: { width: number; height: number };
   annotations: Annotation[];
   caption: Node[];
 }
@@ -244,7 +246,7 @@ export function readScreenshot(
     n: 1,
     number: 1,
   },
-): Screenshot & { viewport?: { width: number; height: number } } {
+): Screenshot {
   let number = start.number;
   const where = names.get(node) ?? "screenshot";
   const problems: Issue[] = [];
@@ -567,14 +569,14 @@ export function readCompare(
   for (const child of children(node)) {
     if (isElement(child) && child[0] === "screenshot") {
       const all = shots.flatMap((item) => item.annotations);
-      const { viewport, ...shot } = readScreenshot(child, issues, data, names, {
+      const shot = readScreenshot(child, issues, data, names, {
         n: 1 + all.length,
         number: 1 + all.filter((annotation) => annotation.number).length,
         sides,
         ink,
       });
       shots.push({ ...shot, title: shot.title ?? (shots.length ? "After" : "Before") });
-      viewports.push({ name: names.get(child) ?? "screenshot", size: viewport });
+      viewports.push({ name: names.get(child) ?? "screenshot", size: shot.viewport });
     } else if (isElement(child) || text(child))
       issues.push({
         rule: "comark/annotate/compare-content",

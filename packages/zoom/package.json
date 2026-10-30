@@ -38,6 +38,7 @@
       "svelte": "./dist/svelte/index.js",
       "default": "./dist/svelte/index.js"
     },
+    "./size": "./dist/size.mjs",
     "./theme": "./dist/theme.mjs",
     "./vue": "./dist/vue.mjs",
     "./package.json": "./package.json"
