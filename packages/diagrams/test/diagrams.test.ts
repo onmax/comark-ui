@@ -66,6 +66,16 @@ describe("comark-diagrams", () => {
     ]);
   });
 
+  it("draws a diagram when Kroki responds after a timeout", async () => {
+    const fetch = vi
+      .fn()
+      .mockRejectedValueOnce(new DOMException("timed out", "TimeoutError"))
+      .mockResolvedValueOnce(new Response(svg("recovered")));
+    vi.stubGlobal("fetch", fetch);
+    expect(await render("```dot\nretry timeout\n```")).toContain("<svg");
+    expect(fetch).toHaveBeenCalledTimes(2);
+  });
+
   it("draws a source once per process", async () => {
     await render("```d2\ncached once\n```");
     await render("```d2\ncached once\n```");

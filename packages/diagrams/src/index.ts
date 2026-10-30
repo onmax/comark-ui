@@ -54,12 +54,20 @@ const errorText = (error: unknown) => (error instanceof Error ? error.message : 
 class Refused extends Error {}
 
 async function request(server: string, type: string, source: string): Promise<string> {
-  const response = await fetch(`${server}/${type}/svg`, {
-    method: "POST",
-    headers: { "content-type": "text/plain" },
-    body: source,
-    signal: AbortSignal.timeout(15_000),
-  });
+  const send = () =>
+    fetch(`${server}/${type}/svg`, {
+      method: "POST",
+      headers: { "content-type": "text/plain" },
+      body: source,
+      signal: AbortSignal.timeout(15_000),
+    });
+  let response: Response;
+  try {
+    response = await send();
+  } catch (error) {
+    if (!(error instanceof Error) || error.name !== "TimeoutError") throw error;
+    response = await send();
+  }
   const body = await response.text();
   // Kroki answers a diagram it can't draw with its tool's error, after a status line.
   if (!response.ok)
