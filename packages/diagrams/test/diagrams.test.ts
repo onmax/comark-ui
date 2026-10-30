@@ -27,7 +27,10 @@ beforeEach(() => {
   requests = [];
   vi.stubGlobal("fetch", kroki);
 });
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+});
 
 const render = (markdown: string, options?: DiagramsOptions) =>
   createHtmlRenderer({ plugins: [diagrams(options)], components })(markdown);
@@ -94,6 +97,47 @@ describe("comark-diagrams", () => {
       "The ```dot fence 1: the Kroki server at https://kroki.io returned HTTP 503 (Service Unavailable). Check `server`, or build again.",
     ]);
   });
+
+  it.each(["TimeoutError", "AbortError"])(
+    "retries when a timeout interrupts the SVG body with %s",
+    async (name) => {
+      const controller = new AbortController();
+      vi.spyOn(AbortSignal, "timeout").mockReturnValueOnce(controller.signal);
+      const response = new Response(svg("interrupted"));
+      vi.spyOn(response, "text").mockImplementationOnce(async () => {
+        controller.abort(new DOMException("timed out", "TimeoutError"));
+        throw new DOMException("body interrupted", name);
+      });
+      const fetch = vi
+        .fn()
+        .mockResolvedValueOnce(response)
+        .mockResolvedValueOnce(new Response(svg("recovered body")));
+      vi.stubGlobal("fetch", fetch);
+      expect(await render(`\`\`\`dot\nretry body ${name}\n\`\`\``)).toContain("recovered body");
+      expect(fetch).toHaveBeenCalledTimes(2);
+      expect(fetch.mock.calls[1]?.[1].signal).not.toBe(controller.signal);
+    },
+  );
+
+  it("reports a repeated timeout after two attempts", async () => {
+    const fetch = vi.fn().mockRejectedValue(new DOMException("timed out", "TimeoutError"));
+    vi.stubGlobal("fetch", fetch);
+    expect(await issues("```dot\nrepeated timeout\n```")).toEqual([
+      "The ```dot fence 1: couldn't reach the Kroki server at https://kroki.io (timed out). Check `server`, or build again.",
+    ]);
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(fetch.mock.calls[1]?.[1].signal).not.toBe(fetch.mock.calls[0]?.[1].signal);
+  });
+
+  it.each([new TypeError("fetch failed"), new DOMException("aborted", "AbortError")])(
+    "reports a repeated connection error after retrying: %s",
+    async (error) => {
+      const fetch = vi.fn().mockRejectedValue(error);
+      vi.stubGlobal("fetch", fetch);
+      expect(await issues(`\`\`\`dot\nrepeated error ${error.name}\n\`\`\``)).toHaveLength(1);
+      expect(fetch).toHaveBeenCalledTimes(2);
+    },
+  );
 
   it("draws a source once per process", async () => {
     await render("```d2\ncached once\n```");
