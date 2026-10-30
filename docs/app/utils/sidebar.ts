@@ -3,9 +3,10 @@
 const positions = new Map<string, { list: string | null; top: number }>();
 let activeEntry: string | undefined;
 
-const columnOf = (root: ParentNode) => root.querySelector<HTMLElement>(".sidebar .pages");
+const columnOf = (root: Pick<ParentNode, "querySelector">) =>
+  root.querySelector<HTMLElement>(".sidebar .pages");
 
-export function leaveSidebar(root: ParentNode) {
+export function leaveSidebar(root: Pick<ParentNode, "querySelector">) {
   const column = columnOf(root);
   if (!column) return;
   positions.set(activeEntry ?? entryOf(), {
@@ -14,7 +15,7 @@ export function leaveSidebar(root: ParentNode) {
   });
 }
 
-export function enterSidebar(root: ParentNode) {
+export function enterSidebar(root: Pick<ParentNode, "querySelector">) {
   activeEntry = entryOf();
   const position = positions.get(activeEntry);
   if (!position) return;

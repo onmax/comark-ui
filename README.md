@@ -6,7 +6,7 @@
 [![license: MIT](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](./LICENSE)
 [![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me&icon=comark)](https://comark-ui.onmax.me)
 [![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-ui&icon=npm)](https://www.npmjs.com/package/comark-ui)
-[![CI status](https://comark-ui.onmax.me/badge.svg?source=github-actions&repository=onmax%2Fcomark-ui&workflow=pkg-pr-new.yml&branch=main&icon=github)](https://github.com/onmax/comark-ui/actions/workflows/pkg-pr-new.yml)
+[![Release status](https://comark-ui.onmax.me/badge.svg?source=github-actions&repository=onmax%2Fcomark-ui&workflow=release.yaml&icon=github)](https://github.com/onmax/comark-ui/actions/workflows/release.yaml)
 
 Comark UI is a free, open source library built on [Comark](https://comark.dev), with 40+ blocks for docs, reviews, and agent reports. Write tabs, cards, charts, annotated screenshots, and more in Markdown. Install them together with [`comark-ui`](./packages/ui), or use individual packages.
 
@@ -121,6 +121,7 @@ It detects your installed `comark-ui` and checks documents with its plugins. Use
 ```sh
 pnpm install
 pnpm ready      # format, lint, typecheck, build, test, and Vite Doctor
+pnpm test:fuzz  # all 2048 deterministic cases; normal tests run the first 256
 pnpm docs:build # the docs site in docs/dist
 ```
 
