@@ -9,16 +9,16 @@ Finds unclosed blocks, unknown components, broken links and anchors, local URLs,
 
 ```sh
 pnpm add -D comark-linter
-pnpm lint-comark "docs/**/*.md"
+pnpm comark-lint "docs/**/*.md"
 ```
 
-The package is `comark-linter`, since npm refuses `comark-lint` as too close to `remark-lint`. Its command and config file are `lint-comark`.
+The package is `comark-linter`, since npm refuses `comark-lint` as too close to `remark-lint`. Its command and config file are `comark-lint`; `lint-comark` still works for both.
 
 ```txt
 docs/pigeons-vs-deploys.md:8:1 comark/unclosed-block `::compare` opened on line 8 is never closed. Add a line with `::` after its last child.
 ```
 
-The CLI checks each file with every comark-ui package installed, `comark-ui` included, prints `file:line:column rule message`, or JSON with `--format json`, and exits with 1 on any problem. Add your own plugins and component names with `--config lint-comark.config.ts`, which exports `defineConfig({ plugins, components, links })`. `--check-urls` also requests every external URL and reports the dead ones.
+The CLI checks each file with every comark-ui package installed, `comark-ui` included, prints `file:line:column rule message`, or JSON with `--format json`, and exits with 1 on any problem. Add your own plugins and component names in a `comark-lint.config.ts`, which the CLI loads from the working directory (or pass one with `--config`) and which exports `defineConfig({ plugins, components, links })`. `--check-urls` also requests every external URL and reports the dead ones.
 
 ```ts
 import { lint } from "comark-linter";

@@ -4,7 +4,7 @@ description: Run comark-linter from the command line, a script, ESLint, or Vite 
 install: pnpm add -D comark-linter
 ---
 
-Install lint-comark, run it on your documents, and teach it your own components.
+Install comark-lint, run it on your documents, and teach it your own components.
 
 ## Installation
 
@@ -14,26 +14,26 @@ Install lint-comark, run it on your documents, and teach it your own components.
 pnpm add -D comark-linter
 ```
 
-The package is `comark-linter`, since npm refuses `comark-lint` as too close to `remark-lint`. Its command and config file are `lint-comark`.
+The package is `comark-linter`, since npm refuses `comark-lint` as too close to `remark-lint`. Its command and config file are `comark-lint`. The command is also installed as `lint-comark`, and a `lint-comark.config.ts` still loads.
 
 ### Run it
 
 Pass files or globs. Quote a glob so the shell passes it as it is.
 
 ```sh
-pnpm lint-comark "docs/**/*.md"
-pnpm lint-comark ducks-vs-bugs.md --format json
-pnpm lint-comark "docs/**/*.md" --check-urls
+pnpm comark-lint "docs/**/*.md"
+pnpm comark-lint ducks-vs-bugs.md --format json
+pnpm comark-lint "docs/**/*.md" --check-urls
 ```
 
 It checks each file with the plugins and components of every comark-ui package installed. `comark-ui` counts as every package in it. It prints one `file:line:column rule message fix` line per problem, and `No problems.` when there are none. Links resolve from the working directory. `--check-urls` also requests every external URL and reports the dead ones.
 
 ### Add your own components
 
-Put components and plugins of your own in a config, and pass it with `--config`:
+Put components and plugins of your own in a `comark-lint.config.ts` in the working directory:
 
 ```ts
-// lint-comark.config.ts
+// comark-lint.config.ts
 import { defineConfig } from "comark-linter";
 import mermaid from "./mermaid.ts";
 
@@ -43,8 +43,10 @@ export default defineConfig({
 });
 ```
 
+The command loads it, or a `.mts`, `.mjs`, or `.js` one, when you run it from that directory. Pass a config elsewhere with `--config`:
+
 ```sh
-pnpm lint-comark "docs/**/*.md" --config lint-comark.config.ts
+pnpm comark-lint "docs/**/*.md" --config config/comark-lint.config.ts
 ```
 
 Its `plugins` and `components` are added to the installed packages'. It takes every [library option](#library) but `file`.
@@ -85,13 +87,13 @@ Register `comark-linter/doctor` in `doctor.config.ts` to lint your Markdown in t
 ### Command line
 
 ```sh
-lint-comark <file or glob>... [--format text|json] [--config lint-comark.config.ts] [--check-urls]
+comark-lint <file or glob>... [--format text|json] [--config comark-lint.config.ts] [--check-urls]
 ```
 
 | Option | Default | Description |
 | --- | --- | --- |
 | `--format` | `text` | `text` prints one line per problem. `json` prints the problems as an array, each with its `file`. |
-| `--config`, `-c` | — | A config file whose default export is a `defineConfig()` object. |
+| `--config`, `-c` | `comark-lint.config.ts` in the working directory | A config file whose default export is a `defineConfig()` object. |
 | `--check-urls` | Off | Requests every external URL and reports the dead ones as `comark/dead-url`. |
 | `--help`, `-h` | — | Prints the usage. |
 
@@ -134,7 +136,7 @@ const results = await lintFiles(["docs/index.md", "docs/setup.md"], await resolv
 `links` sets how `comark/broken-link`, `comark/broken-anchor`, `comark/blocked-url`, and `comark/dead-url` read links:
 
 ```ts
-// lint-comark.config.ts
+// comark-lint.config.ts
 import { defineConfig } from "comark-linter";
 
 export default defineConfig({

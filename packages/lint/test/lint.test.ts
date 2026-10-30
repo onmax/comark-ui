@@ -556,6 +556,21 @@ describe("lint-comark CLI", () => {
     ).toBe("No problems.\n");
   });
 
+  it("loads comark-lint.config from the working directory without --config", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "lint-comark-"));
+    await writeFile(join(dir, "pigeon-coop.md"), `::pigeon-coop\n::\n`);
+    await writeFile(
+      join(dir, "comark-lint.config.mjs"),
+      `export default { components: ["pigeon-coop"] };\n`,
+    );
+    const { stdout } = await promisify(execFile)(
+      process.execPath,
+      [new URL("../dist/cli.mjs", import.meta.url).pathname, "pigeon-coop.md"],
+      { cwd: dir },
+    );
+    expect(stdout).toBe("No problems.\n");
+  });
+
   it("prints JSON when a plugin throws a circular exception", async () => {
     const root = new URL("../../../test-results/", import.meta.url);
     await mkdir(root, { recursive: true });

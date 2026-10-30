@@ -1,14 +1,18 @@
 #!/usr/bin/env node
+import { existsSync } from "node:fs";
 import { glob } from "node:fs/promises";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
 import { lintFiles, resolveConfig, type Config, type Diagnostic } from "./index.ts";
 
-const USAGE = `Usage: lint-comark <file or glob>... [--format text|json] [--config lint-comark.config.ts] [--check-urls]
+const USAGE = `Usage: comark-lint <file or glob>... [--format text|json] [--config comark-lint.config.ts] [--check-urls]
 
 Checks Comark documents with every comark-ui package installed. Exits with 1 if there are problems.
---check-urls also requests every external URL and reports dead ones.`;
+Without --config, it loads comark-lint.config.ts (or .mts, .mjs, .js, or a lint-comark.config file)
+from the working directory when there is one.
+--check-urls also requests every external URL and reports dead ones.
+The command is also installed as lint-comark.`;
 
 const { positionals, values } = parseArgs({
   allowPositionals: true,
@@ -31,16 +35,21 @@ const fail = (message: string) => {
   failed = true;
 };
 
+const configFile =
+  values.config ??
+  ["comark-lint", "lint-comark"]
+    .flatMap((name) => ["ts", "mts", "mjs", "js"].map((extension) => `${name}.config.${extension}`))
+    .find((file) => existsSync(file));
 let config: Config = {};
-if (values.config) {
+if (configFile) {
   try {
     // SAFETY: a config module's default export is the object defineConfig returns.
-    const module = (await import(pathToFileURL(resolve(values.config)).href)) as {
+    const module = (await import(pathToFileURL(resolve(configFile)).href)) as {
       default?: Config;
     };
     config = module.default ?? {};
   } catch (error) {
-    fail(`can't load ${values.config}: ${error instanceof Error ? error.message : String(error)}`);
+    fail(`can't load ${configFile}: ${error instanceof Error ? error.message : String(error)}`);
     process.exit(2);
   }
 }
