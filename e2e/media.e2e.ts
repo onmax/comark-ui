@@ -40,7 +40,11 @@ const serve = (body: Buffer, type: string) => (route: Route) => {
     },
   });
 };
-const open = async (page: Page, markdown: string, options: { script?: boolean } = {}) => {
+const open = async (
+  page: Page,
+  markdown: string,
+  options: { script?: boolean; width?: string } = {},
+) => {
   await page.route("**/silence.wav*", serve(silence, "audio/wav"));
   await page.route("**/clip.webm", serve(clip, "video/webm"));
   await page.route("**/missing.wav", (route) => route.fulfill({ status: 404 }));
@@ -49,7 +53,7 @@ const open = async (page: Page, markdown: string, options: { script?: boolean } 
   await page.route("http://media.test/", (route) =>
     route.fulfill({
       contentType: "text/html",
-      body: `<!doctype html><html><body style="width:32rem;margin:2rem">${html}</body></html>`,
+      body: `<!doctype html><html><body style="width:${options.width ?? "32rem"};margin:2rem">${html}</body></html>`,
     }),
   );
   await page.goto("http://media.test/", { waitUntil: "domcontentloaded" });
@@ -99,6 +103,65 @@ test("a video plays with its own controls, from its bar or a click, and goes ful
   await expect(player).toHaveAttribute("data-fullscreen");
   await player.getByRole("button", { name: "Exit full screen" }).click();
   await expect(player).not.toHaveAttribute("data-fullscreen");
+});
+
+test("a narrow player gives its seek bar a row of its own, above the buttons", async ({ page }) => {
+  for (const [width, own] of [
+    ["18rem", true],
+    ["32rem", false],
+  ] as const) {
+    await open(page, "![Silence](silence.wav)", { width });
+    const player = page.getByRole("group", { name: "Silence" });
+    await expect(player.locator(".cm-time").last()).toHaveText("0:04");
+    const bar = (await player.locator(".cm-bar").boundingBox())!;
+    const seek = (await player.getByRole("slider", { name: "Seek" }).boundingBox())!;
+    const play = (await player.getByRole("button", { name: "Play" }).boundingBox())!;
+    expect(seek.y + seek.height <= play.y).toBe(own);
+    expect(seek.width > bar.width * 0.9).toBe(own);
+  }
+});
+
+test.describe("touch video controls", () => {
+  test.use({ hasTouch: true });
+
+  test("hour-long times keep the buttons on one row at narrow widths", async ({ page }) => {
+    await open(page, "![A gray clip](clip.webm)");
+    const player = page.getByRole("group", { name: "A gray clip" });
+    await expect(player.locator(".cm-time").last()).toHaveText("0:04");
+    expect(await page.evaluate(() => matchMedia("(pointer:coarse)").matches)).toBe(true);
+    // A supported wider font makes the limiting geometry independent of CI's system font.
+    await page.locator("body").evaluate((body) => {
+      body.style.setProperty("--comark-font", "monospace");
+    });
+    // Exercise hour-form geometry without adding an hour-long video fixture.
+    await player.locator(".cm-time").evaluateAll((times) => {
+      times[0].textContent = "1:00:00";
+      times[1].textContent = "1:02:03";
+    });
+
+    for (const width of [240, 288, 289, 319, 320, 321, 375]) {
+      await page.locator("body").evaluate((body, width) => {
+        body.style.width = `${width}px`;
+      }, width);
+      const bar = (await player.locator(".cm-bar").boundingBox())!;
+      const seek = (await player.getByRole("slider", { name: "Seek" }).boundingBox())!;
+      const buttons = await player.getByRole("button").all();
+      const play = (await buttons[0].boundingBox())!;
+      expect(play.width).toBe(40);
+      expect(seek.y + seek.height).toBeLessThanOrEqual(play.y);
+      expect(seek.width).toBeGreaterThan(bar.width * 0.9);
+      for (const button of buttons) {
+        const box = (await button.boundingBox())!;
+        expect(box.y, `button row at ${width}px`).toBe(play.y);
+        expect(box.x).toBeGreaterThanOrEqual(bar.x);
+        expect(box.x + box.width).toBeLessThanOrEqual(bar.x + bar.width);
+      }
+      expect(await player.locator(".cm-time").first().isVisible()).toBe(width >= 320);
+      expect(
+        await player.locator(".cm-bar").evaluate((bar) => bar.scrollWidth <= bar.clientWidth),
+      ).toBe(true);
+    }
+  });
 });
 
 test("a video in a frame that can't go full screen has no full screen button", async ({ page }) => {

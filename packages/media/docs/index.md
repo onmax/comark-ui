@@ -207,7 +207,7 @@ The renderer inlines the styles once per document, and the players' script once 
 
 ## Theme
 
-A video sits in a bordered frame at most the page's width. A bar of controls floats over its bottom edge: a play button, the time, a seek bar, a mute button, and a full screen button. The bar fades out while the video plays, unless the pointer or the focus is on the video. An audio player takes the page's width and is the same bar on its own, without full screen. A player narrower than 18rem drops the times. The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
+A video sits in a bordered frame at most the page's width. A bar of controls floats over its bottom edge: a play button, the time, a seek bar, a mute button, and a full screen button. The bar fades out while the video plays, unless the pointer or the focus is on the video. An audio player takes the page's width and is the same bar on its own, without full screen. A player narrower than 24rem gives the seek bar a row of its own above the buttons, and one narrower than 16rem drops the times. Touch video controls drop the times below 18rem to leave room for the larger buttons and hour-form timestamps. The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
 
 ### Shared tokens
 
@@ -216,10 +216,10 @@ Players read these [shared tokens](/guide/theming/):
 | Token | Used for |
 | --- | --- |
 | `--comark-background` | The bar, a little see-through over a video, and the seek bar's handle |
-| `--comark-foreground` | The play button and the played part of the seek bar, when the page sets no primary color |
+| `--comark-foreground` | The play button and the played part of the seek bar, when the page sets no primary color, and, faded, the rest of the seek bar |
 | `--comark-muted` | The times and the mute and full screen buttons |
 | `--comark-border` | A video's frame and the audio bar |
-| `--comark-accent` | The space a video takes before its first frame loads, the rest of the seek bar, and hovered buttons |
+| `--comark-accent` | The space a video takes before its first frame loads, and hovered buttons |
 | `--comark-ring` | Focus rings |
 | `--comark-radius` | Corners |
 | `--comark-font` | The times |
