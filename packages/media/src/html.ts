@@ -18,7 +18,7 @@ const text = (value: unknown) =>
 const attr = (value: unknown) => escapeHtml(text(value), { '"': "&quot;" });
 
 const media: NodeHandler = ([, attrs], state) => {
-  const { kind, src, label, poster, autoplay, loop, muted, native } = attrs;
+  const { kind, src, label, poster, width, height, autoplay, loop, muted, native } = attrs;
   if ((kind !== "video" && kind !== "audio") || !src) return "";
   const styles = styled.has(state.context) ? "" : `<style data-comark-media>${css}</style>`;
   styled.add(state.context);
@@ -26,6 +26,8 @@ const media: NodeHandler = ([, attrs], state) => {
   const element =
     `<${kind}${native ? ' class="cm"' : ""} src="${attr(src)}" controls${video ? " playsinline" : ""} preload="metadata"` +
     (poster && video ? ` poster="${attr(poster)}"` : "") +
+    // The browser keeps this room, at the video's ratio, until the video loads.
+    (width && height && video ? ` width="${attr(width)}" height="${attr(height)}"` : "") +
     (autoplay ? " autoplay" : "") +
     (loop ? " loop" : "") +
     (muted ? " muted" : "") +

@@ -2,6 +2,7 @@ import type { ElementNode, Node, NodeHandler, State } from "comark";
 import { escapeHtml, textContent } from "comark/utils";
 import { carouselHtml } from "comark-carousel/html";
 import { runtime as zoomRuntime } from "comark-zoom/html";
+import { measure } from "comark-zoom/size";
 import { start } from "./script.ts";
 import { draw } from "./marks.ts";
 import { BOX_PADDING, pixels, place } from "./place.ts";
@@ -274,10 +275,13 @@ async function parts(
   const caption = shot.caption.some((node) => Array.isArray(node) || node.trim() !== "")
     ? await children(shot.caption, state)
     : "";
+  // The page keeps the image's room before it loads: its capture size, or the size read from the file.
+  const size = body ? undefined : (shot.viewport ?? (await measure(shot.src)));
+  const sized = size ? ` width="${size.width}" height="${size.height}"` : "";
   return {
     sides: sided.map((annotation) => ` ca-${annotation.side}`),
     heading: heading && `<div class="ca-heading">${heading}</div>`,
-    frame: `<div class="ca-frame">${body ?? `<img src="${attr(shot.src)}" alt="${attr(shot.alt)}" loading="lazy" decoding="async">`}${pins.join("")}${arrows.join("")}${copy ? COPY : ""}</div>`,
+    frame: `<div class="ca-frame">${body ?? `<img src="${attr(shot.src)}" alt="${attr(shot.alt)}"${sized} loading="lazy" decoding="async">`}${pins.join("")}${arrows.join("")}${copy ? COPY : ""}</div>`,
     callouts,
     notes: caption || notes ? `${caption}${notes ? `<ol class="ca-notes">${notes}</ol>` : ""}` : "",
   };

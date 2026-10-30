@@ -18,9 +18,9 @@ export const css = `@layer comark{${[
   ".cm{display:block;box-sizing:border-box;max-width:100%;margin:1rem 0}",
   // The accent tint shows where the video will be before its first frame loads.
   "video.cm,.cm-video{border:1px solid var(--_comark-border);border-radius:var(--_comark-radius);background:var(--_comark-accent)}",
-  // Until its metadata loads, a video is the browser's 2:1 box; most are 16:9, so it takes that room and keeps its own
-  // ratio once known.
-  "video.cm,.cm-video>video{aspect-ratio:auto 16/9}",
+  // A video with its `width` and `height` keeps that room until it loads. Without them, it's the browser's 2:1 box until
+  // its metadata loads; most are 16:9, so it takes that room and keeps its own ratio once known.
+  ":is(video.cm,.cm-video>video):not([width][height]){aspect-ratio:auto 16/9}",
   "video.cm{height:auto}",
   ".cm-video{position:relative;width:fit-content;overflow:hidden}",
   ".cm-video>video{display:block;max-width:100%;height:auto}",

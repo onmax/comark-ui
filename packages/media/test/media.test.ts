@@ -1,13 +1,14 @@
 import { createHtmlRenderer } from "@comark/html";
 import { parseMarkdown } from "comark";
-import { describe, expect, it } from "vite-plus/test";
+import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 import chips from "../../chips/src/index.ts";
 import zoom from "../../zoom/src/index.ts";
 import media, { components } from "../src/html.ts";
 
-const render = createHtmlRenderer({ plugins: [media()], components });
+// Sizes are read from remote files only in the tests that ask for them.
+const render = createHtmlRenderer({ plugins: [media({ size: false })], components });
 const issues = async (markdown: string) =>
-  (await parseMarkdown(markdown, { plugins: [media()] })).meta.issues;
+  (await parseMarkdown(markdown, { plugins: [media({ size: false })] })).meta.issues;
 const attachment =
   "https://github.com/user-attachments/assets/2f3c0e3e-1c4b-4c3a-9a6b-0b1e2f3a4b5c";
 
@@ -99,7 +100,7 @@ describe("comark-media", () => {
   it("runs before comark-chips and comark-zoom in any order", async () => {
     const markdown = `![Flow](flow.mp4)\n\n${attachment}`;
     const value = await parseMarkdown(markdown, {
-      plugins: [chips({ download: false }), zoom(), media()],
+      plugins: [chips({ download: false }), zoom({ size: false }), media({ size: false })],
     });
     expect(value.nodes).toEqual([
       ["p", {}, ["media", { kind: "video", src: "flow.mp4", label: "Flow" }]],
@@ -118,9 +119,67 @@ describe("comark-media", () => {
     expect(await issues('![Song](a.mp3){poster="a.png"}')).toEqual([
       "`![Song](a.mp3)`: audio has no picture, so `poster` was dropped. Remove it.",
     ]);
-    expect(await issues("![Demo](demo.mp4){width=600 .wide}")).toEqual([
-      "`![Demo](demo.mp4)`: `width`, `class` aren't video options, so they were dropped. Use autoplay, loop, muted, or poster.",
+    expect(await issues("![Demo](demo.mp4){chapters=1 .wide}")).toEqual([
+      "`![Demo](demo.mp4)`: `chapters`, `class` aren't video options, so they were dropped. Use autoplay, loop, muted, poster, width, or height.",
     ]);
+    expect(await issues("![Song](a.mp3){width=600}")).toEqual([
+      "`![Song](a.mp3)`: `width` isn't an audio option, so it was dropped. Use autoplay, loop, or muted.",
+    ]);
+    expect(await issues("![Demo](demo.mp4){width=600}")).toEqual([
+      "`![Demo](demo.mp4)`: `width` and `height` are the video's size in pixels and go together, like `{width=1280 height=720}`, so it was dropped and the size is read from the file.",
+    ]);
+  });
+
+  describe("sizes", () => {
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+    // The first bytes of an MP4: its type, then an index with one 1280 by 720 track.
+    const be = (value: number) => [
+      value >>> 24,
+      (value >>> 16) & 255,
+      (value >>> 8) & 255,
+      value & 255,
+    ];
+    const box = (type: string, payload: number[]) => [
+      ...be(payload.length + 8),
+      ...new TextEncoder().encode(type),
+      ...payload,
+    ];
+    const identity = [0x10000, 0, 0, 0, 0x10000, 0, 0, 0, 0x40000000].flatMap(be);
+    const tkhd = box("tkhd", [
+      ...Array(40).fill(0),
+      ...identity,
+      ...be(1280 << 16),
+      ...be(720 << 16),
+    ]);
+    const mp4 = new Uint8Array([
+      ...box("ftyp", [105, 115, 111, 109, 0, 0, 0, 0]),
+      ...box("moov", box("trak", tkhd)),
+    ]);
+
+    it("gives a video the width and height it was written with, so the page keeps its room", async () => {
+      const html = await render("![Demo](demo.mp4){width=1280 height=720}");
+      expect(html).toContain(
+        '<video src="demo.mp4" controls playsinline preload="metadata" width="1280" height="720"',
+      );
+    });
+
+    it("reads a remote video's size from its first bytes, and leaves audio and local files alone", async () => {
+      const fetch = vi.fn(async () => new Response(mp4, { status: 206 }));
+      vi.stubGlobal("fetch", fetch);
+      const render = createHtmlRenderer({ plugins: [media()], components });
+      expect(await render("![Demo](https://cdn.test/sized.mp4)")).toContain(
+        'preload="metadata" width="1280" height="720"',
+      );
+      expect(
+        await render("![Demo](./local.mp4)\n\n![Song](https://cdn.test/song.mp3)"),
+      ).not.toMatch(/<(video|audio)[^>]* width=/);
+      expect(fetch).toHaveBeenCalledTimes(1);
+      const off = createHtmlRenderer({ plugins: [media({ size: false })], components });
+      expect(await off("![Demo](https://cdn.test/off.mp4)")).not.toMatch(/<video[^>]* width=/);
+      expect(fetch).toHaveBeenCalledTimes(1);
+    });
   });
 
   it("escapes what it writes", async () => {

@@ -1,6 +1,7 @@
 import type { ComarkParseTokensState, ElementNode, Node } from "comark";
 import { defineComarkPlugin } from "comark";
 import { resolveAttributes } from "comark/render";
+import { measure } from "comark-zoom/size";
 
 export type MediaMeta = {
   /** One readable sentence per problem with a video or audio file. Empty when the document has none. Other plugins add theirs too. */
@@ -16,17 +17,25 @@ export type MediaOptions = {
    * Default `styled`.
    */
   controls?: "styled" | "native";
+  /**
+   * Give every video at a URL its `width` and `height`, read from its first bytes while parsing, so the page
+   * keeps its room before the video loads. Default `true`.
+   */
+  size?: boolean;
 };
 
 /**
  * What a media file becomes, and all its renderers read. `kind` is `video` or `audio`; `label` is the image's alt.
- * `native` marks a file that keeps the browser's controls. The flags are only present when set.
+ * `width` and `height` are a video's size in pixels, as written or read from the file. `native` marks a file that keeps
+ * the browser's controls. The flags are only present when set.
  */
 export type MediaAttributes = {
   kind?: "video" | "audio";
   src?: string;
   label?: string;
   poster?: string;
+  width?: number;
+  height?: number;
   autoplay?: boolean;
   loop?: boolean;
   muted?: boolean;
@@ -41,6 +50,7 @@ const AUDIO = /\.(?:mp3|wav|ogg|m4a)$/i;
 // GitHub plays an uploaded video when its link sits alone in a paragraph; the address has no extension.
 const ATTACHMENT = /^https:\/\/github\.com\/user-attachments\/assets\/[\w-]+\/?(?:[?#].*)?$/;
 const FLAGS = ["autoplay", "loop", "muted"] as const;
+const SIDES = ["width", "height"] as const;
 const KNOWN = new Set<string>(["src", "alt", "kind", "poster", ...FLAGS]);
 
 const isElement = (node: Node): node is ElementNode => Array.isArray(node) && node[0] !== null;
@@ -128,17 +138,31 @@ function read(
       message: `${name}: audio has no picture, so \`poster\` was dropped. Remove it.`,
     });
   else if (poster) result.poster = poster;
+  const sides = kind === "video" ? SIDES.filter((side) => attrs[side] !== undefined) : [];
+  if (sides.length) {
+    const [width = 0, height = 0] = SIDES.map((side) => Number(text(attrs[side])));
+    if (Number.isInteger(width) && Number.isInteger(height) && width > 0 && height > 0) {
+      result.width = width;
+      result.height = height;
+    } else
+      issues.push({
+        rule: "comark/media/invalid-size",
+        message: `${name}: \`width\` and \`height\` are the video's size in pixels and go together, like \`{width=1280 height=720}\`, so ${sides.length === 1 ? "it was" : "they were"} dropped and the size is read from the file.`,
+      });
+  }
   if (options.controls === "native") result.native = true;
   if (result.autoplay && !result.muted)
     issues.push({
       rule: "comark/media/autoplay-without-muted",
       message: `${name}: browsers only start ${kind === "video" ? "a video" : "audio"} by itself when it's muted. Add \`muted\`, or remove \`autoplay\`.`,
     });
-  const unknown = Object.keys(attrs).filter((key) => !KNOWN.has(key));
+  const unknown = Object.keys(attrs).filter(
+    (key) => !KNOWN.has(key) && !(kind === "video" && SIDES.some((side) => side === key)),
+  );
   if (unknown.length)
     issues.push({
       rule: "comark/media/unknown-prop",
-      message: `${name}: ${unknown.map((key) => `\`${key}\``).join(", ")} ${unknown.length === 1 ? `isn't ${kind === "audio" ? "an" : "a"}` : "aren't"} ${kind} option${unknown.length === 1 ? "" : "s"}, so ${unknown.length === 1 ? "it was" : "they were"} dropped. Use ${kind === "video" ? "autoplay, loop, muted, or poster" : "autoplay, loop, or muted"}.`,
+      message: `${name}: ${unknown.map((key) => `\`${key}\``).join(", ")} ${unknown.length === 1 ? `isn't ${kind === "audio" ? "an" : "a"}` : "aren't"} ${kind} option${unknown.length === 1 ? "" : "s"}, so ${unknown.length === 1 ? "it was" : "they were"} dropped. Use ${kind === "video" ? "autoplay, loop, muted, poster, width, or height" : "autoplay, loop, or muted"}.`,
     });
   return result;
 }
@@ -153,18 +177,32 @@ export default defineComarkPlugin<MediaOptions | undefined, MediaMeta>((options 
   markdownItPost(state) {
     convert(state.tokens);
   },
-  post(state) {
+  async post(state) {
     const { tree } = state;
     const data: Data = { frontmatter: tree.frontmatter, meta: tree.meta, data: {}, props: {} };
     const issues: Issue[] = [];
+    const videos: MediaAttributes[] = [];
     const walk = (nodes: Node[]) => {
       for (const node of nodes) {
         if (!isElement(node)) continue;
-        if (node[0] === "media") node.splice(1, node.length - 1, read(node, data, issues, options));
-        else walk(childrenOf(node));
+        if (node[0] !== "media") {
+          walk(childrenOf(node));
+          continue;
+        }
+        const attributes = read(node, data, issues, options);
+        node.splice(1, node.length - 1, attributes);
+        if (attributes.kind === "video" && !attributes.width) videos.push(attributes);
       }
     };
     walk(tree.nodes);
+    if (options.size !== false)
+      await Promise.all(
+        videos.map(async (video) => {
+          // SAFETY: `read` only returns a video with its `src`.
+          const size = await measure(video.src as string);
+          if (size) Object.assign(video, size);
+        }),
+      );
     tree.meta.issues = [...(tree.meta.issues ?? []), ...issues.map((issue) => issue.message)];
     tree.meta.issueRules = {
       ...tree.meta.issueRules,

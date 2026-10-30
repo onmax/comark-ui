@@ -15,7 +15,7 @@ import { components as reactComponents } from "../src/react.ts";
 import { components as vueComponents } from "../src/vue.ts";
 
 const markdown = [
-  '![Login & logout](./login.mp4){autoplay loop muted poster="login.png"}',
+  '![Login & logout](./login.mp4){autoplay loop muted poster="login.png" width=1280 height=720}',
   "![Standup](standup.m4a)",
   "https://github.com/user-attachments/assets/2f3c0e3e-1c4b-4c3a-9a6b-0b1e2f3a4b5c",
 ].join("\n\n");
@@ -41,13 +41,14 @@ const renderers = {
 };
 
 describe("comark-media renderers", async () => {
-  const value = await parseMarkdown(markdown, { plugins: [media()] });
+  const value = await parseMarkdown(markdown, { plugins: [media({ size: false })] });
   const expected = normalize(await renderHtmlFromDocument(value, { components: htmlComponents }));
 
   it("renders a video, audio, and an attachment in HTML", () => {
     expect(expected.match(/<span class="cm cm-video"/g)).toHaveLength(2);
     expect(expected.match(/<span class="cm cm-audio"/g)).toHaveLength(1);
     expect(expected).toContain("Login &amp; logout");
+    expect(expected).toContain('width="1280" height="720"');
   });
 
   for (const [name, render] of Object.entries(renderers))

@@ -6,7 +6,7 @@ import { promisify } from "node:util";
 import { renderHtmlFromDocument } from "@comark/html";
 import { parseMarkdown } from "comark";
 import security from "comark/plugins/security";
-import { describe, expect, it } from "vite-plus/test";
+import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 import annotate, { components } from "../src/html.ts";
 import { draw } from "../src/marks.ts";
 import { css } from "../src/styles.ts";
@@ -795,5 +795,31 @@ Duck
           : [height, Math.min(...points.map(([, y]) => y)), Math.max(...points.map(([, y]) => y))];
       expect(to - from - long, `${width}x${height}`).toBeLessThan(Math.max(40, long * 0.2));
     }
+  });
+});
+
+describe("screenshot sizes", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+  const png = new Uint8Array([
+    0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13, 0x49, 0x48, 0x44, 0x52, 0, 0, 0x0b,
+    0x40, 0, 0, 0x07, 0x08, 8, 6, 0, 0, 0,
+  ]);
+
+  it("keeps an image's room before it loads: its viewport, or the size read from the file", async () => {
+    const fetch = vi.fn(async () => new Response(png));
+    vi.stubGlobal("fetch", fetch);
+    const shot = (attrs: string) => run(`::screenshot{${attrs} alt="Toolbar"}\n::`);
+    expect((await shot('src="a.png" viewport="1440x900"')).html).toContain(
+      '<img src="a.png" alt="Toolbar" width="1440" height="900" loading="lazy"',
+    );
+    expect((await shot('src="https://cdn.test/shot.png"')).html).toContain(
+      'alt="Toolbar" width="2880" height="1800" loading="lazy"',
+    );
+    expect((await shot('src="b.png"')).html).toContain(
+      '<img src="b.png" alt="Toolbar" loading="lazy"',
+    );
+    expect(fetch).toHaveBeenCalledTimes(1);
   });
 });

@@ -16,4 +16,8 @@ export default {
     title: "Mute a file that plays by itself",
   },
   "comark/media/unknown-prop": { code: "COMARK3905", title: "Use only a media file's options" },
+  "comark/media/invalid-size": {
+    code: "COMARK3906",
+    title: "Give a video's `width` and `height` together, in pixels",
+  },
 } satisfies Record<`comark/media/${string}`, RuleInfo>;

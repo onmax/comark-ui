@@ -109,6 +109,16 @@ A screen recording is often the clearest evidence in a pull request. It shows a 
 
 The player loads only the file's first frame and length until the reader presses play, so a page with several recordings stays light.
 
+### Room before it loads
+
+A video at a URL gets its `width` and `height` while parsing, read from the file's first bytes, so the page keeps the video's room and doesn't jump when it loads. A local file can't be read while parsing, so give it its size in pixels:
+
+```md
+![Signing in with a passkey](./login.mp4){width=1280 height=720}
+```
+
+Without a size, a video takes a 16:9 box until its own size is known. Pass `media({ size: false })` to read no files.
+
 ### The browser's controls
 
 Use `controls: "native"` to always show the browser's controls and leave the script out.
@@ -152,8 +162,9 @@ In a right-to-left page, `ArrowLeft` and `ArrowRight` swap.
 | `loop` | `false` | Starts again at the end. |
 | `muted` | `false` | Starts without sound. |
 | `poster` | — | An image to show before a video plays. Video only. |
+| `width`, `height` | Read from the file | The video's size in pixels, together. The page keeps that room until the video loads. Video only. |
 
-Write `{loop=false}` to turn a prop off. Other props, such as `width` or a class, are dropped.
+Write `{loop=false}` to turn a prop off. Other props, such as a class, are dropped.
 
 ### File types
 
@@ -169,6 +180,7 @@ The options go under `media` in `comarkUi()`, or to `media()` when you use the p
 | Option | Default | Description |
 | --- | --- | --- |
 | `controls` | `"styled"` | `"styled"` draws the controls with the [shared tokens](/guide/theming/), which a small script runs. `"native"` always uses the browser's controls and leaves the script out. |
+| `size` | `true` | Reads each video's size from the first bytes of its file at a URL, with a range request, while parsing. `false` reads no files. |
 
 ### Issues
 
@@ -177,6 +189,7 @@ The plugin adds these problems to `meta.issues`, as [Validation](/guide/validati
 - A video or audio file with nothing in its brackets.
 - `autoplay` without `muted`.
 - A `poster` on audio.
+- A `width` or `height` without the other, or one that isn't a whole number of pixels.
 - A prop it doesn't know.
 
 Each issue names the file and says how to fix it, and each has its own rule in [Doctor](/doctor/):

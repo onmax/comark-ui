@@ -30,6 +30,8 @@ Any Markdown: code, callouts, tables.
 
 The zoomed view grows out of the item's place on the page. Escape, Back, and a click around it close it; arrow keys and the strip page through a group; Enter or Space opens a focused item. `zoom({ images: false })` leaves images alone, except those you mark with `{data-zoom}`, and `{zoom=false}` keeps one image from zooming. Add `data-zoom-src` to an image to load a larger file when it zooms; the page's image shows until it loads.
 
+Every image at a URL or in a data URI gets its `width` and `height` while parsing, read from the file's first bytes, so the page keeps its room before the image loads and doesn't jump. `zoom({ size: false })` reads no files. Other packages read their files' sizes with the same `measure()` from `comark-zoom/size`.
+
 ## Renderers
 
 | Renderer | Import |

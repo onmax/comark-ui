@@ -28,13 +28,13 @@ const render = createHtmlRenderer({ plugins: [media()], components });
 https://github.com/user-attachments/assets/2f3c0e3e-1c4b-4c3a-9a6b-0b1e2f3a4b5c
 ```
 
-An image ending in `.mp4`, `.webm`, `.mov`, or `.m4v` becomes `<video controls playsinline preload="metadata">`, and one ending in `.mp3`, `.wav`, `.ogg`, or `.m4a` becomes `<audio controls preload="metadata">`. The alt text labels the player. `autoplay`, `loop`, `muted`, and `poster` pass through.
+An image ending in `.mp4`, `.webm`, `.mov`, or `.m4v` becomes `<video controls playsinline preload="metadata">`, and one ending in `.mp3`, `.wav`, `.ogg`, or `.m4a` becomes `<audio controls preload="metadata">`. The alt text labels the player. `autoplay`, `loop`, `muted`, `poster`, `width`, and `height` pass through. A video at a URL without `width` and `height` gets them while parsing, read from the file's first bytes, so the page keeps its room before it loads; `media({ size: false })` reads no files.
 
 Players come with a play button, the time, a seek bar, and a mute button, drawn with the shared `--comark-*` tokens; a video's float over its bottom edge and add a full screen button. A small script, inlined once per document, runs them. Until it does, and when a file can't play, the browser's own controls show instead, so the file plays without any script. Pass `media({ controls: "native" })` to keep the browser's controls and leave the script out.
 
 The plugin works on Markdown's tokens, before any plugin's `post` step, so comark-zoom never zooms a video and comark-chips never turns an attachment link into a chip, whatever their order.
 
-The plugin adds every problem to `meta.issues`, so a host can reject a document before publishing it: a file without alt text, `autoplay` without `muted`, a `poster` on audio, and a prop it doesn't know. Each issue names the file and says how to fix it.
+The plugin adds every problem to `meta.issues`, so a host can reject a document before publishing it: a file without alt text, `autoplay` without `muted`, a `poster` on audio, a `width` or `height` without the other, and a prop it doesn't know. Each issue names the file and says how to fix it.
 
 ## Renderers
 
