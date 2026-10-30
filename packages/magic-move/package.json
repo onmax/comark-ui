@@ -1,6 +1,6 @@
 {
   "name": "comark-magic-move",
-  "version": "0.7.4",
+  "version": "0.7.5",
   "description": "Code that animates between steps: the tokens two steps share move into place, as in Shiki Magic Move. The steps read in turn without a script. A Comark plugin.",
   "keywords": [
     "animation",
