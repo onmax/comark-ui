@@ -1,6 +1,6 @@
 {
   "name": "comark-badge",
-  "version": "0.7.6",
+  "version": "0.7.7",
   "description": "Badges for versions and statuses, inline or as Nuxt UI's block ::badge, in Nuxt UI's seven colors. A Comark plugin.",
   "keywords": [
     "badge",

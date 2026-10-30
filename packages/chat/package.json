@@ -1,6 +1,6 @@
 {
   "name": "comark-chat",
-  "version": "0.7.6",
+  "version": "0.7.7",
   "description": "AI SDK chat messages rendered with Comark: streaming Markdown, files, and a trace of each turn's reasoning, tool calls, and sources, for Vue, React, and Svelte.",
   "keywords": [
     "ai",

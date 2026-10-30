@@ -1,6 +1,6 @@
 {
   "name": "comark-deflist",
-  "version": "0.7.6",
+  "version": "0.7.7",
   "description": "Definition lists in Comark: a term, then `: definition` lines, rendered as native <dl>, <dt>, and <dd>.",
   "keywords": [
     "comark",

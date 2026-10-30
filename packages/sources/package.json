@@ -1,6 +1,6 @@
 {
   "name": "comark-sources",
-  "version": "0.7.6",
+  "version": "0.7.7",
   "description": "Numbered :cite[2] citations that link to a ::sources list of links, each with a link back. A Comark plugin.",
   "keywords": [
     "citations",

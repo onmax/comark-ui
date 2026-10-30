@@ -1,6 +1,6 @@
 {
   "name": "comark-mark",
-  "version": "0.7.6",
+  "version": "0.7.7",
   "description": "Highlights and superscripts in Comark: ==marked text== as <mark> and ^sup^ as <sup>, styled by components for HTML, Vue, React, and Svelte.",
   "keywords": [
     "comark",

@@ -1,6 +1,6 @@
 {
   "name": "comark-quiz",
-  "version": "0.7.6",
+  "version": "0.7.7",
   "description": "Questions, polls, and recall cards for lessons written in Markdown: check an answer, see why each option is right or wrong, and vote. They read without a script. A Comark plugin.",
   "keywords": [
     "comark",

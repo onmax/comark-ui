@@ -1,6 +1,6 @@
 {
   "name": "comark-chips",
-  "version": "0.7.6",
+  "version": "0.7.7",
   "description": "Links as chips with the site's favicon, and @user as a chip with their avatar, downloaded while parsing so readers ask no one. A Comark plugin.",
   "keywords": [
     "avatar",
