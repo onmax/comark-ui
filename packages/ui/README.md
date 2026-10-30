@@ -50,7 +50,7 @@ Vue, React, and Svelte leave out annotate and diff, which render only to HTML.
 
 | Export | What it does |
 | --- | --- |
-| `ComarkKit` | The schema: StarterKit, task lists, inline images (drawn as players for video and audio), tables, and Comark's components, slots, and comments, each keeping the attributes it has no field for. |
+| `ComarkKit` | The schema: StarterKit, task lists, inline images (drawn as players for video and audio), tables, footnotes, definition lists, CriticMarkup, and Comark's components, slots, and comments, each keeping the attributes it has no field for. |
 | `fromMarkdown`, `toMarkdown` | Convert between Markdown and the editor's JSON with Comark's own parser and writer. Front matter stays beside the document. |
 | `checkMarkdown(markdown, { plugins })` | Whether the editor can save the document without changing what readers see, judged with the plugins the page renders with. A document it can't keep opens read-only. |
 | `Upload` | Uploads pasted and dropped files. Each shows a placeholder with its progress until `upload(file, progress)` returns its URL. The placeholder is a decoration, so a collaborative document never holds a file that hasn't arrived. |

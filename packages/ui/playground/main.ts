@@ -27,6 +27,20 @@ Ship it on **Friday**, after the [review](https://comark-ui.onmax.me). :badge[Ne
 Edit this note in either pane.
 ::
 
+> [!TIP] Before you tag
+> Check the {--old--}{++new++} changelog{>>Mention the migration.<<} against the docs[^docs].
+
+::question{#release-day}
+When does the release go out?
+
+- [x] Friday, after the review
+  > The review is the last step before tagging.
+- [ ] Monday
+  > Monday is for the retro.
+::
+
+[^docs]: The [editor guide](https://comark-ui.onmax.me/guide/editor/) lists what the editor keeps.
+
 | Package | Size |
 | :-- | --: |
 | comark-ui | 18 kB |

@@ -3,6 +3,20 @@ import type { ComarkPlugin, ElementNode, ElementNodeAttributes, Node as AstNode 
 import { parseMarkdown } from "comark";
 import { renderMarkdown } from "comark/render";
 import { textContent } from "comark/utils";
+import {
+  between,
+  blockComponent,
+  definitionList,
+  footnoteDefinition,
+  footnoteReference,
+  inlineComponent,
+  own,
+  substitution,
+  task,
+  trailingLines,
+  writeOptions,
+} from "./handlers.ts";
+import { SHORTHAND, SUBSTITUTION, syntax } from "./syntax.ts";
 
 type Props = ElementNodeAttributes;
 type Mark = { type: string; attrs?: Record<string, unknown> };
@@ -10,6 +24,7 @@ type Mark = { type: string; attrs?: Record<string, unknown> };
 // Paragraphs stay explicit, so an element among blocks is a block (`::badge`) and one in a paragraph is inline
 // (`:badge`). Only the heading ids an author wrote are kept: an id derived from the text would go stale on an edit.
 const parseOptions = { autoUnwrap: false, headingIds: false } as const;
+const readOptions = { ...parseOptions, plugins: syntax };
 
 const marks = new Map([
   ["strong", "bold"],
@@ -18,12 +33,23 @@ const marks = new Map([
   ["code", "code"],
   ["a", "link"],
 ]);
+// comark-footnotes' markers, each followed by its label.
+const DEFINITION = "cfn-def:";
+const REFERENCE = "cfn-ref:";
+const NOTE = "cfn-note";
 const markTags = new Map([...marks].map(([tag, mark]) => [mark, tag]));
-const inlineTags = new Set([...marks.keys(), "br", "img", "span", "input"]);
+const inlineTags = new Set([
+  ...marks.keys(),
+  "br",
+  "img",
+  "span",
+  "input",
+  "ins",
+  "mark",
+  SUBSTITUTION,
+  NOTE,
+]);
 const headings = new Set(["h1", "h2", "h3", "h4", "h5", "h6"]);
-// Comark's writer prints these tags as Markdown, so a component that shares the name, such as `::table`, can't be
-// written back as one.
-const builtIn = new Set([...headings, "p", "blockquote", "hr", "pre", "table", "ul", "ol", "li"]);
 
 // A text node is a string and every other node an array, so the array check tells them apart.
 const isText = (node: AstNode): node is string => !Array.isArray(node);
@@ -40,7 +66,11 @@ const textOf = (value: unknown) =>
 const inlineHtml = ({ $: meta }: Props) =>
   meta instanceof Object && "block" in meta && meta.block === 0;
 const isInline = (node: AstNode) =>
-  isText(node) || (isElement(node) && (inlineTags.has(node[0]) || inlineHtml(node[1])));
+  isText(node) ||
+  (isElement(node) &&
+    (inlineTags.has(node[0]) || node[0].startsWith(REFERENCE) || inlineHtml(node[1])));
+// Raw HTML is written by Comark's HTML handler, so only a component is the codec's to write.
+const isHtml = (props: Props) => props.$ instanceof Object;
 
 /** The props a node has no field for, or `undefined` when none are left. */
 function rest(props: Props, ...keys: string[]) {
@@ -103,6 +133,11 @@ function readBlock(child: AstNode, reading: Reading): JSONContent[] {
   if (!isElement(child)) return [node("comarkComment", { text: child[2] })];
   const [tag, props] = child;
   const children = childrenOf(child);
+  // `:name[text]{props}` alone on its line reads as a block, but it's an inline component in its own paragraph.
+  if (SHORTHAND in props) {
+    const { [SHORTHAND]: _, ...attrs } = props;
+    return [node("paragraph", {}, readInline([[tag, attrs, ...children]], [], reading))];
+  }
   if (tag === "p")
     return [node("paragraph", withProps({}, rest(props)), readInline(children, [], reading))];
   if (headings.has(tag))
@@ -119,15 +154,54 @@ function readBlock(child: AstNode, reading: Reading): JSONContent[] {
   if (tag === "pre") return [readCode(props, children)];
   if (
     tag === "table" &&
+    children.length &&
     children.every((part) => isElement(part) && ["thead", "tbody", "tr"].includes(part[0]))
   )
     return [readTable(props, children, reading)];
   if (tag === "ul" || tag === "ol") return [readList(tag, props, children, reading)];
+  if (tag.startsWith(DEFINITION))
+    return [
+      node(
+        "footnoteDefinition",
+        { label: tag.slice(DEFINITION.length) },
+        filled(readBlocks(children, reading)),
+      ),
+    ];
+  if (tag === "dl") return [readDefinitions(props, children, reading)];
   // A slot only means something inside a component.
-  if (tag === "template" || builtIn.has(tag)) reading.lossy = true;
+  if (tag === "template") reading.lossy = true;
   return [
     node("comarkBlock", withProps({ name: tag }, rest(props)), readComponent(children, reading)),
   ];
+}
+
+/** Blocks that need at least one, as an empty item or definition writes nothing. */
+const filled = (blocks: JSONContent[]) =>
+  blocks.length ? blocks : [{ type: "paragraph" } satisfies JSONContent];
+
+function readDefinitions(props: Props, children: AstNode[], reading: Reading): JSONContent {
+  return node(
+    "definitionList",
+    withProps({}, rest(props)),
+    children.flatMap((item) => {
+      if (!isElement(item)) return [];
+      return item[0] === "dt"
+        ? [
+            node(
+              "definitionTerm",
+              withProps({}, rest(item[1])),
+              readInline(childrenOf(item), [], reading),
+            ),
+          ]
+        : [
+            node(
+              "definitionDescription",
+              withProps({}, rest(item[1])),
+              filled(readBlocks(childrenOf(item), reading)),
+            ),
+          ];
+    }),
+  );
 }
 
 function readComponent(children: AstNode[], reading: Reading): JSONContent[] {
@@ -248,6 +322,20 @@ function readTable(props: Props, children: AstNode[], reading: Reading): JSONCon
   );
 }
 
+// comark-critic's classes: a `del` without one is `~~strikethrough~~`.
+const critics = new Map([
+  ["ins", { className: "ccm-ins", type: "criticInsertion" }],
+  ["del", { className: "ccm-del", type: "criticDeletion" }],
+  ["mark", { className: "ccm-mark", type: "criticHighlight" }],
+]);
+const COMMENT = "ccm-comment";
+
+function criticMark([tag, props]: ElementNode) {
+  const critic = critics.get(tag);
+  if (!critic || !classes(props).includes(critic.className)) return;
+  return { className: critic.className, mark: { type: critic.type } satisfies Mark };
+}
+
 function readInline(children: AstNode[], active: Mark[], reading: Reading): JSONContent[] {
   const out: JSONContent[] = [];
   const marked = (json: JSONContent): JSONContent =>
@@ -265,8 +353,30 @@ function readInline(children: AstNode[], active: Mark[], reading: Reading): JSON
     }
     const [tag, props] = child;
     const content = childrenOf(child);
+    const critic = criticMark(child);
     const mark = marks.get(tag);
-    if (mark && !(tag === "code" && !content.every(isText))) {
+    if (critic) {
+      if (rest(withoutClass(props, critic.className))) reading.lossy = true;
+      out.push(...readInline(content, [...active, critic.mark], reading));
+    } else if (tag === SUBSTITUTION) {
+      const [removed, added] = content.filter(isElement);
+      const half = (element: ElementNode | undefined, type: string): JSONContent[] =>
+        element
+          ? readInline(
+              childrenOf(element),
+              [...active, { type, attrs: { substitution: true } }],
+              reading,
+            )
+          : [];
+      out.push(...half(removed, "criticDeletion"), ...half(added, "criticInsertion"));
+    } else if (tag === "span" && classes(props).includes(COMMENT)) {
+      if (rest(withoutClass(props, COMMENT))) reading.lossy = true;
+      out.push(marked(node("criticComment", {}, readInline(content, [], reading))));
+    } else if (tag.startsWith(REFERENCE))
+      out.push(marked(node("footnoteReference", { label: tag.slice(REFERENCE.length) })));
+    else if (tag === NOTE)
+      out.push(marked(node("inlineFootnote", {}, readInline(content, [], reading))));
+    else if (mark && !(tag === "code" && !content.every(isText))) {
       const attrs =
         mark === "link"
           ? withProps(
@@ -327,13 +437,13 @@ function writeBlock(json: JSONContent): AstNode[] {
       return [["hr", props]];
     case "codeBlock": {
       const language = textOf(attrs.language) || undefined;
-      return [
-        [
-          "pre",
-          language ? { ...props, language } : props,
-          ["code", language ? { class: `language-${language}` } : {}, plainText(json.content)],
-        ],
+      const code = plainText(json.content);
+      const pre: ElementNode = [
+        "pre",
+        language ? { ...props, language } : props,
+        ["code", language ? { class: `language-${language}` } : {}, code],
       ];
+      return [code.trimEnd() === code ? pre : own(pre, trailingLines)];
     }
     case "bulletList":
       return [["ul", props, ...writeBlocks(json.content)]];
@@ -345,43 +455,46 @@ function writeBlock(json: JSONContent): AstNode[] {
       return [["li", props, ...writeBlocks(json.content)]];
     case "taskList":
       return [["ul", withClass(props, "contains-task-list"), ...writeBlocks(json.content)]];
-    case "taskItem": {
-      // Written unwrapped, checkbox then text: Comark's writer drops the text of a task whose first paragraph is
-      // wrapped and followed by a nested list.
-      const [first, ...others] = json.content ?? [];
-      const text = writeInline(first?.content);
-      const [head] = text;
-      if (head !== undefined && isText(head)) text[0] = ` ${head}`;
-      else text.unshift(" ");
-      const box: Props = {
-        class: "task-list-item-checkbox",
-        type: "checkbox",
-        ":disabled": "true",
-      };
-      if (attrs.checked) box[":checked"] = "true";
-      return [
-        ["li", withClass(props, "task-list-item"), ["input", box], ...text, ...writeBlocks(others)],
-      ];
-    }
+    case "taskItem":
+      return [own(["li", props, ...writeBlocks(json.content)], task(Boolean(attrs.checked)))];
     case "table":
       return [writeTable(json, props)];
-    case "comarkBlock":
+    case "comarkBlock": {
+      const component: ElementNode = [
+        String(attrs.name),
+        props,
+        ...(json.content ?? []).flatMap((child): AstNode[] =>
+          child.type === "comarkSlot"
+            ? [
+                [
+                  "template",
+                  { ...propsOf(child.attrs), name: child.attrs?.name },
+                  ...writeBlocks(child.content),
+                ],
+              ]
+            : writeBlock(child),
+        ),
+      ];
+      return [isHtml(props) ? component : own(component, blockComponent)];
+    }
+    case "footnoteDefinition": {
+      const label = textOf(attrs.label) ?? "";
+      return [own(["footnote", {}, ...writeBlocks(json.content)], footnoteDefinition(label))];
+    }
+    case "definitionList":
       return [
-        [
-          String(attrs.name),
-          props,
-          ...(json.content ?? []).flatMap((child): AstNode[] =>
-            child.type === "comarkSlot"
-              ? [
-                  [
-                    "template",
-                    { ...propsOf(child.attrs), name: child.attrs?.name },
-                    ...writeBlocks(child.content),
-                  ],
-                ]
-              : writeBlock(child),
-          ),
-        ],
+        own(
+          [
+            "dl",
+            props,
+            ...(json.content ?? []).map((item): ElementNode =>
+              item.type === "definitionTerm"
+                ? ["dt", propsOf(item.attrs), ...writeInline(item.content)]
+                : ["dd", propsOf(item.attrs), ...writeBlocks(item.content)],
+            ),
+          ],
+          definitionList,
+        ),
       ];
     case "comarkComment":
       return [[null, {}, textOf(attrs.text) ?? ""]];
@@ -425,7 +538,19 @@ function writeTable(json: JSONContent, props: Props): ElementNode {
 const sameMark = (a: Mark, b: Mark) =>
   a.type === b.type && JSON.stringify(a.attrs ?? {}) === JSON.stringify(b.attrs ?? {});
 
+const criticDelimiters = new Map<string, [open: string, close: string]>([
+  ["criticInsertion", ["{++", "++}"]],
+  ["criticDeletion", ["{--", "--}"]],
+  ["criticHighlight", ["{==", "==}"]],
+]);
+
 function writeMark(mark: Mark, children: AstNode[]): ElementNode {
+  const delimiters = criticDelimiters.get(mark.type);
+  if (delimiters) {
+    // Tagged for `pairSubstitutions`, which writes the two halves of a substitution as one.
+    const half = mark.attrs?.substitution ? mark.type : "critic";
+    return own([half, {}, ...children], between(...delimiters));
+  }
   const props = propsOf(mark.attrs);
   if (mark.type !== "link") return [markTags.get(mark.type) ?? "span", props, ...children];
   const href = textOf(mark.attrs?.href);
@@ -452,10 +577,10 @@ function writeInline(content: JSONContent[] = []): AstNode[] {
       append(open.at(-1)?.children ?? root, writeMark(frame.mark, frame.children));
   };
   for (const json of content) {
-    // ProseMirror orders marks by schema rank. Code must wrap only text in Markdown,
-    // so formatting goes outside it even when the schema ranks code before italic.
+    // ProseMirror orders marks by schema rank. Code must wrap only text in Markdown, so formatting goes outside it
+    // even when the schema ranks code before italic, and a suggested change wraps the formatting it changes.
     const active: Mark[] = [...(json.marks ?? [])].sort(
-      (left, right) => Number(left.type === "code") - Number(right.type === "code"),
+      (left, right) => markOrder(left) - markOrder(right),
     );
     const same = (index: number) => {
       const frame = open[index];
@@ -469,7 +594,28 @@ function writeInline(content: JSONContent[] = []): AstNode[] {
     for (const child of writeLeaf(json)) append(open.at(-1)?.children ?? root, child);
   }
   if (open.length) close(0);
-  return root;
+  return pairSubstitutions(root);
+}
+
+const markOrder = (mark: Mark) =>
+  criticDelimiters.has(mark.type) ? -1 : mark.type === "code" ? 1 : 0;
+
+/** Joins a deletion and the insertion right after it, both from one `{~~old~>new~~}`, back into one. */
+function pairSubstitutions(children: AstNode[]): AstNode[] {
+  const out: AstNode[] = [];
+  for (const child of children) {
+    const last = out.at(-1);
+    if (
+      isElement(child) &&
+      child[0] === "criticInsertion" &&
+      last !== undefined &&
+      isElement(last) &&
+      last[0] === "criticDeletion"
+    )
+      out[out.length - 1] = own([SUBSTITUTION, {}, last, child], substitution);
+    else out.push(child);
+  }
+  return out;
 }
 
 function writeLeaf(json: JSONContent): AstNode[] {
@@ -483,8 +629,16 @@ function writeLeaf(json: JSONContent): AstNode[] {
     if (attrs.title) image.title = attrs.title;
     return [["img", image]];
   }
-  if (json.type === "comarkInline")
-    return [[String(attrs.name), props, ...writeInline(json.content)]];
+  if (json.type === "comarkInline") {
+    const component: ElementNode = [String(attrs.name), props, ...writeInline(json.content)];
+    return [isHtml(props) ? component : own(component, inlineComponent)];
+  }
+  if (json.type === "footnoteReference")
+    return [own(["footnote", {}], footnoteReference(textOf(attrs.label) ?? ""))];
+  if (json.type === "inlineFootnote")
+    return [own(["footnote", {}, ...writeInline(json.content)], between("^[", "]"))];
+  if (json.type === "criticComment")
+    return [own(["span", {}, ...writeInline(json.content)], between("{>>", "<<}"))];
   return [];
 }
 
@@ -511,7 +665,7 @@ export interface EditorDocument {
 
 /** Reads Markdown into the editor's document. */
 export async function fromMarkdown(markdown: string): Promise<EditorDocument> {
-  const tree = await parseMarkdown(markdown, parseOptions);
+  const tree = await parseMarkdown(markdown, readOptions);
   const reading: Reading = { lossy: false };
   const content = readBlocks(tree.nodes, reading);
   return {
@@ -528,7 +682,7 @@ export async function toMarkdown(
 ): Promise<string> {
   const markdown = await renderMarkdown(
     { nodes: writeBlocks(doc.content), frontmatter: options.frontmatter ?? {}, meta: {} },
-    { headingIds: false },
+    writeOptions,
   );
   return markdown.trim() ? `${markdown.trimEnd()}\n` : "";
 }
