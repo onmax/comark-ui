@@ -12,6 +12,7 @@ export default defineConfig({
             "packages/*/tsdown.config.ts",
             "packages/*/README.md",
             "packages/*/LICENSE",
+            "shared/**",
             "skills/**",
             "tsdown.shared.ts",
             "tsconfig.json",
