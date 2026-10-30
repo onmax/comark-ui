@@ -29,7 +29,7 @@ const diagnostics = await lint(markdown, { plugins: [annotate()], components });
 
 `lint()` never throws and returns `{ rule, severity, line, column?, message, fix, cause? }[]`, where `severity` is the rule's, `error` or `warn`. When parsing or a rule throws, `cause` holds the original exception. The CLI omits `cause` from JSON. Without `components`, unknown components aren't reported, and without `file`, links to other files aren't checked. `lintFiles(paths, options)` checks many files in one run, as the CLI does.
 
-For ESLint 9.15 or later, install `eslint` and `@eslint/markdown` and add the recommended config to `eslint.config.js`. It lints `.md` and `.mdc` files with every rule but `comark/dead-url`, each one configurable like any ESLint rule, and `settings.comark.config` points at a `lint-comark.config.mjs`:
+For ESLint 9.15 or later, install `eslint` and `@eslint/markdown` and add the recommended config to `eslint.config.js`. It lints `.md` and `.mdc` files with every rule but `comark/dead-url`, each one configurable like any ESLint rule, and `settings.comark.config` points at a `comark-lint.config.mjs`:
 
 ```js
 import comark from "comark-linter/eslint";
@@ -37,7 +37,7 @@ import comark from "comark-linter/eslint";
 export default [comark.configs.recommended];
 ```
 
-oxlint can't run it yet: its JS plugins lint JavaScript and TypeScript only, so run `lint-comark` next to `oxlint`.
+oxlint can't run it yet: its JS plugins lint JavaScript and TypeScript only, so run `comark-lint` next to `oxlint`.
 
 For Vite Doctor 0.1 or later, register the extension in `doctor.config.ts` and run `vite-doctor . --config doctor.config.ts`:
 

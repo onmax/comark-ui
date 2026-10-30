@@ -719,11 +719,11 @@ const playIcon = `<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="t
 const canvasIcon = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>`;
 const listIcon = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="13" width="18" height="7" rx="1.5"/></svg>`;
 
-// What lint-comark prints for a demo's Markdown, a line at a time, as its command line would.
-// What lint-comark prints for a file, drawn as a terminal. With `fixes`, each problem's fix follows its message.
+// What comark-lint prints for a demo's Markdown, a line at a time, as its command line would.
+// What comark-lint prints for a file, drawn as a terminal. With `fixes`, each problem's fix follows its message.
 function terminal(file: string, found: Diagnostic[], fixes = false) {
   const lines = [
-    `<span class="term-cmd"><span aria-hidden="true">$</span> lint-comark ${file}</span>`,
+    `<span class="term-cmd"><span aria-hidden="true">$</span> comark-lint ${file}</span>`,
     ...found.flatMap((d) => [
       `<span class="term-where">${file}:${d.line}:${d.column ?? 1} <span>${escapeHtml(d.rule)}</span></span>`,
       `<span class="term-message">${inlineCode(d.message)}</span>`,
@@ -740,7 +740,7 @@ async function lintReport(source: string) {
   if (!found.length) throw new Error("The lint demo's Markdown needs a problem to report.");
   return terminal("review.md", found);
 }
-// A rule page's examples: Markdown the rule reports, with what lint-comark prints for it, and the same Markdown fixed.
+// A rule page's examples: Markdown the rule reports, with what comark-lint prints for it, and the same Markdown fixed.
 // test/doctor.test.ts checks them the same way, so the build fails only on a page the tests let through.
 const ruleExample =
   (page: Page, kind: "incorrect" | "correct"): NodeHandler =>
@@ -1971,7 +1971,7 @@ await writeFile(
     "",
     `- Every page has a Markdown copy at its path plus \`.md\`, such as ${site}/zoom.md for ${site}/zoom/. A request with \`Accept: text/markdown\` gets it too.`,
     `- \`vp dlx skills add onmax/comark-ui\` lists the repository's agent skills to pick from: comark-ui, which teaches the syntax of every block (see ${site}/guide/agents.md), and the skills that write a whole document, such as before/after evidence, a review, or a lesson (see ${site}/skills.md). Add \`--skill <name>\` to install one without the list.`,
-    "- Check a document before anyone reads it: `vp dlx --package comark-linter --package comark-ui lint-comark doc.md`.",
+    "- Check a document before anyone reads it: `vp dlx --package comark-linter --package comark-ui comark-lint doc.md`.",
     "- `vp` comes with Vite+ (https://viteplus.dev/guide/global-cli). Without it, `pnpm dlx` takes the same arguments.",
     "",
     "## When to use Comark UI",

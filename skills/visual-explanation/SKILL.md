@@ -57,7 +57,7 @@ Done when the explanation reads top to bottom in under a minute and every visual
 1. Lint it, and fix until it reports no problems:
 
    ```sh
-   vp dlx --package comark-linter --package comark-ui lint-comark explanation.md
+   vp dlx --package comark-linter --package comark-ui comark-lint explanation.md
    ```
 
    These commands use the [global Vite+ CLI](https://viteplus.dev/guide/global-cli). Without it, `pnpm dlx` takes the same arguments.

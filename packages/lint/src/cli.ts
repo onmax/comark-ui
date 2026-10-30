@@ -31,7 +31,7 @@ if (values.help || !positionals.length || (values.format !== "text" && values.fo
 
 let failed = false;
 const fail = (message: string) => {
-  console.error(`lint-comark: ${message}`);
+  console.error(`comark-lint: ${message}`);
   failed = true;
 };
 

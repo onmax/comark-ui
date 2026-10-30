@@ -43,7 +43,7 @@ export default defineConfig({
 });
 ```
 
-The command loads it, or a `.mts`, `.mjs`, or `.js` one, when you run it from that directory. Pass a config elsewhere with `--config`:
+The command loads it, or a `.mts`, `.mjs`, or `.js` one, when you run it from that directory. Node before 22.18 can't import a `.ts` file without a flag, so name it `comark-lint.config.mjs` there. Pass a config elsewhere with `--config`:
 
 ```sh
 pnpm comark-lint "docs/**/*.md" --config config/comark-lint.config.ts
@@ -202,5 +202,5 @@ When parsing or a rule throws, the result's optional `cause` holds the original 
 
 - [ESLint](/lint/eslint/) runs every rule as an ESLint rule.
 - [Vite Doctor](/lint/vite-doctor/) runs every rule in the same report as your code.
-- [Guides](/lint/guides/) add lint-comark to your lint script, staged files, and CI.
+- [Guides](/lint/guides/) add comark-lint to your lint script, staged files, and CI.
 - [Doctor](/doctor/) has a page for every rule.
