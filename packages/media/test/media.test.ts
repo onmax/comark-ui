@@ -55,6 +55,11 @@ describe("comark-media", () => {
       '<input type="range" class="cm-seek" min="0" max="0" step="any" value="0" aria-label="Seek">',
     );
     expect(html.match(/<span class="cm-bar">/g)).toHaveLength(3);
+    expect(
+      html.match(
+        /<input type="range" class="cm-volume" min="0" max="1" step="0.05" value="1" aria-label="Volume">/g,
+      ),
+    ).toHaveLength(3);
     expect(html.match(/class="cm-full"/g)).toHaveLength(1);
     expect(html.match(/<script>/g)).toHaveLength(1);
   });

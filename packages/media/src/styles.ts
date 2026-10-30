@@ -5,6 +5,9 @@ const track =
   "height:.375rem;border-radius:999px;background:linear-gradient(var(--_cm-fill),var(--_cm-primary) var(--cm-at,0%),color-mix(in srgb,var(--_comark-foreground) 25%,transparent) var(--cm-at,0%))";
 const thumb =
   "box-sizing:border-box;width:1rem;height:1rem;border:1px solid var(--_cm-primary);border-radius:50%;background:var(--_comark-background);box-shadow:0 1px 2px rgb(0 0 0/.1)";
+// The volume panel opens fast and closes faster, since the reader has already moved on.
+const level =
+  "opacity:1;scale:1;pointer-events:auto;transition:opacity .15s cubic-bezier(.32,.72,0,1),scale .15s cubic-bezier(.32,.72,0,1)";
 const ring = "box-shadow:0 0 0 3px color-mix(in srgb,var(--_comark-ring) 50%,transparent)";
 
 /**
@@ -22,9 +25,10 @@ export const css = `@layer comark{${[
   // its metadata loads; most are 16:9, so it takes that room and keeps its own ratio once known.
   ":is(video.cm,.cm-video>video):not([width][height]){aspect-ratio:auto 16/9}",
   "video.cm{height:auto}",
-  ".cm-video{position:relative;width:fit-content;overflow:hidden}",
+  // Round the video itself so the volume panel can extend above a short frame.
+  ".cm-video{position:relative;width:fit-content}",
   // Typeset gives a video a top margin, which inside the frame would push it down and crop its bottom.
-  ".cm-video>video{display:block;max-width:100%;height:auto;margin:0}",
+  ".cm-video>video{display:block;max-width:100%;height:auto;margin:0;border-radius:inherit}",
   ".cm-video[data-media-ready]:not([data-error])>video{cursor:pointer}",
   ".cm-video:fullscreen{display:grid;place-items:center;width:100%;max-width:none;margin:0;border:0;border-radius:0;background:#000}",
   ".cm-video:fullscreen>video{width:100%;height:100%;max-width:none;object-fit:contain}",
@@ -54,21 +58,36 @@ export const css = `@layer comark{${[
   ".cm-bar button[hidden]{display:none}",
   ".cm-icon-pause,.cm-icon-muted,.cm-icon-exit,[data-playing] .cm-icon-play,[data-muted] .cm-icon-volume,[data-fullscreen] .cm-icon-full{display:none}",
   "[data-playing] .cm-icon-pause,[data-muted] .cm-icon-muted,[data-fullscreen] .cm-icon-exit{display:block}",
+  // The volume sits in a panel over the mute button, opened by the pointer or the keyboard, so the seek bar keeps its
+  // width. A touch screen sets the volume with its own buttons, and an iPhone ignores the page's.
+  ".cm-sound{position:relative;display:flex;flex:none}",
+  // Opacity keeps the slider in both tab directions; disable pointer hits while the panel is closed.
+  ".cm-level{position:absolute;bottom:calc(100% + .5rem);left:50%;translate:-50% 0;display:flex;padding:.75rem .5rem;border:1px solid var(--_comark-border);border-radius:var(--_comark-radius);background:var(--_comark-background);box-shadow:0 4px 12px rgb(0 0 0/.12);transform-origin:bottom;opacity:0;scale:.96;pointer-events:none;transition:opacity .1s ease-in,scale .1s ease-in}",
+  // Covers the gap down to the button, so the pointer can cross it without closing the panel.
+  '.cm-level::before{content:"";position:absolute;inset:100% 0 -.5rem}',
+  `.cm-sound:is(:hover,:has(:focus-visible,:active))>.cm-level{${level}}`,
+  "@media (hover:none),(pointer:coarse){.cm-level{display:none}}",
+  "@media (prefers-reduced-motion:reduce){.cm-level{transition:none}}",
+  // Vertical, with silence at the bottom.
+  ".cm-volume{--_cm-fill:to top;width:1rem;height:5rem;margin:0;background:none;appearance:none;cursor:pointer;writing-mode:vertical-lr;direction:rtl}",
   ".cm-time{flex:none;color:var(--_comark-muted);font-variant-numeric:tabular-nums}",
   ".cm-seek{--_cm-fill:to right;flex:1 1 0;min-width:0;height:1rem;margin:0;background:none;appearance:none;cursor:pointer}",
   ".cm-seek:dir(rtl){--_cm-fill:to left}",
   ".cm-seek:disabled{opacity:.5;cursor:default}",
-  ".cm-seek:focus-visible{outline:none}",
+  ":is(.cm-seek,.cm-volume):focus-visible{outline:none}",
   // Each engine drops a whole rule over a pseudo-element it doesn't know, so every one gets its own.
-  `.cm-seek::-webkit-slider-runnable-track{${track}}`,
-  `.cm-seek::-moz-range-track{${track}}`,
-  `.cm-seek::-webkit-slider-thumb{${thumb};margin-top:-.3125rem;appearance:none}`,
-  `.cm-seek::-moz-range-thumb{${thumb}}`,
-  `.cm-seek:focus-visible::-webkit-slider-thumb{${ring}}`,
-  `.cm-seek:focus-visible::-moz-range-thumb{${ring}}`,
+  `:is(.cm-seek,.cm-volume)::-webkit-slider-runnable-track{${track}}`,
+  `:is(.cm-seek,.cm-volume)::-moz-range-track{${track}}`,
+  `:is(.cm-seek,.cm-volume)::-webkit-slider-thumb{${thumb};margin-top:-.3125rem;appearance:none}`,
+  `:is(.cm-seek,.cm-volume)::-moz-range-thumb{${thumb}}`,
+  `:is(.cm-seek,.cm-volume):focus-visible::-webkit-slider-thumb{${ring}}`,
+  `:is(.cm-seek,.cm-volume):focus-visible::-moz-range-thumb{${ring}}`,
+  ".cm-volume::-webkit-slider-runnable-track{width:.375rem;height:100%}",
+  ".cm-volume::-moz-range-track{width:.375rem;height:100%}",
+  ".cm-volume::-webkit-slider-thumb{margin:0 0 0 -.3125rem}",
   // A narrow player can't fit the seek bar between the times and the buttons, so it gets a row of its own above them,
   // with the times together after the play button. A very narrow one drops the times.
-  '@container (width<24rem){.cm-seek{flex-basis:100%;order:-1}.cm-bar>.cm-mute{margin-inline-start:auto}.cm-seek+.cm-time{margin-inline-start:-.75rem}.cm-video .cm-seek+.cm-time{margin-inline-start:-.5rem}.cm-seek+.cm-time::before{content:"\\a0/\\a0"}}',
+  '@container (width<24rem){.cm-seek{flex-basis:100%;order:-1}.cm-bar>.cm-sound{margin-inline-start:auto}.cm-seek+.cm-time{margin-inline-start:-.75rem}.cm-video .cm-seek+.cm-time{margin-inline-start:-.5rem}.cm-seek+.cm-time::before{content:"\\a0/\\a0"}}',
   "@container (width<16rem){.cm-time{display:none}}",
   // Three touch buttons plus two hour-form times need more room than the desktop controls.
   "@media (pointer:coarse){.cm-bar button{width:2.5rem;height:2.5rem}@container (width<18rem){.cm-video .cm-time{display:none}}}",

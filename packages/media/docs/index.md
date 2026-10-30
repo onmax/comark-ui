@@ -137,7 +137,7 @@ A GitHub attachment from a private repository only plays for a reader signed in 
 
 ## Accessibility
 
-Each player is a group named by its alt text. Its buttons are named for what they do next: Play or Pause, Mute or Unmute, Full screen or Exit full screen. The seek bar is a slider named "Seek" that reads its position, such as "0:12 of 1:30". A click on a video plays or pauses it.
+Each player is a group named by its alt text. Its buttons are named for what they do next: Play or Pause, Mute or Unmute, Full screen or Exit full screen. The seek bar is a slider named "Seek" that reads its position, such as "0:12 of 1:30". The volume is a slider named "Volume" in a panel over the mute button, which opens when the pointer or the focus reaches the button; a touch screen has no panel, since its own buttons set the volume. Turning the volume to zero mutes the player. A click on a video plays or pauses it.
 
 ### Keyboard interactions
 
@@ -145,10 +145,11 @@ The keys work once the script runs. Until then, the browser's own controls take 
 
 | Key | Description |
 | --- | --- |
-| `Tab`, `Shift+Tab` | Moves between the play button, the seek bar, the mute button, and the full screen button. |
+| `Tab`, `Shift+Tab` | Moves between the play button, the seek bar, the mute button, the volume, and the full screen button. |
 | `Enter`, `Space` | Presses the focused button: plays or pauses, mutes or unmutes, or enters or leaves full screen. |
 | `ArrowLeft`, `ArrowDown` | On the seek bar, moves back 5 seconds, or a tenth of a clip shorter than 50 seconds. |
 | `ArrowRight`, `ArrowUp` | On the seek bar, moves forward by the same step. |
+| Arrow keys, `Home`, `End` | On the volume, turns it down or up by 5%, or to silent or full. |
 
 In a right-to-left page, `ArrowLeft` and `ArrowRight` swap.
 
@@ -220,7 +221,7 @@ The renderer inlines the styles once per document, and the players' script once 
 
 ## Theme
 
-A video sits in a bordered frame at most the page's width. A bar of controls floats over its bottom edge: a play button, the time, a seek bar, a mute button, and a full screen button. The bar fades out while the video plays, unless the pointer or the focus is on the video. An audio player takes the page's width and is the same bar on its own, without full screen. A player narrower than 24rem gives the seek bar a row of its own above the buttons, and one narrower than 16rem drops the times. Touch video controls drop the times below 18rem to leave room for the larger buttons and hour-form timestamps. The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
+A video sits in a bordered frame at most the page's width. A bar of controls floats over its bottom edge: a play button, the time, a seek bar, a mute button with the volume over it, and a full screen button. The bar fades out while the video plays, unless the pointer or the focus is on the video. An audio player takes the page's width and is the same bar on its own, without full screen. A player narrower than 24rem gives the seek bar a row of its own above the buttons, and one narrower than 16rem drops the times. Touch video controls drop the times below 18rem to leave room for the larger buttons and hour-form timestamps. The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
 
 ### Shared tokens
 
@@ -231,7 +232,7 @@ Players read these [shared tokens](/guide/theming/):
 | `--comark-background` | The bar, a little see-through over a video, and the seek bar's handle |
 | `--comark-foreground` | The play button and the played part of the seek bar, when the page sets no primary color, and, faded, the rest of the seek bar |
 | `--comark-muted` | The times and the mute and full screen buttons |
-| `--comark-border` | A video's frame and the audio bar |
+| `--comark-border` | A video's frame, the audio bar, and the volume panel |
 | `--comark-accent` | The space a video takes before its first frame loads, and hovered buttons |
 | `--comark-ring` | Focus rings |
 | `--comark-radius` | Corners |
@@ -246,6 +247,7 @@ The play button and the played part of the seek bar use Nuxt UI's `--ui-primary`
 | `.cm.cm-video`, `.cm.cm-audio` | A player, around the browser's `<video>` or `<audio>` |
 | `.cm-bar` | Its controls |
 | `.cm-play`, `.cm-time`, `.cm-seek`, `.cm-mute`, `.cm-full` | The play button, the two times, the seek bar, the mute button, and a video's full screen button |
+| `.cm-level`, `.cm-volume` | The panel over the mute button and its volume slider |
 | `[data-playing]`, `[data-muted]`, `[data-fullscreen]` | A player while it plays, while it's muted, and while a video fills the screen |
 | `[data-error]` | A player whose file can't play, which shows the browser's controls instead |
 | `video.cm`, `audio.cm` | A player with `controls: "native"` |
