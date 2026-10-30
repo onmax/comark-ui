@@ -32,7 +32,7 @@ async function writeAssets() {
   // Each page's Markdown copy and llms.txt, at the site's root.
   const markdown = new URL("dist/markdown/", root);
   if (existsSync(markdown)) await cp(markdown, generated, { recursive: true });
-  for (const file of ["search.json", "style.css"]) {
+  for (const file of ["search.json", "style.css", "canvas-cards.json"]) {
     const built = new URL(`dist/${file}`, root);
     if (existsSync(built)) await cp(built, new URL(file, generated));
   }
@@ -85,7 +85,7 @@ export default defineNuxtConfig({
   },
   modules: [
     "vite-hub/nuxt",
-    "~~/modules/vitehub-pilot",
+    "~~/modules/wrangler-output",
     "nuxt-agent-discovery",
     async (_, nuxt) => {
       await writeAssets();
@@ -140,15 +140,15 @@ export default defineNuxtConfig({
     skills: { dir: "../skills" },
   },
   nitro: {
+    // The Console imports its unused Teams connector, whose optional KV drivers cannot run in this worker.
+    virtual: {
+      "@vite-hub/kv": `export const kv = new Proxy({}, { get() { throw new Error("This documentation site does not configure ViteHub KV.") } })`,
+    },
     // The root wrangler.jsonc holds what ViteHub doesn't generate (name, routes, previews). Nitro merges it with ViteHub's
-    // bindings into docs/dist/server/wrangler.json, which the hook below makes `wrangler` use from the repository's root.
+    // bindings into docs/dist/server/wrangler.json, which the local Wrangler module selects for commands run from the repository's root.
     cloudflare: {
       deployConfig: true,
       nodeCompat: true,
-      // Wrangler bundles the output again, and ViteHub's code imports this one by a name only Nitro's aliases know.
-      wrangler: {
-        alias: { "#vitehub/env/server": fileURLToPath(new URL(".vitehub/env/server.mjs", root)) },
-      },
     },
     output: { dir: fileURLToPath(new URL("dist/", root)) },
     // The playground is a static app copied into the output, not a Nuxt page.

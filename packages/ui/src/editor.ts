@@ -5,6 +5,16 @@ export {
   ComarkInline,
   ComarkKit,
   ComarkSlot,
+  CriticComment,
+  CriticDeletion,
+  CriticHighlight,
+  CriticInsertion,
+  DefinitionDescription,
+  DefinitionList,
+  DefinitionTerm,
+  FootnoteDefinition,
+  FootnoteReference,
+  InlineFootnote,
   type ComarkKitOptions,
 } from "./editor/kit.ts";
 export {

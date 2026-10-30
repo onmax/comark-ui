@@ -1,4 +1,4 @@
-import { Extension, Node } from "@tiptap/core";
+import { Extension, Mark, Node } from "@tiptap/core";
 import Image from "@tiptap/extension-image";
 import { TaskItem, TaskList } from "@tiptap/extension-list";
 import { TableKit } from "@tiptap/extension-table";
@@ -35,10 +35,29 @@ const typesWithProps = [
   "strike",
   "code",
   "link",
+  "definitionList",
+  "definitionTerm",
+  "definitionDescription",
 ];
 
-/** Comark attributes the editor doesn't show, carried as they were parsed so writing the node back keeps them. */
-const props = { default: null, rendered: false };
+function readProps(element: HTMLElement) {
+  try {
+    return JSON.parse(element.getAttribute("data-comark-props") ?? "null");
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Comark attributes the editor doesn't show, carried as they were parsed so writing the node back keeps them. They're
+ * in the HTML too, since the clipboard copies nodes as HTML: a pasted `::screenshot` keeps its `src`.
+ */
+const props = {
+  default: null,
+  parseHTML: readProps,
+  renderHTML: (attrs: Record<string, unknown>) =>
+    attrs.props ? { "data-comark-props": JSON.stringify(attrs.props) } : {},
+};
 
 const name = (attribute: string) => ({
   default: "",
@@ -116,9 +135,126 @@ export const ComarkComment = Node.create({
   renderHTML: ({ HTMLAttributes }) => ["div", HTMLAttributes],
 });
 
+const label = {
+  default: "",
+  parseHTML: (element: HTMLElement) => element.getAttribute("data-label") ?? "",
+  renderHTML: (attrs: Record<string, unknown>) => ({ "data-label": attrs.label }),
+};
+
+/** A footnote reference, `[^label]`. */
+export const FootnoteReference = Node.create({
+  name: "footnoteReference",
+  group: "inline",
+  inline: true,
+  atom: true,
+  addAttributes: () => ({ label }),
+  parseHTML: () => [{ tag: "sup[data-footnote-reference]" }],
+  renderHTML: ({ node, HTMLAttributes }) => [
+    "sup",
+    { ...HTMLAttributes, "data-footnote-reference": "" },
+    node.attrs.label,
+  ],
+});
+
+/** A note written where it applies, `^[text]`. */
+export const InlineFootnote = Node.create({
+  name: "inlineFootnote",
+  group: "inline",
+  inline: true,
+  content: "inline*",
+  parseHTML: () => [{ tag: "span[data-inline-footnote]" }],
+  renderHTML: ({ HTMLAttributes }) => [
+    "span",
+    { ...HTMLAttributes, "data-inline-footnote": "" },
+    0,
+  ],
+});
+
+/** A footnote's text, `[^label]: text`, with the blocks indented under it. */
+export const FootnoteDefinition = Node.create({
+  name: "footnoteDefinition",
+  group: "block",
+  content: "block+",
+  defining: true,
+  addAttributes: () => ({ label }),
+  parseHTML: () => [{ tag: "div[data-footnote-definition]" }],
+  renderHTML: ({ HTMLAttributes }) => [
+    "div",
+    { ...HTMLAttributes, "data-footnote-definition": "" },
+    0,
+  ],
+});
+
+/** A definition list, `Term` then `: Definition`. */
+export const DefinitionList = Node.create({
+  name: "definitionList",
+  group: "block",
+  content: "(definitionTerm definitionDescription+)+",
+  parseHTML: () => [{ tag: "dl" }],
+  renderHTML: ({ HTMLAttributes }) => ["dl", HTMLAttributes, 0],
+});
+
+export const DefinitionTerm = Node.create({
+  name: "definitionTerm",
+  content: "inline*",
+  defining: true,
+  parseHTML: () => [{ tag: "dt" }],
+  renderHTML: ({ HTMLAttributes }) => ["dt", HTMLAttributes, 0],
+});
+
+export const DefinitionDescription = Node.create({
+  name: "definitionDescription",
+  content: "block+",
+  defining: true,
+  parseHTML: () => [{ tag: "dd" }],
+  renderHTML: ({ HTMLAttributes }) => ["dd", HTMLAttributes, 0],
+});
+
+// The two halves of `{~~old~>new~~}` carry it, so they're written back as one substitution.
+const substitution = {
+  default: false,
+  parseHTML: (element: HTMLElement) => element.hasAttribute("data-substitution"),
+  renderHTML: (attrs: Record<string, unknown>) =>
+    attrs.substitution ? { "data-substitution": "" } : {},
+};
+
+/** CriticMarkup's suggested insertion, `{++text++}`. */
+export const CriticInsertion = Mark.create({
+  name: "criticInsertion",
+  addAttributes: () => ({ substitution }),
+  parseHTML: () => [{ tag: "ins" }],
+  renderHTML: ({ HTMLAttributes }) => ["ins", HTMLAttributes, 0],
+});
+
+/** CriticMarkup's suggested deletion, `{--text--}`. */
+export const CriticDeletion = Mark.create({
+  name: "criticDeletion",
+  addAttributes: () => ({ substitution }),
+  // StarterKit's generic `del` rule must not consume CriticMarkup copied as HTML.
+  parseHTML: () => [{ tag: "del[data-critic]", priority: 60 }],
+  renderHTML: ({ HTMLAttributes }) => ["del", { ...HTMLAttributes, "data-critic": "" }, 0],
+});
+
+/** CriticMarkup's highlight, `{==text==}`. */
+export const CriticHighlight = Mark.create({
+  name: "criticHighlight",
+  parseHTML: () => [{ tag: "mark" }],
+  renderHTML: ({ HTMLAttributes }) => ["mark", HTMLAttributes, 0],
+});
+
+/** CriticMarkup's comment, `{>>text<<}`. */
+export const CriticComment = Node.create({
+  name: "criticComment",
+  group: "inline",
+  inline: true,
+  content: "inline*",
+  parseHTML: () => [{ tag: "span[data-critic-comment]" }],
+  renderHTML: ({ HTMLAttributes }) => ["span", { ...HTMLAttributes, "data-critic-comment": "" }, 0],
+});
+
 /**
  * The schema `fromMarkdown` and `toMarkdown` read and write: StarterKit's nodes and marks, task lists, inline images,
- * tables, and Comark's components, slots, and comments. It needs no DOM, so a server can load it to convert a document
+ * tables, footnotes, definition lists, CriticMarkup, and Comark's components, slots, and comments. It needs no DOM, so a server can load it to convert a document
  * for a collaborative room.
  */
 export const ComarkKit = Extension.create<ComarkKitOptions>({
@@ -142,6 +278,16 @@ export const ComarkKit = Extension.create<ComarkKitOptions>({
       ComarkSlot,
       ComarkInline,
       ComarkComment,
+      FootnoteReference,
+      InlineFootnote,
+      FootnoteDefinition,
+      DefinitionList,
+      DefinitionTerm,
+      DefinitionDescription,
+      CriticInsertion,
+      CriticDeletion,
+      CriticHighlight,
+      CriticComment,
     ];
   },
 });

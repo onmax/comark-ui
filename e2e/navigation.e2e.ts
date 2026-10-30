@@ -1,7 +1,8 @@
 import { expect, test } from "@playwright/test";
+import { gotoHydrated } from "./helpers.ts";
 
 test("client navigation preserves the app and reinitializes page scripts", async ({ page }) => {
-  await page.goto("/zoom/");
+  await gotoHydrated(page, "/zoom/");
   const marker = await page.evaluate(() => {
     const w = window as typeof window & { __comarkNavigation?: number };
     return (w.__comarkNavigation ??= Math.random());
@@ -38,7 +39,7 @@ test("client navigation preserves the app and reinitializes page scripts", async
 });
 
 test("the landing canvas paints its cards centered after a client navigation", async ({ page }) => {
-  await page.goto("/zoom/");
+  await gotoHydrated(page, "/zoom/");
   // Every frame's position of the first card, from the click until the canvas has settled.
   const positions = await page.evaluate(async () => {
     const seen: number[] = [];
@@ -65,7 +66,7 @@ test("the landing canvas paints its cards centered after a client navigation", a
 
 test("a page change jumps to its scroll position instead of sliding there", async ({ page }) => {
   // Both pages are taller than the position, so the browser doesn't clamp it while the next one comes in.
-  await page.goto("/charts/");
+  await gotoHydrated(page, "/charts/");
   await page.evaluate(() => window.scrollTo({ top: 1200, behavior: "instant" }));
   // Every scroll position from the link's click, or going back, until the page has settled.
   const frames = (back: boolean) =>
@@ -89,7 +90,7 @@ test("a page change jumps to its scroll position instead of sliding there", asyn
 test("the sidebar stays where it was when one of its links opens another page", async ({
   page,
 }) => {
-  await page.goto("/annotate/");
+  await gotoHydrated(page, "/annotate/");
   // Every scroll position of the sidebar's column from the click until the next page has been in for a while.
   const { before, seen } = await page.evaluate(async () => {
     const column = () => document.querySelector<HTMLElement>(".sidebar .pages")!;
@@ -112,7 +113,7 @@ test("the sidebar stays where it was when one of its links opens another page", 
 });
 
 test("the sidebar restores each browser history entry's position", async ({ page }) => {
-  await page.goto("/annotate/");
+  await gotoHydrated(page, "/annotate/");
   const first = await page.locator(".sidebar .pages").evaluate((column) => {
     column.scrollTop = 120;
     return Math.round(column.scrollTop);
@@ -130,24 +131,33 @@ test("the sidebar restores each browser history entry's position", async ({ page
   expect(second).toBeGreaterThan(first);
   await page.goBack();
   await expect(page).toHaveURL(/\/annotate\/$/);
+  // Restored scroll offsets can round to adjacent CSS pixels.
   await expect
-    .poll(() => page.locator(".sidebar .pages").evaluate((column) => Math.round(column.scrollTop)))
-    .toBe(first);
+    .poll(() =>
+      page
+        .locator(".sidebar .pages")
+        .evaluate((column, first) => Math.abs(column.scrollTop - first), first),
+    )
+    .toBeLessThanOrEqual(1);
   await page.goForward();
   await expect(page).toHaveURL(/\/tabs\/$/);
   await expect
-    .poll(() => page.locator(".sidebar .pages").evaluate((column) => Math.round(column.scrollTop)))
-    .toBe(second);
+    .poll(() =>
+      page
+        .locator(".sidebar .pages")
+        .evaluate((column, second) => Math.abs(column.scrollTop - second), second),
+    )
+    .toBeLessThanOrEqual(1);
 });
 
 test("the sidebar does not reuse a discarded forward entry's position", async ({ page }) => {
   // A fresh entry reveals its current link, which may be below the fold as the rail grows.
-  await page.goto("/charts/");
+  await gotoHydrated(page, "/charts/");
   await expect(page.locator('.sidebar .pages a[aria-current="page"]')).toBeInViewport();
   const fresh = await page
     .locator(".sidebar .pages")
     .evaluate((column) => Math.round(column.scrollTop));
-  await page.goto("/annotate/");
+  await gotoHydrated(page, "/annotate/");
   await page.locator(".sidebar .pages").evaluate((column) => {
     column.scrollTop = 120;
   });
@@ -173,6 +183,6 @@ test("the sidebar does not reuse a discarded forward entry's position", async ({
 });
 
 test("the sidebar shows the current page's link on a first load", async ({ page }) => {
-  await page.goto("/zoom/");
+  await gotoHydrated(page, "/zoom/");
   await expect(page.locator('.sidebar .pages a[aria-current="page"]')).toBeInViewport();
 });

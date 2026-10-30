@@ -200,10 +200,12 @@ export function start(): () => void {
   const making = new WeakMap<HTMLElement, Promise<Made>>();
   const urls = new Set<string>();
   let zoomed: HTMLElement | null = null;
+  let zoomCopy: HTMLElement | null = null;
 
   // A zoomed screenshot is a copy without ids; the page's source behind it is the one to paint.
   const figureOf = (target: EventTarget | null) => {
     if (!(target instanceof Element)) return null;
+    if (target.closest(".ca-zoom-copy")) return zoomed;
     if (target.closest(".cz-dialog"))
       return zoomed &&
         target.closest(
@@ -630,7 +632,7 @@ export function start(): () => void {
       const figure = figureOf(button);
       if (!button || !figure || !copying) return;
       event.preventDefault();
-      copy(figure, button.closest(".ca-frame"));
+      copy(figure, button.closest(".ca-zoom-copy,.ca-frame"));
     },
     { signal },
   );
@@ -650,14 +652,19 @@ export function start(): () => void {
           : null;
       if (!target || !figure) return;
       event.preventDefault();
-      copy(figure, (own ? figure : target).querySelector(".ca-frame"));
+      copy(figure, (own ? figure : target).querySelector(".ca-zoom-copy,.ca-frame"));
     },
     { signal },
   );
 
   const follow = (event: Event) => {
-    // SAFETY: comark-zoom's open and change events carry the item shown.
-    const { item } = (event as CustomEvent<{ item?: unknown }>).detail ?? {};
+    // SAFETY: comark-zoom's open and change events carry the item shown, its copy, and the dialog's header.
+    const { item, header, content } =
+      (event as CustomEvent<{ item?: unknown; header?: HTMLElement; content?: HTMLElement }>)
+        .detail ?? {};
+    const focused = zoomCopy?.contains(document.activeElement);
+    zoomCopy?.remove();
+    zoomCopy = null;
     // A screenshot zooms its stage, inside the source that copy paints. Sliders zoom their pair, so use the first
     // side as the screenshot source for the keyboard copy path.
     zoomed =
@@ -674,16 +681,35 @@ export function start(): () => void {
       button.removeAttribute("data-state");
     for (const status of document.querySelectorAll(".cz-dialog .ca-copy-status"))
       status.textContent = "";
+    // Zoomed, Copy sits in the header beside Close, clear of the image and its marks.
+    if (!zoomed || !header || !content) return;
+    const button = content.querySelector<HTMLElement>(".ca-copy");
+    const status = content.querySelector(".ca-copy-status");
+    if (!button || !status) return;
+    zoomCopy = document.createElement("div");
+    zoomCopy.className = "ca-zoom-copy";
+    zoomCopy.append(button, status);
+    header.insertBefore(zoomCopy, header.querySelector(".cz-close"));
+    for (const part of content.querySelectorAll(".ca-copy,.ca-copy-status")) part.remove();
+    if (focused) button.focus({ preventScroll: true });
   };
   document.addEventListener("comark-zoom:open", follow, { signal });
   document.addEventListener("comark-zoom:change", follow, { signal });
-  document.addEventListener("comark-zoom:close", () => (zoomed = null), { signal });
+  document.addEventListener(
+    "comark-zoom:close",
+    () => {
+      zoomed = null;
+      zoomCopy = null;
+    },
+    { signal },
+  );
 
   const state = {
     users: 1,
     stop: () => {
       if (--state.users > 0) return;
       listeners.abort();
+      zoomCopy?.remove();
       disarm();
       for (const url of urls) URL.revokeObjectURL(url);
       for (const overlay of document.querySelectorAll(".ca-overlay")) overlay.remove();
