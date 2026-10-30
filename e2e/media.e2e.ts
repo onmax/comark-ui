@@ -85,6 +85,51 @@ test("an audio player plays, pauses, and seeks with its own controls", async ({ 
   await expect(player.getByRole("button", { name: "Unmute" })).toBeVisible();
 });
 
+test("the volume opens over the mute button for the pointer and the keyboard, and zero mutes", async ({
+  page,
+}) => {
+  await open(page, "![A gray clip](clip.webm)");
+  const player = page.getByRole("group", { name: "A gray clip" });
+  const mute = player.locator(".cm-mute");
+  const volume = player.getByRole("slider", { name: "Volume" });
+  await expect(player.locator(".cm-time").last()).toHaveText("0:04");
+  await expect(volume).toBeHidden();
+
+  await mute.hover();
+  await expect(volume).toBeVisible();
+  // The pointer crosses the gap up to the panel without closing it.
+  const box = (await volume.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height + 6, { steps: 4 });
+  await page.mouse.move(box.x + 2, box.y + box.height / 2, { steps: 4 });
+  await page.mouse.down();
+  await page.mouse.up();
+  await expect(player).toHaveAttribute("data-muted");
+  await expect(mute).toHaveAttribute("aria-label", "Unmute");
+  await page.mouse.move(0, 0);
+  await expect(volume).toBeHidden();
+
+  // All the way down, Unmute plays at full volume.
+  await mute.click();
+  await expect(player).not.toHaveAttribute("data-muted");
+  expect(await player.locator("video").evaluate((video: HTMLVideoElement) => video.volume)).toBe(1);
+  await page.mouse.move(0, 0);
+
+  await player.getByRole("slider", { name: "Seek" }).focus();
+  await page.keyboard.press("Tab");
+  await expect(volume).toBeVisible();
+  await page.keyboard.press("Tab");
+  await expect(volume).toBeFocused();
+  await page.keyboard.press("ArrowLeft");
+  await expect(volume).toHaveAttribute("aria-valuetext", "95%");
+  expect(
+    await player.locator("video").evaluate((video: HTMLVideoElement) => video.volume),
+  ).toBeCloseTo(0.95);
+  await page.keyboard.press("Home");
+  await expect(mute).toHaveAttribute("aria-label", "Unmute");
+  await page.keyboard.press("Tab");
+  await expect(volume).toBeHidden();
+});
+
 test("a video plays with its own controls, from its bar or a click, and goes full screen", async ({
   page,
 }) => {
@@ -129,6 +174,9 @@ test.describe("touch video controls", () => {
     const player = page.getByRole("group", { name: "A gray clip" });
     await expect(player.locator(".cm-time").last()).toHaveText("0:04");
     expect(await page.evaluate(() => matchMedia("(pointer:coarse)").matches)).toBe(true);
+    // A touch screen sets the volume with its own buttons.
+    await player.locator(".cm-mute").focus();
+    await expect(player.getByRole("slider", { name: "Volume", includeHidden: true })).toBeHidden();
     // A supported wider font makes the limiting geometry independent of CI's system font.
     await page.locator("body").evaluate((body) => {
       body.style.setProperty("--comark-font", "monospace");

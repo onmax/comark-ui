@@ -20,7 +20,8 @@ const speaker =
 export const controls = (kind: "audio" | "video") =>
   `<button type="button" class="cm-play" aria-label="Play">${icon("play", '<path d="M6 4.5v15a1 1 0 0 0 1.5.86l12-7.5a1 1 0 0 0 0-1.72l-12-7.5A1 1 0 0 0 6 4.5z"/>', true)}${icon("pause", '<rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/>', true)}</button>` +
   '<span class="cm-time">0:00</span><input type="range" class="cm-seek" min="0" max="0" step="any" value="0" aria-label="Seek"><span class="cm-time">0:00</span>' +
-  `<button type="button" class="cm-mute" aria-label="Mute">${icon("volume", `${speaker}<path d="M16 9a5 5 0 0 1 0 6"/><path d="M19.364 18.364a9 9 0 0 0 0-12.728"/>`, false)}${icon("muted", `${speaker}<path d="m22 9-6 6"/><path d="m16 9 6 6"/>`, false)}</button>` +
+  `<span class="cm-sound"><button type="button" class="cm-mute" aria-label="Mute">${icon("volume", `${speaker}<path d="M16 9a5 5 0 0 1 0 6"/><path d="M19.364 18.364a9 9 0 0 0 0-12.728"/>`, false)}${icon("muted", `${speaker}<path d="m22 9-6 6"/><path d="m16 9 6 6"/>`, false)}</button>` +
+  '<span class="cm-level"><input type="range" class="cm-volume" min="0" max="1" step="0.05" value="1" aria-label="Volume"></span></span>' +
   (kind === "video"
     ? `<button type="button" class="cm-full" aria-label="Full screen">${icon("full", '<path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/>', false)}${icon("exit", '<path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/>', false)}</button>`
     : "");
@@ -73,7 +74,8 @@ export function start(css: string): () => void {
     const at = Math.min(media.currentTime, total);
     player.setAttribute("data-media-ready", "");
     player.toggleAttribute("data-playing", !media.paused);
-    player.toggleAttribute("data-muted", media.muted);
+    const level = media.muted ? 0 : media.volume;
+    player.toggleAttribute("data-muted", !level);
     player.toggleAttribute("data-error", Boolean(media.error));
     if (media instanceof HTMLVideoElement) {
       // A video that can't play gets the browser's controls back, so they can say why.
@@ -83,7 +85,13 @@ export function start(css: string): () => void {
       if (full) full.hidden = !document.fullscreenEnabled && !media.webkitEnterFullscreen;
     }
     player.querySelector(".cm-play")?.setAttribute("aria-label", media.paused ? "Play" : "Pause");
-    player.querySelector(".cm-mute")?.setAttribute("aria-label", media.muted ? "Unmute" : "Mute");
+    player.querySelector(".cm-mute")?.setAttribute("aria-label", level ? "Mute" : "Unmute");
+    const volume = player.querySelector<HTMLInputElement>(".cm-volume");
+    if (volume) {
+      volume.value = String(level);
+      volume.style.setProperty("--cm-at", `${level * 100}%`);
+      volume.setAttribute("aria-valuetext", `${Math.round(level * 100)}%`);
+    }
     const [now, end] = player.querySelectorAll(".cm-time");
     if (now) now.textContent = clock(at);
     if (end) end.textContent = clock(total);
@@ -176,7 +184,11 @@ export function start(css: string): () => void {
       const media = player && mediaOf(player);
       if (!button || !player || !media) return;
       if (button.classList.contains("cm-mute")) {
-        media.muted = !media.muted;
+        // A player turned all the way down unmutes at full volume, or the button would do nothing.
+        if (media.muted || !media.volume) {
+          media.muted = false;
+          media.volume ||= 1;
+        } else media.muted = true;
         if (!media.muted && !media.paused) pauseAudible(media);
       } else if (button.classList.contains("cm-full")) {
         if (document.fullscreenElement === player) document.exitFullscreen().catch(() => {});
@@ -210,6 +222,17 @@ export function start(css: string): () => void {
   document.addEventListener(
     "input",
     (event) => {
+      const volume =
+        event.target instanceof HTMLInputElement && event.target.matches(".cm-volume")
+          ? event.target
+          : null;
+      const sounding = playerOf(volume);
+      const loud = sounding && mediaOf(sounding);
+      if (volume && loud) {
+        loud.volume = Number(volume.value);
+        loud.muted = !loud.volume;
+        return;
+      }
       const seek = seekOf(event.target);
       const player = playerOf(seek);
       const media = player && mediaOf(player);
