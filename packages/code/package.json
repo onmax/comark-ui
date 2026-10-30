@@ -1,6 +1,6 @@
 {
   "name": "comark-code",
-  "version": "0.7.5",
+  "version": "0.7.6",
   "description": "Copy and wrap buttons on Markdown code blocks, plus buttons of your own that send the code to your app. A Comark plugin.",
   "keywords": [
     "clipboard",
