@@ -265,6 +265,77 @@ The top right corner.
   expect(size).toBeGreaterThan(0);
 });
 
+for (const viewport of [
+  { width: 1280, height: 720 },
+  { width: 320, height: 568 },
+  { width: 844, height: 390 },
+]) {
+  for (const failure of ["clipboard", "CORS"]) {
+    test(`zoomed Copy keeps ${failure} failure feedback in the header at ${viewport.width}x${viewport.height}`, async ({
+      page,
+      context,
+    }) => {
+      await page.setViewportSize(viewport);
+      await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+      if (failure === "clipboard") {
+        await page.addInitScript(() => {
+          navigator.clipboard.write = async (items) => {
+            await items[0]!.getType("image/png");
+            throw new DOMException("Clipboard access denied", "NotAllowedError");
+          };
+        });
+      }
+      const src = failure === "CORS" ? "https://screenshots.example/shot.png" : "/fixture/shot.png";
+      const render = createHtmlRenderer({ plugins: [annotate()], components });
+      const body = await render(`::screenshot{src="${src}" alt="Dashboard" viewport="1280x800"}
+:::annotation{x=80 y=2 w=18 h=8 mark="box" color="red"}
+The top right corner.
+:::
+::`);
+      const shot = await readFile(new URL("../docs/public/dashboard.png", import.meta.url));
+      await page.route("**/shot.png", (route) =>
+        route.fulfill({
+          contentType: "image/png",
+          headers: { "access-control-allow-origin": "https://another-site.example" },
+          body: shot,
+        }),
+      );
+      await page.route("**/fixture/", (route) =>
+        route.fulfill({
+          contentType: "text/html",
+          body: `<!doctype html><meta charset="utf-8"><style>main{max-width:720px;margin:auto}</style><main>${body}</main>`,
+        }),
+      );
+      await page.goto("/fixture/", { waitUntil: "domcontentloaded" });
+      await page.locator(".ca-screenshot .ca-stage").first().click();
+      const copy = page.locator(".cz-header .ca-copy");
+      await page.waitForFunction(() =>
+        document
+          .querySelector(".cz-dialog")!
+          .getAnimations({ subtree: true })
+          .every((animation) => animation.playState !== "running"),
+      );
+      await copy.click();
+      await expect(copy).toHaveAttribute("data-state", "failed");
+      const status = page.locator(".cz-header .ca-copy-status");
+      await expect(status).toHaveText(
+        failure === "CORS"
+          ? "The image's server doesn't allow copying it (no CORS)."
+          : "This page can't write to the clipboard. Right-click the image and copy it instead.",
+      );
+      await expect(status).toBeVisible();
+      const feedback = (await status.boundingBox())!;
+      const header = (await page.locator(".cz-header").boundingBox())!;
+      const item = (await page.locator(".cz-item").boundingBox())!;
+      expect(feedback.y).toBeGreaterThanOrEqual(header.y);
+      expect(feedback.y + feedback.height).toBeLessThanOrEqual(header.y + header.height);
+      expect(feedback.y + feedback.height).toBeLessThanOrEqual(item.y);
+      expect(feedback.x).toBeGreaterThanOrEqual(0);
+      expect(feedback.x + feedback.width).toBeLessThanOrEqual(viewport.width);
+    });
+  }
+}
+
 test("Copy keeps a circle's whole loop, where it reaches past its area", async ({
   page,
   context,
