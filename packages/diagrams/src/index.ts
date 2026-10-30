@@ -51,23 +51,32 @@ const text = (value: unknown) =>
       String(value as string | number | boolean).trim();
 const errorText = (error: unknown) => (error instanceof Error ? error.message : String(error));
 
-class Refused extends Error {}
-
-async function request(server: string, type: string, source: string): Promise<string> {
-  const send = () =>
-    fetch(`${server}/${type}/svg`, {
-      method: "POST",
-      headers: { "content-type": "text/plain" },
-      body: source,
-      signal: AbortSignal.timeout(15_000),
-    });
-  let response: Response;
-  try {
-    response = await send();
-  } catch (error) {
-    if (!(error instanceof Error) || error.name !== "TimeoutError") throw error;
-    response = await send();
+class Refused extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
   }
+}
+
+// kroki.io sometimes stalls, drops, or fails a request it answers the next time, and one failed diagram fails a site's
+// build, so each gets a second try. A 4xx is the source's fault and would fail again.
+async function request(server: string, type: string, source: string): Promise<string> {
+  try {
+    return await attempt(server, type, source);
+  } catch (error) {
+    if (error instanceof Refused && error.status < 500) throw error;
+    return attempt(server, type, source);
+  }
+}
+
+async function attempt(server: string, type: string, source: string): Promise<string> {
+  const response = await fetch(`${server}/${type}/svg`, {
+    method: "POST",
+    headers: { "content-type": "text/plain" },
+    body: source,
+    signal: AbortSignal.timeout(15_000),
+  });
   const body = await response.text();
   // Kroki answers a diagram it can't draw with its tool's error, after a status line.
   if (!response.ok)
@@ -80,6 +89,7 @@ async function request(server: string, type: string, source: string): Promise<st
         .filter(Boolean)
         .slice(0, 2)
         .join(" ") || `HTTP ${response.status}`,
+      response.status,
     );
   if (!/<svg[\s>]/.test(body)) throw new Error("it answered without an SVG");
   return sized(sanitizeSvg(body));
@@ -110,14 +120,17 @@ async function draw(server: string, type: string, source: string): Promise<Drawn
   try {
     return { svg: await pending };
   } catch (error) {
-    return error instanceof Refused
+    return error instanceof Refused && error.status < 500
       ? {
           rule: "comark/diagrams/draw-failed",
           problem: `Kroki couldn't draw it: ${error.message}. Fix the diagram's source.`,
         }
       : {
           rule: "comark/diagrams/server-unreachable",
-          problem: `couldn't reach the Kroki server at ${server} (${errorText(error)}). Check \`server\`, or build again.`,
+          problem:
+            error instanceof Refused
+              ? `the Kroki server at ${server} returned HTTP ${error.status} (${error.message}). Check \`server\`, or build again.`
+              : `couldn't reach the Kroki server at ${server} (${errorText(error)}). Check \`server\`, or build again.`,
         };
   }
 }
