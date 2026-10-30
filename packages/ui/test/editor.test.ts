@@ -1,7 +1,8 @@
-import { readdirSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { getSchema } from "@tiptap/core";
 import { Node } from "@tiptap/pm/model";
 import { prosemirrorJSONToYDoc, yDocToProsemirrorJSON } from "@tiptap/y-tiptap";
+import { defineComarkPlugin, type MarkdownExitPlugin } from "comark";
 import { describe, expect, it } from "vite-plus/test";
 import { loadExamples } from "../../../docs/examples.ts";
 import html from "../src/html.ts";
@@ -98,6 +99,109 @@ describe("fromMarkdown and toMarkdown", () => {
     expect(await roundTrip("Line one\nline two\n")).toBe("Line one\nline two\n");
   });
 
+  // Comark's writer indents the blocks under a task by the width of `- [ ] `, which reads them back as code.
+  it("keeps a quiz's options and the rationale under each", async () => {
+    const markdown = [
+      "::question{#order}",
+      "What logs first?",
+      "",
+      "- [x] The promise",
+      "  > Microtasks run first.",
+      "- [ ] The timeout",
+      "  > A timer queues a task.",
+      "",
+      "#explain",
+      "The microtask queue empties first.",
+      "::",
+      "",
+    ].join("\n");
+    expect(await roundTrip(markdown)).toBe(markdown);
+  });
+
+  it("keeps components flush, with their props on their line", async () => {
+    const markdown = [
+      '::compare{title="Toolbar"}',
+      ':::screenshot{src="/a.png" alt="Before"}',
+      '::::annotation{x="4" y="28" w="90" h="44" color="red"}',
+      "Wraps.",
+      "::::",
+      ":::",
+      "::",
+      "",
+    ].join("\n");
+    expect(await roundTrip(markdown)).toBe(markdown);
+  });
+
+  // Comark reads `:name{}` alone on its line like an empty `::name`, so the codec keeps which one the author wrote.
+  it("keeps a component written alone on its line the way it was written", async () => {
+    const markdown =
+      ':comment{reply="ttl" by="Ana" note="Keeping it."}\n\n:badge[New]\n\n::embed{url="https://x.dev"}\n::\n';
+    expect(await roundTrip(markdown)).toBe(markdown);
+  });
+
+  // Comark's writer has its own handlers for `comment` and `table`, which would write these as an HTML comment and a
+  // Markdown table.
+  it("keeps components named like Markdown elements", async () => {
+    const markdown =
+      'Text :comment[span]{#c note="Why?"} more.\n\n::table{sort}\n```json\n[]\n```\n::\n';
+    expect(await roundTrip(markdown)).toBe(markdown);
+  });
+
+  it("keeps a callout's title on its marker line", async () => {
+    const markdown = "> [!NOTE] Heads up\n> Read this.\n\n> [!TIP]\n> No title.\n";
+    expect(await roundTrip(markdown)).toBe(markdown);
+  });
+
+  it("keeps footnotes by the labels their author picked", async () => {
+    const markdown = [
+      "Pigeons[^count] and ^[a note *inline*].",
+      "",
+      "[^count]: Counted at nine.",
+      "",
+      "    From the window.",
+      "",
+    ].join("\n");
+    expect(await roundTrip(markdown)).toBe(markdown);
+    const { doc } = await fromMarkdown(markdown);
+    expect(doc.content?.[1]).toMatchObject({
+      type: "footnoteDefinition",
+      attrs: { label: "count" },
+    });
+  });
+
+  // comark-critic reads a substitution and a deletion beside an insertion as the same two nodes.
+  it("keeps CriticMarkup, each mark as it was written", async () => {
+    const markdown =
+      "More than {--twelve--}{++fifteen++} pigeons {~~after~>before~~} the {==east **window**==}{>>Not west.<<}.\n";
+    expect(await roundTrip(markdown)).toBe(markdown);
+  });
+
+  it("keeps definition lists", async () => {
+    const markdown = [
+      "Pigeon count",
+      ":   The number on the roof.",
+      "",
+      "    - Count once.",
+      "",
+      "Pizza vote",
+      ":   Fridays.",
+      ":   At noon.",
+      "",
+    ].join("\n");
+    expect(await roundTrip(markdown)).toBe(markdown);
+  });
+
+  // Comark's writer trims a code block's text, and a diff's last context line can be a single space.
+  it("keeps the blank lines a code block ends with", async () => {
+    const markdown = "```diff\n a\n \n```\n\n```txt\nb\n\n```\n";
+    expect(await roundTrip(markdown)).toBe(markdown);
+  });
+
+  it("keeps emphasis next to CJK punctuation", async () => {
+    const markdown = "**この文は太字。**次の文は普通です。\n";
+    expect(await roundTrip(markdown)).toBe(markdown);
+  });
+
   it("reads an empty document as one empty paragraph and writes it as nothing", async () => {
     const { doc } = await fromMarkdown("");
     expect(doc).toEqual({ type: "doc", content: [{ type: "paragraph" }] });
@@ -117,50 +221,57 @@ describe("checkMarkdown", () => {
     expect(await checkMarkdown("Text <!-- hidden --> more\n")).toEqual({ editable: false });
   });
 
-  // Comark's writer prints a `table` node as a Markdown table, whatever it holds.
-  it("refuses a component named like a Markdown block", async () => {
-    expect(await checkMarkdown("::table{sort}\n```json\n[]\n```\n::\n")).toEqual({
-      editable: false,
-    });
+  // Tiptap's task list is a bullet list.
+  it("refuses an ordered task list", async () => {
+    expect(await checkMarkdown("1. [ ] a\n   > b\n")).toEqual({ editable: false });
   });
 
-  // Comark's alert plugin reads the title into the callout's text, so the editor would move it into the body.
-  it("refuses a callout with its own title", async () => {
-    const { plugins } = html(offline);
-    expect(await checkMarkdown("> [!NOTE] Heads up\n> Read this.\n", { plugins })).toEqual({
-      editable: false,
-    });
-    expect((await checkMarkdown("> [!NOTE]\n> Read this.\n", { plugins })).editable).toBe(true);
-  });
-
-  // Without comark-footnotes the definition never reaches the tree, so only the page's own plugins see it go.
+  // The codec writes `~` escaped, so a page whose plugin reads `H~2~O` as a subscript would lose it.
   it("refuses syntax only the page's plugins read", async () => {
-    const markdown = "Note[^1]\n\n[^1]: Foot\n";
+    const rule: MarkdownExitPlugin = (md) =>
+      md.core.ruler.before("inline", "subscript", (state) => {
+        for (const token of state.tokens)
+          if (token.type === "inline") token.content = token.content.replace(/~(\w+)~/g, "$1");
+      });
+    const subscript = defineComarkPlugin(() => ({ name: "subscript", markdownItPlugins: [rule] }));
+    const markdown = "H~2~O\n";
     expect((await checkMarkdown(markdown)).editable).toBe(true);
-    const { plugins } = html(offline);
-    expect(await checkMarkdown(markdown, { plugins })).toEqual({ editable: false });
+    expect(await checkMarkdown(markdown, { plugins: [subscript()] })).toEqual({ editable: false });
   });
 });
 
-// Every example the docs show: the editor either opens it and saves it unchanged, or says it can't. Whatever it opens
-// must fit the schema and survive the trip through Yjs that a collaborative room makes.
+// Every example the docs show, and the finished document of each skill, a quiz lesson among them: the editor opens it,
+// fits it to the schema, takes it through Yjs as a collaborative room does, and saves it without changing what readers
+// see.
 describe("the docs examples", async () => {
   const packages = readdirSync(new URL("../../", import.meta.url));
   const examples = await loadExamples(packages);
+  const skills = ["before-after-evidence", "review-document", "teach-lesson", "visual-explanation"];
+  const documents = [
+    ...examples.map((example) => [example.id, example.source] as const),
+    ...skills.map(
+      (skill) =>
+        [
+          `skill ${skill}`,
+          readFileSync(
+            new URL(`../../../skills/${skill}/references/example.md`, import.meta.url),
+            "utf8",
+          ),
+        ] as const,
+    ),
+  ];
   const { plugins } = html(offline);
 
-  it.each(examples.map((example) => [example.id, example.source] as const))(
-    "%s",
-    async (_, source) => {
-      const { doc } = await fromMarkdown(source);
-      const node = Node.fromJSON(schema, doc);
-      node.check();
-      const synced = yDocToProsemirrorJSON(prosemirrorJSONToYDoc(schema, doc));
-      expect(Node.fromJSON(schema, synced).eq(node)).toBe(true);
-      const check = await checkMarkdown(source, { plugins });
-      if (check.editable) expect(await checkMarkdown(check.markdown, { plugins })).toEqual(check);
-    },
-  );
+  it.each(documents)("%s", async (_, source) => {
+    const { doc } = await fromMarkdown(source);
+    const node = Node.fromJSON(schema, doc);
+    node.check();
+    const synced = yDocToProsemirrorJSON(prosemirrorJSONToYDoc(schema, doc));
+    expect(Node.fromJSON(schema, synced).eq(node)).toBe(true);
+    const check = await checkMarkdown(source, { plugins });
+    expect(check.editable).toBe(true);
+    if (check.editable) expect(await checkMarkdown(check.markdown, { plugins })).toEqual(check);
+  });
 });
 
 describe("createEditorCodec", () => {

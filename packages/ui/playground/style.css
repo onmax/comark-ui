@@ -95,6 +95,56 @@ textarea {
   border-radius: 4px;
   padding: 0 4px;
 }
+[data-footnote-reference] {
+  color: #2563eb;
+}
+[data-footnote-reference]::before {
+  content: "^";
+}
+[data-inline-footnote] {
+  font-size: 0.85em;
+  color: #52525b;
+}
+[data-inline-footnote]::before {
+  content: "^[";
+}
+[data-inline-footnote]::after {
+  content: "]";
+}
+[data-footnote-definition] {
+  border-top: 1px solid #e4e4e7;
+  font-size: 0.9em;
+}
+[data-footnote-definition]::before {
+  content: "[^" attr(data-label) "]:";
+  font:
+    11px ui-monospace,
+    monospace;
+  color: #71717a;
+}
+.ProseMirror ins {
+  background: #dcfce7;
+  text-decoration: none;
+}
+.ProseMirror del[data-critic] {
+  background: #fee2e2;
+}
+.ProseMirror mark {
+  background: #fef9c3;
+}
+[data-critic-comment] {
+  font-style: italic;
+  color: #71717a;
+}
+[data-critic-comment]::before {
+  content: "💬 ";
+}
+.ProseMirror dt {
+  font-weight: 600;
+}
+.ProseMirror dd {
+  margin-left: 24px;
+}
 .cue-upload {
   display: inline-grid;
   position: relative;

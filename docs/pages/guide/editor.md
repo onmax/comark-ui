@@ -79,19 +79,32 @@ if (!lossy) {
 
 `checkMarkdown(markdown, { plugins })` checks whether the editor can read and write the document without losing its structure or changing the text the plugins render. It returns `{ editable: true, markdown }` with the normalized Markdown, or `{ editable: false }`.
 
-Pass the same parse plugins you use to render the document. Syntax only those plugins read, such as footnote definitions, otherwise escapes the check. The Vue bindings run this check and open a document read-only when it fails.
+Pass the same parse plugins you use to render the document. Syntax only those plugins read, such as a third-party plugin's, otherwise escapes the check. The Vue bindings run this check and open a document read-only when it fails.
 
 The editor may normalize Markdown formatting. A successful check does not promise byte-for-byte preservation.
 
+### What the editor keeps
+
+The editor reads and writes all of comark-ui's syntax, so a document that uses it opens editable:
+
+- Every block and inline component, with its props and slots, written flush and with its props on its own line. A component written `:name{}` alone on its line stays that way.
+- Quiz options, as tasks with the `>` rationale under each.
+- GitHub callouts, with the title on the marker line.
+- Footnotes, by the labels their author picked, and inline notes.
+- CriticMarkup: insertions, deletions, substitutions, highlights, and comments.
+- Definition lists, and emphasis next to Chinese, Japanese, and Korean punctuation.
+
+The first save normalizes formatting without changing the document: it pads table cells, quotes attribute values, and puts a blank line between blocks. It refuses ordered task lists and HTML comments inside a paragraph, because the schema has nowhere to keep them.
+
 ## Schema
 
-`ComarkKit` from `comark-ui/editor` combines Tiptap's StarterKit with task lists, inline images, tables, and Comark components, slots, and comments. It preserves Comark attributes that have no editor field.
+`ComarkKit` from `comark-ui/editor` combines Tiptap's StarterKit with task lists, inline images, tables, footnotes, definition lists, CriticMarkup, and Comark components, slots, and comments. It preserves Comark attributes that have no editor field, through the clipboard too.
 
 Use `[ComarkKit]` as the extensions of a Tiptap editor you create yourself. Pass StarterKit options through `ComarkKit.configure({ starterKit: { ... } })`. Underline stays off because Comark has no underline syntax.
 
 The component nodes preserve a block's structure and editable content. Supply your own Tiptap node views to draw a block as it appears in your app.
 
-`ComarkImage` draws video and audio URLs as native players for the file extensions the editor recognizes. Images stay inline. The other exported nodes are `ComarkBlock`, `ComarkInline`, `ComarkSlot`, and `ComarkComment`; `ComarkKit` already includes them.
+`ComarkImage` draws video and audio URLs as native players for the file extensions the editor recognizes. Images stay inline. The other exported nodes are `ComarkBlock`, `ComarkInline`, `ComarkSlot`, `ComarkComment`, `FootnoteReference`, `InlineFootnote`, `FootnoteDefinition`, `DefinitionList`, `DefinitionTerm`, `DefinitionDescription`, and `CriticComment`, and the marks `CriticInsertion`, `CriticDeletion`, and `CriticHighlight`; `ComarkKit` already includes them.
 
 ## File uploads
 
