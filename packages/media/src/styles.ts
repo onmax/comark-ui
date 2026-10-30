@@ -59,15 +59,14 @@ export const css = `@layer comark{${[
   // The volume sits in a panel over the mute button, opened by the pointer or the keyboard, so the seek bar keeps its
   // width. A touch screen sets the volume with its own buttons, and an iPhone ignores the page's.
   ".cm-sound{position:relative;display:flex;flex:none}",
-  ".cm-level{position:absolute;inset-block-end:calc(100% + .5rem);inset-inline-end:0;display:flex;padding:.5rem .75rem;border:1px solid var(--_comark-border);border-radius:var(--_comark-radius);background:var(--_comark-background);box-shadow:0 4px 12px rgb(0 0 0/.12);transform-origin:bottom right;opacity:0;scale:.96;visibility:hidden;transition:opacity .1s ease-in,scale .1s ease-in,visibility 0s .1s}",
-  ".cm-level:dir(rtl){transform-origin:bottom left}",
+  ".cm-level{position:absolute;bottom:calc(100% + .5rem);left:50%;translate:-50% 0;display:flex;padding:.75rem .5rem;border:1px solid var(--_comark-border);border-radius:var(--_comark-radius);background:var(--_comark-background);box-shadow:0 4px 12px rgb(0 0 0/.12);transform-origin:bottom;opacity:0;scale:.96;visibility:hidden;transition:opacity .1s ease-in,scale .1s ease-in,visibility 0s .1s}",
   // Covers the gap down to the button, so the pointer can cross it without closing the panel.
   '.cm-level::before{content:"";position:absolute;inset:100% 0 -.5rem}',
   `.cm-sound:is(:hover,:has(:focus-visible,:active))>.cm-level{${level}}`,
   "@media (hover:none),(pointer:coarse){.cm-level{display:none}}",
   "@media (prefers-reduced-motion:reduce){.cm-level{transition:none}}",
-  ".cm-volume{--_cm-fill:to right;width:5rem;height:1rem;margin:0;background:none;appearance:none;cursor:pointer}",
-  ".cm-volume:dir(rtl){--_cm-fill:to left}",
+  // Vertical, with silence at the bottom.
+  ".cm-volume{--_cm-fill:to top;width:1rem;height:5rem;margin:0;background:none;appearance:none;cursor:pointer;writing-mode:vertical-lr;direction:rtl}",
   ".cm-time{flex:none;color:var(--_comark-muted);font-variant-numeric:tabular-nums}",
   ".cm-seek{--_cm-fill:to right;flex:1 1 0;min-width:0;height:1rem;margin:0;background:none;appearance:none;cursor:pointer}",
   ".cm-seek:dir(rtl){--_cm-fill:to left}",
@@ -80,6 +79,9 @@ export const css = `@layer comark{${[
   `:is(.cm-seek,.cm-volume)::-moz-range-thumb{${thumb}}`,
   `:is(.cm-seek,.cm-volume):focus-visible::-webkit-slider-thumb{${ring}}`,
   `:is(.cm-seek,.cm-volume):focus-visible::-moz-range-thumb{${ring}}`,
+  ".cm-volume::-webkit-slider-runnable-track{width:.375rem;height:100%}",
+  ".cm-volume::-moz-range-track{width:.375rem;height:100%}",
+  ".cm-volume::-webkit-slider-thumb{margin:0 0 0 -.3125rem}",
   // A narrow player can't fit the seek bar between the times and the buttons, so it gets a row of its own above them,
   // with the times together after the play button. A very narrow one drops the times.
   '@container (width<24rem){.cm-seek{flex-basis:100%;order:-1}.cm-bar>.cm-sound{margin-inline-start:auto}.cm-seek+.cm-time{margin-inline-start:-.75rem}.cm-video .cm-seek+.cm-time{margin-inline-start:-.5rem}.cm-seek+.cm-time::before{content:"\\a0/\\a0"}}',

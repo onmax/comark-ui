@@ -99,8 +99,8 @@ test("the volume opens over the mute button for the pointer and the keyboard, an
   await expect(volume).toBeVisible();
   // The pointer crosses the gap up to the panel without closing it.
   const box = (await volume.boundingBox())!;
-  await page.mouse.move(box.x + box.width / 2, box.y + box.height + 6, { steps: 4 });
-  await page.mouse.move(box.x + 2, box.y + box.height / 2, { steps: 4 });
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height + 14, { steps: 4 });
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height - 2, { steps: 4 });
   await page.mouse.down();
   await page.mouse.up();
   await expect(player).toHaveAttribute("data-muted");
@@ -119,7 +119,7 @@ test("the volume opens over the mute button for the pointer and the keyboard, an
   await expect(volume).toBeVisible();
   await page.keyboard.press("Tab");
   await expect(volume).toBeFocused();
-  await page.keyboard.press("ArrowLeft");
+  await page.keyboard.press("ArrowDown");
   await expect(volume).toHaveAttribute("aria-valuetext", "95%");
   expect(
     await player.locator("video").evaluate((video: HTMLVideoElement) => video.volume),
