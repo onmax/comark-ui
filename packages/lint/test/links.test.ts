@@ -376,7 +376,7 @@ describe("comark/dead-url", () => {
     expect(await check("[a](https://a.example/) [b](https://b.example/)", { links })).toEqual([]);
     expect(warn).toHaveBeenCalledTimes(1);
     expect(warn).toHaveBeenCalledWith(
-      "lint-comark: the network is unreachable, so comark/dead-url checked no URLs.",
+      "comark-lint: the network is unreachable, so comark/dead-url checked no URLs.",
     );
   });
 });

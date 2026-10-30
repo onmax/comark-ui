@@ -538,7 +538,7 @@ describe("lint-comark CLI", () => {
 
     await expect(cli(join(dir, "missing.md"))).rejects.toMatchObject({
       code: 2,
-      stderr: expect.stringContaining(`lint-comark: can't read ${join(dir, "missing.md")}`),
+      stderr: expect.stringContaining(`comark-lint: can't read ${join(dir, "missing.md")}`),
     });
   });
 
@@ -554,6 +554,57 @@ describe("lint-comark CLI", () => {
       (await cli(join(dir, "pigeon-coop.md"), "--config", join(dir, "lint-comark.config.mjs")))
         .stdout,
     ).toBe("No problems.\n");
+  });
+
+  it("loads comark-lint.config from the working directory without --config", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "lint-comark-"));
+    await writeFile(join(dir, "pigeon-coop.md"), `::pigeon-coop\n::\n`);
+    await writeFile(
+      join(dir, "comark-lint.config.mjs"),
+      `export default { components: ["pigeon-coop"] };\n`,
+    );
+    const { stdout } = await promisify(execFile)(
+      process.execPath,
+      [new URL("../dist/cli.mjs", import.meta.url).pathname, "pigeon-coop.md"],
+      { cwd: dir },
+    );
+    expect(stdout).toBe("No problems.\n");
+  });
+
+  it("still loads a lint-comark.config from the working directory", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "lint-comark-"));
+    await writeFile(join(dir, "pigeon-coop.md"), `::pigeon-coop\n::\n`);
+    await writeFile(
+      join(dir, "lint-comark.config.mjs"),
+      `export default { components: ["pigeon-coop"] };\n`,
+    );
+    const { stdout } = await promisify(execFile)(
+      process.execPath,
+      [new URL("../dist/cli.mjs", import.meta.url).pathname, "pigeon-coop.md"],
+      { cwd: dir },
+    );
+    expect(stdout).toBe("No problems.\n");
+  });
+
+  it("prefers --config over a config in the working directory", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "lint-comark-"));
+    await writeFile(join(dir, "pigeon-coop.md"), `::pigeon-coop\n::\n`);
+    await writeFile(join(dir, "comark-lint.config.mjs"), `export default { components: [] };\n`);
+    await writeFile(
+      join(dir, "coop.config.mjs"),
+      `export default { components: ["pigeon-coop"] };\n`,
+    );
+    const { stdout } = await promisify(execFile)(
+      process.execPath,
+      [
+        new URL("../dist/cli.mjs", import.meta.url).pathname,
+        "pigeon-coop.md",
+        "--config",
+        "coop.config.mjs",
+      ],
+      { cwd: dir },
+    );
+    expect(stdout).toBe("No problems.\n");
   });
 
   it("prints JSON when a plugin throws a circular exception", async () => {

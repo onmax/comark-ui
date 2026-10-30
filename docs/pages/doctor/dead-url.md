@@ -5,7 +5,7 @@ It sends a GET, the way a browser does, and stops reading once the headers arriv
 It's off by default, since it depends on the network and not on the Markdown, so it has no example here. Turn it on with `--check-urls`, or with `links.urls`:
 
 ```sh
-pnpm lint-comark "docs/**/*.md" --check-urls
+pnpm comark-lint "docs/**/*.md" --check-urls
 ```
 
 ```txt

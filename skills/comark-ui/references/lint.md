@@ -5,14 +5,14 @@ comark-linter reports what Comark forgives, such as a `::` block never closed, a
 ## Run the command
 
 ```sh
-vp exec lint-comark "docs/**/*.md" --format json --check-urls
+vp exec comark-lint "docs/**/*.md" --format json --check-urls
 ```
 
-- Pass files or globs. Quote a glob so the shell passes it as written; lint-comark expands it and skips `node_modules` and `dist`.
+- Pass files or globs. Quote a glob so the shell passes it as written; comark-lint expands it and skips `node_modules` and `dist`.
 - It prints `file:line:column rule message fix` for each problem, or `No problems.` when there are none. It exits with 0 when clean, 1 on any problem, and 2 when a file can't be read, a glob matches nothing, or the config fails to load.
 - `--format json` prints an array of `{ file, rule, line, column, message, fix }` instead.
 - `--check-urls` also requests every external URL, and reports one that answers 404 or 410, has no DNS record, or fails its TLS check. It caches answers for a day in `node_modules/.cache/comark-linter/urls.json`, except a 404, 410, 429, or 5xx, which it requests again on the next run.
-- `--config lint-comark.config.ts` loads a config. The command finds none on its own.
+- It loads `comark-lint.config.ts` (or `.mts`, `.mjs`, `.js`) from the working directory, or a `lint-comark.config` file there. `--config path/to/config.ts` loads another one instead.
 
 Run it from the project root. A relative link or image resolves from the document's folder, and a `/` path from the working directory. Each must point at a file that exists, so save the screenshots before you lint.
 
@@ -21,7 +21,7 @@ It lints with every comark-ui package installed, `comark-ui` first; the [comark-
 ## Config file
 
 ```ts
-// lint-comark.config.ts
+// comark-lint.config.ts
 import { defineConfig } from "comark-linter";
 import include from "comark-include";
 
@@ -68,12 +68,12 @@ const results = await lintFiles(["docs/index.md", "docs/setup.md"], await resolv
 // eslint.config.js
 import comark from "comark-linter/eslint";
 
-export default [comark.configs.recommended, { settings: { comark: { config: "lint-comark.config.mjs" } } }];
+export default [comark.configs.recommended, { settings: { comark: { config: "comark-lint.config.mjs" } } }];
 ```
 
 Use a JavaScript ES module (`export default { ... }`) for the linter config across supported Node versions. A `.ts` config requires Node 22.18+ or `--experimental-strip-types` on Node 22.12–22.17, including in the editor. Restart ESLint after editing the config or its imports; they are cached for the process lifetime.
 
-Install `eslint` (9.15 or later) and `@eslint/markdown` (8 or later). The recommended config lints `**/*.md` and `**/*.mdc` with `@eslint/markdown`'s `markdown/commonmark` language and YAML frontmatter, and turns on every rule but `comark/dead-url`, which requests every URL; turn that one on in `rules` to check them. Each rule has the name the command prints and is configured like any ESLint rule, `<!-- eslint-disable-next-line comark/unknown-component -->` included. ESLint prints the fix after the message. `settings.comark.config`, from the working directory, loads the same config file as `--config`. oxlint can't run it: its JS plugins don't lint `.md` files, so run `lint-comark` beside `oxlint`.
+Install `eslint` (9.15 or later) and `@eslint/markdown` (8 or later). The recommended config lints `**/*.md` and `**/*.mdc` with `@eslint/markdown`'s `markdown/commonmark` language and YAML frontmatter, and turns on every rule but `comark/dead-url`, which requests every URL; turn that one on in `rules` to check them. Each rule has the name the command prints and is configured like any ESLint rule, `<!-- eslint-disable-next-line comark/unknown-component -->` included. ESLint prints the fix after the message. `settings.comark.config`, from the working directory, loads the same config file as `--config`. oxlint can't run it: its JS plugins don't lint `.md` files, so run `comark-lint` beside `oxlint`.
 
 ## Vite Doctor
 
@@ -93,4 +93,4 @@ Run `vite-doctor . --config doctor.config.ts --max-warnings 0`. The extension ta
 ## Register
 
 - In `comark-ui`: not included. Install it beside the preset, which it finds on its own.
-- Alone: `pnpm add -D comark-linter`. The command is `lint-comark`, the library `comark-linter`, the ESLint plugin `comark-linter/eslint`, and the extension `comark-linter/doctor`. npm refused `comark-lint` as too close to `remark-lint`, hence the name.
+- Alone: `pnpm add -D comark-linter`. The command is `comark-lint`, also installed as `lint-comark`, the library `comark-linter`, the ESLint plugin `comark-linter/eslint`, and the extension `comark-linter/doctor`. npm refused `comark-lint` as too close to `remark-lint`, hence the name.

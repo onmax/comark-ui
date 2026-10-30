@@ -1350,7 +1350,7 @@ kbd {
   color: #fff;
 }
 
-/* lint: lint-comark's report, a line at a time, as a terminal prints it. */
+/* lint: comark-lint's report, a line at a time, as a terminal prints it. */
 .demo-lint {
   --z: 0.78;
 }
@@ -1418,7 +1418,7 @@ kbd {
   font-weight: 600;
 }
 
-/* A Doctor rule's examples: the Markdown, then what lint-comark prints for it. */
+/* A Doctor rule's examples: the Markdown, then what comark-lint prints for it. */
 .rule-example {
   margin: 1.25rem 0;
 }

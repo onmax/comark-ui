@@ -10,7 +10,7 @@ icon: list-checks
 blurb: Catches what Comark forgives
 ---
 
-Comark forgives a lot. It closes a `::` block you forgot to close, reads a missing `}` as the end of the line, and renders a misspelled component as an empty element. lint-comark reports each of these with its line, so whoever wrote the document, often an agent, can fix it.
+Comark forgives a lot. It closes a `::` block you forgot to close, reads a missing `}` as the end of the line, and renders a misspelled component as an empty element. comark-lint reports each of these with its line, so whoever wrote the document, often an agent, can fix it.
 
 ## Features
 
@@ -23,10 +23,10 @@ Comark forgives a lot. It closes a `::` block you forgot to close, reads a missi
 
 ## Usage
 
-Run `lint-comark` on your documents:
+Run `comark-lint` on your documents:
 
 ```sh
-pnpm lint-comark "docs/**/*.md"
+pnpm comark-lint "docs/**/*.md"
 ```
 
 It prints one line per problem:
@@ -61,7 +61,7 @@ Each comark-ui package adds a rule for every kind of problem its plugin reports,
 
 ## Positions
 
-Comark gives parsed nodes no source positions. lint-comark takes block components' lines from the parser's tokens, and finds everything else by searching the source:
+Comark gives parsed nodes no source positions. comark-lint takes block components' lines from the parser's tokens, and finds everything else by searching the source:
 
 - A component inside a paragraph gets its line and the first matching column.
 - A URL matches where it starts an attribute or link, not in prose.

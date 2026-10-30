@@ -68,7 +68,7 @@ Done when the question tests the stated outcome with one changed input, every op
 1. Lint it, and fix until it reports no problems:
 
    ```sh
-   vp dlx --package comark-linter --package comark-ui lint-comark lesson.md
+   vp dlx --package comark-linter --package comark-ui comark-lint lesson.md
    ```
 
    These commands use the [global Vite+ CLI](https://viteplus.dev/guide/global-cli). Without it, `pnpm dlx` takes the same arguments.

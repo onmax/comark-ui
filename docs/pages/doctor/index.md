@@ -15,7 +15,7 @@ docs/review.md:8:1 comark/annotate/box-outside-image screenshot "after.png", ann
 ## Run it
 
 ```sh
-pnpm lint-comark "docs/**/*.md"
+pnpm comark-lint "docs/**/*.md"
 ```
 
 Or add `comark-linter/doctor` to `doctor.config.ts`, and the `comark/recommended` preset turns every rule on. [Vite Doctor](/lint/vite-doctor/) has the setup.

@@ -65,7 +65,7 @@ export async function checkUrls(
   if (fresh.size && !reached) {
     const probe = await once(PROBE, settings.timeout, "HEAD");
     if (!("status" in probe || isTls(probe.code))) {
-      console.warn("lint-comark: the network is unreachable, so comark/dead-url checked no URLs.");
+      console.warn("comark-lint: the network is unreachable, so comark/dead-url checked no URLs.");
       return undefined;
     }
   }

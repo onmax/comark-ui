@@ -59,7 +59,7 @@ meta.issueRules['screenshot "after.png", annotation 2: the box runs past the ima
 It reports each issue under its rule, and Vite Doctor shows the rule's code. Run it in CI and in [Vite Doctor](/lint/vite-doctor/):
 
 ```sh
-pnpm lint-comark "docs/**/*.md"
+pnpm comark-lint "docs/**/*.md"
 ```
 
-comark-annotate has its own CLI. It checks only annotate, carousel, and zoom, without line numbers, and it renders a file to a standalone page you can open and screenshot. Use [`comark-annotate render`](/guide/agents/#check-the-result) to look at the marks, and lint-comark for everything else.
+comark-annotate has its own CLI. It checks only annotate, carousel, and zoom, without line numbers, and it renders a file to a standalone page you can open and screenshot. Use [`comark-annotate render`](/guide/agents/#check-the-result) to look at the marks, and comark-lint for everything else.

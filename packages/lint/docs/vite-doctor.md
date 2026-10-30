@@ -4,7 +4,7 @@ description: Lint a project's Markdown as part of Vite Doctor, with one code per
 install: pnpm add -D comark-linter vite-doctor
 ---
 
-Add every lint-comark rule to a [Vite Doctor](https://github.com/onmax/vite-doctor) run, so one report covers your code and your documents.
+Add every comark-lint rule to a [Vite Doctor](https://github.com/onmax/vite-doctor) run, so one report covers your code and your documents.
 
 ## Setup
 

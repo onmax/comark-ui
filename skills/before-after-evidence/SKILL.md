@@ -51,7 +51,7 @@ Image `src` must be a URL the renderer can reach: a path next to the document, o
 1. Lint it, and fix until it reports no problems:
 
    ```sh
-   vp dlx --package comark-linter --package comark-ui lint-comark evidence.md
+   vp dlx --package comark-linter --package comark-ui comark-lint evidence.md
    ```
 
    These commands use the [global Vite+ CLI](https://viteplus.dev/guide/global-cli). Without it, `pnpm dlx` takes the same arguments.
