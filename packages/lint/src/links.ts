@@ -1,6 +1,9 @@
 import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 import type { Diagnostic } from "./index.ts";
+
+/** A diagnostic before `lint()` gives it its rule's severity. */
+export type Finding = Omit<Diagnostic, "severity">;
 import { checkUrls, isTls, type UrlOptions } from "./urls.ts";
 import { closest, decode, listIds } from "./words.ts";
 
@@ -52,7 +55,7 @@ export type Context = {
 };
 
 /** An external URL waiting for its network check. */
-export type Pending = { url: string; link: Link; found: Diagnostic[] };
+export type Pending = { url: string; link: Link; found: Finding[] };
 
 type Kind = "local" | "private" | "file" | "tunnel" | "preview";
 
@@ -139,7 +142,7 @@ export async function checkLinks(
   links: readonly Link[],
   file: string | undefined,
   context: Context,
-  found: Diagnostic[],
+  found: Finding[],
   pending: Pending[],
 ): Promise<void> {
   const { skip = [], allow, block = [] } = context.links;
@@ -198,7 +201,7 @@ export async function checkLinks(
 
 type Target = { found: string | true } | { missing: string[]; routed: boolean };
 
-async function checkLocal(link: Link, file: string, context: Context, found: Diagnostic[]) {
+async function checkLocal(link: Link, file: string, context: Context, found: Finding[]) {
   const { value, line, column } = link;
   const [, written = "", fragment] = /^([^?#]*)(?:\?[^#]*)?(?:#(.*))?$/.exec(value) ?? [];
   if (!written) return;
