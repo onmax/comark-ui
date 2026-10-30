@@ -69,5 +69,6 @@ export const css = `@layer comark{${[
   // with the times together after the play button. A very narrow one drops the times.
   '@container (width<24rem){.cm-seek{flex-basis:100%;order:-1}.cm-bar>.cm-mute{margin-inline-start:auto}.cm-seek+.cm-time{margin-inline-start:-.75rem}.cm-video .cm-seek+.cm-time{margin-inline-start:-.5rem}.cm-seek+.cm-time::before{content:"\\a0/\\a0"}}',
   "@container (width<16rem){.cm-time{display:none}}",
-  "@media (pointer:coarse){.cm-bar button{width:2.5rem;height:2.5rem}}",
+  // Three touch buttons plus two hour-form times need more room than the desktop controls.
+  "@media (pointer:coarse){.cm-bar button{width:2.5rem;height:2.5rem}@container (width<18rem){.cm-video .cm-time{display:none}}}",
 ].join("")}}`;

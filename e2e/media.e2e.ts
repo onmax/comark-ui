@@ -121,6 +121,49 @@ test("a narrow player gives its seek bar a row of its own, above the buttons", a
   }
 });
 
+test.describe("touch video controls", () => {
+  test.use({ hasTouch: true });
+
+  test("hour-long times keep the buttons on one row at narrow widths", async ({ page }) => {
+    await open(page, "![A gray clip](clip.webm)");
+    const player = page.getByRole("group", { name: "A gray clip" });
+    await expect(player.locator(".cm-time").last()).toHaveText("0:04");
+    expect(await page.evaluate(() => matchMedia("(pointer:coarse)").matches)).toBe(true);
+    // A supported wider font makes the limiting geometry independent of CI's system font.
+    await page.locator("body").evaluate((body) => {
+      body.style.setProperty("--comark-font", "monospace");
+    });
+    // Exercise hour-form geometry without adding an hour-long video fixture.
+    await player.locator(".cm-time").evaluateAll((times) => {
+      times[0].textContent = "1:00:00";
+      times[1].textContent = "1:02:03";
+    });
+
+    for (const width of [240, 288, 289, 319, 320, 321, 375]) {
+      await page.locator("body").evaluate((body, width) => {
+        body.style.width = `${width}px`;
+      }, width);
+      const bar = (await player.locator(".cm-bar").boundingBox())!;
+      const seek = (await player.getByRole("slider", { name: "Seek" }).boundingBox())!;
+      const buttons = await player.getByRole("button").all();
+      const play = (await buttons[0].boundingBox())!;
+      expect(play.width).toBe(40);
+      expect(seek.y + seek.height).toBeLessThanOrEqual(play.y);
+      expect(seek.width).toBeGreaterThan(bar.width * 0.9);
+      for (const button of buttons) {
+        const box = (await button.boundingBox())!;
+        expect(box.y, `button row at ${width}px`).toBe(play.y);
+        expect(box.x).toBeGreaterThanOrEqual(bar.x);
+        expect(box.x + box.width).toBeLessThanOrEqual(bar.x + bar.width);
+      }
+      expect(await player.locator(".cm-time").first().isVisible()).toBe(width >= 320);
+      expect(
+        await player.locator(".cm-bar").evaluate((bar) => bar.scrollWidth <= bar.clientWidth),
+      ).toBe(true);
+    }
+  });
+});
+
 test("a video in a frame that can't go full screen has no full screen button", async ({ page }) => {
   await open(page, "![A gray clip](clip.webm)");
   const html = await page.content();
