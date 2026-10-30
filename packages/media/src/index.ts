@@ -18,8 +18,8 @@ export type MediaOptions = {
    */
   controls?: "styled" | "native";
   /**
-   * Give every video at a URL its `width` and `height`, read from its first bytes while parsing, so the page
-   * keeps its room before the video loads. Default `true`.
+   * Give videos their `width` and `height` while parsing. By default only data URIs are measured. `true` also
+   * fetches remote URLs, including redirects, so enable it only for trusted documents. `false` disables measurement.
    */
   size?: boolean;
 };
@@ -147,7 +147,7 @@ function read(
     } else
       issues.push({
         rule: "comark/media/invalid-size",
-        message: `${name}: \`width\` and \`height\` are the video's size in pixels and go together, like \`{width=1280 height=720}\`, so ${sides.length === 1 ? "it was" : "they were"} dropped and the size is read from the file.`,
+        message: `${name}: \`width\` and \`height\` are the video's size in pixels and go together, like \`{width=1280 height=720}\`, so ${sides.length === 1 ? "it was" : "they were"} dropped. Supply both sides.`,
       });
   }
   if (options.controls === "native") result.native = true;
@@ -199,7 +199,7 @@ export default defineComarkPlugin<MediaOptions | undefined, MediaMeta>((options 
       await Promise.all(
         videos.map(async (video) => {
           // SAFETY: `read` only returns a video with its `src`.
-          const size = await measure(video.src as string);
+          const size = await measure(video.src as string, { remote: options.size === true });
           if (size) Object.assign(video, size);
         }),
       );

@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { createHtmlRenderer } from "@comark/html";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 import zoom, { components } from "../src/html.ts";
@@ -177,11 +178,51 @@ describe("sizeOf", () => {
   it("reads nothing it doesn't know", async () => {
     expect(await sizeOf(new TextEncoder().encode("Not Found"))).toBeUndefined();
   });
+
+  it("rejects unknown, oversized, empty, and truncated WebM integer payloads", async () => {
+    // A child process bounds this regression: the original 14-byte file blocks the event loop.
+    const source = new URL("../src/size.ts", import.meta.url).href;
+    const output = execFileSync(
+      process.execPath,
+      [
+        "--experimental-strip-types",
+        "--input-type=module",
+        "-e",
+        `
+        import { sizeOf } from ${JSON.stringify(source)};
+        console.log(await sizeOf(Uint8Array.from(Buffer.from('1a45dfa380b001ffffffffffffff', 'hex'))));
+      `,
+      ],
+      { timeout: 2000, encoding: "utf8" },
+    );
+    expect(output.trim()).toBe("undefined");
+    const header = ebml([0x1a, 0x45, 0xdf, 0xa3], []);
+    const height = ebml([0xba], be(720, 2));
+    for (const width of [ebml([0xb0], Array(9).fill(1)), ebml([0xb0], [])])
+      expect(await sizeOf(bytes(header, width, height))).toBeUndefined();
+    expect(await sizeOf(bytes(header, height, [0xb0, 0x82, 5]))).toBeUndefined();
+  });
 });
 
 describe("measure", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
+  });
+
+  it("makes no remote requests without host opt-in, even for a cached URL", async () => {
+    const fetch = vi.fn(async () => new Response(png));
+    vi.stubGlobal("fetch", fetch);
+    for (const src of [
+      "http://127.0.0.1/private",
+      "http://169.254.169.254/latest",
+      "https://example.com/no-opt-in.png",
+    ])
+      expect(await measure(src)).toBeUndefined();
+    expect(fetch).not.toHaveBeenCalled();
+    const src = "https://example.com/opt-in.png";
+    expect(await measure(src, { remote: true })).toEqual({ width: 2560, height: 1600 });
+    expect(await measure(src)).toBeUndefined();
+    expect(fetch).toHaveBeenCalledTimes(1);
   });
 
   it("asks for the first bytes once per URL, and skips relative paths", async () => {
@@ -190,8 +231,14 @@ describe("measure", () => {
       return new Response(png, { status: 206 });
     });
     vi.stubGlobal("fetch", fetch);
-    expect(await measure("https://example.com/once.png")).toEqual({ width: 2560, height: 1600 });
-    expect(await measure("https://example.com/once.png")).toEqual({ width: 2560, height: 1600 });
+    expect(await measure("https://example.com/once.png", { remote: true })).toEqual({
+      width: 2560,
+      height: 1600,
+    });
+    expect(await measure("https://example.com/once.png", { remote: true })).toEqual({
+      width: 2560,
+      height: 1600,
+    });
     expect(await measure("./shot.png")).toBeUndefined();
     expect(fetch).toHaveBeenCalledTimes(1);
   });
@@ -215,9 +262,28 @@ describe("measure", () => {
         return new Response(png);
       }),
     );
-    expect(await measure("https://example.com/retry.png")).toBeUndefined();
+    expect(await measure("https://example.com/retry.png", { remote: true })).toBeUndefined();
     fail = false;
-    expect(await measure("https://example.com/retry.png")).toEqual({ width: 2560, height: 1600 });
+    expect(await measure("https://example.com/retry.png", { remote: true })).toEqual({
+      width: 2560,
+      height: 1600,
+    });
+  });
+
+  it.each(["http", "format", "timeout"])("retries after a %s failure", async (failure) => {
+    const fetch = vi
+      .fn()
+      .mockImplementationOnce(async () => {
+        if (failure === "http") return new Response("unavailable", { status: 503 });
+        if (failure === "format") return new Response("not media");
+        throw new DOMException("Timed out", "TimeoutError");
+      })
+      .mockImplementation(async () => new Response(png));
+    vi.stubGlobal("fetch", fetch);
+    const src = `https://example.com/retry-${failure}.png`;
+    expect(await measure(src, { remote: true })).toBeUndefined();
+    expect(await measure(src, { remote: true })).toEqual({ width: 2560, height: 1600 });
+    expect(fetch).toHaveBeenCalledTimes(2);
   });
 });
 
@@ -228,20 +294,32 @@ describe("comark-zoom sizes", () => {
   const render = (markdown: string, options?: Parameters<typeof zoom>[0]) =>
     createHtmlRenderer({ plugins: [zoom(options)], components })(markdown);
 
+  it("measures data URIs by default and requires host opt-in for remote images", async () => {
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+    expect(await render("![Internal](http://127.0.0.1/private.png){size=true}")).not.toMatch(
+      /<img[^>]* width=/,
+    );
+    const inline = `![Shot](data:image/png;base64,${btoa(String.fromCharCode(...png))})`;
+    expect(await render(inline)).toMatch(/<img[^>]* width="2560" height="1600"/);
+    expect(await render(inline, { size: false })).not.toMatch(/<img[^>]* width=/);
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
   it("gives a remote image its width and height, and keeps the sides an author set", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async () => new Response(png)),
     );
-    expect(await render("![Shot](https://example.com/a.png)")).toMatch(
+    expect(await render("![Shot](https://example.com/a.png)", { size: true })).toMatch(
       /<img src="https:\/\/example.com\/a.png" alt="Shot"[^>]* width="2560" height="1600">/,
     );
-    expect(await render("![Shot](https://example.com/b.png){width=640}")).toMatch(
+    expect(await render("![Shot](https://example.com/b.png){width=640}", { size: true })).toMatch(
       /width="640"[^>]* height="400"/,
     );
-    expect(await render("![Shot](https://example.com/c.png){width=50%}")).not.toMatch(
-      /<img[^>]* height=/,
-    );
+    expect(
+      await render("![Shot](https://example.com/c.png){width=50%}", { size: true }),
+    ).not.toMatch(/<img[^>]* height=/);
     expect(await render("![Shot](https://example.com/d.png)", { size: false })).not.toMatch(
       /<img[^>]* width=/,
     );

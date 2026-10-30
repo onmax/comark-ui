@@ -6,9 +6,9 @@ export interface ZoomOptions {
   /** Make every content image zoomable. Images inside links keep their link. Default `true`. */
   images?: boolean;
   /**
-   * Give every image at a URL or in a data URI its `width` and `height`, read from its first bytes while
-   * parsing, so the page keeps its room before it loads. An image with one of them keeps it and gets the other at its
-   * ratio. Default `true`.
+   * Give images their `width` and `height` while parsing. By default only data URIs are measured. `true` also
+   * fetches remote URLs, including redirects, so enable it only for trusted documents. `false` disables measurement.
+   * An image with one side keeps it and gets the other at its ratio.
    */
   size?: boolean;
 }
@@ -66,12 +66,12 @@ function images(nodes: Node[], found: ElementNode[] = []) {
 
 // Sets the sides an image lacks. A browser keeps that room until the picture loads, then takes the picture's own ratio.
 // A side in other units, like `50%`, is the author's layout, so the image is left alone.
-async function size([, attrs]: ElementNode) {
+async function size([, attrs]: ElementNode, remote: boolean) {
   if (attrs.width !== undefined && attrs.height !== undefined) return;
   const width = pixels(attrs.width);
   const height = pixels(attrs.height);
   if ((attrs.width !== undefined && !width) || (attrs.height !== undefined && !height)) return;
-  const measured = await measure(String(attrs.src));
+  const measured = await measure(String(attrs.src), { remote });
   if (!measured) return;
   const ratio = measured.height / measured.width;
   attrs.width = String(width ?? (height ? Math.round(height / ratio) : measured.width));
@@ -87,6 +87,7 @@ export default /* @__PURE__ */ defineComarkPlugin<ZoomOptions>((options) => ({
   async post(state) {
     const { nodes } = state.tree;
     if (mark(nodes, options?.images ?? true)) nodes.push([RUNTIME_TAG, {}]);
-    if (options?.size !== false) await Promise.all(images(nodes).map(size));
+    if (options?.size !== false)
+      await Promise.all(images(nodes).map((node) => size(node, options?.size === true)));
   },
 }));

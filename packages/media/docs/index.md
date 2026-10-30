@@ -111,13 +111,13 @@ The player loads only the file's first frame and length until the reader presses
 
 ### Room before it loads
 
-A video at a URL gets its `width` and `height` while parsing, read from the file's first bytes, so the page keeps the video's room and doesn't jump when it loads. A local file can't be read while parsing, so give it its size in pixels:
+Give a video its `width` and `height` in pixels so the page keeps its room before it loads:
 
 ```md
 ![Signing in with a passkey](./login.mp4){width=1280 height=720}
 ```
 
-Without a size, a video takes a 16:9 box until its own size is known. Pass `media({ size: false })` to read no files.
+`media({ size: true })` also reads remote videos' dimensions from their first bytes while parsing. Enable it only for trusted documents: requests follow redirects and can reach private networks. Local files are not read, and default measurement reads only data URIs. Without a size, a video takes a 16:9 box until its own size is known. Pass `media({ size: false })` to disable measurement.
 
 ### The browser's controls
 
@@ -162,7 +162,7 @@ In a right-to-left page, `ArrowLeft` and `ArrowRight` swap.
 | `loop` | `false` | Starts again at the end. |
 | `muted` | `false` | Starts without sound. |
 | `poster` | — | An image to show before a video plays. Video only. |
-| `width`, `height` | Read from the file | The video's size in pixels, together. The page keeps that room until the video loads. Video only. |
+| `width`, `height` | — | The video's size in pixels, together. The page keeps that room until the video loads. Video only. |
 
 Write `{loop=false}` to turn a prop off. Other props, such as a class, are dropped.
 
@@ -180,7 +180,7 @@ The options go under `media` in `comarkUi()`, or to `media()` when you use the p
 | Option | Default | Description |
 | --- | --- | --- |
 | `controls` | `"styled"` | `"styled"` draws the controls with the [shared tokens](/guide/theming/), which a small script runs. `"native"` always uses the browser's controls and leaves the script out. |
-| `size` | `true` | Reads each video's size from the first bytes of its file at a URL, with a range request, while parsing. `false` reads no files. |
+| `size` | Data URIs only | Reads video dimensions while parsing. `true` also fetches remote URLs with range requests; enable it only for trusted documents. `false` disables measurement. |
 
 ### Issues
 

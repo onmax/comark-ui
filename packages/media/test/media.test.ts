@@ -126,7 +126,7 @@ describe("comark-media", () => {
       "`![Song](a.mp3)`: `width` isn't an audio option, so it was dropped. Use autoplay, loop, or muted.",
     ]);
     expect(await issues("![Demo](demo.mp4){width=600}")).toEqual([
-      "`![Demo](demo.mp4)`: `width` and `height` are the video's size in pixels and go together, like `{width=1280 height=720}`, so it was dropped and the size is read from the file.",
+      "`![Demo](demo.mp4)`: `width` and `height` are the video's size in pixels and go together, like `{width=1280 height=720}`, so it was dropped. Supply both sides.",
     ]);
   });
 
@@ -168,7 +168,7 @@ describe("comark-media", () => {
     it("reads a remote video's size from its first bytes, and leaves audio and local files alone", async () => {
       const fetch = vi.fn(async () => new Response(mp4, { status: 206 }));
       vi.stubGlobal("fetch", fetch);
-      const render = createHtmlRenderer({ plugins: [media()], components });
+      const render = createHtmlRenderer({ plugins: [media({ size: true })], components });
       expect(await render("![Demo](https://cdn.test/sized.mp4)")).toContain(
         'preload="metadata" width="1280" height="720"',
       );
@@ -179,6 +179,19 @@ describe("comark-media", () => {
       const off = createHtmlRenderer({ plugins: [media({ size: false })], components });
       expect(await off("![Demo](https://cdn.test/off.mp4)")).not.toMatch(/<video[^>]* width=/);
       expect(fetch).toHaveBeenCalledTimes(1);
+    });
+
+    it("does not request remote videos by default, even with an authored size flag", async () => {
+      const fetch = vi.fn();
+      vi.stubGlobal("fetch", fetch);
+      const render = createHtmlRenderer({ plugins: [media()], components });
+      expect(await render("![Internal](http://127.0.0.1/private.mp4){size=true}")).not.toMatch(
+        /<video[^>]* width=/,
+      );
+      expect(
+        await render("![Internal](http://127.0.0.1/private.mp4){width=1280 height=720}"),
+      ).toMatch(/<video[^>]* width="1280" height="720"/);
+      expect(fetch).not.toHaveBeenCalled();
     });
   });
 

@@ -12,7 +12,7 @@ The spinner now stops once the build finishes:
 
 - A `src` that ends in `.mp4`, `.webm`, `.mov`, or `.m4v`, before any `?` or `#`, plays as a video, and one in `.mp3`, `.wav`, `.ogg`, or `.m4a` as audio. Every other image stays an image.
 - The alt text is required. It names the player for screen readers, and it's the text of a link to the file where the browser can't play it.
-- `autoplay`, `loop`, and `muted` are off by default. Browsers start a file by itself only when it's muted, so `autoplay` needs `muted`. `poster="frame.png"` shows an image before a video plays; audio takes none. `{loop=false}` turns a prop off. Other props, such as `width` or a class, are dropped and reported.
+- `autoplay`, `loop`, and `muted` are off by default. Browsers start a file by itself only when it's muted, so `autoplay` needs `muted`. `poster="frame.png"` shows an image before a video plays; audio takes none. `{loop=false}` turns a prop off. A video's `width` and `height` must be paired whole pixel dimensions, like `{width=1280 height=720}`, to reserve its room before loading. Audio takes neither. Other props, such as a class, are dropped and reported.
 - A GitHub attachment link, `https://github.com/user-attachments/assets/<id>`, plays as a video when the bare URL sits alone in its paragraph, as on GitHub. With text of its own, or inside a sentence, it stays a link.
 
 ## Record the evidence
@@ -25,5 +25,5 @@ The spinner now stops once the build finishes:
 
 ## Register
 
-- In `comark-ui`: on. `media: { controls: "native" }` keeps the browser's own controls and leaves the script out.
+- In `comark-ui`: on. `media: { controls: "native" }` keeps the browser's own controls and leaves the script out. Measurement reads only data URIs by default. `media: { size: true }` also measures remote videos while parsing; use it only for trusted documents, since requests follow redirects and can reach private networks. `media: { size: false }` disables measurement. Authored dimensions work with any setting. Alone, pass the same options to `media()`.
 - Alone: `pnpm add comark @comark/html comark-media`, then `createHtmlRenderer({ plugins: [media()], components })` with both from `comark-media/html`. `comark-media/vue`, `/react`, and `/svelte` render it too. Its place in `plugins` doesn't matter. It reads the tokens before any plugin sees the tree, so comark-zoom never zooms a video and comark-chips never turns an attachment link into a chip. The HTML renderer inlines the players' script once per document, and the browser's own controls show until it runs and whenever a file can't play.

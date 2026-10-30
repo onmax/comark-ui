@@ -18,7 +18,7 @@ import {
 import { css } from "./styles.ts";
 
 export { default } from "./index.ts";
-export type { AnnotateMeta, Annotation, Mark } from "./index.ts";
+export type { AnnotateMeta, AnnotateOptions, Annotation, Mark } from "./index.ts";
 
 // Each render gets a fresh `state.context`: the first figure in a document carries the styles, and ids are
 // counted per render.
@@ -276,7 +276,12 @@ async function parts(
     ? await children(shot.caption, state)
     : "";
   // The page keeps the image's room before it loads: its capture size, or the size read from the file.
-  const size = body ? undefined : (shot.viewport ?? (await measure(shot.src)));
+  const size = body
+    ? undefined
+    : (shot.viewport ??
+      (state.renderData.meta.annotateSize !== false
+        ? await measure(shot.src, { remote: state.renderData.meta.annotateSize === true })
+        : undefined));
   const sized = size ? ` width="${size.width}" height="${size.height}"` : "";
   return {
     sides: sided.map((annotation) => ` ca-${annotation.side}`),

@@ -11,8 +11,8 @@ import annotate, { components } from "../src/html.ts";
 import { draw } from "../src/marks.ts";
 import { css } from "../src/styles.ts";
 
-async function run(markdown: string) {
-  const document = await parseMarkdown(markdown, { plugins: [annotate()] });
+async function run(markdown: string, options?: Parameters<typeof annotate>[0]) {
+  const document = await parseMarkdown(markdown, { plugins: [annotate(options)] });
   return {
     issues: document.meta.issues,
     html: await renderHtmlFromDocument(document, { components }),
@@ -810,7 +810,7 @@ describe("screenshot sizes", () => {
   it("keeps an image's room before it loads: its viewport, or the size read from the file", async () => {
     const fetch = vi.fn(async () => new Response(png));
     vi.stubGlobal("fetch", fetch);
-    const shot = (attrs: string) => run(`::screenshot{${attrs} alt="Toolbar"}\n::`);
+    const shot = (attrs: string) => run(`::screenshot{${attrs} alt="Toolbar"}\n::`, { size: true });
     expect((await shot('src="a.png" viewport="1440x900"')).html).toContain(
       '<img src="a.png" alt="Toolbar" width="1440" height="900" loading="lazy"',
     );
@@ -821,5 +821,24 @@ describe("screenshot sizes", () => {
       '<img src="b.png" alt="Toolbar" loading="lazy"',
     );
     expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("uses data URIs and viewports by default, with remote reads controlled by host options", async () => {
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+    const remote = '::screenshot{src="http://127.0.0.1/private.png" alt="Private" size=true}\n::';
+    expect((await run(remote)).html).not.toMatch(/<img[^>]* width=/);
+    const inline = `::screenshot{src="data:image/png;base64,${btoa(String.fromCharCode(...png))}" alt="Toolbar"}\n::`;
+    expect((await run(inline)).html).toMatch(/<img[^>]* width="2880" height="1800"/);
+    expect((await run(inline, { size: false })).html).not.toMatch(/<img[^>]* width=/);
+    const viewport =
+      '::screenshot{src="http://127.0.0.1/viewport.png" alt="Toolbar" viewport="1440x900"}\n::';
+    expect((await run(viewport, { size: false })).html).toMatch(
+      /<img[^>]* width="1440" height="900"/,
+    );
+    expect((await run(viewport, { size: true })).html).toMatch(
+      /<img[^>]* width="1440" height="900"/,
+    );
+    expect(fetch).not.toHaveBeenCalled();
   });
 });

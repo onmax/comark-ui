@@ -212,7 +212,7 @@ To page through screenshots spread across a page, or show a flow one step at a t
 
 ### Options
 
-The plugin takes no options. In `comarkUi()`, `annotate: false` turns it off.
+Screenshots reserve their authored `viewport`, or their dimensions read from a data URI. `annotate({ size: true })` also measures remote screenshots at render time; enable it only for trusted documents, since requests follow redirects and can reach private networks. `annotate({ size: false })` disables measurement and still uses authored viewports. In `comarkUi()`, pass these options under `annotate`; `annotate: false` turns the plugin off.
 
 ### CLI
 

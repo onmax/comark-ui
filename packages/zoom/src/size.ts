@@ -219,8 +219,10 @@ function webm(bytes: Uint8Array) {
     const start = at + id.width + size.width;
     const side = SIDES.get(id.value);
     if (side && found[side] === undefined) {
+      if (size.unknown || size.value < 1 || size.value > 8 || size.value > bytes.length - start)
+        return undefined;
       let value = 0;
-      for (let i = 0; i < size.value; i++) value = value * 256 + (bytes[start + i] ?? 0);
+      for (let i = 0; i < size.value; i++) value = value * 256 + bytes[start + i]!;
       found[side] = value;
     }
     // A parent's children follow its header; anything else is skipped whole.
@@ -294,20 +296,24 @@ function decode(src: string) {
 const measured = new Map<string, Promise<Size | undefined>>();
 
 /**
- * The size of the picture or video at a URL or in a data URI, read from its first bytes with a range request.
+ * The size of a picture or video in a data URI. `{ remote: true }` also reads HTTP(S) URLs with range requests.
+ * Only enable remote reads for trusted sources: requests can follow redirects and reach private networks.
  * Nothing for a relative path, a format it doesn't know, or a file that doesn't answer within 5 seconds.
  */
-export function measure(src: string): Promise<Size | undefined> {
+export function measure(src: string, options?: { remote?: boolean }): Promise<Size | undefined> {
   if (src.startsWith("data:"))
     return Promise.resolve(src)
       .then((data) => sizeOf(decode(data)))
       .catch(() => undefined);
-  if (!/^https?:\/\//i.test(src)) return Promise.resolve(undefined);
+  if (options?.remote !== true || !/^https?:\/\//i.test(src)) return Promise.resolve(undefined);
   let size = measured.get(src);
   if (!size) {
-    size = download(src, 0).then((bytes) =>
-      bytes ? sizeOf(bytes, (from) => download(src, from)) : undefined,
-    );
+    size = download(src, 0)
+      .then((bytes) => (bytes ? sizeOf(bytes, (from) => download(src, from)) : undefined))
+      .then((result) => {
+        if (!result) measured.delete(src);
+        return result;
+      });
     measured.set(src, size);
     size.catch(() => measured.delete(src));
   }

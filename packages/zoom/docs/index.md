@@ -194,7 +194,7 @@ The options go under `zoom` in `comarkUi()`, or to `zoom()` when you use it alon
 | Option | Default | Description |
 | --- | --- | --- |
 | `images` | `true` | `false` leaves images alone, so only `::zoom` blocks and images with `data-zoom` zoom. |
-| `size` | `true` | Gives every image at a URL or in a data URI its `width` and `height`, read from the file's first bytes with a range request while parsing, so the page keeps its room before the image loads. An image with one of them gets the other at its ratio; one with both, or a side like `50%`, is left alone. `false` reads no files. |
+| `size` | Data URIs only | Gives images their `width` and `height` while parsing. `true` also fetches remote URLs with range requests; enable it only for trusted documents, since requests follow redirects and can reach private networks. An image with one side gets the other at its ratio; one with both, or a side like `50%`, is left alone. `false` disables measurement. |
 
 ### Events
 
