@@ -189,7 +189,7 @@ export const FootnoteDefinition = Node.create({
 export const DefinitionList = Node.create({
   name: "definitionList",
   group: "block",
-  content: "(definitionTerm | definitionDescription)+",
+  content: "(definitionTerm definitionDescription+)+",
   parseHTML: () => [{ tag: "dl" }],
   renderHTML: ({ HTMLAttributes }) => ["dl", HTMLAttributes, 0],
 });
@@ -230,7 +230,8 @@ export const CriticInsertion = Mark.create({
 export const CriticDeletion = Mark.create({
   name: "criticDeletion",
   addAttributes: () => ({ substitution }),
-  parseHTML: () => [{ tag: "del[data-critic]" }],
+  // StarterKit's generic `del` rule must not consume CriticMarkup copied as HTML.
+  parseHTML: () => [{ tag: "del[data-critic]", priority: 60 }],
   renderHTML: ({ HTMLAttributes }) => ["del", { ...HTMLAttributes, "data-critic": "" }, 0],
 });
 
