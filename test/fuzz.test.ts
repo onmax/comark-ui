@@ -1,6 +1,6 @@
 import { renderHtmlFromDocument } from "@comark/html";
 import { parseMarkdown } from "comark";
-import { beforeAll, describe, expect, it, vi } from "vite-plus/test";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vite-plus/test";
 import annotate, { components as annotateComponents } from "../packages/annotate/src/html.ts";
 import carousel, { components as carouselComponents } from "../packages/carousel/src/html.ts";
 import charts, { components as chartComponents } from "../packages/charts/src/html.ts";
@@ -192,28 +192,29 @@ beforeAll(() => {
   vi.stubGlobal("fetch", async () => new Response("Not Found", { status: 404 }));
 });
 
+afterAll(() => vi.unstubAllGlobals());
+
+const seeds = Array.from({ length: process.env.COMARK_FUZZ === "full" ? 2048 : 256 }, (_, i) => i);
+
 describe("public parse/render fuzz", () => {
-  it("handles 2048 deterministic generated combinations without throwing", async () => {
-    for (let seed = 0; seed < 2048; seed++) {
-      const random = rng(seed + 1);
-      const source = sourceFor(seed, random);
-      const order = pluginFactories.map((_, index) => index).sort(() => random() - 0.5);
-      const plugins = order.map((index) => pluginFactories[index]!());
-      try {
-        const document = await parseMarkdown(source, { plugins });
-        const output = await renderHtmlFromDocument(document, { components });
-        const second = await renderHtmlFromDocument(document, { components });
-        expect(typeof output).toBe("string");
-        expect(second, `seed ${seed}`).toBe(output);
-        const bad = output
-          .replace(/<script>.*?<\/script>/gs, "")
-          .match(/.{0,100}\b(?:undefined|NaN)\b.{0,100}/s);
-        if (bad) throw new Error(`bad output seed ${seed}: ${bad[0]}`);
-      } catch (error) {
-        throw new Error(
-          `seed ${seed}\n${source}\n${error instanceof Error ? error.stack : String(error)}`,
-        );
-      }
+  it.each(seeds)("renders seed %i twice without throwing or corrupting output", async (seed) => {
+    const random = rng(seed + 1);
+    const source = sourceFor(seed, random);
+    const order = pluginFactories.map((_, index) => index).sort(() => random() - 0.5);
+    const plugins = order.map((index) => pluginFactories[index]!());
+    try {
+      const document = await parseMarkdown(source, { plugins });
+      const output = await renderHtmlFromDocument(document, { components });
+      const second = await renderHtmlFromDocument(document, { components });
+      expect(second, `seed ${seed}`).toBe(output);
+      const bad = output
+        .replace(/<script>.*?<\/script>/gs, "")
+        .match(/.{0,100}\b(?:undefined|NaN)\b.{0,100}/s);
+      if (bad) throw new Error(`bad output seed ${seed}: ${bad[0]}`);
+    } catch (error) {
+      throw new Error(
+        `seed ${seed}\n${source}\n${error instanceof Error ? error.stack : String(error)}`,
+      );
     }
-  }, 120_000);
+  });
 });

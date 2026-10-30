@@ -53,31 +53,21 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           prerelease: ${{ inputs.prerelease }}
 
-  # GITHUB_TOKEN release PRs may not trigger PR CI. Recovery dispatches must pass the same checks.
+  # Verify the exact tag once, including recovery dispatches.
   verify-release:
-    if: |
+    if: >-
       !github.event.repository.fork
-      && (
-        (
-          github.event_name == 'pull_request'
-          && github.event.pull_request.merged == true
-          && startsWith(github.event.pull_request.head.ref, 'release/v')
-          && github.event.pull_request.head.repo.full_name == github.repository
-        ) || (
-          github.event_name == 'workflow_dispatch'
-          && startsWith(github.ref, 'refs/tags/v')
-        )
-      )
+      && github.event_name == 'workflow_dispatch'
+      && startsWith(github.ref, 'refs/tags/v')
     permissions:
       contents: read
     uses: ./.github/workflows/ci.yml
     with:
-      ref: ${{ github.event.pull_request.merge_commit_sha || github.sha }}
+      ref: ${{ github.sha }}
 
   release:
-    needs: verify-release
     if: |
-      needs.verify-release.result == 'success'
+      !github.event.repository.fork
       && github.event_name == 'pull_request'
       && github.event.pull_request.merged == true
       && startsWith(github.event.pull_request.head.ref, 'release/v')
@@ -118,7 +108,10 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile --ignore-scripts
-      - run: pnpm build
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: packages
+          path: packages
       - id: pack
         uses: danielroe/uppt/pack@6ec27140623aa835e362f866d8ab0018ab057f4d # v0.6.11
         with:
@@ -126,7 +119,7 @@ jobs:
           checkout: "false"
           install: "false"
         env:
-          # Build once above, then keep uppt's tarballs without repeating the prepack builds.
+          # Pack the verified build without running prepack again.
           pnpm_config_ignore_scripts: "true"
 
       - name: Check release tarball count
@@ -138,6 +131,7 @@ jobs:
 
   # publish the prebuilt tarballs straight to npm through OIDC trusted publishing
   publish:
+    timeout-minutes: 15
     needs: pack
     if: |
       github.event_name == 'workflow_dispatch'
@@ -172,7 +166,8 @@ jobs:
           TARBALLS: ${{ runner.temp }}/tarballs
         run: |
           set -euo pipefail
-          for file in $(jq -r '.[]' <<<"$FILES"); do
+          publish_package() {
+            local file=$1
             tarball="$TARBALLS/$file"
             manifest=$(tar -xOzf "$tarball" package/package.json)
             name=$(jq -r .name <<<"$manifest")
@@ -180,7 +175,7 @@ jobs:
             # a rerun after a partial publish skips what already went out
             if [ -n "$(npm view "$name@$version" version 2>/dev/null)" ]; then
               echo "$name@$version is already on npm"
-              continue
+              return
             fi
             # uppt's dist-tags: latest when stable, else the prerelease name, or next for a bare number
             tag=${NPM_TAG:-}
@@ -196,7 +191,9 @@ jobs:
               esac
             fi
             npm publish "$tarball" --provenance --ignore-scripts --access public --tag "$tag"
-          done
+          }
+          export -f publish_package
+          jq -jr '.[] | ., "\u0000"' <<<"$FILES" | xargs -0 -r -n 1 -P 4 bash -c 'set -euo pipefail; publish_package "$1"' _
 
       - name: Verify every release package is on npm
         if: ${{ !cancelled() && steps.publish.outcome != 'skipped' }}
@@ -215,9 +212,9 @@ jobs:
             version=$(jq -r .version <<<"$manifest")
             found=false
             while :; do
-              # the publish step's npm view cached the packument from before the publish
-              if published=$(npm view "$name@$version" version --prefer-online --registry=https://registry.npmjs.org 2>/dev/null); then
-                if [ "$published" = "$version" ]; then
+              # Version URLs avoid the package metadata cached before publishing.
+              if manifest=$(curl --fail --silent --show-error --connect-timeout 5 --max-time 15 "https://registry.npmjs.org/$name/$version"); then
+                if jq -e --arg name "$name" --arg version "$version" '.name == $name and .version == $version' <<<"$manifest" > /dev/null; then
                   found=true
                   break
                 fi

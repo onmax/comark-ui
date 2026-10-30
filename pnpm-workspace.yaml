@@ -68,6 +68,7 @@ catalog:
   wrangler: ^4.152.0
   d3-sankey: ^0.12.3
   "@types/d3-sankey": ^0.12.5
+  tsrs: 0.20.1-ts7.1.0-beta
 
 overrides:
   vite: "catalog:"
