@@ -85,6 +85,14 @@ export const css = `@layer comark{${[
   ".ca-copy[data-state=done] .ca-copy-done{display:block}",
   ".ca-copy-status{position:absolute;top:.5rem;right:2.75rem;max-width:min(18rem,calc(100% - 3.5rem));padding:.25rem .5rem;box-sizing:border-box;border-radius:calc(var(--_comark-radius) - 4px);background:var(--_comark-foreground);color:var(--_comark-background);font-family:var(--_comark-font);font-size:.75rem;line-height:1.25rem;pointer-events:none}",
   ".ca-copy-status:empty{display:none}",
+  ".cz-header .ca-zoom-copy{position:relative;display:flex;align-items:center;margin-left:auto}",
+  "[data-annotate-copy] .cz-header .ca-copy{position:static;width:2.25rem;height:2.25rem;border:0;border-radius:calc(var(--_comark-radius) - 2px);background:none;box-shadow:none;opacity:1;transition:none}",
+  "[data-annotate-copy] .cz-header .ca-copy:hover{background:var(--_comark-accent)}",
+  ".cz-header .ca-zoom-copy+.cz-close{margin-left:0}",
+  ".cz-header .ca-copy-status{top:calc(100% + .5rem);right:0;max-width:min(18rem,calc(100vw - 2rem));width:max-content}",
+  // The check mark says it in the header; the status stays for screen readers.
+  ".cz-header .ca-copy[data-state=done]+.ca-copy-status{width:1px;height:1px;overflow:hidden;clip-path:inset(50%);padding:0}",
+  "@media (pointer:coarse){[data-annotate-copy] .cz-header .ca-copy{width:2.75rem;height:2.75rem}}",
   // The copy behind the browser's menu: invisible, and in the way only for a right-click.
   ".ca-frame .ca-overlay{position:absolute;inset:0;width:100%;height:100%;opacity:0;outline:none;pointer-events:none}",
   ".ca-frame .ca-overlay[data-menu]{pointer-events:auto;opacity:1}",

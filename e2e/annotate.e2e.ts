@@ -213,7 +213,56 @@ test("Copy puts a screenshot on the clipboard with its marks, and a right-click 
     .toEqual(["ca-overlay", true]);
   await expect(page.locator(".cz-dialog")).toBeVisible();
   await page.keyboard.press("ControlOrMeta+c");
-  await expect(page.locator(".cz-item .ca-copy-status")).toHaveText("Copied");
+  await expect(page.locator(".cz-header .ca-copy-status")).toHaveText("Copied");
+});
+
+test("a zoomed screenshot's Copy sits in the header before Close, clear of the image and its marks", async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  const render = createHtmlRenderer({ plugins: [annotate()], components });
+  const body =
+    await render(`::screenshot{src="/fixture/shot.png" alt="Dashboard" viewport="1280x800"}
+:::annotation{x=80 y=2 w=18 h=8 mark="box" color="red"}
+The top right corner.
+:::
+::`);
+  const shot = await readFile(new URL("../docs/public/dashboard.png", import.meta.url));
+  await page.route("**/fixture/shot.png", (route) =>
+    route.fulfill({ contentType: "image/png", body: shot }),
+  );
+  await page.route("**/fixture/", (route) =>
+    route.fulfill({
+      contentType: "text/html",
+      body: `<!doctype html><meta charset="utf-8"><style>main{width:720px;padding:80px}</style><main>${body}</main>`,
+    }),
+  );
+  await page.goto("/fixture/", { waitUntil: "domcontentloaded" });
+  await page.locator(".ca-screenshot .ca-stage").first().click();
+  await expect(page.locator(".cz-dialog")).toBeVisible();
+
+  const copy = page.locator(".cz-header .ca-zoom-copy .ca-copy");
+  await expect(copy).toBeVisible();
+  await expect(page.locator(".cz-item :is(.ca-copy,.ca-copy-status)")).toHaveCount(0);
+  expect(
+    await page
+      .locator(".cz-header")
+      .evaluate((header) => [...header.children].map((child) => child.className).slice(-2)),
+  ).toEqual(["ca-zoom-copy", "cz-close"]);
+  const button = await copy.boundingBox();
+  const frame = await page.locator(".cz-item .ca-frame").boundingBox();
+  expect(button!.y + button!.height).toBeLessThanOrEqual(frame!.y);
+
+  await copy.click();
+  await expect(copy).toHaveAttribute("data-state", "done");
+  await expect(page.locator(".cz-header .ca-copy-status")).toHaveText("Copied");
+  const size = await page.evaluate(async () => {
+    const [item] = await navigator.clipboard.read();
+    const bitmap = await createImageBitmap(await item!.getType("image/png"));
+    return bitmap.width;
+  });
+  expect(size).toBeGreaterThan(0);
 });
 
 test("Copy keeps a circle's whole loop, where it reaches past its area", async ({
