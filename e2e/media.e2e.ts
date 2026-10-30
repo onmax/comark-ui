@@ -92,11 +92,13 @@ test("the volume opens over the mute button for the pointer and the keyboard, an
   const player = page.getByRole("group", { name: "A gray clip" });
   const mute = player.locator(".cm-mute");
   const volume = player.getByRole("slider", { name: "Volume" });
+  const panel = player.locator(".cm-level");
   await expect(player.locator(".cm-time").last()).toHaveText("0:04");
-  await expect(volume).toBeHidden();
+  await expect(panel).toHaveCSS("opacity", "0");
+  await expect(panel).toHaveCSS("pointer-events", "none");
 
   await mute.hover();
-  await expect(volume).toBeVisible();
+  await expect(panel).toHaveCSS("opacity", "1");
   // The pointer crosses the gap up to the panel without closing it.
   const box = (await volume.boundingBox())!;
   await page.mouse.move(box.x + box.width / 2, box.y + box.height + 14, { steps: 4 });
@@ -106,7 +108,8 @@ test("the volume opens over the mute button for the pointer and the keyboard, an
   await expect(player).toHaveAttribute("data-muted");
   await expect(mute).toHaveAttribute("aria-label", "Unmute");
   await page.mouse.move(0, 0);
-  await expect(volume).toBeHidden();
+  await expect(panel).toHaveCSS("opacity", "0");
+  await expect(panel).toHaveCSS("pointer-events", "none");
 
   // All the way down, Unmute plays at full volume.
   await mute.click();
@@ -116,7 +119,7 @@ test("the volume opens over the mute button for the pointer and the keyboard, an
 
   await player.getByRole("slider", { name: "Seek" }).focus();
   await page.keyboard.press("Tab");
-  await expect(volume).toBeVisible();
+  await expect(panel).toHaveCSS("opacity", "1");
   await page.keyboard.press("Tab");
   await expect(volume).toBeFocused();
   await page.keyboard.press("ArrowDown");
@@ -127,7 +130,51 @@ test("the volume opens over the mute button for the pointer and the keyboard, an
   await page.keyboard.press("Home");
   await expect(mute).toHaveAttribute("aria-label", "Unmute");
   await page.keyboard.press("Tab");
-  await expect(volume).toBeHidden();
+  await expect(panel).toHaveCSS("opacity", "0");
+});
+
+test("the volume follows DOM order when tabbing backward through video and audio controls", async ({
+  page,
+}) => {
+  for (const source of ["clip.webm", "silence.wav"]) {
+    await open(page, `![Player](${source})\n\n[After the player](#after)`);
+    const player = page.getByRole("group", { name: "Player" });
+    await expect(player.locator(".cm-time").last()).toHaveText("0:04");
+    const next =
+      source === "clip.webm"
+        ? player.getByRole("button", { name: "Full screen" })
+        : page.getByRole("link", { name: "After the player" });
+    await next.focus();
+    await page.keyboard.press("Shift+Tab");
+    const volume = player.getByRole("slider", { name: "Volume" });
+    await expect(volume).toBeFocused();
+    await expect(player.locator(".cm-level")).toHaveCSS("opacity", "1");
+    await page.keyboard.press("ArrowDown");
+    await expect(volume).toHaveAttribute("aria-valuetext", "95%");
+    await page.keyboard.press("Shift+Tab");
+    await expect(player.locator(".cm-mute")).toBeFocused();
+    await page.keyboard.press("Shift+Tab");
+    await expect(player.getByRole("slider", { name: "Seek" })).toBeFocused();
+    await expect(player.locator(".cm-level")).toHaveCSS("opacity", "0");
+  }
+});
+
+test("the full volume range is reachable above a short video", async ({ page }) => {
+  await open(page, "![A gray clip](clip.webm)", { width: "240px" });
+  const player = page.getByRole("group", { name: "A gray clip" });
+  await expect(player.locator(".cm-time").last()).toHaveText("0:04");
+  const mute = player.locator(".cm-mute");
+  await mute.click();
+  await expect(player).toHaveAttribute("data-muted");
+  const panel = player.locator(".cm-level");
+  await expect(panel).toHaveCSS("opacity", "1");
+  const volume = player.getByRole("slider", { name: "Volume" });
+  const box = (await volume.boundingBox())!;
+  const frame = (await player.boundingBox())!;
+  expect(box.y).toBeLessThan(frame.y);
+  await volume.click({ position: { x: box.width / 2, y: 1 }, timeout: 3000 });
+  await expect(player).not.toHaveAttribute("data-muted");
+  expect(await player.locator("video").evaluate((video: HTMLVideoElement) => video.volume)).toBe(1);
 });
 
 test("a video plays with its own controls, from its bar or a click, and goes full screen", async ({

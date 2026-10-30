@@ -7,7 +7,7 @@ const thumb =
   "box-sizing:border-box;width:1rem;height:1rem;border:1px solid var(--_cm-primary);border-radius:50%;background:var(--_comark-background);box-shadow:0 1px 2px rgb(0 0 0/.1)";
 // The volume panel opens fast and closes faster, since the reader has already moved on.
 const level =
-  "opacity:1;scale:1;visibility:visible;transition:opacity .15s cubic-bezier(.32,.72,0,1),scale .15s cubic-bezier(.32,.72,0,1),visibility 0s";
+  "opacity:1;scale:1;pointer-events:auto;transition:opacity .15s cubic-bezier(.32,.72,0,1),scale .15s cubic-bezier(.32,.72,0,1)";
 const ring = "box-shadow:0 0 0 3px color-mix(in srgb,var(--_comark-ring) 50%,transparent)";
 
 /**
@@ -25,8 +25,9 @@ export const css = `@layer comark{${[
   // ratio once known.
   "video.cm,.cm-video>video{aspect-ratio:auto 16/9}",
   "video.cm{height:auto}",
-  ".cm-video{position:relative;width:fit-content;overflow:hidden}",
-  ".cm-video>video{display:block;max-width:100%;height:auto}",
+  // Round the video itself so the volume panel can extend above a short frame.
+  ".cm-video{position:relative;width:fit-content}",
+  ".cm-video>video{display:block;max-width:100%;height:auto;border-radius:inherit}",
   ".cm-video[data-media-ready]:not([data-error])>video{cursor:pointer}",
   ".cm-video:fullscreen{display:grid;place-items:center;width:100%;max-width:none;margin:0;border:0;border-radius:0;background:#000}",
   ".cm-video:fullscreen>video{width:100%;height:100%;max-width:none;object-fit:contain}",
@@ -59,7 +60,8 @@ export const css = `@layer comark{${[
   // The volume sits in a panel over the mute button, opened by the pointer or the keyboard, so the seek bar keeps its
   // width. A touch screen sets the volume with its own buttons, and an iPhone ignores the page's.
   ".cm-sound{position:relative;display:flex;flex:none}",
-  ".cm-level{position:absolute;bottom:calc(100% + .5rem);left:50%;translate:-50% 0;display:flex;padding:.75rem .5rem;border:1px solid var(--_comark-border);border-radius:var(--_comark-radius);background:var(--_comark-background);box-shadow:0 4px 12px rgb(0 0 0/.12);transform-origin:bottom;opacity:0;scale:.96;visibility:hidden;transition:opacity .1s ease-in,scale .1s ease-in,visibility 0s .1s}",
+  // Opacity keeps the slider in both tab directions; disable pointer hits while the panel is closed.
+  ".cm-level{position:absolute;bottom:calc(100% + .5rem);left:50%;translate:-50% 0;display:flex;padding:.75rem .5rem;border:1px solid var(--_comark-border);border-radius:var(--_comark-radius);background:var(--_comark-background);box-shadow:0 4px 12px rgb(0 0 0/.12);transform-origin:bottom;opacity:0;scale:.96;pointer-events:none;transition:opacity .1s ease-in,scale .1s ease-in}",
   // Covers the gap down to the button, so the pointer can cross it without closing the panel.
   '.cm-level::before{content:"";position:absolute;inset:100% 0 -.5rem}',
   `.cm-sound:is(:hover,:has(:focus-visible,:active))>.cm-level{${level}}`,
