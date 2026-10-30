@@ -7,11 +7,12 @@ import {
   checkPending,
   type Context,
   type Files,
+  type Finding,
   type Link,
   type LinkOptions,
   type Pending,
 } from "./links.ts";
-import { catalog } from "./rules/index.ts";
+import { catalog, type RuleInfo } from "./rules/index.ts";
 import { find, findAny, read, type Source } from "./source.ts";
 import { closest, decode, listIds } from "./words.ts";
 
@@ -30,6 +31,8 @@ export const rules = Object.fromEntries(
 
 export type Diagnostic = {
   rule: Rule;
+  /** The rule's severity, as its Doctor page gives it: `error` when the document doesn't render as written. */
+  severity: "error" | "warn";
   /** 1-based, counting the frontmatter. */
   line: number;
   /** 1-based, when the spot is known. Components inside a paragraph are found by searching its lines. */
@@ -115,10 +118,15 @@ export async function lintFiles(
 
 type Parsed = { document: MarkdownDocument; tokens: Token[]; offset: number };
 
-type Document = { file?: string; source: Source; found: Diagnostic[]; parsed?: Parsed };
+type Document = { file?: string; source: Source; found: Finding[]; parsed?: Parsed };
 
-const sorted = (found: Diagnostic[]) =>
-  found.sort((a, b) => a.line - b.line || (a.column ?? 0) - (b.column ?? 0));
+const finished = (found: Finding[]): Diagnostic[] =>
+  found
+    .sort((a, b) => a.line - b.line || (a.column ?? 0) - (b.column ?? 0))
+    .map((finding) => ({ ...finding, severity: severityOf(finding.rule) }));
+
+const info: Record<Rule, RuleInfo> = catalog;
+const severityOf = (rule: Rule) => info[rule].severity ?? "warn";
 
 async function lintAll(
   inputs: readonly { path?: string; text?: string }[],
@@ -164,7 +172,11 @@ async function lintAll(
     }
   return inputs.map(({ path }, index) => {
     const document = documents[index];
-    return { path, text: document?.markdown, diagnostics: document ? sorted(document.found) : [] };
+    return {
+      path,
+      text: document?.markdown,
+      diagnostics: document ? finished(document.found) : [],
+    };
   });
 }
 
@@ -222,13 +234,13 @@ function createContext(options: LintOptions): Context & {
 
 async function prepare(markdown: string, options: LintOptions): Promise<Document> {
   const source = read(markdown);
-  const found: Diagnostic[] = [];
+  const found: Finding[] = [];
   const parsed = await parse(source, options, found);
   return { source, found, parsed };
 }
 
 function checkDocument({ source, found, parsed }: Document, options: LintOptions): void {
-  const check = (rule: Rule, run: () => Diagnostic[]) => {
+  const check = (rule: Rule, run: () => Finding[]) => {
     try {
       found.push(...run());
     } catch (error) {
@@ -258,7 +270,7 @@ function checkDocument({ source, found, parsed }: Document, options: LintOptions
 async function parse(
   source: Source,
   { plugins = [], headingIds }: LintOptions,
-  found: Diagnostic[],
+  found: Finding[],
 ): Promise<Parsed | undefined> {
   let tokens: Token[] = [];
   const probe: ComarkPlugin = {
@@ -308,7 +320,7 @@ async function parse(
   }
 }
 
-const couldNotParse = (error: unknown): Diagnostic => ({
+const couldNotParse = (error: unknown): Finding => ({
   rule: "comark/plugin-issue",
   cause: error,
   line: 1,
@@ -316,7 +328,7 @@ const couldNotParse = (error: unknown): Diagnostic => ({
   fix: "Fix what the error names; a plugin that throws stops the whole document from rendering.",
 });
 
-const crashed = (rule: Rule, error: unknown): Diagnostic => ({
+const crashed = (rule: Rule, error: unknown): Finding => ({
   rule,
   cause: error,
   line: 1,
@@ -340,7 +352,7 @@ function rawLines(tokens: Token[], offset: number): Set<number> {
   return lines;
 }
 
-function unclosedBlocks(source: Source, raw: Set<number>): Diagnostic[] {
+function unclosedBlocks(source: Source, raw: Set<number>): Finding[] {
   const open: (Block & { colons: string })[] = [];
   const unclosed: typeof open = [];
   for (const [index, line] of source.prose.entries()) {
@@ -370,8 +382,8 @@ function unclosedBlocks(source: Source, raw: Set<number>): Diagnostic[] {
   }));
 }
 
-function malformedAttributes(source: Source, raw: Set<number>): Diagnostic[] {
-  const found: Diagnostic[] = [];
+function malformedAttributes(source: Source, raw: Set<number>): Finding[] {
+  const found: Finding[] = [];
   // Attributes follow a component name, a `[span]`, or a link or image's `(url)`.
   const opener =
     /(?:^ {0,3}(:{2,}[A-Za-z][\w-]*)|(?<![\w:])(:[A-Za-z][\w-]*)(?:\[[^\]]*\])?|[\])])\{/g;
@@ -458,7 +470,7 @@ function unknownComponents(
   source: Source,
   blocks: Block[],
   components: NonNullable<LintOptions["components"]>,
-): Diagnostic[] {
+): Finding[] {
   const names = [
     ...new Set((Array.isArray(components) ? components : Object.keys(components)).map(kebab)),
   ].sort();
@@ -610,7 +622,7 @@ function locator(source: Source, attribute = false, needles: readonly string[] =
   };
 }
 
-function brokenAnchors(nodes: Node[], source: Source): Diagnostic[] {
+function brokenAnchors(nodes: Node[], source: Source): Finding[] {
   const ids = new Set<string>();
   const links: string[] = [];
   for (const [, attributes] of elements(nodes)) {
@@ -730,9 +742,9 @@ function written(source: Source, value: string): string[] {
   return [...found];
 }
 
-function unsafeUrls(nodes: Node[], source: Source): Diagnostic[] {
+function unsafeUrls(nodes: Node[], source: Source): Finding[] {
   const locate = locator(source, true);
-  const found: Diagnostic[] = [];
+  const found: Finding[] = [];
   for (const [tag, attributes] of elements(nodes)) {
     for (const key of ["href", "src"]) {
       const value = text(attributes[key]);
@@ -752,13 +764,13 @@ function unsafeUrls(nodes: Node[], source: Source): Diagnostic[] {
   return found;
 }
 
-function duplicateIds(nodes: Node[], source: Source, headingIds?: HeadingIdsOption): Diagnostic[] {
+function duplicateIds(nodes: Node[], source: Source, headingIds?: HeadingIdsOption): Finding[] {
   const tagged = [...elements(nodes)].flatMap(([tag, attributes]) => {
     const id = text(attributes.id);
     return id ? [{ tag, id }] : [];
   });
   const seen = new Map<string, number>();
-  const found: Diagnostic[] = [];
+  const found: Finding[] = [];
   const locations = (id: string): { line: number; column: number }[] => {
     const matches: { line: number; column: number }[] = [];
     const explicit = [
@@ -832,9 +844,9 @@ function duplicateIds(nodes: Node[], source: Source, headingIds?: HeadingIdsOpti
   return found;
 }
 
-function missingAlts(nodes: Node[], source: Source): Diagnostic[] {
+function missingAlts(nodes: Node[], source: Source): Finding[] {
   const locate = locator(source);
-  const found: Diagnostic[] = [];
+  const found: Finding[] = [];
   const occurrences = new Map<string, number>();
   for (const [tag, attributes] of elements(nodes)) {
     const src = text(attributes.src);
@@ -855,9 +867,9 @@ function missingAlts(nodes: Node[], source: Source): Diagnostic[] {
   return found;
 }
 
-function emptyLinks(nodes: Node[], source: Source): Diagnostic[] {
+function emptyLinks(nodes: Node[], source: Source): Finding[] {
   const locate = locator(source);
-  const found: Diagnostic[] = [];
+  const found: Finding[] = [];
   const occurrences = new Map<string, number>();
   for (const [tag, attributes, ...children] of elements(nodes)) {
     const href = text(attributes.href);
@@ -881,11 +893,7 @@ function emptyLinks(nodes: Node[], source: Source): Diagnostic[] {
   return found;
 }
 
-function pluginIssues(
-  meta: Record<string, unknown>,
-  source: Source,
-  blocks: Block[],
-): Diagnostic[] {
+function pluginIssues(meta: Record<string, unknown>, source: Source, blocks: Block[]): Finding[] {
   const issues = Array.isArray(meta.issues)
     ? meta.issues.flatMap((issue) => text(issue) || [])
     : [];
