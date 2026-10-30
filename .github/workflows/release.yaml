@@ -216,8 +216,8 @@ jobs:
             found=false
             while :; do
               # the publish step's npm view cached the packument from before the publish
-              if published=$(npm view "$name@$version" version --json --prefer-online --registry=https://registry.npmjs.org 2>/dev/null); then
-                if jq -e --arg version "$version" '. == $version' <<<"$published" > /dev/null; then
+              if published=$(npm view "$name@$version" version --prefer-online --registry=https://registry.npmjs.org 2>/dev/null); then
+                if [ "$published" = "$version" ]; then
                   found=true
                   break
                 fi
