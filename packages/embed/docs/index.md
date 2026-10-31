@@ -1,7 +1,7 @@
 ---
 title: Embed
 description: Videos, audio, and live code from a link, written in Markdown.
-keywords: YouTube, Vimeo, Loom, Spotify, CodePen, StackBlitz, Figma, video, iframe, player, oEmbed, live code
+keywords: YouTube, Vimeo, Loom, Spotify, CodePen, StackBlitz, Figma, tweet, video, iframe, player, oEmbed, live code
 tagline: A player for a video, audio, or live code link, or a card for any other link, read from the link alone.
 group: Review blocks
 icon: tv-minimal-play
@@ -33,7 +33,7 @@ blurb: Videos, audio, and live code
 
 ## Features
 
-- A YouTube, Vimeo, Loom, Spotify, CodePen, StackBlitz, or Figma link becomes its player.
+- A YouTube, Vimeo, Loom, Spotify, CodePen, StackBlitz, Figma, or X link becomes its player.
 - Any other `https://` link becomes a card.
 - The plugin never fetches, so a document renders the same offline, in tests, and at build time.
 - The link stays under every player, so the page still makes sense in a feed reader or where iframes are blocked.
@@ -114,6 +114,20 @@ Use a project that runs in the browser alone, such as the `typescript` starter, 
 
 A project that runs in WebContainers, such as a Node or Vite starter, needs a cross-origin-isolated page and a supported browser. Without them, its preview may fail with "Unable to run Embedded Project". StackBlitz lists the [supported browsers](https://developer.stackblitz.com/platform/webcontainers/browser-support) and the [browser configuration](https://developer.stackblitz.com/platform/webcontainers/browser-config).
 
+### X posts
+
+Use a link to a post on `x.com` or `twitter.com`. The player is X's own, and it grows to the post's height: a small script reads the height X's player reports and sets it on the iframe.
+
+::example
+```md
+::embed{url="https://x.com/_onmax/status/2116191062418997278" title="Opus teaching me my own Nuxt PR"}
+::
+```
+::
+
+> [!NOTE]
+> X's player is always light, like the other players, whatever the page's theme.
+
 ## Accessibility
 
 Each player is an iframe named by its `title`. Without one, a screen reader hears the provider's name for it, such as "YouTube video" or "Spotify track". The link under it reads as the figure's caption. Players load when they scroll near, and the keys inside a player are the provider's.
@@ -141,6 +155,7 @@ The plugin checks the path as well as the host. A link to a provider's host with
 | CodePen | `codepen.io/<user>/pen/<id>`, also `full`, `details`, or `embed` | The pen's result. |
 | StackBlitz | `stackblitz.com/edit/<project>`, `stackblitz.com/github/<owner>/<repo>[/<path>]` | The project or GitHub branch, tag, commit, or directory, keeping options such as `file` and `view`. |
 | Figma | `figma.com/design`, `file`, `proto`, `board`, `slides`, and `deck` links | Figma's embed, keeping `node-id`. |
+| X | `x.com/<user>/status/<id>` and `twitter.com/...`, also `mobile.` links and ones ending in `/photo/1` or `/video/1` | X's post player, with `dnt=true`, as tall as the post and at most 550px wide. |
 
 ### Options
 
@@ -202,14 +217,16 @@ Set them on `.ce`:
 | --- | --- | --- |
 | `--ce-app-height` | `30rem` | The height of CodePen, StackBlitz, and Figma |
 | `--ce-short-width` | `20rem` | The widest a YouTube Short gets, centered |
+| `--ce-post-width` | `550px` | The widest an X post gets, centered |
+| `--ce-post-height` | `30rem` | An X post's height until its player reports its own |
 
-Videos keep 16:9 and Shorts 9:16 at any width. Spotify draws its own card at fixed heights, so its players have no frame.
+Videos keep 16:9 and Shorts 9:16 at any width. Spotify and X draw their own cards, so their players have no frame. An X post's height comes from a script, which the HTML renderer inlines once per document that has a post, and the Vue, React, and Svelte components start when they mount.
 
 ### Classes and attributes
 
 | Selector | Is |
 | --- | --- |
-| `figure.ce` | A player, with `data-provider`, such as `youtube`, and `data-size`: `video`, `short`, `compact`, `list`, or `app` |
+| `figure.ce` | A player, with `data-provider`, such as `youtube`, and `data-size`: `video`, `short`, `compact`, `list`, `app`, or `post` |
 | `.ce-frame` | The frame that holds the iframe |
 | `.ce figcaption` | The link under a player |
 | `a.ce-card` | A card, holding a globe, the title in `strong`, and the host in `span` |

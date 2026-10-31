@@ -1,5 +1,8 @@
-/** How tall a player is: a 16:9 or 9:16 video, Spotify's compact or full player, or a tool at a fixed height. */
-export type Size = "video" | "short" | "compact" | "list" | "app";
+/**
+ * How tall a player is: a 16:9 or 9:16 video, Spotify's compact or full player, a tool at a fixed height, or an X post
+ * as tall as the post.
+ */
+export type Size = "video" | "short" | "compact" | "list" | "app" | "post";
 
 export interface Player {
   /** The provider's key, such as `youtube`, written to `data-provider`. */
@@ -157,6 +160,24 @@ const PROVIDERS = {
       for (const [name, value] of url.searchParams) src.searchParams.set(name, value);
       src.searchParams.set("embed-host", "comark");
       return { provider: "figma", src: src.href, label: "Figma file", size: "app" };
+    },
+  },
+  x: {
+    hosts: ["x.com", "twitter.com", "mobile.x.com", "mobile.twitter.com"],
+    holds: "a post ID",
+    read(url) {
+      const id = match(
+        /^\/(?:\w+|i\/web)\/status(?:es)?\/(\d+)(?:\/(?:photo|video)\/\d+)?\/?$/,
+        url.pathname,
+      )?.[1];
+      if (!id) return { hint: "Use an x.com/<user>/status/<id> link." };
+      // X's own player, the one its widgets.js loads. Its height follows the post, which `start()` reads from it.
+      return {
+        provider: "x",
+        src: `https://platform.twitter.com/embed/Tweet.html?id=${id}&dnt=true`,
+        label: "X post",
+        size: "post",
+      };
     },
   },
 } satisfies Record<string, Provider>;

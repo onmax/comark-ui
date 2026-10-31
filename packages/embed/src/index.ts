@@ -125,7 +125,7 @@ function embed(node: ElementNode, number: number, data: Data, issues: Issue[]): 
 }
 
 /**
- * Turns `::embed{url="..."}` into a player for YouTube, Vimeo, Loom, Spotify, CodePen, StackBlitz, and Figma links,
+ * Turns `::embed{url="..."}` into a player for YouTube, Vimeo, Loom, Spotify, CodePen, StackBlitz, Figma, and X links,
  * read from the link alone, or a link card for any other https link. Problems are added to `meta.issues`.
  */
 export default defineComarkPlugin<void, EmbedMeta>(() => ({

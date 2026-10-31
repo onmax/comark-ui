@@ -47,13 +47,19 @@ describe("comark-embed", () => {
     expect(short).toContain('data-provider="youtube" data-size="short"');
   });
 
-  it("sizes apps and Shorts from --ce-app-height and --ce-short-width", async () => {
+  it("sizes apps, Shorts, and X posts from their variables", async () => {
     const html = await render(block("https://www.youtube.com/shorts/dQw4w9WgXcQ"));
-    expect(html).toContain(":where(.ce){--ce-app-height:30rem;--ce-short-width:20rem}");
+    expect(html).toContain(
+      ":where(.ce){--ce-app-height:30rem;--ce-short-width:20rem;--ce-post-width:550px;--ce-post-height:30rem}",
+    );
     expect(html).toContain(
       ".ce[data-size='short'] .ce-frame{aspect-ratio:9/16;max-width:var(--ce-short-width);",
     );
     expect(html).toContain(".ce[data-size='app'] .ce-frame{height:var(--ce-app-height)}");
+    expect(html).toContain(
+      ".ce[data-size='post'] .ce-frame{max-width:var(--ce-post-width);margin-inline:auto;",
+    );
+    expect(html).toContain(".ce[data-size='post'] iframe{height:var(--ce-post-height)}");
   });
 
   it("reads Vimeo links, unlisted ones too, without tracking", async () => {
@@ -126,6 +132,34 @@ describe("comark-embed", () => {
     );
   });
 
+  it("reads X and Twitter post links into X's player, sized by a script inlined once", async () => {
+    const src = "https://platform.twitter.com/embed/Tweet.html?id=2116191062418997278&amp;dnt=true";
+    for (const url of [
+      "https://x.com/_onmax/status/2116191062418997278",
+      "https://twitter.com/_onmax/status/2116191062418997278/",
+      "https://www.twitter.com/_onmax/status/2116191062418997278?s=20&t=abc",
+      "https://mobile.x.com/_onmax/status/2116191062418997278",
+      "https://mobile.twitter.com/_onmax/statuses/2116191062418997278",
+      "https://x.com/_onmax/status/2116191062418997278/video/1",
+      "https://x.com/_onmax/status/2116191062418997278/photo/2",
+      "https://x.com/i/web/status/2116191062418997278",
+    ]) {
+      expect(await iframe(url), url).toBe(src);
+      expect(await issues(block(url)), url).toEqual([]);
+    }
+    const post = block("https://x.com/_onmax/status/2116191062418997278");
+    const html = await render(`${post}\n\n${post}`);
+    expect(html).toContain('<figure class="ce" data-provider="x" data-size="post">');
+    expect(html).toContain('title="X post"');
+    expect(html).toContain(
+      '<figcaption><a href="https://x.com/_onmax/status/2116191062418997278">x.com<svg',
+    );
+    expect(html.match(/<script>/g)).toHaveLength(1);
+    expect(html).toContain("twttr.private.resize");
+    // Other players need no script.
+    expect(await render(block("https://youtu.be/dQw4w9WgXcQ"))).not.toContain("<script>");
+  });
+
   it("accepts the documented provider shapes and rejects malformed StackBlitz paths", async () => {
     const players = [
       ["youtube", "https://www.youtube.com/watch?v=dQw4w9WgXcQ"],
@@ -135,6 +169,7 @@ describe("comark-embed", () => {
       ["codepen", "https://codepen.io/chriscoyier/details/gfdDu"],
       ["stackblitz", "https://stackblitz.com/edit/vitejs-vite/"],
       ["figma", "https://www.figma.com/file/BAZsTPbh6W1r66Bdo/Example"],
+      ["x", "https://twitter.com/_onmax/status/2116191062418997278"],
     ] as const;
     for (const [provider, url] of players) {
       expect(await issues(block(url)), url).toEqual([]);
@@ -251,6 +286,15 @@ describe("comark-embed", () => {
     expect(await issues(block("https://www.figma.com/files/recents"))).toEqual([
       "`::embed` 1: can't read a file from https://www.figma.com/files/recents. Use a figma.com/design, proto, board, slides, or deck link.",
     ]);
+    for (const url of [
+      "https://x.com/_onmax",
+      "https://x.com/_onmax/status/latest",
+      "https://twitter.com/_onmax/status/2116191062418997278/likes",
+    ])
+      expect(await issues(block(url)), url).toEqual([
+        `\`::embed\` 1: can't read a post ID from ${url}. Use an x.com/<user>/status/<id> link.`,
+      ]);
+    expect(await render(block("https://x.com/_onmax"))).toContain('<a class="ce-card"');
     expect(
       await issues(
         `${block("https://youtu.be/dQw4w9WgXcQ")}\n\n${block("https://youtu.be/dQw4w9WgXcQ")}\n\n${block("https://example.com/a")}`,

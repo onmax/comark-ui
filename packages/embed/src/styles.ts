@@ -2,12 +2,12 @@ import { theme } from "comark-zoom/theme";
 
 /**
  * Players in a bordered frame the page's width, with the link under them, and link cards in the style of shadcn/ui's
- * Item, on the shared `--comark-*` tokens. Override `--ce-app-height` for CodePen, StackBlitz, and Figma, and
- * `--ce-short-width` for a YouTube Short. The rules sit in the `comark` layer, so any unlayered rule of the host's wins.
+ * Item, on the shared `--comark-*` tokens. Override `--ce-app-height` for CodePen, StackBlitz, and Figma,
+ * `--ce-short-width` for a YouTube Short, and `--ce-post-width` and `--ce-post-height` for an X post. The rules sit in the `comark` layer, so any unlayered rule of the host's wins.
  */
 export const css = `@layer comark{${[
   theme(".ce,.ce-card"),
-  ":where(.ce){--ce-app-height:30rem;--ce-short-width:20rem}",
+  ":where(.ce){--ce-app-height:30rem;--ce-short-width:20rem;--ce-post-width:550px;--ce-post-height:30rem}",
   ".ce{margin:1.5rem 0;font-family:var(--_comark-font)}",
   ".ce-frame{overflow:hidden;border:1px solid var(--_comark-border);border-radius:var(--_comark-radius);background:color-mix(in srgb,var(--_comark-foreground) 4%,transparent)}",
   // A dark page paints an iframe white until its document, which declares no color scheme, matches the iframe's.
@@ -18,8 +18,11 @@ export const css = `@layer comark{${[
   ".ce[data-size='compact'] .ce-frame{height:152px;border:0;background:none}",
   ".ce[data-size='list'] .ce-frame{height:352px;border:0;background:none}",
   ".ce[data-size='app'] .ce-frame{height:var(--ce-app-height)}",
+  // X draws its own card, 550px at most, and reports its height to the script, which sets it on the iframe.
+  ".ce[data-size='post'] .ce-frame{max-width:var(--ce-post-width);margin-inline:auto;border:0;background:none}",
+  ".ce[data-size='post'] iframe{height:var(--ce-post-height)}",
   ".ce figcaption{margin-top:.75rem;color:var(--_comark-muted);font-size:.875rem;line-height:1.25rem;overflow-wrap:anywhere}",
-  ".ce[data-size='short'] figcaption{text-align:center}",
+  ".ce:is([data-size='short'],[data-size='post']) figcaption{text-align:center}",
   ".ce figcaption a{border-radius:calc(var(--_comark-radius) - 4px);color:inherit;text-decoration:none;text-underline-offset:4px;transition:color .15s}",
   ".ce figcaption a:hover{color:var(--_comark-foreground);text-decoration:underline}",
   // Inline, so the icon follows the last word of a title that wraps.
