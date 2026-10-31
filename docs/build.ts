@@ -1100,7 +1100,9 @@ const column = (section: Section, current: string) => {
           title: list.title,
           icon: list.icon,
           fold: list.fold,
-          open: list.pages.some((page) => page.slug === current),
+          open:
+            list.pages.some((page) => page.slug === current) ||
+            list.anchors?.some((anchor) => anchor.href.split("#")[0] === href(current)),
           links: [
             ...list.pages.map(
               (page) =>
@@ -1137,9 +1139,26 @@ const column = (section: Section, current: string) => {
     })
     .join("")}</nav>`;
 };
-// Brings the current page's link into the column's view before the first paint, for a page low in a long column. The
-// app runs it again after a navigation, unless a saved history position has already been restored.
-const revealCurrent = `<script>{const c=document.currentScript.previousElementSibling.querySelector(".pages"),a=c&&c.querySelector("[aria-current=page]");if(a&&!c.hasAttribute("data-sidebar-restored")){const b=c.getBoundingClientRect(),l=a.getBoundingClientRect();if(l.top<b.top||l.bottom>b.bottom)c.scrollTop+=l.top-b.top-(b.height-l.height)/2}}</script>`;
+// A shared page's hash identifies its current rule. Register once, but query the new links after each body replacement.
+// Bring that link into view before the first paint, unless the docs app already restored the column's scroll.
+const revealCurrent = `<script>{
+if (!window.comarkSidebarAnchors) {
+  window.comarkSidebarAnchors = () => {
+    for (const a of document.querySelectorAll('.pages .nav-fold a[href*="#"]')) {
+      const current = a.pathname === location.pathname && a.hash === location.hash;
+      if (current) { a.setAttribute("aria-current", "location"); a.closest("details").open = true }
+      else a.removeAttribute("aria-current");
+    }
+  };
+  addEventListener("hashchange", window.comarkSidebarAnchors);
+}
+window.comarkSidebarAnchors();
+const c = document.currentScript.previousElementSibling.querySelector(".pages"), a = c && (c.querySelector("[aria-current=location]") || c.querySelector("[aria-current=page]"));
+if (a && !c.hasAttribute("data-sidebar-restored")) {
+  const b = c.getBoundingClientRect(), l = a.getBoundingClientRect();
+  if (l.top < b.top || l.bottom > b.bottom) c.scrollTop += l.top - b.top - (b.height - l.height) / 2;
+}
+}</script>`;
 // Previous and next page in the section.
 function pager(page: Page) {
   const list = pagesOf(page.section).flatMap((list) => list.pages);

@@ -244,4 +244,18 @@ test("the rule groups stay shut, but the one holding the current rule is open", 
   await migration.locator("summary").click();
   await migration.getByRole("link", { name: "framework" }).click();
   await expect(page).toHaveURL(/\/remark-to-comark\/diagnostics\/#rtc0101$/);
+  await expect(migration).toHaveAttribute("open", "");
+  await expect(migration.locator('a[aria-current="location"]')).toHaveText("framework");
+  await expect(migration.getByRole("link", { name: "framework" })).toBeInViewport();
+  await expect(column.locator(".nav-fold[open]")).toHaveCount(1);
+
+  await migration.getByRole("link", { name: "plugin", exact: true }).click();
+  await expect(page).toHaveURL(/#rtc0102$/);
+  await expect(migration.locator("a[aria-current]")).toHaveText("plugin");
+  await page.goBack();
+  await expect(migration.locator("a[aria-current]")).toHaveText("framework");
+
+  await page.reload();
+  await expect(migration).toHaveAttribute("open", "");
+  await expect(migration.locator("a[aria-current]")).toHaveText("framework");
 });
