@@ -228,3 +228,20 @@ test("no page scrolls sideways on a phone", async ({ page }) => {
     expect(scroll, path).toBeLessThanOrEqual(width);
   }
 });
+
+test("the rule groups stay shut, but the one holding the current rule is open", async ({
+  page,
+}) => {
+  await page.goto("/doctor/annotate/missing-src/");
+  const column = page.locator(".sidebar .pages");
+  await expect(column.locator(".nav-fold[open]")).toHaveCount(1);
+  await expect(column.locator('a[aria-current="page"]')).toBeVisible();
+  const core = column.locator(".nav-fold").filter({ hasText: "Core" });
+  await expect(core.getByRole("link", { name: "unclosed-block" })).toBeHidden();
+  await core.locator("summary").press("Enter");
+  await expect(core.getByRole("link", { name: "unclosed-block" })).toBeVisible();
+  const migration = column.locator(".nav-fold").filter({ hasText: "remark-to-comark" });
+  await migration.locator("summary").click();
+  await migration.getByRole("link", { name: "framework" }).click();
+  await expect(page).toHaveURL(/\/remark-to-comark\/diagnostics\/#rtc0101$/);
+});

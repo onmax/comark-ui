@@ -1831,6 +1831,59 @@ kbd {
   font-weight: 500;
 }
 
+/* A long group, such as a package's rules, opens from its heading. */
+.nav-fold > summary {
+  margin: 0.75rem -0.5rem 0;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--r-sm);
+  color: var(--muted);
+  cursor: pointer;
+  list-style: none;
+  transition: color 150ms ease;
+}
+
+.nav-fold[open] > summary {
+  color: var(--fg);
+}
+
+.nav-fold + .nav-fold > summary {
+  margin-top: 0;
+}
+
+.nav-fold[open] {
+  padding-bottom: 0.5rem;
+}
+
+.nav-fold > summary::-webkit-details-marker {
+  display: none;
+}
+
+.nav-fold > summary::after {
+  content: "";
+  width: 0.375rem;
+  height: 0.375rem;
+  margin: 0 0.125rem 0 auto;
+  border: solid var(--faint);
+  border-width: 0 1.5px 1.5px 0;
+  rotate: -45deg;
+  transition: rotate 150ms var(--ease-out);
+}
+
+.nav-fold[open] > summary::after {
+  rotate: 45deg;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .nav-fold > summary:hover {
+    background: var(--soft);
+    color: var(--fg);
+  }
+}
+
+.nav-fold > a {
+  display: block;
+}
+
 /* Not the links inside a preset's still, which keep the look the plugins give them. */
 .pages a:not(.preset-page *) {
   margin: 0 -0.5rem;

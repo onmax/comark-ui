@@ -14,6 +14,7 @@ import { css as criticCss } from "../packages/critic/src/index.ts";
 import { createIcons, css as iconCss, iconHtml } from "../packages/icon/src/html.ts";
 import include from "../packages/include/src/index.ts";
 import { lint, type Diagnostic } from "../packages/lint/src/index.ts";
+import { catalog as migrationCatalog } from "../packages/remark-to-comark/src/diagnostics.ts";
 import { defaultConfig } from "./config.ts";
 import { highlighted, sitePlugins as examplePlugins, withoutFor } from "./example-plugins.ts";
 import { loadExamples, pageOrder, recipeOrder, slugify, thirdParty } from "./examples.ts";
@@ -294,7 +295,13 @@ type Section = {
   slug: string;
   label: string;
   icon: string;
-  lists: { title?: string; icon?: string; slugs: string[] }[];
+  lists: {
+    title?: string;
+    icon?: string;
+    fold?: boolean;
+    slugs: string[];
+    anchors?: { label: string; href: string }[];
+  }[];
 };
 // A package's page, then its sub-pages, then its other pages.
 const pagesOfPackage = (pkg: Package) =>
@@ -379,8 +386,27 @@ const sections: Section[] = [
       ...[...new Set(doctorRules.map((entry) => entry.group))].map((group) => ({
         title: group === "core" ? "Core" : group,
         icon: packages.find((pkg) => pkg.slug === (group === "core" ? "lint" : group))?.icon,
+        // Over 200 rules would bury the column, so each group stays shut until the reader opens it or is on one of its pages.
+        fold: true,
         slugs: doctorRules.filter((entry) => entry.group === group).map((entry) => entry.slug),
       })),
+      // remark-to-comark's rules check a project's code, not a document, so each links its first code on the Diagnostics
+      // page instead of a page of examples.
+      {
+        title: "remark-to-comark",
+        icon: packages.find((pkg) => pkg.slug === "remark-to-comark")?.icon,
+        fold: true,
+        slugs: [],
+        anchors: Object.entries(migrationCatalog)
+          .filter(
+            ([, entry], i, all) =>
+              all.findIndex(([, first]) => first.ruleId === entry.ruleId) === i,
+          )
+          .map(([code, entry]) => ({
+            label: entry.ruleId.replace("remark-to-comark/", ""),
+            href: `/remark-to-comark/diagnostics/#${code.toLowerCase()}`,
+          })),
+      },
     ],
   },
   // Its column lists the presets, which come from the pages' examples.
@@ -1052,7 +1078,13 @@ const rail = (current: Section, slug: string) =>
 const column = (section: Section, current: string) => {
   const presetCard = (preset: (typeof presets)[number], href: string) =>
     `<div class="preset"><div class="preset-thumb" aria-hidden="true" inert><div class="preset-page">${thumbnails.get(preset.id) ?? ""}</div></div><a data-preset="${preset.id}" href="${href}">${escapeHtml(preset.label)}</a></div>`;
-  const lists =
+  const lists: {
+    title?: string;
+    icon?: string;
+    fold?: boolean;
+    open?: boolean;
+    links: string[];
+  }[] =
     section.slug === "play"
       ? [...new Set(presets.map((preset) => preset.group))].map((group) => ({
           title: group,
@@ -1067,10 +1099,17 @@ const column = (section: Section, current: string) => {
       : pagesOf(section).map((list) => ({
           title: list.title,
           icon: list.icon,
-          links: list.pages.map(
-            (page) =>
-              `<a${subPageSlugs.has(page.slug) ? ` class="nav-sub${page.slug.includes("/components/") ? " nav-code" : ""}"` : ""}${page.slug === current ? ' aria-current="page"' : ""} href="${href(page.slug)}">${escapeHtml(page.label)}</a>`,
-          ),
+          fold: list.fold,
+          open: list.pages.some((page) => page.slug === current),
+          links: [
+            ...list.pages.map(
+              (page) =>
+                `<a${subPageSlugs.has(page.slug) ? ` class="nav-sub${page.slug.includes("/components/") ? " nav-code" : ""}"` : ""}${page.slug === current ? ' aria-current="page"' : ""} href="${href(page.slug)}">${escapeHtml(page.label)}</a>`,
+            ),
+            ...(list.anchors ?? []).map(
+              (anchor) => `<a href="${anchor.href}">${escapeHtml(anchor.label)}</a>`,
+            ),
+          ],
         }));
   const playLinks = [
     ["play/editor", "Rich-text editor"],
@@ -1090,10 +1129,12 @@ const column = (section: Section, current: string) => {
       )
       .join("")}</nav>`;
   return `<nav class="pages" aria-label="${escapeHtml(section.label)}"><p class="pages-title">${escapeHtml(section.label)}</p>${section.slug === "play" ? playLinks : ""}${lists
-    .map(
-      (list) =>
-        `${list.title ? `<p class="nav-group">${list.icon ? siteIcon(list.icon, 14) : ""}${escapeHtml(list.title)}</p>` : ""}${list.links.join("")}`,
-    )
+    .map((list) => {
+      const heading = `${list.icon ? siteIcon(list.icon, 14) : ""}${escapeHtml(list.title ?? "")}`;
+      if (list.fold)
+        return `<details class="nav-fold"${list.open ? " open" : ""}><summary class="nav-group">${heading}</summary>${list.links.join("")}</details>`;
+      return `${list.title ? `<p class="nav-group">${heading}</p>` : ""}${list.links.join("")}`;
+    })
     .join("")}</nav>`;
 };
 // Brings the current page's link into the column's view before the first paint, for a page low in a long column. The
