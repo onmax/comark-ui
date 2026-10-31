@@ -1,6 +1,6 @@
 {
   "name": "comark-github",
-  "version": "0.7.6",
+  "version": "0.8.0",
   "description": "GitHub's Markdown in Comark: alerts as shadcn-style callouts, @user and #123 references as links, and raw HTML limited to what GitHub allows.",
   "keywords": [
     "admonition",

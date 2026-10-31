@@ -1,6 +1,6 @@
 {
   "name": "comark-tabs",
-  "version": "0.7.6",
+  "version": "0.8.0",
   "description": "Tabs and code groups for Markdown, with keys and labels synced across the page. They read without a script. A Comark plugin.",
   "keywords": [
     "code-group",

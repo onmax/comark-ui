@@ -1,6 +1,6 @@
 {
   "name": "comark-metrics",
-  "version": "0.7.6",
+  "version": "0.8.0",
   "description": "Before → after numbers with the percent change, progress bars, and tables of metrics with a change column. A Comark plugin.",
   "keywords": [
     "benchmark",
