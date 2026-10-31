@@ -28,5 +28,5 @@ With `@comark/vue` or `@comark/react`, read `meta.readingTime` from the parsed d
 
 ## Register
 
-- In `comark-ui`: on in every entry. `readingTime: { wordsPerMinute: 230 }` sets the speed. The default, 200, is a cautious pace for technical prose; 230 to 250 suits light reading, and a site mostly in CJK may want more.
+- In `comark-ui`: on in every entry. `readingTime: { wordsPerMinute: 230 }` sets the speed; 0 or less counts at 200. The default, 200, is a cautious pace for technical prose; 230 to 250 suits light reading, and a site mostly in CJK may want more.
 - Alone: `pnpm add comark comark-reading-time`, then `parseMarkdown(markdown, { plugins: [readingTime()] })` with `readingTime` from `comark-reading-time`. It has no components, so it works with any renderer.

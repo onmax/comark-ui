@@ -30,7 +30,7 @@ A direct child of a screenshot. Its content is the note, in Markdown.
 | Prop | What it does |
 | --- | --- |
 | `x` `y` `w` `h` | Required. The marked rectangle as percentages of the image, without `%`. |
-| `mark` | `box` (default), `circle`, `underline`, `highlight`, `bracket`, `cross`, `check`, or `none`. |
+| `mark` | `box` (default), `circle`, `underline`, `line`, `highlight`, `bracket`, `cross`, `check`, or `none`. |
 | `color` | `red` for a problem, `green` for the fix, `amber` for a warning, `violet` (default) to point something out, `gray`, or a hex color. |
 | `side` | `top` or `bottom` moves the note into the margin with an arrow; in a side-by-side compare, `left` and `right` notes join the numbered list. |
 

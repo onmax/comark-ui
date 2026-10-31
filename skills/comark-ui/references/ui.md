@@ -1,10 +1,10 @@
 # Every plugin in one install
 
-comark-ui registers every comark-ui package for one renderer, in the order they need, with one icon resolver shared by `:icon`, cards, details, file trees, tabs, and code actions. Install in SKILL.md shows its basic use. This page covers its options, what it turns on, its other renderers, and how the linter uses it.
+comark-ui registers every comark-ui package for one renderer, in the order they need, with one icon resolver shared by `:icon`, cards, details, file trees, tabs, and code actions. SKILL.md's Install section shows the basic use. This page covers the options, what the preset turns on, the other renderers, and how the linter uses it.
 
 ## Options
 
-`comarkUi(options)` returns `{ plugins, components }`. Each key is a package's name without `comark-`, in camelCase, such as `fileTree`, `codeNotes`, or `readingTime`. `false` turns a plugin off along with its components, and an object turns it on with those options. `true` turns on `include` and leaves the others as they are:
+`comarkUi(options)` returns `{ plugins, components }`. Each key is a package's name without `comark-`, in camelCase, such as `fileTree`, `codeNotes`, or `readingTime`. The exceptions are `math` for comark-mathml, `outline` for comark-outline, and `mermaid` and `typeset`, which are not packages. `false` turns a plugin off along with its components, and an object turns it on with those options. `true` turns on `include` and leaves the others as they are:
 
 ```ts
 comarkUi({
@@ -16,17 +16,18 @@ comarkUi({
 });
 ```
 
-`github` takes its three plugins by name, `callouts`, `references`, and `html`, and `links` takes `external` and `anchors`. Each package's reference lists its own options. The order stays fixed whatever you pass. `include` runs first, so the others read what it pastes, and `code` and `codeNotes` run last, after every plugin that writes code blocks.
+`github` takes its three plugins by name, `callouts`, `references`, and `html`, and `links` takes `external` and `anchors`. Each package's reference lists its own options. The order stays fixed whatever you pass: `include` runs first, so the others read what it pastes, and `code` and `codeNotes` run late, after every plugin that writes code blocks.
 
 ## What it turns on
 
 - Every plugin except `include`, which reads files from disk. `include: { root, base }` turns it on, or `{ read }` in a browser or an edge runtime. `include: true` reads under the working directory.
 - `cast`, `table`, and `tests` get a reader that finds no file. Inline casts, CSV fences, and pasted JUnit reports render, and a `src` file doesn't load until you pass `{ root }` or `{ read }`. Any other options object replaces that reader too, so the plugin reads under the working directory.
-- By default, three plugins use the network while parsing: `chips` downloads favicons and avatars, `icon` fetches icon sets from the Iconify API, and `diagrams` sends each diagram's source to `https://kroki.io`. In a browser, pass `chips: { download: false }`, since a browser may not download another site's images. To parse offline, also pass `icon: { fetch: false }` with your icon sets in `collections`, and `diagrams: { draw: false }`. To keep diagram sources private, pass your own Kroki `server`.
-- Media sizing reads only data URIs by default. `zoom: { size: true }` and `media: { size: true }` also fetch remote files while parsing; `annotate: { size: true }` does so at HTML render time. Enable these only for trusted documents, since requests follow redirects and can reach private networks. `{ size: false }` disables measurement for each plugin; authored dimensions and screenshot viewports still work.
+- Three plugins use the network while parsing by default: `chips` downloads favicons and avatars, `icon` fetches icon sets from the Iconify API, and `diagrams` sends each diagram's source to `https://kroki.io`. In a browser, pass `chips: { download: false }`, because a browser may not download another site's images. To parse offline, also pass `icon: { fetch: false }` with your icon sets in `collections`, and `diagrams: { draw: false }`. To keep diagram sources private, pass your own Kroki `server`.
+- Media sizing reads only data URIs by default. `zoom: { size: true }` and `media: { size: true }` also fetch remote files while parsing, and `annotate: { size: true }` does so at HTML render time. Enable these only for trusted documents, because the requests follow redirects and can reach private networks. `{ size: false }` turns measurement off for that plugin; authored dimensions and screenshot viewports still work.
 - `icon`'s options apply to every icon the preset draws, in cards, details, file trees, tabs, and code actions too.
+- `mermaid` draws `mermaid` fences with comark-pele, on the server and offline. In the HTML entry the diagram zooms with comark-zoom unless `zoom` is `false`. `mermaid: false` turns it off.
 - comark-critic has no component to add its styles, so put `criticCss`, which every entry exports, in the page.
-- The text around the blocks is styled by default, scoped to the element the document renders into, on the same `--comark-*` tokens. Pass `typeset: false` when the site already styles Markdown, such as with Tailwind Typography's `prose`.
+- The preset styles the text around the blocks, scoped to the element the document renders into, on the same `--comark-*` tokens. Pass `typeset: false` when the site already styles Markdown, such as with Tailwind Typography's `prose`.
 
 ## Renderers
 

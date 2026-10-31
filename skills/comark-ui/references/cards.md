@@ -23,7 +23,8 @@ Read the code, or open an issue.
 | `icon` | An icon above the title, in the card's color, named as in [icon](icon.md), such as `lucide:rocket`. The plugin reports one it can't draw. |
 | `to` | Makes it a link card. One link covers the card and takes the title as its name, and links in the card's text still open on their own. A web address opens in a new tab with an arrow in the corner. |
 | `target` | Where the link opens, such as `_self` to keep a web address in the tab. |
-| `color` | Tints the icon and a hovered link card's border: `primary` (default), `secondary`, `success`, `info`, `warning`, `error`, or `neutral`. |
+| `color` | Tints the icon and a hovered link card's border: `primary` (default), `secondary`, `success`, `info`, `warning`, `error`, or `neutral`. Any other value shows as `primary` and is reported. |
+| `variant` | `outline` (default) keeps the plain card, `soft` washes it in its `color`, and `subtle` washes it and draws its border in the `color` too. |
 
 `::card-group` sets its cards in two columns, or one when the group is narrower than 36rem, so a group in a sidebar stacks too. A card works on its own as well.
 

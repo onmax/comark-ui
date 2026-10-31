@@ -36,9 +36,9 @@ The `rail` option adds an "On this page" outline beside the text of every docume
 
 - Options: `rail: true`, or `{ title, depth }` (default "On this page" and 3).
 - The page sets `--comark-inset-end` on `:root` for a panel that covers its right edge. While the outline keeps a column beside wide blocks, it sets `data-comark-rail` and `--comark-rail-width` on `<html>`, and the page shrinks `--comark-wide-end` by it, so wide blocks move toward the room before the text.
-- It hides where it doesn't fit, and rather than narrow a diagram.
+- It hides where it doesn't fit, and hides rather than narrow a wide diagram.
 
 ## Register
 
 - In `comark-ui`: on in every entry; `outline: { rail: true }` adds the side outline.
-- Alone: `pnpm add comark @comark/html comark-outline`, then `createHtmlRenderer({ plugins: [outline()], components })` with both from `comark-outline/html`. `comark-outline/vue`, `/react`, and `/svelte` render it too. It reads the headings itself, so it works in any plugin order and without Comark's toc plugin, which only fills `meta.toc` for a sidebar. The npm name is `comark-outline` because npm refused `comark-toc`.
+- Alone: `pnpm add comark @comark/html comark-outline`, then `createHtmlRenderer({ plugins: [outline()], components })` with both from `comark-outline/html`. `comark-outline/vue`, `/react`, and `/svelte` render it too. It reads the headings itself, so it works in any plugin order and without Comark's toc plugin, which only fills `meta.toc` for a sidebar.

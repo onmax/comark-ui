@@ -28,9 +28,9 @@ Press **Ctrl+K** to find the pigeon data.
 
 - `::tabs`: each `:::tabs-item` inside is one tab. Content outside every tab doesn't render, and is reported.
 - `:::tabs-item`: `label` is required and must differ from the other labels in its block, since `sync` matches tabs by label. `icon` draws an Iconify name, such as `lucide:apple`, or an image URL before the label.
-- `::code-group`: only code blocks go inside. Name each one's tab in brackets after its language, as in `sh [pnpm]`, with an optional icon after it, as in `sh [pnpm] icon=logos:pnpm`. The tab replaces the block's own title, and comark-code's `title="pnpm"` names no tab.
+- `::code-group`: only code blocks go inside. Name each one's tab in brackets after its language, as in `sh [pnpm]`, with an optional icon after it, as in `sh [pnpm] icon=logos:pnpm`. The tab replaces the block's own title. `title="pnpm"` names no tab, so a block without brackets is reported.
 - `sync`, on either block, is a key shared by blocks that switch together. Picking a tab picks the tab with the same label in every block with that key, and the next page that uses the key remembers it.
-- A code block marked `pm`, as in `sh pm`, holds package manager commands in any manager (npm, npx, pnpm, pnpx, yarn, bun, bunx, or deno) and becomes a code group with a tab each for npm, pnpm, yarn, and bun, synced as `pm`. The manager it's written in keeps its commands as written. It reads install, frozen install (`npm ci`), add with `-D`, `-E`, `-O`, `--save-peer`, or `-g`, remove, update, run, `npx`/`dlx`, create, and init. Only commands at the start of a line or after `&&`, `||`, or `;` change. Inside a `::code-group`, `pm` does nothing.
+- A code block marked `pm`, as in `sh pm`, holds package manager commands in any manager (npm, npx, pnpm, pnpx, yarn, bun, bunx, or deno) and becomes a code group with a tab each for npm, pnpm, yarn, and bun, synced as `pm`. The manager it's written in keeps its commands as written. It reads install, frozen install (`npm ci`), add with `-D`, `-E`, `-O`, `--save-peer`, or `-g`, remove, run, `npx`/`dlx`, create, and init. An update or a `pnpm exec` stays only in its own manager's tab, and the others are left out and reported. Only commands at the start of a line or after `&&`, `||`, or `;` change. Inside a `::code-group`, `pm` does nothing.
 
 ## Choose the block
 

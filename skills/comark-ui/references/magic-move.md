@@ -25,7 +25,7 @@ const total = price * rate
 ## Choose the steps
 
 - Change one thing per step. When most of the code moves at once, the reader can't follow any of it.
-- Keep the code that stays the same identical, spaces aside, so it moves rather than fading out and in.
+- Keep the code that stays the same identical, so it moves rather than fading out and in.
 - For a change a reviewer approves, write `::diff`: it shows every removed and added line at once, which an animation can't.
 
 ## Register

@@ -18,7 +18,7 @@ At 1024 px wide, **Apply** drops under the filter chips.
 ```
 
 - Each `###` heading starts a step that holds everything up to the next one, code blocks and images included. The heading keeps its id, so a link to `#add-three-filters` and a table of contents still find it.
-- `level` is the level of the headings that start each step, from 2 to 6, default 3. Write `::steps{level="2"}` for `##` headings. Deeper headings stay inside their step.
+- `level` is the level of the headings that start each step, from 2 to 6, default 3; any other value falls back to 3 and is reported. Write `::steps{level="2"}` for `##` headings. Deeper headings stay inside their step.
 - A block whose only content is one numbered list makes a step of each item, and a list that starts at 3 numbers its steps from 3. Use the list when every step fits on one line.
 - A `:::steps{level="4"}` inside a step keeps its own headings and numbers.
 

@@ -25,7 +25,7 @@ The link expires after :comment[15 minutes]{#ttl by="@onmax" note="Is 15 minutes
 | Prop | On | What it does |
 | --- | --- | --- |
 | `from` | suggestion | The text it replaces or deletes. Plain text. |
-| `by` | both, reply | The author, shown as written; a leading `@` is dropped. The avatar is the name's initial. |
+| `by` | both, reply | The author, shown as written; a leading `@` is dropped. The avatar is the name's initial, or the image `avatars` gives that name. |
 | `note` | both, reply | The card's text. Plain text. A suggestion with no note and no replies is only a redline, with no card. |
 | `mark` | suggestion | `track` (default): red strike, green insert. `pen`: a hand-drawn strike with the new words handwritten above. |
 | `#id` | both | The id a reply points at. Comments and suggestions share one id space. |
@@ -39,5 +39,5 @@ The link expires after :comment[15 minutes]{#ttl by="@onmax" note="Is 15 minutes
 
 ## Register
 
-- In `comark-ui`: on, as `comments`, in `comark-ui/html` only. `comments: { mark: "pen" }` draws every suggestion with the pen unless it sets its own `mark`.
-- Alone: `pnpm add comark @comark/html comark-comments`, then `createHtmlRenderer({ plugins: [comments()], components })` with `comments, { components }` from `comark-comments/html`. There are no Vue, React, or Svelte entries.
+- In `comark-ui`: on, as `comments`, in `comark-ui/html` only. `comments: { mark: "pen" }` draws every suggestion with the pen unless it sets its own `mark`. `comments: { avatars: { onmax: "https://github.com/onmax.png" } }` gives authors an image by the name in `by`, without `@`, in any case.
+- Alone: `pnpm add comark @comark/html comark-comments`, then `createHtmlRenderer({ plugins: [comments()], components })` with `comments, { components }` from `comark-comments/html`, which takes the same `mark` and `avatars` options. There are no Vue, React, or Svelte entries.
