@@ -1,13 +1,8 @@
 import { css } from "./styles.ts";
+import { addStyles as add } from "../../../shared/styles.ts";
 
 /** Adds the test results styles to the page once. The Vue, React, and Svelte components call it when they mount. */
-export function addStyles(): void {
-  if (document.querySelector("style[data-comark-tests]")) return;
-  const style = document.createElement("style");
-  style.dataset.comarkTests = "";
-  style.textContent = css;
-  document.head.append(style);
-}
+export const addStyles = (): void => add("tests", css);
 
 /** The words of the summary line, in order: a count when it has something to say, then the duration. */
 export function summary({
