@@ -1,6 +1,8 @@
 import type { ElementNode, Node } from "comark";
 import { resolveAttributes } from "comark/render";
 import { textContent } from "comark/utils";
+import { childrenOf, isElement } from "../../../shared/nodes.ts";
+import { text } from "../../../shared/text.ts";
 
 export interface DiffRow {
   kind: "same" | "del" | "add";
@@ -31,15 +33,7 @@ export type Issue = { rule: `comark/diff/${string}`; message: string };
 // What `check` calls each diff in its messages. The renderer reports nothing, so it needs no names.
 type Names = Map<ElementNode, string>;
 
-// Comark text nodes are strings, elements are arrays, and comments are arrays with a null tag.
-const isElement = (node: Node): node is ElementNode => Array.isArray(node) && node[0] !== null;
-const children = ([, , ...rest]: ElementNode): Node[] => rest;
 // Prop values arrive as strings, numbers, or booleans; objects and arrays aren't valid for any prop here.
-const text = (value: unknown) =>
-  value === undefined || value === null || value instanceof Object
-    ? ""
-    : // SAFETY: undefined, null, objects, and arrays returned above, so only a string, number, or boolean is left.
-      String(value as string | number | boolean).trim();
 // Inline, YAML-block, and `:bound` props all land here, parsed the way Comark's own renderers see them.
 const props = (node: ElementNode, data: Data) =>
   resolveAttributes(node[1], data, { parseJson: true });
@@ -171,7 +165,7 @@ const lineText = (nodes: Node[]) => textContent(["span", {}, ...nodes]);
 // Shiki wraps each line in a `span.line` and puts a newline between them; plain code is one string. Both come out as
 // one list of nodes per line.
 function lines(pre: ElementNode): Node[][] {
-  const code = children(pre).find(isElement);
+  const code = childrenOf(pre).find(isElement);
   const result: Node[][] = [[]];
   const add = (nodes: Node[]) => {
     for (const node of nodes) {
@@ -184,11 +178,11 @@ function lines(pre: ElementNode): Node[][] {
         node[0] === "span" &&
         /(?:^|\s)line(?:\s|$)/.test(text(node[1].class))
       )
-        add(children(node));
+        add(childrenOf(node));
       else if (isElement(node)) result.at(-1)!.push(node);
     }
   };
-  add(code && code[0] === "code" ? children(code) : children(pre));
+  add(code && code[0] === "code" ? childrenOf(code) : childrenOf(pre));
   // A newline at the end leaves an empty line after it, which the code block doesn't show either.
   if (result.length > 1 && !lineText(result.at(-1)!)) result.pop();
   // An empty fence still parses as one empty line.
@@ -270,7 +264,7 @@ function cut(nodes: Node[], ranges: [number, number][], tag: "del" | "ins", star
       }
       if (cursor < length) result.push(node.slice(cursor));
     } else if (isElement(node))
-      result.push([node[0], node[1], ...cut(children(node), ranges, tag, at)]);
+      result.push([node[0], node[1], ...cut(childrenOf(node), ranges, tag, at)]);
     else result.push(node);
     at += length;
   }
@@ -296,7 +290,7 @@ function pair(before: DiffRow, after: DiffRow, budget: Budget) {
 }
 
 const codeBlocks = (node: ElementNode) =>
-  children(node).filter((child): child is ElementNode => isElement(child) && child[0] === "pre");
+  childrenOf(node).filter((child): child is ElementNode => isElement(child) && child[0] === "pre");
 // The `file` prop wins over the blocks' own names, and the first block's over the second's.
 const fileOf = (node: ElementNode, attrs: Record<string, unknown>) =>
   text(attrs.file) || text(codeBlocks(node)[0]?.[1].filename) || "";
@@ -310,7 +304,7 @@ function read(node: ElementNode, issues: Issue[], data: Data, names: Names = new
   const where = names.get(node) ?? (file ? `diff ${quote(file)}` : "diff");
   const problems: Issue[] = [];
   checkProps(node, attrs, problems);
-  for (const child of children(node))
+  for (const child of childrenOf(node))
     if (!(isElement(child) && child[0] === "pre") && (isElement(child) || text(child)))
       problems.push({
         rule: "comark/diff/stray-content",
@@ -445,7 +439,7 @@ function name(nodes: Node[], data: Data): Names {
     for (const node of list) {
       if (!isElement(node)) continue;
       if (node[0] === "diff") diffs.push(node);
-      else walk(children(node));
+      else walk(childrenOf(node));
     }
   };
   walk(nodes);
@@ -473,7 +467,7 @@ export function check(nodes: Node[], data: Data): Issue[] {
     for (const node of list) {
       if (!isElement(node)) continue;
       if (node[0] === "diff") read(node, issues, data, names);
-      else walk(children(node));
+      else walk(childrenOf(node));
     }
   };
   walk(nodes);

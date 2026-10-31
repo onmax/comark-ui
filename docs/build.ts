@@ -16,13 +16,15 @@ import include from "../packages/include/src/index.ts";
 import { lint, type Diagnostic } from "../packages/lint/src/index.ts";
 import { defaultConfig } from "./config.ts";
 import { highlighted, sitePlugins as examplePlugins, withoutFor } from "./example-plugins.ts";
-import { loadExamples, pageOrder, recipeOrder, thirdParty } from "./examples.ts";
+import { loadExamples, pageOrder, recipeOrder, slugify, thirdParty } from "./examples.ts";
 import { checkExample, doctorRule, doctorRules } from "./doctor.ts";
 import { highlight } from "./highlight.ts";
 import { browserPlugins, components } from "./plugins.ts";
 import { colorTokens, themePresets } from "./play-theme.ts";
 import { propsOf } from "./props.ts";
 import { cellDocument, previewDocument } from "./preview.ts";
+import { rawText } from "../shared/text.ts";
+import { isElement } from "../shared/nodes.ts";
 
 const root = new URL("./", import.meta.url);
 const dist = new URL("dist/", root);
@@ -79,11 +81,6 @@ const lucideNames = [
   "tag",
 ];
 const iconId = (name: string) => (name in ownIcons ? `site:${name}` : `lucide:${name}`);
-const str = (value: unknown) =>
-  value === undefined || value === null || value instanceof Object
-    ? ""
-    : // SAFETY: undefined, null, objects, and arrays returned above, so only a string, number, or boolean is left.
-      String(value as string | number | boolean);
 
 const plain = (text: string) => text.replaceAll("`", "");
 const inlineCode = (text: string) => escapeHtml(text).replace(/`([^`]+)`/g, "<code>$1</code>");
@@ -260,7 +257,7 @@ const packages = await Promise.all(
         "icon",
         "blurb",
         "credits",
-      ].map((key) => str(frontmatter[key]));
+      ].map((key) => rawText(frontmatter[key]));
       if (!title || !group || !icon || !blurb)
         throw new Error(
           `${fileOf(slug)} needs a title, a group, an icon, and a blurb in its frontmatter.`,
@@ -276,7 +273,7 @@ const packages = await Promise.all(
         icon,
         blurb,
         credits: credits || undefined,
-        npm: str((manifest as { name?: unknown }).name),
+        npm: rawText((manifest as { name?: unknown }).name),
       };
     }),
 );
@@ -390,7 +387,6 @@ const sections: Section[] = [
 // The package a page documents, if any.
 const packageOf = (slug: string) => packages.find((pkg) => pkg.slug === slug.split("/")[0]);
 
-const isElement = (node: Node): node is ElementNode => Array.isArray(node) && node[0] !== null;
 const isPre = (node: Node): node is ElementNode => isElement(node) && node[0] === "pre";
 const href = (slug: string) => `/${slug}${slug ? "/" : ""}`;
 // An include reads files, so the playground can't run it.
@@ -409,11 +405,11 @@ const exampleWithout =
   (without: string[]): NodeHandler =>
   async ([, attrs, ...children], state) => {
     const pre = children.find(isPre);
-    if (!pre) throw new Error(`Example "${str(attrs.label)}" needs a fenced code block.`);
+    if (!pre) throw new Error(`Example "${rawText(attrs.label)}" needs a fenced code block.`);
     const source = textContent(pre);
     const preview = await parseExample(source, without);
     if (preview.meta.issues.length)
-      throw new Error(`Example "${str(attrs.label)}":\n${preview.meta.issues.join("\n")}`);
+      throw new Error(`Example "${rawText(attrs.label)}":\n${preview.meta.issues.join("\n")}`);
     const play = playable(source)
       ? `<a class="example-play" href="${escapeHtml(playLink(source))}">${siteIcon("flask-conical", 13)}Playground</a>`
       : "";
@@ -429,7 +425,7 @@ const exampleWithout =
 const exampleTabs: NodeHandler = async ([, , ...children], state) => {
   const panels = children.filter(isElement);
   const labels = panels.map((panel, i) => {
-    const label = escapeHtml(str(panel[1].label) || `Example ${i + 1}`);
+    const label = escapeHtml(rawText(panel[1].label) || `Example ${i + 1}`);
     return `<button type="button" role="tab" aria-selected="${i === 0}" data-tab="${i}">${label}</button>`;
   });
   const bodies = await Promise.all(
@@ -581,7 +577,7 @@ const toc = (document: { nodes: Node[] }) =>
     .filter(([tag]) => tag === "h2" || tag === "h3")
     .map(
       ([tag, attrs, ...children]) =>
-        `<a class="nav-${tag}" href="#${str(attrs.id)}">${escapeHtml(textContent([tag, attrs, ...children]))}</a>`,
+        `<a class="nav-${tag}" href="#${rawText(attrs.id)}">${escapeHtml(textContent([tag, attrs, ...children]))}</a>`,
     )
     .join("");
 
@@ -602,7 +598,7 @@ async function parsePage(slug: string, section: Section) {
     "install",
     "headline",
     "label",
-  ].map((key) => str(document.frontmatter[key]));
+  ].map((key) => rawText(document.frontmatter[key]));
   const pkg = packageOf(slug);
   if (pkg && pkg.slug !== "lint" && install)
     throw new Error(
@@ -620,7 +616,7 @@ async function parsePage(slug: string, section: Section) {
     headline,
     pkg,
     // Words that find the page in search that it doesn't say itself, such as other tools' names for its blocks.
-    keywords: [document.frontmatter.keywords].flat().map(str).filter(Boolean).join(", "),
+    keywords: [document.frontmatter.keywords].flat().map(rawText).filter(Boolean).join(", "),
     label: rule?.name ?? (label || title),
     toc: toc(document),
   };
@@ -641,11 +637,6 @@ const pagesOf = (section: Section) =>
 // Every example on the site, in one list from docs/examples.ts: the playground lists the ones it can run, a
 // package's column shows its own, and the landing's canvas draws a card for each.
 const examples = await loadExamples(packageOrder);
-const slugify = (text: string) =>
-  text
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
 const pageOf = (slug: string) => parsed.find((page) => page.slug === slug)!;
 const presets = examples
   .filter((example) => example.playable)
@@ -831,11 +822,17 @@ function deal(demos: Demo[]) {
 // card for a package with no examples, such as lint's report.
 const packageGrid: NodeHandler = async ([, , ...children]) => {
   const extra: Demo[] = children.filter(isElement).map(([, attrs, ...content]) => {
-    const pkg = packages.find((pkg) => pkg.slug === str(attrs.package));
-    if (!pkg) throw new Error(`A demo names no package: "${str(attrs.package)}".`);
+    const pkg = packages.find((pkg) => pkg.slug === rawText(attrs.package));
+    if (!pkg) throw new Error(`A demo names no package: "${rawText(attrs.package)}".`);
     const pre = content.find(isPre);
     if (!pre) throw new Error(`The ${pkg.slug} demo needs a fenced code block.`);
-    return { id: pkg.slug, pkg, page: pkg.slug, label: str(attrs.label), source: textContent(pre) };
+    return {
+      id: pkg.slug,
+      pkg,
+      page: pkg.slug,
+      label: rawText(attrs.label),
+      source: textContent(pre),
+    };
   });
   const cards: Demo[] = examples.map((example) => {
     const pkg = packages.find((pkg) => pkg.slug === example.group);
@@ -932,7 +929,7 @@ const skillFiles = (name: string) => {
     }));
 };
 const skill: NodeHandler = async ([, attrs], state) => {
-  const name = str(attrs.name);
+  const name = rawText(attrs.name);
   if (!skillOrder.includes(name))
     throw new Error(`::skill names no skill in skillOrder: "${name}".`);
   const source = skillSource(name);
@@ -976,7 +973,7 @@ const skillCards: NodeHandler = async () => {
       );
       return (
         `<li class="skill-card"><div class="skill-card-screen" inert><div class="skill-card-paper"><div class="demo-page">${still}</div></div></div>` +
-        `<div class="skill-card-text"><a href="${href(page.slug)}">${siteIcon(str(page.document.frontmatter.icon) || "sparkles", 16)}<strong>${escapeHtml(page.label)}</strong></a>` +
+        `<div class="skill-card-text"><a href="${href(page.slug)}">${siteIcon(rawText(page.document.frontmatter.icon) || "sparkles", 16)}<strong>${escapeHtml(page.label)}</strong></a>` +
         `<p>${escapeHtml(page.description)}</p></div></li>`
       );
     }),
@@ -1580,7 +1577,7 @@ const searchIndex = [
           k: "heading",
           t: textContent(heading!),
           p: where,
-          h: `${href(page.slug)}#${str(heading![1].id)}`,
+          h: `${href(page.slug)}#${rawText(heading![1].id)}`,
           x: prose(nodes) || undefined,
         })),
       ];

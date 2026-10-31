@@ -1,7 +1,7 @@
 import type { NodeHandler } from "comark";
-import { escapeHtml } from "comark/utils";
 import { allow, icons, referrerPolicy } from "./client.ts";
 import { css } from "./styles.ts";
+import { attr } from "../../../shared/html.ts";
 
 export { default } from "./index.ts";
 export type { EmbedAttributes, EmbedMeta, Size } from "./index.ts";
@@ -9,12 +9,6 @@ export type { EmbedAttributes, EmbedMeta, Size } from "./index.ts";
 // Each render gets a fresh `state.context`, so a document carries the styles once.
 const styled = new WeakSet<object>();
 
-const text = (value: unknown) =>
-  value === undefined || value === null || value instanceof Object
-    ? ""
-    : // SAFETY: undefined, null, objects, and arrays returned above, so only a string, number, or boolean is left.
-      String(value as string | number | boolean);
-const attr = (value: unknown) => escapeHtml(text(value), { '"': "&quot;" });
 const icon = (d: string) =>
   `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${d}"></path></svg>`;
 

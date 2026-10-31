@@ -122,7 +122,7 @@ For Vue, React, or Svelte, import from `comark-qr/vue`, `comark-qr/react`, or `c
 
 ## Theme
 
-The code sits on a white tile with no border. The modules are always black on white, in both color schemes,. The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
+The code sits on a white tile with no border. The modules are always black on white, in both color schemes. The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
 
 ### Shared tokens
 

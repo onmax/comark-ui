@@ -1,6 +1,7 @@
 import type { NodeHandler } from "comark";
-import { escapeHtml } from "comark/utils";
 import { css } from "./styles.ts";
+import { rawText } from "../../../shared/text.ts";
+import { attr } from "../../../shared/html.ts";
 
 export { default, isColor } from "./index.ts";
 export type { ColorAttributes, ColorsMeta } from "./index.ts";
@@ -8,9 +9,6 @@ export type { ColorAttributes, ColorsMeta } from "./index.ts";
 // Each render gets a fresh `state.context`, so a document carries the styles once.
 const styled = new WeakSet<object>();
 
-const attr = (value: string) => escapeHtml(value, { '"': "&quot;" });
-// SAFETY: the parse plugin writes every attribute the renderer reads as a string.
-const str = (value: unknown) => (value === undefined ? "" : String(value as string));
 const styles = (state: { context: object }) => {
   const tag = styled.has(state.context) ? "" : `<style data-comark-colors>${css}</style>`;
   styled.add(state.context);
@@ -18,8 +16,8 @@ const styles = (state: { context: object }) => {
 };
 
 const color: NodeHandler = ([, attrs], state) => {
-  const value = str(attrs.value);
-  const name = str(attrs.name);
+  const value = rawText(attrs.value);
+  const name = rawText(attrs.name);
   if (!value) return "";
   if (name)
     return `<li><span class="cco-tile" style="--cco:${attr(value)}"></span><span class="cco-name">${attr(name)}</span><span class="cco-value">${attr(value)}</span></li>`;

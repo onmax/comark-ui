@@ -1,9 +1,10 @@
 import type { NodeHandler, State } from "comark";
 import { resolveAttributes } from "comark/render";
-import { escapeHtml } from "comark/utils";
 import { runtime as zoomRuntime } from "comark-zoom/html";
 import { start } from "./client.ts";
 import { css } from "./styles.ts";
+import { scalar } from "../../../shared/text.ts";
+import { attr } from "../../../shared/html.ts";
 
 export { default } from "./index.ts";
 export type { CarouselMeta } from "./index.ts";
@@ -19,13 +20,7 @@ export function runtime(state: State): string {
   return `<style data-comark-carousel>${css}</style><script>(${start.toString()})("")</script>`;
 }
 
-const attr = (value: string) => escapeHtml(value, { '"': "&quot;" });
 const off = (value: unknown) => value === false || value === "false";
-const text = (value: unknown) =>
-  value === undefined || value === null || value instanceof Object
-    ? undefined
-    : // SAFETY: undefined, null, objects, and arrays returned above, so only a string, number, or boolean is left.
-      String(value as string | number | boolean);
 const chevron = (path: string) =>
   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${path}"/></svg>`;
 
@@ -75,7 +70,7 @@ const carousel: NodeHandler = async ([, attrs, ...children], state) => {
   const { count, columns, title, zoom } = props(attrs, state);
   return shell(
     Number(count) || 0,
-    { columns: text(columns), title: text(title), zoom: !off(zoom) },
+    { columns: scalar(columns), title: scalar(title), zoom: !off(zoom) },
     await state.flow(["div", {}, ...children], state),
     state,
   );
@@ -83,9 +78,9 @@ const carousel: NodeHandler = async ([, attrs, ...children], state) => {
 
 const slide: NodeHandler = async ([, attrs, ...children], state) => {
   const { index, count, title, zoom } = props(attrs, state);
-  const name = text(title);
+  const name = scalar(title);
   const zoomable = !off(zoom);
-  return `<div class="cc-slide" role="group" aria-roledescription="slide" aria-label="${attr(`${text(index) ?? ""} of ${text(count) ?? ""}`)}"${zoomable ? ` data-zoom tabindex="0"${name === undefined ? "" : ` data-zoom-title="${attr(name)}"`}` : ""}>${await state.flow(["div", {}, ...children], state)}</div>`;
+  return `<div class="cc-slide" role="group" aria-roledescription="slide" aria-label="${attr(`${scalar(index) ?? ""} of ${scalar(count) ?? ""}`)}"${zoomable ? ` data-zoom tabindex="0"${name === undefined ? "" : ` data-zoom-title="${attr(name)}"`}` : ""}>${await state.flow(["div", {}, ...children], state)}</div>`;
 };
 
 /** HTML renderers for `::carousel` and `:::slide`. Pass them as `components`. */

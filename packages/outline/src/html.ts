@@ -1,8 +1,9 @@
 import type { NodeHandler, State } from "comark";
-import { escapeHtml } from "comark/utils";
 import { RAIL_TAG } from "./index.ts";
 import { start } from "./script.ts";
 import { css } from "./styles.ts";
+import { rawText } from "../../../shared/text.ts";
+import { attr } from "../../../shared/html.ts";
 
 export { default, RAIL_TAG } from "./index.ts";
 export type {
@@ -23,10 +24,6 @@ export const railScript = `(${start.toString()})()`;
 const styled = new WeakSet<object>();
 const started = new WeakSet<object>();
 
-const attr = (value: string) => escapeHtml(value, { '"': "&quot;" });
-// SAFETY: the parse plugin writes every attribute the renderer reads as a string.
-const str = (value: unknown) => (value === undefined ? "" : String(value as string));
-
 function styles(state: State) {
   if (styled.has(state.context)) return "";
   styled.add(state.context);
@@ -35,13 +32,13 @@ function styles(state: State) {
 
 const toc: NodeHandler = async ([, attrs, ...children], state) => {
   if (!children.length) return "";
-  const title = str(attrs.title);
+  const title = rawText(attrs.title);
   const list = (await Promise.all(children.map((child) => state.one(child, state)))).join("");
   return `${styles(state)}<nav class="cto" aria-label="${attr(title || "Contents")}">${title ? `<p class="cto-title">${attr(title)}</p>` : ""}${list}</nav>`;
 };
 
 const rail: NodeHandler = async ([, attrs, ...children], state) => {
-  const title = attr(str(attrs.title));
+  const title = attr(rawText(attrs.title));
   const list = (await Promise.all(children.map((child) => state.one(child, state)))).join("");
   const script = started.has(state.context) ? "" : `<script>${railScript}</script>`;
   started.add(state.context);

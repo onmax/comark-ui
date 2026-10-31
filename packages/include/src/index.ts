@@ -1,5 +1,7 @@
 import type { Node } from "comark";
 import { defineComarkPlugin } from "comark";
+import { errorText } from "../../../shared/text.ts";
+import { OutsideRoot, diskReader, resolvePath } from "../../../shared/disk.ts";
 
 /** Reads a file by its POSIX path relative to `root`, such as `guide/setup.md`. Returns undefined when it doesn't exist. */
 export type IncludeReader = (path: string) => string | undefined | Promise<string | undefined>;
@@ -60,17 +62,6 @@ function attributes(source: string) {
   return found;
 }
 
-// Paths are joined as strings, so the root check runs the same in Node, browsers, and edge runtimes.
-function resolve(folder: string, src: string) {
-  const parts = folder ? folder.split("/") : [];
-  for (const part of src.split(/[/\\]/)) {
-    if (part === "" || part === ".") continue;
-    if (part !== "..") parts.push(part);
-    else if (parts.pop() === undefined) return;
-  }
-  return parts.join("/");
-}
-
 const folderOf = (path: string) => path.slice(0, Math.max(0, path.lastIndexOf("/")));
 const extensionOf = (path: string) => {
   const name = path.slice(path.lastIndexOf("/") + 1);
@@ -78,7 +69,6 @@ const extensionOf = (path: string) => {
 };
 const isTrue = (value: string | undefined) => value !== undefined && value !== "false";
 const indentOf = (line: string) => line.length - line.trimStart().length;
-const errorText = (error: unknown) => (error instanceof Error ? error.message : String(error));
 
 /**
  * Marks each line that sits outside fenced code, where an include or a block marker means something. Fences may sit in
@@ -188,7 +178,7 @@ async function include(source: string, folder: string, chain: string[], run: Run
   if (invalidOption) return;
   if (/^[a-z][a-z\d+.-]*:/i.test(src))
     return fail("comark/include/remote-file", `${name}: only local files can be included.`);
-  const path = resolve(src.startsWith("/") ? "" : folder, src);
+  const path = resolvePath(src.startsWith("/") ? "" : folder, src);
   const leaves = `${name}: the path leaves the root. Move the file under the root or widen \`root\`.`;
   if (path === undefined) return fail("comark/include/path-outside-root", leaves);
   const lines = args.get("lines");
@@ -307,33 +297,6 @@ async function expand(markdown: string, folder: string, chain: string[], run: Ru
   return out.join("\n");
 }
 
-const isMissing = (error: unknown) =>
-  error instanceof Error &&
-  "code" in error &&
-  (error.code === "ENOENT" || error.code === "ENOTDIR");
-
-class OutsideRoot extends Error {}
-
-function diskReader(root: string): IncludeReader {
-  const folder = (root || ".").replace(/[/\\]+$/, "");
-  return async (path) => {
-    // Imported on first read, so the plugin loads in runtimes without node:fs when they pass their own `read`.
-    const { readFile, realpath } = await import("node:fs/promises");
-    const paths = await import("node:path");
-    try {
-      // The string check can't see symlinks, so the real target must sit under the real root too.
-      const [base, target] = await Promise.all([realpath(folder), realpath(`${folder}/${path}`)]);
-      const inside = paths.relative(base, target);
-      if (inside === ".." || inside.startsWith(`..${paths.sep}`) || paths.isAbsolute(inside))
-        throw new OutsideRoot();
-      return await readFile(target, "utf8");
-    } catch (error) {
-      if (isMissing(error)) return undefined;
-      throw error;
-    }
-  };
-}
-
 /** Removes the includes the text splice couldn't expand, keeping whatever a `::include` took in. */
 function strays(list: Node[], start: number, issues: Issue[]) {
   const inline = list.slice(start).some((node) => !Array.isArray(node));
@@ -383,7 +346,7 @@ export default defineComarkPlugin<IncludeOptions, IncludeMeta>((options = {}) =>
     async pre(state) {
       const run = fresh();
       runs.set(state, run);
-      const base = resolve("", options.base ?? "");
+      const base = resolvePath("", options.base ?? "");
       if (base === undefined)
         run.issues.push({
           rule: "comark/include/path-outside-root",

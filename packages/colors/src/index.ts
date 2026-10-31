@@ -1,6 +1,7 @@
 import type { ElementNode, Node } from "comark";
 import { defineComarkPlugin } from "comark";
 import { textContent } from "comark/utils";
+import { childrenOf, isElement } from "../../../shared/nodes.ts";
 
 export type ColorsMeta = {
   /** One readable sentence per problem with a `::palette`. Empty when the document has none. Other plugins add theirs too. */
@@ -42,8 +43,6 @@ const EXAMPLE = "`- Primary: #3b82f6`";
 /** Whether `value` is a hex, rgb(), hsl(), hwb(), lab(), lch(), oklab(), or oklch() color. */
 export const isColor = (value: string) => COLOR.test(value);
 
-const isElement = (node: Node): node is ElementNode => Array.isArray(node) && node[0] !== null;
-const childrenOf = ([, , ...rest]: ElementNode): Node[] => rest;
 // Comments render nothing, so they aren't content a palette would drop.
 const isContent = (node: Node) => (Array.isArray(node) ? node[0] !== null : node.trim() !== "");
 

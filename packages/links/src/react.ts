@@ -1,7 +1,7 @@
 import { createElement, type ReactNode, useEffect } from "react";
 import type { Anchor } from "./anchors.ts";
 import { addStyles } from "./client.ts";
-import { text } from "./text.ts";
+import { rawText } from "../../../shared/text.ts";
 
 export { anchors, external, STYLES_TAG } from "./index.ts";
 export type { Anchor, AnchorsOptions, ExternalOptions } from "./index.ts";
@@ -19,7 +19,7 @@ const heading = (tag: string) => {
     }, [anchor]);
     // Everything but `anchor` belongs to the heading itself.
     const element = createElement(tag, attrs, children);
-    const id = text(attrs.id);
+    const id = rawText(attrs.id);
     if (!anchor || !id) return element;
     return createElement(
       "div",

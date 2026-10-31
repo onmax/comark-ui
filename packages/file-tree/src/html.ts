@@ -4,6 +4,7 @@ import type { IconData } from "comark-icon";
 import { iconHtml, iconStyles } from "comark-icon/html";
 import { glyphs, marks } from "./client.ts";
 import { css } from "./styles.ts";
+import { rawText } from "../../../shared/text.ts";
 
 export { default } from "./index.ts";
 export type { EntryState, FileTreeItemAttributes, FileTreeMeta, FileTreeOptions } from "./index.ts";
@@ -11,9 +12,7 @@ export type { EntryState, FileTreeItemAttributes, FileTreeMeta, FileTreeOptions 
 // Each render gets a fresh `state.context`, so a document carries the styles once.
 const styled = new WeakSet<object>();
 
-const text = (value: unknown) =>
-  // SAFETY: the parse plugin writes every attribute the renderer reads as a string.
-  value === undefined ? "" : escapeHtml(String(value as string));
+const text = (value: unknown) => escapeHtml(rawText(value));
 const glyph = (d: string) =>
   `<svg class="cft-glyph" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${d}"></path></svg>`;
 

@@ -1,5 +1,6 @@
 import { defineComarkPlugin } from "comark";
-import { defer, hasRenderBindings, hash, type Mark, transform } from "./read.ts";
+import { defer, hasRenderBindings, type Mark, transform } from "./read.ts";
+import { hash } from "../../../shared/text.ts";
 
 export type { Entry, Mark } from "./read.ts";
 

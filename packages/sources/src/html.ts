@@ -1,7 +1,8 @@
 import type { NodeHandler, State } from "comark";
-import { escapeHtml } from "comark/utils";
 import { start } from "./client.ts";
 import { css } from "./styles.ts";
+import { rawText } from "../../../shared/text.ts";
+import { attr } from "../../../shared/html.ts";
 
 export { default } from "./index.ts";
 export type { SourcesAttributes, SourcesMeta } from "./index.ts";
@@ -17,13 +18,9 @@ function runtime(state: State) {
   return `<style data-comark-sources>${css}</style><script>(${start.toString()})("")</script>`;
 }
 
-const attr = (value: string) => escapeHtml(value, { '"': "&quot;" });
-// SAFETY: the parse plugin writes every attribute the renderer reads as a string.
-const str = (value: unknown) => (value === undefined ? "" : String(value as string));
-
 const sources: NodeHandler = async ([, attrs, ...children], state) => {
   if (!children.length) return "";
-  const title = str(attrs.title) || "Sources";
+  const title = rawText(attrs.title) || "Sources";
   const list = (await Promise.all(children.map((child) => state.one(child, state)))).join("");
   return `<section class="cso" aria-label="${attr(title)}"><p class="cso-title">${attr(title)}</p>${list}</section>${runtime(state)}`;
 };

@@ -1,3 +1,5 @@
+import { isWebUrl } from "../../../shared/url.ts";
+
 /**
  * The parts of a message, shaped like the AI SDK's `UIMessage["parts"]`, so its messages pass as they are. Every field
  * is read defensively: parts come from the model and from tools, and a stored message can be older or newer than this
@@ -59,15 +61,6 @@ type Fields = Record<string, unknown>;
 // SAFETY: every part is an object with a `type`; the other fields are read through `string()` and `in`.
 const fields = (part: MessagePart) => part as MessagePart & Fields;
 const string = (value: unknown) => (typeof value === "string" ? value : undefined);
-
-export function isWebUrl(value: string): boolean {
-  try {
-    const { protocol } = new URL(value);
-    return protocol === "http:" || protocol === "https:";
-  } catch {
-    return false;
-  }
-}
 
 const isImageUrl = (value: string) =>
   isWebUrl(value) || value.startsWith("blob:") || /^data:image\/[a-z0-9.+-]+[;,]/i.test(value);

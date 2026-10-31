@@ -40,7 +40,7 @@ The images are downloaded while parsing and inlined as data URIs, so the page as
 
 ## Options
 
-`chips({ download: false })` keeps the image URLs instead of downloading them; use it where parsing runs in a browser. `favicon: (host) => url` and `avatar: (login) => url` change where the images come from, such as `https://unavatar.io/github/${login}`. `cache: ".comark/chips"` keeps the images in a folder you can commit, and `cache: false` keeps none. The [docs](https://comark-ui.onmax.me/chips/#cache-images-in-ci) cover caching in CI.
+`chips({ download: false })` keeps the image URLs instead of downloading them; use it where parsing runs in a browser. `favicon: (host) => url` and `avatar: (login) => url` change where the images come from, such as `https://unavatar.io/github/${login}`. `cache: ".comark/chips"` keeps the images in a folder you can commit, and `cache: false` keeps them in memory only. The [docs](https://comark-ui.onmax.me/chips/#cache-images-in-ci) cover caching in CI.
 
 ## Renderers
 

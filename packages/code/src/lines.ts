@@ -1,8 +1,5 @@
 import type { ElementNode, Node } from "comark";
-
-const isElement = (node: Node): node is ElementNode => Array.isArray(node) && node[0] !== null;
-// SAFETY: an element node is [tag, attributes, ...children], so everything after index 1 is a child node.
-const childrenOf = (node: ElementNode) => node.slice(2) as Node[];
+import { childrenOf, isElement } from "../../../shared/nodes.ts";
 
 // Expressive Code's terminal languages that Shiki also knows.
 const terminals = new Set([

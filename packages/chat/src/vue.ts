@@ -16,7 +16,7 @@ import {
 import { addStyles } from "./client.ts";
 import { read, type Block, type MessagePart, type Step } from "./index.ts";
 
-export { isWebUrl, read, valueText } from "./index.ts";
+export { read, valueText } from "./index.ts";
 export type { Block, MessagePart, Step, StepStatus, ToolValue } from "./index.ts";
 
 type Of<Union, Kind> = Extract<Union, { kind: Kind }>;
