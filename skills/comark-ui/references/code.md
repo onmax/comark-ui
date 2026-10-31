@@ -28,9 +28,9 @@ function close() {
 
 A range is one line, `{7}`, a run, `{3-4}`, or a list of both, `{1, 3-4}`, always in braces. Ranges count the block's own lines from 1, folded lines included, whatever `startLineNumber` says: `startLineNumber=120 ins={3}` marks the line numbered 122.
 
-`sh`, `bash`, `zsh`, `shell`, `console`, and `ansi` blocks draw as terminals unless their title is a file name, such as `install.sh`. A terminal's header shows its title but not its language. In a code group the tab names the block, so a terminal there draws no window.
+`sh`, `bash`, `zsh`, `shell`, `shellscript`, `shellsession`, `console`, and `ansi` blocks draw as terminals unless their title is a file name, such as `install.sh`. A terminal's header shows its title but not its language. In a code group the tab names the block, so a terminal there draws no window.
 
-When the host runs Shiki's notation transformers, comments such as `// [!code ++]`, `// [!code --]`, `// [!code highlight]`, and `// [!code focus]` mark lines too, and comark-code styles them.
+When the host runs Shiki's notation transformers, comments such as `// [!code ++]`, `// [!code --]`, `// [!code highlight]`, `// [!code focus]`, `// [!code error]`, and `// [!code warning]` mark lines too, and comark-code styles them.
 
 ## Show a change
 
@@ -50,7 +50,7 @@ When the host runs Shiki's notation transformers, comments such as `// [!code ++
 ```
 ````
 
-A range that lands on the wrong line inside the block isn't reported, so count the lines before you mark them.
+A range past the block's last line is reported. One that lands on the wrong line inside the block isn't, so count the lines before you mark them.
 
 ## Add buttons
 

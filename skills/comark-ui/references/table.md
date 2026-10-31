@@ -25,6 +25,7 @@ Or read the file the run wrote, and leave the block empty:
 - A ` ```json ` fence stays code unless it sits inside `::table`. It holds an array of objects, one per row. Every key becomes a column, in the order first seen, and a nested value shows as JSON.
 - `src` starts at the document's folder, or at the host's `root` when it starts with `/`. It can't leave `root` or be a URL, and the extension picks the format. The plugin drops content beside `src` and reports it.
 - A Markdown table inside `::table{sort}` or `::table{copy}` gets the Copy button. A `::table` with no props renders its Markdown table plain.
+- To tint a cell by status, write the whole cell as `[text]{tone="success"}`, with `success`, `warning`, `error`, or `info`. A tone on the first cell tints the row. This works in Markdown, CSV, TSV, and JSON cells. A span that doesn't fill its cell, or another tone, leaves the cell uncolored and is reported.
 
 | Prop | What it does |
 | --- | --- |
