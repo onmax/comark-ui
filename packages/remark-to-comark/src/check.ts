@@ -1,7 +1,7 @@
 import { parseSync } from "oxc-parser";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { glob as globFiles } from "tinyglobby";
 import type { Pluggable } from "unified";
 import { migrateContent } from "./content.ts";
@@ -155,46 +155,140 @@ export interface ContentSetup {
   remarkPlugins: Pluggable[];
   alerts: boolean;
   emoji: boolean;
-  /** Whether the project reads GFM: false only when every setup found is one that leaves remark-gfm out. */
+  /** Whether the owning setup reads GFM. */
   gfm: boolean;
   /** Syntax plugins the project uses that couldn't be loaded, so content would escape the syntax they add. */
   missing: string[];
+  /** Conflicting setups in this scope: the document's renderer can't be determined safely. */
+  reason?: string;
 }
 
-/** How the content codemod must parse this project's Markdown: with its syntax plugins and alert markers. */
-export async function contentSetup(
-  root: string,
-  setups: Setup[],
-  sources: string[] = [],
-): Promise<ContentSetup> {
+function contentProfile(setups: Setup[], code = "") {
   const names = setups.flatMap((setup) => setup.plugins.map((plugin) => plugin.name));
   // Code `rewrite` already moved to Comark still says what the Markdown holds: its plugins replace remark's.
-  const code = sources.join("\n");
   if (/["'](?:@comark\/html|comark)\/plugins\/math["']/.test(code)) names.push("remark-math");
-  const missing: string[] = [];
-  const remarkPlugins = await syntaxPlugins(root, names, missing);
   // Astro, Docusaurus, Gatsby, and Nuxt Content read GFM on their own; a bare unified chain or react-markdown doesn't.
   const gfmByDefault = setups.some((setup) =>
     ["astro", "docusaurus", "gatsby", "nuxt"].includes(setup.host),
   );
   const comarkGfm = /comarkOptions\((?![^)]*gfm:\s*false)/.test(code);
+  const syntax = [...new Set(names.filter((name) => SYNTAX.test(name)))].sort();
   return {
-    remarkPlugins,
+    names: syntax,
+    options: syntax.map((name) => {
+      const options = setups.flatMap((setup) =>
+        setup.plugins
+          .filter((plugin) => plugin.name === name)
+          .map((plugin) => plugin.options ?? ""),
+      );
+      return [...new Set(options.length ? options : [""])].sort();
+    }),
     alerts:
       names.some((name) => ALERTS.test(name)) ||
       /["']comark\/plugins\/alert["']|["']comark-github["']/.test(code),
     emoji:
       names.some((name) => /^remark-(gemoji|emoji)$/.test(name)) ||
       /["']comark\/plugins\/emoji["']/.test(code),
-    gfm: !setups.length || gfmByDefault || comarkGfm || names.includes("remark-gfm"),
+    gfm:
+      (!setups.length && !/comarkOptions\(/.test(code)) ||
+      gfmByDefault ||
+      comarkGfm ||
+      names.includes("remark-gfm"),
+  };
+}
+
+/** How one site's content must be parsed. Differing renderers are ambiguous, so never union their syntax. */
+export async function contentSetup(
+  root: string,
+  setups: Setup[],
+  sources: string[] = [],
+): Promise<ContentSetup> {
+  const groups: Setup[][] = [];
+  const configs = new Map<string, Setup[]>();
+  for (const setup of setups) {
+    if (["unified", "react-markdown", "component"].includes(setup.host)) groups.push([setup]);
+    else {
+      const config = configs.get(setup.file) ?? [];
+      config.push(setup);
+      configs.set(setup.file, config);
+    }
+  }
+  groups.push(...configs.values());
+  const profiles = groups.map((group) => contentProfile(group));
+  for (const source of sources) {
+    if (
+      /["'](?:remark-to-comark\/setup|(?:@comark\/html|comark)\/plugins\/math|comark\/plugins\/(?:alert|emoji)|comark-github)["']/.test(
+        source,
+      )
+    )
+      profiles.push(contentProfile([], source));
+  }
+  const profile = profiles[0] ?? contentProfile([]);
+  if (profiles.some((other) => JSON.stringify(other) !== JSON.stringify(profile)))
+    return {
+      remarkPlugins: [],
+      alerts: false,
+      emoji: false,
+      gfm: false,
+      missing: [],
+      reason:
+        "The Markdown setups in this site or package disagree about syntax, and the document's owning renderer is ambiguous.",
+    };
+  const missing: string[] = [];
+  return {
+    remarkPlugins: await syntaxPlugins(root, profile.names, missing),
+    alerts: profile.alerts,
+    emoji: profile.emoji,
+    gfm: profile.gfm,
     missing,
   };
 }
 
-/** Every remark setup in the project's code. */
-export async function scanProject(
+type ScannedFile = { file: string; source: string; setups: Setup[] };
+const SITE_CONFIG =
+  "**/{astro.config,next.config,contentlayer.config,docusaurus.config,gatsby-config,velite.config,nuxt.config}.{js,mjs,cjs,ts,mts,cts}";
+
+/** Resolve content by its nearest package or framework config, keeping sibling sites and rewritten code apart. */
+export async function contentSetups(
+  root: string,
   reader: ProjectReader,
-): Promise<{ file: string; source: string; setups: Setup[] }[]> {
+  scanned: ScannedFile[],
+): Promise<(file: string) => Promise<ContentSetup>> {
+  const boundaries = [
+    "",
+    ...new Set(
+      (await Promise.all([reader.glob("**/package.json"), reader.glob(SITE_CONFIG)]))
+        .flat()
+        .map((file) => (dirname(file) === "." ? "" : `${dirname(file)}/`)),
+    ),
+  ].sort((a, b) => b.length - a.length);
+  const owner = (file: string) => boundaries.find((dir) => file.startsWith(dir))!;
+  const byScope = new Map<string, ScannedFile[]>();
+  for (const entry of scanned) {
+    const scope = owner(entry.file);
+    const entries = byScope.get(scope) ?? [];
+    entries.push(entry);
+    byScope.set(scope, entries);
+  }
+  const cache = new Map<string, Promise<ContentSetup>>();
+  return (file) => {
+    const scope = owner(file);
+    let setup = cache.get(scope);
+    if (!setup) {
+      const entries = byScope.get(scope) ?? [];
+      setup = contentSetup(
+        resolve(root, scope),
+        entries.flatMap((entry) => entry.setups),
+        entries.map((entry) => entry.source),
+      );
+      cache.set(scope, setup);
+    }
+    return setup;
+  };
+}
+
+/** Every remark setup in the project's code. */
+export async function scanProject(reader: ProjectReader): Promise<ScannedFile[]> {
   const files = [];
   for (const file of (
     await reader.glob("**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx,vue,svelte,astro}")
@@ -281,19 +375,25 @@ export async function check(
     }
   }
 
-  const setup = await contentSetup(
-    root,
-    scanned.flatMap((entry) => entry.setups),
-    scanned.map((entry) => entry.source),
-  );
+  const setupFor = await contentSetups(root, reader, scanned);
   const documents = (await reader.glob("**/*.{md,mdx}")).sort();
   const split = await splitMdx(reader, documents);
   for (const path of documents) {
     if (split.mdx.has(path)) continue;
     const source = reader.read(path);
     if (source === undefined) continue;
-    const { changes, skipped } = migrateContent(source, setup);
     const file = shown(path);
+    const setup = await setupFor(path);
+    if (setup.reason) {
+      findings.push({
+        code: "RTC0303",
+        params: { at: `${file}:1`, reason: setup.reason },
+        file,
+        line: 1,
+      });
+      continue;
+    }
+    const { changes, skipped } = migrateContent(source, setup);
     if (skipped.length)
       findings.push({
         code: "RTC0303",

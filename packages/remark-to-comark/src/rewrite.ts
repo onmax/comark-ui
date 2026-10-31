@@ -202,7 +202,7 @@ function facts(program: Program): Facts {
     }
     for (const [childKey, child] of children(node)) visit(child, node, childKey);
   };
-  for (const node of program.body) visit(node);
+  for (const node of program.body) visit(node, program);
   return result;
 }
 
@@ -321,27 +321,80 @@ function inputUse(
   if (type !== "Identifier")
     return `passes ${type === "NewExpression" || type === "ObjectExpression" ? "a VFile-like object" : "an expression"} to \`process\`; \`renderHtml\` takes the Markdown string, so pass a string variable`;
   const name = chain.input!;
-  // Its declarations: a parameter or variable typed as anything but `string`, or holding an object, isn't a string.
-  let verdict: string | undefined;
+  const declarations: { id: BindingIdentifier; node: Node }[] = [];
+  let assigned = false;
+  const containsName = (node: Node): boolean =>
+    (node.type === "Identifier" && node.name === name) ||
+    children(node).some(([, child]) => containsName(child));
   const visit = (node: Node) => {
-    if (verdict) return;
     const ids: BindingIdentifier[] = [];
     if (node.type === "VariableDeclarator") bindingNames(node.id, ids);
-    if (isFunction(node)) for (const param of node.params) bindingNames(param, ids);
-    for (const id of ids) {
-      if (id.name !== name) continue;
-      const annotation = id.typeAnnotation?.typeAnnotation;
-      const init = node.type === "VariableDeclarator" ? node.init : null;
-      if (annotation && annotation.type !== "TSStringKeyword")
-        verdict = `passes \`${name}\`, typed as something other than \`string\`, to \`process\`; \`renderHtml\` takes the Markdown string`;
-      else if (init && /^(NewExpression|ObjectExpression|ArrayExpression)$/.test(init.type))
-        verdict = `passes \`${name}\`, a VFile-like object, to \`process\`; \`renderHtml\` takes the Markdown string`;
+    if (isFunction(node)) {
+      if ("id" in node && node.id) ids.push(node.id);
+      for (const param of node.params) bindingNames(param, ids);
     }
+    if ((node.type === "ClassDeclaration" || node.type === "ClassExpression") && node.id)
+      ids.push(node.id);
+    if (node.type === "CatchClause") bindingNames(node.param, ids);
+    for (const id of ids) if (id.name === name) declarations.push({ id, node });
+    if (node.type === "AssignmentExpression" && containsName(node.left)) assigned = true;
+    if (node.type === "UpdateExpression" && containsName(node.argument)) assigned = true;
+    if (
+      (node.type === "ForOfStatement" || node.type === "ForInStatement") &&
+      containsName(node.left)
+    )
+      assigned = true;
     for (const [, child] of children(node)) visit(child);
   };
   visit(program);
-  void info;
-  return verdict;
+  const unknown = `passes \`${name}\`, whose binding isn't proven to be a string, to \`process\`; pass a string literal, a const string, or a parameter typed as \`string\``;
+  if (
+    assigned ||
+    declarations.length !== 1 ||
+    info.imports.some((item) => item.specifiers.some((specifier) => specifier.local === name))
+  )
+    return unknown;
+  const { id, node } = declarations[0]!;
+  if (id.typeAnnotation && id.typeAnnotation.typeAnnotation.type !== "TSStringKeyword")
+    return `passes \`${name}\`, typed as something other than \`string\`, to \`process\`; \`renderHtml\` takes the Markdown string`;
+  if (
+    node.type === "VariableDeclarator" &&
+    node.init &&
+    /^(NewExpression|ObjectExpression|ArrayExpression)$/.test(node.init.type)
+  )
+    return `passes \`${name}\`, a VFile-like object, to \`process\`; \`renderHtml\` takes the Markdown string`;
+  // A uniquely named binding must still enclose the use; a declaration in a sibling function isn't in scope.
+  let scope: Node | undefined = node;
+  while (
+    scope &&
+    !isFunction(scope) &&
+    !/^(Program|BlockStatement|ForStatement|ForOfStatement|ForInStatement|SwitchStatement)$/.test(
+      scope.type,
+    )
+  )
+    scope = info.parent.get(scope);
+  if (
+    !scope ||
+    chain.inputStart === undefined ||
+    chain.inputStart < scope.start ||
+    chain.inputStart >= scope.end
+  )
+    return unknown;
+  if (isFunction(node))
+    return id.typeAnnotation?.typeAnnotation.type === "TSStringKeyword" &&
+      !("optional" in id && id.optional)
+      ? undefined
+      : unknown;
+  if (node.type !== "VariableDeclarator" || node.id !== id || id.end > chain.inputStart)
+    return unknown;
+  const declaration = info.parent.get(node);
+  const init = node.init;
+  return declaration?.type === "VariableDeclaration" &&
+    declaration.kind === "const" &&
+    init &&
+    ((init.type === "Literal" && typeof init.value === "string") || init.type === "TemplateLiteral")
+    ? undefined
+    : unknown;
 }
 
 /** Why a chain can't become `renderHtml(markdown, options)` without changing what it does, if it can't. */

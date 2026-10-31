@@ -443,40 +443,35 @@ function scanScript(source: string, file: string, shared?: Map<string, string>):
             ? [found(item.key, item.value.type === "ObjectExpression" ? item.value : undefined)!]
             : [],
         );
-        if (plugins.length) setups.push({ file, line: lineOf(node.start), host, plugins });
+        if (plugins.length || host !== "config")
+          setups.push({ file, line: lineOf(node.start), host, plugins });
         return;
       }
       if (!isList(value)) return;
       const plugins = list(value);
-      if (plugins.length) setups.push({ file, line: lineOf(node.start), host, plugins });
+      if (plugins.length || host !== "config")
+        setups.push({ file, line: lineOf(node.start), host, plugins });
       return;
     }
-    // <ReactMarkdown remarkPlugins={[remarkGfm]} />, and any component that takes the same props
-    if (node.type === "JSXAttribute") {
-      const key = node.name.type === "JSXIdentifier" ? node.name.name : undefined;
-      const value =
-        node.value?.type === "JSXExpressionContainer" ? node.value.expression : undefined;
-      if (!key || !PLUGIN_LISTS.has(key) || !value || !isList(value)) return;
-      const plugins = list(value);
-      const owner = [...imports.values()].some((from) => from === "react-markdown")
-        ? "react-markdown"
-        : "component";
-      if (plugins.length) setups.push({ file, line: lineOf(node.start), host: owner, plugins });
-      return;
-    }
-    // `<ReactMarkdown>{text}</ReactMarkdown>` with no plugin props still renders with remark.
-    if (
-      node.type === "JSXOpeningElement" &&
-      node.name.type === "JSXIdentifier" &&
-      imports.get(node.name.name) === "react-markdown"
-    ) {
-      const props = node.attributes.flatMap((attribute) =>
-        attribute.type === "JSXAttribute" && attribute.name.type === "JSXIdentifier"
-          ? [attribute.name.name]
-          : [],
-      );
-      if (!props.some((prop) => PLUGIN_LISTS.has(prop)))
-        setups.push({ file, line: lineOf(node.start), host: "react-markdown", plugins: [] });
+    // Keep each element's remark and rehype props together. ReactMarkdown renders even with empty or absent lists.
+    if (node.type === "JSXOpeningElement") {
+      const owner =
+        node.name.type === "JSXIdentifier" && imports.get(node.name.name) === "react-markdown"
+          ? "react-markdown"
+          : "component";
+      const plugins = node.attributes.flatMap((attribute) => {
+        if (
+          attribute.type !== "JSXAttribute" ||
+          attribute.name.type !== "JSXIdentifier" ||
+          !PLUGIN_LISTS.has(attribute.name.name) ||
+          attribute.value?.type !== "JSXExpressionContainer"
+        )
+          return [];
+        const value = attribute.value.expression;
+        return isList(value) ? list(value) : [];
+      });
+      if (plugins.length || owner === "react-markdown")
+        setups.push({ file, line: lineOf(node.start), host: owner, plugins });
     }
   });
   return setups;

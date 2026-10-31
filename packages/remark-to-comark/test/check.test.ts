@@ -1,12 +1,16 @@
-import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
+import { execFileSync, spawnSync } from "node:child_process";
+import { mkdtempSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vite-plus/test";
 import { check } from "../src/check.ts";
 import { formatFindings } from "../src/report.ts";
 
 function project(files: Record<string, string>) {
   const root = mkdtempSync(join(tmpdir(), "remark-to-comark-"));
+  // A synthetic root for CLI discovery, so a checkout above the temporary directory doesn't become the fixture root.
+  writeFileSync(join(root, ".git"), "fixture");
   for (const [path, text] of Object.entries(files)) {
     mkdirSync(join(root, path, ".."), { recursive: true });
     writeFileSync(join(root, path), text);
@@ -15,7 +19,8 @@ function project(files: Record<string, string>) {
 }
 
 const fixture = project({
-  "src/render.ts": `import { remark } from "remark";\nimport html from "remark-html";\nimport rehypeAutolinkHeadings from "rehype-autolink-headings";\nimport mine from "./mine.js";\nexport const a = async (md) => String(await remark().use(html).process(md));\nexport const b = async (md) => String(await remark().use(mine).use(html).process(md));\nexport const c = [rehypeAutolinkHeadings];\n`,
+  "src/package.json": "{}",
+  "src/render.ts": `import { remark } from "remark";\nimport html from "remark-html";\nimport rehypeAutolinkHeadings from "rehype-autolink-headings";\nimport mine from "./mine.js";\nexport const a = async (md: string) => String(await remark().use(html).process(md));\nexport const b = async (other: string) => String(await remark().use(mine).use(html).process(other));\nexport const c = [rehypeAutolinkHeadings];\n`,
   "astro.config.mjs": `import remarkToc from "remark-toc";\nexport default { markdown: { remarkPlugins: [remarkToc] } };\n`,
   "docs/a.md": "# A\n\nSet {value} first.\n",
   "docs/b.md": "# B\n\nPlain.\n",
@@ -23,6 +28,64 @@ const fixture = project({
 });
 
 describe("check", () => {
+  it("keeps literal single tildes for an explicitly empty ReactMarkdown setup in content --write", () => {
+    const root = project({
+      "view.tsx": `import Markdown from "react-markdown"; export const C = () => <Markdown remarkPlugins={[]} />;`,
+      "doc.md": "~a~\n",
+    });
+    execFileSync(
+      process.execPath,
+      [fileURLToPath(new URL("../src/cli.ts", import.meta.url)), "content", "doc.md", "--write"],
+      { cwd: root },
+    );
+    expect(readFileSync(join(root, "doc.md"), "utf8")).toBe("~a~\n");
+  });
+
+  it("scopes syntax plugins and alert/emoji flags to their site for check and content --write", async () => {
+    const root = project({
+      "a/astro.config.ts": `export default { markdown: { remarkPlugins: [] } };`,
+      "b/astro.config.ts": `import directive from "remark-directive"; import alerts from "remark-github-blockquote-alert"; import emoji from "remark-gemoji"; export default { markdown: { remarkPlugins: [directive, alerts, emoji] } };`,
+      "a/doc.md": ":note[hello] :smile:\n\n> [!NOTE]\n> text\n",
+      "b/doc.md": ":note[hello] :smile:\n\n> [!NOTE]\n> text\n",
+    });
+    const findings = await check(root);
+    expect(
+      findings.some((finding) => finding.code === "RTC0302" && finding.file === "a/doc.md"),
+    ).toBe(true);
+    execFileSync(
+      process.execPath,
+      [fileURLToPath(new URL("../src/cli.ts", import.meta.url)), "content", "**/*.md", "--write"],
+      { cwd: root },
+    );
+    expect(readFileSync(join(root, "a/doc.md"), "utf8")).toBe(
+      "\\:note\\[hello\\] \\:smile:\n\n> \\[!NOTE\\]\n> text\n",
+    );
+    expect(readFileSync(join(root, "b/doc.md"), "utf8")).toBe(
+      ":note[hello] :smile:\n\n> [!NOTE]\n> text\n",
+    );
+  }, 30000);
+
+  it("refuses ambiguous ownership while still writing files in an independent package", async () => {
+    const root = project({
+      "view.tsx": `import Markdown from "react-markdown"; import gfm from "remark-gfm"; export const C = () => <><Markdown remarkPlugins={[]} /><Other remarkPlugins={[gfm]} /></>;`,
+      "doc.md": "~a~ {x}\n",
+      "independent/package.json": "{}",
+      "independent/doc.md": "{x}\n",
+    });
+    expect(
+      (await check(root)).find((finding) => finding.code === "RTC0303")?.params.reason,
+    ).toContain("disagree");
+    const result = spawnSync(
+      process.execPath,
+      [fileURLToPath(new URL("../src/cli.ts", import.meta.url)), "content", "**/*.md", "--write"],
+      { cwd: root, encoding: "utf8" },
+    );
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("disagree");
+    expect(readFileSync(join(root, "doc.md"), "utf8")).toBe("~a~ {x}\n");
+    expect(readFileSync(join(root, "independent/doc.md"), "utf8")).toBe("\\{x}\n");
+  }, 30000);
+
   it("counts a Docusaurus site's .md files as MDX unless its config sets markdown.format to detect", async () => {
     const site = (config: string) =>
       project({
@@ -159,7 +222,7 @@ describe("check", () => {
   it("parses with the project's math plugin, or the bundled one, so content doesn't escape inside math", async () => {
     const findings = await check(
       project({
-        "render.ts": `import { remark } from "remark";\nimport remarkMath from "remark-math";\nexport const f = (md) => remark().use(remarkMath).process(md);\n`,
+        "render.ts": `import { remark } from "remark";\nimport remarkMath from "remark-math";\nexport const f = (md: string) => remark().use(remarkMath).process(md);\n`,
         "doc.md": "Sum $x_{i}$ and {y}.\n",
       }),
     );

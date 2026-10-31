@@ -127,10 +127,14 @@ export const catalog = {
   RTC0303: {
     ruleId: "remark-to-comark/content",
     severity: "warn",
-    why: (p: Where & { count: number; lines: string }) =>
-      `${p.at} has ${p.count} ${p.count === 1 ? "block" : "blocks"} the rewrite left as written, on lines ${p.lines}, because no edit kept remark's output the same. Comark may read ${p.count === 1 ? "it" : "them"} differently.`,
-    fix: () =>
-      "Look at each line. A URL after an unclosed `[`: escape the bracket by hand (`\\[`) or wrap the URL in `<…>`. A strikethrough nested in another or inside a reference label: rewrite it with `~~`. Then run the check again.",
+    why: (p: Where & { count?: number; lines?: string; reason?: string }) =>
+      p.reason
+        ? `${p.at} was left as written. ${p.reason}`
+        : `${p.at} has ${p.count} ${p.count === 1 ? "block" : "blocks"} the rewrite left as written, on lines ${p.lines}, because no edit kept remark's output the same. Comark may read ${p.count === 1 ? "it" : "them"} differently.`,
+    fix: (p: Where & { reason?: string }) =>
+      p.reason
+        ? "Identify the renderer for this document and migrate it by hand with that renderer's syntax settings; the content command won't guess between conflicting setups."
+        : "Look at each line. A URL after an unclosed `[`: escape the bracket by hand (`\\[`) or wrap the URL in `<…>`. A strikethrough nested in another or inside a reference label: rewrite it with `~~`. Then run the check again.",
   },
 } as const;
 

@@ -9,7 +9,7 @@ const names = (source: string, file = "x.ts") =>
 
 describe("scanSource", () => {
   it("reads a unified chain and maps each plugin", () => {
-    const source = `import { unified } from "unified";\nimport remarkParse from "remark-parse";\nimport remarkGfm from "remark-gfm";\nimport remarkRehype from "remark-rehype";\nimport rehypeSlug from "rehype-slug";\nimport rehypeStringify from "rehype-stringify";\nexport const html = (md) => unified().use(remarkParse).use(remarkGfm).use(remarkRehype).use(rehypeSlug).use(rehypeStringify).process(md);\n`;
+    const source = `import { unified } from "unified";\nimport remarkParse from "remark-parse";\nimport remarkGfm from "remark-gfm";\nimport remarkRehype from "remark-rehype";\nimport rehypeSlug from "rehype-slug";\nimport rehypeStringify from "rehype-stringify";\nexport const html = (md: string) => unified().use(remarkParse).use(remarkGfm).use(remarkRehype).use(rehypeSlug).use(rehypeStringify).process(md);\n`;
     expect(names(source)).toEqual([
       [
         "unified",
@@ -88,7 +88,7 @@ describe("rewriteSource", () => {
   });
 
   it("keeps an import something else still uses", () => {
-    const source = `import { unified } from "unified";\nimport remarkParse from "remark-parse";\nimport rehypeStringify from "rehype-stringify";\nexport const p = unified().use(remarkParse);\nexport const run = async (md) => String(await unified().use(remarkParse).use(rehypeStringify).process(md));\n`;
+    const source = `import { unified } from "unified";\nimport remarkParse from "remark-parse";\nimport rehypeStringify from "rehype-stringify";\nexport const p = unified().use(remarkParse);\nexport const run = async (md: string) => String(await unified().use(remarkParse).use(rehypeStringify).process(md));\n`;
     const { code } = rewriteSource(source, "c.ts");
     expect(code).toContain(`import remarkParse from "remark-parse";`);
     expect(code).toContain(`import { unified } from "unified";`);
@@ -103,38 +103,38 @@ describe("rewriteSource keeps what the chain did", () => {
   it("drops raw HTML unless the chain kept it", () => {
     expect(
       rewrite(
-        `${head}export const f = async (md) => String(await remark().use(html).process(md));\n`,
+        `${head}export const f = async (md: string) => String(await remark().use(html).process(md));\n`,
       ).code,
     ).toContain("comarkOptions({ html: false, gfm: false, frontmatter: false })");
-    const raw = `import { unified } from "unified";\nimport remarkParse from "remark-parse";\nimport remarkRehype from "remark-rehype";\nimport rehypeRaw from "rehype-raw";\nimport rehypeStringify from "rehype-stringify";\nexport const f = async (md) => String(await unified().use(remarkParse).use(remarkRehype, { allowDangerousHtml: true }).use(rehypeRaw).use(rehypeStringify).process(md));\n`;
+    const raw = `import { unified } from "unified";\nimport remarkParse from "remark-parse";\nimport remarkRehype from "remark-rehype";\nimport rehypeRaw from "rehype-raw";\nimport rehypeStringify from "rehype-stringify";\nexport const f = async (md: string) => String(await unified().use(remarkParse).use(remarkRehype, { allowDangerousHtml: true }).use(rehypeRaw).use(rehypeStringify).process(md));\n`;
     expect(rewrite(raw).code).toContain("comarkOptions({ gfm: false, frontmatter: false })");
   });
 
   it.each([
     [
       "a plugin list with the project's own plugin",
-      `${head}const custom = () => () => {};\nexport const f = (md) => remark().use([html, custom]).process(md);\n`,
+      `${head}const custom = () => () => {};\nexport const f = (md: string) => remark().use([html, custom]).process(md);\n`,
       "uses the project's own plugin (`custom`)",
     ],
     [
       "VFile fields on the result",
-      `${head}export async function f(md) { const file = await remark().use(html).process(md); return file.data; }\n`,
+      `${head}export async function f(md: string) { const file = await remark().use(html).process(md); return file.data; }\n`,
       "reads `file` as the VFile",
     ],
     [
       "a VFile-like input",
-      `${head}export const f = (md) => remark().use(html).process({ value: md });\n`,
+      `${head}export const f = (md: string) => remark().use(html).process({ value: md });\n`,
       "VFile-like object",
     ],
     ["a callback", `${head}remark().use(html).process("x", () => {});\n`, "callback"],
     [
       "CommonJS",
-      `const { remark } = require("remark");\nconst html = require("remark-html");\nmodule.exports = (md) => remark().use(html).process(md);\n`,
+      `const { remark } = require("remark");\nconst html = require("remark-html");\nmodule.exports = (md: string) => remark().use(html).process(md);\n`,
       "CommonJS",
     ],
     [
       "rehype-sanitize",
-      `${head}import rehypeSanitize from "rehype-sanitize";\nexport const f = (md) => remark().use(html).use(rehypeSanitize).process(md);\n`,
+      `${head}import rehypeSanitize from "rehype-sanitize";\nexport const f = (md: string) => remark().use(html).use(rehypeSanitize).process(md);\n`,
       "rehype-sanitize has no Comark counterpart",
     ],
   ])("leaves %s", (_, source, reason) => {
@@ -145,12 +145,12 @@ describe("rewriteSource keeps what the chain did", () => {
 
   it("reuses an existing import and avoids a clashing name", () => {
     const reused = rewrite(
-      `import { renderHtml } from '@comark/html';\n${head}export const f = async (md) => String(await remark().use(html).process(md));\n`,
+      `import { renderHtml } from '@comark/html';\n${head}export const f = async (md: string) => String(await remark().use(html).process(md));\n`,
     ).code;
     expect(reused.match(/renderHtml }/g)).toHaveLength(1);
     expect(reused).not.toContain("remark-html");
     const clash = rewrite(
-      `${head}const renderHtml = 1;\nexport const f = async (md) => String(await remark().use(html).process(md));\n`,
+      `${head}const renderHtml = 1;\nexport const f = async (md: string) => String(await remark().use(html).process(md));\n`,
     ).code;
     expect(clash).toContain("import { renderHtml as renderHtmlFromComark }");
     expect(clash).toContain("renderHtmlFromComark(md,");
@@ -165,7 +165,7 @@ describe("rewriteSource on the review's inputs", () => {
   it("reads the HTML policy from the options, not from comments", () => {
     expect(
       rewriteSource(
-        `${unified}export const f = async (md) => String(await ${chain(", {/* allowDangerousHtml: true */}")}.process(md));\n`,
+        `${unified}export const f = async (md: string) => String(await ${chain(", {/* allowDangerousHtml: true */}")}.process(md));\n`,
         "x.ts",
       ).code,
     ).toContain("html: false");
@@ -174,12 +174,12 @@ describe("rewriteSource on the review's inputs", () => {
   it.each([
     [
       "options in a variable",
-      `${unified}const options = { allowDangerousHtml: true };\nexport const f = async (md) => String(await ${chain(", options")}.process(md));\n`,
+      `${unified}const options = { allowDangerousHtml: true };\nexport const f = async (md: string) => String(await ${chain(", options")}.process(md));\n`,
       "can't read",
     ],
     [
       "a destructured VFile",
-      `${unified}export async function f(md) { const { value } = await ${chain()}.process(md); return value; }\n`,
+      `${unified}export async function f(md: string) { const { value } = await ${chain()}.process(md); return value; }\n`,
       "uses the VFile",
     ],
     [
@@ -189,7 +189,7 @@ describe("rewriteSource on the review's inputs", () => {
     ],
     [
       "VFile fields in then",
-      `${unified}export const f = (md) => ${chain()}.process(md).then((file) => file.value);\n`,
+      `${unified}export const f = (md: string) => ${chain()}.process(md).then((file) => file.value);\n`,
       "in `.then`",
     ],
   ])("leaves %s", (_, source, reason) => {
@@ -200,7 +200,7 @@ describe("rewriteSource on the review's inputs", () => {
 
   it("calls an existing aliased import by its alias", () => {
     const code = rewriteSource(
-      `import { renderHtml as render } from "@comark/html";\n${unified}export const f = async (md) => String(await ${chain()}.process(md));\nexport const g = render;\n`,
+      `import { renderHtml as render } from "@comark/html";\n${unified}export const f = async (md: string) => String(await ${chain()}.process(md));\nexport const g = render;\n`,
       "x.ts",
     ).code;
     expect(code).toContain("render(md, comarkOptions(");
@@ -210,7 +210,8 @@ describe("rewriteSource on the review's inputs", () => {
 
 describe("rewriteSource on the second review's inputs", () => {
   const head = `import { unified } from "unified";\nimport p from "remark-parse";\nimport r from "remark-rehype";\nimport s from "rehype-stringify";\n`;
-  const wrap = (chain: string) => `export const f = async (md) => String(await ${chain});\n`;
+  const wrap = (chain: string) =>
+    `export const f = async (md: string) => String(await ${chain});\n`;
 
   it.each([
     [
@@ -240,17 +241,17 @@ describe("rewriteSource on the second review's inputs", () => {
     ],
     [
       "a destructured then",
-      `${head}export const f = (md) => unified().use(p).use(r).use(s).process(md).then(({ value }) => value);\n`,
+      `${head}export const f = (md: string) => unified().use(p).use(r).use(s).process(md).then(({ value }) => value);\n`,
       "in `.then`",
     ],
     [
       "a bracket read",
-      `${head}export async function f(md) { const file = await unified().use(p).use(r).use(s).process(md); return file["value"]; }\n`,
+      `${head}export async function f(md: string) { const file = await unified().use(p).use(r).use(s).process(md); return file["value"]; }\n`,
       "reads `file`",
     ],
     [
       "a returned VFile",
-      `${head}export const f = (md) => unified().use(p).use(r).use(s).process(md);\n`,
+      `${head}export const f = (md: string) => unified().use(p).use(r).use(s).process(md);\n`,
       "callers would change",
     ],
     [
@@ -282,7 +283,7 @@ describe("rewriteSource on the second review's inputs", () => {
 
   it("picks names nothing in the file uses, globals included", () => {
     const code = rewriteSource(
-      `${head}import math from "remark-math";\nexport const f = async (renderHtml, md) => String(await unified().use(p).use(math).use(r).use(s).process(md)) + Math.random();\n`,
+      `${head}import math from "remark-math";\nexport const f = async (renderHtml, md: string) => String(await unified().use(p).use(math).use(r).use(s).process(md)) + Math.random();\n`,
       "x.ts",
     ).code;
     expect(code).toContain("import { renderHtml as renderHtmlFromComark }");
@@ -347,14 +348,43 @@ describe("rewriteSource on the second review's inputs", () => {
 describe("rewriteSource on the PR review's inputs", () => {
   const head = `import { remark } from "remark";\nimport html from "remark-html";\n`;
   it.each([
+    ['const input = Buffer.from("# Hi");', ""],
+    ['import input from "./input.js";', ""],
+    ["", "input"],
+    ["", ""],
+    ['let input = "# Hi"; input = Buffer.from("# Other");', ""],
+    ['const input = "# Hi";', "input"],
+    ["function other(input: string) { return input; }", ""],
+  ])(
+    "leaves identifier inputs without a proven string binding: %s %s",
+    (declaration, parameter) => {
+      const source = `${head}${declaration}\nexport const f = async (${parameter}) => String(await remark().use(html).process(input));`;
+      const result = rewriteSource(source, "x.ts");
+      expect(result.code).toBe(source);
+      expect(result.rewrites[0]?.reason).toContain("binding isn't proven to be a string");
+    },
+  );
+
+  it.each(['const input = "# Hi";', "const input = `# ${title}`;"])(
+    "rewrites a const string binding: %s",
+    (declaration) => {
+      const result = rewriteSource(
+        `${head}${declaration}\nexport const f = async () => String(await remark().use(html).process(input));`,
+        "x.ts",
+      );
+      expect(result.rewrites[0]?.rewritten).toBe(true);
+    },
+  );
+
+  it.each([
     [
       "a rehype processor, which parses HTML",
-      `import { rehype } from "rehype";\nimport stringify from "rehype-stringify";\nexport const f = async (md) => String(await rehype().use(stringify).process(md));\n`,
+      `import { rehype } from "rehype";\nimport stringify from "rehype-stringify";\nexport const f = async (md: string) => String(await rehype().use(stringify).process(md));\n`,
       "parses HTML",
     ],
     [
       "remark-toc, whose list Comark's toc() doesn't render",
-      `${head}import toc from "remark-toc";\nexport const f = async (md) => String(await remark().use(toc).use(html).process(md));\n`,
+      `${head}import toc from "remark-toc";\nexport const f = async (md: string) => String(await remark().use(toc).use(html).process(md));\n`,
       "visible table of contents",
     ],
     [
@@ -404,6 +434,23 @@ describe("rewriteSource on the PR review's inputs", () => {
 });
 
 describe("scanSource in component markup", () => {
+  it("keeps empty ReactMarkdown lists and attributes plugin props to their own element", () => {
+    const setups = scanSource(
+      `import Markdown from "react-markdown";
+import gfm from "remark-gfm";
+const empty = [];
+export const C = () => <><Markdown remarkPlugins={[]} /><Markdown remarkPlugins={empty} rehypePlugins={[]} /><Other remarkPlugins={[gfm]} /></>;`,
+      "a.tsx",
+    );
+    expect(setups.map((setup) => [setup.host, setup.plugins.map((plugin) => plugin.name)])).toEqual(
+      [
+        ["react-markdown", []],
+        ["react-markdown", []],
+        ["component", ["remark-gfm"]],
+      ],
+    );
+  });
+
   it("reads plugin lists in Svelte and Vue markup, and a react-markdown with no plugins", () => {
     const names = (source: string, file: string) =>
       scanSource(source, file).map((setup) => [

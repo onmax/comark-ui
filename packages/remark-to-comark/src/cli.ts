@@ -3,7 +3,7 @@ import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { glob } from "tinyglobby";
-import { check, contentSetup, nodeReader, scanProject, splitMdx } from "./check.ts";
+import { check, contentSetups, nodeReader, scanProject, splitMdx } from "./check.ts";
 import { migrateContent } from "./content.ts";
 import { formatFindings } from "./report.ts";
 import { rewriteSource } from "./rewrite.ts";
@@ -89,11 +89,7 @@ if (command === "check") {
   const root = projectRoot(process.cwd());
   const reader = nodeReader(root);
   const scanned = await scanProject(reader);
-  const setup = await contentSetup(
-    root,
-    scanned.flatMap((entry) => entry.setups),
-    scanned.map((entry) => entry.source),
-  );
+  const setupFor = await contentSetups(root, reader, scanned);
   const split = await splitMdx(
     reader,
     matched.map((file) => relative(root, file)),
@@ -122,15 +118,17 @@ if (command === "check") {
       ).split("\n\n")[0],
     );
   }
-  if (setup.missing.length && values.write) {
-    console.error(
-      `${setup.missing.join(", ")} couldn't be loaded, and without it the rewrite would escape the syntax it adds. Install the project's dependencies, then run this again.`,
-    );
-    process.exit(1);
-  }
   let changed = 0;
   for (const file of matched) {
     if (split.mdx.has(relative(root, file))) continue;
+    const setup = await setupFor(relative(root, file));
+    if (setup.reason || (setup.missing.length && values.write)) {
+      console.error(
+        `${relative(process.cwd(), file)}: left as written (RTC0303): ${setup.reason ?? `${setup.missing.join(", ")} couldn't be loaded. Install this site's dependencies, then run this again.`}`,
+      );
+      if (values.write) process.exitCode = 1;
+      continue;
+    }
     const source = readFileSync(file, "utf8");
     const result = migrateContent(source, { ...setup, syntax });
     if (result.skipped.length)

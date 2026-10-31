@@ -29,6 +29,8 @@ pnpm remark-to-comark content "**/*.{md,mdx}" --write  # apply it
 
 `content` parses each file with the project's own syntax plugins, such as remark-math, and edits only text remark read as text. It finds those plugins in the code `rewrite` replaces, so run it first. With `--syntax plain` it skips the escaping, for a project that reads its Markdown with `comarkOptions({ syntax: "plain" })`, where Comark's component syntax is off. MDX files, and the `.md` files a Docusaurus site compiles as MDX, are reported and left alone.
 
+In a monorepo, each document uses the setups inside its nearest package or framework config directory. A sibling site's syntax plugins, GFM, alert markers, and emoji settings don't apply to it. If the setups in that scope disagree, `content` leaves the file alone and reports RTC0303; migrate it by hand using its renderer's settings. With `--write`, skipped files make the command exit unsuccessfully while independent files can still be migrated.
+
 ## Rewrite unified chains
 
 ```sh
@@ -36,7 +38,7 @@ pnpm remark-to-comark rewrite .          # what it would change
 pnpm remark-to-comark rewrite . --write  # apply it
 ```
 
-A chain like `unified().use(remarkParse).use(remarkRehype).use(rehypeStringify).process(markdown)` becomes `renderHtml(markdown, comarkOptions({ … }))`. Raw HTML stays kept or dropped as the chain had it, and GFM and frontmatter stay off when the chain didn't use remark-gfm or remark-frontmatter. A chain it can't replace without changing what it does stays as it is, with the reason. Install what the rewritten code imports:
+A chain like `unified().use(remarkParse).use(remarkRehype).use(rehypeStringify).process(markdown)` becomes `renderHtml(markdown, comarkOptions({ … }))`. Raw HTML stays kept or dropped as the chain had it, and GFM and frontmatter stay off when the chain didn't use remark-gfm or remark-frontmatter. Identifier inputs need a uniquely bound const string or a parameter typed as `string`; imported, untyped, reassigned, and ambiguous bindings stay for manual migration. A chain it can't replace without changing what it does stays as it is, with the reason. Install what the rewritten code imports:
 
 ```sh
 pnpm add comark @comark/html remark-to-comark

@@ -1,6 +1,7 @@
 export {
   check,
   contentSetup,
+  contentSetups,
   nodeReader,
   scanProject,
   splitMdx,

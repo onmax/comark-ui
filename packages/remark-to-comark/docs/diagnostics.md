@@ -81,3 +81,4 @@ Docusaurus v3 compiles `.md` files as MDX too, unless `docusaurus.config` sets `
 
 Then run the check again.
 
+RTC0303 also reports an entire document left alone when multiple setups inside its nearest package or framework config directory disagree about syntax. The command can't prove which renderer owns that document. Identify its renderer and migrate it by hand with that setup's syntax settings; plugins from another site are never combined with its own.
