@@ -5,6 +5,16 @@ import table, { components } from "../packages/table/src/html.ts";
 const render = createHtmlRenderer({ plugins: [table()], components });
 const markdown = '::table{sort}\n```csv\nBird,Seen\nPigeon,"1,204"\nHeron,9\nMallard,10\n```\n::';
 
+test("sortable headers keep a visible keyboard focus ring", async ({ page }) => {
+  await page.setContent(`<!doctype html><html><body>${await render(markdown)}</body></html>`);
+  const bird = page.getByRole("button", { name: "Bird" });
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Tab");
+  await expect(bird).toBeFocused();
+  await expect(bird).not.toHaveCSS("box-shadow", "none");
+});
+
 test("a table sorts by a header, numbers as numbers, and copies as a table, Markdown, and CSV", async ({
   page,
   context,

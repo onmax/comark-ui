@@ -9,10 +9,10 @@ const marks = ".ccm-ins,.ccm-del,.ccm-mark";
  * layer, so any unlayered rule of the host's wins.
  */
 export const css = `@layer comark{${[
-  theme(`${marks},.ccm-comment`),
+  theme(`${marks},.ccm-comment`, "status"),
   // Resolved into private variables, so a `--ccm-*` set on `:root` or any ancestor reaches the marks.
-  `:where(${marks}){--_ccm-ins:var(--ccm-ins,#259f56);--_ccm-del:var(--ccm-del,var(--destructive,#ee3533));--_ccm-mark:var(--ccm-mark,#f5b400)}`,
-  `@media (prefers-color-scheme:dark){:where(${marks}){--_ccm-ins:var(--ccm-ins,#59d38c);--_ccm-del:var(--ccm-del,var(--destructive,#fd736d));--_ccm-mark:var(--ccm-mark,#f5c84b)}}`,
+  `:where(${marks}){--_ccm-ins:var(--ccm-ins,var(--_comark-success));--_ccm-del:var(--ccm-del,var(--_comark-danger));--_ccm-mark:var(--ccm-mark,#f5b400)}`,
+  `@media (prefers-color-scheme:dark){:where(${marks}){--_ccm-mark:var(--ccm-mark,#f5c84b)}}`,
   // A mark that wraps keeps its tint and corners on every line.
   `${marks},.ccm-comment{border-radius:calc(var(--_comark-radius) - 6px);-webkit-box-decoration-break:clone;box-decoration-break:clone}`,
   `${marks}{padding:0 .125em;color:inherit}`,

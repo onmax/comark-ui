@@ -150,6 +150,7 @@ Citations and sources read the [shared tokens](/guide/theming/). The rules sit i
 | `--comark-accent` | Behind a source just jumped to |
 | `--comark-ring` | Focus rings |
 | `--comark-radius` | The corners of the card, a focus ring, and a source just jumped to |
+| `--comark-shadow` | The card |
 | `--comark-font` | The list and the card |
 
 ### Classes

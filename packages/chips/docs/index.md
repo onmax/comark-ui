@@ -232,7 +232,7 @@ Set these on `:root`, or on any ancestor to change the chips inside it only:
 | `--cp-ring` | `--comark-foreground` at 8% | The hairline around a favicon chip |
 | `--cp-color` | The text's color | The chip's text |
 | `--cp-font-weight` | `500` | The chip's text |
-| `--cp-radius` | `0.375em` | A favicon chip's corners |
+| `--cp-radius` | `calc(var(--comark-radius) - 4px)` | A favicon chip's corners |
 | `--cp-image-size` | `1em` | The favicon or avatar |
 
 ### Classes and attributes
@@ -252,7 +252,7 @@ A tinted, round pill with no ring, and a ring around avatars:
 :root {
   --cp-background: oklch(0.95 0.03 250);
   --cp-ring: transparent;
-  --cp-radius: 999px;
+  --cp-radius: 9999px;
 }
 
 .cp[data-kind="avatar"] .cp-img {

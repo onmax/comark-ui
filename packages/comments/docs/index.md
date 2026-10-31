@@ -244,6 +244,7 @@ The cards and bubbles follow the shared tokens in [Theming](/guide/theming/), an
 | `--comark-border` | The cards' and bubbles' borders, and the line between replies |
 | `--comark-ring` | A highlighted card or bubble, and the focus ring |
 | `--comark-radius` | The cards' corners |
+| `--comark-shadow` | A card while it is open beside the text |
 | `--comark-font` | The cards' and bubbles' text |
 
 ### Variables
@@ -252,8 +253,8 @@ Set these on `.cr` or any ancestor, such as `:root`:
 
 | Variable | Default | Used for |
 | --- | --- | --- |
-| `--cr-del` | `--destructive`, or red | Deleted words, and the pen |
-| `--cr-ins` | green | Inserted words |
+| `--cr-del` | `--comark-danger` | Deleted words, and the pen |
+| `--cr-ins` | `--comark-success` | Inserted words |
 | `--cr-comment` | amber | A comment's highlight |
 | `--cr-icon` | a grey speech bubble | The bubble's icon, as a CSS image |
 

@@ -320,9 +320,9 @@ Set these on `.cft`:
 
 | Variable | Default | Used for |
 | --- | --- | --- |
-| `--cft-added` | `#16a34a` (`#4ade80` in dark mode) | Added entries |
-| `--cft-removed` | shadcn/ui's `--destructive`, else `#dc2626` (`#f87171` in dark mode) | Removed entries |
-| `--cft-changed` | `#d97706` (`#fbbf24` in dark mode) | Changed entries |
+| `--cft-added` | `--comark-success` | Added entries |
+| `--cft-removed` | `--comark-danger` | Removed entries |
+| `--cft-changed` | `--comark-warning` | Changed entries |
 
 ### Classes and attributes
 

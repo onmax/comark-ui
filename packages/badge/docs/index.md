@@ -365,10 +365,10 @@ Each color reads Nuxt UI's variable first, then its own default. Set one on `.cb
 | --- | --- |
 | `--cb-primary` | `--ui-primary`, else shadcn/ui's `--primary`, else `--comark-foreground` |
 | `--cb-secondary` | `--ui-secondary`, else `--comark-muted` |
-| `--cb-success` | `--ui-success`, else `#16a34a` (`#4ade80` in dark mode) |
-| `--cb-info` | `--ui-info`, else `#2563eb` (`#60a5fa` in dark mode) |
-| `--cb-warning` | `--ui-warning`, else `#ca8a04` (`#facc15` in dark mode) |
-| `--cb-error` | `--ui-error`, else shadcn/ui's `--destructive`, else `#dc2626` (`#f87171` in dark mode) |
+| `--cb-success` | `--comark-success` |
+| `--cb-info` | `--comark-info` |
+| `--cb-warning` | `--comark-warning` |
+| `--cb-error` | `--comark-danger` |
 | `--cb-neutral` | `--comark-muted` |
 
 Primary's default matches the page's brand color, or stays neutral without one.

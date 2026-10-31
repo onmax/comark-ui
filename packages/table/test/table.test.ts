@@ -72,8 +72,8 @@ describe("comark-table", () => {
 
   it("tints a cell that is one tone span, and a row whose first cell is", async () => {
     const tint = (color: string) => `background-color:color-mix(in srgb,${color} 20%,transparent)`;
-    const error = tint("var(--ui-error,var(--destructive,#dc2626))");
-    const success = tint("var(--ui-success,#16a34a)");
+    const error = tint("var(--comark-danger,var(--ui-error,var(--destructive,#ee3533)))");
+    const success = tint("var(--comark-success,var(--ui-success,var(--success,#259f56)))");
     const html = flat(
       await render(
         '| Step | Time |\n| --- | --: |\n| [build]{tone="error"} | [1.9 s]{tone=success} |\n| lint | [z]{.x tone="warning"} |',
@@ -86,7 +86,7 @@ describe("comark-table", () => {
     expect(html).not.toContain("tone");
     expect(html).not.toContain("ctb");
     expect(body(await render('```csv\nname,ms\nparse,[12]{tone="info"}\n```'))).toBe(
-      `<tr><td>parse</td><tdstyle="text-align:right;${tint("var(--ui-info,#2563eb)")}">12</td></tr>`.replace(
+      `<tr><td>parse</td><tdstyle="text-align:right;${tint("var(--comark-info,var(--ui-info,#2563eb))")}">12</td></tr>`.replace(
         /\s/g,
         "",
       ),

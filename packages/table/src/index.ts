@@ -1,6 +1,7 @@
 import type { ElementNode, Node } from "comark";
 import { defineComarkPlugin } from "comark";
 import { resolveAttributes } from "comark/render";
+import { statusColor } from "comark-zoom/theme";
 import { errorText, text } from "../../../shared/text.ts";
 import { childrenOf, isElement } from "../../../shared/nodes.ts";
 import { OutsideRoot, diskReader, resolvePath } from "../../../shared/disk.ts";
@@ -59,12 +60,12 @@ const isBlock = (node: ElementNode) =>
   (!isMarkdownTable(node) ||
     Object.keys(node[1]).some((key) => PROPS.includes(key.replace(/^:/, ""))));
 
-// The colors comark-badge uses, as tints, so a cell's text keeps its color and reads in light and dark themes.
+// The shared status colors, as tints, so a cell's text keeps its color and reads in light and dark themes.
 const TONES = {
-  success: "var(--ui-success,#16a34a)",
-  warning: "var(--ui-warning,#ca8a04)",
-  error: "var(--ui-error,var(--destructive,#dc2626))",
-  info: "var(--ui-info,#2563eb)",
+  success: statusColor("success"),
+  warning: statusColor("warning"),
+  error: statusColor("danger"),
+  info: statusColor("info"),
 };
 type Tone = keyof typeof TONES;
 const isKnownTone = (tone: string): tone is Tone => Object.hasOwn(TONES, tone);

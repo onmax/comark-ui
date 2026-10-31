@@ -594,6 +594,7 @@ Charts read these [shared tokens](/guide/theming/), and their series read Nuxt U
 | `--comark-accent` | `--ui-bg-elevated`, `--accent` | A hovered copy button or menu item, and the arrow while its menu is open |
 | `--comark-ring` | `--ui-primary`, `--ring` | The focus ring on the **Data** toggle and the copy buttons |
 | `--comark-radius` | twice `--ui-radius`, `--radius` | The card's, the copy buttons', and the menu's corners |
+| `--comark-shadow` | A soft shadow, deeper in dark mode | The menu |
 | `--comark-font` | `--font-sans` | All text |
 | `--comark-chart-1` to `-6` | `--ui-chart-1` to `-6`, `--chart-1` to `-6` | Series, in column order |
 

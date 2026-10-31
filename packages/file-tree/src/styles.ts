@@ -8,9 +8,8 @@ import { disclosureMotion } from "../../../shared/disclosure.ts";
  */
 export const css = `@layer comark{${[
   disclosureMotion(".cft details"),
-  theme(".cft"),
-  ":where(.cft){--cft-added:#16a34a;--cft-removed:var(--destructive,#dc2626);--cft-changed:#d97706}",
-  "@media (prefers-color-scheme:dark){:where(.cft){--cft-added:#4ade80;--cft-removed:var(--destructive,#f87171);--cft-changed:#fbbf24}}",
+  theme(".cft", "status"),
+  ":where(.cft){--cft-added:var(--_comark-success);--cft-removed:var(--_comark-danger);--cft-changed:var(--_comark-warning)}",
   ".cft{margin:1.5rem 0;padding:.75rem;overflow-x:auto;border:1px solid var(--_comark-border);border-radius:var(--_comark-radius);background:var(--_comark-background);color:var(--_comark-foreground);font:400 .8125rem/1.25rem ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}",
   // A page's list margins, padding, and bullets are almost always unlayered, so only `!important` keeps them out of the
   // tree's indents.

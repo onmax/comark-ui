@@ -405,11 +405,11 @@ Set these on `.ck` or any ancestor, such as `:root`:
 | `--ck-inset` | `0.375rem` | How far the buttons sit from the block's top right corner |
 | `--ck-button-size` | `1.5rem` | The buttons' height and least width. On touch screens the tap area is at least `2.75rem` tall without growing the button. Its width stays within the button to avoid overlapping adjacent controls. |
 | `--ck-title-font` | `ui-monospace, SFMono-Regular, Menlo, monospace` | The title. Set it to your code's font so the title matches the block. |
-| `--ck-green` | `#259f56`, `#59d38c` in dark mode | Lines marked `ins`, and their `+` |
-| `--ck-red` | `#ee3533`, `#fd736d` in dark mode | Lines marked `del`, and their `−`, and Shiki's errors |
-| `--ck-yellow` | `#d49b00`, `#f5c84b` in dark mode | Shiki's warnings |
+| `--ck-green` | `--comark-success` | Lines marked `ins`, and their `+` |
+| `--ck-red` | `--comark-danger` | Lines marked `del`, and their `−`, and Shiki's errors |
+| `--ck-yellow` | `--comark-warning` | Shiki's warnings |
 
-The dark shades follow the system's dark mode, or a `.dark` class on any ancestor, and a `.light` class keeps the light ones.
+The three colors come from the shared status tokens, so they lighten in dark mode with the rest of the theme.
 
 The block's `padding-top` is the button size, the inset above the buttons, and `0.75rem` more, so the code starts that far below the header. A marked line is tinted from edge to edge, past the block's padding, so the block clips its overflow. Its sign sits in the block's left padding, which needs to be at least `1.5ch` wide. On a numbered block, the sign sits between the number and the code.
 
