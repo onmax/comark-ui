@@ -31,16 +31,6 @@ declare global {
   }
 }
 
-/**
- * The attributes a component's `pre` gets, written as Comark writes them on a `pre` of its own: a fence's `language`
- * and `filename` become `data-language` and `data-filename`.
- */
-export function preAttributes<T extends Record<string, unknown>>(attributes: T): T {
-  // Components get the attributes without their node, so an HTML `<pre language>`, which Comark leaves alone, is
-  // treated as a fence too. Authors don't write those.
-  return toNativeAttributes("pre", ["pre", {}], attributes);
-}
-
 // What the parse plugin writes on a block for the wrapper rather than the `pre`.
 const own = new Set(["actions", "frame", "wrap", "lines", "numbers"]);
 
@@ -68,7 +58,9 @@ export function parts(attributes: Record<string, unknown>): {
       }),
       ...(attributes.wrap === true && { "data-code-wrap": "" }),
     },
-    pre: preAttributes(withoutOwn(attributes)),
+    // Components get the attributes without their node, so an HTML `<pre language>`, which Comark leaves alone, is
+    // treated as a fence too, and a fence's `language` and `filename` become `data-language` and `data-filename`.
+    pre: toNativeAttributes("pre", ["pre", {}], withoutOwn(attributes)),
     bar: buttons(attributes.actions, attributes),
   };
 }

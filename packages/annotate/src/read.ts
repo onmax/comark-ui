@@ -108,7 +108,7 @@ export type Side = (typeof SIDES)[number];
 // width for top and bottom. A heuristic, since the text itself can't be measured.
 const SIDE_GAP = { left: 12, right: 12, top: 25, bottom: 25 };
 // styles.ts links marks and notes for this many annotations per screenshot or compare.
-export const MAX_LINKED = 40;
+const MAX_LINKED = 40;
 
 const PROPS = {
   screenshot: ["src", "alt", "title", "href", "viewport", "ink"],

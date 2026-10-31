@@ -31,7 +31,7 @@ declare global {
   }
 }
 
-export type ScriptConfig = { labels: QuizLabels; icons: Icons };
+type ScriptConfig = { labels: QuizLabels; icons: Icons };
 
 /**
  * Upgrades every `.cqz` block on the page, and any added later, from its no-script form into the interactive one,

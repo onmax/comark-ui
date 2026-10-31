@@ -27,8 +27,7 @@ export interface CriticOptions {
   mode?: CriticMode;
 }
 
-/** The comment's class. */
-export const COMMENT_CLASS = "ccm-comment";
+const COMMENT_CLASS = "ccm-comment";
 // Insertions, deletions, and highlights are native tags with a class, so `css` styles them and not a page's other
 // `<del>`, which Comark also writes for `~~strikethrough~~`.
 const CLASSES = { ins: "ccm-ins", del: "ccm-del", mark: "ccm-mark" } as const;

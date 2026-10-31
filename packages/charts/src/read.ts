@@ -90,7 +90,7 @@ export type Issue =
   | { rule: `comark/charts/${string}`; message: string }
   | Parameters<typeof readMark>[2][number];
 
-export const TYPES: readonly ChartType[] = [
+const TYPES: readonly ChartType[] = [
   "bar",
   "stacked",
   "line",
@@ -149,7 +149,7 @@ const list = (values: string[], last = "and") =>
     ? values.join("")
     : `${values.slice(0, -1).join(", ")} ${last} ${values[values.length - 1]}`;
 
-export const readNumber = (cell: string): number | undefined =>
+const readNumber = (cell: string): number | undefined =>
   NUMBER.test(cell) ? Number(cell.replaceAll(",", "")) : undefined;
 
 const format = (value: number) => value.toLocaleString("en-US", { maximumFractionDigits: 12 });

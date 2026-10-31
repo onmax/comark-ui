@@ -45,7 +45,7 @@ const SLOT_GUESSES = new Map([
   ["hints", ["hint"]],
 ]);
 // Six is about as many options as a reader holds in mind at once.
-export const MAX_OPTIONS = 6;
+const MAX_OPTIONS = 6;
 // A slot marker that a missing blank line left inside a rationale or an option, where it's only text.
 const SWALLOWED = /(?:^|\n)[ \t]*#(explain|hint|answer)\b/;
 // Options that only mean something in the order written, which shuffling breaks.
