@@ -30,7 +30,7 @@ export const css = `@layer comark{${[
   ".cz-layer{position:absolute;inset:0;pointer-events:none}",
   ".cz-layer>*{pointer-events:auto}",
   // shadcn/ui's outline icon buttons, like comark-carousel's, so they stand out over the item's edge.
-  ".cz-dialog .cz-nav{position:absolute;top:50%;width:2.5rem;height:2.5rem;border:1px solid var(--_comark-border);border-radius:999px;background:var(--_comark-background);box-shadow:0 1px 2px rgb(0 0 0/.05);transform:translateY(-50%)}",
+  ".cz-dialog .cz-nav{position:absolute;top:50%;width:2.5rem;height:2.5rem;border:1px solid var(--_comark-border);border-radius:9999px;background:var(--_comark-background);transform:translateY(-50%)}",
   ".cz-nav svg{width:1.25rem;height:1.25rem}",
   ".cz-dialog .cz-close:hover,.cz-dialog .cz-nav:hover{background:var(--_comark-accent)}",
   ".cz-prev{left:.5rem}",

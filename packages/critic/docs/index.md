@@ -245,8 +245,8 @@ The colors are variables of their own, read wherever they're set, on `:root` or 
 
 | Variable | Default |
 | --- | --- |
-| `--ccm-ins` | Green |
-| `--ccm-del` | `--destructive`, else red |
+| `--ccm-ins` | `--comark-success` |
+| `--ccm-del` | `--comark-danger` |
 | `--ccm-mark` | Amber |
 
 ### Example
@@ -260,4 +260,4 @@ The rules sit in a `comark` CSS layer, so any plain rule of your own wins. Recol
 }
 ```
 
-shadcn/ui before Tailwind 4 stores `--destructive` as bare HSL numbers, so map it as [Theming](/guide/theming/) does the shared tokens: `--ccm-del: hsl(var(--destructive))`.
+shadcn/ui before Tailwind 4 stores `--destructive` as bare HSL numbers, so map it as [Theming](/guide/theming/) does the shared tokens: `--comark-danger: hsl(var(--destructive))`.

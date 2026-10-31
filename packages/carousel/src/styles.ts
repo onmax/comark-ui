@@ -40,7 +40,7 @@ export const css = `@layer comark{${[
   "@container (min-width:36.01rem){.cc[data-carousel-fits] .cc-controls{display:none!important}}",
   ".cc-count{color:var(--_comark-muted);font-size:.875rem;line-height:1.25rem;font-variant-numeric:tabular-nums}",
   ".cc-steps{display:flex;gap:.5rem}",
-  ".cc-step{display:inline-grid;place-items:center;width:var(--cc-button-size,2rem);height:var(--cc-button-size,2rem);padding:0;border:1px solid var(--_comark-border);border-radius:999px;background:var(--_comark-background);color:var(--_comark-foreground);box-shadow:0 1px 2px rgb(0 0 0/.05);cursor:pointer;touch-action:manipulation;transition:background .15s,opacity .15s}",
+  ".cc-step{display:inline-grid;place-items:center;width:var(--cc-button-size,2rem);height:var(--cc-button-size,2rem);padding:0;border:1px solid var(--_comark-border);border-radius:9999px;background:var(--_comark-background);color:var(--_comark-foreground);cursor:pointer;touch-action:manipulation;transition:background .15s,opacity .15s}",
   ".cc-step:hover:not([aria-disabled='true']){background:var(--_comark-accent)}",
   ".cc-step:focus-visible{outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--_comark-ring) 50%,transparent)}",
   // Not `disabled`: a button that disables under focus drops focus to the page, and the arrow keys with it.

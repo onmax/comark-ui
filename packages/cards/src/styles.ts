@@ -9,9 +9,8 @@ import { theme } from "comark-zoom/theme";
  * primary then to the foreground, so a card is neutral like the other plugins until the page has a brand color. The rules sit in the `comark` layer, so any unlayered rule of the host's wins.
  */
 export const css = `@layer comark{${[
-  theme(".ccr,.ccr-group,.ccr-columns"),
-  ":where(.ccr){--ccr-primary:var(--ui-primary,var(--primary,var(--_comark-foreground)));--ccr-secondary:var(--ui-secondary,#2563eb);--ccr-success:var(--ui-success,#16a34a);--ccr-info:var(--ui-info,#2563eb);--ccr-warning:var(--ui-warning,#ca8a04);--ccr-error:var(--ui-error,var(--destructive,#dc2626));--ccr-neutral:var(--_comark-foreground)}",
-  "@media (prefers-color-scheme:dark){:where(.ccr){--ccr-secondary:var(--ui-secondary,#60a5fa);--ccr-success:var(--ui-success,#4ade80);--ccr-info:var(--ui-info,#60a5fa);--ccr-warning:var(--ui-warning,#facc15);--ccr-error:var(--ui-error,var(--destructive,#f87171))}}",
+  theme(".ccr,.ccr-group,.ccr-columns", "status"),
+  ":where(.ccr){--ccr-primary:var(--ui-primary,var(--primary,var(--_comark-foreground)));--ccr-secondary:var(--ui-secondary,var(--_comark-info));--ccr-success:var(--_comark-success);--ccr-info:var(--_comark-info);--ccr-warning:var(--_comark-warning);--ccr-error:var(--_comark-danger);--ccr-neutral:var(--_comark-foreground)}",
   ".ccr-group,.ccr-columns{display:grid;gap:1rem;margin:1.5rem 0;container-type:inline-size}",
   ".ccr-group{grid-template-columns:repeat(2,minmax(0,1fr))}",
   ...[2, 3, 4, 5, 6].map(
@@ -23,7 +22,7 @@ export const css = `@layer comark{${[
   ".ccr-group>.ccr{margin:0}",
   ".ccr-column>:first-child{margin-top:0}",
   ".ccr-column>:last-child{margin-bottom:0}",
-  ".ccr{--ccr:var(--ccr-primary);position:relative;margin:1.5rem 0;padding:1.25rem;border:1px solid var(--_comark-border);border-radius:calc(var(--_comark-radius) + 2px);background:var(--_comark-background);box-shadow:0 1px 2px rgb(0 0 0/.05);color:var(--_comark-muted);font:400 .875rem/1.375rem var(--_comark-font);transition:background-color .15s,border-color .15s}",
+  ".ccr{--ccr:var(--ccr-primary);position:relative;margin:1.5rem 0;padding:1.25rem;border:1px solid var(--_comark-border);border-radius:calc(var(--_comark-radius) + 2px);background:var(--_comark-background);color:var(--_comark-muted);font:400 .875rem/1.375rem var(--_comark-font);transition:background-color .15s,border-color .15s}",
   ...["secondary", "success", "info", "warning", "error", "neutral"].map(
     (color) => `.ccr[data-color='${color}']{--ccr:var(--ccr-${color})}`,
   ),

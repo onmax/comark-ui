@@ -43,7 +43,7 @@ describe("comark-table renderers", async () => {
     expect(expected).toContain('<div class="ctb"><div class="ctb-bar">');
     expect(expected).toContain('<button type="button" class="ctb-sort">Name</button>');
     expect(expected).toContain("zoom & tabs");
-    expect(expected).toContain('#dc2626)) 20%,transparent)">9</td>');
+    expect(expected).toContain('#ee3533))) 20%,transparent)">9</td>');
   });
 
   for (const [name, render] of Object.entries(renderers))

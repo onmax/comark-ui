@@ -2,7 +2,7 @@
 title: Theming
 description: One set of --comark-* tokens themes every plugin, on top of Nuxt UI's or shadcn/ui's variables.
 keywords: CSS, colors, dark mode, light mode, CSS variables, custom properties, shadcn, Tailwind, styles, theme, Nuxt UI
-tagline: The blocks match a Nuxt UI or shadcn/ui site as it is. Elsewhere, eight tokens theme them all at once.
+tagline: The blocks match a Nuxt UI or shadcn/ui site as it is. Elsewhere, a dozen tokens theme them all at once.
 ---
 
 This page shows how the blocks pick up your site's theme, how to change it with the `--comark-*` tokens, and how to carry a Nuxt UI app's theme to a page rendered outside the app.
@@ -18,7 +18,7 @@ When a site sets both, Nuxt UI's variables win.
 The blocks follow the app's `app.config` colors, its `--ui-radius`, and its color mode:
 
 - Surfaces, text, and borders read `--ui-bg`, `--ui-text-highlighted`, `--ui-text-muted`, `--ui-border`, and `--ui-bg-elevated`. The table under [Tokens](#tokens) maps each one.
-- Brand colors, such as a primary badge or an error card, read `--ui-primary`, `--ui-success`, `--ui-error`, and the rest.
+- Brand colors, such as a primary badge or an error card, read `--ui-primary`, `--ui-success`, `--ui-error`, and the rest. Status colors, such as a passing test or a removed line, read `--ui-success`, `--ui-error`, `--ui-warning`, and `--ui-info`.
 - Chart series read `--ui-chart-1` to `-6`.
 - Focus rings use `--ui-primary`, like Nuxt UI's own components.
 - Corners are twice `--ui-radius`.
@@ -27,11 +27,11 @@ To render the blocks somewhere the app's stylesheet isn't loaded, see [Outside a
 
 ### shadcn/ui
 
-shadcn/ui before Tailwind 4 stores colors as bare HSL numbers, which the blocks can't read. Map those through the tokens below: `--comark-border: hsl(var(--border))`.
+shadcn/ui before Tailwind 4 stores colors as bare HSL numbers, which the blocks can't read. Map those through the tokens below: `--comark-border: hsl(var(--border))`, and `--comark-danger: hsl(var(--destructive))` for the red.
 
 ## Tokens
 
-Set the `--comark-*` tokens to theme annotate, carousel, charts, chips, code, diff, embed, github, tabs, and zoom at once. Each one wins over the Nuxt UI and shadcn variables, and works on `:root` or on any ancestor:
+Set the `--comark-*` tokens to theme every plugin at once. Each one wins over the Nuxt UI and shadcn variables, and works on `:root` or on any ancestor:
 
 | Token | Falls back to | Used for |
 | --- | --- | --- |
@@ -41,7 +41,12 @@ Set the `--comark-*` tokens to theme annotate, carousel, charts, chips, code, di
 | `--comark-border` | `--ui-border`, `--border` | Button, thumbnail, screenshot, player, callout, and diff borders |
 | `--comark-accent` | `--ui-bg-elevated`, `--accent` | Hovered buttons, the diff header |
 | `--comark-ring` | `--ui-primary`, `--ring` | Focus rings, the edge of a highlighted diff line |
-| `--comark-radius` | twice `--ui-radius`, `--radius` | Image and code block corners; some controls use a smaller radius |
+| `--comark-success` | `--ui-success`, `--success` | Passing tests, added lines, a better change, a tip |
+| `--comark-danger` | `--ui-error`, `--destructive` | Failing tests, removed lines, a worse change, an error or a required field |
+| `--comark-warning` | `--ui-warning` | Warnings, changed entries, a caution |
+| `--comark-info` | `--ui-info` | Notes and info badges |
+| `--comark-shadow` | A soft shadow, deeper in dark mode | The shadow under a menu, a popover card, or the handle on a slider. Blocks that rest on the page have a border and no shadow |
+| `--comark-radius` | twice `--ui-radius`, `--radius` | Image and code block corners; controls, chips, and marks use a smaller radius derived from it |
 | `--comark-font` | `--font-sans` | The text around the blocks, the zoomed view's header, callouts, and the links under players |
 
 ```css

@@ -333,8 +333,8 @@ Deltas, bars, and tables read these [shared tokens](/guide/theming/):
 
 | Variable | Default | Used for |
 | --- | --- | --- |
-| `--cmt-better` | `#259f56`, `#59d38c` in dark mode | A change that's better |
-| `--cmt-worse` | shadcn/ui's `--destructive`, else `#ee3533`, `#fd736d` in dark mode | A change that's worse |
+| `--cmt-better` | `--comark-success` | A change that's better |
+| `--cmt-worse` | `--comark-danger` | A change that's worse |
 | `--cmt-bar` | shadcn/ui's `--primary`, else `--comark-foreground` | The progress bar's fill, and its track at 20% |
 
 Set `--cmt-better` and `--cmt-worse` on `.cmt-delta`, and `--cmt-bar` on `.cmt-progress`.

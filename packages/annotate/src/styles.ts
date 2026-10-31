@@ -18,7 +18,7 @@ export const css = `@layer comark{${[
   // Notes and labels sit on hand-drawn marks, so they're handwritten too. No handwriting font ships with every system, so it comes inlined.
   `@font-face{font-family:comark-caveat;src:url(data:font/woff2;base64,${caveat}) format("woff2");font-display:block}`,
   // Surfaces, borders, and radii follow the shared `--comark-*` tokens; the mark colors stay their own.
-  theme(".ca"),
+  theme(".ca", "status", "shadow"),
   // One meaning per color: violet points something out (the default), red flags a problem, amber a warning, green a
   // fix, blue is a second voice beside the default, and gray anything neutral. Violet reads on a white page and on a
   // dark screenshot alike (4.2:1 and 4.1:1), so marks need no halo where they cross one.
@@ -26,9 +26,9 @@ export const css = `@layer comark{${[
   // so their number stays white (5:1 or better); only amber keeps a dark number.
   // Declared on `.ca` alone and at zero specificity, so a host's plain `.ca { --ca-color: … }` reaches every mark. A
   // zoomed screenshot sits in a copy of its `.ca`, so it keeps them too.
-  ":where(.ca){--ca-note-font:comark-caveat,cursive;--ca-note-size:1.25em;--ca-label-size:1.5em;--ca-gutter:10rem;--ca-top-gutter:5rem;--ca-bottom-gutter:5rem;--ca-gap:1.25rem;--ca-red:#ee3533;--ca-amber:#f5a524;--ca-green:#259f56;--ca-blue:#0581e6;--ca-violet:#8b5cf6;--ca-gray:#71717a;--ca-red-solid:#d01d21;--ca-amber-solid:#f59e0b;--ca-green-solid:#037e3f;--ca-blue-solid:#0267c7;--ca-violet-solid:#7c3aed;--ca-gray-solid:#52525b;--ca-red-ink:#fff;--ca-amber-ink:#1c1917;--ca-green-ink:#fff;--ca-blue-ink:#fff;--ca-violet-ink:#fff;--ca-gray-ink:#fff;--ca-color:var(--ca-violet);--ca-solid:var(--ca-violet-solid);--ca-ink:var(--ca-violet-ink)}",
+  ":where(.ca){--ca-note-font:comark-caveat,cursive;--ca-note-size:1.25em;--ca-label-size:1.5em;--ca-gutter:10rem;--ca-top-gutter:5rem;--ca-bottom-gutter:5rem;--ca-gap:1.25rem;--ca-red:var(--_comark-danger);--ca-amber:#f5a524;--ca-green:var(--_comark-success);--ca-blue:#0581e6;--ca-violet:#8b5cf6;--ca-gray:#71717a;--ca-red-solid:#d01d21;--ca-amber-solid:#f59e0b;--ca-green-solid:#037e3f;--ca-blue-solid:#0267c7;--ca-violet-solid:#7c3aed;--ca-gray-solid:#52525b;--ca-red-ink:#fff;--ca-amber-ink:#1c1917;--ca-green-ink:#fff;--ca-blue-ink:#fff;--ca-violet-ink:#fff;--ca-gray-ink:#fff;--ca-color:var(--ca-violet);--ca-solid:var(--ca-violet-solid);--ca-ink:var(--ca-violet-ink)}",
   ":where(.ca){margin:1.5rem 0}",
-  "@media (prefers-color-scheme:dark){:where(.ca){--ca-red:#fd736d;--ca-amber:#ffb224;--ca-green:#59d38c;--ca-blue:#67b0f9;--ca-violet:#b49cff;--ca-gray:#a1a1aa}}",
+  "@media (prefers-color-scheme:dark){:where(.ca){--ca-amber:#ffb224;--ca-blue:#67b0f9;--ca-violet:#b49cff;--ca-gray:#a1a1aa}}",
   // How far above or below the image a leader leaves an offset note: at the baseline of its nearest line, so it runs
   // under a neighbouring note's words rather than through them.
   ":where(.ca){--ca-lead:calc(var(--ca-gap) + .25rem + var(--ca-note-size) * .3)}",
@@ -50,10 +50,10 @@ export const css = `@layer comark{${[
   "[data-annotate-ready] .ca-side-before>.ca-stage{clip-path:inset(0 calc(100% - var(--ca-split)) 0 0)}",
   "[data-annotate-ready] .ca-side-after>.ca-stage{clip-path:inset(0 0 0 var(--ca-split))}",
   ".ca-swipe img{-webkit-user-drag:none}",
-  // A thin line with a round grip, as in React Bits' comparison slider. The shadow keeps it visible on a white page.
+  // A thin line with a round grip, as in React Bits' comparison slider. The ring and shadow keep it visible on a white page.
   "[data-annotate-ready] .ca-handle{grid-area:2/1/3/3;position:relative;left:var(--ca-split);display:block;width:0;outline:none;cursor:ew-resize;touch-action:none}",
-  ".ca-handle::before{content:'';position:absolute;inset:0 auto 0 -1px;width:2px;background:var(--_comark-background);box-shadow:0 0 0 .5px rgb(0 0 0/.15),0 0 10px rgb(0 0 0/.25)}",
-  ".ca-grip{position:absolute;top:50%;left:0;display:grid;place-items:center;width:2rem;height:2rem;border-radius:999px;background:var(--_comark-background);color:var(--_comark-foreground);box-shadow:0 0 0 1px var(--_comark-border),0 2px 8px rgb(0 0 0/.25);transform:translate(-50%,-50%);transition:transform .15s ease,box-shadow .15s ease}",
+  ".ca-handle::before{content:'';position:absolute;inset:0 auto 0 -1px;width:2px;background:var(--_comark-background);box-shadow:0 0 0 1px var(--_comark-border),var(--_comark-shadow)}",
+  ".ca-grip{position:absolute;top:50%;left:0;display:grid;place-items:center;width:2rem;height:2rem;border-radius:9999px;background:var(--_comark-background);color:var(--_comark-foreground);box-shadow:0 0 0 1px var(--_comark-border),var(--_comark-shadow);transform:translate(-50%,-50%);transition:transform .15s ease,box-shadow .15s ease}",
   ".ca-grip svg{width:1rem;height:1rem}",
   ".ca-swipe[data-dragging]{cursor:ew-resize}",
   ".ca-swipe[data-dragging] .ca-grip{transform:translate(-50%,-50%) scale(1.1)}",
@@ -75,7 +75,7 @@ export const css = `@layer comark{${[
   ".ca-frame img{display:block;width:100%;height:auto;margin:0;border-radius:var(--_comark-radius);outline:1px solid var(--_comark-border);outline-offset:-1px}",
   // The Copy button shows on hover and focus, and always on touch screens and when zoomed.
   ".ca-copy{display:none}",
-  "[data-annotate-copy] .ca-copy{position:absolute;top:.5rem;right:.5rem;display:grid;place-items:center;width:1.75rem;height:1.75rem;padding:0;border:1px solid var(--_comark-border);border-radius:calc(var(--_comark-radius) - 4px);background:var(--_comark-background);color:var(--_comark-foreground);box-shadow:0 1px 2px rgb(0 0 0/.05);cursor:pointer;opacity:0;transition:opacity .15s ease,background .15s ease}",
+  "[data-annotate-copy] .ca-copy{position:absolute;top:.5rem;right:.5rem;display:grid;place-items:center;width:1.75rem;height:1.75rem;padding:0;border:1px solid var(--_comark-border);border-radius:calc(var(--_comark-radius) - 4px);background:var(--_comark-background);color:var(--_comark-foreground);cursor:pointer;opacity:0;transition:opacity .15s ease,background .15s ease}",
   ".ca-copy:hover{background:var(--_comark-accent)}",
   ".ca-copy:focus-visible{outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--_comark-ring) 50%,transparent)}",
   ".ca-screenshot:is(:hover,:focus-visible) .ca-copy,.ca-copy:focus-visible,.ca-copy[data-state],.cz-dialog .ca-copy{opacity:1}",
@@ -114,7 +114,7 @@ export const css = `@layer comark{${[
   ".ca-underline svg{top:calc(100% - 5px);height:12px}",
   // A tick beside the target, so it doesn't hide what it approves.
   ".ca-check svg{left:calc(100% + 4px);top:50%;width:20px;height:20px;transform:translateY(-50%)}",
-  ".ca-stamp{display:inline-grid;place-items:center;flex:none;min-width:15px;height:15px;padding:0 4px;box-sizing:border-box;border-radius:999px;background:var(--ca-solid,var(--ca-color));color:var(--ca-ink);font-family:var(--_comark-font);font-size:9.5px;font-weight:600;line-height:1;letter-spacing:-.01em;font-variant-numeric:tabular-nums}",
+  ".ca-stamp{display:inline-grid;place-items:center;flex:none;min-width:15px;height:15px;padding:0 4px;box-sizing:border-box;border-radius:9999px;background:var(--ca-solid,var(--ca-color));color:var(--ca-ink);font-family:var(--_comark-font);font-size:9.5px;font-weight:600;line-height:1;letter-spacing:-.01em;font-variant-numeric:tabular-nums}",
   ".ca-letter{display:none}",
   // place.ts sets which corner of the mark the number sits on.
   ".ca-mark .ca-stamp{position:absolute;box-shadow:0 0 0 2px var(--ca-ring,var(--_comark-background)),0 1px 3px rgb(0 0 0/.18);transform:scale(calc(1 + .1 * var(--ca-on,0)));transition:transform .15s ease}",
@@ -147,8 +147,8 @@ export const css = `@layer comark{${[
   ".ca-callout>div>:first-child{margin-top:0}",
   ".ca-callout>div>:last-child{margin-bottom:0}",
   // Too narrow for side notes: stack them under the image, drop the arrows, and letter each note and its target instead. Notes on both sides need more room than notes on one.
-  "@container (max-width:28rem){.ca-stage{padding:0!important}.ca-arrow{display:none}.ca-callout{position:static;display:flex;gap:.6rem;align-items:baseline;width:auto;max-width:none;margin-top:.5rem;padding-left:0;text-align:left;transform:none}.ca-letter{display:inline-grid}.ca-none{outline:1.5px dashed var(--ca-color);outline-offset:3px;border-radius:3px}}",
-  "@container (max-width:40rem){.ca-left.ca-right .ca-stage{padding:0!important}.ca-left.ca-right .ca-arrow{display:none}.ca-left.ca-right .ca-callout{position:static;display:flex;gap:.6rem;align-items:baseline;width:auto;max-width:none;margin-top:.5rem;padding-left:0;text-align:left;transform:none}.ca-left.ca-right .ca-letter{display:inline-grid}.ca-left.ca-right .ca-none{outline:1.5px dashed var(--ca-color);outline-offset:3px;border-radius:3px}}",
+  "@container (max-width:28rem){.ca-stage{padding:0!important}.ca-arrow{display:none}.ca-callout{position:static;display:flex;gap:.6rem;align-items:baseline;width:auto;max-width:none;margin-top:.5rem;padding-left:0;text-align:left;transform:none}.ca-letter{display:inline-grid}.ca-none{outline:1.5px dashed var(--ca-color);outline-offset:3px;border-radius:calc(var(--_comark-radius) - 7px)}}",
+  "@container (max-width:40rem){.ca-left.ca-right .ca-stage{padding:0!important}.ca-left.ca-right .ca-arrow{display:none}.ca-left.ca-right .ca-callout{position:static;display:flex;gap:.6rem;align-items:baseline;width:auto;max-width:none;margin-top:.5rem;padding-left:0;text-align:left;transform:none}.ca-left.ca-right .ca-letter{display:inline-grid}.ca-left.ca-right .ca-none{outline:1.5px dashed var(--ca-color);outline-offset:3px;border-radius:calc(var(--_comark-radius) - 7px)}}",
   // Host pages often center a figcaption, which suits a one-line caption but not a list of notes.
   ".ca figcaption{margin-top:.75rem;text-align:start}",
   // One line, so the two images of a compare stay level.

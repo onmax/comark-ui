@@ -165,7 +165,7 @@ On a [screenshot](/annotate/components/annotation/#mark), `line` draws a straigh
 | `series` | Every series in the row | The column to mark in that row. On a gantt chart, the group of the bar instead. |
 | `value` | — | With `mark="line"`, the number on the value axis the line crosses at. |
 | `mark` | `box` | `box`, `circle`, `underline`, `line`, `highlight`, `bracket`, `cross`, `check`, or `none`. |
-| `color` | `violet` | `violet`, `red`, `amber`, `green`, `blue`, `gray`, or a 3- or 6-digit hex color. |
+| `color` | The chart's text color | `red`, `amber`, `green`, `blue`, `violet`, `gray`, or a 3- or 6-digit hex color. |
 | `side` | — | `left`, `right`, `top`, or `bottom` for a side note with an arrow. |
 
 ### Issues

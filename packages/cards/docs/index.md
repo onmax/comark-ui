@@ -341,11 +341,11 @@ Each color but neutral reads Nuxt UI's variable first, then its own default. Set
 | Variable | Default |
 | --- | --- |
 | `--ccr-primary` | `--ui-primary`, else shadcn/ui's `--primary`, else `--comark-foreground` |
-| `--ccr-secondary` | `--ui-secondary`, else `#2563eb` (`#60a5fa` in dark mode) |
-| `--ccr-success` | `--ui-success`, else `#16a34a` (`#4ade80` in dark mode) |
-| `--ccr-info` | `--ui-info`, else `#2563eb` (`#60a5fa` in dark mode) |
-| `--ccr-warning` | `--ui-warning`, else `#ca8a04` (`#facc15` in dark mode) |
-| `--ccr-error` | `--ui-error`, else shadcn/ui's `--destructive`, else `#dc2626` (`#f87171` in dark mode) |
+| `--ccr-secondary` | `--ui-secondary`, else `--comark-info` |
+| `--ccr-success` | `--comark-success` |
+| `--ccr-info` | `--comark-info` |
+| `--ccr-warning` | `--comark-warning` |
+| `--ccr-error` | `--comark-danger` |
 | `--ccr-neutral` | `--comark-foreground` |
 
 Primary's default matches the page's brand color, or stays neutral without one.

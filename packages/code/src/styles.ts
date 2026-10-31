@@ -7,8 +7,6 @@ const chevrons = `url("data:image/svg+xml,${encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg>',
 )}")`;
 const lines = ".ck[data-code-lines]";
-const light = "--ck-red:#ee3533;--ck-green:#259f56;--ck-yellow:#d49b00";
-const dark = "--ck-red:#fd736d;--ck-green:#59d38c;--ck-yellow:#f5c84b";
 // In a comark-tabs code group the tab names the block, so a terminal there draws no window.
 const terminal = ".ck[data-code-frame=terminal]:not([data-tabs-code] .ck)";
 
@@ -20,7 +18,7 @@ const terminal = ".ck[data-code-frame=terminal]:not([data-tabs-code] .ck)";
  */
 export const css = `${icons}@layer comark{${[
   disclosureMotion(".ck[data-code-lines] .ck-fold"),
-  theme(".ck"),
+  theme(".ck", "status"),
   ".ck>pre{border-radius:var(--_comark-radius)}",
   // No padding, border, or new formatting context, so the block's own margins collapse through the wrapper and the
   // header's top edge is the block's.
@@ -53,11 +51,7 @@ export const css = `${icons}@layer comark{${[
   `${terminal}>.ck-bar{border-bottom:1px solid var(--_comark-border)}`,
   `${terminal}>.ck-bar::before{content:'';flex:none;width:.625rem;height:.625rem;margin:0 auto 0 .125rem;border-radius:50%;background:currentColor;box-shadow:1rem 0,2rem 0;color:color-mix(in srgb,var(--_comark-muted) 45%,transparent)}`,
   `${terminal} .ck-title{position:absolute;left:50%;max-width:calc(100% - 12rem);margin:0;translate:-50%}`,
-  // Red and green lighten in dark mode, like comark-diff's, whether the system or a `.dark` class above sets it.
-  `:where(.ck){${light};--_ck-digits:2}`,
-  `@media (prefers-color-scheme:dark){:where(.ck){${dark}}}`,
-  `:where(.light .ck){${light}}`,
-  `:where(.dark .ck){${dark}}`,
+  ":where(.ck){--ck-red:var(--_comark-danger);--ck-green:var(--_comark-success);--ck-yellow:var(--_comark-warning);--_ck-digits:2}",
   ...[3, 4, 5, 6].map((digits) => `.ck[data-code-numbers="${digits}"]{--_ck-digits:${digits}}`),
   // Each line is a block, its newline inside it, so a marked one can be tinted. The tint is a border image that reaches
   // past the line to the block's edges, which clip it, so it covers the padding whatever the host sets.

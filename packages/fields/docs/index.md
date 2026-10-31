@@ -240,7 +240,7 @@ Set it on `.cfl`:
 
 | Variable | Default | Used for |
 | --- | --- | --- |
-| `--cfl-required` | shadcn/ui's `--destructive`, else `#dc2626` (`#f87171` in dark mode) | The required tag |
+| `--cfl-required` | `--comark-danger` | The required tag |
 
 ### Classes
 
