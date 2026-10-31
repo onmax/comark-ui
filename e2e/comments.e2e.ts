@@ -96,7 +96,7 @@ for (const mark of ["track", "pen"] as const) {
     );
     const bubbles = page.locator(".cr-bub");
     await expect(bubbles.first()).toHaveCSS("display", "inline");
-    expect(await page.locator(".cr-bub svg").count()).toBe(0);
+    await expect(page.locator(".cr-bub svg")).toHaveCount(0);
     // Every width from 12rem to 30rem puts the anchor's last word at the end of a line at least once.
     const broken = await page.evaluate(() => {
       const main = document.querySelector("main")!;

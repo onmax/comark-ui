@@ -132,7 +132,7 @@ test("the end of a track with several columns counts as the last slide", async (
 test("a right-to-left carousel pages in its reading direction", async ({ page }) => {
   await open(page, three, { dir: "rtl" });
   const { count, next, prev, root } = parts(page);
-  expect(await next.locator("svg").evaluate((svg) => getComputedStyle(svg).scale)).toBe("-1 1");
+  await expect(next.locator("svg")).toHaveCSS("scale", "-1 1");
   await next.click();
   await expect(count).toHaveText("2 / 3");
   await expect(prev).toHaveAttribute("aria-disabled", "false");
@@ -201,7 +201,7 @@ test("a zoomable slide shows its whole focus ring", async ({ page }) => {
   const slide = parts(page).root.locator(".cc-slide").first();
   await page.keyboard.press("Tab");
   await expect(slide).toBeFocused();
-  expect(await slide.evaluate((element) => getComputedStyle(element).outlineOffset)).toBe("-2px");
+  await expect(slide).toHaveCSS("outline-offset", "-2px");
 });
 
 test("without the script, the scrollbar reaches the other slides", async ({ page }) => {

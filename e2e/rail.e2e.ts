@@ -151,7 +151,7 @@ test("the outline marks the heading being read, and its links scroll to them", a
   await expect
     .poll(() => page.locator("#faq").evaluate((h) => Math.round(h.getBoundingClientRect().top)))
     .toBeLessThan(96);
-  expect(await current.getAttribute("aria-current")).toBe("location");
+  await expect(current).toHaveAttribute("aria-current", "location");
 });
 
 test("at the bottom of a scrolling container, the last section is the one being read", async ({

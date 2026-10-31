@@ -236,7 +236,7 @@ test("hundreds of worst-case charts draw with no text colliding, clipped, or pas
     }),
   );
   await page.goto("/fixture/", { waitUntil: "domcontentloaded" });
-  expect(await page.locator("figure.cch").count()).toBe(cases.length);
+  await expect(page.locator("figure.cch")).toHaveCount(cases.length);
 
   const problems = await page.evaluate(() => {
     const found: string[] = [];

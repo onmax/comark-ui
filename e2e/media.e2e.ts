@@ -116,7 +116,7 @@ test("the volume opens over the mute button for the pointer and the keyboard, an
   // All the way down, Unmute plays at full volume.
   await mute.click();
   await expect(player).not.toHaveAttribute("data-muted");
-  expect(await player.locator("video").evaluate((video: HTMLVideoElement) => video.volume)).toBe(1);
+  await expect(player.locator("video")).toHaveJSProperty("volume", 1);
   await page.mouse.move(0, 0);
 
   await player.getByRole("slider", { name: "Seek" }).focus();
@@ -176,7 +176,7 @@ test("the full volume range is reachable above a short video", async ({ page }) 
   expect(box.y).toBeLessThan(frame.y);
   await volume.click({ position: { x: box.width / 2, y: 1 }, timeout: 3000 });
   await expect(player).not.toHaveAttribute("data-muted");
-  expect(await player.locator("video").evaluate((video: HTMLVideoElement) => video.volume)).toBe(1);
+  await expect(player.locator("video")).toHaveJSProperty("volume", 1);
 });
 
 test("a video plays with its own controls, from its bar or a click, and goes full screen", async ({
@@ -186,7 +186,7 @@ test("a video plays with its own controls, from its bar or a click, and goes ful
   const player = page.getByRole("group", { name: "A gray clip" });
   const video = player.locator("video");
   await expect(player.locator(".cm-time").last()).toHaveText("0:04");
-  expect(await video.evaluate((element: HTMLVideoElement) => element.controls)).toBe(false);
+  await expect(video).toHaveJSProperty("controls", false);
 
   await player.getByRole("button", { name: "Play" }).click();
   await expect(player).toHaveAttribute("data-playing");
@@ -263,7 +263,8 @@ test.describe("touch video controls", () => {
         expect(box.x).toBeGreaterThanOrEqual(bar.x);
         expect(box.x + box.width).toBeLessThanOrEqual(bar.x + bar.width);
       }
-      expect(await player.locator(".cm-time").first().isVisible()).toBe(width >= 320);
+      if (width >= 320) await expect(player.locator(".cm-time").first()).toBeVisible();
+      else await expect(player.locator(".cm-time").first()).toBeHidden();
       expect(
         await player.locator(".cm-bar").evaluate((bar) => bar.scrollWidth <= bar.clientWidth),
       ).toBe(true);

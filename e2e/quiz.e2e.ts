@@ -288,7 +288,7 @@ test("a host's state replaces localStorage and restores answers and results with
   await expect(block).toHaveAttribute("data-state", "incorrect");
   const promise = await keyOf(again, "promise");
   const timer = await keyOf(again, "setTimeout");
-  await again.waitForTimeout(300);
+  await expect.poll(() => again.evaluate(() => document.getAnimations().length)).toBe(0);
   // An answer the host has, with results, lands at once; the one from localStorage gives way to it.
   await send(again, {
     answers: { "event-loop": { choice: [promise!], correct: true } },

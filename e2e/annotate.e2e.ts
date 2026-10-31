@@ -18,7 +18,7 @@ test("a comparison lines up its screenshots and zooms them with their marks and 
   await mark.click({ force: true });
   const zoomed = page.locator(".cz-item .ca-mark").first();
   await expect(zoomed).toBeVisible();
-  expect(await zoomed.evaluate((node) => getComputedStyle(node).color)).toBe(color);
+  await expect(zoomed).toHaveCSS("color", color);
   await expect(page.locator(".cz-count")).toHaveText("1 / 2");
 
   // The notes sit beside the zoomed screenshot, and a mark lights up its note there too.
