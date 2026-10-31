@@ -83,4 +83,6 @@ Then run the check again.
 
 RTC0303 also reports an entire document left alone when multiple setups inside its nearest package or framework config directory disagree about syntax. The command can't prove which renderer owns that document. Identify its renderer and migrate it by hand with that setup's syntax settings; plugins from another site are never combined with its own.
 
-An unresolved component plugin list, such as `remarkPlugins={getPlugins()}` or `remarkPlugins={[enabled && gfm]}`, also leaves the document alone with RTC0303. Use explicit imported plugin references, including `[plugin, { options }]` tuples. A local array must be a private, unchanged `const`; mutations, reassignment, aliases, exports, or passing it to other code prevent proof of its contents. Spreads of proven arrays are supported.
+An unresolved component plugin list, such as `remarkPlugins={getPlugins()}` or `remarkPlugins={[enabled && gfm]}`, also leaves the document alone with RTC0303. Use explicit imported plugin references or `[plugin]` tuples. A local array must be a private, unchanged `const`; mutations, reassignment, aliases, exports, or passing it to other code prevent proof of its contents. Spreads of proven arrays are supported.
+
+Syntax plugin options, such as `[gfm, { singleTilde: false }]` or `.use(math, { singleDollarTextMath: false })`, also leave the document alone. The scan reads their source but can't safely apply their runtime values to the content parser. Migrate the document by hand with its renderer's syntax settings.

@@ -108,7 +108,7 @@ describe("check", () => {
   it.each([
     ["const plugins = [];", "~a~\n"],
     ["const base = [gfm]; const plugins = [...base];", "~~a~~\n"],
-    ["const plugins = [[gfm, { singleTilde: true }]];", "~~a~~\n"],
+    ["const plugins = [[gfm]];", "~~a~~\n"],
   ])("migrates content with a proven local plugin array: %s", (declaration, expected) => {
     const root = project({
       "view.tsx": `import Markdown from "react-markdown"; import gfm from "remark-gfm"; ${declaration} export const C = () => <Markdown remarkPlugins={plugins} />;`,
@@ -121,6 +121,44 @@ describe("check", () => {
     );
     expect(readFileSync(join(root, "doc.md"), "utf8")).toBe(expected);
   });
+
+  it.each([
+    [
+      "view.tsx",
+      `import Markdown from "react-markdown"; import gfm from "remark-gfm"; const plugins = [[gfm, { singleTilde: false }]]; export const C = () => <Markdown remarkPlugins={plugins} />;`,
+      "~a~\n",
+      "remark-gfm",
+    ],
+    [
+      "astro.config.ts",
+      `import gfm from "remark-gfm"; export default { markdown: { remarkPlugins: [[gfm, { singleTilde: false }]] } };`,
+      "~a~\n",
+      "remark-gfm",
+    ],
+    [
+      "render.ts",
+      `import { remark } from "remark"; import math from "remark-math"; export const f = (md: string) => remark().use(math, { singleDollarTextMath: false }).process(md);`,
+      "$x_{i}$ {y}\n",
+      "remark-math",
+    ],
+  ])(
+    "refuses syntax plugin options instead of using defaults in content --write: %s",
+    async (file, source, markdown, plugin) => {
+      const root = project({ [file]: source, "doc.md": markdown });
+      const result = spawnSync(
+        process.execPath,
+        [fileURLToPath(new URL("../src/cli.ts", import.meta.url)), "content", "doc.md", "--write"],
+        { cwd: root, encoding: "utf8" },
+      );
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain("RTC0303");
+      expect(result.stderr).toContain(`options for ${plugin}`);
+      expect(readFileSync(join(root, "doc.md"), "utf8")).toBe(markdown);
+      expect(
+        (await check(root)).find((finding) => finding.code === "RTC0303")?.params.reason,
+      ).toContain(`options for ${plugin}`);
+    },
+  );
 
   it("scopes syntax plugins and alert/emoji flags to their site for check and content --write", async () => {
     const root = project({

@@ -224,8 +224,19 @@ export async function contentSetup(
       profiles.push(contentProfile([], source));
   }
   const profile = profiles[0] ?? contentProfile([]);
+  // Scanned options are source text, not runtime values. Never silently parse with a syntax plugin's defaults.
+  const optionPlugin = setups
+    .flatMap((setup) => setup.plugins)
+    .find(
+      (plugin) =>
+        plugin.options !== undefined &&
+        (SYNTAX.test(plugin.name) || ["remark-gfm", "remark-frontmatter"].includes(plugin.name)),
+    );
   const reason =
     setups.find((setup) => setup.unresolved)?.unresolved ??
+    (optionPlugin
+      ? `The options for ${optionPlugin.name} can't be applied to the content parser safely. Migrate this document by hand with its renderer's syntax settings.`
+      : undefined) ??
     (profiles.some((other) => JSON.stringify(other) !== JSON.stringify(profile))
       ? "The Markdown setups in this site or package disagree about syntax, and the document's owning renderer is ambiguous."
       : undefined);
