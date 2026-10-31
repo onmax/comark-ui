@@ -49,10 +49,6 @@ export default defineNuxtPlugin((nuxtApp) => {
   router.beforeEach((to, from) => {
     if (to.path !== from.path && !nuxtApp.isHydrating) loadBody(slugOf(to), "high").catch(() => {});
   });
-  // The first load keeps its entrance; later pages only fade in, so the new page shows as soon as it arrives.
-  router.afterEach(() => {
-    if (!nuxtApp.isHydrating) document.documentElement.dataset.navigated = "";
-  });
 
   return { provide: { loadBody } };
 });

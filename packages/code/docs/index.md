@@ -244,7 +244,7 @@ A button shows a `label`, an `icon`, or both. The icon is an Iconify name, such 
 code({
   actions: [
     { id: "run", label: "Run", icon: "lucide:play", languages: ["sh", "bash"] },
-    { id: "explain", icon: "lucide:sparkles", title: "Explain this code" },
+    { id: "explain", icon: "lucide:message-square-text", title: "Explain this code" },
   ],
 });
 ```
