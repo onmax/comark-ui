@@ -1,11 +1,11 @@
 import { css } from "./styles.ts";
+import { addStyles as add } from "../../../shared/styles.ts";
 
 declare global {
   interface Window {
     __comarkEmbed?: { users: number; stop: () => void };
   }
 }
-import { addStyles as add } from "../../../shared/styles.ts";
 
 /** Adds the embed styles to the page once. The Vue, React, and Svelte components call it when they mount. */
 export const addStyles = (): void => add("embed", css);
