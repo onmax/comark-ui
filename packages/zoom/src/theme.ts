@@ -59,9 +59,9 @@ export function theme(selector: string, ...extras: Extras[]): string {
   const where = `:where(${selector})`;
   const added = extras.flatMap((name) => groups[name]);
   const list: Token[] = [...tokens, ...added];
-  // Few themes define dark status colors, so a `.light` or `.dark` class above the block picks their fallbacks too.
+  // Few themes define dark status colors, so a `.light` or `.dark` class on the block or an ancestor picks their fallbacks too.
   const classes = added.length
-    ? `:where(.light) ${where}{${resolve(added, 3)}}:where(.dark) ${where}{${resolve(added, 4)}}`
+    ? `:where(.light,.light *)${where}{${resolve(added, 3)}}:where(.dark,.dark *)${where}{${resolve(added, 4)}}`
     : "";
   return (
     `${where}{${resolve(list, 3)};--_comark-radius:var(--comark-radius,calc(var(--ui-radius,calc(var(--radius,.625rem)/2))*2));--_comark-font:var(--comark-font,var(--font-sans,ui-sans-serif,system-ui,sans-serif))}` +

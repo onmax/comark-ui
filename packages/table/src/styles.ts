@@ -39,6 +39,6 @@ export const css = `@layer comark{${[
   "html[data-table-ready] [aria-sort='ascending']>.ctb-sort::after{content:'↑';color:inherit}",
   "html[data-table-ready] [aria-sort='descending']>.ctb-sort::after{content:'↓';color:inherit}",
   ".ctb-copy>button:focus-visible{outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--_comark-ring) 50%,transparent)!important}",
-  ".ctb-sort:focus-visible{outline:none;border-radius:calc(var(--_comark-radius) - 4px);box-shadow:0 0 0 3px color-mix(in srgb,var(--_comark-ring) 50%,transparent)}",
+  ".ctb-sort:focus-visible{outline:none;border-radius:calc(var(--_comark-radius) - 4px);box-shadow:0 0 0 3px color-mix(in srgb,var(--_comark-ring) 50%,transparent)!important}",
   "@media print{.ctb-bar{display:none}.ctb-sort::after{content:none!important}}",
 ].join("")}}`;

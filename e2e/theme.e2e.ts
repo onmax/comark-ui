@@ -1,4 +1,35 @@
 import { expect, test } from "@playwright/test";
+import { mermaidCss } from "../packages/ui/src/client.ts";
+import { theme } from "../packages/zoom/src/theme.ts";
+
+for (const mode of ["light", "dark"] as const) {
+  test(`status tokens follow a root .${mode} class over the OS color scheme`, async ({ page }) => {
+    await page.emulateMedia({ colorScheme: mode === "light" ? "dark" : "light" });
+    await page.setContent(`<!doctype html><html class="${mode}"><head><style>
+      ${mermaidCss}
+      ${theme(".status-a,.status-b", "status", "shadow")}
+      .error{color:var(--pele-error)}
+      .critical{color:var(--pele-critical)}
+      .status-a,.status-b{color:var(--_comark-danger);box-shadow:var(--_comark-shadow)}
+    </style></head><body>
+      <div class="pele-diagram"><span class="error">Error</span><span class="critical">Critical</span></div>
+      <div class="status-a">First block</div><div class="status-b">Second block</div>
+    </body></html>`);
+
+    const danger = mode === "light" ? "rgb(238, 53, 51)" : "rgb(253, 115, 109)";
+    for (const selector of [".error", ".critical", ".status-a", ".status-b"]) {
+      await expect(page.locator(selector)).toHaveCSS("color", danger);
+    }
+    await expect(page.locator(".status-a")).toHaveCSS(
+      "box-shadow",
+      `rgba(0, 0, 0, ${mode === "light" ? "0.12" : "0.5"}) 0px 4px 12px 0px`,
+    );
+
+    await page.addStyleTag({ content: ":root{--comark-danger:rgb(1 2 3)}" });
+    await expect(page.locator(".error")).toHaveCSS("color", "rgb(1, 2, 3)");
+    await expect(page.locator(".status-b")).toHaveCSS("color", "rgb(1, 2, 3)");
+  });
+}
 
 const next = (page: import("@playwright/test").Page) =>
   page.locator("main .cc").first().getByRole("button", { name: "Next slide" });
