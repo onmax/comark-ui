@@ -93,7 +93,7 @@ Each value shows by its kind:
 | Value | Shows as |
 | --- | --- |
 | `status` | A pill with a dot |
-| A date such as `2026-10-23` | `Oct 23, 2026`, in a `time` element that keeps the date as written |
+| A date such as `2026-10-23` | `Oct 23, 2026` in the reader's locale, such as `23 oct 2026` in Spanish, in a `time` element that keeps the date as written |
 | Text, a number, `true` or `false` | Itself |
 | A GitHub or GitLab pull request, merge request, or issue link | `owner/repo#123`, linked |
 | Any other `http(s)` link | Its host and path, linked |
@@ -162,6 +162,7 @@ The options go under `properties` in `comarkUi()`, or to `properties()` when you
 | `keys` | `["status", "pr", "author", "date", "tags"]` | The frontmatter keys to show, in this order. A key the frontmatter doesn't have is skipped. |
 | `labels` | `{}` | A label per key, such as `{ pr: "Pull request" }`. Without one, a key shows capitalized, with dashes and underscores as spaces, and `pr` and `url` show as "PR" and "URL". |
 | `top` | `true` | Puts the box at the top of a document that has no `::properties`. `false` shows the box only where `::properties` sits. |
+| `locale` | none | The locale dates show in, such as `"de-DE"`, for every reader. Without it, dates render in English and a small script, or the component once mounted, rewrites them in the reader's locale. |
 
 ### Issues
 
@@ -171,6 +172,7 @@ The plugin adds these problems to `meta.issues`, as [Validation](/guide/validati
 - A `::properties` with nothing to show.
 - Content inside `::properties`. It's dropped.
 - A prop on `::properties`. It's ignored.
+- An invalid `locale` option. It's ignored, so dates use the reader's locale.
 
 Each issue names the key or block and says how to fix it, and each has its own rule in [Doctor](/doctor/).
 
