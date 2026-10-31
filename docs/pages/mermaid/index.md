@@ -156,7 +156,7 @@ The preset's own `zoom: false` turns off a diagram's zoom too.
 
 ### Script
 
-`comark-ui/html` inlines one script per document for the buttons, and comark-zoom's for the zoom. `mermaidScript`, exported from `comark-ui/html`, is the buttons' script text, so a page with a strict Content Security Policy can allow it by hash; [Renderers](/guide/renderers/#content-security-policy) shows how. Copy image also needs `img-src data:` in that policy.
+`comark-ui/html` inlines the buttons' script, and comark-zoom's for the zoom. `mermaidScript`, exported from `comark-ui/html`, is the buttons' script text, so a page with a strict Content Security Policy can allow it by hash; [Renderers](/guide/renderers/#content-security-policy) shows how. Copy image also needs `img-src data:` in that policy.
 
 ### Issues
 
@@ -179,7 +179,7 @@ import pele, { Pele } from "comark-pele/html";
 const render = createHtmlRenderer({ plugins: [pele()], components: { Pele } });
 ```
 
-The HTML renderer puts static SVG in the page, so it needs no script, no browser, and no network, in Node or in a Cloudflare Worker. For Vue, React, or Svelte, import from `comark-pele/vue`, `comark-pele/react`, or `comark-pele/svelte`, or from comark-ui's entry for that renderer. Those components draw the same SVG on the server, then switch to Pele's `mount()` in the browser, which fits each diagram to its container and adds zoom.
+The HTML renderer puts static SVG in the page and runs in Node or in a Cloudflare Worker. For Vue, React, or Svelte, import from `comark-pele/vue`, `comark-pele/react`, or `comark-pele/svelte`, or from comark-ui's entry for that renderer. Those components draw the same SVG on the server, then fit each diagram to its container and add zoom in the browser.
 
 On its own, comark-pele draws with Pele's colors. To put its diagrams on the `--comark-*` tokens, as comark-ui does, add `mermaidCss` from `comark-ui/client` to the page; [Theme](#theme) lists what it sets. [Renderers](/guide/renderers/) covers using it with other plugins.
 

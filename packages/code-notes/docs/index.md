@@ -115,7 +115,7 @@ The source stays readable without the plugin. On GitHub, the comments show in th
 
 ### Plugin order
 
-The plugin takes the markers out of the code before any plugin runs, so Shiki highlights the code without them. It draws the markers back once the tree is built, into the lines Shiki wrote, so it has to come after `shiki` in `plugins`:
+List `codeNotes()` after `shiki` in `plugins`, so Shiki highlights the code without the markers:
 
 ```ts
 const render = createHtmlRenderer({ plugins: [shiki(), codeNotes(), code()], components });
@@ -125,11 +125,11 @@ In the other order the code isn't highlighted, and `meta.issues` says to move it
 
 ### With comark-code
 
-[comark-code](/code/) wraps each block in its bar of buttons, and the markers sit inside the code it wraps. The marker's number is drawn by CSS, so Copy takes only the code. The two are separate packages because the notes need nothing from the buttons: comark-code replaces `pre`, and this plugin only adds markers to its lines and turns the list under it into notes.
+[comark-code](/code/) adds a bar of buttons to each block. The marker's number is drawn by CSS, so Copy takes only the code.
 
 ## Accessibility
 
-Each marker in the code is a link named "Note 1", and each note starts with a link named "Back to marker 1". A marker with no note is plain text. The number is drawn by CSS, so copying the code never takes it along. The note a link jumps to is highlighted.
+Each marker in the code is a link named "Note 1", and each note starts with a link named "Back to marker 1". A marker with no note is plain text. The note a link jumps to is highlighted.
 
 ### Keyboard interactions
 
@@ -176,9 +176,9 @@ import codeNotes, { components } from "comark-code-notes/html";
 const render = createHtmlRenderer({ plugins: [shiki(), codeNotes()], components });
 ```
 
-The markers are drawn into the lines Shiki writes, so `codeNotes()` goes after `shiki()`, as [Plugin order](#plugin-order) explains.
+Register `codeNotes()` after `shiki()`, as [Plugin order](#plugin-order) explains.
 
-The renderer inlines the styles once per document, and the output needs no script. For Vue, React, or Svelte, import from `comark-code-notes/vue`, `comark-code-notes/react`, or `comark-code-notes/svelte`. The components add the styles when they mount. Import `comark-code-notes/style.css` with your styles so a server-rendered page doesn't shift. It works with [comark-code](/code/)'s buttons, whose Copy leaves the markers out. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-code-notes/vue`, `comark-code-notes/react`, or `comark-code-notes/svelte`. The components add the styles when they mount. Import `comark-code-notes/style.css` with your styles so a server-rendered page doesn't shift. It works with [comark-code](/code/)'s buttons, whose Copy leaves the markers out. [Renderers](/guide/renderers/) covers using it with other plugins.
 
 ## Theme
 

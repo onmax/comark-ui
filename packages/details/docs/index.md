@@ -46,7 +46,7 @@ No. Each item is a native `<details>`, and `type="single"` gives them one `name`
 
 - Every block renders as `<details>` with a real `<summary>`, so it opens and closes with no script.
 - The browser's search finds text inside a closed block, and it prints.
-- A `#summary` slot renders as a real `<summary>`. Comark alone writes it as a `<template>`, which browsers never show.
+- A `#summary` slot renders as a real `<summary>`.
 - A single accordion keeps one item open through the `name` attribute, which [every current browser](https://caniuse.com/mdn-html_elements_details_name) supports.
 - Nuxt UI's syntax, unchanged, so a page renders the same accordions and collapsibles under Nuxt UI.
 
@@ -257,7 +257,7 @@ Anything.
 
 ### Accordions on one page
 
-A `type="single"` accordion names its items from a hash of the document and the accordion's position, so two accordions on one page, or two documents rendered into one page, never close each other's items. The name stays the same every time a document renders, so server and client output match.
+Two `type="single"` accordions on one page never close each other's items, even when they come from two documents rendered into one page.
 
 ## Accessibility
 
@@ -402,4 +402,4 @@ Details and accordions are bordered boxes with a chevron that turns as they open
 
 ### Important rules
 
-The rules sit in a `comark` CSS layer, so any plain rule of your own wins, except the spacing that draws each box. The padding of `.cdt` and its summary, the margins between accordion items, and the edge margins of a box's content are `!important`. A page's own `details`, `summary`, and paragraph rules are almost always unlayered, and would pull the summary out of line or split an accordion. Override those with `!important` too.
+The rules sit in a `comark` CSS layer, so any plain rule of your own wins, except the spacing that draws each box. The padding of `.cdt` and its summary, the margins between accordion items, and the edge margins of a box's content are `!important`. Override those with `!important` too.

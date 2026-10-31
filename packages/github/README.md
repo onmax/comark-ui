@@ -32,7 +32,7 @@ Each plugin works alone, so register only the ones you want.
 > The `render` option moved.
 ```
 
-Comark's built-in alert plugin already reads these markers and leaves the drawing to you. `callouts()` is named `alert`, so it takes its place. A quote without a marker, or with another type, stays a quote. `callouts({ titles: { note: "Nota" } })` changes the default titles.
+`callouts()` replaces Comark's built-in alert plugin. A quote without a marker, or with another type, stays a quote. `callouts({ titles: { note: "Nota" } })` changes the default titles.
 
 ## References
 
@@ -40,13 +40,13 @@ Comark's built-in alert plugin already reads these markers and leaves the drawin
 
 ## HTML
 
-`html()` renders raw HTML the way GitHub does. Tags such as `<sub>`, `<sup>`, `<kbd>`, `<details>`, and `<picture>` stay with GitHub's attributes, such as `align`, `width`, and `open`. `script` and `style` are removed with their content, and any other tag is replaced by its content. A URL must be relative, http, https, or (for links) mailto. Comark renders all raw HTML as written, so use this when people other than you write the Markdown. It is named `html`, so it takes the place of Comark's built-in html plugin. Components written as Markdown, such as `::callout`, aren't touched; Comark's `security` plugin covers those.
+`html()` renders raw HTML the way GitHub does. Tags such as `<sub>`, `<sup>`, `<kbd>`, `<details>`, and `<picture>` stay with GitHub's attributes, such as `align`, `width`, and `open`. `script` and `style` are removed with their content, and any other tag is replaced by its content. A URL must be relative, http, https, or (for links) mailto. Comark renders all raw HTML as written, so use this when people other than you write the Markdown. It replaces Comark's built-in html plugin. Components written as Markdown, such as `::callout`, aren't touched; Comark's `security` plugin covers those.
 
 ## Renderers
 
 | Renderer | Import |
 | --- | --- |
-| `@comark/html` | `comark-github/html`: the styles are inlined once per document |
+| `@comark/html` | `comark-github/html`: the styles are inlined |
 | `@comark/vue` | `comark-github/vue` |
 | `@comark/react` | `comark-github/react` |
 | `@comark/svelte` | `comark-github/svelte` |

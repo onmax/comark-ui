@@ -43,7 +43,7 @@ The pigeon tracker before the redesign is in :ref{#fig-before}, and after it in 
 - `:ref{#id}` becomes a link that reads "Figure 1" or "Table 1", and stays right when figures move.
 - Figures and tables are numbered separately, in the order they appear, and a reference can come before what it points at.
 - A reference to a label that doesn't exist is an issue, not a broken link.
-- The output is plain `figure`, `figcaption`, `caption`, and `a` elements, so it needs no components and no styles.
+- It needs no components or styles. The output is plain `figure`, `figcaption`, `caption`, and `a` elements.
 
 ## Usage
 
@@ -181,11 +181,11 @@ import xref from "comark-xref";
 const render = createHtmlRenderer({ plugins: [xref()] });
 ```
 
-It needs no components: figures become `figure` and `figcaption`, tables get a `caption`, and references become links, which every renderer draws and most pages already style. [Renderers](/guide/renderers/) covers using it with other plugins.
+[Renderers](/guide/renderers/) covers using it with other plugins.
 
 ## Theme
 
-The plugin ships no styles, since figures, captions, and links already have the page's.
+The plugin ships no styles. Figures, captions, and links use the page's.
 
 ### Classes and attributes
 

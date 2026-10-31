@@ -42,7 +42,7 @@ The plugin adds every problem to `meta.issues`, so a host can reject a document 
 
 | Renderer | Import |
 | --- | --- |
-| `@comark/html` | `comark-table/html`: the script and styles are inlined once per document |
+| `@comark/html` | `comark-table/html`: the script and styles are inlined |
 | `@comark/vue` | `comark-table/vue` |
 | `@comark/react` | `comark-table/react` |
 | `@comark/svelte` | `comark-table/svelte` |

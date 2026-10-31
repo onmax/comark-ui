@@ -157,10 +157,6 @@ dd + dt {
 
 A definition list reads better than a two-column table when definitions run longer than a line or hold more than a paragraph, since a table cell holds neither a list nor code. For short values side by side, such as options and defaults, a table is easier to scan.
 
-### How it parses
-
-The parser is markdown-it-deflist, ported so its tokens reach Comark's tree. Comark drops block tokens it doesn't know, so the plugin pushes ones it builds with any tag.
-
 ## API
 
 ### Syntax
@@ -192,5 +188,3 @@ const document = await parseMarkdown(markdown, {
   plugins: [deflist()],
 });
 ```
-
-It has no components and no styles, because a definition list is native HTML. It works with `registerDefaultPlugins: false`, in streaming parses, and inside any `::component`. Every renderer draws the nodes as they are: `dl`, `dt`, and `dd`.

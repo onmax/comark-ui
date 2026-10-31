@@ -32,6 +32,6 @@ As :ref{#fig-login} shows, the button moved.
 
 An image alone in its paragraph with a `fig-` id becomes a figure captioned "Figure 1: " and its alt text; a table in a `::table` with a `tbl-` id gets a caption "Table 1: " and its `caption`. `:ref{#id}` becomes a link that reads "Figure 1". Figures and tables are numbered apart, in document order. The words come from the `figure` and `table` options. Pandoc's `@fig-x` isn't read, since `@name` is a mention in comark-chips and comark-github.
 
-It needs no components or styles: its output is `figure`, `figcaption`, `caption`, and `a`, with the classes `cxr`, `cxr-label`, and `cxr-ref` for your own rules.
+It needs no components or styles. The classes `cxr`, `cxr-label`, and `cxr-ref` are there for your own rules.
 
 The plugin adds every problem to `meta.issues`: a reference with no id or to a label that doesn't exist, a label used twice, a labeled image that shares its paragraph with text, and text inside a `:ref`, which it drops. Each issue names its block and says how to fix it.

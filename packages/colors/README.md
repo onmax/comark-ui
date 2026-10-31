@@ -35,7 +35,7 @@ The plugin adds every problem with a palette to `meta.issues`: no list, content 
 
 | Renderer | Import |
 | --- | --- |
-| `@comark/html` | `comark-colors/html`: the styles are inlined once per document |
+| `@comark/html` | `comark-colors/html`: the styles are inlined |
 | `@comark/vue` | `comark-colors/vue` |
 | `@comark/react` | `comark-colors/react` |
 | `@comark/svelte` | `comark-colors/svelte` |

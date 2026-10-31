@@ -29,7 +29,7 @@ The bundle went :delta{from=412 to=388 unit="kB" better="lower"} and :progress{v
 ::
 ```
 
-`:delta` shows `412 kB → 388 kB ↓ 5.8%`, green when the change is better and red when it's worse. `:progress` is a native `<progress>` with its percent; `max` counts to something other than 1. `::stats` wraps a table of names, befores, and afters and adds a Change column. Everything is worked out while parsing, so the output needs no script.
+`:delta` shows `412 kB → 388 kB ↓ 5.8%`, green when the change is better and red when it's worse. `:progress` is a native `<progress>` with its percent; `max` counts to something other than 1. `::stats` wraps a table of names, befores, and afters and adds a Change column. It needs no script.
 
 The plugin adds every problem to `meta.issues`, so a host can reject a document before publishing it: a number it can't read, a `better` that isn't `lower` or `higher`, a `value` outside its range, a `::stats` without a three-column table, and a row in two units. Each issue names its block and says how to fix it.
 
@@ -37,7 +37,7 @@ The plugin adds every problem to `meta.issues`, so a host can reject a document 
 
 | Renderer | Import |
 | --- | --- |
-| `@comark/html` | `comark-metrics/html`: the styles are inlined once per document |
+| `@comark/html` | `comark-metrics/html`: the styles are inlined |
 | `@comark/vue` | `comark-metrics/vue` |
 | `@comark/react` | `comark-metrics/react` |
 | `@comark/svelte` | `comark-metrics/svelte` |

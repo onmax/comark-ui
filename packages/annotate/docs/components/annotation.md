@@ -25,7 +25,7 @@ r now counts the office cat.
 - A note goes in the numbered list under the image.
 - A side note sits beside, above, or below the image instead, and an arrow points from it to the mark.
 - Hover a mark to highlight its note, or a note to highlight its mark.
-- Each mark wobbles a little, seeded by its box, so no two marks match and the same Markdown always draws the same marks.
+- Each mark is hand-drawn and a little different, and the same Markdown always draws the same marks.
 - Props can be inline, in a YAML props block, or bound with `:x`.
 
 ## Usage

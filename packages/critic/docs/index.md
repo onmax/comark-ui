@@ -207,8 +207,6 @@ const document = await parseMarkdown(markdown, {
 });
 ```
 
-It has no components: insertions, deletions, and highlights are native tags that every renderer outputs as they are. It works with `registerDefaultPlugins: false` and in streaming parses.
-
 ## Theme
 
 ### Styles

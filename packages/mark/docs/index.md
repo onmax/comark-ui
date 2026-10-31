@@ -94,7 +94,7 @@ A ^spaced\ superscript^.
 
 ### Subscripts
 
-`~sub~` is left out on purpose. Comark's autoClose escapes a lone `~` before any plugin sees the Markdown ([comarkdown/comark#462](https://github.com/comarkdown/comark/issues/462)). GitHub reads `~text~` as strikethrough, so the same file would mean two things. Write `<sub>2</sub>` for a subscript, as in H<sub>2</sub>O.
+`~sub~` isn't supported. Write `<sub>2</sub>` for a subscript, as in H<sub>2</sub>O.
 
 ```md
 H<sub>2</sub>O
@@ -117,10 +117,6 @@ A class after a highlight sets its own color through `--cmk-mark`:
   --cmk-mark: #ef4444;
 }
 ```
-
-### How it parses
-
-The parser is markdown-it-mark and markdown-it-sup, ported to TypeScript, since neither ships types. Comark drops inline tokens it doesn't know and keeps their text. So the plugin renames `mark_open` and `mark_close` to the inline span Comark builds with any tag. Comark already builds `sup`.
 
 ## API
 
@@ -154,7 +150,7 @@ const render = createHtmlRenderer({ plugins: [mark()], components });
 
 For Vue, React, or Svelte, import from `comark-mark/vue`, `comark-mark/react`, or `comark-mark/svelte`. The components add the styles when they mount. When you render on a server, import `comark-mark/style.css` with your own styles so the page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
 
-Without the components, the plugin still works in any renderer: the nodes stay plain `mark` and `sup`, which the browser paints yellow and raises. It works with `registerDefaultPlugins: false` and in streaming parses.
+Without the components, the plugin still works in any renderer: the nodes stay plain `mark` and `sup`, which the browser paints yellow and raises.
 
 ## Theme
 

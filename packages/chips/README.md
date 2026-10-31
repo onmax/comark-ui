@@ -26,7 +26,7 @@ Moves the build to [Vite](https://vite.dev). Reviewed by @antfu.
 
 Every web link becomes a chip with its site's favicon, and every `@user` a chip with their GitHub avatar that links to their profile. A link into a GitHub account or repository shows the account's avatar, and a link into an X, Bluesky, YouTube, or GitLab account shows theirs through [unavatar.io](https://unavatar.io). Relative links, links around images, and links written as HTML stay plain.
 
-The images are downloaded while parsing and inlined as data URIs, so the page asks no other site for them. They are kept in `node_modules/.cache/comark-chips` for a week, so the next build asks no one either. One that can't be downloaded stays a URL for the reader's browser to load. An avatar that answers with an HTTP error, such as an `@user` with no account, is reported in `meta.issues`.
+The images are downloaded while parsing and inlined as data URIs, so the page asks no other site for them. One that can't be downloaded stays a URL for the reader's browser to load. An avatar that answers with an HTTP error, such as an `@user` with no account, is reported in `meta.issues`.
 
 ## Props
 
@@ -40,13 +40,13 @@ The images are downloaded while parsing and inlined as data URIs, so the page as
 
 ## Options
 
-`chips({ download: false })` keeps the image URLs instead of downloading them; use it where parsing runs in a browser. `favicon: (host) => url` and `avatar: (login) => url` change where the images come from, such as `https://unavatar.io/github/${login}`. `cache: ".comark/chips"` keeps the images in a folder you can commit, and `cache: false` keeps them in memory only.
+`chips({ download: false })` keeps the image URLs instead of downloading them; use it where parsing runs in a browser. `favicon: (host) => url` and `avatar: (login) => url` change where the images come from, such as `https://unavatar.io/github/${login}`. `cache: ".comark/chips"` keeps the images in a folder you can commit, and `cache: false` keeps them in memory only. The [docs](https://comark-ui.onmax.me/chips/#cache-images-in-ci) cover caching in CI.
 
 ## Renderers
 
 | Renderer | Import |
 | --- | --- |
-| `@comark/html` | `comark-chips/html`: the styles are inlined once per document |
+| `@comark/html` | `comark-chips/html`: the styles are inlined |
 | `@comark/vue` | `comark-chips/vue` |
 | `@comark/react` | `comark-chips/react` |
 | `@comark/svelte` | `comark-chips/svelte` |

@@ -47,7 +47,6 @@ The loft moves to the roof in spring.
 - A pull request or issue link reads as `owner/repo#123`, any other link as its address, and a list as badges.
 - The box goes first in the document, or wherever `::properties` sits.
 - A key that's missing or empty is skipped, and a document with none of the keys gets no box.
-- The facts stay in the frontmatter, where a script can read them too.
 
 ## Usage
 
@@ -116,7 +115,7 @@ The palette page now shows every token.
 
 ### Review documents with a status
 
-Agents that write review documents can keep the facts a reviewer scans for in the frontmatter. A script can read them there too, and the box shows them on the page:
+Keep the facts a reviewer scans for in the frontmatter, and the box shows them on the page. A script can read them there too:
 
 ```md
 ---
@@ -130,7 +129,7 @@ tags: [colors, docs]
 
 ### Your own keys and labels
 
-Use the `keys` option to choose the keys, so the same frontmatter can carry fields that only your tooling reads. Use `labels` to name them:
+Use the `keys` option to choose the keys, so the frontmatter can carry fields that only your tooling reads. Use `labels` to name them:
 
 ```ts
 properties({ keys: ["status", "owner", "due"], labels: { due: "Due date" } });

@@ -205,7 +205,7 @@ Only commands that start a line or follow `&&`, `||`, or `;` change, so `cd my-n
 | Create a project | `npm create x@latest` | `pnpm create x` | `yarn create x` | `bun create x` | `deno init --npm x` |
 | Start a package | `npm init` | `pnpm init` | `yarn init` | `bun init` | `deno init` |
 
-Update commands and local execution with `pnpm exec` stay only in their source manager’s tab. Other managers’ tabs are omitted with a no-form issue: update range, manifest, and workspace behavior differs across managers, and local execution must not become a runner that can download a package. Add takes `-D` for a dev dependency, `-E` for an exact version, `-O` for an optional one, `--save-peer` for a peer one, and `-g` to install globally, each in the manager's own flag. In a `::code-group` the block is one tab already, and `pm` does nothing. Set the managers with the [`managers` option](#choose-the-package-managers).
+Update commands and local execution with `pnpm exec` stay only in their source manager’s tab. Other managers’ tabs are left out, with an issue. Add takes `-D` for a dev dependency, `-E` for an exact version, `-O` for an optional one, `--save-peer` for a peer one, and `-g` to install globally, each in the manager's own flag. In a `::code-group` the block is one tab already, and `pm` does nothing. Set the managers with the [`managers` option](#choose-the-package-managers).
 
 ## Examples
 
@@ -221,7 +221,7 @@ A command a manager has no form for, such as `npm install -g` in yarn, leaves th
 
 ### Icons for every block
 
-Use the `icons` option to set icons once for every block, by label, for tabs that don't set their own. Icons come from the Iconify API by default. Pass the resolver the page's `:icon` uses as `iconResolver`, so they share its sets and `fetch`:
+Use the `icons` option to set icons once for every block, by label, for tabs that don't set their own. Icons come from the Iconify API by default. Pass the resolver the page's `:icon` uses as `iconResolver`:
 
 ```ts
 import { icons as logos } from "@iconify-json/logos";

@@ -48,7 +48,6 @@ export const MAX_FILTERS = 3;
 - Removed lines are red and added lines green. Within a pair of changed lines, the words that changed are a shade deeper.
 - The line numbers and the `+` and `−` come from CSS, so copying a selection copies only the code.
 - With Comark's `shiki` plugin, both blocks keep their highlighting.
-- The output needs no script.
 - To mark a change inside one block of code instead, such as pasted `git diff` output, use a `diff` fence with [Code](/code/#diffs).
 
 ## Usage
@@ -218,7 +217,7 @@ import diff, { components } from "comark-diff/html";
 const render = createHtmlRenderer({ plugins: [diff()], components });
 ```
 
-It's HTML only: Vue, React, and Svelte have no diff components. The renderer inlines the styles once per document, and the output needs no script. Add Comark's `shiki` plugin to keep the code's highlighting. [Renderers](/guide/renderers/) covers using it with other plugins.
+It's HTML only: Vue, React, and Svelte have no diff components. Add Comark's `shiki` plugin to keep the code's highlighting. [Renderers](/guide/renderers/) covers using it with other plugins.
 
 ## Theme
 

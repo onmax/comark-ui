@@ -29,7 +29,7 @@ The deploy waits when the roof holds more than 12 pigeons[^count], unless it's a
     Pigeons that fly off mid-count still count.
 ```
 
-Notes are numbered in the order they're first referenced and listed in a section at the end. It is named `footnotes`, like Comark's plugin, and takes the same options (`label`, `hr`, `backRef`) and writes the same nodes, so it replaces it. When a plugin list holds both, Comark keeps the first.
+Notes are numbered in the order they're first referenced and listed in a section at the end. It takes the same options as Comark's plugin (`label`, `hr`, `backRef`) and writes the same nodes. Remove `comark/plugins/footnotes` when you add this one.
 
 Compared with Comark's plugin, a definition inside fenced code stays in the code, Markdown in a note renders, and a note can run over several lines and blocks. A reference used twice gets its own id, `fnref-label-2`.
 

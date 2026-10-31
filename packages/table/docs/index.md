@@ -50,8 +50,8 @@ Count the pigeons,412,388
 
 - A ` ```csv ` or ` ```tsv ` fence becomes a table wherever it is.
 - `::table` reads a CSV, TSV, or JSON file or fence while parsing, so the table is plain HTML.
-- Every table it makes gets a Copy button, which pastes as cells in a spreadsheet, a menu that copies it as Markdown or CSV instead, and headers that sort if you like.
-- A small script adds the buttons and sorting. Without it, the table still reads.
+- Every table gets a Copy button that pastes as cells in a spreadsheet, a menu that copies it as Markdown or CSV, and headers that sort.
+- A small script adds the buttons and sorting. Without it, the table still reads as plain headers, and print hides the buttons.
 - Any table, Markdown or data, can color a cell or a row by its status.
 
 ## Usage
@@ -178,7 +178,7 @@ A CSV, TSV, or JSON cell takes the same span.
 
 ### Benchmarks in a pull request
 
-A benchmark reads best as the table it is, and an agent writing a review shouldn't have to turn CSV into Markdown by hand. Have the benchmark write CSV next to the document, and point a table at it, so the numbers in the review are the ones the run produced:
+Have the benchmark write CSV next to the document, and point a table at it, so the numbers in the review are the ones the run produced:
 
 ```md
 ::table{src="./bench/results.csv" sort}
@@ -191,11 +191,7 @@ Every row becomes HTML, so a table of thousands of rows makes a heavy page. Trim
 
 ### Reading files
 
-Files are read while parsing, the way [comark-include](/include/) reads them: from disk under `root` by default, refusing symlinks that lead out of it, or through your `read`. The table doesn't fetch URLs, so download the data first.
-
-### Without the script
-
-The Copy button and the sort arrows only show once the script runs. Without it, the headers read as plain text and the table is still a table. In print, the buttons are hidden.
+Files are read as [comark-include](/include/) reads them, from disk under `root` or through your `read`. Symlinks that lead out of `root` are refused, and URLs aren't fetched, so download the data first.
 
 ## Accessibility
 
@@ -282,7 +278,7 @@ import table, { components } from "comark-table/html";
 const render = createHtmlRenderer({ plugins: [table({ root: "docs" })], components });
 ```
 
-The HTML renderer inlines the script and styles once per document. For Vue, React, or Svelte, import from `comark-table/vue`, `comark-table/react`, or `comark-table/svelte`. The components start the script when they mount. Import `comark-table/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-table/vue`, `comark-table/react`, or `comark-table/svelte`. The components start the script when they mount. Import `comark-table/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
 
 ## Theme
 

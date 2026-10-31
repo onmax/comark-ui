@@ -43,7 +43,7 @@ Bread costs $2 a pigeon and seed $5 in all, so $n$ pigeons cost $c = 2n + 5$.
 ## Features
 
 - `$…$` and `\(…\)` write inline math, and `$$…$$`, `\[…\]`, and a `math` fence write display math.
-- Each formula is typeset once while parsing, as MathML, which every current browser draws with its own math font. The page loads no script, font, or stylesheet for it.
+- Each formula is typeset while parsing, as MathML, which every current browser draws with its own math font. The page loads no script, font, or stylesheet for it.
 - Prices such as `$5 and $10`, citations such as `\[1\]`, and anything in code stay text.
 - A formula that doesn't typeset shows its TeX, and the plugin reports it.
 - The TeX stays in the MathML, where screen readers and copy can read it.
@@ -88,13 +88,13 @@ comarkUi({ math: { macros: { "\\R": "\\mathbb{R}" } } });
 
 - `$5 and $10`, `US$20`, and `$ x $`: a `$` followed by a digit or a space doesn't open a formula.
 - `\[1\]` and `\[2, 3\]`: brackets around numbers are citations.
-- Invalid formulas show their TeX and report an issue, including at the end of a document. Comark auto-closes dollar delimiters before plugins run, so incomplete streaming formulas may also report an issue until the rest arrives.
+- Invalid formulas show their TeX and report an issue. In a streaming parse, an unfinished formula may report one until the rest arrives.
 
 ### From Comark's math plugin
 
-Swap `comark/plugins/math` for `comark-mathml`, and drop KaTeX's stylesheet and its `Math` component. This plugin is named `math` too, so a list holds one or the other. When a list holds both, Comark keeps the first, so remove the import from `comark/plugins/math` rather than adding this one after it.
+Swap `comark/plugins/math` for `comark-mathml`, and drop KaTeX's stylesheet and its `Math` component. Remove `comark/plugins/math` when you add this one.
 
-Comark's plugin leaves the TeX in the tree and typesets it with KaTeX in a component, in the reader's browser. This one typesets while parsing and stores the MathML on the node, so renderers only draw it and the page loads no KaTeX.
+Comark's plugin leaves the TeX in the tree and typesets it with KaTeX in a component, in the reader's browser. This one typesets while parsing, so the page loads no KaTeX.
 
 ### KaTeX's HTML
 
@@ -123,9 +123,11 @@ The options go under `math` in `comarkUi()`, or to `math()` when you use the plu
 
 ### Typesetting
 
-Formulas are typeset with `trust: false`, so `\href`, `\url`, and `\includegraphics` don't render; with at most 1,000 macro expansions, so a macro that calls itself stops; and with sizes up to 20em. Each formula is typeset once per process, keyed on its TeX, whether it's display math, and the options, so a site that builds many pages typesets a shared formula once.
+- `\href`, `\url`, and `\includegraphics` don't render.
+- A macro that calls itself stops after 1,000 expansions.
+- Sizes go up to 20em.
 
-[Temml](https://temml.org) writes MathML that Chrome, Firefox, and Safari draw alike. KaTeX's MathML is written for screen readers, and Chrome draws it without `\cancel`, `\boxed`, wide accents such as `\widehat`, or `\mathbb` letters. Temml is also smaller: 50 kB gzipped against KaTeX's 76 kB.
+[Temml](https://temml.org) writes MathML that Chrome, Firefox, and Safari draw alike. KaTeX's MathML is written for screen readers, and Chrome draws it without `\cancel`, `\boxed`, wide accents such as `\widehat`, or `\mathbb` letters.
 
 ### Issues
 
@@ -156,8 +158,6 @@ const render = createHtmlRenderer({ plugins: [math()], components });
 ```
 
 For Vue, React, or Svelte, import from `comark-mathml/vue`, `comark-mathml/react`, or `comark-mathml/svelte`. The components add the styles when they mount. Import `comark-mathml/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
-
-It works with `registerDefaultPlugins: false` and in streaming parses.
 
 ## Theme
 

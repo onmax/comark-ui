@@ -66,7 +66,7 @@ Give a `label` when the icon carries meaning the text around it doesn't, such as
 
 ### Build offline
 
-With no options, the plugin fetches each icon from the [Iconify API](https://iconify.design/docs/api/) while parsing. It asks once per process, for a few icons per request. To build offline, or to keep the output from depending on Iconify, install the sets you use and pass them in `collections`:
+With no options, the plugin fetches each icon from the [Iconify API](https://iconify.design/docs/api/) while parsing. To build offline, or to keep the output from depending on Iconify, install the sets you use and pass them in `collections`:
 
 ```ts
 import { icons as lucide } from "@iconify-json/lucide";

@@ -35,9 +35,9 @@ Count them {~~after~>before~~} the stand-up, from the {==east window==}{>>Not th
 | Highlight | `{==this==}` | `<mark class="ccm-mark">` | its text | its text |
 | Comment | `{>>why<<}` | `<span class="ccm-comment">` | nothing | nothing |
 
-Text inside a mark is Markdown, and each mark opens and closes in one paragraph. One left open stays as written and adds a sentence to `meta.issues`. The plugin works with `registerDefaultPlugins: false` and in streaming parses.
+Text inside a mark is Markdown, and each mark opens and closes in one paragraph. One left open stays as written and adds a sentence to `meta.issues`.
 
-Without the plugin, Comark's attribute rule reads `{++added++}` as attributes and drops the whole mark. The plugin's rule runs first and leaves `{.class}`, `{#id}`, and `{{ bindings }}` to Comark.
+Without the plugin, Comark reads `{++added++}` as attributes and drops the whole mark. Comark's `{.class}`, `{#id}`, and `{{ bindings }}` still work.
 
 ## Styles
 

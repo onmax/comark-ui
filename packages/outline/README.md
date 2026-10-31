@@ -23,7 +23,7 @@ const render = createHtmlRenderer({ plugins: [toc()], components });
 ::
 ```
 
-The package is `comark-outline` because npm refuses `comark-toc` as too close to `remark-toc`; the block is still `::toc`. It lists h2 headings down to `depth` (default 3), each under the closest heading above it, and links to the ids Comark gives them. It reads the headings itself, so it doesn't depend on plugin order or on Comark's toc plugin. `[[toc]]` isn't read, since Comark parses `[[...]]` as a span.
+`::toc` lists h2 headings down to `depth` (default 3), each under the closest heading above it, and links to the ids Comark gives them. `[[toc]]` isn't read, since Comark parses `[[...]]` as a span.
 
 `toc({ rail: true })` also adds an "On this page" outline beside the text, with a small script that marks the section being read and makes way for wide blocks. The [docs](https://comark-ui.onmax.me/outline/#side-outline) give the page variables it reads and sets.
 
@@ -33,7 +33,7 @@ The plugin adds every problem to `meta.issues`: a `depth` outside 2 to 6, conten
 
 | Renderer | Import |
 | --- | --- |
-| `@comark/html` | `comark-outline/html`: the styles are inlined once per document |
+| `@comark/html` | `comark-outline/html`: the styles are inlined |
 | `@comark/vue` | `comark-outline/vue` |
 | `@comark/react` | `comark-outline/react` |
 | `@comark/svelte` | `comark-outline/svelte` |

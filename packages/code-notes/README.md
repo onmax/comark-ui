@@ -37,7 +37,7 @@ The plugin adds every problem to `meta.issues`, so a host can reject a document 
 
 | Renderer | Import |
 | --- | --- |
-| `@comark/html` | `comark-code-notes/html`: the styles are inlined once per document |
+| `@comark/html` | `comark-code-notes/html`: the styles are inlined |
 | `@comark/vue` | `comark-code-notes/vue` |
 | `@comark/react` | `comark-code-notes/react` |
 | `@comark/svelte` | `comark-code-notes/svelte` |

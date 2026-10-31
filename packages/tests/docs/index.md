@@ -49,8 +49,7 @@ credits: 'Reads the <a href="https://github.com/testmoapp/junitxml">JUnit XML</a
 - Reads the JUnit XML that Vitest, Jest, pytest, Go, and most CI tools write, from a file or a fence.
 - Shows how many tests passed, failed, and were skipped, and how long they took.
 - Each failure opens to its message and stack.
-- The report is read while parsing, so the page shows the counts with no script.
-- A pull request that says the tests pass reads better with the run next to it.
+- The counts show with no script.
 
 ## Usage
 
@@ -118,10 +117,6 @@ Have CI write the report next to the review document, then point the block at it
 ```
 
 The summary is one line, and the failures stay closed until a reader opens one, so a long report doesn't push the rest of the review down. In print, every failure prints open.
-
-### The XML parser
-
-JUnit XML uses a small part of XML: elements, attributes, text, CDATA, the five entities, and character references. The plugin reads it with a parser of its own, under two hundred lines with no dependency, rather than pulling in a general XML library many times its size. It refuses what isn't well-formed and says on which line. It skips doctypes without reading them, so a report can't make it load anything.
 
 ## Accessibility
 
@@ -197,7 +192,7 @@ import tests, { components } from "comark-tests/html";
 const render = createHtmlRenderer({ plugins: [tests({ root: "." })], components });
 ```
 
-The renderer inlines the styles once per document, and the output needs no script. For Vue, React, or Svelte, import from `comark-tests/vue`, `comark-tests/react`, or `comark-tests/svelte`. The components add the styles when they mount. Import `comark-tests/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-tests/vue`, `comark-tests/react`, or `comark-tests/svelte`. The components add the styles when they mount. Import `comark-tests/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
 
 ## Theme
 

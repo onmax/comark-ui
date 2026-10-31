@@ -93,9 +93,9 @@ Create the config as a JavaScript ES module:
 export default { components: ["duck-count"] };
 ```
 
-The path resolves from ESLint's working directory, and the file is the one `comark-lint --config` reads. `.mjs` works across the package's supported Node versions. Configs are imported by Node without a TypeScript loader: to use `comark-lint.config.ts` with erasable TypeScript syntax, run ESLint on Node 22.18 or later, or enable `--experimental-strip-types` on Node 22.12–22.17. The same requirement applies to the Node runtime used by your editor's ESLint extension.
+The path resolves from ESLint's working directory, and the file is the one `comark-lint --config` reads. Node imports it without a TypeScript loader. To use `comark-lint.config.ts` with erasable TypeScript syntax, run ESLint on Node 22.18 or later, or enable `--experimental-strip-types` on Node 22.12–22.17. The same requirement applies to the Node runtime used by your editor's ESLint extension.
 
-Configs and their imports are cached for the lifetime of the ESLint process. After editing a config or a module it imports, restart ESLint (in VS Code, run **ESLint: Restart ESLint Server**) to load the changes.
+Restart ESLint after you edit a config or a module it imports. In VS Code, run **ESLint: Restart ESLint Server**.
 
 ### Check external URLs
 
@@ -136,4 +136,4 @@ oxlint can't run this plugin yet. Its JS plugins lint JavaScript and TypeScript 
 
 ### How it runs
 
-ESLint rules are synchronous, and comark-lint's parse plugins aren't. The plugin lints each file once in a worker thread and waits for the result, which every rule then reads. Links to other files are checked against the disk, from the file ESLint lints. A config that fails to load is reported as `comark/plugin-issue` on line 1, and ESLint keeps going.
+Links to other files are checked against the disk, from the file ESLint lints. A config that fails to load is reported as `comark/plugin-issue` on line 1, and ESLint keeps going.

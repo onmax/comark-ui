@@ -24,7 +24,7 @@ Open [pr-123.preview.example.com](https://pr-123.preview.example.com), or scan i
 :qr{value="https://pr-123.preview.example.com"}
 ```
 
-The parse plugin encodes `value` with [uqr](https://github.com/unjs/uqr), Anthony Fu's zero-dependency ES module from his [QR Toolkit](https://qrcode.antfu.me), and writes the code as one SVG path, so no renderer encodes anything and the page needs no script. Codes are black on white in both color schemes; set `--cqr-size` to resize them.
+The page needs no script. Codes are black on white in both color schemes; set `--cqr-size` to resize them.
 
 The plugin adds every problem to `meta.issues`: a `:qr` with no `value`, one too long to encode, text in its brackets, and a prop it doesn't read. Each issue names its block and says how to fix it.
 
@@ -32,7 +32,7 @@ The plugin adds every problem to `meta.issues`: a `:qr` with no `value`, one too
 
 | Renderer | Import |
 | --- | --- |
-| `@comark/html` | `comark-qr/html`: the styles are inlined once per document |
+| `@comark/html` | `comark-qr/html`: the styles are inlined |
 | `@comark/vue` | `comark-qr/vue` |
 | `@comark/react` | `comark-qr/react` |
 | `@comark/svelte` | `comark-qr/svelte` |

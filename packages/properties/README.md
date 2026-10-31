@@ -36,7 +36,7 @@ The plugin adds every problem to `meta.issues`: a value it can't show, a `::prop
 
 | Renderer | Import |
 | --- | --- |
-| `@comark/html` | `comark-properties/html`: the styles are inlined once per document |
+| `@comark/html` | `comark-properties/html`: the styles are inlined |
 | `@comark/vue` | `comark-properties/vue` |
 | `@comark/react` | `comark-properties/react` |
 | `@comark/svelte` | `comark-properties/svelte` |

@@ -47,7 +47,7 @@ digraph {
 ## Features
 
 - PlantUML, Graphviz, D2, DBML, GoAT, and Svgbob fences become SVG in the page.
-- A [Kroki](https://kroki.io) server draws each diagram while parsing, so the page needs no script.
+- A [Kroki](https://kroki.io) server draws each diagram while parsing.
 - The plugin takes out anything in the SVG that could run.
 - Each diagram sits on a white card, since the tools draw dark lines on white.
 - A title names the diagram for screen readers.
@@ -147,8 +147,6 @@ Options go under `diagrams` in `comarkUi()`, or to `diagrams()` when you use it 
 | `server` | `"https://kroki.io"` | The Kroki server that draws the diagrams. Set your own to keep the sources private. |
 | `draw` | `true` | `false` leaves every diagram as code and sends nothing. |
 
-Parsing waits for each diagram from the Kroki server, so the page needs no script and no request when it's read. Every diagram is drawn once per process, so a site that builds many pages asks for each one once.
-
 ### Issues
 
 A diagram Kroki can't draw stays as code, and the plugin adds a sentence to `meta.issues`, as [Validation](/guide/validation/) describes, with the first two lines of the tool's error. So does a diagram drawn while the server can't be reached:
@@ -158,7 +156,7 @@ The ```dot fence 2: Kroki couldn't draw it: Error: <stdin>: syntax error in line
 The ```d2 fence 1: couldn't reach the Kroki server at https://kroki.io (fetch failed). Check `server`, or build again.
 ```
 
-A diagram that failed is drawn again on the next parse. Each issue has its own rule in [Doctor](/doctor/).
+Each issue has its own rule in [Doctor](/doctor/).
 
 ### Package
 

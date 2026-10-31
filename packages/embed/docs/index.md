@@ -35,7 +35,7 @@ blurb: Videos, audio, and live code
 
 - A YouTube, Vimeo, Loom, Spotify, CodePen, StackBlitz, or Figma link becomes its player.
 - Any other `https://` link becomes a card.
-- The plugin reads the player's address from the link alone, with no fetch, so a document renders the same offline, in tests, and at build time.
+- The plugin never fetches, so a document renders the same offline, in tests, and at build time.
 - The link stays under every player, so the page still makes sense in a feed reader or where iframes are blocked.
 - In print, each player gives way to its address.
 
@@ -158,7 +158,7 @@ The plugin adds every problem to `meta.issues`, as [Validation](/guide/validatio
 - Content inside the block.
 - A prop `::embed` doesn't read.
 
-Each issue names its block and says how to fix it. Each has its own rule in [Doctor](/doctor/).
+Each has its own rule in [Doctor](/doctor/).
 
 ### Package
 

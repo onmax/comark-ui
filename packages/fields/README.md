@@ -36,11 +36,11 @@ A key shared by blocks that switch together.
 
 | Renderer | Import |
 | --- | --- |
-| `@comark/html` | `comark-fields/html`: the styles are inlined once per document |
+| `@comark/html` | `comark-fields/html`: the styles are inlined |
 | `@comark/vue` | `comark-fields/vue` |
 | `@comark/react` | `comark-fields/react` |
 | `@comark/svelte` | `comark-fields/svelte` |
 
 Each entry exports the parse plugin as `default` and the renderer's `components`. The Vue, React, and Svelte components add the styles when they mount; import `comark-fields/style.css` with your styles so a server-rendered page doesn't shift.
 
-The styles follow shadcn/ui: they read its CSS variables, such as `--muted-foreground` and `--border`, when the page has them, and use its neutral theme otherwise. Set the shared `--comark-*` tokens to theme every plugin at once; the rules sit in a `comark` CSS layer, so any plain rule of your own wins, except the top and bottom margins of a field's description, which are `!important`, because a page's own paragraph and list margins are almost always unlayered and would open a gap under the name. To override those margins, use `!important` in a cascade layer declared before `comark`; an unlayered important rule loses because important declarations reverse layer order.
+The styles follow shadcn/ui: they read its CSS variables, such as `--muted-foreground` and `--border`, when the page has them, and use its neutral theme otherwise. Set the shared `--comark-*` tokens to theme every plugin at once; the rules sit in a `comark` CSS layer, so any plain rule of your own wins, except the top and bottom margins of a field's description, which are `!important`. To override those, use `!important` in a cascade layer declared before `comark`.

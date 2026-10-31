@@ -52,8 +52,7 @@ Duck tests moved to Vitest: :progress{value=0.85 label="Migrated"}
 - `:delta` turns two numbers into the arrow, the percent change, and whether the change is better or worse.
 - `:progress` draws a progress bar with its percent after it.
 - `::stats` adds a Change column to a table of befores and afters, or shows each row as a tile.
-- The plugin works out every change while parsing, so the renderers only draw it and the output needs no script.
-- The numbers sit next to the claim, which is how a pull request that changes a size or a speed reads best.
+- No script: every change is worked out while parsing.
 
 ## Usage
 
@@ -310,7 +309,7 @@ import metrics, { components } from "comark-metrics/html";
 const render = createHtmlRenderer({ plugins: [metrics()], components });
 ```
 
-The renderer inlines the styles once per document, and the output needs no script. For Vue, React, or Svelte, import from `comark-metrics/vue`, `comark-metrics/react`, or `comark-metrics/svelte`. The components add the styles when they mount. Import `comark-metrics/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-metrics/vue`, `comark-metrics/react`, or `comark-metrics/svelte`. The components add the styles when they mount. Import `comark-metrics/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
 
 ## Theme
 

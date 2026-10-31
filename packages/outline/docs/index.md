@@ -45,7 +45,7 @@ blurb: A table of contents in the page
 ## Features
 
 - `::toc` becomes a nested list of links to the page's headings, kept in step with them on every render.
-- The plugin reads the headings itself, with the ids Comark gives them, so it works in any order with other plugins and doesn't need Comark's toc plugin.
+- It links to the ids Comark gives the headings, and works in any plugin order.
 - Each heading sits under the closest heading above it of a higher level, so a page that skips a level still nests sensibly.
 - The list is a `nav` that screen readers can jump to.
 - No script: the links work in any renderer that keeps the heading ids.
@@ -175,7 +175,7 @@ The [side outline](#side-outline) draws itself beside the text. To draw one in y
 
 ### Coming from markdown-it-toc
 
-`[[toc]]`, as markdown-it-toc writes it, isn't read: in Comark `[[...]]` is a span, and the block syntax is the one every other plugin uses. Write `::toc` and `::` on the next line instead.
+`[[toc]]`, as markdown-it-toc writes it, isn't read: in Comark `[[...]]` is a span. Write `::toc` and `::` on the next line instead.
 
 ## API
 
@@ -229,7 +229,7 @@ import toc, { components } from "comark-outline/html";
 const render = createHtmlRenderer({ plugins: [toc()], components });
 ```
 
-Pass the options to the plugin, such as `toc({ rail: true })` for the [side outline](#side-outline). The links point at the heading ids Comark writes, so they work with any renderer that keeps them.
+Pass the options to the plugin, such as `toc({ rail: true })` for the [side outline](#side-outline).
 
 For Vue, React, or Svelte, import from `comark-outline/vue`, `comark-outline/react`, or `comark-outline/svelte`; the components add the styles when they mount. Import `comark-outline/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
 

@@ -232,7 +232,7 @@ vp exec comark-annotate render duck-audit.md -o duck-audit.html
 
 `vp` comes with the [global Vite+ CLI](https://viteplus.dev/guide/global-cli). Without it, use `pnpm dlx` for `vp dlx` and `pnpm exec` for `vp exec`.
 
-A direct dependency links the executable in pnpm workspaces. When comark-annotate is only transitive, npx can find the package without finding a linked command and stop with `comark-annotate: not found`. Using `@latest` to bypass that discovery can instead run a different release from the project's renderers.
+A direct dependency links the executable in pnpm workspaces. When comark-annotate is only transitive, npx stops with `comark-annotate: not found`, and `@latest` can run a different release from the project's renderers.
 
 ### Issues
 
@@ -270,7 +270,7 @@ const render = createHtmlRenderer({ plugins: [annotate()], components });
 const html = await render(markdown);
 ```
 
-The renderer inlines its styles and script once per document. Annotate renders only to HTML. [Renderers](/guide/renderers/) covers using it with other plugins, a strict Content Security Policy, and untrusted notes.
+Annotate renders only to HTML. [Renderers](/guide/renderers/) covers using it with other plugins, a strict Content Security Policy, and untrusted notes.
 
 The comark-ui agent skill knows the syntax, how to measure marks from the page, and how to check the result. Agents install it with `vp dlx skills add onmax/comark-ui`, and [Agents](/guide/agents/) covers the rest.
 
@@ -314,7 +314,7 @@ Set them on `.ca`, the root of every block:
 | `--ca-bottom-gutter` | `5rem` | The room below the image for `side="bottom"` notes |
 | `--ca-gap` | `1.25rem` | The space between a side note and the image, where its arrow runs |
 
-A screenshot's or compare's `ink` colors its annotations the same way. An annotation's `color` sets `--ca-color`, `--ca-solid`, and `--ca-ink` on its own mark and note, so it wins over `.ca`. Caveat comes inlined with the styles, about 32 KB once per page.
+A screenshot's or compare's `ink` colors its annotations the same way. An annotation's `color` sets `--ca-color`, `--ca-solid`, and `--ca-ink` on its own mark and note, so it wins over `.ca`. Caveat comes inlined with the styles, about 32 KB.
 
 ### Classes
 

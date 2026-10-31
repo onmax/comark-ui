@@ -39,7 +39,7 @@ credits: 'Arguments from <a href="https://github.com/unjs/automd">automd</a>.'
 
 - A Markdown file is pasted into the page, and any other file becomes a code block in the language of its extension.
 - Pick lines by number, or by a named region that moves with the code.
-- The files are pasted before Comark reads the page, so the page parses once and every plugin sees one document.
+- The page parses once, so heading ids stay unique across partials.
 - Paths can't leave `root`, in any runtime.
 - comark-ui leaves it off until you turn it on, since it reads from disk.
 
@@ -125,9 +125,7 @@ Indent the include to paste into a list item. Pasted lines are indented like the
 
 ### One parse
 
-The plugin pastes the files into the Markdown before Comark reads it, so a page parses once. Heading ids stay unique across partials, and every other plugin runs once over the whole page.
-
-Comark closes open blocks before plugins run. That's why an include is `:include` with one colon, since a `::include` line would take in the rest of the page.
+The plugin pastes the files into the Markdown before Comark reads it, so every other plugin runs once over the whole page.
 
 Streaming parses aren't supported.
 
@@ -172,9 +170,9 @@ const render = createHtmlRenderer(comarkUi({ include: { root: "content", base: "
 | `read(path)` | Reads from disk | Reads a file by its POSIX path relative to `root`, and returns its text or `undefined`. It may be async. |
 | `depth` | `8` | How many levels of includes may nest. |
 
-Comark doesn't tell plugins where a page lives, so set `base` to its folder.
+Set `base` to the page's folder.
 
-The plugin joins paths as strings, so `../` can't leave `root` in any runtime, and `read` only gets paths under it. The default reader also refuses a symlink that leads out of `root`. If your own `read` can meet symlinks, it has to refuse them itself.
+`../` can't leave `root` in any runtime, and `read` only gets paths under it. The default reader also refuses a symlink that leads out of `root`. If your own `read` can meet symlinks, it has to refuse them itself.
 
 ### Meta
 
@@ -221,5 +219,3 @@ const document = await parseMarkdown(markdown, {
   plugins: [include({ root: "content", base: "guide" })],
 });
 ```
-
-It has no components, because the included text renders as the rest of the page does.

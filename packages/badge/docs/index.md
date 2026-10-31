@@ -224,7 +224,7 @@ https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-ui&preset
 
 ### Host the endpoint
 
-Use `createBadgeHandler()` from `comark-badge/server` in a server or Worker. Keep one handler per process so requests share its bounded cache. In a Worker, pass a `cache` from the Cache API so every instance in a location shares the data, a GitHub `token` so workflow badges don't share the IP's limit of 60 requests an hour, and the request's context so data refreshes after the response. It also accepts `fetch` and `now` functions for testing.
+Use `createBadgeHandler()` from `comark-badge/server` in a server or Worker. Create one handler and reuse it for every request. In a Worker, pass a `cache` from the Cache API so every instance in a location shares the data, a GitHub `token` so workflow badges don't share the IP's limit of 60 requests an hour, and the request's context so data refreshes after the response.
 
 ```ts
 import { createBadgeHandler } from "comark-badge/server";
@@ -238,7 +238,7 @@ export default {
 };
 ```
 
-The handler accepts GET and HEAD, rejects malformed options with HTTP 400, and fetches only public npm and GitHub APIs. The token, which needs no scopes, goes only to GitHub. Authenticated workflow results are displayed and cached only when GitHub explicitly marks the run’s repository as public; private or unknown visibility returns `unavailable`, even with a broader token. It limits concurrent upstream requests to 16, response bodies to 64 KiB, requests to five seconds, and its process cache to 256 entries.
+The handler accepts GET and HEAD, rejects malformed options with HTTP 400, and fetches only public npm and GitHub APIs. The token needs no scopes and goes only to GitHub. A workflow badge shows only when GitHub marks the run's repository as public. A private or unknown repository returns `unavailable`, even with a broader token.
 
 | Source | Cache lifetime |
 | --- | --- |
@@ -248,7 +248,7 @@ The handler accepts GET and HEAD, rejects malformed options with HTTP 400, and f
 | GitHub Actions | One minute |
 | Unavailable upstream | 30 seconds |
 
-Data is kept apart from the badge's look, so every style of one package shares it. Once its lifetime ends, the handler answers with the last value it has and refreshes it in the background; if the refresh fails, it keeps that value for up to a day and tries again 30 seconds later. Without one, a missing package, missing workflow, no runs, rate limit, or failed request displays `unavailable`, never a passing status. Image responses include `X-Badge-Status: ok` or `unavailable`. Responses allow `stale-while-revalidate` for a day, so browsers and image proxies show the last image while they fetch the next. An image reload checks the cache; there is no polling script.
+Once a lifetime ends, the handler answers with the last value it has and refreshes it in the background. A missing package, missing workflow, no runs, rate limit, or failed request with no earlier value displays `unavailable`, never a passing status. Browsers and image proxies show the last image while they fetch the next.
 
 ### Serve badges behind Cloudflare
 
@@ -268,7 +268,7 @@ If Security Events identifies Browser Integrity Check as the cause, add a Config
 
 Use your own hostname and path when self-hosting. This rule changes only Browser Integrity Check for matching requests. Other paths, methods, and security settings keep their existing configuration. Wrangler's Worker configuration does not apply zone Configuration Rules; manage this rule separately in Cloudflare.
 
-Verify the endpoint from the client that failed. A valid badge request returns HTTP 200, `Content-Type: image/svg+xml`, and `X-Badge-Status: ok`. A remaining 403 requires checking Security Events for the blocking feature; changing the badge handler cannot fix a rejection at Cloudflare's edge.
+Verify the endpoint from the client that failed. A valid badge request returns HTTP 200 with `Content-Type: image/svg+xml`. A remaining 403 requires checking Security Events for the blocking feature; changing the badge handler cannot fix a rejection at Cloudflare's edge.
 
 ## API
 
@@ -298,7 +298,7 @@ In `comarkUi()`, `badge: false` turns it off, and `badge: { endpoint, download }
 | Option | Default | Description |
 | --- | --- | --- |
 | `endpoint` | `https://comark-ui.onmax.me/badge.svg` | HTTPS image endpoint without credentials. Applies only to live sources. |
-| `download` | `true` | Fetches live data while parsing and draws it into the document. Each source's data is kept for its cache lifetime below, once per process. `false` links live badges to `endpoint`. |
+| `download` | `true` | Fetches live data while parsing and draws it into the document. `false` links live badges to `endpoint`. |
 
 ### Functions
 

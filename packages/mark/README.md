@@ -26,15 +26,13 @@ The deploy waits while ==more than 12 pigeons== sit on the roof.
 
 Markdown works inside a highlight and `{attributes}` work after one. A superscript holds no spaces unless they're escaped, and `[^1]` is never read as one, so footnotes keep working.
 
-There is no `~sub~`: Comark's autoClose escapes a lone `~` ([comarkdown/comark#462](https://github.com/comarkdown/comark/issues/462)), and GitHub reads `~text~` as strikethrough. Write `<sub>2</sub>` instead.
-
-It works with `registerDefaultPlugins: false` and in streaming parses.
+`~sub~` isn't supported. Write `<sub>2</sub>` instead.
 
 ## Renderers
 
 | Renderer | Import |
 | --- | --- |
-| `@comark/html` | `comark-mark/html`: the styles are inlined once per document |
+| `@comark/html` | `comark-mark/html`: the styles are inlined |
 | `@comark/vue` | `comark-mark/vue` |
 | `@comark/react` | `comark-mark/react` |
 | `@comark/svelte` | `comark-mark/svelte` |

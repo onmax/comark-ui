@@ -7,7 +7,7 @@ tagline: Check a document before you publish it. Each problem is one sentence th
 
 ## meta.issues
 
-The plugins check every block while parsing and add their problems to `meta.issues`. Several plugins run on one document, so each one adds to the list and never replaces it. Parse with the plugins you render with, and reject the document if the list isn't empty:
+The plugins check every block while parsing and add their problems to `meta.issues`. Parse with the plugins you render with, and reject the document if the list isn't empty:
 
 ```ts
 import { parseMarkdown } from "comark";

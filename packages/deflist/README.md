@@ -34,9 +34,7 @@ Pigeon count
     Above 12, the deploy waits.
 ```
 
-A term is one line, and each definition starts with `:` or `~` and a space. Lines indented past the marker continue the definition, so it can hold paragraphs, lists, and code. A definition of one paragraph renders its text straight inside `<dd>`.
-
-It works with `registerDefaultPlugins: false`, in streaming parses, and inside any `::component`.
+A term is one line, and each definition starts with `:` or `~` and a space. Lines indented past the marker continue the definition, so it can hold paragraphs, lists, and code.
 
 ## Credits
 

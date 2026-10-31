@@ -19,7 +19,7 @@ In a pnpm workspace that has a package only through another one, `npx` finds the
 
 The CLI lists every skill in the repository. Pick `comark-ui`. This site serves it too, so `vp dlx skills add https://comark-ui.onmax.me` installs the same skill.
 
-A project that installs `comark-ui` can link the skill from `node_modules` instead, so it matches the installed version. Run `vp dlx skills experimental_sync` after each install; [Skills](/skills/#from-npm) shows how, and why the command is still experimental.
+A project that installs `comark-ui` can link the skill from `node_modules` instead, so it matches the installed version. Run `vp dlx skills experimental_sync` after each install; [Skills](/skills/#from-npm) shows how.
 
 It teaches the blocks. To teach your agent a whole document, such as before/after evidence, a review, or a lesson, pick the [skills](/skills/) for those from the same list.
 

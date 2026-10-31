@@ -162,7 +162,7 @@ These tags stay, as on GitHub: `a`, `abbr`, `b`, `bdo`, `blockquote`, `br`, `cap
 - A URL must be relative, http, or https, or mailto in a link. Any other, such as `javascript:` or `data:`, is removed.
 
 > [!NOTE]
-> Markdown between an HTML tag and its closing tag, after a blank line, renders after the element instead of inside it, until Comark fixes [comark#235](https://github.com/comarkdown/comark/issues/235). Content on the lines right after the opening tag, with no blank line, stays inside, but as plain text.
+> Markdown between an HTML tag and its closing tag, after a blank line, renders after the element instead of inside it. Content on the lines right after the opening tag, with no blank line, stays inside, but as plain text.
 
 ## Examples
 
@@ -241,7 +241,7 @@ const render = createHtmlRenderer({
 });
 ```
 
-Each plugin works alone, in any order. `callouts()` is named `alert` and `html()` is named `html`, so they take the place of Comark's built-in plugins of those names. They work with `registerDefaultPlugins: false` too.
+Each plugin works alone, in any order. `callouts()` replaces Comark's built-in alert plugin, and `html()` replaces its html plugin.
 
 For Vue, React, or Svelte, import from `comark-github/vue`, `comark-github/react`, or `comark-github/svelte`. The callout components add the styles when they mount. When you render on a server, import `comark-github/style.css` with your own styles so the page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
 

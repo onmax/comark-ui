@@ -228,7 +228,7 @@ import comments, { components } from "comark-comments/html";
 const render = createHtmlRenderer({ plugins: [comments({ mark: "track" })], components });
 ```
 
-Only the HTML renderer exists: the cards are plain HTML and CSS, so the same output works in any page. [Renderers](/guide/renderers/) covers the rest.
+Comments render only to HTML. [Renderers](/guide/renderers/) covers the rest.
 
 ## Theme
 

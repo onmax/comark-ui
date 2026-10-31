@@ -46,7 +46,7 @@ Inlines each image while parsing.
 - Each field is a row: its name in code, its type, a required tag, its default, and its description under them.
 - Fields inside a field describe an object's properties, and sit indented under it.
 - A field works on its own, or in a `::field-group` with a line between fields.
-- Nuxt UI's syntax, with no script.
+- Nuxt UI's syntax.
 
 ## Usage
 
@@ -199,7 +199,7 @@ The plugin adds every problem to `meta.issues`, as [Validation](/guide/validatio
 - A prop it doesn't read.
 - A `description` prop on a field with content and no nested fields, which hides the prop.
 
-Each issue names the field, by its name or else its type, and says how to fix it. Each one has its own rule in [Doctor](/doctor/).
+Each one has its own rule in [Doctor](/doctor/).
 
 ### Package
 
@@ -254,4 +254,4 @@ Set it on `.cfl`:
 
 ### Important rules
 
-The rules sit in a `comark` CSS layer, so any plain rule of your own wins, except the top and bottom margins of a field's description. Those are `!important`, because a page's own paragraph and list margins are almost always unlayered and would open a gap under the name. To override them, use `!important` in a cascade layer declared before `comark`. An unlayered important rule loses, because important declarations reverse layer order.
+The rules sit in a `comark` CSS layer, so any plain rule of your own wins, except the top and bottom margins of a field's description. Those are `!important`. To override them, use `!important` in a cascade layer declared before `comark`. An unlayered important rule loses.

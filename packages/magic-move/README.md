@@ -33,13 +33,13 @@ const total = price * rate
 ::
 ````
 
-The plugin adds every problem to `meta.issues`, so a host can reject a document before publishing it: a block with fewer than two code blocks, content that isn't a code block (it's dropped), and a prop it doesn't know. Each issue names its block and says how to fix it.
+The plugin adds every problem to `meta.issues`, so a host can reject a document before publishing it. A block with fewer than two code blocks is one; content that isn't a code block is dropped.
 
 ## Renderers
 
 | Renderer | Import |
 | --- | --- |
-| `@comark/html` | `comark-magic-move/html`: the script and styles are inlined once per document |
+| `@comark/html` | `comark-magic-move/html`: the script and styles are inlined |
 | `@comark/vue` | `comark-magic-move/vue` |
 | `@comark/react` | `comark-magic-move/react` |
 | `@comark/svelte` | `comark-magic-move/svelte` |

@@ -12,8 +12,6 @@ pnpm add -D comark-linter
 pnpm comark-lint "docs/**/*.md"
 ```
 
-The package is `comark-linter`, since npm refuses `comark-lint` as too close to `remark-lint`. Its command and config file are `comark-lint`; `lint-comark` still works for both.
-
 ```txt
 docs/pigeons-vs-deploys.md:8:1 comark/unclosed-block `::compare` opened on line 8 is never closed. Add a line with `::` after its last child.
 ```
@@ -65,5 +63,3 @@ export default defineDoctorConfig({ extends: ["auto"], extensions: [comark()] })
 | `comark/dead-url` | `COMARK0013` | An external URL that answers 404 or 410, or whose host is gone, with `--check-urls` |
 
 Each comark-ui package adds one rule per kind of problem its plugin reports, named in `meta.issueRules`, with a code in its own hundred. [Doctor](https://comark-ui.onmax.me/doctor/) has a page for every rule.
-
-Comark gives parsed nodes no positions, so block components take their line from the parser's tokens and everything else is found by searching the source.

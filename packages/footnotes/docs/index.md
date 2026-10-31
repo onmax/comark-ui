@@ -168,7 +168,7 @@ The options go under `footnotes` in `comarkUi()`, or to `footnotes()` when you u
 
 ### Issues
 
-The plugin adds a sentence to `meta.issues` for each of these, naming the label and saying how to fix it. Each one has its own rule in [Doctor](/doctor/).
+The plugin adds a sentence to `meta.issues` for each of these. Each has its own rule in [Doctor](/doctor/).
 
 - A reference with no definition.
 - A definition nothing references.
@@ -197,6 +197,4 @@ const document = await parseMarkdown(markdown, {
 });
 ```
 
-It has no components, because the notes render as plain HTML. It is named `footnotes`, like Comark's plugin, so a list holds one or the other. When a list holds both, Comark keeps the first, so remove the import from `comark/plugins/footnotes` rather than adding this one after it.
-
-It works with `registerDefaultPlugins: false` and in streaming parses.
+Remove `comark/plugins/footnotes` when you add this one.

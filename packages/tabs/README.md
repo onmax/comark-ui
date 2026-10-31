@@ -44,7 +44,7 @@ npm install comark-tabs
 
 A code block marked `pm` after its language, as in `sh pm`, holds package manager commands in any manager, npm, pnpm, yarn, bun, or deno, and becomes a code group with `sync="pm"` and a tab each for npm, pnpm, yarn, and bun. It reads installs, adds, removes, updates, scripts, `npx` and `dlx`, `create`, and `init`, and only commands that start a line or follow `&&`, `||`, or `;` change. Choose the managers and their order with `tabs({ managers: ["pnpm", "npm", "yarn", "bun", "deno"] })`.
 
-A tab takes an `icon`, an [Iconify](https://icones.js.org) name or an image URL: `:::tabs-item{label="macOS" icon="lucide:apple"}`, or `icon=logos:pnpm` after a code block's label. [comark-icon](https://comark-ui.onmax.me/icon/) resolves it while parsing, from the Iconify API by default, and draws it as a CSS image, in the text's color when it has one color. Pass the resolver your `:icon`s use as `tabs({ iconResolver })`, so tabs share its sets and `fetch`, and icons by label for every block as `tabs({ icons: { pnpm: "logos:pnpm" } })`. Size them with `--comark-icon-size`.
+A tab takes an `icon`, an [Iconify](https://icones.js.org) name or an image URL: `:::tabs-item{label="macOS" icon="lucide:apple"}`, or `icon=logos:pnpm` after a code block's label. [comark-icon](https://comark-ui.onmax.me/icon/) resolves it while parsing, from the Iconify API by default, and draws it as a CSS image, in the text's color when it has one color. Pass the resolver your `:icon`s use as `tabs({ iconResolver })`, and icons by label for every block as `tabs({ icons: { pnpm: "logos:pnpm" } })`. Size them with `--comark-icon-size`.
 
 The markup follows the WAI-ARIA tabs pattern: ←, →, Home, and End move between tabs and open them. Blocks with the same `sync` switch together by label, the choice is saved in `localStorage` under `comark-tabs:` and the key, and the page scrolls to keep the clicked tab still when blocks above it change height. Labels and `sync` can be bound to the front matter, such as `:label="frontmatter.name"`.
 
@@ -54,7 +54,7 @@ The plugin adds every problem to `meta.issues`, so a host can reject a document 
 
 | Renderer | Import |
 | --- | --- |
-| `@comark/html` | `comark-tabs/html`: the script is inlined once per document |
+| `@comark/html` | `comark-tabs/html`: the script is inlined |
 | `@comark/vue` | `comark-tabs/vue` |
 | `@comark/react` | `comark-tabs/react` |
 | `@comark/svelte` | `comark-tabs/svelte`, Svelte 5.20 or later |
