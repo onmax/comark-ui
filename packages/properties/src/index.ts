@@ -46,20 +46,21 @@ function link(href: string) {
 }
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
-const KINDS: Record<string, string> = {
-  status: "status",
-  pr: "pr",
-  author: "person",
-  date: "date",
-  tags: "tags",
-};
+const KINDS = new Map([
+  ["status", "status"],
+  ["pr", "pr"],
+  ["author", "person"],
+  ["date", "date"],
+  ["tags", "tags"],
+]);
 
 /** What the row's icon shows: the key's own for the default keys, otherwise one for the kind of value. */
 function kindOf(key: string, value: unknown): string {
-  if (KINDS[key]) return KINDS[key];
+  const own = KINDS.get(key);
+  if (own) return own;
   if (Array.isArray(value)) return "tags";
-  if (typeof value === "number") return "number";
-  if (typeof value === "boolean") return "boolean";
+  if (Number(value) === value) return "number";
+  if (value === true || value === false) return "boolean";
   const text = String(value);
   if (DAY.test(text)) return "date";
   return /^https?:\/\//.test(text) ? "link" : "text";
@@ -124,11 +125,12 @@ export function rowsOf(
       continue;
     }
     const kind = kindOf(key, value);
+    const text = Array.isArray(value) ? undefined : String(value);
     const shown: Node[] =
-      kind === "status" && !Array.isArray(value) && typeof nodes[0] === "string"
+      kind === "status" && text !== undefined
         ? [["span", { class: "cfm-status" }, ...nodes]]
-        : kind === "date" && typeof nodes[0] === "string" && DAY.test(nodes[0])
-          ? [day(nodes[0])]
+        : kind === "date" && text !== undefined && DAY.test(text)
+          ? [day(text)]
           : nodes;
     rows.push([
       "div",
