@@ -57,6 +57,38 @@ describe("check", () => {
     },
   );
 
+  it.each([
+    ["const enabled = true;", "[enabled && gfm]"],
+    ["const enabled = false;", "[enabled ? gfm : other]"],
+    ["const getPlugin = () => gfm;", "[getPlugin()]"],
+    ["const getPlugin = () => gfm;", "[[getPlugin(), {}]]"],
+    ["const plugins = []; plugins.push(gfm);", "plugins"],
+    ["const plugins = []; plugins[0] = gfm;", "plugins"],
+    ["let plugins = [gfm]; plugins = [];", "plugins"],
+    ["const plugins = [gfm]; const alias = plugins; alias.length = 0;", "plugins"],
+    ["const plugins = [[gfm, {}]]; const copy = [...plugins]; copy[0][0] = other;", "plugins"],
+  ])(
+    "refuses unproven plugin-array contents in content --write: %s %s",
+    async (declaration, expression) => {
+      const root = project({
+        "view.tsx": `import Markdown from "react-markdown"; import gfm from "remark-gfm"; import other from "remark-math"; ${declaration} export const C = () => <Markdown remarkPlugins={${expression}} />;`,
+        "doc.md": "~a~ {x}\n",
+      });
+      const result = spawnSync(
+        process.execPath,
+        [fileURLToPath(new URL("../src/cli.ts", import.meta.url)), "content", "doc.md", "--write"],
+        { cwd: root, encoding: "utf8" },
+      );
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain("RTC0303");
+      expect(result.stderr).toContain("can't be statically enumerated");
+      expect(readFileSync(join(root, "doc.md"), "utf8")).toBe("~a~ {x}\n");
+      expect(
+        (await check(root)).find((finding) => finding.code === "RTC0303")?.params.reason,
+      ).toContain("can't be statically enumerated");
+    },
+  );
+
   it.each(["", "remarkPlugins={[]}"])(
     "keeps literal single tildes for a proven GFM-less ReactMarkdown setup in content --write: %s",
     (attribute) => {
@@ -72,6 +104,23 @@ describe("check", () => {
       expect(readFileSync(join(root, "doc.md"), "utf8")).toBe("~a~\n");
     },
   );
+
+  it.each([
+    ["const plugins = [];", "~a~\n"],
+    ["const base = [gfm]; const plugins = [...base];", "~~a~~\n"],
+    ["const plugins = [[gfm, { singleTilde: true }]];", "~~a~~\n"],
+  ])("migrates content with a proven local plugin array: %s", (declaration, expected) => {
+    const root = project({
+      "view.tsx": `import Markdown from "react-markdown"; import gfm from "remark-gfm"; ${declaration} export const C = () => <Markdown remarkPlugins={plugins} />;`,
+      "doc.md": "~a~\n",
+    });
+    execFileSync(
+      process.execPath,
+      [fileURLToPath(new URL("../src/cli.ts", import.meta.url)), "content", "doc.md", "--write"],
+      { cwd: root },
+    );
+    expect(readFileSync(join(root, "doc.md"), "utf8")).toBe(expected);
+  });
 
   it("scopes syntax plugins and alert/emoji flags to their site for check and content --write", async () => {
     const root = project({

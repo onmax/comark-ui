@@ -14,27 +14,59 @@ describe("scanSource", () => {
     "config.remarkPlugins",
     "plugins",
     "[...getPlugins()]",
+    "[enabled && gfm]",
+    "[enabled ? gfm : other]",
+    "[getPlugin()]",
+    "[[getPlugin(), {}]]",
+    "[[gfm, enabled ? {} : false]]",
   ])("preserves an unresolved ReactMarkdown plugin list: %s", (expression) => {
     const [setup] = scanSource(
-      `import Markdown from "react-markdown"; export const C = () => <Markdown remarkPlugins={${expression}} />;`,
+      `import Markdown from "react-markdown"; import gfm from "remark-gfm"; export const C = () => <Markdown remarkPlugins={${expression}} />;`,
       "view.tsx",
     );
     expect(setup?.host).toBe("react-markdown");
     expect(setup?.unresolved).toContain("can't be statically enumerated");
   });
 
-  it("keeps statically enumerated JSX lists resolved", () => {
-    const setups = scanSource(
-      `import Markdown from "react-markdown"; import gfm from "remark-gfm"; const plugins = [gfm]; export const C = () => <><Markdown /><Markdown remarkPlugins={[]} /><Markdown remarkPlugins={[...plugins]} /></>;`,
+  it.each([
+    "const plugins = []; plugins.push(gfm);",
+    "const plugins = []; plugins[0] = gfm;",
+    "let plugins = [gfm]; plugins = [];",
+    "const plugins = [gfm]; const alias = plugins; alias.length = 0;",
+    "const plugins = [[gfm, {}]]; const copy = [...plugins]; copy[0][0] = other;",
+    "const plugins = []; configure(plugins);",
+    "export const plugins = [gfm];",
+    "function other() { const plugins = [gfm]; }",
+    "const plugins = [gfm]; function other(plugins) {}",
+  ])("leaves unproven local plugin-array bindings unresolved: %s", (declaration) => {
+    const [setup] = scanSource(
+      `import Markdown from "react-markdown"; import gfm from "remark-gfm"; import other from "remark-math"; ${declaration} export const C = () => <Markdown remarkPlugins={plugins} />;`,
       "view.tsx",
     );
-    expect(setups).toHaveLength(3);
+    expect(setup?.unresolved).toContain("can't be statically enumerated");
+  });
+
+  it("keeps statically enumerated JSX lists resolved", () => {
+    const setups = scanSource(
+      `import Markdown from "react-markdown"; import gfm from "remark-gfm"; const base = [gfm]; const plugins = [...base]; export const C = () => <><Markdown /><Markdown remarkPlugins={[]} /><Markdown remarkPlugins={[...plugins]} /><Markdown remarkPlugins={[[gfm, { singleTilde: true }]]} /></>;`,
+      "view.tsx",
+    );
+    expect(setups).toHaveLength(4);
     expect(setups.every((setup) => !setup.unresolved)).toBe(true);
     expect(setups.map((setup) => setup.plugins.map((plugin) => plugin.name))).toEqual([
       [],
       [],
       ["remark-gfm"],
+      ["remark-gfm"],
     ]);
+  });
+
+  it("leaves a shadowed plugin import unresolved", () => {
+    const [setup] = scanSource(
+      `import Markdown from "react-markdown"; import gfm from "remark-gfm"; export const C = (gfm) => <Markdown remarkPlugins={[gfm]} />;`,
+      "view.tsx",
+    );
+    expect(setup?.unresolved).toContain("can't be statically enumerated");
   });
 
   it("reads a unified chain and maps each plugin", () => {

@@ -275,9 +275,58 @@ function scanScript(source: string, file: string, shared?: Map<string, string>):
     return plugin;
   };
 
-  // Arrays bound to a const in this file, so `remarkPlugins: shared` and `[...shared, x]` can be followed.
+  // Keep discovery separate from proof: an initializer can list candidates even when its binding later changes.
   const arrays = new Map<string, Node>();
-  walk(program, (node) => {
+  const parents = new Map<Node, Node>();
+  const bindings = new Map<string, Node[]>();
+  const references = new Map<string, Node[]>();
+  const bind = (pattern: Node): void => {
+    if (pattern.type === "Identifier") {
+      const ids = bindings.get(pattern.name) ?? [];
+      ids.push(pattern);
+      bindings.set(pattern.name, ids);
+    } else if (pattern.type === "TSParameterProperty") bind(pattern.parameter);
+    else if (pattern.type === "RestElement") bind(pattern.argument);
+    else if (pattern.type === "AssignmentPattern") bind(pattern.left);
+    else if (pattern.type === "ArrayPattern") {
+      for (const item of pattern.elements) if (item) bind(item);
+    } else if (pattern.type === "ObjectPattern") {
+      for (const item of pattern.properties)
+        bind(item.type === "RestElement" ? item.argument : item.value);
+    }
+  };
+  walk(program, (node, parent) => {
+    if (parent) parents.set(node, parent);
+    if (node.type === "Identifier") {
+      // Noncomputed property names aren't reads of the binding with that name.
+      if (
+        !(parent?.type === "MemberExpression" && parent.property === node && !parent.computed) &&
+        !(
+          parent?.type === "Property" &&
+          parent.key === node &&
+          !parent.computed &&
+          !parent.shorthand
+        )
+      ) {
+        const refs = references.get(node.name) ?? [];
+        refs.push(node);
+        references.set(node.name, refs);
+      }
+    }
+    if (node.type === "VariableDeclarator") bind(node.id);
+    if (
+      node.type === "FunctionDeclaration" ||
+      node.type === "FunctionExpression" ||
+      node.type === "ArrowFunctionExpression"
+    ) {
+      if ("id" in node && node.id) bind(node.id);
+      for (const param of node.params) bind(param);
+    }
+    if ((node.type === "ClassDeclaration" || node.type === "ClassExpression") && node.id)
+      bind(node.id);
+    if (node.type === "CatchClause" && node.param) bind(node.param);
+    if (node.type === "ImportDeclaration")
+      for (const specifier of node.specifiers) bind(specifier.local);
     if (
       node.type === "VariableDeclarator" &&
       node.id.type === "Identifier" &&
@@ -304,16 +353,95 @@ function scanScript(source: string, file: string, shared?: Map<string, string>):
   const isList = (node: Node): boolean =>
     node.type === "ArrayExpression" || node.type === "Identifier";
 
+  // Only a unique imported binding names a proven plugin. Calls, conditionals, and shadowed names can select a
+  // different runtime plugin even when discovery found a plausible package name.
+  const completePlugin = (node: Node): boolean => {
+    if (node.type !== "Identifier") return false;
+    const ids = bindings.get(node.name);
+    return (
+      ids?.length === 1 &&
+      /^(ImportDefaultSpecifier|ImportSpecifier)$/.test(parents.get(ids[0]!)?.type ?? "")
+    );
+  };
+
+  // Passing an array to arbitrary code, aliasing it, or exporting it can expose it to mutation. Spreads also share
+  // nested plugin tuples, so their destination must remain private and unchanged too.
+  const privateArray = (array: Node, seen = new Set<Node>()): boolean => {
+    const binding = parents.get(array);
+    const declaration = binding && parents.get(binding);
+    return (
+      binding?.type === "VariableDeclarator" &&
+      binding.id.type === "Identifier" &&
+      declaration?.type === "VariableDeclaration" &&
+      declaration.kind === "const" &&
+      parents.get(declaration)?.type !== "ExportNamedDeclaration" &&
+      bindings.get(binding.id.name)?.length === 1 &&
+      !seen.has(array) &&
+      references
+        .get(binding.id.name)!
+        .every((ref) => ref === binding.id || arrayRead(ref, new Set([...seen, array])))
+    );
+  };
+  const arrayRead = (node: Node, seen: Set<Node>): boolean => {
+    const parent = parents.get(node);
+    if (parent?.type === "SpreadElement") {
+      const array = parents.get(parent);
+      return array?.type === "ArrayExpression" && arrayRead(array, seen);
+    }
+    if (parent?.type === "VariableDeclarator" && parent.init === node)
+      return privateArray(node, seen);
+    if (parent?.type !== "JSXExpressionContainer") return false;
+    const attribute = parents.get(parent);
+    const opening = attribute && parents.get(attribute);
+    return (
+      attribute?.type === "JSXAttribute" &&
+      attribute.name.type === "JSXIdentifier" &&
+      PLUGIN_LISTS.has(attribute.name.name) &&
+      opening?.type === "JSXOpeningElement" &&
+      opening.name.type === "JSXIdentifier" &&
+      imports.get(opening.name.name) === "react-markdown"
+    );
+  };
+
   const completeList = (node: Node, seen = new Set<string>()): boolean => {
     if (node.type === "Identifier") {
       const array = arrays.get(node.name);
-      return !!array && !seen.has(node.name) && completeList(array, new Set([...seen, node.name]));
+      const binding = array && parents.get(array);
+      const declaration = binding && parents.get(binding);
+      let scope = declaration && parents.get(declaration);
+      while (
+        scope &&
+        !/^(Program|BlockStatement|ForStatement|ForOfStatement|ForInStatement|SwitchStatement)$/.test(
+          scope.type,
+        )
+      )
+        scope = parents.get(scope);
+      return (
+        !!array &&
+        binding?.type === "VariableDeclarator" &&
+        privateArray(array) &&
+        !!scope &&
+        node.start >= binding.end &&
+        node.start >= scope.start &&
+        node.end <= scope.end &&
+        !seen.has(node.name) &&
+        completeList(array, new Set([...seen, node.name]))
+      );
     }
     return (
       node.type === "ArrayExpression" &&
-      node.elements.every(
-        (item) => !item || item.type !== "SpreadElement" || completeList(item.argument, seen),
-      )
+      node.elements.every((item) => {
+        if (!item) return false;
+        if (item.type === "SpreadElement") return completeList(item.argument, seen);
+        if (item.type !== "ArrayExpression") return completePlugin(item);
+        const [plugin, options] = item.elements;
+        return (
+          item.elements.length <= 2 &&
+          !!plugin &&
+          completePlugin(plugin) &&
+          (item.elements.length === 1 || options?.type === "ObjectExpression")
+        );
+      })
     );
   };
 
@@ -475,7 +603,7 @@ function scanScript(source: string, file: string, shared?: Map<string, string>):
           ? "react-markdown"
           : "component";
       let unresolved: string | undefined;
-      const unresolvedList = `${file}:${lineOf(node.start)} has a plugin list that can't be statically enumerated. Write its plugins as an explicit array before migrating this site's content.`;
+      const unresolvedList = `${file}:${lineOf(node.start)} has a plugin list that can't be statically enumerated. Use explicit imported plugin references or a private, unchanged const array before migrating this site's content.`;
       const plugins = node.attributes.flatMap((attribute) => {
         if (attribute.type === "JSXSpreadAttribute") {
           if (owner === "react-markdown") unresolved = unresolvedList;
