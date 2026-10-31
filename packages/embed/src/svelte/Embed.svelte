@@ -1,7 +1,7 @@
 <!-- `::embed` for `@comark/svelte`. -->
 <script>
   import { onMount } from "svelte";
-  import { addStyles, allow, icons, referrerPolicy } from "comark-embed/client";
+  import { addStyles, allow, icons, referrerPolicy, start } from "comark-embed/client";
 
   let {
     provider = undefined,
@@ -12,7 +12,10 @@
     title = undefined,
     host = undefined,
   } = $props();
-  onMount(addStyles);
+  onMount(() => {
+    addStyles();
+    return provider === "x" ? start() : undefined;
+  });
 </script>
 
 {#if href && src}

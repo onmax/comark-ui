@@ -1,5 +1,5 @@
 import { createElement, useEffect } from "react";
-import { addStyles, allow, icons, referrerPolicy } from "./client.ts";
+import { addStyles, allow, icons, referrerPolicy, start } from "./client.ts";
 import type { EmbedAttributes } from "./index.ts";
 
 export { default } from "./index.ts";
@@ -24,7 +24,10 @@ const icon = (d: string) =>
 
 /** `::embed` for `@comark/react`. */
 export function Embed({ provider, src, label, size, href, title, host }: EmbedAttributes) {
-  useEffect(addStyles, []);
+  useEffect(() => {
+    addStyles();
+    return provider === "x" ? start() : undefined;
+  }, [provider]);
   if (!href) return null;
   if (!src)
     return createElement(

@@ -1,6 +1,6 @@
 # Players and link cards
 
-comark-embed turns `::embed` into the provider's player, with the link under it, for YouTube, Vimeo, Loom, Spotify, CodePen, StackBlitz, and Figma, and into a link card for any other https page. It reads the player's address from the link alone and fetches nothing. Use it for a screen recording of a bug, a design file, or a live reproduction.
+comark-embed turns `::embed` into the provider's player, with the link under it, for YouTube, Vimeo, Loom, Spotify, CodePen, StackBlitz, Figma, and X, and into a link card for any other https page. It reads the player's address from the link alone and fetches nothing. Use it for a screen recording of a bug, a design file, or a live reproduction.
 
 ## Syntax
 
@@ -26,6 +26,7 @@ Close the block with `::` on the next line. It drops anything inside and reports
 | CodePen | `codepen.io/<user>/pen/<id>` |
 | StackBlitz | `stackblitz.com/edit/<project>` and `stackblitz.com/github/<owner>/<repo>`, keeping options such as `file` and `view` |
 | Figma | `figma.com/design`, `file`, `proto`, `board`, `slides`, and `deck` links, keeping `node-id` |
+| X | `x.com/<user>/status/<id>` and `twitter.com` links, `mobile.` ones too; the post grows to its own height |
 
 Any other `https://` link renders as a card with its `title` and host. A provider's link it can't read an ID from renders as a card too, and is reported. A link with a user name or password renders nothing.
 
@@ -37,4 +38,4 @@ Any other `https://` link renders as a card with its `title` and host. A provide
 ## Register
 
 - In `comark-ui`: on.
-- Alone: `pnpm add comark @comark/html comark-embed`, then `createHtmlRenderer({ plugins: [embed()], components })` with both from `comark-embed/html`. It takes no options and needs no script. `comark-embed/vue`, `/react`, and `/svelte` render it too.
+- Alone: `pnpm add comark @comark/html comark-embed`, then `createHtmlRenderer({ plugins: [embed()], components })` with both from `comark-embed/html`. It takes no options. Only an X post needs a script, which the HTML renderer inlines and the components start on mount. `comark-embed/vue`, `/react`, and `/svelte` render it too.

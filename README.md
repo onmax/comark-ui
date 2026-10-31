@@ -72,7 +72,7 @@ Browse the [docs and live examples](https://comark-ui.onmax.me) for component sy
 | [`comark-details`](./packages/details) | Details, accordions, and collapsibles in Nuxt UI's syntax, drawn as native `<details>` with a real `<summary>`, so they open with no script. |
 | [`comark-diagrams`](./packages/diagrams) | PlantUML, Graphviz, D2, DBML, and ASCII diagrams drawn as sanitized inline SVG while parsing, through a Kroki server. |
 | [`comark-diff`](./packages/diff) | A code change shown like a suggested change in a pull request review: the file, red and green lines, and the words that changed. |
-| [`comark-embed`](./packages/embed) | YouTube, Vimeo, Loom, Spotify, CodePen, StackBlitz, and Figma players from a link, with no network fetch. |
+| [`comark-embed`](./packages/embed) | YouTube, Vimeo, Loom, Spotify, CodePen, StackBlitz, Figma, and X players from a link, with no network fetch. |
 | [`comark-figure`](./packages/figure) | Image captions: an image alone in its paragraph with a title becomes a native `<figure>` with a `<figcaption>`. |
 | [`comark-footnotes`](./packages/footnotes) | Footnotes in place of Comark's own plugin: `[^1]` references, definitions that hold any Markdown over several lines and blocks, and `^[inline notes]`. |
 | [`comark-file-tree`](./packages/file-tree) | A project's folders and files from an indented list or pasted `tree` output, with added, removed, and changed entries marked and a note on any line. |

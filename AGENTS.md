@@ -83,6 +83,7 @@ How most packages work, so the bullets below don't repeat it:
 - `packages/embed` is `comark-embed`.
   - Its parse plugin reads the player's `src` from the `::embed` link alone, with no fetch, and replaces the node's attributes with `provider`, `src`, `label`, `size`, `href`, `title`, and `host`.
   - `src/providers.ts` holds one entry per provider. A link with no player becomes a card, and one that isn't https renders nothing.
+  - Its one script, `start()` in `src/client.ts`, is built like carousel's. It sets each X post's iframe to the height X's player posts to the page. The HTML renderer inlines it once per document with an X post, and the components start it on mount.
 - `packages/fields` is `comark-fields`. Its parse plugin replaces each `::field`'s attributes with `name`, `type`, `required`, and `default` as strings (`:required="true"` and a JSON `:default` included). Nested `:::field` blocks render inside their parent's body.
 - `packages/figure` is `comark-figure`. Its parse plugin turns an image alone in its paragraph, with a title, into a native `figure` with a `figcaption`. Its `unwrap` option lifts every lone image out of the `<p>`, captioned or not. No renderer.
 - `packages/file-tree` is `comark-file-tree`.

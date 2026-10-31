@@ -5,7 +5,7 @@
 [![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-embed)
 [![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/embed/)
 
-Video, audio, and live code from a link: YouTube, Vimeo, Loom, Spotify, CodePen, StackBlitz, and Figma players, read from the link alone with no network fetch. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
+Video, audio, and live code from a link: YouTube, Vimeo, Loom, Spotify, CodePen, StackBlitz, Figma, and X players, read from the link alone with no network fetch. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
 
 ```sh
 pnpm add comark comark-embed
@@ -37,6 +37,7 @@ const render = createHtmlRenderer({ plugins: [embed()], components });
 | CodePen | `codepen.io/<user>/pen/<id>` (also `full`, `details`, or `embed`) |
 | StackBlitz | `stackblitz.com/edit/<project>`, `stackblitz.com/github/<owner>/<repo>[/<path>]` |
 | Figma | `figma.com/design`, `file`, `proto`, `board`, `slides`, and `deck` |
+| X | `x.com/<user>/status/<id>`, `twitter.com`, and `mobile.` links; grows to the post's height |
 
 Any other `https://` link renders as a card with its `title` and host. Cards don't fetch the page's title yet, so give each one a `title`.
 

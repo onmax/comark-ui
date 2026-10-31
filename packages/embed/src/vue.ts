@@ -1,5 +1,5 @@
-import { defineComponent, h, onMounted } from "vue";
-import { addStyles, allow, icons, referrerPolicy } from "./client.ts";
+import { defineComponent, h, onBeforeUnmount, onMounted } from "vue";
+import { addStyles, allow, icons, referrerPolicy, start } from "./client.ts";
 
 export { default } from "./index.ts";
 export type { EmbedAttributes, EmbedMeta, Size } from "./index.ts";
@@ -35,7 +35,12 @@ export const Embed = defineComponent({
     host: String,
   },
   setup(props) {
-    onMounted(addStyles);
+    let stop: (() => void) | undefined;
+    onMounted(() => {
+      addStyles();
+      if (props.provider === "x") stop = start();
+    });
+    onBeforeUnmount(() => stop?.());
     return () => {
       if (!props.href) return null;
       if (!props.src)
