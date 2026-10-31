@@ -1,6 +1,6 @@
 {
   "name": "comark-table",
-  "version": "0.7.6",
+  "version": "0.8.0",
   "description": "Tables from CSV, TSV, and JSON files or fences, read while parsing, with copy buttons and sortable headers. A Comark plugin.",
   "keywords": [
     "comark",
