@@ -140,7 +140,12 @@ describe("comark-footnotes", () => {
       `<p>A${ref("1", 1)}</p><section class="footnotes"><ol class="footnotes-list">` +
         '<li id="fn-1">B <a href="#fnref-1" class="footnote-backref">back</a></li></ol></section>',
     );
-    expect(footnotes().name).toBe("footnotes");
+    const { default: core } = await import("comark/plugins/footnotes");
+    const both = await createHtmlRenderer({
+      plugins: [footnotes({ label: "Notes" }), core()],
+    })("A[^1]\n\n[^1]: B");
+    expect(both).toContain(">Notes</h2>");
+    expect(both).not.toContain("Footnotes</h2>");
   });
 
   it("works without Comark's default plugins", async () => {
