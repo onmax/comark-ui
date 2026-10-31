@@ -1,6 +1,7 @@
 import type { ElementNode, Node } from "comark";
 import { defineComarkPlugin } from "comark";
 import { measure } from "./size.ts";
+import { isElement } from "../../../shared/nodes.ts";
 
 export interface ZoomOptions {
   /** Make every content image zoomable. Images inside links keep their link. Default `true`. */
@@ -16,7 +17,6 @@ export interface ZoomOptions {
 /** The node that starts the zoom script. The plugin adds one at the end of a document that has anything to zoom. */
 export const RUNTIME_TAG = "zoom-runtime";
 
-const isElement = (node: Node): node is ElementNode => Array.isArray(node) && node[0] !== null;
 // Blocks that zoom as a whole, so the images inside them don't zoom on their own.
 const WHOLE = new Set(["zoom", "carousel", "slide", "screenshot", "compare"]);
 

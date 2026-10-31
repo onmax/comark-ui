@@ -1,7 +1,8 @@
-import type { ElementNode, Node } from "comark";
+import type { Node } from "comark";
 import { defineComarkPlugin } from "comark";
 import { textContent } from "comark/utils";
-import { text } from "./text.ts";
+import { rawText } from "../../../shared/text.ts";
+import { isElement } from "../../../shared/nodes.ts";
 
 export interface AnchorsOptions {
   /** The heading levels that get a link. Default `[2, 3, 4]`. */
@@ -15,7 +16,6 @@ export interface AnchorsOptions {
 /** What the plugin writes on a heading as its `anchor` attribute, for the components to draw. */
 export type Anchor = { label: string; icon: string };
 
-const isElement = (node: Node): node is ElementNode => Array.isArray(node) && node[0] !== null;
 const HEADING = /^h([1-6])$/;
 const SKIP = new Set(["code", "pre"]);
 
@@ -33,7 +33,7 @@ export const anchors = defineComarkPlugin<AnchorsOptions>((options = {}) => {
       if (!isElement(node) || SKIP.has(node[0])) continue;
       const level = HEADING.exec(node[0])?.[1];
       if (level) {
-        if (levels.has(Number(level)) && text(node[1].id)) {
+        if (levels.has(Number(level)) && rawText(node[1].id)) {
           const anchor: Anchor = { label: label(textContent(node).trim()), icon };
           node[1].anchor = anchor;
         }

@@ -2,6 +2,7 @@ import type { ElementNode, Node } from "comark";
 import { defineComarkPlugin } from "comark";
 import { textContent } from "comark/utils";
 import type { IconData, Icons } from "comark-icon";
+import { childrenOf, isElement } from "../../../shared/nodes.ts";
 
 export type FileTreeOptions = {
   /**
@@ -40,12 +41,8 @@ export type FileTreeItemAttributes = {
   icon?: IconData;
 };
 
-const isElement = (node: Node | undefined): node is ElementNode =>
-  Array.isArray(node) && node[0] !== null;
 // Comments render nothing, so they aren't content a tree would drop.
 const isContent = (node: Node) => (Array.isArray(node) ? node[0] !== null : node.trim() !== "");
-// SAFETY: an element node is [tag, attributes, ...children], so everything after index 1 is a child node.
-const childrenOf = (node: ElementNode) => node.slice(2) as Node[];
 const clip = (value: string) => {
   const words = value.trim().replace(/\s+/g, " ");
   return words.length > 40 ? `${words.slice(0, 39)}…` : words;

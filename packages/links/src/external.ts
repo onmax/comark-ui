@@ -1,6 +1,7 @@
-import type { ElementNode, Node } from "comark";
+import type { Node } from "comark";
 import { defineComarkPlugin } from "comark";
-import { text } from "./text.ts";
+import { rawText } from "../../../shared/text.ts";
+import { isElement } from "../../../shared/nodes.ts";
 
 export interface ExternalOptions {
   /**
@@ -23,7 +24,6 @@ export interface ExternalOptions {
 /** The node that adds the styles. The plugin adds one at the end of a document with a link that opens a new tab. */
 export const STYLES_TAG = "links-styles";
 
-const isElement = (node: Node): node is ElementNode => Array.isArray(node) && node[0] !== null;
 const SKIP = new Set(["code", "pre"]);
 // The targets that stay in the reader's own tab.
 const SAME_TAB = new Set(["", "_self", "_parent", "_top"]);
@@ -70,12 +70,12 @@ export const external = defineComarkPlugin<ExternalOptions>((options = {}) => {
     for (const node of nodes) {
       if (!isElement(node) || SKIP.has(node[0])) continue;
       const [tag, attrs] = node;
-      const href = text(attrs.href);
+      const href = rawText(attrs.href);
       if (tag === "a" && href) {
         const external = test(href);
         if (external && target && attrs.target === undefined) attrs.target = target;
-        const opens = text(attrs.target);
-        const own = text(attrs.rel).split(/\s+/).filter(Boolean);
+        const opens = rawText(attrs.target);
+        const own = rawText(attrs.rel).split(/\s+/).filter(Boolean);
         const words = new Set([
           ...(external ? rel : []),
           ...own,

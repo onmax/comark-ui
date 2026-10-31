@@ -10,6 +10,8 @@ import {
   type Icons,
 } from "comark-icon";
 import { defaultManagers, translate, writtenIn, type PackageManager } from "./managers.ts";
+import { hash, text } from "../../../shared/text.ts";
+import { childrenOf, isElement } from "../../../shared/nodes.ts";
 
 export type { PackageManager };
 
@@ -41,17 +43,8 @@ type Issue = { rule: `comark/tabs/${string}` | `comark/icon/${string}`; message:
 
 type Data = Parameters<typeof resolveAttributes>[1];
 
-const isElement = (node: Node | undefined): node is ElementNode =>
-  Array.isArray(node) && node[0] !== null;
 // Comments are arrays with a null tag and render nothing, so they aren't tabs either.
 const isContent = (node: Node) => (Array.isArray(node) ? node[0] !== null : node.trim() !== "");
-// SAFETY: an element node is [tag, attributes, ...children], so everything after index 1 is a child node.
-const childrenOf = (node: ElementNode) => node.slice(2) as Node[];
-const text = (value: unknown) =>
-  value === undefined || value === null || value instanceof Object
-    ? ""
-    : // SAFETY: undefined, null, objects, and arrays returned above, so only a string, number, or boolean is left.
-      String(value as string | number | boolean).trim();
 const clip = (value: string) => {
   const words = value.trim().replace(/\s+/g, " ");
   return words.length > 40 ? `${words.slice(0, 39)}…` : words;
@@ -89,15 +82,6 @@ interface Walk {
   pm: number;
   managers: PackageManager[];
   prefix: string;
-}
-
-// FNV-1a of the source. Ids from it differ between documents on one page, and from the ids authors write, yet stay
-// the same every time a document renders.
-function hash(text: string) {
-  let value = 0x811c9dc5;
-  for (let at = 0; at < text.length; at++)
-    value = Math.imul(value ^ text.charCodeAt(at), 0x01000193);
-  return (value >>> 0).toString(36);
 }
 
 // `icon=logos:pnpm` after a code block's label, quoted or not.

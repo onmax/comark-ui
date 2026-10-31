@@ -1,6 +1,8 @@
 import type { ElementNode, Node } from "comark";
 import { resolveAttributes } from "comark/render";
 import { textContent } from "comark/utils";
+import { text } from "../../../shared/text.ts";
+import { childrenOf, isElement } from "../../../shared/nodes.ts";
 
 /** How a suggestion draws: a red strike and a green insert, or a hand-drawn strike with the new words written above. */
 export type Mark = "track" | "pen";
@@ -49,15 +51,6 @@ const HINTS = new Map([
 const PEN_MAX = 24;
 const HEADING = /^h[1-6]$/;
 
-export const isElement = (node: Node | undefined): node is ElementNode =>
-  Array.isArray(node) && node[0] !== null;
-// SAFETY: an element node is [tag, attributes, ...children], so everything after index 1 is a child node.
-export const childrenOf = (node: ElementNode) => node.slice(2) as Node[];
-const text = (value: unknown) =>
-  value === undefined || value === null || value instanceof Object
-    ? ""
-    : // SAFETY: undefined, null, objects, and arrays returned above, so only a string, number, or boolean is left.
-      String(value as string | number | boolean).trim();
 const later = (path: unknown) => /^(?:data|props)(?:\.|$)/.test(text(path));
 const pending = (raw: Record<string, unknown>, key: string) => later(raw[`:${key}`]);
 export const hasRenderBindings = (nodes: Node[]): boolean =>
@@ -81,14 +74,6 @@ const quote = (value: string) => JSON.stringify(clip(value));
 const list = (names: readonly string[]) =>
   names.map((name) => (name === "id" ? "`#id`" : `\`${name}\``)).join(", ");
 const graphemes = (value: string) => [...new Intl.Segmenter().segment(value)].length;
-
-/** FNV-1a, in base 36: short, and the same every time the same text is hashed. */
-export function hash(source: string) {
-  let value = 0x811c9dc5;
-  for (let at = 0; at < source.length; at++)
-    value = Math.imul(value ^ source.charCodeAt(at), 0x01000193);
-  return (value >>> 0).toString(36);
-}
 
 function distance(a: string, b: string) {
   const row = Array.from({ length: b.length + 1 }, (_, index) => index);

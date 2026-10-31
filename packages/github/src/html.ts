@@ -1,8 +1,9 @@
 import type { NodeHandler } from "comark";
 import { escapeHtml } from "comark/utils";
-import { icon, titleOf, typeOf } from "./icons.ts";
+import { icon, typeOf } from "./icons.ts";
 import { CALLOUT_TAG } from "./callouts.ts";
 import { css } from "./styles.ts";
+import { rawText } from "../../../shared/text.ts";
 
 export { CALLOUT_TAG, callouts, html, references } from "./index.ts";
 export type { CalloutsOptions, CalloutType, GitHubMeta, ReferencesOptions } from "./index.ts";
@@ -16,7 +17,7 @@ const callout: NodeHandler = async ([, attrs, ...children], state) => {
   styled.add(state.context);
   return (
     `${styles}<div class="cgc" data-type="${type}"><span class="cgc-icon" aria-hidden="true">${icon(type)}</span>` +
-    `<p class="cgc-title">${escapeHtml(titleOf(attrs.title))}</p>` +
+    `<p class="cgc-title">${escapeHtml(rawText(attrs.title))}</p>` +
     `<div class="cgc-body">${await state.flow(["div", {}, ...children], state)}</div></div>`
   );
 };

@@ -2,7 +2,7 @@ import type { MarkdownProps } from "@comark/svelte";
 import type { Component, Snippet } from "svelte";
 import type { Block, MessagePart, Step } from "comark-chat";
 
-export { isWebUrl, read, valueText } from "comark-chat";
+export { read, valueText } from "comark-chat";
 export type { Block, MessagePart, Step, StepStatus, ToolValue } from "comark-chat";
 
 type Of<Union, Kind> = Extract<Union, { kind: Kind }>;

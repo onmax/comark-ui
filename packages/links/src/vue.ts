@@ -1,7 +1,7 @@
 import { defineComponent, h, onMounted, type PropType } from "vue";
 import type { Anchor } from "./anchors.ts";
 import { addStyles } from "./client.ts";
-import { text } from "./text.ts";
+import { rawText } from "../../../shared/text.ts";
 
 export { anchors, external, STYLES_TAG } from "./index.ts";
 export type { Anchor, AnchorsOptions, ExternalOptions } from "./index.ts";
@@ -17,7 +17,7 @@ const heading = (tag: string) =>
       onMounted(() => props.anchor && addStyles());
       return () => {
         const element = h(tag, attrs, slots.default?.());
-        const id = text(attrs.id);
+        const id = rawText(attrs.id);
         if (!props.anchor || !id) return element;
         return h("div", { class: "cl-heading" }, [
           element,

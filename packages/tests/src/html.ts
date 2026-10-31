@@ -1,7 +1,8 @@
 import type { NodeHandler } from "comark";
-import { escapeHtml } from "comark/utils";
 import { summary } from "./client.ts";
 import { css } from "./styles.ts";
+import { rawText } from "../../../shared/text.ts";
+import { attr } from "../../../shared/html.ts";
 
 export { default } from "./index.ts";
 export type { TestsAttributes, TestsMeta, TestsOptions, TestsReader } from "./index.ts";
@@ -9,12 +10,6 @@ export type { TestsAttributes, TestsMeta, TestsOptions, TestsReader } from "./in
 // Each render gets a fresh `state.context`, so a document carries the styles once.
 const styled = new WeakSet<object>();
 
-const text = (value: unknown) =>
-  value === undefined || value === null || value instanceof Object
-    ? ""
-    : // SAFETY: undefined, null, objects, and arrays returned above, so only a string, number, or boolean is left.
-      String(value as string | number | boolean);
-const attr = (value: unknown) => escapeHtml(text(value), { '"': "&quot;" });
 const count = (value: unknown) => Number(value) || 0;
 
 const tests: NodeHandler = async ([, attrs, ...children], state) => {
@@ -22,7 +17,7 @@ const tests: NodeHandler = async ([, attrs, ...children], state) => {
   styled.add(state.context);
   const failed = count(attrs.failed);
   const counts = summary({ passed: count(attrs.passed), failed, skipped: count(attrs.skipped) });
-  const title = text(attrs.title);
+  const title = rawText(attrs.title);
   return (
     `${styles}<section class="ctr" data-status="${failed ? "failed" : "passed"}" aria-label="${attr(title || "Test results")}"><p class="ctr-summary">` +
     (title ? `<strong class="ctr-title">${attr(title)}</strong>` : "") +

@@ -2,6 +2,9 @@ import type { ElementNode, Node } from "comark";
 import { defineComarkPlugin } from "comark";
 import { resolveAttributes } from "comark/render";
 import { statusColor } from "comark-zoom/theme";
+import { errorText, text } from "../../../shared/text.ts";
+import { childrenOf, isElement } from "../../../shared/nodes.ts";
+import { OutsideRoot, diskReader, resolvePath } from "../../../shared/disk.ts";
 
 /** Reads a file by its POSIX path relative to `root`, such as `bench/results.csv`. Returns undefined when it doesn't exist. */
 export type TableReader = (path: string) => string | undefined | Promise<string | undefined>;
@@ -44,18 +47,10 @@ type Format = "csv" | "tsv" | "json";
 const FORMATS = new Set<string>(["csv", "tsv", "json"]);
 const NUMBER = /^[+-]?(?:\d[\d,]*(?:\.\d+)?|\.\d+)(?:\s*\S{1,4})?$/;
 
-const isElement = (node: Node): node is ElementNode => Array.isArray(node) && node[0] !== null;
-const childrenOf = ([, , ...rest]: ElementNode): Node[] => rest;
 const isContent = (node: Node) => (Array.isArray(node) ? node[0] !== null : node.trim() !== "");
 const textOf = (node: Node): string =>
   !Array.isArray(node) ? node : isElement(node) ? childrenOf(node).map(textOf).join("") : "";
-const text = (value: unknown) =>
-  value === undefined || value === null || value instanceof Object
-    ? ""
-    : // SAFETY: undefined, null, objects, and arrays returned above, so only a string, number, or boolean is left.
-      String(value as string | number | boolean).trim();
 const on = (value: unknown) => value !== undefined && value !== false && text(value) !== "false";
-const errorText = (error: unknown) => (error instanceof Error ? error.message : String(error));
 const isMarkdownTable = (node: ElementNode) =>
   node[0] === "table" && childrenOf(node).some((child) => isElement(child) && child[0] === "thead");
 const PROPS = ["src", "format", "sort", "copy"];
@@ -309,44 +304,6 @@ function sortable(table: ElementNode) {
                 { type: "button", class: "ctb-sort" },
                 ...childrenOf(th),
               ]);
-}
-
-// Paths are joined as strings, so the root check runs the same in Node, browsers, and edge runtimes.
-function resolvePath(folder: string, src: string) {
-  const parts = folder ? folder.split("/") : [];
-  for (const part of src.split(/[/\\]/)) {
-    if (part === "" || part === ".") continue;
-    if (part !== "..") parts.push(part);
-    else if (parts.pop() === undefined) return undefined;
-  }
-  return parts.join("/");
-}
-
-class OutsideRoot extends Error {}
-
-const isMissing = (error: unknown) =>
-  error instanceof Error &&
-  "code" in error &&
-  (error.code === "ENOENT" || error.code === "ENOTDIR");
-
-function diskReader(root: string): TableReader {
-  const folder = (root || ".").replace(/[/\\]+$/, "");
-  return async (path) => {
-    // Imported on first read, so the plugin loads in runtimes without node:fs when they pass their own `read`.
-    const { readFile, realpath } = await import("node:fs/promises");
-    const paths = await import("node:path");
-    try {
-      // The string check can't see symlinks, so the real target must sit under the real root too.
-      const [base, target] = await Promise.all([realpath(folder), realpath(`${folder}/${path}`)]);
-      const inside = paths.relative(base, target);
-      if (inside === ".." || inside.startsWith(`..${paths.sep}`) || paths.isAbsolute(inside))
-        throw new OutsideRoot();
-      return await readFile(target, "utf8");
-    } catch (error) {
-      if (isMissing(error)) return undefined;
-      throw error;
-    }
-  };
 }
 
 interface Run {

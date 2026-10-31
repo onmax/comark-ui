@@ -2,6 +2,8 @@ import type { ElementNode, Node } from "comark";
 import { defineComarkPlugin } from "comark";
 import { resolveAttributes } from "comark/render";
 import { textContent } from "comark/utils";
+import { hash, text } from "../../../shared/text.ts";
+import { childrenOf, isElement } from "../../../shared/nodes.ts";
 
 export type MagicMoveMeta = {
   /** One readable sentence per problem with a `::magic-move`. Empty when there are none. */
@@ -14,18 +16,9 @@ type Issue = { rule: `comark/magic-move/${string}`; message: string };
 
 type Data = Parameters<typeof resolveAttributes>[1];
 
-const isElement = (node: Node | undefined): node is ElementNode =>
-  Array.isArray(node) && node[0] !== null;
 // Comments are arrays with a null tag and render nothing, so they aren't steps either.
 const isContent = (node: Node) => (Array.isArray(node) ? node[0] !== null : node.trim() !== "");
 const isCode = (node: Node): node is ElementNode => isElement(node) && node[0] === "pre";
-// SAFETY: an element node is [tag, attributes, ...children], so everything after index 1 is a child node.
-const childrenOf = (node: ElementNode) => node.slice(2) as Node[];
-const text = (value: unknown) =>
-  value === undefined || value === null || value instanceof Object
-    ? ""
-    : // SAFETY: undefined, null, objects, and arrays returned above, so only a string, number, or boolean is left.
-      String(value as string | number | boolean).trim();
 const clip = (value: string) => {
   const words = value.trim().replace(/\s+/g, " ");
   return words.length > 40 ? `${words.slice(0, 39)}…` : words;
@@ -49,14 +42,6 @@ function describe(node: Node) {
 }
 
 const PROPS = ["title", "id", "class"];
-
-// FNV-1a of the document's source gives stable block keys; renderers add an instance namespace for ARIA ids.
-function hash(value: string) {
-  let result = 0x811c9dc5;
-  for (let at = 0; at < value.length; at++)
-    result = Math.imul(result ^ value.charCodeAt(at), 0x01000193);
-  return (result >>> 0).toString(36);
-}
 
 interface Walk {
   data: Data;

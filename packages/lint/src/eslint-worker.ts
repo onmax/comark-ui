@@ -2,6 +2,7 @@ import { pathToFileURL } from "node:url";
 import { workerData, type MessagePort } from "node:worker_threads";
 import { lint, resolveConfig, type Config } from "./index.ts";
 import type { Reply, Request } from "./eslint.ts";
+import { errorText } from "../../../shared/text.ts";
 
 // SAFETY: eslint.ts starts this worker with exactly this data.
 const { port, signal } = workerData as { port: MessagePort; signal: Int32Array };
@@ -44,7 +45,7 @@ port.on("message", async ({ text, file, root, config, urls }: Request) => {
     };
   } catch (error) {
     configs.delete(config ?? "");
-    reply = { error: error instanceof Error ? error.message : String(error) };
+    reply = { error: errorText(error) };
   }
   port.postMessage(reply);
   Atomics.store(signal, 0, 1);

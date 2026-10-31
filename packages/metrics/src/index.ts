@@ -1,6 +1,8 @@
 import type { ElementNode, Node } from "comark";
 import { defineComarkPlugin } from "comark";
 import { resolveAttributes } from "comark/render";
+import { text } from "../../../shared/text.ts";
+import { childrenOf, isElement } from "../../../shared/nodes.ts";
 
 export type MetricsMeta = {
   /** One readable sentence per problem with a `:delta`, `:progress`, or `::stats`. Other plugins add theirs too. */
@@ -43,16 +45,9 @@ type Better = "lower" | "higher" | undefined;
 const NUMBER = /^([+-]?(?:\d[\d,]*(?:\.\d+)?|\.\d+))\s*(.*)$/;
 const VALID_DIGITS = /^[+-]?(?:(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d+)?|\.\d+)$/;
 
-const isElement = (node: Node): node is ElementNode => Array.isArray(node) && node[0] !== null;
-const childrenOf = ([, , ...rest]: ElementNode): Node[] => rest;
 const elements = (node: ElementNode, tag: string) =>
   childrenOf(node).filter((child): child is ElementNode => isElement(child) && child[0] === tag);
 const isContent = (node: Node) => (Array.isArray(node) ? node[0] !== null : node.trim() !== "");
-const text = (value: unknown) =>
-  value === undefined || value === null || value instanceof Object
-    ? ""
-    : // SAFETY: undefined, null, objects, and arrays returned above, so only a string, number, or boolean is left.
-      String(value as string | number | boolean).trim();
 const textOf = (node: Node): string =>
   !Array.isArray(node) ? node : isElement(node) ? childrenOf(node).map(textOf).join("") : "";
 const decimals = (value: string) => value.split(".")[1]?.length ?? 0;

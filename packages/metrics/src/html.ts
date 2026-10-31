@@ -1,6 +1,6 @@
 import type { NodeHandler, State } from "comark";
-import { escapeHtml } from "comark/utils";
 import { css } from "./styles.ts";
+import { attr } from "../../../shared/html.ts";
 
 export { default, PROGRESS_TAG, STATS_TILES_TAG } from "./index.ts";
 export type { DeltaAttributes, MetricsMeta, ProgressAttributes } from "./index.ts";
@@ -8,12 +8,6 @@ export type { DeltaAttributes, MetricsMeta, ProgressAttributes } from "./index.t
 // Each render gets a fresh `state.context`, so a document carries the styles once.
 const styled = new WeakSet<object>();
 
-const text = (value: unknown) =>
-  value === undefined || value === null || value instanceof Object
-    ? ""
-    : // SAFETY: undefined, null, objects, and arrays returned above, so only a string, number, or boolean is left.
-      String(value as string | number | boolean);
-const attr = (value: unknown) => escapeHtml(text(value), { '"': "&quot;" });
 const styles = ({ context }: State) => {
   if (styled.has(context)) return "";
   styled.add(context);

@@ -1,8 +1,8 @@
 import type { NodeHandler, State } from "comark";
-import { escapeHtml } from "comark/utils";
 import { script } from "./script.ts";
 import { RUNTIME_TAG } from "./index.ts";
 import { css } from "./styles.ts";
+import { attr } from "../../../shared/html.ts";
 
 export { default, RUNTIME_TAG } from "./index.ts";
 export type { ZoomOptions } from "./index.ts";
@@ -18,8 +18,6 @@ export function runtime(state: State): string {
   // The styles come inline before the script, so the script has nothing to add.
   return `<style data-comark-zoom>${css}</style><script>(${script.toString()})("")</script>`;
 }
-
-const attr = (value: unknown) => escapeHtml(String(value), { '"': "&quot;" });
 
 const zoom: NodeHandler = async ([, attrs, ...children], state) => {
   const extra = [

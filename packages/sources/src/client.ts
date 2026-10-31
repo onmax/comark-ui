@@ -6,15 +6,6 @@ declare global {
   }
 }
 
-/** Adds the sources styles once, preserving the style-only client API. */
-export function addStyles(): void {
-  if (document.querySelector("style[data-comark-sources]")) return;
-  const style = document.createElement("style");
-  style.dataset.comarkSources = "";
-  style.textContent = css;
-  document.head.append(style);
-}
-
 /**
  * Adds the sources styles to the page, and shows a card with a source's icon, site, and title while a pointer rests on
  * its citation or the keyboard focuses it, in place of the browser's tooltip. Returns a function that stops it. Every

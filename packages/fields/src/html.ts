@@ -1,6 +1,7 @@
 import type { NodeHandler, State } from "comark";
 import { escapeHtml } from "comark/utils";
 import { css } from "./styles.ts";
+import { rawText } from "../../../shared/text.ts";
 
 export { default } from "./index.ts";
 export type { FieldAttributes, FieldsMeta } from "./index.ts";
@@ -8,9 +9,7 @@ export type { FieldAttributes, FieldsMeta } from "./index.ts";
 // Each render gets a fresh `state.context`, so a document carries the styles once.
 const styled = new WeakSet<object>();
 
-const text = (value: unknown) =>
-  // SAFETY: the parse plugin writes every attribute the renderer reads as a string.
-  escapeHtml(String(value as string));
+const text = (value: unknown) => escapeHtml(rawText(value));
 const styles = (state: State) => {
   if (styled.has(state.context)) return "";
   styled.add(state.context);

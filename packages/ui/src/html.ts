@@ -1,5 +1,4 @@
 import type { NodeHandler } from "comark";
-import { escapeHtml } from "comark/utils";
 import * as annotate from "comark-annotate/html";
 import * as badge from "comark-badge/html";
 import * as cards from "comark-cards/html";
@@ -40,6 +39,7 @@ import { mermaidBar, mermaidCss } from "./client.ts";
 import { type Preset, type PresetOptions, preset } from "./index.ts";
 import { start } from "./script.ts";
 import { typesetCss } from "./typeset-css.ts";
+import { attr } from "../../../shared/html.ts";
 
 export { criticCss } from "./index.ts";
 export type { PresetOptions } from "./index.ts";
@@ -53,8 +53,6 @@ const styled = new WeakSet<object>();
  * hash without rendering a document first.
  */
 export const mermaidScript = `(${start.toString()})()`;
-
-const attr = (value: string) => escapeHtml(value, { '"': "&quot;" });
 
 /**
  * Wraps Pele's card in `.cmm` with the bar of buttons and the source they copy. The wrapper is a wide block with the
