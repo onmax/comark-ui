@@ -289,7 +289,7 @@ export function mapPlugin(name: string, imported = true): Mapping & { known: boo
   if (!imported || !PACKAGE.test(base) || /^[~@]\//.test(base) || base.startsWith(".")) {
     return {
       kind: "custom",
-      note: "The project's own plugin: port it to a Comark plugin and check it with the harness on the project's content.",
+      note: "The project's own plugin. Port it to a Comark plugin and compare its output with the remark plugin's on the project's content.",
       known: true,
     };
   }

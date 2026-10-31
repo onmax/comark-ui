@@ -3,7 +3,7 @@ title: Diagnostics
 description: Every code remark-to-comark reports, what it means, and what to do.
 ---
 
-`remark-to-comark check` and the Vite Doctor extension (`remark-to-comark/doctor`) report the same findings, as [nostics](https://github.com/vercel-labs/nostics) diagnostics: a code, what was found, what to do, and a link here. Warnings are work left; info findings are the plan. `--json` prints them for agents.
+`remark-to-comark check` and the Vite Doctor extension (`remark-to-comark/doctor`) report the same findings as [nostics](https://github.com/vercel-labs/nostics) diagnostics. Each has a code, what was found, what to do, and a link to its section here. Warnings are work left, and info findings are the plan. `--json` prints them for agents.
 
 The comark-ui docs cover the packages the findings point to, and the comark-ui skill (`npx skills add onmax/comark-ui`) teaches an agent Comark's blocks and plugins.
 
@@ -11,13 +11,13 @@ The comark-ui docs cover the packages the findings point to, and the comark-ui s
 
 **A framework owns the remark setup** (Astro, Next.js MDX, Contentlayer, Docusaurus, Gatsby, Velite, Nuxt). The framework calls remark itself, so the rewrite can't swap the parser in its config. The plugin findings that follow still say what each plugin becomes.
 
-The same code covers react-markdown's `remarkPlugins` and `rehypePlugins` props: replace the component with `<Markdown>` from @comark/react (or @comark/vue) and pass the Comark plugins the findings name.
+The same code covers react-markdown's `remarkPlugins` and `rehypePlugins` props. Replace the component with `<Markdown>` from @comark/react, or @comark/vue, and pass it the Comark plugins the findings name.
 
 Render the Markdown yourself where the framework allows it, such as an Astro content loader or a Next.js route, with `renderHtml(markdown, comarkOptions())`. For Nuxt, `@comark/nuxt` renders Comark directly. Otherwise keep remark for that site.
 
 ## rtc0102
 
-**A comark-ui package does what the plugin does.** comark-ui packages are styled and themed with the `--comark-*` tokens and render in HTML, Vue, React, and Svelte, but their markup isn't the remark plugin's: pages that style the old markup need a look. When an exact counterpart exists too, the finding names it, for output identical to the remark plugin.
+**A comark-ui package does what the plugin does.** comark-ui packages take their colors from the `--comark-*` tokens and render in HTML, Vue, React, and Svelte. Their markup isn't the remark plugin's, so check the pages that style the old markup. When a port with output identical to the remark plugin exists too, the finding names it.
 
 | remark plugin | comark-ui |
 | --- | --- |
@@ -33,23 +33,22 @@ Render the Markdown yourself where the framework allows it, such as an Astro con
 | remark-embedder, remark-oembed | [comark-embed](https://comark-ui.onmax.me/embed/) |
 | remark-kbd | [comark-keys](https://comark-ui.onmax.me/keys/) |
 | remark-supersub | [comark-mark](https://comark-ui.onmax.me/mark/) |
-| remark-mermaid, rehype-mermaid | [comark-diagrams](https://comark-ui.onmax.me/diagrams/) |
 
 ## rtc0103
 
-**Covered.** `comarkOptions()` reads GFM, frontmatter, and raw HTML the way remark does; Comark gives headings ids and reads `{#id}` attributes and fence filenames itself; or a Comark plugin replaces the remark one. Nothing to do.
+**Covered.** `comarkOptions()` reads GFM, frontmatter, and raw HTML the way remark does, Comark gives headings ids and reads `{#id}` attributes and fence filenames itself, or a Comark plugin replaces the remark one. Nothing to do.
 
 ## rtc0104
 
-**A port in `remark-to-comark/plugins` replaces the plugin**, tested against the original through the differential harness: `slug`, `autolinkHeadings`, `externalLinks`, `unwrapImages`, `squeezeParagraphs`, `npm2yarn`, `readingTime`. Options carry over.
+**A port in `remark-to-comark/plugins` replaces the plugin.** The ports are `slug`, `autolinkHeadings`, `externalLinks`, `unwrapImages`, `squeezeParagraphs`, `npm2yarn`, and `readingTime`, and each one's tests compare its HTML with the original plugin's. Options carry over.
 
 ## rtc0105
 
-**The project's own plugin**, or an expression the scan can't follow (a ternary, a call result, an inline function). Port it to a Comark plugin: a `post` hook that walks `state.tree.nodes`, where an element is `[tag, attributes, ...children]`. The ports in `src/plugins/ports.ts` are small examples. Then prove it with the lab: add the project to `lab/projects.json` with its setup and run `remark-to-comark lab --only <project>`.
+**The project's own plugin**, or an expression the scan can't follow (a ternary, a call result, an inline function). Port it to a Comark plugin, a `post` hook that walks `state.tree.nodes`, where an element is `[tag, attributes, ...children]`. The ports in `remark-to-comark/plugins` are small examples to copy. Then render a few of the project's pages with both and compare the HTML.
 
 ## rtc0106
 
-**No Comark counterpart.** The note says why and what to do: some plugins work on the finished HTML (minify, document shells) and can stay as a rehype step on the HTML Comark renders; some read files during the build; plugins the map doesn't know yet get a port, with their own test fixtures as the spec.
+**No Comark counterpart.** The note says why and what to do. A plugin that works on the finished HTML, like a minifier, can stay as a rehype step on the HTML Comark renders. A plugin the map doesn't know yet needs a port, and its own test fixtures are the spec.
 
 ## rtc0107
 
@@ -57,7 +56,7 @@ Render the Markdown yourself where the framework allows it, such as an Astro con
 
 ## rtc0201
 
-**A unified chain that can't be rewritten without changing what it does.** The reason says which: a plugin without a counterpart (port it first), HTML options in a variable (write them as literals), a VFile read from the result, a callback, an object input, or CommonJS (change the call by hand). A chain that ends in `.parse()` or `.run()` works on the syntax tree, so it isn't an HTML render at all: keep remark for it, or port the tree code to the nodes `parseMarkdown()` returns.
+**A unified chain that can't be rewritten without changing what it does.** The reason says which: a plugin without a counterpart (port it first), HTML options in a variable (write them as literals), a VFile read from the result, a callback, an object input, or CommonJS (change the call by hand). A chain that ends in `.parse()` or `.run()` works on the syntax tree, not on HTML. Keep remark for it, or port the tree code to the nodes `parseMarkdown()` returns.
 
 ## rtc0202
 
@@ -75,5 +74,5 @@ Docusaurus v3 compiles `.md` files as MDX too, unless `docusaurus.config` sets `
 
 ## rtc0303
 
-**A block left as written.** A URL follows an unclosed `[` there. remark links such a URL in a later pass, and escaping the `[` moves where its link ends, so `content` only edits the block when remark renders it exactly as before, and leaves it otherwise. Comark may read the bracket as a span. Escape the bracket by hand where it's plain text, or wrap the URL in `<…>`, then run the check again.
+**A block left as written.** A URL follows an unclosed `[` in it. remark links that URL in a later pass, and escaping the `[` can move where the link ends, so `content` edits such a block only when remark still renders it exactly as before. This block failed that check, and Comark may read its bracket as a span. Escape the bracket by hand where it's plain text, or wrap the URL in `<…>`, then run the check again.
 

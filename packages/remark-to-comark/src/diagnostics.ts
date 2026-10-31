@@ -67,7 +67,7 @@ export const catalog = {
     why: (p: Plugin) =>
       `${p.plugin} (${p.at}) is the project's own plugin, or an expression the scan can't follow, so nothing replaces it.`,
     fix: () =>
-      `Port it to a Comark plugin (a \`post\` hook over \`state.tree\`, see the ports in remark-to-comark/plugins), then run \`remark-to-comark lab\` on the project's content to prove it renders the same. ${SKILL}`,
+      `Port it to a Comark plugin (a \`post\` hook over \`state.tree\`, see the ports in remark-to-comark/plugins), then compare its HTML with the remark plugin's on a few of the project's own pages. ${SKILL}`,
   },
   RTC0106: {
     ruleId: "remark-to-comark/unsupported-plugin",
@@ -75,7 +75,7 @@ export const catalog = {
     why: (p: Plugin & { note: string }) =>
       `${p.plugin} (${p.at}) has no Comark counterpart: ${p.note}`,
     fix: () =>
-      "Keep what it does outside the parser, as the note says, or port it and check it with `remark-to-comark lab`.",
+      "Keep what it does outside the parser, as the note says, or port it and compare its HTML with the remark plugin's on the project's pages.",
   },
   RTC0107: {
     ruleId: "remark-to-comark/plugin",

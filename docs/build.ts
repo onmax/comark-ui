@@ -602,7 +602,8 @@ async function parsePage(slug: string, section: Section) {
     "label",
   ].map((key) => rawText(document.frontmatter[key]));
   const pkg = packageOf(slug);
-  if (pkg && pkg.slug !== "lint" && install)
+  // The linter and the remark migration install on their own, outside comark-ui.
+  if (pkg && pkg.slug !== "lint" && pkg.slug !== "remark-to-comark" && install)
     throw new Error(
       `${file}: a block's page has no installer; Getting started installs comark-ui, and the page's Package section installs it alone.`,
     );

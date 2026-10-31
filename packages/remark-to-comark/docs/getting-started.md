@@ -18,7 +18,7 @@ pnpm add -D remark-to-comark
 pnpm remark-to-comark check .
 ```
 
-`check` reads the project's code and Markdown and prints one diagnostic per finding, warnings first. Info findings, the plan for each plugin, show with `--verbose`; `--json` prints every finding with its full file list, for agents. Each diagnostic links its section in [Diagnostics](/remark-to-comark/diagnostics/).
+`check` reads the project's code and Markdown and prints one diagnostic per finding, warnings first. `--verbose` adds the info findings, which say what each plugin becomes. `--json` prints every finding with its full file list, for agents. Each diagnostic links its section in [Diagnostics](/remark-to-comark/diagnostics/).
 
 ## Rewrite unified chains
 
@@ -27,7 +27,7 @@ pnpm remark-to-comark rewrite .          # what it would change
 pnpm remark-to-comark rewrite . --write  # apply it
 ```
 
-A chain like `unified().use(remarkParse).use(remarkRehype).use(rehypeStringify).process(markdown)` becomes `renderHtml(markdown, comarkOptions({ … }))`. It keeps the HTML policy, turns off GFM and frontmatter when the chain didn't have them, and leaves any chain it can't replace without changing what it does, with the reason. Install what the rewritten code imports:
+A chain like `unified().use(remarkParse).use(remarkRehype).use(rehypeStringify).process(markdown)` becomes `renderHtml(markdown, comarkOptions({ … }))`. Raw HTML stays kept or dropped as the chain had it, and GFM and frontmatter stay off when the chain didn't use remark-gfm or remark-frontmatter. A chain it can't replace without changing what it does stays as it is, with the reason. Install what the rewritten code imports:
 
 ```sh
 pnpm add comark @comark/html remark-to-comark
@@ -40,7 +40,7 @@ pnpm remark-to-comark content "**/*.{md,mdx}"          # what it would change
 pnpm remark-to-comark content "**/*.{md,mdx}" --write  # apply it
 ```
 
-`content` parses each file with the project's own syntax plugins and edits only text remark read as text. `--syntax plain` turns Comark's component syntax off instead, so the files need no escaping, and `comarkOptions({ syntax: "plain" })` reads them that way. MDX files, and the `.md` files a Docusaurus site compiles as MDX, are reported and left alone.
+`content` parses each file with the project's own syntax plugins, such as remark-math, and edits only text remark read as text. With `--syntax plain` it skips the escaping, for a project that reads its Markdown with `comarkOptions({ syntax: "plain" })`, where Comark's component syntax is off. MDX files, and the `.md` files a Docusaurus site compiles as MDX, are reported and left alone.
 
 ## Check again
 

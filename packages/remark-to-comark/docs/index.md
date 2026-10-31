@@ -14,11 +14,13 @@ remark-to-comark moves a Markdown project from remark to Comark. It finds every 
 
 ## Features
 
-- `check` reports everything as [diagnostics](/remark-to-comark/diagnostics/), each with its file, line, fix, and docs link, and ends with what's left and the commands to run next.
-- `rewrite` replaces a unified chain that renders HTML with Comark's `renderHtml`, only when the result is provably used as a string and every plugin and option carries over.
+- `check` reports everything as [diagnostics](/remark-to-comark/diagnostics/), each with its file, line, fix, and docs link, then lists what's left and the commands to run next.
+- `rewrite` replaces a unified chain that renders HTML with Comark's `renderHtml`. It only does so when the code turns the result into a string and every plugin and option carries over.
 - `content` escapes `{`, `[`, and `:name` that Comark would read as attributes, spans, or components, widens `~a~` to `~~a~~`, and leaves code, HTML, and MDX alone.
 - It reads setups in unified chains, react-markdown props, Vue, Svelte, and Astro components, and the configs of Astro, Next.js, Docusaurus, Gatsby, Contentlayer, Velite, and Nuxt Content.
 - The same findings run as a [Vite Doctor](/remark-to-comark/vite-doctor/) extension, next to comark-linter.
+
+[How it was tested](/remark-to-comark/testing/) covers the 100 projects it ran on and what still differs.
 
 ## Usage
 

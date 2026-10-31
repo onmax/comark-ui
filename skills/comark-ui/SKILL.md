@@ -45,6 +45,8 @@ Either way, the HTML renderer inlines the styles once per document, and the Vue,
 
 The `--comark-*` tokens theme every plugin at once; https://comark-ui.onmax.me/guide/theming/ lists them. In a Nuxt UI app the plugins follow its `--ui-*` variables with no setup. For a page rendered outside the app, such as review evidence, put the CSS from `nuxtUiTheme({ colors: appConfig.ui?.colors, css: mainCss })` (from `comark-ui/nuxt-ui`) in a `<style>`, so the page matches the app.
 
+A project that renders Markdown with remark moves to Comark with `remark-to-comark`; the [remark-to-comark reference](references/remark-to-comark.md) walks through it.
+
 Problems land in `meta.issues` after `parseMarkdown`, one sentence each, and a host can refuse a document while any remain. For untrusted input, add Comark's `security` plugin with `blockedTags` such as `script`, `style`, and `iframe`; it cleans the Markdown inside blocks too.
 
 ## Shape the document
