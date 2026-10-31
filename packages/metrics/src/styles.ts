@@ -2,15 +2,15 @@ import { theme } from "comark-zoom/theme";
 
 /**
  * Deltas colored green when better and red when worse (shadcn/ui's `--destructive` when the page has it), a progress
- * bar in shadcn/ui's `--primary`, a stats table with its numbers aligned, and stat tiles like shadcn/ui's Card that wrap
+ * bar in the primary color, a stats table with its numbers aligned, and stat tiles like shadcn/ui's Card that wrap
  * to the width, on the shared `--comark-*` tokens. Override `--cmt-better`, `--cmt-worse`, and `--cmt-bar`. The rules
  * sit in the `comark` layer, so any unlayered rule of the host's wins.
  */
 export const css = `@layer comark{${[
-  theme(".cmt-delta,.cmt-progress,.cmt-stats,.cmt-tiles", "status"),
+  theme(".cmt-delta,.cmt-progress,.cmt-stats,.cmt-tiles", "status", "primary"),
   ":where(.cmt-delta){--cmt-better:var(--_comark-success);--cmt-worse:var(--_comark-danger)}",
   // shadcn/ui's Progress: the primary color on a track of itself at a fifth.
-  ":where(.cmt-progress){--cmt-bar:var(--primary,var(--_comark-foreground))}",
+  ":where(.cmt-progress){--cmt-bar:var(--_comark-primary)}",
   ".cmt-delta{font-variant-numeric:tabular-nums;white-space:nowrap}",
   ".cmt-from{color:var(--_comark-muted)}",
   ".cmt-change{font-weight:500}",

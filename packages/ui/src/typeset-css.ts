@@ -97,7 +97,7 @@ const rules = `
   &:where(ul > li, ol > li)::marker { color: var(--_ty-muted); }
   &:where(ul.contains-task-list) { list-style-type: none; padding-inline-start: 0.25em; }
   &:where(li.task-list-item > input[type="checkbox"]) {
-    margin-inline-end: 0.5em; vertical-align: -0.1em; accent-color: var(--ui-primary, var(--primary, currentColor));
+    margin-inline-end: 0.5em; vertical-align: -0.1em; accent-color: var(--_comark-primary);
   }
 
   &:where(details) { margin-block: var(--_ty-flow) 0; }
@@ -220,10 +220,11 @@ const rules = `
  * page alone. The `typeset` layer sits inside `comark`, so every block's own rules win over it, and any plain rule of
  * the page wins over both.
  */
-export const typesetCss = `@layer comark{@layer typeset{@scope{${theme(":scope")}${rules}}}}`
-  .replace(/\/\*[\s\S]*?\*\//g, "")
-  .replace(/\s+/g, " ")
-  .replace(/ ?([{};,>(]) ?/g, "$1")
-  // A colon followed by a space only ends a property's name; a selector's colon never has one after it.
-  .replace(/: /g, ":")
-  .trim();
+export const typesetCss =
+  `@layer comark{@layer typeset{@scope{${theme(":scope", "primary")}${rules}}}}`
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/\s+/g, " ")
+    .replace(/ ?([{};,>(]) ?/g, "$1")
+    // A colon followed by a space only ends a property's name; a selector's colon never has one after it.
+    .replace(/: /g, ":")
+    .trim();

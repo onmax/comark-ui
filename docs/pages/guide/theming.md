@@ -18,7 +18,7 @@ When a site sets both, Nuxt UI's variables win.
 The blocks follow the app's `app.config` colors, its `--ui-radius`, and its color mode:
 
 - Surfaces, text, and borders read `--ui-bg`, `--ui-text-highlighted`, `--ui-text-muted`, `--ui-border`, and `--ui-bg-elevated`. The table under [Tokens](#tokens) maps each one.
-- Brand colors, such as a primary badge or an error card, read `--ui-primary`, `--ui-success`, `--ui-error`, and the rest. Status colors, such as a passing test or a removed line, read `--ui-success`, `--ui-error`, `--ui-warning`, and `--ui-info`.
+- Brand colors, such as a primary badge or a progress bar, read `--ui-primary` and `--ui-secondary`, with text on them in `--ui-text-inverted`. Status colors, such as a passing test or a removed line, read `--ui-success`, `--ui-error`, `--ui-warning`, and `--ui-info`.
 - Chart series read `--ui-chart-1` to `-6`.
 - Focus rings use `--ui-primary`, like Nuxt UI's own components.
 - Corners are twice `--ui-radius`.
@@ -27,7 +27,7 @@ To render the blocks somewhere the app's stylesheet isn't loaded, see [Outside a
 
 ### shadcn/ui
 
-shadcn/ui before Tailwind 4 stores colors as bare HSL numbers, which the blocks can't read. Map those through the tokens below: `--comark-border: hsl(var(--border))`, and `--comark-danger: hsl(var(--destructive))` for the red.
+shadcn/ui before Tailwind 4 stores colors as bare HSL numbers, which the blocks can't read. Map those through the tokens below: `--comark-border: hsl(var(--border))`, `--comark-primary: hsl(var(--primary))` for the brand color, and `--comark-danger: hsl(var(--destructive))` for the red.
 
 ## Tokens
 
@@ -41,6 +41,9 @@ Set the `--comark-*` tokens to theme every plugin at once. Each one wins over th
 | `--comark-border` | `--ui-border`, `--border` | Button, thumbnail, screenshot, player, callout, and diff borders |
 | `--comark-accent` | `--ui-bg-elevated`, `--accent` | Hovered buttons, the diff header |
 | `--comark-ring` | `--ui-primary`, `--ring` | Focus rings, the edge of a highlighted diff line |
+| `--comark-primary` | `--ui-primary`, `--primary`, else `--comark-foreground` | Primary badges and cards, a selected quiz option, progress bars, code note markers, the media seek bar, checkboxes |
+| `--comark-primary-foreground` | `--ui-text-inverted`, `--primary-foreground`, else `--comark-background` | Text and icons on the primary color |
+| `--comark-secondary` | `--ui-secondary`, else `--comark-muted` | Secondary badges and cards |
 | `--comark-success` | `--ui-success`, `--success` | Passing tests, added lines, a better change, a tip |
 | `--comark-danger` | `--ui-error`, `--destructive` | Failing tests, removed lines, a worse change, an error or a required field |
 | `--comark-warning` | `--ui-warning` | Warnings, changed entries, a caution |

@@ -328,6 +328,7 @@ Cards follow the shared tokens in [Theming](/guide/theming/), and a variable per
 | `--comark-background` | Cards |
 | `--comark-foreground` | Titles |
 | `--comark-muted` | Text, the arrow on external cards |
+| `--comark-primary`, `--comark-secondary` | The primary and secondary colors |
 | `--comark-border` | Cards |
 | `--comark-accent` | A hovered link card |
 | `--comark-ring` | Focus rings |
@@ -336,12 +337,12 @@ Cards follow the shared tokens in [Theming](/guide/theming/), and a variable per
 
 ### Variables
 
-Each color but neutral reads Nuxt UI's variable first, then its own default. Set one on `.ccr` to change it:
+Each color defaults to a shared token. Set one on `.ccr` to change cards alone:
 
 | Variable | Default |
 | --- | --- |
-| `--ccr-primary` | `--ui-primary`, else shadcn/ui's `--primary`, else `--comark-foreground` |
-| `--ccr-secondary` | `--ui-secondary`, else `--comark-info` |
+| `--ccr-primary` | `--comark-primary` |
+| `--ccr-secondary` | `--comark-secondary` |
 | `--ccr-success` | `--comark-success` |
 | `--ccr-info` | `--comark-info` |
 | `--ccr-warning` | `--comark-warning` |

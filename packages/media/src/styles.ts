@@ -16,8 +16,8 @@ const ring = "box-shadow:0 0 0 3px color-mix(in srgb,var(--_comark-ring) 50%,tra
  * host's wins.
  */
 export const css = `@layer comark{${[
-  theme(".cm", "shadow"),
-  ":where(.cm){--_cm-primary:var(--ui-primary,var(--primary,var(--_comark-foreground)));--_cm-on-primary:var(--primary-foreground,var(--_comark-background))}",
+  theme(".cm", "primary", "shadow"),
+  ":where(.cm){--_cm-primary:var(--_comark-primary);--_cm-on-primary:var(--_comark-primary-foreground)}",
   ".cm{display:block;box-sizing:border-box;max-width:100%;margin:1rem 0}",
   // The accent tint shows where the video will be before its first frame loads.
   "video.cm,.cm-video{border:1px solid var(--_comark-border);border-radius:var(--_comark-radius);background:var(--_comark-accent)}",

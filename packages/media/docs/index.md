@@ -229,7 +229,9 @@ Players read these [shared tokens](/guide/theming/):
 | Token | Used for |
 | --- | --- |
 | `--comark-background` | The bar, a little see-through over a video, and the seek bar's handle |
-| `--comark-foreground` | The play button and the played part of the seek bar, when the page sets no primary color, and, faded, the rest of the seek bar |
+| `--comark-foreground` | Faded, the rest of the seek bar |
+| `--comark-primary` | The play button and the played part of the seek bar |
+| `--comark-primary-foreground` | The play icon |
 | `--comark-muted` | The times and the mute and full screen buttons |
 | `--comark-border` | A video's frame, the audio bar, and the volume panel |
 | `--comark-accent` | The space a video takes before its first frame loads, and hovered buttons |
@@ -237,8 +239,6 @@ Players read these [shared tokens](/guide/theming/):
 | `--comark-radius` | Corners |
 | `--comark-shadow` | The volume panel and the video bar |
 | `--comark-font` | The times |
-
-The play button and the played part of the seek bar use Nuxt UI's `--ui-primary`, else your `--primary`, when the page sets one. The play icon uses `--primary-foreground`.
 
 ### Classes
 

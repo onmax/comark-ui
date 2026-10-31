@@ -18,6 +18,21 @@ const colors = {
 } as const;
 const status = Object.values(colors);
 
+// The brand color, for a selected option, a progress bar, or a primary badge, and the text on it. Nuxt UI draws text
+// on a solid primary in `--ui-text-inverted`. Secondary is Nuxt UI's alone, since shadcn/ui's `--secondary` is a surface.
+// Each falls back to a neutral token, so a block stays neutral until the page has a brand color.
+const primary = [
+  ["primary", "ui-primary", "primary", "var(--_comark-foreground)", "var(--_comark-foreground)"],
+  [
+    "primary-foreground",
+    "ui-text-inverted",
+    "primary-foreground",
+    "var(--_comark-background)",
+    "var(--_comark-background)",
+  ],
+  ["secondary", "ui-secondary", "", "var(--_comark-muted)", "var(--_comark-muted)"],
+] as const;
+
 // The shadow under a popover, menu, or card that floats over the page. Flat blocks use a border alone.
 const shadow = [
   ["shadow", "", "", "0 4px 12px rgb(0 0 0/.12)", "0 4px 12px rgb(0 0 0/.5)"],
@@ -25,9 +40,9 @@ const shadow = [
 
 type Token = readonly [string, string, string, string, string];
 
-export type Extras = "status" | "shadow";
+export type Extras = "status" | "primary" | "shadow";
 
-const groups: Record<Extras, readonly Token[]> = { status, shadow };
+const groups: Record<Extras, readonly Token[]> = { status, primary, shadow };
 
 const chain = (token: Token, scheme: 3 | 4) => {
   const shadcn = token[2] ? `var(--${token[2]},${token[scheme]})` : token[scheme];
@@ -52,16 +67,18 @@ export function statusColor(name: keyof typeof colors): string {
  * They resolve on the component rather than `:root`, so a `.dark` class anywhere above it switches the theme, and a
  * `--comark-*` set on any ancestor still inherits down. `:where()` keeps them at zero specificity.
  *
- * Every block gets the core tokens. Name `"status"` for `--comark-success`, `-danger`, `-warning`, and `-info`, and
- * `"shadow"` for `--comark-shadow`, so a block that never draws them doesn't carry them.
+ * Every block gets the core tokens. Name `"status"` for `--comark-success`, `-danger`, `-warning`, and `-info`,
+ * `"primary"` for `--comark-primary`, `-primary-foreground`, and `-secondary`, and `"shadow"` for `--comark-shadow`, so
+ * a block that never draws them doesn't carry them.
  */
 export function theme(selector: string, ...extras: Extras[]): string {
   const where = `:where(${selector})`;
   const added = extras.flatMap((name) => groups[name]);
   const list: Token[] = [...tokens, ...added];
   // Few themes define dark status colors, so a `.light` or `.dark` class on the block or an ancestor picks their fallbacks too.
-  const classes = added.length
-    ? `:where(.light,.light *)${where}{${resolve(added, 3)}}:where(.dark,.dark *)${where}{${resolve(added, 4)}}`
+  const schemed = added.filter((token) => token[3] !== token[4]);
+  const classes = schemed.length
+    ? `:where(.light,.light *)${where}{${resolve(schemed, 3)}}:where(.dark,.dark *)${where}{${resolve(schemed, 4)}}`
     : "";
   return (
     `${where}{${resolve(list, 3)};--_comark-radius:var(--comark-radius,calc(var(--ui-radius,calc(var(--radius,.625rem)/2))*2));--_comark-font:var(--comark-font,var(--font-sans,ui-sans-serif,system-ui,sans-serif))}` +
