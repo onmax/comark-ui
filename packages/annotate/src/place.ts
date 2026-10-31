@@ -100,8 +100,7 @@ export function place(
       });
       continue;
     }
-    let best: { rect: Rect; css: string; hits: typeof placed; cost: [number, number] } | undefined;
-    for (const [right, bottom] of CORNERS) {
+    const candidate = ([right, bottom]: (typeof CORNERS)[number]) => {
       // Centered on the corner, the stamp sits on its mark's stroke and reaches only a few pixels past it, so it can't
       // be read as the number of whatever sits next to the mark.
       const cornerX = right ? b.x + b.w : b.x;
@@ -130,21 +129,22 @@ export function place(
           0,
         ),
       ];
-      if (!best || cost[0] < best.cost[0] || (cost[0] === best.cost[0] && cost[1] < best.cost[1]))
-        best = {
-          rect,
-          css: [
-            `${near}:${offset(inside, slideX)}`,
-            `${edge}:${offset(inside, slideY)}`,
-            ...(inside ? [] : [`translate:${shift(slideX, far)} ${shift(slideY, down)}`]),
-          ].join(";"),
-          hits,
-          cost,
-        };
-      if (!cost[0] && !cost[1]) break;
-    }
-    // CORNERS isn't empty, so the loop always sets `best`.
-    const chosen = best!;
+      return {
+        rect,
+        css: [
+          `${near}:${offset(inside, slideX)}`,
+          `${edge}:${offset(inside, slideY)}`,
+          ...(inside ? [] : [`translate:${shift(slideX, far)} ${shift(slideY, down)}`]),
+        ].join(";"),
+        hits,
+        cost,
+      };
+    };
+    const chosen = CORNERS.map(candidate).reduce((best, next) =>
+      next.cost[0] < best.cost[0] || (next.cost[0] === best.cost[0] && next.cost[1] < best.cost[1])
+        ? next
+        : best,
+    );
     css.set(annotation.n, chosen.css);
     placed.push({ index, numbered, rect: chosen.rect });
     if (numbered)
