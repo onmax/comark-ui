@@ -3,9 +3,9 @@
 import { fileURLToPath } from "node:url";
 import { registerSource, splitSource, useSource } from "@vite-hub/source";
 import { glob } from "@vite-hub/source/glob";
-import type { ElementNode, Node } from "comark";
 import { parseMarkdown } from "comark";
 import { textContent } from "comark/utils";
+import { isElement } from "../shared/nodes.ts";
 
 export interface Example {
   id: string;
@@ -37,8 +37,7 @@ export const recipeOrder = ["review", "pull-request", "share", "zoom", "carousel
 // folder in packages/, so their pages sit in docs/pages/<slug>/.
 export const thirdParty: Record<string, string> = { mermaid: "comark-pele" };
 
-const isElement = (node: Node): node is ElementNode => Array.isArray(node) && node[0] !== null;
-const slugify = (text: string) =>
+export const slugify = (text: string) =>
   text
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")

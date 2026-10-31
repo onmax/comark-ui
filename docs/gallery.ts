@@ -3,6 +3,7 @@
 // in the browser with the plugins its page used, which load with the first change, and the changes ride in the URL's
 // `edit` parameter, so a link or a screenshot shows them.
 import { cellDocument } from "./preview.ts";
+import { errorText } from "../shared/text.ts";
 
 interface Cell {
   group: string;
@@ -419,7 +420,7 @@ function compressionStream(kind: "compress" | "decompress") {
   }
 }
 function reportSharing(error: unknown, message = "Could not create a sharing link.") {
-  sharingIssue.textContent = `${message} ${error instanceof Error ? error.message : String(error)}`;
+  sharingIssue.textContent = `${message} ${errorText(error)}`;
   sharingIssue.hidden = false;
 }
 async function pack(text: string) {

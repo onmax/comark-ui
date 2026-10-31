@@ -6,6 +6,7 @@ import { defaultConfig, readConfig } from "./config.ts";
 import { defaultTheme, readTheme, themeCss, themePresets, type Theme } from "./play-theme.ts";
 import { browserPlugins, components } from "./plugins.ts";
 import { previewDocument } from "./preview.ts";
+import { errorText } from "../shared/text.ts";
 
 function find<T extends Element>(selector: string, type: new () => T) {
   const element = document.querySelector(selector);
@@ -354,7 +355,7 @@ function themeChanged() {
     try {
       history.replaceState(null, "", await link());
     } catch (error) {
-      showIssues([error instanceof Error ? error.message : String(error)]);
+      showIssues([errorText(error)]);
     }
   }, 200);
 }
@@ -405,7 +406,7 @@ themeCopy.addEventListener("click", async () => {
     themeCopy.textContent = "Copied";
     setTimeout(() => (themeCopy.textContent = "Copy CSS"), 1500);
   } catch (error) {
-    showIssues([error instanceof Error ? error.message : String(error)]);
+    showIssues([errorText(error)]);
   }
 });
 systemDark.addEventListener("change", () => {
@@ -431,11 +432,7 @@ async function render() {
     html = await renderHtmlFromDocument(parsed, { components });
     problems = [...loadIssues, ...configIssues, ...parsed.meta.issues];
   } catch (error) {
-    problems = [
-      ...loadIssues,
-      ...configIssues,
-      error instanceof Error ? error.message : String(error),
-    ];
+    problems = [...loadIssues, ...configIssues, errorText(error)];
   }
   // A slower render of older text must not replace a newer one.
   if (current !== run) return;
@@ -522,7 +519,7 @@ for (const textarea of [editor, configEditor])
       try {
         history.replaceState(null, "", await link());
       } catch (error) {
-        showIssues([error instanceof Error ? error.message : String(error)]);
+        showIssues([errorText(error)]);
       }
       await render();
     }, 200);
@@ -534,7 +531,7 @@ share.addEventListener("click", async () => {
     share.textContent = "Copied";
     setTimeout(() => (share.textContent = "Copy link"), 1500);
   } catch (error) {
-    showIssues([error instanceof Error ? error.message : String(error)]);
+    showIssues([errorText(error)]);
   }
 });
 // Resetting drops edits that live nowhere else, so it asks first.
@@ -552,7 +549,7 @@ copy.addEventListener("click", async () => {
     copy.classList.add("copied");
     setTimeout(() => copy.classList.remove("copied"), 1200);
   } catch (error) {
-    showIssues([error instanceof Error ? error.message : String(error)]);
+    showIssues([errorText(error)]);
   }
 });
 addEventListener("hashchange", load);
