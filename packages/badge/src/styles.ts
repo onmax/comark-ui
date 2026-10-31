@@ -4,9 +4,8 @@ import { theme } from "comark-zoom/theme";
  * Badges in Nuxt UI's subtle style: a tint of their color, a ring a little stronger, and text in the color. Each color
  * reads Nuxt UI's `--ui-*` variable when the page has it, so badges match the app, then `--cb-*`. Primary and error fall
  * back to shadcn/ui's `--primary` and `--destructive`, primary then to the foreground and secondary to the muted text,
- * so a badge is neutral like the other plugins until the page has a brand color. Both complete colors and legacy bare
- * HSL component variables are supported. The rules sit in the
- * `comark` layer, so any unlayered rule of the host's wins.
+ * so a badge is neutral like the other plugins until the page has a brand color. The rules sit in the `comark` layer,
+ * so any unlayered rule of the host's wins.
  */
 export const css = `@layer comark{${[
   theme(".cb", "status"),

@@ -104,7 +104,7 @@ function checkProps(node: ElementNode, attrs: Record<string, unknown>, problems:
 }
 
 // A suggested change is a few lines around the edit; past this it stops being reviewable.
-export const MAX_DIFF_LINES = 200;
+const MAX_DIFF_LINES = 200;
 // Line matching and every word pair share this budget; after it runs out, changes stay whole lines.
 const MAX_CELLS = 4_000_000;
 type Budget = { cells: number };

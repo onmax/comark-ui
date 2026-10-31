@@ -20,8 +20,8 @@ export const icons = [
   "check",
 ] as const;
 export const badgePresets = ["default", "npmx", "nuxt", "flat", "for-the-badge"] as const;
-export type BadgePreset = (typeof badgePresets)[number];
-export type BadgeSource = (typeof sources)[number];
+type BadgePreset = (typeof badgePresets)[number];
+type BadgeSource = (typeof sources)[number];
 export type BadgeSpec = {
   source: BadgeSource;
   label: string;

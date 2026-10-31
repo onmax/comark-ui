@@ -33,8 +33,8 @@ export interface DrawnChart {
   marks?: Annotation[];
 }
 
-/** Calls `visit` on every `::chart` node in document order, with its number. */
-export function eachChart(nodes: Node[], visit: (node: ElementNode, number: number) => void) {
+// A chart's number counts from 1 in document order.
+function eachChart(nodes: Node[], visit: (node: ElementNode, number: number) => void) {
   let count = 0;
   const walk = (children: Node[]) => {
     for (const node of children) {
