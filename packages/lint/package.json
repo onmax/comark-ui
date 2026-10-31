@@ -1,6 +1,6 @@
 {
   "name": "comark-linter",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "Finds unclosed blocks, unknown components, broken links and anchors, local URLs, and plugin issues in Comark documents. A library, a CLI, an ESLint plugin, and a Vite Doctor extension.",
   "keywords": [
     "comark",
