@@ -45,6 +45,41 @@ function link(href: string) {
   return ["a", { href: url.href }, text] satisfies ElementNode;
 }
 
+const DAY = /^\d{4}-\d{2}-\d{2}$/;
+const KINDS: Record<string, string> = {
+  status: "status",
+  pr: "pr",
+  author: "person",
+  date: "date",
+  tags: "tags",
+};
+
+/** What the row's icon shows: the key's own for the default keys, otherwise one for the kind of value. */
+function kindOf(key: string, value: unknown): string {
+  if (KINDS[key]) return KINDS[key];
+  if (Array.isArray(value)) return "tags";
+  if (typeof value === "number") return "number";
+  if (typeof value === "boolean") return "boolean";
+  const text = String(value);
+  if (DAY.test(text)) return "date";
+  return /^https?:\/\//.test(text) ? "link" : "text";
+}
+
+/** `2026-10-23` as `Oct 23, 2026`, in a `time` that keeps the date for machines. */
+function day(text: string): ElementNode {
+  const date = new Date(`${text}T00:00:00Z`);
+  // `Date` rolls an impossible day, such as February 30, over into the next month.
+  if (Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== text)
+    return ["span", {}, text];
+  const shown = date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+  return ["time", { datetime: text }, shown];
+}
+
 /** A frontmatter value as nodes: text, a link for an http(s) URL, or one tag per item of a list of those. */
 function valueOf(value: unknown, nested = false): Node[] | undefined {
   if (Array.isArray(value)) {
@@ -60,6 +95,52 @@ function valueOf(value: unknown, nested = false): Node[] | undefined {
 }
 
 /**
+ * The rows of the properties box for a document's frontmatter, as `div` nodes of a `dt` and a `dd`, and a problem for
+ * each value it can't show. An editor uses it to show the same box above the text.
+ */
+export function rowsOf(
+  frontmatter: Record<string, unknown>,
+  options: PropertiesOptions = {},
+): { rows: ElementNode[]; issues: Issue[] } {
+  const keys = options.keys ?? KEYS;
+  const labels = options.labels ?? {};
+  const issues: Issue[] = [];
+  const rows: ElementNode[] = [];
+  for (const key of keys) {
+    const value: unknown = frontmatter[key];
+    if (
+      value === undefined ||
+      value === null ||
+      value === "" ||
+      (Array.isArray(value) && value.length === 0)
+    )
+      continue;
+    const nodes = valueOf(value);
+    if (!nodes) {
+      issues.push({
+        rule: "comark/properties/invalid-value",
+        message: `properties: \`${key}\` in the frontmatter is neither text, a number, a link, nor a list of them, so it isn't shown. Write it as one of those.`,
+      });
+      continue;
+    }
+    const kind = kindOf(key, value);
+    const shown: Node[] =
+      kind === "status" && !Array.isArray(value) && typeof nodes[0] === "string"
+        ? [["span", { class: "cfm-status" }, ...nodes]]
+        : kind === "date" && typeof nodes[0] === "string" && DAY.test(nodes[0])
+          ? [day(nodes[0])]
+          : nodes;
+    rows.push([
+      "div",
+      { "data-key": key, "data-kind": kind },
+      ["dt", {}, labelOf(key, labels)],
+      ["dd", {}, ...shown],
+    ]);
+  }
+  return { rows, issues };
+}
+
+/**
  * Shows chosen frontmatter keys, such as a review document's status, pull request, author, date, and tags, as a box of
  * properties where `::properties` sits, or at the top of the document. Problems are added to `meta.issues`.
  */
@@ -68,33 +149,7 @@ export default defineComarkPlugin<PropertiesOptions, PropertiesMeta>((options = 
   post(state) {
     const { tree } = state;
     const keys = options.keys ?? KEYS;
-    const labels = options.labels ?? {};
-    const issues: Issue[] = [];
-    const rows: ElementNode[] = [];
-    for (const key of keys) {
-      const value: unknown = tree.frontmatter[key];
-      if (
-        value === undefined ||
-        value === null ||
-        value === "" ||
-        (Array.isArray(value) && value.length === 0)
-      )
-        continue;
-      const nodes = valueOf(value);
-      if (!nodes) {
-        issues.push({
-          rule: "comark/properties/invalid-value",
-          message: `properties: \`${key}\` in the frontmatter is neither text, a number, a link, nor a list of them, so it isn't shown. Write it as one of those.`,
-        });
-        continue;
-      }
-      rows.push([
-        "div",
-        { "data-key": key },
-        ["dt", {}, labelOf(key, labels)],
-        ["dd", {}, ...nodes],
-      ]);
-    }
+    const { rows, issues } = rowsOf(tree.frontmatter, options);
     let placed = 0;
     const walk = (nodes: Node[], start: number) => {
       for (let index = start; index < nodes.length; index++) {

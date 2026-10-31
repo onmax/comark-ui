@@ -40,11 +40,13 @@ const { plugins } = comarkUi({ chips: { download: false }, icon: { fetch: false 
 </template>
 ```
 
+The frontmatter keys that [Properties](/properties/) shows on the page show above the text the same way, read-only. Pass Properties' options in `properties`, or `:properties="false"` to hide them.
+
 Mount the editor in the browser. In Nuxt, put it inside `<ClientOnly>`. `ComarkEditor` renders Tiptap's `EditorContent`; your app supplies the toolbar and styles.
 
 ### Use the composable
 
-Use `useComarkEditor(markdown, options)` from `comark-ui/editor/vue` when you need the Tiptap instance. It returns `editor`, a shallow ref that is empty until the document loads, and `editable`, a ref that says whether the document can be saved.
+Use `useComarkEditor(markdown, options)` from `comark-ui/editor/vue` when you need the Tiptap instance. It returns `editor`, a shallow ref that is empty until the document loads, `editable`, a ref that says whether the document can be saved, and `frontmatter`, the document's frontmatter, which the editor writes back on each save.
 
 ```ts
 import { ref } from "vue";
@@ -171,6 +173,7 @@ A collaborative room holds only the body. `verify()` refuses documents whose par
 | `plugins` | Component and composable | Parse plugins used to check the document before editing. |
 | `kit` | Composable | `ComarkKitOptions`, including StarterKit configuration. |
 | `modelValue` | Component | The Markdown string, bound with `v-model`; changes emit `update:modelValue`. |
+| `properties` | Component | `PropertiesOptions` for the read-only rows above the text, or `false` to hide them. Default `true`. |
 
 ## Next steps
 

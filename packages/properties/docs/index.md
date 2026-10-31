@@ -92,7 +92,9 @@ Each value shows by its kind:
 
 | Value | Shows as |
 | --- | --- |
-| Text, a number, `true` or `false` | Itself. A date such as `2026-10-23` stays as written. |
+| `status` | A pill with a dot |
+| A date such as `2026-10-23` | `Oct 23, 2026`, in a `time` element that keeps the date as written |
+| Text, a number, `true` or `false` | Itself |
 | A GitHub or GitLab pull request, merge request, or issue link | `owner/repo#123`, linked |
 | Any other `http(s)` link | Its host and path, linked |
 | A list | One badge per item |
@@ -137,28 +139,13 @@ properties({ keys: ["status", "owner", "due"], labels: { due: "Due date" } });
 
 ### Icons beside the labels
 
-Each row carries its key in `data-key`, so CSS can put an icon before a label without a plugin. This one draws [Lucide](https://lucide.dev) icons from the Iconify API as masks, so they take the label's color:
+Each row has a [Lucide](https://lucide.dev) icon before its label, picked by `data-kind`: `status`, `pr`, `person` for `author`, `date`, and `tags` for the default keys, and for any other key `link`, `date`, `tags`, `number`, `boolean`, or `text` by its value. Set `--cfm-icon` to a mask image to change one:
 
 ```css
-.cfm dt::before {
-  content: "";
-  display: inline-block;
-  width: 1em;
-  height: 1em;
-  margin-inline-end: 0.375rem;
-  vertical-align: -0.125em;
-  background: currentColor;
-  mask: var(--key-icon, linear-gradient(transparent 0 0)) center / contain no-repeat;
-}
-
-.cfm [data-key="status"] { --key-icon: url("https://api.iconify.design/lucide/circle-dot.svg"); }
-.cfm [data-key="pr"] { --key-icon: url("https://api.iconify.design/lucide/git-pull-request.svg"); }
-.cfm [data-key="author"] { --key-icon: url("https://api.iconify.design/lucide/user.svg"); }
-.cfm [data-key="date"] { --key-icon: url("https://api.iconify.design/lucide/calendar.svg"); }
-.cfm [data-key="tags"] { --key-icon: url("https://api.iconify.design/lucide/tags.svg"); }
+.cfm [data-key="owner"] { --cfm-icon: url("https://api.iconify.design/lucide/crown.svg"); }
 ```
 
-A key with no icon gets a transparent mask, so its room stays empty and the labels still line up. [A pull request description](/recipes/pull-request/) puts the box together with icons, numbers, and a test run.
+[A pull request description](/recipes/pull-request/) puts the box together with numbers and a test run.
 
 ## API
 
@@ -214,18 +201,18 @@ The box reads the [shared tokens](/guide/theming/). The rules sit in a `comark` 
 
 | Token | Used for |
 | --- | --- |
-| `--comark-background` | The box |
 | `--comark-foreground` | The values |
-| `--comark-border` | The box's border and the badges' borders |
-| `--comark-muted` | The labels |
+| `--comark-border` | The line under the rows, and the badges' and the status pill's borders |
+| `--comark-muted` | The labels, their icons, and the status dot |
 | `--comark-accent` | Behind badges |
 | `--comark-ring` | Focus rings on links |
 | `--comark-radius` | Corners |
-| `--comark-font` | The box's text |
+| `--comark-font` | The rows' text |
 
 ### Classes
 
 | Class | Element |
 | --- | --- |
-| `.cfm` | The box, a `dl` with one `div` of `dt` and `dd` per key, each with `data-key` |
+| `.cfm` | The rows, a `dl` with one `div` of `dt` and `dd` per key, each with `data-key` and `data-kind` |
+| `.cfm-status` | The status pill |
 | `.cfm-tag` | A badge of a list |
