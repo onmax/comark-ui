@@ -19,11 +19,11 @@ If-Match: "v7"
 ::
 ````
 
-Each `###` heading starts a step that holds everything up to the next one, code blocks included. Put any introduction above the block, since a paragraph before the first heading is reported. For steps of one line each, a numbered list inside `::steps` works too.
+Each `###` heading starts a step that holds everything up to the next one, code blocks included. Put any introduction above the block; content before the first heading renders above the steps and is reported. For steps of one line each, a numbered list inside `::steps` works too.
 
 ## Build a diagram across steps
 
-Use a `mermaid` fence when a diagram helps explain interacting parts. Redraw the previous diagram and add one part or relationship at each move. Keep existing labels and participant order consistent.
+Use a `mermaid` fence when a diagram helps explain interacting parts. At each move, redraw the previous diagram with one more part or relationship, and keep its labels and participant order.
 
 Use numbered Markdown headings for the worked example. Mermaid fences currently disappear inside `::steps`, so place them directly under these headings:
 
@@ -48,7 +48,7 @@ sequenceDiagram
 ```
 ````
 
-These paths and version labels are illustrative. Use `sequenceDiagram` for messages or `flowchart LR` for a flow. comark-ui renders Mermaid as SVG, so the reader needs no diagram script.
+These paths and version labels are illustrative. Use `sequenceDiagram` for messages or `flowchart LR` for a flow.
 
 ## The check: `::question`
 
@@ -69,10 +69,10 @@ What does the server compare the label against?
 ::
 ```
 
-- Mark the right option `[x]`. One `[x]` makes radio buttons; add `multiple` to the block for checkboxes with several right options.
+- Mark each right option `[x]`. One `[x]` makes radio buttons and several make checkboxes. Add `multiple` to show checkboxes even with one right option.
 - The `>` quote under an option is its rationale, shown once the reader answers.
-- `#hint` is optional, shown on request; `#explain` shows after any answer.
-- Options are shuffled the same way on every render; write `shuffle="false"` only when their order means something, such as numbers in order.
+- `#hint` is optional and opens on request. `#explain` opens after the right answer or Show answer, not after a wrong pick.
+- Options are shuffled the same way on every render. Write `shuffle="false"` only when their order means something, such as numbers in order.
 - Give the block an `#id` so a host can store the answer. Without one, the id comes from the question's text and changes when you edit it.
 
 Without its script, the question and an answer disclosure still render as plain HTML.

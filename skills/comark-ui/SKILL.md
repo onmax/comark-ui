@@ -5,11 +5,11 @@ description: Writes PR evidence, explanations of how something works, and docs p
 
 # comark-ui
 
-You write Markdown; the comark plugins render it as static HTML, from marks on screenshots and charts drawn from tables to code changes, diagrams, and steps. The reader sees only what you measured and wrote down, so measure every mark from the page, take every number from the data, and check the render before you hand it over.
+You write Markdown, and the comark plugins render it as static HTML. The reader sees only what you measured and wrote down, so measure every mark from the page, take every number from the data, and check the render before you hand it over.
 
 ## Install
 
-Prefer `comark-ui`, every plugin in one install, registered in the order they need:
+Install `comark-ui` by default. It holds every plugin and registers them in the order they need:
 
 ```sh
 pnpm add comark @comark/html comark-ui
@@ -26,7 +26,7 @@ const render = createHtmlRenderer(comarkUi());
 
 Every plugin is on except `include`. The [comark-ui reference](references/ui.md) covers its options, the plugins that read files or use the network, and its Vue, React, and Svelte entries.
 
-When a project wants only some plugins, install those packages and register each plugin with its components:
+To use only some plugins, install those packages and register each plugin with its components:
 
 ```sh
 pnpm add comark @comark/html comark-annotate
@@ -41,13 +41,15 @@ const render = createHtmlRenderer({ plugins: [annotate()], components });
 
 Each reference ends with a Register section that says how its package registers alone and which options it needs.
 
-Either way, the HTML renderer inlines the styles once per document, and the Vue, React, and Svelte components add them on mount. On a server-rendered page, import each package's `style.css`, such as `comark-cards/style.css`, so the page doesn't shift. The `--comark-*` tokens in https://comark-ui.onmax.me/guide/theming/ theme every plugin at once. In a Nuxt UI app the plugins follow its `--ui-*` variables with no setup; for a page rendered outside the app, such as review evidence, put the CSS from `nuxtUiTheme({ colors: appConfig.ui?.colors, css: mainCss })` in `comark-ui/nuxt-ui` in a `<style>`, so the page matches the app.
+Either way, the HTML renderer inlines the styles once per document, and the Vue, React, and Svelte components add them on mount. On a server-rendered page, import each package's `style.css`, such as `comark-cards/style.css`, so the page doesn't shift.
+
+The `--comark-*` tokens theme every plugin at once; https://comark-ui.onmax.me/guide/theming/ lists them. In a Nuxt UI app the plugins follow its `--ui-*` variables with no setup. For a page rendered outside the app, such as review evidence, put the CSS from `nuxtUiTheme({ colors: appConfig.ui?.colors, css: mainCss })` (from `comark-ui/nuxt-ui`) in a `<style>`, so the page matches the app.
 
 Problems land in `meta.issues` after `parseMarkdown`, one sentence each, and a host can refuse a document while any remain. For untrusted input, add Comark's `security` plugin with `blockedTags` such as `script`, `style`, and `iframe`; it cleans the Markdown inside blocks too.
 
 ## Shape the document
 
-This skill teaches the blocks. Four sibling skills teach a whole document, what goes in it and in what order: `before-after-evidence`, `review-document`, `visual-explanation`, and `teach-lesson`. When the user asks for one of those and the skill isn't installed, suggest `vp dlx skills add onmax/comark-ui` and picking it from the list.
+This skill teaches the blocks. Four sibling skills teach a whole document, what goes in it and in what order: `before-after-evidence`, `review-document`, `visual-explanation`, and `teach-lesson`. When the user asks for one of those and it isn't installed, suggest `vp dlx skills add onmax/comark-ui` and picking it from the list.
 
 ## Pick the blocks
 
@@ -133,13 +135,13 @@ Read the reference for each block you use before you write it. Mix the blocks fr
 
 Screenshots and charts draw the same marks. Each `::annotation` is one mark and its note, written in Markdown.
 
-- `mark` is `box` (default), `circle`, `underline`, `highlight`, `bracket`, `cross`, `check`, or `none`, which draws nothing, so its note needs a `side` and the arrow alone points.
+- `mark` is `box` (default), `circle`, `underline`, `line`, `highlight`, `bracket`, `cross`, `check`, or `none`, which draws nothing, so its note needs a `side` and the arrow alone points.
 - `color` is `violet` (default) to point something out, `red` for a problem, `amber` for a warning, `green` for a fix, `blue` for a second voice, `gray` for neutral, or a 3- or 6-digit hex color.
 - `side` is `top`, `bottom`, `left`, or `right`, and puts the note in that margin with an arrow to its mark. Notes without one are numbered in a list under the figure.
 
-Mark only what your text talks about. Each note says what changed or what is wrong in the words the screen or the table shows, so the reader can check it against the figure; a value the figure doesn't show stays out of the note.
+Mark only what your text talks about. Write each note in the words the screen or table shows, saying what changed or what is wrong, so the reader can check it against the figure. Leave out a value the figure doesn't show.
 
 ## Check the result
 
-1. Lint the file: `vp exec comark-lint report.md`, in a project with `comark-linter` and the plugins installed, where `comark-ui` counts as every plugin. It prints one line per problem with its line, its rule, and how to fix it, and exits with 1 while any remain. Fix every one, and run it again until it exits with 0. The [lint reference](references/lint.md) covers its flags, its config file, the library, ESLint, and Vite Doctor.
-2. Look at the render, made as the block's reference says. Open it in a browser and take a screenshot: each mark sits on its target, each number matches its note, and each chart says what your text says. If you can't verify something, say so when you hand the document over instead of guessing.
+1. Lint the file with `vp exec comark-lint report.md`, in a project with `comark-linter` and the plugins installed (`comark-ui` counts as every plugin). It prints one line per problem with its line, its rule, and the fix, and exits with 1 while any remain. Fix every problem and run it again until it exits with 0. The [lint reference](references/lint.md) covers the flags, the config file, the library, ESLint, and Vite Doctor.
+2. Render the document as the block's reference says, open it in a browser, and take a screenshot. Each mark must sit on its target, each number must match its note, and each chart must say what your text says. Name anything you couldn't verify when you hand the document over.

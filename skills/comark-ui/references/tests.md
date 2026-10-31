@@ -35,7 +35,7 @@ The block shows:
 
 - The counts of `<testcase>` elements. A case with `<skipped>` is skipped, one with `<failure>` or `<error>` failed, and the rest passed. Failed and skipped show only when there are any.
 - The duration, from the `time` of `<testsuites>`, else the sum of the suites' times, else the cases', written as `250 ms`, `4.2 s`, or `1 min 21 s`. A report without times shows none.
-- Each failure as a closed disclosure named `classname › name`, with its `message` and its stack in a code block. Failures print open.
+- Each failure as a closed disclosure named `classname › name`, with its `message` and its stack in a code block. In print, every failure prints open.
 
 The root is `<testsuites>` or a single `<testsuite>`. A report with another root renders nothing, and so does malformed XML, which the plugin reports with its line.
 

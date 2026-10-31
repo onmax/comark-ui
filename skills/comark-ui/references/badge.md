@@ -42,7 +42,7 @@ Use image mode for README-style label/value badges. Static images embed their SV
 - `style`: `shadcn` by default, `subtle`, or `solid`; `theme`: `auto` by default, following the page's light or dark theme (on GitHub too), or `light` or `dark`. `color` and `labelColor` accept semantic names or six-digit hex colors. In the default preset, shadcn draws an outline with neutral text; `labelColor` applies to subtle and solid backgrounds. CI chooses its own status color. Images embed colors and do not inherit the document's CSS.
 - `period`: `day`, `week`, or `month` for downloads. Hosted values cache for five minutes for versions, one hour for downloads, and one minute for CI. Failures display `unavailable` for 30 seconds. Downloaded SVGs are snapshots.
 
-The builder at `/badges/` lives in the docs layout, shares its configuration and export format in the query string, and exports Comark, Markdown, an image URL, and SVG. The image endpoint is `/badge.svg`, with the same props as query parameters. Preserve the existing prose syntax for inline tags that should follow the page's theme.
+The builder at `/badges/` exports Comark, Markdown, an image URL, and SVG. The image endpoint is `/badge.svg`, with the same props as query parameters. For an inline tag that should follow the page's theme, keep the prose syntax above; an image embeds its own colors.
 
 ## Register
 

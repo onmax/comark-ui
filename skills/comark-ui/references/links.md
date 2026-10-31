@@ -15,7 +15,7 @@ Turn off the `new-checkout` flag in **Settings**, then redeploy.
 ```
 
 - A heading's `#` link uses its id. Comark makes the id from the heading's text, so write `{#rollout}` after a heading that other pages link to, and the link survives a reworded heading.
-- A link opens a new tab only when the host sets `target` or the link says `{target="_blank"}`. Leave both off, so the reader decides; add one only where leaving loses the reader's work, such as a page with a half-filled form. Any link that opens a new tab, on your site or another, gets `rel="noopener"`, a ↗, and "(opens in a new tab)" for screen readers, so leave that out of the link's text.
+- A link opens a new tab only when the host sets `target` or the link says `{target="_blank"}`. Leave both off, so the reader decides; add one only where leaving loses the reader's work, such as a page with a half-filled form. Any link that opens a new tab, on your site or another, gets a ↗ and "(opens in a new tab)" for screen readers, so leave that out of the link's text. Any link with `target="_blank"` also gets `rel="noopener"`.
 - A link keeps the `target` and `rel` written on it, such as `{rel="me"}` on a profile link, or `{target="_self"}` to keep one link in the tab when the host opens the others in a new one.
 
 ## Options

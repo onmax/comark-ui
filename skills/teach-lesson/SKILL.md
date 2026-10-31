@@ -1,6 +1,6 @@
 ---
 name: teach-lesson
-description: Write a short lesson on one concept, with simplified English, a worked example, and an application question. Use for a lesson, a self-check, or onboarding on one idea.
+description: Writes a short lesson on one concept in simplified English, with a worked example and a question the reader answers. Use when someone asks to learn or understand one concept, wants a tutorial or self-check they can test themselves on, or needs onboarding on one idea.
 license: MIT
 ---
 
@@ -58,7 +58,7 @@ Use [`::question`](references/blocks.md#the-check-question) to test the outcome.
 
 - Make each wrong option a real misconception, and give it a `>` rationale that says why it's tempting and why it's wrong.
 - Keep the options parallel, one idea each and close in length, so their shape gives no clue to the answer.
-- Add `#explain` for the one thing the reader should take away whatever they picked.
+- Add `#explain` for the one thing the reader should take away. It opens after the right answer or Show answer, so it must resolve every misconception the wrong options carry.
 - For a fact worth remembering a week later, optionally add a [`::recall` card](references/blocks.md#the-fact-to-keep-recall).
 
 Done when the question tests the stated outcome with one changed input, every option has a rationale, and the shared explanation resolves each misconception.
@@ -73,6 +73,6 @@ Done when the question tests the stated outcome with one changed input, every op
 
    These commands use the [global Vite+ CLI](https://viteplus.dev/guide/global-cli). Without it, `pnpm dlx` takes the same arguments.
 
-2. Open the rendered page where it will be read. Select each option and check its rationale and the shared explanation.
+2. Open the rendered page where it will be read. Select each option and check its rationale. Pick the right option, or press Show answer, and check the shared explanation.
 
-Done when lint reports no problems, every worked step and diagram is visible, and each option reveals the expected result and rationale. Confirm that the correct answer follows from the example and that the lesson fits a five-minute read.
+Done when lint reports no problems, every worked step and diagram is visible, and each option reveals its rationale. Confirm that the correct answer follows from the example and that the lesson fits a five-minute read.

@@ -30,5 +30,5 @@ Mark the lines a reviewer would ask about: the request that runs in parallel, th
 
 ## Register
 
-- In `comark-ui`: on as `codeNotes`, the last plugin. The preset leaves Shiki out; add it right before comark-code, as the [code reference](code.md) shows, which keeps it ahead of code notes.
+- In `comark-ui`: on as `codeNotes`, listed after `code`. The preset leaves Shiki out; add it right before comark-code, as the [code reference](code.md) shows, which keeps it ahead of code notes.
 - Alone: `pnpm add comark @comark/html comark-code-notes`, then `createHtmlRenderer({ plugins: [shiki(), codeNotes()], components })` with `shiki` from `@comark/html/plugins/shiki`, and `codeNotes` and `components` from `comark-code-notes/html`. It goes after `shiki`; in the other order the code isn't highlighted and `meta.issues` says so. Without Shiki it draws the lines itself. It takes no options, and `comark-code-notes/vue`, `/react`, and `/svelte` render it too.

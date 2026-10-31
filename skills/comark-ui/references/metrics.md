@@ -20,6 +20,7 @@ Tests moved to Vitest: :progress{value=17 max=20 label="Migrated"}
 
 - `:delta` reads `412 kB → 388 kB ↓ 5.8%`. `from` and `to` are required numbers, and `unit`, such as `kB`, `s`, or `%`, goes after both. `better` is `lower` for sizes and durations or `higher` for scores. It colors the change green when it's better and red when it's worse; without it the change is gray. The percent is of `from`, to one decimal. From 0 there is no percent, so the change is the difference, such as `↑ 1.5 s`.
 - `::stats` holds one Markdown table of three columns: a name, the value before, and the value after, under any headers. A cell is a number, with commas if you like, and an optional unit after it, the same in both cells of a row. `better` applies to every row, and `unit` names a difference from 0 for cells written without one. The plugin drops anything else inside the block and reports it.
+- Add `tiles` to `::stats` to show each row as a tile, with the name above the after value and the change below it. The table can then have two columns, a name and a value; a value with no before shows without a change. `better` and `unit` work as for the table.
 - `:progress` is a native `<progress>` with its percent after it. `value` is required: a fraction from 0 to 1, or a count up to `max`, which is 1 by default. `label` shows before the bar and names it for screen readers. The plugin clamps a `value` outside 0 to `max` and reports it.
 
 ## Write the numbers

@@ -11,7 +11,7 @@ Hold ++shift++ and press ++"Duck Button"++ to page the rubber duck.
 ```
 
 - Write the keys between `++` and `++`, joined by single `+` signs, with no spaces. Names aren't case sensitive.
-- Letters and digits render uppercase, `f1` to `f24` as F1 to F24, and these names as their usual labels:
+- Full names (`control`, `command`, `escape`, `delete`, `arrow-up`) and pymdownx.keys' other aliases work too. Letters and digits render uppercase, `f1` to `f24` as F1 to F24, and these names as their usual labels:
   - Modifiers: `ctrl`, `alt`, `shift`, `cmd`, `opt`, `option`, `meta`, `super`, `win`, `fn`, `altgr`.
   - Editing: `enter`, `return`, `tab`, `esc`, `space`, `backspace`, `bksp`, `del`, `ins`, `caps-lock`.
   - Moving: `up`, `down`, `left`, `right`, `home`, `end`, `pg-up`, `pg-dn`, `page-up`, `page-down`.
