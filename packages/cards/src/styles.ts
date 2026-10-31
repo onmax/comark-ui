@@ -4,13 +4,12 @@ import { theme } from "comark-zoom/theme";
  * Cards in the style of shadcn/ui's Card, two to a row in a group and one when the group is narrower than 36rem, and
  * columns from `::columns`, on the shared `--comark-*` tokens. The group is a size container, so a group in a narrow
  * column stacks whatever the screen's width. A card's color tints its icon and, on a link card, its hovered border; the
- * `soft` variant washes the card in it, and `subtle` its border too. Each color reads Nuxt UI's `--ui-*` variable when
- * the page has it, then `--ccr-*`. Primary and error fall back to shadcn/ui's `--primary` and `--destructive`, and
- * primary then to the foreground, so a card is neutral like the other plugins until the page has a brand color. The rules sit in the `comark` layer, so any unlayered rule of the host's wins.
+ * `soft` variant washes the card in it, and `subtle` its border too. Each color reads a shared token, which follows
+ * Nuxt UI's `--ui-*` variables, then shadcn/ui's; set `--ccr-*` to change one for cards alone. The rules sit in the `comark` layer, so any unlayered rule of the host's wins.
  */
 export const css = `@layer comark{${[
-  theme(".ccr,.ccr-group,.ccr-columns", "status"),
-  ":where(.ccr){--ccr-primary:var(--ui-primary,var(--primary,var(--_comark-foreground)));--ccr-secondary:var(--ui-secondary,var(--_comark-info));--ccr-success:var(--_comark-success);--ccr-info:var(--_comark-info);--ccr-warning:var(--_comark-warning);--ccr-error:var(--_comark-danger);--ccr-neutral:var(--_comark-foreground)}",
+  theme(".ccr,.ccr-group,.ccr-columns", "status", "primary"),
+  ":where(.ccr){--ccr-primary:var(--_comark-primary);--ccr-secondary:var(--_comark-secondary);--ccr-success:var(--_comark-success);--ccr-info:var(--_comark-info);--ccr-warning:var(--_comark-warning);--ccr-error:var(--_comark-danger);--ccr-neutral:var(--_comark-foreground)}",
   ".ccr-group,.ccr-columns{display:grid;gap:1rem;margin:1.5rem 0;container-type:inline-size}",
   ".ccr-group{grid-template-columns:repeat(2,minmax(0,1fr))}",
   ...[2, 3, 4, 5, 6].map(

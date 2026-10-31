@@ -507,7 +507,7 @@ Every block is a card in the style of shadcn/ui's Card, with options like its Ra
 | Token | Used for |
 | --- | --- |
 | `--comark-background` | The options and outline buttons |
-| `--comark-foreground` | Text, and the primary color when the page has none |
+| `--comark-foreground` | Text |
 | `--comark-muted` | The number, reasons, hints, and the counts |
 | `--comark-border` | The card, the options, and the line over the explanation |
 | `--comark-accent` | Hovered options and buttons, and a pressed grade |
@@ -521,8 +521,8 @@ Set these on `.cqz` or any ancestor, such as `:root`:
 
 | Variable | Default | Used for |
 | --- | --- | --- |
-| `--cqz-primary` | Nuxt UI's `--ui-primary`, else shadcn/ui's `--primary`, else `--comark-foreground` | A selected option, the Check button, a poll vote |
-| `--cqz-primary-foreground` | `--primary-foreground`, else `--comark-background` | Text on the Check button, and a checked box's tick |
+| `--cqz-primary` | `--comark-primary` | A selected option, the Check button, a poll vote |
+| `--cqz-primary-foreground` | `--comark-primary-foreground` | Text on the Check button, and a checked box's tick |
 | `--cqz-correct` | `--comark-success` | A right option's border and tint |
 | `--cqz-incorrect` | `--comark-danger` | A wrong pick's border and tint |
 | `--cqz-correct-foreground` | `--cqz-correct` at 55% mixed with `--comark-foreground` | Correct icons and verdict text |

@@ -321,7 +321,8 @@ Deltas, bars, and tables read these [shared tokens](/guide/theming/):
 
 | Token | Used for |
 | --- | --- |
-| `--comark-foreground` | Tile values and the progress bar, when the page has no `--primary` |
+| `--comark-foreground` | Tile values |
+| `--comark-primary` | The progress bar |
 | `--comark-muted` | The value before, a change with no verdict, a bar's label and percent, a tile's name |
 | `--comark-font` | Inherited text, with tabular numbers |
 | `--comark-border` | Tile borders |
@@ -334,7 +335,7 @@ Deltas, bars, and tables read these [shared tokens](/guide/theming/):
 | --- | --- | --- |
 | `--cmt-better` | `--comark-success` | A change that's better |
 | `--cmt-worse` | `--comark-danger` | A change that's worse |
-| `--cmt-bar` | shadcn/ui's `--primary`, else `--comark-foreground` | The progress bar's fill, and its track at 20% |
+| `--cmt-bar` | `--comark-primary` | The progress bar's fill, and its track at 20% |
 
 Set `--cmt-better` and `--cmt-worse` on `.cmt-delta`, and `--cmt-bar` on `.cmt-progress`.
 

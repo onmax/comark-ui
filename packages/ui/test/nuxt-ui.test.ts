@@ -95,4 +95,17 @@ describe("the plugins' styles", () => {
     expect(output).toContain("var(--comark-background,var(--ui-bg,var(--background,#fff)))");
     expect(output).toContain("calc(var(--ui-radius,calc(var(--radius,.625rem)/2))*2)");
   });
+
+  it("read the primary color from Nuxt UI, then shadcn/ui, in every block that draws it", async () => {
+    const { default: html } = await import("../src/html.ts");
+    const render = createHtmlRenderer(
+      html({ chips: { download: false }, icon: { fetch: false }, diagrams: { draw: false } }),
+    );
+    const output = await render(":badge[New] and :progress{value=0.4}");
+    expect(output).toContain(
+      "--_comark-primary:var(--comark-primary,var(--ui-primary,var(--primary,var(--_comark-foreground))))",
+    );
+    expect(output).toContain("--cb-primary:var(--_comark-primary)");
+    expect(output).toContain("--cmt-bar:var(--_comark-primary)");
+  });
 });

@@ -31,7 +31,7 @@ Use `useFetch` instead. :badge[v4]{color="info"} :badge[stable]{color="success"}
 
 - A prose badge is one `<span>`, written inline or as Nuxt UI's block `::badge`.
 - Seven colors from Nuxt UI, each a tint with text in the color, so a badge reads on light and dark pages.
-- Primary follows the page's shadcn/ui `--primary`, or the text color without one.
+- Primary follows the shared `--comark-primary`: the page's Nuxt UI or shadcn/ui primary, or the text color without one.
 - On a Nuxt UI page, every color but neutral takes the app's `--ui-*` variable.
 - Static SVG badges and live npm versions, downloads, and GitHub Actions status, with a [builder](/badges/) for sharing and export.
 - No script: the components add the styles when they mount.
@@ -353,18 +353,20 @@ Prose badges follow the shared tokens in [Theming](/guide/theming/), and a varia
 | Token | Used for |
 | --- | --- |
 | `--comark-foreground` | Mixed into the text, so it stays readable |
-| `--comark-muted` | Neutral and secondary badges |
+| `--comark-primary` | Primary badges |
+| `--comark-secondary` | Secondary badges |
+| `--comark-muted` | Neutral badges |
 | `--comark-radius` | Corners |
 | `--comark-font` | Text |
 
 ### Variables
 
-Each color reads Nuxt UI's variable first, then its own default. Set one on `.cb` to change it:
+Each color defaults to a shared token. Set one on `.cb` to change badges alone:
 
 | Variable | Default |
 | --- | --- |
-| `--cb-primary` | `--ui-primary`, else shadcn/ui's `--primary`, else `--comark-foreground` |
-| `--cb-secondary` | `--ui-secondary`, else `--comark-muted` |
+| `--cb-primary` | `--comark-primary` |
+| `--cb-secondary` | `--comark-secondary` |
 | `--cb-success` | `--comark-success` |
 | `--cb-info` | `--comark-info` |
 | `--cb-warning` | `--comark-warning` |
