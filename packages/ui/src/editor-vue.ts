@@ -1,8 +1,9 @@
 import type { AnyExtension } from "@tiptap/core";
 import { Editor, EditorContent } from "@tiptap/vue-3";
-import type { ComarkPlugin, ElementNode, Node } from "comark";
+import type { ComarkPlugin, Node } from "comark";
 import { rowsOf, type PropertiesOptions } from "comark-properties";
 import { Properties } from "comark-properties/vue";
+import { childrenOf, isElement } from "../../../shared/nodes.ts";
 import {
   defineComponent,
   h,
@@ -90,11 +91,9 @@ export function useComarkEditor(markdown: Ref<string>, options: UseComarkEditorO
 }
 
 /** A comark node as a Vue node, for the few elements the properties rows hold. */
-function vnode(node: Node): VNode | string {
-  if (typeof node === "string") return node;
-  // SAFETY: the rows are elements and strings, which `rowsOf` builds.
-  const [tag, attributes, ...children] = node as ElementNode;
-  return h(tag, attributes, children.map(vnode));
+function vnode(node: Node): VNode | string | null {
+  if (!isElement(node)) return Array.isArray(node) ? null : node;
+  return h(node[0], node[1], childrenOf(node).map(vnode));
 }
 
 /**
@@ -106,6 +105,7 @@ export const ComarkEditor = defineComponent({
   inheritAttrs: false,
   props: {
     properties: {
+      // SAFETY: Vue's runtime constructor cannot express the options object's type.
       type: [Object, Boolean] as PropType<PropertiesOptions | boolean>,
       default: true,
     },
