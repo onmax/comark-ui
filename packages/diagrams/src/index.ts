@@ -1,6 +1,8 @@
 import type { ElementNode, Node } from "comark";
 import { defineComarkPlugin } from "comark";
 import { sanitizeSvg } from "./sanitize.ts";
+import { errorText, text } from "../../../shared/text.ts";
+import { childrenOf, isElement } from "../../../shared/nodes.ts";
 
 export { sanitizeSvg } from "./sanitize.ts";
 
@@ -40,16 +42,8 @@ export const LANGUAGES: Readonly<Record<string, string>> = {
 
 type Drawn = { svg: string } | { rule: Rule; problem: string };
 
-const isElement = (node: Node): node is ElementNode => Array.isArray(node) && node[0] !== null;
-const childrenOf = ([, , ...rest]: ElementNode): Node[] => rest;
 const textOf = (node: Node): string =>
   !Array.isArray(node) ? node : isElement(node) ? childrenOf(node).map(textOf).join("") : "";
-const text = (value: unknown) =>
-  value === undefined || value === null || value instanceof Object
-    ? ""
-    : // SAFETY: undefined, null, objects, and arrays returned above, so only a string, number, or boolean is left.
-      String(value as string | number | boolean).trim();
-const errorText = (error: unknown) => (error instanceof Error ? error.message : String(error));
 
 class Refused extends Error {
   status: number;

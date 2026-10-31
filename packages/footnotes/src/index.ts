@@ -8,6 +8,7 @@ import {
   type StateBlock,
   type StateInline,
 } from "../../../shared/markdown-it.ts";
+import { isElement } from "../../../shared/nodes.ts";
 
 export type FootnotesMeta = {
   /** One readable sentence per problem with a footnote. Empty when the document has none. Other plugins add theirs too. */
@@ -161,8 +162,6 @@ const markdownIt = (md: MarkdownExit) => {
 // Comark's own label escaping, so ids match the ones its footnotes plugin writes.
 const sanitizeLabel = (label: string) =>
   label.replace(/[^a-zA-Z0-9_-]/g, (char) => `-${char.charCodeAt(0).toString(16)}-`);
-const isElement = (node: Node | undefined): node is ElementNode =>
-  Array.isArray(node) && node[0] !== null;
 /** The label after a marker's tag, or nothing for another element. */
 const labelAfter = (marker: string, [tag]: ElementNode) =>
   tag.startsWith(marker) ? tag.slice(marker.length) : undefined;

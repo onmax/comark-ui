@@ -1,16 +1,14 @@
 import type { ElementNode, Node } from "comark";
 import { defineComarkPlugin } from "comark";
+import { text } from "../../../shared/text.ts";
+import { childrenOf, isElement } from "../../../shared/nodes.ts";
 
 export interface FigureOptions {
   /** Lift every image that stands alone in its paragraph out of the `<p>`, captioned or not. Default `false`. */
   unwrap?: boolean;
 }
 
-const isElement = (node: Node | undefined): node is ElementNode =>
-  Array.isArray(node) && node[0] !== null;
 const isRaw = (node: ElementNode) => Boolean(node[1].$?.html);
-// SAFETY: an element node is [tag, attributes, ...children], so everything after index 1 is a child node.
-const childrenOf = (node: ElementNode) => node.slice(2) as Node[];
 // Comments are arrays with a null tag and render nothing, so they don't keep an image from standing alone.
 const isContent = (node: Node) => (Array.isArray(node) ? node[0] !== null : node.trim() !== "");
 const only = (node: ElementNode) => {
@@ -24,11 +22,6 @@ const imageOf = (node: Node | undefined) => {
   const inner = node[0] === "a" ? only(node) : undefined;
   return isElement(inner) && !isRaw(inner) && inner[0] === "img" ? inner : undefined;
 };
-const text = (value: unknown) =>
-  value === undefined || value === null || value instanceof Object
-    ? ""
-    : // SAFETY: undefined, null, objects, and arrays returned above, so only a string, number, or boolean is left.
-      String(value as string | number | boolean).trim();
 // Comark drops the paragraph around an image alone in these, so the image is their only child. A component does the
 // same, but so does an inline component alone on its line, and the tree doesn't tell them apart.
 const UNWRAPPED = new Set(["li", "blockquote", "dd"]);

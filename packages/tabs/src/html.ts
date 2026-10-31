@@ -4,6 +4,7 @@ import { start } from "./client.ts";
 import type { IconData } from "comark-icon";
 import { iconHtml, iconStyles } from "comark-icon/html";
 import { css } from "./styles.ts";
+import { attr } from "../../../shared/html.ts";
 
 export { default } from "./index.ts";
 export type { PackageManager, TabsMeta, TabsOptions } from "./index.ts";
@@ -19,12 +20,6 @@ export function runtime(state: State): string {
   return `<style data-comark-tabs>${css}</style><script>(${start.toString()})("")</script>`;
 }
 
-const attr = (value: unknown) =>
-  escapeHtml(
-    // SAFETY: the parse plugin writes every attribute the renderer reads as a string.
-    String(value as string),
-    { '"': "&quot;" },
-  );
 const isItem = (node: Node): node is ElementNode => Array.isArray(node) && node[0] === "tabs-item";
 
 // SAFETY: the parse plugin writes each icon as comark-icon's `IconData`, or null for a tab without one.

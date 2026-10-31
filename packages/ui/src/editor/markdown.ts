@@ -17,6 +17,7 @@ import {
   writeOptions,
 } from "./handlers.ts";
 import { SHORTHAND, SUBSTITUTION, syntax } from "./syntax.ts";
+import { scalar } from "../../../../shared/text.ts";
 
 type Props = ElementNodeAttributes;
 type Mark = { type: string; attrs?: Record<string, unknown> };
@@ -56,12 +57,6 @@ const isText = (node: AstNode): node is string => !Array.isArray(node);
 const isElement = (node: AstNode): node is ElementNode => Array.isArray(node) && node[0] !== null;
 // SAFETY: an element node is [tag, attributes, ...children], so everything after index 1 is a child node.
 const childrenOf = (element: ElementNode) => element.slice(2) as AstNode[];
-/** A prop as text. Comark props are strings, numbers, and booleans, or parsed JSON for `:prop` bindings. */
-const textOf = (value: unknown) =>
-  value === undefined || value === null || value instanceof Object
-    ? undefined
-    : // SAFETY: undefined, null, objects, and arrays returned above, so only a string, number, or boolean is left.
-      String(value as string | number | boolean);
 // Raw HTML carries `$: { html, block }`; an inline tag such as `<kbd>` belongs in a paragraph.
 const inlineHtml = ({ $: meta }: Props) =>
   meta instanceof Object && "block" in meta && meta.block === 0;
@@ -78,7 +73,7 @@ function rest(props: Props, ...keys: string[]) {
   return Object.keys(left).length ? left : undefined;
 }
 
-const classes = (props: Props) => textOf(props.class)?.split(/\s+/) ?? [];
+const classes = (props: Props) => scalar(props.class)?.split(/\s+/) ?? [];
 function withoutClass(props: Props, name: string): Props {
   const left = classes(props).filter((value) => value && value !== name);
   const { class: _, ...others } = props;
@@ -218,7 +213,7 @@ function readComponent(children: AstNode[], reading: Reading): JSONContent[] {
       out.push(
         node(
           "comarkSlot",
-          withProps({ name: textOf(name) ?? "default" }, rest(props)),
+          withProps({ name: scalar(name) ?? "default" }, rest(props)),
           readBlocks(childrenOf(child), reading),
         ),
       );
@@ -231,7 +226,7 @@ function readComponent(children: AstNode[], reading: Reading): JSONContent[] {
 function readCode(props: Props, children: AstNode[]): JSONContent {
   const code = children.find(isElement);
   const text = (code ? childrenOf(code) : children).filter(isText).join("");
-  const language = textOf(props.language) ?? null;
+  const language = scalar(props.language) ?? null;
   return node(
     "codeBlock",
     withProps(language ? { language } : {}, rest(props, "language")),
@@ -436,7 +431,7 @@ function writeBlock(json: JSONContent): AstNode[] {
     case "horizontalRule":
       return [["hr", props]];
     case "codeBlock": {
-      const language = textOf(attrs.language) || undefined;
+      const language = scalar(attrs.language) || undefined;
       const code = plainText(json.content);
       const pre: ElementNode = [
         "pre",
@@ -478,7 +473,7 @@ function writeBlock(json: JSONContent): AstNode[] {
       return [isHtml(props) ? component : own(component, blockComponent)];
     }
     case "footnoteDefinition": {
-      const label = textOf(attrs.label) ?? "";
+      const label = scalar(attrs.label) ?? "";
       return [own(["footnote", {}, ...writeBlocks(json.content)], footnoteDefinition(label))];
     }
     case "definitionList":
@@ -497,7 +492,7 @@ function writeBlock(json: JSONContent): AstNode[] {
         ),
       ];
     case "comarkComment":
-      return [[null, {}, textOf(attrs.text) ?? ""]];
+      return [[null, {}, scalar(attrs.text) ?? ""]];
     default:
       return [];
   }
@@ -553,8 +548,8 @@ function writeMark(mark: Mark, children: AstNode[]): ElementNode {
   }
   const props = propsOf(mark.attrs);
   if (mark.type !== "link") return [markTags.get(mark.type) ?? "span", props, ...children];
-  const href = textOf(mark.attrs?.href);
-  const title = textOf(mark.attrs?.title);
+  const href = scalar(mark.attrs?.href);
+  const title = scalar(mark.attrs?.title);
   const link: Props = { ...props, href };
   if (title) link.title = title;
   return ["a", link, ...children];
@@ -634,7 +629,7 @@ function writeLeaf(json: JSONContent): AstNode[] {
     return [isHtml(props) ? component : own(component, inlineComponent)];
   }
   if (json.type === "footnoteReference")
-    return [own(["footnote", {}], footnoteReference(textOf(attrs.label) ?? ""))];
+    return [own(["footnote", {}], footnoteReference(scalar(attrs.label) ?? ""))];
   if (json.type === "inlineFootnote")
     return [own(["footnote", {}, ...writeInline(json.content)], between("^[", "]"))];
   if (json.type === "criticComment")

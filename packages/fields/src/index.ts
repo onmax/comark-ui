@@ -1,6 +1,7 @@
 import type { ElementNode, Node } from "comark";
 import { defineComarkPlugin } from "comark";
 import { resolveAttributes } from "comark/render";
+import { childrenOf, isElement } from "../../../shared/nodes.ts";
 
 export type FieldsMeta = {
   /** One readable sentence per problem with a `::field`. Empty when the document has none. Other plugins add theirs too. */
@@ -19,10 +20,6 @@ export type FieldAttributes = { name?: string; type?: string; required?: string;
 
 type Data = Parameters<typeof resolveAttributes>[1];
 
-const isElement = (node: Node | undefined): node is ElementNode =>
-  Array.isArray(node) && node[0] !== null;
-// SAFETY: an element node is [tag, attributes, ...children], so everything after index 1 is a child node.
-const childrenOf = (node: ElementNode) => node.slice(2) as Node[];
 // A default may arrive parsed, as `:default="0"` or `:default='{"a":1}'`, so it's written back the way it reads.
 const text = (value: unknown) =>
   value === undefined || value === null

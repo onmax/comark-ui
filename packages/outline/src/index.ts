@@ -2,6 +2,8 @@ import type { ElementNode, Node } from "comark";
 import { defineComarkPlugin } from "comark";
 import { resolveAttributes } from "comark/render";
 import { textContent } from "comark/utils";
+import { text } from "../../../shared/text.ts";
+import { childrenOf, isElement } from "../../../shared/nodes.ts";
 
 export type OutlineMeta = {
   /** One readable sentence per problem with a `::toc`. Empty when the document has none. Other plugins add theirs too. */
@@ -45,15 +47,8 @@ interface Heading {
 
 const HEADING = /^h([1-6])$/;
 const PROPS = ["depth", "title"];
-const isElement = (node: Node): node is ElementNode => Array.isArray(node) && node[0] !== null;
-const childrenOf = ([, , ...rest]: ElementNode): Node[] => rest;
 // Comments render nothing, so they aren't content a toc would drop.
 const isContent = (node: Node) => (Array.isArray(node) ? node[0] !== null : node.trim() !== "");
-const text = (value: unknown) =>
-  value === undefined || value === null || value instanceof Object
-    ? ""
-    : // SAFETY: undefined, null, objects, and arrays returned above, so only a string, number, or boolean is left.
-      String(value as string | number | boolean).trim();
 
 /** Every heading with an id, in document order. */
 function headingsOf(nodes: Node[], found: Heading[] = []) {

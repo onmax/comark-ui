@@ -2,9 +2,11 @@ import type { ElementNode, NodeHandler, State } from "comark";
 import { escapeHtml } from "comark/utils";
 import { icons, marks } from "./icons.ts";
 import { DEFAULT_LABELS, type QuizLabels } from "./labels.ts";
-import { childrenOf, isElement, type Kind } from "./read.ts";
+import { childrenOf, isElement } from "../../../shared/nodes.ts";
+import type { Kind } from "./read.ts";
 import { script } from "./script.ts";
 import { css } from "./styles.ts";
+import { attr } from "../../../shared/html.ts";
 
 export { default, DEFAULT_LABELS } from "./index.ts";
 export type { QuizLabels, QuizMeta, QuizOptions } from "./index.ts";
@@ -22,12 +24,6 @@ export function runtime(state: State): string {
   return `<style data-comark-quiz>${css}</style><script>(${script.toString()})(${config})</script>`;
 }
 
-const attr = (value: unknown) =>
-  escapeHtml(
-    // SAFETY: the parse plugin writes every attribute the renderer reads as a string.
-    String(value as string),
-    { '"': "&quot;" },
-  );
 const partOf = (node: ElementNode, tag: string) =>
   childrenOf(node).find((child): child is ElementNode => isElement(child) && child[0] === tag);
 const optionsOf = (node: ElementNode) =>

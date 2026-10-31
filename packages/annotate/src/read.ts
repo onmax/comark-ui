@@ -3,6 +3,9 @@ import { resolveAttributes } from "comark/render";
 import { textContent } from "comark/utils";
 import { type Mark, marks } from "./marks.ts";
 import { place } from "./place.ts";
+import { childrenOf, isElement } from "../../../shared/nodes.ts";
+import { text } from "../../../shared/text.ts";
+import { isWebUrl } from "../../../shared/url.ts";
 
 export interface Annotation {
   /** Links the mark to its note; unique within a screenshot or compare. */
@@ -66,18 +69,6 @@ const within = (where: string, problems: Issue[]): Issue[] =>
 // What `check` calls each screenshot and compare in its messages. The renderer reports nothing, so it needs no names.
 type Names = Map<ElementNode, string>;
 
-// Comark text nodes are strings, elements are arrays, and comments are arrays with a null tag.
-const isElement = (node: Node): node is ElementNode => Array.isArray(node) && node[0] !== null;
-const children = ([, , ...rest]: ElementNode): Node[] => rest;
-// Prop values arrive as strings, numbers, or booleans; objects and arrays aren't valid for any prop here. Use
-// identity with the Object wrapper rather than instanceof so a revoked or otherwise hostile proxy cannot throw while
-// we classify it.
-const isObjectLike = (value: unknown) => value !== null && Object(value) === value;
-const text = (value: unknown) =>
-  value === undefined || value === null || isObjectLike(value)
-    ? ""
-    : // SAFETY: undefined, null, objects, and functions returned above, so only a scalar prop value is left.
-      String(value as string | number | boolean | bigint | symbol).trim();
 // Inline, YAML-block, and `:bound` props all land here, parsed the way Comark's own renderers see them.
 const props = (node: ElementNode, data: Data) =>
   resolveAttributes(node[1], data, { parseJson: true });
@@ -87,15 +78,6 @@ const unresolved = (node: ElementNode, attrs: Record<string, unknown>, key: stri
   attrs[key] === undefined && Object.hasOwn(node[1], `:${key}`);
 // Only the renderer's `data` and the parent's `props` are unknown while parsing; frontmatter and meta are already here.
 const later = (path: string) => /^(?:data|props)(?:\.|$)/.test(path);
-// A link the reader can follow: http or https with a host, which the prefix alone doesn't promise.
-function isHttp(url: string) {
-  try {
-    const { protocol, hostname } = new URL(url);
-    return (protocol === "http:" || protocol === "https:") && hostname !== "";
-  } catch {
-    return false;
-  }
-}
 // Quotes what an author wrote, so a quote inside it can't blur where the name ends.
 const quote = (value: string) => JSON.stringify(value);
 // Invalid bound values can be circular, contain a BigInt, or throw while being stringified.
@@ -116,7 +98,7 @@ const hasContent = (nodes: Node[]): boolean =>
   nodes.some((node) =>
     !Array.isArray(node)
       ? node.trim() !== ""
-      : isElement(node) && (node[0] === "img" || hasContent(children(node))),
+      : isElement(node) && (node[0] === "img" || hasContent(childrenOf(node))),
   );
 // Allow half a percent of rounding error when an agent converts pixels to percentages.
 const EDGE = 100.5;
@@ -265,7 +247,7 @@ export function readScreenshot(
       message: "`alt` is required. Describe what the screenshot shows.",
     });
   const href = text(attrs.href);
-  if (href && !isHttp(href))
+  if (href && !isWebUrl(href))
     problems.push({
       rule: "comark/annotate/invalid-href",
       message: "`href` must be an http:// or https:// URL with a host. Link the page you captured.",
@@ -283,7 +265,7 @@ export function readScreenshot(
 
   const annotations: Annotation[] = [];
   const caption: Node[] = [];
-  for (const child of children(node)) {
+  for (const child of childrenOf(node)) {
     if (isElement(child) && child[0] === "annotation") {
       const n = start.n + annotations.length;
       const found: Issue[] = [];
@@ -335,7 +317,7 @@ export function readScreenshot(
     src,
     alt,
     title: text(attrs.title) || undefined,
-    href: isHttp(href) ? href : undefined,
+    href: isWebUrl(href) ? href : undefined,
     ink,
     aspect,
     viewport: size ? { width: Number(size[1]), height: Number(size[2]) } : undefined,
@@ -516,7 +498,7 @@ export function readMark(
       message:
         '`mark="none"` draws nothing, so without a `side` note nothing points at the spot. Add `side="top"`, `"bottom"`, `"left"`, or `"right"`, or pick a visible mark such as `box`.',
     });
-  const note = children(node);
+  const note = childrenOf(node);
   if (!hasContent(note))
     problems.push({
       rule: "comark/annotate/missing-note",
@@ -542,7 +524,7 @@ function nested(nodes: Node[], problems: Issue[]) {
         rule: "comark/annotate/nested-block",
         message: `\`${node[0]}\` can't go inside a note or caption.${node[0] === "annotation" ? " Annotations must be direct children of a screenshot." : " Move it out after the block."}`,
       });
-    else nested(children(node), problems);
+    else nested(childrenOf(node), problems);
   }
 }
 
@@ -566,7 +548,7 @@ export function readCompare(
   const sides = known === "slider" ? [] : (["top", "bottom"] as const);
   const shots: Screenshot[] = [];
   const viewports: { name: string; size?: { width: number; height: number } }[] = [];
-  for (const child of children(node)) {
+  for (const child of childrenOf(node)) {
     if (isElement(child) && child[0] === "screenshot") {
       const all = shots.flatMap((item) => item.annotations);
       const shot = readScreenshot(child, issues, data, names, {
@@ -622,7 +604,7 @@ function name(nodes: Node[], data: Data): Names {
       if (node[0] === "screenshot") shots.push(node);
       else {
         if (node[0] === "compare") compares.push(node);
-        if (node[0] !== "annotation") walk(children(node));
+        if (node[0] !== "annotation") walk(childrenOf(node));
       }
     }
   };
@@ -659,14 +641,14 @@ export function check(nodes: Node[], data: Data): Issue[] {
       // comark-charts checks the annotations in a chart, which point at data rather than at a box.
       else if (node[0] === "chart") continue;
       else if (node[0] === "annotation") {
-        const note = textContent(["div", {}, ...children(node)])
+        const note = textContent(["div", {}, ...childrenOf(node)])
           .trim()
           .slice(0, 40);
         issues.push({
           rule: "comark/annotate/annotation-outside-screenshot",
           message: `annotation ${++stray} outside a screenshot${note ? ` (${quote(note)})` : ""}: it has nothing to point at. Move it inside the \`::screenshot\` it marks, as a direct child.`,
         });
-      } else walk(children(node));
+      } else walk(childrenOf(node));
     }
   };
   walk(nodes);

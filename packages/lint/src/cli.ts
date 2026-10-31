@@ -5,6 +5,7 @@ import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
 import { lintFiles, resolveConfig, type Config, type Diagnostic } from "./index.ts";
+import { errorText } from "../../../shared/text.ts";
 
 const USAGE = `Usage: comark-lint <file or glob>... [--format text|json] [--config comark-lint.config.ts] [--check-urls]
 
@@ -49,7 +50,7 @@ if (configFile) {
     };
     config = module.default ?? {};
   } catch (error) {
-    fail(`can't load ${configFile}: ${error instanceof Error ? error.message : String(error)}`);
+    fail(`can't load ${configFile}: ${errorText(error)}`);
     process.exit(2);
   }
 }

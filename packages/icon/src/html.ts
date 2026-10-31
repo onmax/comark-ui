@@ -1,8 +1,9 @@
 import type { NodeHandler, State } from "comark";
-import { escapeHtml } from "comark/utils";
 import { iconStyle } from "./client.ts";
 import { ICON_TAG } from "./index.ts";
 import { css } from "./styles.ts";
+import { rawText } from "../../../shared/text.ts";
+import { attr } from "../../../shared/html.ts";
 
 export {
   createIcons,
@@ -22,8 +23,6 @@ export type {
   Icons,
 } from "./index.ts";
 export { css };
-
-const attr = (value: string) => escapeHtml(value, { '"': "&quot;" });
 
 /**
  * An icon as HTML: decorative, or announced as an image when it has a `label`. The styles come separately: from the
@@ -49,13 +48,10 @@ export function iconStyles(state: State): string {
   return `<style data-comark-icon>${css}</style>`;
 }
 
-// SAFETY: the parse plugin writes every attribute the renderer reads as a string.
-const str = (value: unknown) => (value === undefined ? "" : String(value as string));
-
 const icon: NodeHandler = ([, attrs], state) => {
-  const src = str(attrs.src);
+  const src = rawText(attrs.src);
   if (!src) return "";
-  return `${iconStyles(state)}${iconHtml({ src, ratio: str(attrs.ratio), mask: attrs.mask }, str(attrs.label))}`;
+  return `${iconStyles(state)}${iconHtml({ src, ratio: rawText(attrs.ratio), mask: attrs.mask }, rawText(attrs.label))}`;
 };
 
 /** The HTML renderer for `:icon`. Pass it as `components`; it inlines the styles once per document. */

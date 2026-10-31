@@ -18,13 +18,6 @@ const types: CalloutType[] = ["note", "tip", "important", "warning", "caution"];
 export const typeOf = (value: unknown): CalloutType =>
   types.find((type) => type === value) ?? "note";
 
-/** The title as text. Props arrive as strings, numbers, or booleans; anything else has no title to show. */
-export const titleOf = (value: unknown): string =>
-  value === undefined || value === null || value instanceof Object
-    ? ""
-    : // SAFETY: undefined, null, objects, and arrays returned above, so only a string, number, or boolean is left.
-      String(value as string | number | boolean);
-
 /** The icon's `<svg>`, which every renderer puts inside `<span class="cgc-icon" aria-hidden="true">`. */
 export const icon = (type: CalloutType) =>
   `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${paths[type]}</svg>`;

@@ -10,6 +10,8 @@ import {
   type Icons,
 } from "comark-icon";
 import { isExternalHref, isSafeHref } from "./client.ts";
+import { text } from "../../../shared/text.ts";
+import { childrenOf, isElement } from "../../../shared/nodes.ts";
 
 export type CardsOptions = {
   /**
@@ -69,17 +71,8 @@ export type ColumnsAttributes = { cols?: string };
 
 type Data = Parameters<typeof resolveAttributes>[1];
 
-const isElement = (node: Node | undefined): node is ElementNode =>
-  Array.isArray(node) && node[0] !== null;
 // Comments render nothing, so they aren't content a card would show.
 const isContent = (node: Node) => (Array.isArray(node) ? node[0] !== null : node.trim() !== "");
-// SAFETY: an element node is [tag, attributes, ...children], so everything after index 1 is a child node.
-const childrenOf = (node: ElementNode) => node.slice(2) as Node[];
-const text = (value: unknown) =>
-  value === undefined || value === null || value instanceof Object
-    ? ""
-    : // SAFETY: undefined, null, objects, and arrays returned above, so only a string, number, or boolean is left.
-      String(value as string | number | boolean).trim();
 const clip = (value: string) => {
   const words = value.trim().replace(/\s+/g, " ");
   return words.length > 40 ? `${words.slice(0, 39)}…` : words;

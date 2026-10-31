@@ -2,6 +2,7 @@ import type { ElementNode, Node } from "comark";
 import { defineComarkPlugin } from "comark";
 import { textContent } from "comark/utils";
 import { type GitHubMeta, type Issue, report } from "./meta.ts";
+import { childrenOf, isElement } from "../../../shared/nodes.ts";
 
 export type CalloutType = "note" | "tip" | "important" | "warning" | "caution";
 
@@ -21,10 +22,6 @@ const TITLES: Record<CalloutType, string> = {
   caution: "Caution",
 };
 const isType = (value: string): value is CalloutType => Object.hasOwn(TITLES, value);
-// Comark text nodes are strings, elements are arrays, and comments are arrays with a null tag.
-const isElement = (node: Node | undefined): node is ElementNode =>
-  Array.isArray(node) && node[0] !== null;
-const childrenOf = ([, , ...rest]: ElementNode): Node[] => rest;
 
 /**
  * Reads the `[!TYPE]` marker at the start of a blockquote's first line, written as text or, with the components

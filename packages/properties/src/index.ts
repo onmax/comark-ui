@@ -1,5 +1,6 @@
 import type { ElementNode, Node } from "comark";
 import { defineComarkPlugin } from "comark";
+import { childrenOf, isElement } from "../../../shared/nodes.ts";
 
 export interface PropertiesOptions {
   /** The frontmatter keys to show, in this order. Default `["status", "pr", "author", "date", "tags"]`. */
@@ -28,8 +29,6 @@ const LABELS = new Map([
 const REFERENCE =
   /^https:\/\/(?:www\.)?(?:github\.com|gitlab\.com)\/([\w.-]+\/[\w.-]+)\/(?:-\/)?(?:pull|issues|merge_requests)\/(\d+)\/?(?:[?#].*)?$/;
 
-const isElement = (node: Node): node is ElementNode => Array.isArray(node) && node[0] !== null;
-const childrenOf = ([, , ...rest]: ElementNode): Node[] => rest;
 // Comments render nothing, so they aren't content the block would drop.
 const isContent = (node: Node) => (Array.isArray(node) ? node[0] !== null : node.trim() !== "");
 const labelOf = (key: string, labels: Record<string, string>) =>

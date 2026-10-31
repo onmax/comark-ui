@@ -16,6 +16,7 @@ import {
   target,
 } from "./read.ts";
 import { css } from "./styles.ts";
+import { attr } from "../../../shared/html.ts";
 
 export { default } from "./index.ts";
 export type { AnnotateMeta, AnnotateOptions, Annotation, Mark } from "./index.ts";
@@ -98,7 +99,6 @@ const HEAD_RIGHT = `<svg class="ca-arrow-head" viewBox="0 0 12 12"><path d="M3.5
 // Closer than this, in percent of the image, the note sits straight over or beside its point and the arrow runs straight.
 const LEVEL = 2;
 
-const attr = (value: string) => escapeHtml(value, { '"': "&quot;" });
 const wrap = (nodes: Node[]): ElementNode => ["div", {}, ...nodes];
 const children = (nodes: Node[], state: State) => state.flow(wrap(nodes), state);
 // Comark restores shared render state after each node, so notes render one at a time to keep the output deterministic.

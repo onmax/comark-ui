@@ -2,6 +2,8 @@ import type { ElementNode, Node } from "comark";
 import type { Annotation } from "comark-annotate";
 import { readMark } from "comark-annotate";
 import { textContent } from "comark/utils";
+import { errorText, text } from "../../../shared/text.ts";
+import { childrenOf, isElement } from "../../../shared/nodes.ts";
 
 export type ChartType =
   | "bar"
@@ -136,18 +138,11 @@ const KINDS: [XKind, RegExp][] = [
 // Commas only as thousands separators, so `1,200` reads as 1200 and `1,5` is rejected rather than misread.
 const NUMBER = /^[+-]?(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d+)?$/;
 
-const isElement = (node: Node): node is ElementNode => Array.isArray(node) && node[0] !== null;
-const childrenOf = ([, , ...rest]: ElementNode): Node[] => rest;
 const isContent = (node: Node) => (Array.isArray(node) ? node[0] !== null : node.trim() !== "");
 const isSpec = (node: Node): node is ElementNode =>
   isElement(node) && node[0] === "pre" && node[1].language === "vega-lite";
 const elements = (node: ElementNode, tag: string) =>
   childrenOf(node).filter((child): child is ElementNode => isElement(child) && child[0] === tag);
-const text = (value: unknown) =>
-  value === undefined || value === null || value instanceof Object
-    ? ""
-    : // SAFETY: undefined, null, objects, and arrays returned above, so only a string, number, or boolean is left.
-      String(value as string | number | boolean).trim();
 const code = (value: string) => `\`${value.replaceAll("`", "'")}\``;
 const list = (values: string[], last = "and") =>
   values.length < 2
@@ -986,7 +981,7 @@ function readSpec(
   } catch (error) {
     issues.push({
       rule: "comark/charts/invalid-spec-json",
-      message: `${name}: its Vega-Lite spec isn't valid JSON (${error instanceof Error ? error.message : String(error)}). Fix it, or remove the \`vega-lite\` block to let comark-charts choose the chart.`,
+      message: `${name}: its Vega-Lite spec isn't valid JSON (${errorText(error)}). Fix it, or remove the \`vega-lite\` block to let comark-charts choose the chart.`,
     });
     return;
   }

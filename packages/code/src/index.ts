@@ -3,6 +3,7 @@ import { defineComarkPlugin } from "comark";
 import { createIcons, describeIconProblem, iconProblemRule, type Icons } from "comark-icon";
 import type { ActionButton } from "./client.ts";
 import { fromDiff, lines, nameOf, type Issue } from "./lines.ts";
+import { childrenOf, isElement } from "../../../shared/nodes.ts";
 
 type Shown =
   | {
@@ -45,10 +46,6 @@ export type CodeMeta = {
   /** The comark-linter rule of each issue, by its sentence, so the linter reports it under its own code. */
   issueRules: Record<string, string>;
 };
-
-const isElement = (node: Node): node is ElementNode => Array.isArray(node) && node[0] !== null;
-// SAFETY: an element node is [tag, attributes, ...children], so everything after index 1 is a child node.
-const childrenOf = (node: ElementNode) => node.slice(2) as Node[];
 
 function mark(nodes: Node[], actions: CodeAction[], used: Set<CodeAction>, blocks: ElementNode[]) {
   for (const node of nodes) {

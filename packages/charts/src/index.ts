@@ -1,10 +1,12 @@
 import type { ElementNode, Node } from "comark";
 import { defineComarkPlugin } from "comark";
 import type { Annotation } from "comark-annotate";
-import { escapeHtml } from "comark/utils";
 import type { draw } from "./draw.ts";
 import type { Issue } from "./read.ts";
 import { readChart } from "./read.ts";
+import { attr } from "../../../shared/html.ts";
+import { childrenOf, isElement } from "../../../shared/nodes.ts";
+import { errorText } from "../../../shared/text.ts";
 
 export type { Chart, ChartType, FlowChart, SpecChart, XKind } from "./read.ts";
 
@@ -30,10 +32,6 @@ export interface DrawnChart {
   /** Its comark-annotate marks, placed on the SVG. Only `@comark/html` draws them. */
   marks?: Annotation[];
 }
-
-const attr = (value: string) => escapeHtml(value, { '"': "&quot;" });
-const isElement = (node: Node): node is ElementNode => Array.isArray(node) && node[0] !== null;
-const childrenOf = ([, , ...rest]: ElementNode): Node[] => rest;
 
 /** Calls `visit` on every `::chart` node in document order, with its number. */
 export function eachChart(nodes: Node[], visit: (node: ElementNode, number: number) => void) {
@@ -95,7 +93,7 @@ export default /* @__PURE__ */ defineComarkPlugin<ChartsOptions | void, ChartsMe
           : "Check the table, or report it at https://github.com/onmax/comark-ui/issues";
         issues.push({
           rule: "comark/charts/draw-failed",
-          message: `\`::chart\` ${number} couldn't be drawn (${error instanceof Error ? error.message : String(error)}), so it shows its table alone. ${fix}.`,
+          message: `\`::chart\` ${number} couldn't be drawn (${errorText(error)}), so it shows its table alone. ${fix}.`,
         });
         node.splice(1, node.length - 1, {}, table);
         continue;

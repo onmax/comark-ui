@@ -2,6 +2,8 @@ import type { ElementNode, Node } from "comark";
 import { defineComarkPlugin } from "comark";
 import { textContent } from "comark/utils";
 import { type Image, inline } from "./images.ts";
+import { text } from "../../../shared/text.ts";
+import { childrenOf, isElement } from "../../../shared/nodes.ts";
 
 export interface ChipsOptions {
   /** Download each image while parsing and inline it, so readers' browsers ask no other site. `false` keeps the URLs. */
@@ -79,14 +81,6 @@ const SKIP = new Set(["a", CHIP_TAG, "code", "pre", "script", "style"]);
 const WEB = /^https?:\/\//i;
 const BARE_LOGIN = new RegExp(`^${LOGIN}$`, "i");
 
-const isElement = (node: Node | undefined): node is ElementNode =>
-  Array.isArray(node) && node[0] !== null;
-const text = (value: unknown) =>
-  value === undefined || value === null || value instanceof Object
-    ? ""
-    : // SAFETY: undefined, null, objects, and arrays returned above, so only a string, number, or boolean is left.
-      String(value as string | number | boolean).trim();
-const childrenOf = ([, , ...rest]: ElementNode): Node[] => rest;
 const hasImage = (nodes: Node[]): boolean =>
   nodes.some((node) => isElement(node) && (node[0] === "img" || hasImage(childrenOf(node))));
 /** Remove interactive chip descendants before making their parent interactive. */
