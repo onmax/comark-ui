@@ -20,9 +20,14 @@ test("a details box closes faster than it opens, and its chevron moves with the 
     });
     const closed = read();
     element.open = true;
-    for (let frame = 0; frame < 2; frame++) await new Promise(requestAnimationFrame);
-    const style = getComputedStyle(element, "::details-content");
-    const midway = { height: Number.parseFloat(style.blockSize), opacity: Number(style.opacity) };
+    let midway = { height: 0, opacity: 0 };
+    // Under load Chromium can defer the transition's start beyond two frames. Sample its first visible frame.
+    for (let frame = 0; frame < 10; frame++) {
+      await new Promise(requestAnimationFrame);
+      const style = getComputedStyle(element, "::details-content");
+      midway = { height: Number.parseFloat(style.blockSize), opacity: Number(style.opacity) };
+      if (midway.height > 0 && midway.opacity > 0) break;
+    }
     return { closed, open: read(), midway };
   });
   // The content's durations are block-size, opacity, and content-visibility; the chevron's are rotate and translate.
