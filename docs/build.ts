@@ -135,6 +135,7 @@ const packageOrder = [
   "reading-time",
   "chat",
   "lint",
+  "remark-to-comark",
 ];
 const repo = new URL("../", root);
 // The agent skills that write a whole document, in the order the Skills section lists them. Each has a folder in
@@ -188,7 +189,7 @@ function subPages(slug: string) {
   return [...new Set(linked)];
 }
 // A package's group picks its section and its heading there: blocks under Components, syntax under Typography, the
-// authoring tools under the docs' Utilities, and the linter on its own. comark-ui has no page: Getting started is it.
+// authoring tools under the docs' Utilities, and the linter on its own, with the remark migration beside it. comark-ui has no page: Getting started is it.
 const groups = [
   "Review blocks",
   "Charts and diagrams",
@@ -198,6 +199,7 @@ const groups = [
   "Authoring tools",
   "Chat",
   "Linter",
+  "Migration",
 ];
 for (const folder of await readdir(new URL("packages/", repo))) {
   // A branch from before the move would add its pages where nothing reads them.
@@ -372,6 +374,7 @@ const sections: Section[] = [
     icon: "stethoscope",
     lists: [
       { slugs: inGroup("Linter") },
+      { title: "Migration", slugs: inGroup("Migration") },
       { title: "Rules", slugs: ["doctor"] },
       ...[...new Set(doctorRules.map((entry) => entry.group))].map((group) => ({
         title: group === "core" ? "Core" : group,
