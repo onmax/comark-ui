@@ -172,6 +172,7 @@ The plugin adds these problems to `meta.issues`, as [Validation](/guide/validati
 - A `::properties` with nothing to show.
 - Content inside `::properties`. It's dropped.
 - A prop on `::properties`. It's ignored.
+- An invalid `locale` option. It's ignored, so dates use the reader's locale.
 
 Each issue names the key or block and says how to fix it, and each has its own rule in [Doctor](/doctor/).
 

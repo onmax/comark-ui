@@ -113,6 +113,19 @@ export function rowsOf(
   const labels = options.labels ?? {};
   const issues: Issue[] = [];
   const rows: ElementNode[] = [];
+  let locale = options.locale;
+  if (locale !== undefined) {
+    try {
+      Intl.getCanonicalLocales(locale);
+    } catch {
+      locale = undefined;
+      issues.push({
+        rule: "comark/properties/invalid-locale",
+        message:
+          "properties: `locale` is not a valid language tag, so dates use the reader's locale. Use a tag such as `de-DE`, or leave `locale` unset.",
+      });
+    }
+  }
   for (const key of keys) {
     const value: unknown = frontmatter[key];
     if (
@@ -136,7 +149,7 @@ export function rowsOf(
       kind === "status" && text !== undefined
         ? [["span", { class: "cfm-status" }, ...nodes]]
         : kind === "date" && text !== undefined && DAY.test(text)
-          ? [day(text, options.locale)]
+          ? [day(text, locale)]
           : nodes;
     rows.push([
       "div",

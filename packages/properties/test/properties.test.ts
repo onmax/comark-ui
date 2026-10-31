@@ -77,6 +77,18 @@ describe("comark-properties", () => {
     expect(html.match(/class="cfm"/g)).toHaveLength(1);
   });
 
+  it.each(["en_US", ""])("falls back and reports an invalid locale %j", async (locale) => {
+    const options = { locale };
+    expect(await render(review, options)).toContain(
+      '<time datetime="2026-10-23">Oct 23, 2026</time>',
+    );
+    const { meta } = await parseMarkdown(review, { plugins: [properties(options)] });
+    const message =
+      "properties: `locale` is not a valid language tag, so dates use the reader's locale. Use a tag such as `de-DE`, or leave `locale` unset.";
+    expect(meta.issues).toEqual([message]);
+    expect(meta.issueRules[message]).toBe("comark/properties/invalid-locale");
+  });
+
   it("takes its keys, labels, and placement from the options", async () => {
     const options = { keys: ["owner", "due", "pr"], labels: { due: "Due date" }, top: true };
     const html = await render(

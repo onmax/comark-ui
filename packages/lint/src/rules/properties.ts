@@ -18,4 +18,8 @@ export default {
     code: "COMARK2804",
     title: "Write `::properties` without props",
   },
+  "comark/properties/invalid-locale": {
+    code: "COMARK2805",
+    title: "Choose a valid locale for properties dates",
+  },
 } satisfies Record<`comark/properties/${string}`, RuleInfo>;

@@ -7,7 +7,23 @@
   let box = $state();
   onMount(addStyles);
   $effect(() => {
-    if (box) localizeDates(box);
+    const root = box;
+    if (!root) return;
+    // A snippet can update its rows without changing its identity or the box binding.
+    const options = {
+      subtree: true,
+      childList: true,
+      characterData: true,
+      attributeFilter: ["datetime", "lang"],
+    };
+    const observer = new MutationObserver(() => {
+      observer.disconnect();
+      localizeDates(root);
+      observer.observe(root, options);
+    });
+    localizeDates(root);
+    observer.observe(root, options);
+    return () => observer.disconnect();
   });
 </script>
 
