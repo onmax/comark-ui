@@ -38,6 +38,6 @@ export const css = `@layer comark{${[
     ".cdt",
     `.cdt{transition:padding-bottom ${closing}}.cdt[open]{transition:padding-bottom ${opening}}`,
   ),
-  "@media (prefers-reduced-motion:reduce){.cdt-summary::after{transition:none}}",
+  "@media (prefers-reduced-motion:reduce){.cdt-summary::after,.cdt[open]>.cdt-summary::after{transition:none}}",
   "@media print{.cdt-summary::after{display:none}}",
 ].join("")}}`;

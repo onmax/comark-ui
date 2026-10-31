@@ -40,3 +40,23 @@ test("a details box closes faster than it opens, and its chevron moves with the 
   expect(timings.midway.opacity).toBeGreaterThan(0);
   expect(timings.midway.opacity).toBeLessThan(1);
 });
+
+test("a details chevron has no transition when opening or closing with reduced motion", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  const render = createHtmlRenderer({ plugins: [details()], components });
+  await page.setContent(await render('::details{summary="Why?"}\nBecause.\n::'));
+  const timings = await page.locator(".cdt").evaluate((element) => {
+    if (!(element instanceof HTMLDetailsElement)) throw new Error("Expected a details element");
+    const chevron = element.querySelector(".cdt-summary");
+    if (!chevron) throw new Error("Expected a summary");
+    const read = () => getComputedStyle(chevron, "::after").transitionDuration;
+    const closed = read();
+    element.open = true;
+    const open = read();
+    element.open = false;
+    return { closed, open, closedAgain: read() };
+  });
+  expect(timings).toEqual({ closed: "0s", open: "0s", closedAgain: "0s" });
+});
