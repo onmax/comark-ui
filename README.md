@@ -112,6 +112,15 @@ pnpm add -D comark-linter
 
 It detects your installed `comark-ui` and checks documents with its plugins. Use it from the [CLI, a script, ESLint, or Vite Doctor](https://comark-ui.onmax.me/lint/).
 
+## Moving from remark
+
+Install [`remark-to-comark`](./packages/remark-to-comark) to move a project from remark to Comark. It reports each remark setup and what its plugins become, rewrites unified chains to Comark's `renderHtml`, and escapes the Markdown Comark would read differently:
+
+```sh
+pnpm add -D remark-to-comark
+pnpm remark-to-comark check .
+```
+
 ## Agents
 
 [`skills/comark-ui`](./skills/comark-ui) teaches an agent every package, with a reference per package. Install it with `vp dlx skills add onmax/comark-ui`, or bundle it in an app from `comark-ui/skills/comark-ui/`. `vp` comes with [Vite+](https://viteplus.dev/guide/global-cli); without it, `pnpm dlx` takes the same arguments.
