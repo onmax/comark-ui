@@ -41,7 +41,7 @@ export default defineConfig({
 });
 ```
 
-The command loads it, or a `.mts`, `.mjs`, or `.js` one, when you run it from that directory. Node before 22.18 can't import a `.ts` file without a flag, so name it `comark-lint.config.mjs` there. Pass a config elsewhere with `--config`:
+The command loads it, or a `.mts`, `.mjs`, or `.js` one, when you run it from that directory. Pass a config elsewhere with `--config`:
 
 ```sh
 pnpm comark-lint "docs/**/*.md" --config config/comark-lint.config.ts
@@ -119,7 +119,7 @@ A glob skips `node_modules` and `dist`.
 | `headingIds` | Comark's | The `headingIds` you render with, so anchors match the ids readers get. |
 | `links` | — | How links are checked. See [Links](#links). |
 
-`lintFiles(paths, options)` checks many files in one run, as the command line and Vite Doctor do. It reads and parses each file once and shares their headings, so a link from one to another doesn't parse it again. It requests each external URL once. It returns `{ file, text, diagnostics }` for each path, with no `text` when the file can't be read.
+`lintFiles(paths, options)` checks many files in one run, as the command line and Vite Doctor do. It returns `{ file, text, diagnostics }` for each path, with no `text` when the file can't be read.
 
 ```ts
 import { lintFiles, resolveConfig } from "comark-linter";
@@ -194,7 +194,7 @@ routes: (path) => (path.startsWith("/api/") ? true : `content${path}`),
 | `cache` | `"node_modules/.cache/comark-linter/urls.json"` | The cache file from `root`, or `false`. |
 | `maxAge` | `86_400_000` | Milliseconds a URL that worked stays cached. |
 
-When parsing or a rule throws, the result's optional `cause` holds the original exception, including any nested diagnostic. The CLI omits it from JSON because exceptions can contain cycles.
+When parsing or a rule throws, the result's optional `cause` holds the original exception, including any nested diagnostic. The CLI omits it from JSON.
 
 ## Next steps
 

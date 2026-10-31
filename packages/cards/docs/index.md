@@ -258,7 +258,7 @@ Links to other sites open in a new tab with `rel="noopener noreferrer"`. Set `ta
 
 ### Options
 
-`cards()` takes one option, `iconResolver`, when you use it alone. In `comarkUi()`, `cards` takes no options, since cards share the resolver built from the `icon` options, and `cards: false` turns them off.
+`cards()` takes one option, `iconResolver`, when you use it alone. In `comarkUi()`, cards use the `icon` options, and `cards: false` turns them off.
 
 | Option | Default | Description |
 | --- | --- | --- |

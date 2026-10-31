@@ -83,8 +83,6 @@ export const limits = {
 
 A range is one line, `{7}`, or the first and last lines of a run, `{3-4}`, and a list takes both, `{1, 3-4}`. Lines count from 1, and collapsed lines are counted where they are.
 
-The components draw every attribute with no script beyond the one the buttons already need.
-
 ### Added and deleted lines
 
 Use the `ins` and `del` attributes to mark lines as added or deleted. Added lines are green, with a `+` before them. Deleted lines are red, with a `−` before them, and Copy leaves them out.
@@ -234,11 +232,9 @@ import { onCodeAction } from "comark-code/client";
 const stop = onCodeAction("run", ({ code, language }) => terminal.run(code));
 ```
 
-The callback lives in the page, not in the plugin's options, because the HTML may be rendered on a server where your function can't follow it.
+A click also sends a `comark-code-action` event from the block, with the action's `id`, the code, and the language in its `detail`. It bubbles up to the page, so you can listen for it yourself to handle every action in one place.
 
-Under the hood, a click sends a `comark-code-action` event from the block. It bubbles up to the page with the action's `id`, the code, and the language in its `detail`. Listen for it yourself to handle every action in one place.
-
-The plugin does nothing else, so `code()` with no actions only adds Copy and Wrap, which come from the components. To see an action's button, add one under `comark-code` in the [playground](/play/)'s Config tab.
+`code()` with no actions only adds Copy and Wrap. To see an action's button, add one under `comark-code` in the [playground](/play/)'s Config tab.
 
 ### Icons on your buttons
 

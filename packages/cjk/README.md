@@ -26,9 +26,9 @@ const document = await parseMarkdown(markdown, {
 **이 문장은 굵게.**다음 문장
 ```
 
-CommonMark leaves the asterisks on all three lines. A closing `**` between punctuation and a letter doesn't count as closing, and these languages put no space after `。` or `.`. The plugin relaxes that rule next to Chinese, Japanese, and Korean characters only, so other text parses as before. `_` still doesn't open or close inside a word, so write `**` and `*`.
+CommonMark leaves the asterisks on all three lines, because a closing `**` between punctuation and a letter doesn't count as closing, and these languages put no space after `。` or `.`. The plugin relaxes that rule next to Chinese, Japanese, and Korean characters only. Other text parses as before. `_` still doesn't open or close inside a word, so write `**` and `*`.
 
-It takes no options, and works with `registerDefaultPlugins: false` and in streaming parses.
+It takes no options.
 
 ## Credits
 

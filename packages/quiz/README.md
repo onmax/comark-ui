@@ -51,7 +51,7 @@ Promise callbacks are microtasks, and a timer's callback is a task.
 ::
 ```
 
-A question's options are shuffled the same way for every reader, and each option gets a key from its text, so saved answers survive reordering. Questions and recall cards are numbered down the page. With no host, answers stay in `localStorage`. A host such as [Drop](https://drop.vitehub.dev) listens for `comark-quiz:answer`, sends `comark-quiz:state` back with saved answers, results, and whether voting is open, and reads `data-quiz-id`, `data-key`, and `data-correct` from the server's HTML. The plugin adds every problem to `meta.issues`, one sentence each naming the block and the fix, such as a question with no right option, a wrong option with no reason, or "All of the above", which the shuffle breaks.
+A question's options are shuffled the same way for every reader, and saved answers survive reordering them. Questions and recall cards are numbered down the page. With no host, answers stay in `localStorage`. A host such as [Drop](https://drop.vitehub.dev) listens for `comark-quiz:answer`, sends `comark-quiz:state` back with saved answers, results, and whether voting is open, and reads `data-quiz-id`, `data-key`, and `data-correct` from the server's HTML. The plugin adds every problem to `meta.issues`, one sentence each naming the block and the fix, such as a question with no right option, a wrong option with no reason, or "All of the above", which the shuffle breaks.
 
 Only the HTML renderer exists, since the blocks need its script.
 

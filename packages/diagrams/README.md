@@ -25,7 +25,7 @@ api -> db
 ```
 ````
 
-` ```plantuml `, ` ```graphviz ` or ` ```dot `, ` ```d2 `, ` ```dbml `, and ` ```goat ` or ` ```svgbob ` fences become SVG; a title in brackets names the diagram and shows under it. Each source is drawn once per process.
+` ```plantuml `, ` ```graphviz ` or ` ```dot `, ` ```d2 `, ` ```dbml `, and ` ```goat ` or ` ```svgbob ` fences become SVG; a title in brackets names the diagram and shows under it.
 
 **Each diagram's source is sent to the Kroki server**, `https://kroki.io` by default. To keep sources private, run your own with `docker run -d -p 8000:8000 yuzutech/kroki` and pass `server: "http://localhost:8000"`. `draw: false` sends nothing and leaves the fences as code.
 
@@ -35,7 +35,7 @@ The SVG is sanitized: scripts, event handlers, `foreignObject`, animations, link
 
 | Renderer | Import |
 | --- | --- |
-| `@comark/html` | `comark-diagrams/html`: the styles are inlined once per document |
+| `@comark/html` | `comark-diagrams/html`: the styles are inlined |
 | `@comark/vue` | `comark-diagrams/vue` |
 | `@comark/react` | `comark-diagrams/react` |
 | `@comark/svelte` | `comark-diagrams/svelte` |

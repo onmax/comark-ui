@@ -63,7 +63,7 @@ credits: 'Reads <a href="https://docs.asciinema.org/manual/asciicast/v2/">asciin
 
 ## Features
 
-- The plugin replays the cast through a small terminal while parsing, so the page gets the screen as the terminal last showed it.
+- The page gets the screen as the terminal last showed it.
 - A progress bar redrawn in place shows only its last state, and a cleared screen is gone.
 - The output keeps its colors, and a reader can select, search, and copy it.
 - No player and no script: the page gets a `pre` with colored spans. The asciinema player weighs 1.4 MB.
@@ -190,7 +190,7 @@ Options go under `cast` in `comarkUi()`, or to `cast()` when you use it alone. I
 | `root` | `"."` | The folder `src` paths start from. A cast can't be read from outside it. |
 | `read` | Reads from disk | Reads a file by its path under `root`, and returns its text or `undefined`. Pass one in a browser or an edge runtime. |
 
-The default reader refuses symlinks that lead out of `root`. It loads `node:fs` only on its first read, so the plugin loads anywhere when you pass `read`.
+The default reader refuses symlinks that lead out of `root`.
 
 ### Issues
 

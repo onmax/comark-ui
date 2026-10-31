@@ -18,7 +18,7 @@ import code, { components } from "comark-code/html";
 const render = createHtmlRenderer({ plugins: [code()], components });
 ```
 
-The components replace how `pre` renders, and keep the block's own markup inside a wrapper, so Shiki's highlighting and your `pre` styles still apply. Each block gets a header above its first line, with the file's name or the language and the buttons, so they never cover the code. They work in a `comark-tabs` code group whichever plugin comes first.
+Shiki's highlighting and your `pre` styles still apply. Each block gets a header above its first line, with the file's name or the language and the buttons, so they never cover the code. They work in a `comark-tabs` code group whichever plugin comes first.
 
 Copy writes the code to the clipboard and shows a check. When the page can't write to it, such as over plain http, it selects the code and says to press Ctrl+C or ⌘C. Wrap breaks long lines in that block until it's pressed again.
 
@@ -64,13 +64,13 @@ import { onCodeAction } from "comark-code/client";
 const stop = onCodeAction("run", ({ code, language }) => terminal.run(code));
 ```
 
-A click sends a `comark-code-action` event from the block that bubbles up to the page; `onCodeAction()` listens for one action's.
+`onCodeAction()` listens for one action's clicks. A click also sends a `comark-code-action` event that bubbles up to the page.
 
 ## Renderers
 
 | Renderer | Import |
 | --- | --- |
-| `@comark/html` | `comark-code/html`: the styles and script are inlined once per document |
+| `@comark/html` | `comark-code/html`: the styles and script are inlined |
 | `@comark/vue` | `comark-code/vue` |
 | `@comark/react` | `comark-code/react` |
 | `@comark/svelte` | `comark-code/svelte`, Svelte 5.20 or later |

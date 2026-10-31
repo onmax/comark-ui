@@ -80,7 +80,7 @@ import { MessageParts } from "comark-chat/react";
 
 ### `read(parts, streaming?)`
 
-Every renderer goes through `read()`, from `comark-chat`, so they can't disagree. Use it to build your own renderer. It returns the blocks in order and never throws, whatever the parts hold:
+Use `read()` from `comark-chat` to build your own renderer. It returns the blocks in order and never throws, whatever the parts hold:
 
 | Block | What it holds |
 | --- | --- |

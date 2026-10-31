@@ -33,17 +33,17 @@ README.md
 
 Indent each level by two spaces, or paste what `tree` prints. A trailing `/` makes a folder; `+`, `-`, and `~` mark an entry added, removed, or changed; ` # ` starts a note; and `...` stands for entries left out. Pass `iconResolver` from comark-icon's `createIcons()` to draw each file's icon; without it, entries get plain glyphs and nothing is fetched.
 
-The plugin adds every problem to `meta.issues`, so a host can reject a document before publishing it: a Markdown list instead of a fence (a list turns `__init__.py` bold and drops `[id].vue`), content beside the fence, and an empty block. Each issue names its block and says how to fix it.
+The plugin adds every problem to `meta.issues`, so a host can reject a document before publishing it, such as a Markdown list instead of a fence (a list turns `__init__.py` bold and drops `[id].vue`), content beside the fence, and an empty block.
 
 ## Renderers
 
 | Renderer | Import |
 | --- | --- |
-| `@comark/html` | `comark-file-tree/html`: the styles are inlined once per document |
+| `@comark/html` | `comark-file-tree/html`: the styles are inlined |
 | `@comark/vue` | `comark-file-tree/vue` |
 | `@comark/react` | `comark-file-tree/react` |
 | `@comark/svelte` | `comark-file-tree/svelte` |
 
 Each entry exports the parse plugin as `default` and the renderer's `components`. The Vue, React, and Svelte components add the styles when they mount; import `comark-file-tree/style.css` with your styles so a server-rendered page doesn't shift.
 
-The styles follow shadcn/ui: they read its CSS variables, such as `--accent` and `--border`, when the page has them, and use its neutral theme otherwise. Set the shared `--comark-*` tokens to theme every plugin at once; the rules sit in a `comark` CSS layer, so any plain rule of your own wins, except the spacing that draws the tree: the margins, padding, and bullets of its lists, `details`, and `summary` are `!important`, because a page's own list styles are almost always unlayered and would push entries off their guide lines. Override those with `!important` too.
+The styles follow shadcn/ui: they read its CSS variables, such as `--accent` and `--border`, when the page has them, and use its neutral theme otherwise. Set the shared `--comark-*` tokens to theme every plugin at once; the rules sit in a `comark` CSS layer, so any plain rule of your own wins, except the spacing that draws the tree: the margins, padding, and bullets of its lists, `details`, and `summary` are `!important`. Override those with `!important` too.

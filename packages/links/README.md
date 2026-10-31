@@ -53,13 +53,13 @@ anchors({ levels: [2, 3], label: (text) => `Link to ${text}`, icon: "¶" });
 | `icon` | `true` | Draws ↗ after a link that opens a new tab |
 | `label` | `"(opens in a new tab)"` | What screen readers hear after it, as WCAG's [G201](https://www.w3.org/WAI/WCAG22/Techniques/general/G201) asks |
 
-`target` is off by default, as in [rehype-external-links](https://github.com/rehypejs/rehype-external-links) v2: readers choose where a link opens.
+`target` is off by default, so readers choose where a link opens.
 
 ## Renderers
 
 | Renderer | Import |
 | --- | --- |
-| `@comark/html` | `comark-links/html`: the styles are inlined once per document |
+| `@comark/html` | `comark-links/html`: the styles are inlined |
 | `@comark/vue` | `comark-links/vue` |
 | `@comark/react` | `comark-links/react` |
 | `@comark/svelte` | `comark-links/svelte` |

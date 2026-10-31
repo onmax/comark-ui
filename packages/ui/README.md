@@ -5,7 +5,7 @@
 [![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-ui)
 [![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/getting-started/)
 
-Every [Comark](https://comark.dev) block from [comark-ui](https://comark-ui.onmax.me) in one install, registered in the order they need, with one icon resolver shared by `:icon`, cards, details, file trees, tabs, and code actions. It ships in lockstep with the plugins, so updating it brings their latest defaults.
+Every [Comark](https://comark.dev) block from [comark-ui](https://comark-ui.onmax.me) in one install, registered in the order they need, with one icon resolver shared by `:icon`, cards, details, file trees, tabs, and code actions.
 
 ```sh
 pnpm add comark @comark/html comark-ui
@@ -53,7 +53,7 @@ Vue, React, and Svelte leave out annotate and diff, which render only to HTML.
 | `ComarkKit` | The schema: StarterKit, task lists, inline images (drawn as players for video and audio), tables, footnotes, definition lists, CriticMarkup, and Comark's components, slots, and comments, each keeping the attributes it has no field for. |
 | `fromMarkdown`, `toMarkdown` | Convert between Markdown and the editor's JSON with Comark's own parser and writer. Front matter stays beside the document. |
 | `checkMarkdown(markdown, { plugins })` | Whether the editor can save the document without changing what readers see, judged with the plugins the page renders with. A document it can't keep opens read-only. |
-| `Upload` | Uploads pasted and dropped files. Each shows a placeholder with its progress until `upload(file, progress)` returns its URL. The placeholder is a decoration, so a collaborative document never holds a file that hasn't arrived. |
+| `Upload` | Uploads pasted and dropped files. Each shows a placeholder with its progress until `upload(file, progress)` returns its URL. |
 | `createEditorCodec({ plugins })` | `{ extensions, fromMarkdown, toMarkdown, verify }` for a collaborative room, such as ViteHub Realtime's `editor` option. |
 
 `comark-ui/editor/vue` binds the editor to a Markdown string with `useComarkEditor(markdown)` or `<ComarkEditor v-model="markdown" />`. Run `pnpm playground` in this package to try it.

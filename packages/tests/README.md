@@ -29,9 +29,7 @@ const render = createHtmlRenderer({ plugins: [tests({ root: "." })], components 
 ::
 ````
 
-`src` reads the report relative to the document, under `root`, as comark-include does; pass `read` in a browser or an edge runtime. A report can also sit in an ` ```xml ` fence inside the block. Vitest, Jest, pytest, Go, Playwright, and most CI tools write this format.
-
-The report is read with a small built-in XML parser, with no dependency: JUnit uses only elements, attributes, text, CDATA, and entities. It refuses XML that isn't well-formed and never resolves a doctype.
+`src` reads the report relative to the document, under `root`, as comark-include does; pass `read` in a browser or an edge runtime. A report can also sit in an ` ```xml ` fence inside the block. Vitest, Jest, pytest, Go, Playwright, and most CI tools write this format. The page shows the counts with no script.
 
 The plugin adds every problem to `meta.issues`, so a host can reject a document before publishing it: a missing `src`, a missing file, a path outside the root, a URL, malformed XML with its line, and a document that isn't a JUnit report. Each issue names the block and says how to fix it.
 
@@ -39,7 +37,7 @@ The plugin adds every problem to `meta.issues`, so a host can reject a document 
 
 | Renderer | Import |
 | --- | --- |
-| `@comark/html` | `comark-tests/html`: the styles are inlined once per document |
+| `@comark/html` | `comark-tests/html`: the styles are inlined |
 | `@comark/vue` | `comark-tests/vue` |
 | `@comark/react` | `comark-tests/react` |
 | `@comark/svelte` | `comark-tests/svelte` |

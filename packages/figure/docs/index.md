@@ -32,9 +32,8 @@ credits: 'After <a href="https://github.com/arve0/markdown-it-implicit-figures">
 
 - An image alone in its paragraph with a title renders as `<figure>`, with the title in `<figcaption>`.
 - The alt text still describes the image to screen readers. The caption is what everyone reads under it.
-- It works at the top of the page, in a list item, a blockquote, a definition, or a `::component`.
 - A linked image keeps its link, and the caption sits outside it.
-- No classes, no styles, and no components.
+- No classes, no styles, and no components, so it works in any renderer.
 
 ## Usage
 
@@ -100,7 +99,7 @@ The caption is plain text, as a title is.
 
 ### Inside a component
 
-When a `::component` holds nothing but the image, Comark removes the paragraph, and the image ends up as the component's only child. An inline `:component[![alt](src "Title")]` alone on its line produces the same tree, so the plugin leaves both as they are. Add another block to the component, and its image becomes a figure.
+A `::component` that holds only the image is left alone, and so is an inline `:component[![alt](src "Title")]` alone on its line. Add another block to the component, and its image becomes a figure.
 
 ### Alt text and captions
 
@@ -159,5 +158,3 @@ const document = await parseMarkdown(markdown, {
   plugins: [figure()],
 });
 ```
-
-It has no components and no styles, because a figure is native HTML. It works with `registerDefaultPlugins: false` and in streaming parses.

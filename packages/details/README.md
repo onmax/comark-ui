@@ -34,7 +34,7 @@ Anything.
 ::
 ```
 
-`::details` takes its summary from `summary` or a `#summary` slot, which Comark alone writes as a `<template>` browsers never show. `type="single"` gives an accordion's items one `name`, so opening one closes the others, and Nuxt UI's `defaultValue` opens items by position. `::collapsible` reads "Show options" and "Hide options". Icons resolve through comark-icon; pass `iconResolver` to share the page's.
+`::details` takes its summary from `summary` or a `#summary` slot. `type="single"` gives an accordion's items one `name`, so opening one closes the others, and Nuxt UI's `defaultValue` opens items by position. `::collapsible` reads "Show options" and "Hide options". Icons resolve through comark-icon; pass `iconResolver` to share the page's.
 
 The plugin adds every problem to `meta.issues`, so a host can reject a document before publishing it: a details block with no summary, content outside every accordion item, an item without a `label`, a `defaultValue` that isn't an item, and an icon it can't draw. Each issue names its block and says how to fix it.
 
@@ -42,7 +42,7 @@ The plugin adds every problem to `meta.issues`, so a host can reject a document 
 
 | Renderer | Import |
 | --- | --- |
-| `@comark/html` | `comark-details/html`: the styles are inlined once per document |
+| `@comark/html` | `comark-details/html`: the styles are inlined |
 | `@comark/vue` | `comark-details/vue` |
 | `@comark/react` | `comark-details/react` |
 | `@comark/svelte` | `comark-details/svelte` |

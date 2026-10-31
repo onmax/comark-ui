@@ -39,8 +39,8 @@ Agents write most of these documents. An agent skill teaches the syntax, and [co
 
 Each package is a parse plugin and a set of components.
 
-1. The **parse plugin** reads its blocks while Comark parses. It checks their props, does any work that needs the network or the disk, such as downloading a favicon, and writes the result onto the node.
-2. The **components** draw the node. They never parse URLs or split children, so the four renderers stay small and output the same markup.
+1. The **parse plugin** reads its blocks while Comark parses. It checks their props, does any work that needs the network or the disk, such as downloading a favicon, and reports problems.
+2. The **components** draw the result in HTML, Vue, React, or Svelte.
 3. The **script**, for blocks that have one, adds behavior in the browser: switching tabs, zooming, copying code.
 
 ## The blocks

@@ -545,11 +545,11 @@ Rendering never throws. A chart with a problem draws what it can:
 
 ### Renderers
 
-The parse plugin draws every chart, so Vega runs where you parse, on the server or at build time, and never in the browser. Each renderer only places the SVG it wrote:
+Each renderer places the SVG the parse plugin drew:
 
 | Renderer | Entry |
 | --- | --- |
-| `@comark/html` | `comark-charts/html`, which inlines the styles and the Copy button's script once per document |
+| `@comark/html` | `comark-charts/html`, which inlines the styles and the Copy button's script |
 | `@comark/vue` | `comark-charts/vue` |
 | `@comark/react` | `comark-charts/react` |
 | `@comark/svelte` | `comark-charts/svelte` |
@@ -573,7 +573,7 @@ import charts, { components } from "comark-charts/html";
 const render = createHtmlRenderer({ plugins: [charts()], components });
 ```
 
-[Flint](https://github.com/microsoft/flint-chart) and [Vega](https://vega.github.io) draw each chart while parsing, on the server or at build time, so the browser runs no chart code. The package installs both. Vue, React, and Svelte have renderers too, as [Renderers](#renderers) shows.
+The package installs [Flint](https://github.com/microsoft/flint-chart) and [Vega](https://vega.github.io). Vue, React, and Svelte have renderers too, as [Renderers](#renderers) shows.
 
 The comark-ui agent skill knows the table shape for each chart type and how to check the result. Agents install it with `vp dlx skills add onmax/comark-ui`. `vp` comes with [Vite+](https://viteplus.dev/guide/global-cli); without it, `pnpm dlx` takes the same arguments. Agents read charts without the skill: in the Markdown and in the page, each chart's data is a table.
 

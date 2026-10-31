@@ -21,7 +21,6 @@ Extra filters collapse into **+2 filters**.
 - Each [`annotation`](/annotate/components/annotation/) inside it draws one mark and its note.
 - A click anywhere on the screenshot zooms it, with its notes beside it.
 - The Copy button copies it as a PNG with its marks and notes drawn in.
-- It reads the same without a script.
 
 ## Usage
 

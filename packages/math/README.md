@@ -26,7 +26,7 @@ $$
 $$
 ```
 
-The parse plugin typesets each formula once with [Temml](https://temml.org), with links off and macro expansion capped, and stores the MathML on the node, so no renderer loads a typesetter. Prices such as `$5 and $10`, citations such as `\[1\]`, and anything in code stay text. `output: "html"` or `"htmlAndMathml"` uses KaTeX's HTML instead, which needs `katex` installed and `katex/dist/katex.css` on the page.
+The parse plugin typesets each formula with [Temml](https://temml.org) while parsing. `\href` and `\url` don't render. Prices such as `$5 and $10`, citations such as `\[1\]`, and anything in code stay text. `output: "html"` or `"htmlAndMathml"` uses KaTeX's HTML instead, which needs `katex` installed and `katex/dist/katex.css` on the page.
 
 The plugin adds every formula that doesn't typeset to `meta.issues`, with the reason, and renders its TeX in its place.
 
@@ -34,7 +34,7 @@ The plugin adds every formula that doesn't typeset to `meta.issues`, with the re
 
 | Renderer | Import |
 | --- | --- |
-| `@comark/html` | `comark-mathml/html`: the styles are inlined once per document |
+| `@comark/html` | `comark-mathml/html`: the styles are inlined |
 | `@comark/vue` | `comark-mathml/vue` |
 | `@comark/react` | `comark-mathml/react` |
 | `@comark/svelte` | `comark-mathml/svelte` |

@@ -33,7 +33,6 @@ credits: 'Runs <a href="https://github.com/tats-u/markdown-cjk-friendly">markdow
 
 - `**bold**`, `*italics*`, and `~~strikethrough~~` close right after `。` or `」`, with no space before the next word.
 - The syntax stays CommonMark's. Only the rule for where a delimiter opens and closes changes.
-- English and other text parses as before.
 - It runs [markdown-it-cjk-friendly](https://github.com/tats-u/markdown-cjk-friendly) by tats-u unchanged.
 - No components and no styles, so it works in any renderer.
 
@@ -82,9 +81,7 @@ Use `~~` to strike out a sentence that ends in punctuation.
 
 ### Why CommonMark shows the asterisks
 
-CommonMark decides whether `**` opens or closes bold by the characters around it. It lets `**` close bold only when it is right-flanking. Roughly, that means it comes after text and not before more of it, unless punctuation sits on its left and a space or punctuation on its right.
-
-`**太字。**次` breaks that. `。` is punctuation and `次` is a letter, so the closing `**` is left as text and the whole line shows its asterisks.
+CommonMark decides whether `**` opens or closes bold by the characters around it. In `**太字。**次`, `。` is punctuation and `次` is a letter, so the closing `**` is left as text and the whole line shows its asterisks.
 
 English puts a space after a full stop, so it never hits this. Chinese, Japanese, and Korean put no space after `。`, `、`, `」`, or `.`. With the plugin, a delimiter next to a character from those scripts may open or close as if a space were there:
 
@@ -140,5 +137,3 @@ const document = await parseMarkdown(markdown, {
   plugins: [cjk()],
 });
 ```
-
-It has no components and no styles, because it only changes where `*`, `_`, and `~~` start and end. It works with `registerDefaultPlugins: false` and in streaming parses.

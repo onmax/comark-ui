@@ -63,5 +63,3 @@ export default defineDoctorConfig({ extends: ["auto"], extensions: [comark()] })
 | `comark/dead-url` | `COMARK0013` | An external URL that answers 404 or 410, or whose host is gone, with `--check-urls` |
 
 Each comark-ui package adds one rule per kind of problem its plugin reports, named in `meta.issueRules`, with a code in its own hundred. [Doctor](https://comark-ui.onmax.me/doctor/) has a page for every rule.
-
-Comark gives parsed nodes no positions, so block components take their line from the parser's tokens and everything else is found by searching the source.

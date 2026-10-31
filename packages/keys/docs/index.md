@@ -31,7 +31,6 @@ Deploy with ++ctrl+alt+"🍕"++ on Fridays only.
 
 - Each key renders as a `<kbd>`, and the whole shortcut sits in a `.ckb` span.
 - Keys get their usual names, so `ctrl` reads Ctrl and `pg-dn` reads Page Down.
-- Names and aliases come from pymdownx.keys.
 - A quoted key shows any text.
 - One unknown name leaves the shortcut as text, so a typo never renders as a key.
 - No styles and no components.
@@ -96,7 +95,7 @@ Then `++hyper+k++` renders Hyper and K, and `++ctrl+k++` renders Control and K.
 
 ### What stays text
 
-As in pymdownx.keys, one unknown name leaves the whole shortcut as text, so `++ctrl+nope++` shows as written. Quote the key to show it anyway.
+One unknown name leaves the whole shortcut as text, so `++ctrl+nope++` shows as written. Quote the key to show it anyway.
 
 Text also stays text when:
 
@@ -136,7 +135,7 @@ The plugin reads `++` before emphasis, so `**++esc++**` is a bold key. comark-cr
 
 ### Attributes
 
-Attributes after a shortcut, `++esc++{.danger}`, go on its `.ckb` span. A class there replaces `ckb` instead of joining it, because Comark assigns the attributes over the span's own.
+Attributes after a shortcut, `++esc++{.danger}`, go on its `.ckb` span. A class there replaces `ckb` instead of joining it.
 
 ## API
 
@@ -179,5 +178,3 @@ const document = await parseMarkdown(markdown, {
   plugins: [keys()],
 });
 ```
-
-It has no components, because keys render as native `<kbd>`. It works with `registerDefaultPlugins: false` and in streaming parses: a shortcut stays text until its closing `++` arrives.

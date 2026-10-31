@@ -47,7 +47,7 @@ Put exactly two [`screenshot`](/annotate/components/screenshot/) blocks inside, 
 ```
 
 > [!NOTE]
-> Set the same `viewport` on both screenshots. The plugin checks that they match, since screenshots of different sizes can't be compared.
+> Set the same `viewport` on both screenshots. The plugin checks that they match. Screenshots of different sizes can't be compared.
 
 ### Title
 

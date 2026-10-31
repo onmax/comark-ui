@@ -1,4 +1,4 @@
-Hosts save answers and votes by the block's id. Without `#id`, the id is a hash of the prompt and options, so fixing a typo in either loses every reader's answer. Name the block once and keep the name.
+Hosts save answers and votes by the block's id. Without `#id`, the id comes from the prompt and options, so fixing a typo in either loses every reader's answer. Name the block once and keep the name.
 
 ::incorrect
 ```md

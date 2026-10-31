@@ -26,15 +26,15 @@ Built with :icon{name="logos:vue" label="Vue"}.
 
 `name` is `set:name`, from any set on [icones.js.org](https://icones.js.org), or an image URL. Nuxt UI's `i-lucide-apple` works too. Without a `label` the icon is decoration and screen readers skip it.
 
-With no options, icons come from the Iconify API, fetched once per process. To build offline, install the sets you use and pass them: `icon({ collections: { lucide }, fetch: false })`, with `import { icons as lucide } from "@iconify-json/lucide"`. A set can also be SVG markup by name, for icons of your own. `fetch` takes the URL of an Iconify API of your own, too.
+With no options, icons come from the Iconify API. To build offline, install the sets you use and pass them: `icon({ collections: { lucide }, fetch: false })`, with `import { icons as lucide } from "@iconify-json/lucide"`. A set can also be SVG markup by name, for icons of your own. `fetch` takes the URL of an Iconify API of your own, too.
 
-The plugin adds every problem to `meta.issues` and leaves the icon out: an icon without a `name`, a name that isn't `set:name` or a URL, a set or icon Iconify doesn't have, and a request that failed. Each issue names the icon and says how to fix it.
+The plugin adds every problem to `meta.issues` and leaves the icon out.
 
 ## Renderers
 
 | Renderer | Import |
 | --- | --- |
-| `@comark/html` | `comark-icon/html`: the styles are inlined once per document |
+| `@comark/html` | `comark-icon/html`: the styles are inlined |
 | `@comark/vue` | `comark-icon/vue` |
 | `@comark/react` | `comark-icon/react` |
 | `@comark/svelte` | `comark-icon/svelte` |

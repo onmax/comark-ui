@@ -47,11 +47,11 @@ A `.md`, `.mdc`, or `.markdown` file is pasted as Markdown, without its frontmat
 | Option | |
 | --- | --- |
 | `root` | The folder includes can't leave. Default `"."`, the working directory. |
-| `base` | The document's folder relative to `root`, since Comark doesn't tell plugins where a document lives. Default `""`. |
+| `base` | The document's folder relative to `root`. Default `""`. |
 | `read(path)` | Reads a file by its POSIX path relative to `root` and returns its text, or `undefined` when it doesn't exist. It may be async. The default reads from disk, so pass your own in a browser or an edge runtime. |
 | `depth` | How many levels of includes may nest. Default 8. |
 
-Paths are normalized as strings, so `../` can't leave `root` in any runtime, and `read` only ever gets paths under it. The default reader also resolves symlinks and refuses a file whose real path is outside the real `root`. A custom `read` gets no such check: if its files can hold symlinks, it has to refuse the ones that lead out.
+`../` can't leave `root` in any runtime, and `read` only gets paths under it. The default reader also refuses a symlink that leads out of `root`. A custom `read` has to refuse those itself.
 
 `meta.includes` lists every file the document included or tried to include, so a watcher can rebuild when one changes or appears.
 
@@ -64,13 +64,9 @@ include "./duck-log.md": file not found. It resolved to "guide/duck-log.md" unde
 include "./pizzas.md": guide/pizzas.md includes itself (guide/pizzas.md -> guide/merged-prs.md -> guide/pizzas.md). Remove one of the includes.
 ```
 
-It reports a missing `src`, an argument it doesn't know, a missing file, a path that leaves the root, a URL, a cycle, nesting past `depth`, a `lines` range that is malformed or runs past the end, a missing or unclosed `region`, `lines` with `region`, a reader that throws, and an include that isn't alone on its line or is written `::include`. A partial that leaves a `::block` open is closed at the end of its paste and reported. Rendering never throws.
+Every kind of problem has a rule in [Doctor](https://comark-ui.onmax.me/doctor/). A partial that leaves a `::block` open is closed at the end of its paste and reported.
 
-## Why a text splice
-
-The plugin pastes the files into the Markdown before Comark tokenizes it, so the document parses once: heading ids stay unique across partials, and every other plugin runs once over the whole thing. Comark closes open blocks before plugins run, which is why an include is `:include` on a line of its own: a bare `::include` line would take in the rest of the document.
-
-Streaming parses aren't supported: each chunk would read the files again and paste them into a partial document.
+Use `:include`, with one colon: a `::include` line would take in the rest of the document. Streaming parses aren't supported.
 
 ## On GitHub and npm
 

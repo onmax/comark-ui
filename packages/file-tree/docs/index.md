@@ -65,7 +65,7 @@ packages/
 - You write the tree in a fenced block, so names stay as they are: `__init__.py` isn't bold, and `[slug].vue` isn't a span.
 - Paste what `tree` prints, in Unicode or ASCII, and it reads the same as indented paths.
 - Mark entries added, removed, or changed, and add a note to any line.
-- Folders are open `<details>`, so a reader folds the ones they don't need with no script.
+- Folders are open `<details>`, so a reader folds the ones they don't need.
 - With [comark-icon](/icon/), each file gets the icon of its type, the way VS Code shows it.
 
 ## Usage
@@ -184,10 +184,6 @@ src/
 
 ## Examples
 
-### Why a fenced block
-
-Starlight writes its file tree as a Markdown list, but in Comark a list mangles names. `__init__.py` turns bold, `[id].vue` becomes a span, and a `- #notes.md` line opens a slot that swallows every entry after it. Inside a fence, every character stays.
-
 ### Icons of your own
 
 Use the `icons` option to map a file name, an extension, or `name/` for a folder to any icon comark-icon resolves, on top of the built-in ones. `folder` and `file` set the fallbacks:
@@ -280,7 +276,7 @@ The plugin adds every problem to `meta.issues`, as [Validation](/guide/validatio
 - An empty fence, or a block with nothing in it.
 - A prop, which the block doesn't read.
 
-Each issue names its block and says how to fix it. Each one has its own rule in [Doctor](/doctor/).
+Each one has its own rule in [Doctor](/doctor/).
 
 ### Package
 
@@ -339,4 +335,4 @@ Set these on `.cft`:
 
 ### Important rules
 
-The rules sit in a `comark` CSS layer, so any plain rule of your own wins, except the spacing that draws the tree. The margins, padding, and bullets of its lists, `details`, and `summary` are `!important`. A page's own list styles are almost always unlayered, and would push entries off their guide lines. Override those with `!important` too.
+The rules sit in a `comark` CSS layer, so any plain rule of your own wins, except the spacing that draws the tree. The margins, padding, and bullets of its lists, `details`, and `summary` are `!important`. Override those with `!important` too.

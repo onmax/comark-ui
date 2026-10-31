@@ -40,13 +40,13 @@ const render = createHtmlRenderer({ plugins: [embed()], components });
 
 Any other `https://` link renders as a card with its `title` and host. Cards don't fetch the page's title yet, so give each one a `title`.
 
-The plugin adds every problem to `meta.issues`, so a host can reject a document before publishing it: a missing `url`, one that isn't `https://` (it renders nothing), a provider's link with no ID it can read (it renders as a card), a card without a `title`, a bad `start`, and content inside the block. Each issue names its block and says how to fix it.
+The plugin adds every problem to `meta.issues`, so a host can reject a document before publishing it. A `url` that isn't `https://` renders nothing.
 
 ## Renderers
 
 | Renderer | Import |
 | --- | --- |
-| `@comark/html` | `comark-embed/html`: the styles are inlined once per document |
+| `@comark/html` | `comark-embed/html`: the styles are inlined |
 | `@comark/vue` | `comark-embed/vue` |
 | `@comark/react` | `comark-embed/react` |
 | `@comark/svelte` | `comark-embed/svelte` |

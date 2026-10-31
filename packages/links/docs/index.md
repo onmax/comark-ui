@@ -32,7 +32,7 @@ Read [the incident report](https://example.com/incidents/42){target="_blank"} be
 ## Features
 
 - `anchors()` puts a `#` after each h2, h3, and h4 that links to the heading itself, so readers can share a section.
-- `external()` writes `target` and `rel` on links to other sites while parsing, so they reach any renderer.
+- `external()` writes `target` and `rel` on links to other sites, in any renderer.
 - Nothing opens in a new tab unless you ask.
 - A link that opens a new tab ends with ↗ and "(opens in a new tab)" for screen readers, so nobody is surprised by a new tab.
 - Without it, Comark gives headings ids but draws no link to them, and changes a link's target only when you write `{target="_blank"}` on it.
@@ -160,7 +160,7 @@ external({ target: "_blank", test: (href) => /^https?:/.test(href) && !href.star
 
 ### Open new tabs only where readers lose work
 
-Leave `target` off unless you have a reason. A reader who wants a new tab can open one, and one who doesn't can't stop a link from opening it. rehype-external-links stopped adding `target="_blank"` by default in its version 2 for this reason.
+Leave `target` off unless you have a reason. A reader who wants a new tab can open one, and one who doesn't can't stop a link from opening it.
 
 Some pages have a reason, such as a form the reader would lose by leaving, or a playground with unsaved work. Open external links in a new tab there, and list your own hosts so links to the rest of your site stay in the tab:
 
@@ -172,7 +172,7 @@ external({ target: "_blank", hosts: ["example.com", "docs.example.com"] });
 
 A heading's link sits beside the heading, not inside it, so screen readers don't read "#" as part of the heading's name. The `#` is hidden from them, and the link reads as `Section titled "Setup"`.
 
-A link that opens a new tab says so before the reader follows it, as WCAG's [technique G201](https://www.w3.org/WAI/WCAG22/Techniques/general/G201) asks. Screen readers read "(opens in a new tab)" after the link's text, and skip the ↗. The HTML renderer writes the arrow's `aria-hidden="true"` in full, since Comark would write a bare `aria-hidden`, which screen readers ignore.
+A link that opens a new tab says so before the reader follows it, as WCAG's [technique G201](https://www.w3.org/WAI/WCAG22/Techniques/general/G201) asks. Screen readers read "(opens in a new tab)" after the link's text, and skip the ↗.
 
 ### Keyboard interactions
 
@@ -227,8 +227,6 @@ const render = createHtmlRenderer({
 ```
 
 Each plugin works alone, in any order. The package has no default export, so import the plugins by name.
-
-`external()` does all its work while parsing, so its `target` and `rel` reach any renderer. The components draw the heading links, and add the styles once per document.
 
 For Vue, React, or Svelte, import from `comark-links/vue`, `comark-links/react`, or `comark-links/svelte`; the components add the styles when they mount. Import `comark-links/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
 

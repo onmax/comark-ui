@@ -22,7 +22,7 @@ Open [comark-ui.onmax.me/qr](https://comark-ui.onmax.me/qr/), or scan it on your
 ## Features
 
 - A reviewer scans the code to open a preview link on their phone.
-- The code is an inline SVG with one path, drawn while parsing, with no script and no image to fetch.
+- The code is an inline SVG, so it needs no script and no image to fetch.
 - It's dark on white in both color schemes, so a phone's camera reads it off any page, and it prints.
 - `:qr` is inline, so it sits in a sentence, a table cell, or a list item.
 - Screen readers hear "QR code: " and its value.
@@ -66,7 +66,7 @@ Codes are 8rem wide by default. Set `--cqr-size` on `.cqr` or any element above 
 
 ### Border
 
-The code has no border, since its white tile and quiet zone already set it apart, and on a white page it needs nothing. To outline it, give the `svg` a border:
+The code has no border. To outline it, give the `svg` a border:
 
 ```css
 .cqr svg {
@@ -88,7 +88,7 @@ The plugin takes no options. `qr: false` in `comarkUi()` turns it off.
 
 ### Encoding
 
-The parse plugin encodes the code with [uqr](https://github.com/unjs/uqr), Anthony Fu's zero-dependency ES module of 27 kB (8 kB gzipped) from his [QR Toolkit](https://qrcode.antfu.me). It uses the toolkit's defaults: error correction level M and a quiet zone of two modules. It writes the modules as an SVG path, so no renderer encodes anything.
+Codes use error correction level M and a quiet zone of two modules.
 
 ### Issues
 
@@ -122,7 +122,7 @@ For Vue, React, or Svelte, import from `comark-qr/vue`, `comark-qr/react`, or `c
 
 ## Theme
 
-The code sits on a white tile with no border. The modules are always black on white, in both color schemes, since phones read dark modules on a light ground best. The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
+The code sits on a white tile with no border. The modules are always black on white, in both color schemes,. The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
 
 ### Shared tokens
 

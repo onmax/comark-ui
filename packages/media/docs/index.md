@@ -31,7 +31,6 @@ The alert sound the reviewer asked for:
 
 - An image that points at a video or audio file plays where it sits, labeled by its alt text.
 - A GitHub attachment link alone in its paragraph plays too.
-- The syntax isn't new: GitLab plays an image that points at a video, and GitHub plays an uploaded video's link.
 - Only the first frame and the length load until the reader presses play.
 - The controls match the page. The browser's own show until the script runs, and when the file can't play.
 - One player with sound plays at a time. Starting one pauses the others, while a muted one plays on.
@@ -117,7 +116,7 @@ Give a video its `width` and `height` in pixels so the page keeps its room befor
 ![Signing in with a passkey](./login.mp4){width=1280 height=720}
 ```
 
-`media({ size: true })` also reads remote videos' dimensions from their first bytes while parsing. Enable it only for trusted documents: requests follow redirects and can reach private networks. Local files are not read, and default measurement reads only data URIs. Without a size, a video takes a 16:9 box until its own size is known. Pass `media({ size: false })` to disable measurement.
+`media({ size: true })` also reads remote videos' dimensions from their first bytes while parsing. Enable it only for trusted documents: requests follow redirects and can reach private networks. Without a size, a video takes a 16:9 box until its own size is known. Pass `media({ size: false })` to disable measurement.
 
 ### The browser's controls
 
@@ -129,7 +128,7 @@ media({ controls: "native" });
 
 ### Plugin order
 
-The plugin works on Markdown's tokens, before any plugin turns them into a tree, so its place in `plugins` doesn't matter. [comark-zoom](/zoom/) never sees a video as an image to zoom, and [comark-chips](/chips/) never turns a GitHub attachment link into a chip.
+Its place in `plugins` doesn't matter. [comark-zoom](/zoom/) never sees a video as an image to zoom, and [comark-chips](/chips/) never turns a GitHub attachment link into a chip.
 
 ### Private attachments
 
@@ -193,7 +192,7 @@ The plugin adds these problems to `meta.issues`, as [Validation](/guide/validati
 - A `width` or `height` without the other, or one that isn't a whole number of pixels.
 - A prop it doesn't know.
 
-Each issue names the file and says how to fix it, and each has its own rule in [Doctor](/doctor/):
+Each has its own rule in [Doctor](/doctor/):
 
 ```txt
 `![](demo.mp4)` has no label. Describe the video in the brackets, like `![Signing in with a passkey](demo.mp4)`.
@@ -217,7 +216,7 @@ import media, { components } from "comark-media/html";
 const render = createHtmlRenderer({ plugins: [media()], components });
 ```
 
-The renderer inlines the styles once per document, and the players' script once per document with a player. For Vue, React, or Svelte, import from `comark-media/vue`, `comark-media/react`, or `comark-media/svelte`. The components add the styles and start the players when they mount. Import `comark-media/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-media/vue`, `comark-media/react`, or `comark-media/svelte`. The components add the styles and start the players when they mount. Import `comark-media/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
 
 ## Theme
 

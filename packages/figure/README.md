@@ -33,7 +33,7 @@ const document = await parseMarkdown(markdown, {
 
 The caption comes from the title only, so the alt text stays on the image for screen readers. The image keeps its other attributes and loses its `title`. An image inside a sentence, or with no title, stays as it was. A linked image counts, and the link stays around the image.
 
-Images in list items, blockquotes, and definitions become figures too. When a `::component` holds nothing but the image, Comark's tree can't be told apart from an inline component's, so that image is left alone.
+Images in list items, blockquotes, and definitions become figures too. A `::component` that holds only the image is left alone.
 
 With [comark-zoom](https://comark-ui.onmax.me/zoom/), the image inside a figure still zooms, in either plugin order.
 

@@ -57,6 +57,4 @@ The plugin adds every problem to `meta.issues`, so a host can reject a document 
 
 The page holds a `figure.cch` with the title, the SVG, and the table folded into **Data**. Text, axes, and grid follow Nuxt UI's or shadcn/ui's variables and the shared `--comark-*` tokens, so charts switch with the page's dark mode. Series take `--comark-chart-1` to `-6`, then Nuxt UI's `--ui-chart-1` to `-6`, then shadcn/ui's `--chart-1` to `-6`. The rules sit in a `comark` CSS layer, so any plain rule of your own wins; see the charts' [Theming page](https://comark-ui.onmax.me/charts/#theme).
 
-Only `@comark/html` has a renderer: Vega draws on the server, and a framework component would ship it to the browser.
-
 The comark-ui agent skill covers charts; install it with `vp dlx skills add onmax/comark-ui`, or bundle it in your own app from `comark-ui/skills/comark-ui/`. `vp` comes with [Vite+](https://viteplus.dev/guide/global-cli); without it, `pnpm dlx` takes the same arguments.

@@ -32,14 +32,14 @@ const render = createHtmlRenderer({ plugins: [badge()], components });
 
 | Renderer | Import |
 | --- | --- |
-| `@comark/html` | `comark-badge/html`: the styles are inlined once per document |
+| `@comark/html` | `comark-badge/html`: the styles are inlined |
 | `@comark/vue` | `comark-badge/vue` |
 | `@comark/react` | `comark-badge/react` |
 | `@comark/svelte` | `comark-badge/svelte` |
 
 Each entry exports the parse plugin as `default` and the renderer's `components`. The Vue, React, and Svelte components add the styles when they mount; import `comark-badge/style.css` with your styles so a server-rendered page doesn't shift.
 
-Each color reads Nuxt UI's variable, such as `--ui-primary`, when the page has it, so badges match a Nuxt UI app; otherwise primary follows shadcn/ui's `--primary`, or the text color, and error `--destructive`. Complete CSS colors and legacy bare HSL shadcn/ui tokens are supported. Set `--cb-*` to change a color and the shared `--comark-*` tokens to theme every plugin at once; the rules sit in a `comark` CSS layer, so any plain rule of your own wins.
+Each color reads Nuxt UI's variable, such as `--ui-primary`, when the page has it, so badges match a Nuxt UI app. Otherwise primary follows shadcn/ui's `--primary`, or the text color, and error follows `--destructive`. Set `--cb-*` to change a color and the shared `--comark-*` tokens to theme every plugin at once. Any plain rule of your own wins.
 
 ## SVG badges and builder
 

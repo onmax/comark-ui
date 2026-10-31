@@ -28,7 +28,7 @@ Pigeons find home by the sun and by the earth's magnetic field :cite[1], and som
 - `:cite[1]` cites a source by its number, and `:cite[1,3]` cites several.
 - Each citation links to its source. Resting the pointer on it, or focusing it, shows a card with the source's title, its site, and the site's icon.
 - Each source links back to every place it's cited.
-- A citation of a source the list doesn't have is an issue, not a dead link. That matters when an agent writes the document and the numbers drift.
+- A citation of a source the list doesn't have is an issue, not a dead link.
 - The citations are plain `sup` links, so they work in any renderer.
 
 ## Usage
@@ -134,8 +134,6 @@ const render = createHtmlRenderer({ plugins: [sources()], components });
 ```
 
 For Vue, React, or Svelte, import from `comark-sources/vue`, `comark-sources/react`, or `comark-sources/svelte`. The components add the styles and start the card when they mount. Import `comark-sources/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
-
-The citations are plain `sup` links, so they work in any renderer. The component draws the list and carries the styles and the card's script for both. The HTML renderer inlines them once per document.
 
 ## Theme
 

@@ -34,7 +34,7 @@ The plugin adds every problem to `meta.issues`: no cast, a missing or unreadable
 
 | Renderer | Import |
 | --- | --- |
-| `@comark/html` | `comark-cast/html`: the styles are inlined once per document |
+| `@comark/html` | `comark-cast/html`: the styles are inlined |
 | `@comark/vue` | `comark-cast/vue` |
 | `@comark/react` | `comark-cast/react` |
 | `@comark/svelte` | `comark-cast/svelte` |

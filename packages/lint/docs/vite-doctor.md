@@ -70,9 +70,9 @@ export default defineDoctorConfig({
 });
 ```
 
-### Files and the cache
+### Links and the network
 
-Links resolve from the project root. Files are read through Vite Doctor's read-only `ctx.fs`, so its cache knows which files a result depends on. `comark/dead-url` is marked `env-dependent`, since its result depends on the network. The URL cache is still written to `node_modules/.cache/comark-linter/` with node:fs, because `ctx.fs` can't write.
+Links resolve from the project root. `comark/dead-url` is marked `env-dependent`, since its result depends on the network.
 
 ## API
 
@@ -93,4 +93,4 @@ Each rule reports with its own code, and the code links to the rule's page in [D
 
 Of the core rules, frontmatter Comark can't read and unsafe URLs are errors. A few package rules are errors too, such as an unsafe card link, a path outside the project root, and a quiz question with no correct option. The rest are warnings. Each rule's page shows its severity, and [Doctor's overview](/doctor/#rules) lists every code.
 
-The extension creates [nostics](https://github.com/vercel-labs/nostics) diagnostics through Vite Doctor's registry. Each one carries `why`, `fix`, its docs link, and the Markdown location in `sources`. A parsing or rule failure also keeps the original exception in `cause`. The library collects these diagnostics without logging them; Vite Doctor reports them once.
+Each diagnostic carries `why`, `fix`, its docs link, and the Markdown location in `sources`. A parsing or rule failure also keeps the original exception in `cause`.

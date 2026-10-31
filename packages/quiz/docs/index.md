@@ -58,7 +58,7 @@ Promise callbacks are microtasks. The event loop empties the microtask queue aft
 
 - A question is a task list with a reason under each option. The reader picks an option and presses Check.
 - A right answer shows its reason and the explanation. A wrong one shows why it's wrong, with Try again and Show answer.
-- The options are shuffled the same way for every reader, and each one gets a key from its text, so an answer saved today still matches after the author reorders them.
+- The options are shuffled the same way for every reader, and saved answers still match after the author reorders them.
 - Polls collect votes through a host, and recall cards blur an answer until the reader asks for it.
 - Every block is open on the page as the reader scrolls. Without the script, the options are a plain list and the answer sits in a Show answer disclosure.
 
@@ -104,7 +104,7 @@ Which callback runs first once the current script ends?
 
 #### Id
 
-Use the `#id` prop to give the block the id a host saves answers by. Without one, the id is a hash of the prompt and options, so it changes when they do, and the plugin adds an issue.
+Use the `#id` prop to give the block the id a host saves answers by. Without one, the id changes whenever the prompt or options do, and the plugin adds an issue.
 
 ```md
 ::question{#event-loop-order}
@@ -323,7 +323,7 @@ After every task, before it renders or takes the next task :cite[1].
 
 ### Order and keys
 
-A question's options are shuffled with a seed from its id and its options' text, so every reader, and the page without its script, sees one order. Writing them in another order doesn't change it. Each option's key is a hash of its text, so a saved answer still matches after the options move, and stops matching when an option's words change.
+The shuffle is stable. Every reader, and the page without its script, sees the same order, whatever order you write the options in. Reordering options keeps saved answers. Editing an option's words resets the saved answers to it.
 
 ### Hosting
 
@@ -362,7 +362,7 @@ In right-to-left text, `ArrowLeft` and `ArrowRight` swap.
 
 | Prop | Default | Description |
 | --- | --- | --- |
-| `#id` | A hash of the prompt and options | The block's id, which a host saves answers by. |
+| `#id` | Derived from the prompt and options | The block's id, which a host saves answers by. |
 | `multiple` | `true` with several right options, else `false` | Shows checkboxes, even with one right option. |
 | `number` | `true` | `number="false"` leaves the block out of the count. |
 | `shuffle` | `true` | `shuffle="false"` keeps the order you wrote. |
@@ -371,7 +371,7 @@ In right-to-left text, `ArrowLeft` and `ArrowRight` swap.
 
 | Prop | Default | Description |
 | --- | --- | --- |
-| `#id` | A hash of the prompt and options | The block's id, as for a question. |
+| `#id` | Derived from the prompt and options | The block's id, as for a question. |
 | `multiple` | `false` | Shows checkboxes, with percentages over voters. |
 | `closes` | — | An ISO date. After it, the poll shows as closed. |
 
@@ -379,7 +379,7 @@ In right-to-left text, `ArrowLeft` and `ArrowRight` swap.
 
 | Prop | Default | Description |
 | --- | --- | --- |
-| `#id` | A hash of the prompt | The block's id, as for a question. |
+| `#id` | Derived from the prompt | The block's id, as for a question. |
 | `number` | `true` | `number="false"` leaves the block out of the count. |
 
 ### Slots
@@ -496,7 +496,7 @@ import quiz, { components } from "comark-quiz/html";
 const render = createHtmlRenderer({ plugins: [quiz()], components });
 ```
 
-The renderer inlines the styles and a small script once per document. Only the HTML renderer exists: the blocks need the script to check answers, so Vue, React, and Svelte versions would each carry it again. [Renderers](/guide/renderers/) covers using it with other plugins.
+Only the HTML renderer exists. [Renderers](/guide/renderers/) covers using it with other plugins.
 
 ## Theme
 

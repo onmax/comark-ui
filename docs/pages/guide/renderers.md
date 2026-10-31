@@ -60,9 +60,9 @@ Every plugin is on but `include`, which reads from disk, and cast, table, and te
 
 Each entry exports the parse plugin as `default` and the renderer's `components`. [github](/github/) and [links](/links/) export their plugins by name instead, since each has several.
 
-Annotate renders only to HTML. A screenshot's notes are Markdown, and a Vue, React, or Svelte version would each have to copy the whole figure. Annotate also draws the marks on a chart, so those marks show only in `@comark/html`. The other renderers draw the chart without them. [diff](/diff/) and [quiz](/quiz/) render only to HTML too.
+Annotate renders only to HTML. It also draws the marks on a chart, so those marks show only in `@comark/html`. The other renderers draw the chart without them. [diff](/diff/) and [quiz](/quiz/) render only to HTML too.
 
-[cjk](/cjk/), [critic](/critic/), [deflist](/deflist/), [figure](/figure/), [footnotes](/footnotes/), [keys](/keys/), [reading-time](/reading-time/), and [xref](/xref/) have no components: they turn their syntax into plain HTML elements, or write to the document's meta, so they work with any renderer. [include](/include/) has none either, because what it pastes renders like the rest of the page. [chat](/chat/) renders AI SDK messages with `@comark/vue`, `@comark/react`, or `@comark/svelte` rather than plugging into them. [lint](/lint/) checks documents and doesn't render them.
+[cjk](/cjk/), [critic](/critic/), [deflist](/deflist/), [figure](/figure/), [footnotes](/footnotes/), [keys](/keys/), [reading-time](/reading-time/), and [xref](/xref/) have no components: they turn their syntax into plain HTML elements, or write to the document's meta, so they work with any renderer. [include](/include/) has none either. [chat](/chat/) renders AI SDK messages with `@comark/vue`, `@comark/react`, or `@comark/svelte` rather than plugging into them. [lint](/lint/) checks documents and doesn't render them.
 
 ## Several plugins
 
@@ -89,7 +89,7 @@ const render = createHtmlRenderer({
 });
 ```
 
-Put `include` first, because it pastes files into the Markdown before the others read it. `callouts()` is named `alert`, so it takes the place of Comark's built-in alert plugin wherever you list it.
+Put `include` first, because it pastes files into the Markdown before the others read it. `callouts()` replaces Comark's built-in alert plugin.
 
 Annotate brings zoom and carousel with it, so screenshots and comparisons zoom without `zoom()`. Add `zoom()` when content images and `::zoom` blocks should zoom too.
 
@@ -97,7 +97,7 @@ Annotate brings zoom and carousel with it, so screenshots and comparisons zoom w
 
 Nothing needs a script to read. Zoom, carousel, tabs, code, annotate, and Mermaid add behavior on top: zooming, arrows and keys, switching tabs, copying and wrapping code, hover and copy, and copying a diagram as an image or its source. Callouts and embeds need only styles.
 
-The HTML renderers inline each plugin's styles, and its script if it has one, once per document.
+The HTML renderers inline each plugin's styles and script in the page.
 
 The [text styles](/guide/typeset/) are the exception in every renderer: Vue, React, and Svelte render them with the document too, since they're scoped to the element the document renders into.
 

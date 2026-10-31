@@ -44,7 +44,7 @@ The plugin adds every problem to `meta.issues`, so a host can reject a document 
 
 | Renderer | Import |
 | --- | --- |
-| `@comark/html` | `comark-cards/html`: the styles are inlined once per document |
+| `@comark/html` | `comark-cards/html`: the styles are inlined |
 | `@comark/vue` | `comark-cards/vue` |
 | `@comark/react` | `comark-cards/react` |
 | `@comark/svelte` | `comark-cards/svelte` |
