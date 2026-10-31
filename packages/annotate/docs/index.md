@@ -290,6 +290,7 @@ Annotate reads these [shared tokens](/guide/theming/):
 | `--comark-accent` | The hovered Copy button |
 | `--comark-ring` | Focus rings |
 | `--comark-radius` | Corners of screenshots and notes |
+| `--comark-shadow` | The slider's handle and grip |
 | `--comark-font` | Stamp numbers, the status after a copy |
 
 ### Variables
@@ -301,7 +302,7 @@ Set them on `.ca`, the root of every block:
 | `--ca-color` | `var(--ca-violet)` | Marks, arrows, and notes without a `color` |
 | `--ca-solid` | `var(--ca-violet-solid)` | Their stamps, and their strokes in dark mode |
 | `--ca-ink` | `var(--ca-violet-ink)` | The number on their stamps |
-| `--ca-red` to `--ca-gray` | `#ee3533`, `#f5a524`, `#259f56`, `#0581e6`, `#8b5cf6`, `#71717a`, lighter in dark mode | Marks, arrows, and notes in red, amber, green, blue, violet, and gray |
+| `--ca-red` to `--ca-gray` | `--comark-danger`, `#f5a524`, `--comark-success`, `#0581e6`, `#8b5cf6`, `#71717a`; the literals lighter in dark mode | Marks, arrows, and notes in red, amber, green, blue, violet, and gray |
 | `--ca-red-solid` to `--ca-gray-solid` | `#d01d21`, `#f59e0b`, `#037e3f`, `#0267c7`, `#7c3aed`, `#52525b` | Stamps in each named color, and its strokes in dark mode |
 | `--ca-red-ink` to `--ca-gray-ink` | `#fff`, and `#1c1917` for amber | The number on a stamp in each named color |
 | `--ca-ring` | `--comark-background` | The ring that parts a stamp from the screenshot |

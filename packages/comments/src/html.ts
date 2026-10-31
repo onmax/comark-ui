@@ -72,17 +72,9 @@ const STROKES = [
 ];
 const CARET =
   '<span class="cr-caret" aria-hidden="true"><svg viewBox="0 0 10 8"><path d="M1 7.4L5.2 1.2 9.1 7"/></svg></span>';
-// Without an image from `avatars`, an avatar is an initial on a color from the name, so nothing is downloaded.
-const COLORS = [
-  "#d97757",
-  "#2563eb",
-  "#7c3aed",
-  "#059669",
-  "#db2777",
-  "#0891b2",
-  "#ca8a04",
-  "#4f46e5",
-];
+// Without an image from `avatars`, an avatar is an initial on a tint from the name, so nothing is downloaded. The hues
+// skip blue-violet, and the styles mix each one into the page's own colors so it reads in light and dark.
+const HUES = [25, 55, 85, 145, 175, 205, 235, 345];
 
 function who(by: string, avatar?: string) {
   const name = by.replace(/^@/, "");
@@ -90,8 +82,8 @@ function who(by: string, avatar?: string) {
   if (avatar)
     return `<img class="cr-av" src="${attr(avatar)}" alt="" width="18" height="18"><b>${escapeHtml(name)}</b>`;
   const initial = [...new Intl.Segmenter().segment(name)][0]?.segment.toUpperCase() ?? "";
-  const color = COLORS[Number.parseInt(hash(name.toLowerCase()), 36) % COLORS.length];
-  return `<span class="cr-av" style="--cr-av:${color}" aria-hidden="true">${escapeHtml(initial)}</span><b>${escapeHtml(name)}</b>`;
+  const hue = HUES[Number.parseInt(hash(name.toLowerCase()), 36) % HUES.length];
+  return `<span class="cr-av" style="--cr-hue:${hue}" aria-hidden="true">${escapeHtml(initial)}</span><b>${escapeHtml(name)}</b>`;
 }
 
 // The anchor, then a word joiner so nothing breaks before the bubble, the hidden toggle, the bubble, and the card.

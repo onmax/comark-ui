@@ -301,20 +301,21 @@ Tables read these [shared tokens](/guide/theming/):
 | `--comark-accent` | A hovered copy button or menu item, the arrow while its menu is open |
 | `--comark-ring` | Focus rings |
 | `--comark-radius` | The copy buttons' and the menu's corners |
+| `--comark-shadow` | The menu |
 | `--comark-font` | The bar |
 
 The table itself takes the page's own table styles.
 
 ### Tones
 
-A toned cell is tinted with its color at 20%. Set these variables in your theme to match the rest of the page:
+A toned cell is tinted with its color at 20%. It takes the shared status tokens, so set these variables in your theme to match the rest of the page:
 
-| Variable | Default | Used for |
-| --- | --- | --- |
-| `--ui-success` | `#16a34a` | `success` |
-| `--ui-warning` | `#ca8a04` | `warning` |
-| `--ui-error` | shadcn/ui's `--destructive`, else `#dc2626` | `error` |
-| `--ui-info` | `#2563eb` | `info` |
+| Variable | Used for |
+| --- | --- |
+| `--comark-success` | `success` |
+| `--comark-warning` | `warning` |
+| `--comark-danger` | `error` |
+| `--comark-info` | `info` |
 
 ### Classes
 

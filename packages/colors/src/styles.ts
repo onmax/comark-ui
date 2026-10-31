@@ -14,7 +14,7 @@ export const css = `@layer comark{${[
   theme(".cco-palette,.cco"),
   ":where(.cco-palette){--cco-tile-width:9rem;--cco-tile-height:4rem}",
   // Ems, so the swatch follows the code's own size, and inline, so it wraps with the color it shows.
-  `.cco-swatch{display:inline-block;box-sizing:border-box;width:.8em;height:.8em;margin-inline-end:.35em;vertical-align:-.05em;border:1px solid var(--_comark-border);border-radius:.2em;${fill}}`,
+  `.cco-swatch{display:inline-block;box-sizing:border-box;width:.8em;height:.8em;margin-inline-end:.35em;vertical-align:-.05em;border:1px solid var(--_comark-border);border-radius:calc(var(--_comark-radius) - 7px);${fill}}`,
   ".cco-palette{display:grid;grid-template-columns:repeat(auto-fill,minmax(var(--cco-tile-width),1fr));gap:.75rem;margin:1.5rem 0;padding:0;list-style:none;font-family:var(--_comark-font)}",
   // A page's list item margins and paddings, almost always unlayered, would stagger the grid's rows (`li+li`) and inset
   // the tile's color, and only `!important` beats them.

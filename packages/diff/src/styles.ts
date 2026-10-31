@@ -1,15 +1,13 @@
 import { theme } from "comark-zoom/theme";
 
 export const css = `@layer comark{${[
-  theme(".cd"),
-  // Red and green lighten in dark mode, like comark-annotate's marks.
-  ":where(.cd){--cd-red:#ee3533;--cd-green:#259f56;margin:1.5rem 0}",
-  "@media (prefers-color-scheme:dark){:where(.cd){--cd-red:#fd736d;--cd-green:#59d38c}}",
+  theme(".cd", "status"),
+  ":where(.cd){--cd-red:var(--_comark-danger);--cd-green:var(--_comark-success);margin:1.5rem 0}",
   // A diff reads like a suggested change in a GitHub review, framed like shadcn/ui's Card: the file and its counts in a
   // quiet header, removed lines red, added lines green, and the words that changed within a pair of lines a shade
   // deeper. Tints are translucent and text colors are mixed with the foreground, so wherever the `--comark-*` tokens
   // turn dark, a `.dark` class included, the diff turns with them.
-  ".cd{overflow:hidden;border:1px solid var(--_comark-border);border-radius:var(--_comark-radius);background:var(--_comark-background);color:var(--_comark-foreground);box-shadow:0 1px 2px rgb(0 0 0/.05)}",
+  ".cd{overflow:hidden;border:1px solid var(--_comark-border);border-radius:var(--_comark-radius);background:var(--_comark-background);color:var(--_comark-foreground)}",
   // On a narrow page the file drops under the label and wraps, rather than lose the end of its name.
   ".cd>figcaption{display:flex;flex-wrap:wrap;gap:.125rem .5rem;align-items:flex-start;margin:0;padding:.5rem .75rem;border-bottom:1px solid var(--_comark-border);background:color-mix(in srgb,var(--_comark-accent) 50%,var(--_comark-background));font:.8125rem/1.25rem var(--_comark-font)}",
   ".cd-icon{flex:none;width:1rem;height:1rem;margin:.125rem 0;color:var(--_comark-muted);fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}",

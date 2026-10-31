@@ -9,9 +9,8 @@ import { disclosureMotion } from "../../../shared/disclosure.ts";
  */
 export const css = `@layer comark{${[
   disclosureMotion(".cht-step>details"),
-  theme(".cht"),
-  ":where(.cht){--cht-error:var(--ui-error,var(--destructive,#dc2626))}",
-  "@media (prefers-color-scheme:dark){:where(.cht){--cht-error:var(--ui-error,var(--destructive,#f87171))}}",
+  theme(".cht", "status"),
+  ":where(.cht){--cht-error:var(--_comark-danger)}",
   ".cht{display:flex;flex-direction:column;gap:.75rem;min-width:0;color:var(--_comark-foreground);font-family:var(--_comark-font)}",
   ".cht-text{min-width:0;overflow-wrap:anywhere}",
   ".cht-text>:first-child{margin-top:0}.cht-text>:last-child{margin-bottom:0}",

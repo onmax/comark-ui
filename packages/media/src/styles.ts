@@ -2,9 +2,9 @@ import { theme } from "comark-zoom/theme";
 
 // The rest of the track is the foreground, faded, since the accent barely shows on the bar.
 const track =
-  "height:.375rem;border-radius:999px;background:linear-gradient(var(--_cm-fill),var(--_cm-primary) var(--cm-at,0%),color-mix(in srgb,var(--_comark-foreground) 25%,transparent) var(--cm-at,0%))";
+  "height:.375rem;border-radius:9999px;background:linear-gradient(var(--_cm-fill),var(--_cm-primary) var(--cm-at,0%),color-mix(in srgb,var(--_comark-foreground) 25%,transparent) var(--cm-at,0%))";
 const thumb =
-  "box-sizing:border-box;width:1rem;height:1rem;border:1px solid var(--_cm-primary);border-radius:50%;background:var(--_comark-background);box-shadow:0 1px 2px rgb(0 0 0/.1)";
+  "box-sizing:border-box;width:1rem;height:1rem;border:1px solid var(--_cm-primary);border-radius:50%;background:var(--_comark-background)";
 // The volume panel opens fast and closes faster, since the reader has already moved on.
 const level =
   "opacity:1;scale:1;pointer-events:auto;transition:opacity .15s cubic-bezier(.32,.72,0,1),scale .15s cubic-bezier(.32,.72,0,1)";
@@ -16,7 +16,7 @@ const ring = "box-shadow:0 0 0 3px color-mix(in srgb,var(--_comark-ring) 50%,tra
  * host's wins.
  */
 export const css = `@layer comark{${[
-  theme(".cm"),
+  theme(".cm", "shadow"),
   ":where(.cm){--_cm-primary:var(--ui-primary,var(--primary,var(--_comark-foreground)));--_cm-on-primary:var(--primary-foreground,var(--_comark-background))}",
   ".cm{display:block;box-sizing:border-box;max-width:100%;margin:1rem 0}",
   // The accent tint shows where the video will be before its first frame loads.
@@ -41,12 +41,12 @@ export const css = `@layer comark{${[
   ".cm-bar button{display:inline-grid;place-items:center;flex:none;width:2rem;height:2rem;margin:0;padding:0;border:0;cursor:pointer;touch-action:manipulation;transition:background .15s,opacity .15s}",
   `.cm-bar button:focus-visible{outline:none;${ring}}`,
   ".cm-bar svg{width:1rem;height:1rem}",
-  ".cm-play{border-radius:999px;background:var(--_cm-primary);color:var(--_cm-on-primary)}",
+  ".cm-play{border-radius:9999px;background:var(--_cm-primary);color:var(--_cm-on-primary)}",
   ".cm-play:hover{opacity:.9}",
   // A triangle looks off-center when its box is centered.
   ".cm-play .cm-icon-play{translate:1px 0}",
   // Over a video, the bar floats above its bottom edge, and fades out while it plays unless the pointer is on it.
-  ".cm-video>.cm-bar{position:absolute;inset:auto .5rem .5rem;gap:.5rem;padding:.25rem .5rem .25rem .25rem;background:color-mix(in srgb,var(--_comark-background) 85%,transparent);box-shadow:0 1px 3px rgb(0 0 0/.1);backdrop-filter:blur(8px);transition:opacity .2s}",
+  ".cm-video>.cm-bar{position:absolute;inset:auto .5rem .5rem;gap:.5rem;padding:.25rem .5rem .25rem .25rem;background:color-mix(in srgb,var(--_comark-background) 85%,transparent);box-shadow:var(--_comark-shadow);backdrop-filter:blur(8px);transition:opacity .2s}",
   ".cm-video[data-playing]:not(:hover,:focus-within)>.cm-bar{opacity:0}",
   // Over a picture a filled button reads as a blot, so a video's play button is plain like the others, and every button's
   // corners follow the bar's.
@@ -62,7 +62,7 @@ export const css = `@layer comark{${[
   // width. A touch screen sets the volume with its own buttons, and an iPhone ignores the page's.
   ".cm-sound{position:relative;display:flex;flex:none}",
   // Opacity keeps the slider in both tab directions; disable pointer hits while the panel is closed.
-  ".cm-level{position:absolute;bottom:calc(100% + .5rem);left:50%;translate:-50% 0;display:flex;padding:.75rem .5rem;border:1px solid var(--_comark-border);border-radius:var(--_comark-radius);background:var(--_comark-background);box-shadow:0 4px 12px rgb(0 0 0/.12);transform-origin:bottom;opacity:0;scale:.96;pointer-events:none;transition:opacity .1s ease-in,scale .1s ease-in}",
+  ".cm-level{position:absolute;bottom:calc(100% + .5rem);left:50%;translate:-50% 0;display:flex;padding:.75rem .5rem;border:1px solid var(--_comark-border);border-radius:var(--_comark-radius);background:var(--_comark-background);box-shadow:var(--_comark-shadow);transform-origin:bottom;opacity:0;scale:.96;pointer-events:none;transition:opacity .1s ease-in,scale .1s ease-in}",
   // Covers the gap down to the button, so the pointer can cross it without closing the panel.
   '.cm-level::before{content:"";position:absolute;inset:100% 0 -.5rem}',
   `.cm-sound:is(:hover,:has(:focus-visible,:active))>.cm-level{${level}}`,

@@ -9,7 +9,7 @@ import { theme } from "comark-zoom/theme";
 export const css = `@layer comark{${[
   theme(".cn-marker,.cn-notes"),
   ":where(.cn-marker){--cn-marker:var(--primary,var(--_comark-foreground));--cn-marker-text:var(--cn-marker)}",
-  ".cn-marker{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;min-width:1.25rem;height:1.25rem;margin-inline-start:.5rem;padding:0 .3rem;border-radius:999px;background:color-mix(in srgb,var(--cn-marker) 10%,var(--_comark-background));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--cn-marker) 22%,transparent);font:600 .6875rem/1 var(--_comark-font);font-variant-numeric:tabular-nums;vertical-align:.0625rem;user-select:none;transition:background-color .15s}",
+  ".cn-marker{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;min-width:1.25rem;height:1.25rem;margin-inline-start:.5rem;padding:0 .3rem;border-radius:9999px;background:color-mix(in srgb,var(--cn-marker) 10%,var(--_comark-background));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--cn-marker) 22%,transparent);font:600 .6875rem/1 var(--_comark-font);font-variant-numeric:tabular-nums;vertical-align:.0625rem;user-select:none;transition:background-color .15s}",
   // A marker is a link, and a page's plain `a` rules would color its number like the page's links, on the marker's fill.
   ".cn-marker{color:var(--cn-marker-text)!important;text-decoration:none!important;border:0!important}",
   ".cn-marker::after{content:attr(data-note)}",

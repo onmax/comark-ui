@@ -6,7 +6,7 @@ import { theme } from "comark-zoom/theme";
  * `comark` layer, so any unlayered rule of the host's wins. The required tag takes shadcn/ui's `--destructive`.
  */
 export const css = `@layer comark{${[
-  theme(".cfl,.cfl-group"),
+  theme(".cfl,.cfl-group", "status"),
   ".cfl-group{margin:1.5rem 0}",
   ".cfl{margin:1rem 0;padding:1rem 0;border-bottom:1px solid var(--_comark-border);font-family:var(--_comark-font)}",
   ".cfl-group>.cfl{margin:0}",
@@ -15,8 +15,7 @@ export const css = `@layer comark{${[
   ".cfl-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:.25rem .75rem;font-size:.875rem;line-height:1.5rem}",
   ".cfl-name{color:var(--_comark-foreground);font-weight:600;font-size:.875rem}",
   ".cfl-type{color:var(--_comark-muted);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.8125rem}",
-  ":where(.cfl){--cfl-required:var(--destructive,#dc2626)}",
-  "@media (prefers-color-scheme:dark){:where(.cfl){--cfl-required:var(--destructive,#f87171)}}",
+  ":where(.cfl){--cfl-required:var(--_comark-danger)}",
   ".cfl-required{padding:0 .375rem;border-radius:calc(var(--_comark-radius) - 4px);background:color-mix(in srgb,var(--cfl-required) 10%,transparent);color:color-mix(in srgb,var(--cfl-required) 85%,var(--_comark-foreground));font-size:.75rem;font-weight:500;line-height:1.25rem}",
   ".cfl-default{color:var(--_comark-muted);font-size:.8125rem}",
   ".cfl-default code{font-size:inherit}",

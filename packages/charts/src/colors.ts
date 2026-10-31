@@ -10,8 +10,8 @@ export const INK = {
   grid: "#ececec",
   background: "#ffffff",
 } as const;
-// Tailwind's 500 shades read on white and on black, so the defaults work in both themes. Past the palette, Flint
-// would merge series into a gray "Others", so there are enough for any table a review holds.
+// Tailwind's 500 shades, bar a brown for the tenth, read on white and on black, so the defaults work in both themes.
+// Past the palette, Flint would merge series into a gray "Others", so there are enough for any table a review holds.
 export const SERIES = [
   "#3b82f6",
   "#f97316",
@@ -22,7 +22,7 @@ export const SERIES = [
   "#06b6d4",
   "#ec4899",
   "#84cc16",
-  "#6366f1",
+  "#a8774a",
   "#14b8a6",
   "#f59e0b",
 ] as const;

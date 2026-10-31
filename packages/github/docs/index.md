@@ -265,11 +265,11 @@ Set them on `.cgc`. Each color goes to the type's icon and title.
 
 | Variable | Default | Used for |
 | --- | --- | --- |
-| `--cgc-note` | `#2563eb`, `#60a5fa` in dark mode | `NOTE` |
-| `--cgc-tip` | `#16a34a`, `#4ade80` in dark mode | `TIP` |
+| `--cgc-note` | `--comark-info` | `NOTE` |
+| `--cgc-tip` | `--comark-success` | `TIP` |
 | `--cgc-important` | `#7c3aed`, `#a78bfa` in dark mode | `IMPORTANT` |
-| `--cgc-warning` | `#d97706`, `#fbbf24` in dark mode | `WARNING` |
-| `--cgc-caution` | shadcn/ui's `--destructive`, else `#dc2626`, `#f87171` in dark mode | `CAUTION` |
+| `--cgc-warning` | `--comark-warning` | `WARNING` |
+| `--cgc-caution` | `--comark-danger` | `CAUTION` |
 
 ### Classes and attributes
 

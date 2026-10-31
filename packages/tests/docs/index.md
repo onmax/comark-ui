@@ -224,8 +224,8 @@ Set them on `.ctr`:
 
 | Variable | Default | Used for |
 | --- | --- | --- |
-| `--ctr-pass` | `#259f56`, `#59d38c` in dark mode | The badge of passed tests |
-| `--ctr-fail` | shadcn/ui's `--destructive`, else `#ee3533`, `#fd736d` in dark mode | The badge of failed tests, and failure messages |
+| `--ctr-pass` | `--comark-success` | The badge of passed tests |
+| `--ctr-fail` | `--comark-danger` | The badge of failed tests, and failure messages |
 | `--ctr-skip` | `--comark-muted` | The badge of skipped tests |
 
 ### Classes

@@ -29,7 +29,7 @@ A block that's written wrong still renders. Its problem goes in `meta.issues` as
 
 **Themed by shadcn/ui tokens**
 
-The blocks follow [shadcn/ui](https://ui.shadcn.com)'s CSS variables, so they match a site that uses them with no setup. Elsewhere, eight `--comark-*` tokens theme every block at once. [Theming](/guide/theming/) lists them.
+The blocks follow [shadcn/ui](https://ui.shadcn.com)'s CSS variables, so they match a site that uses them with no setup. Elsewhere, the `--comark-*` tokens theme every block at once. [Theming](/guide/theming/) lists them.
 
 **Made for agents**
 

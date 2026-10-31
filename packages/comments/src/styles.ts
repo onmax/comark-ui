@@ -14,14 +14,14 @@ export const fontCss = `@font-face{font-family:comark-caveat;src:url(data:font/w
  * `--cr-comment`. The rules sit in the `comark` layer, so any unlayered rule of the host's wins.
  */
 export const css = `@layer comark{${[
-  theme(parts),
-  `:where(${parts}){--_cr-ins:var(--cr-ins,#259f56);--_cr-del:var(--cr-del,var(--destructive,#ee3533));--_cr-comment:var(--cr-comment,#f5a524);--_cr-icon:var(--cr-icon,${icon})}`,
-  `@media (prefers-color-scheme:dark){:where(${parts}){--_cr-ins:var(--cr-ins,#59d38c);--_cr-del:var(--cr-del,var(--destructive,#fd736d));--_cr-comment:var(--cr-comment,#fbbf24)}}`,
+  theme(parts, "status", "shadow"),
+  `:where(${parts}){--_cr-ins:var(--cr-ins,var(--_comark-success));--_cr-del:var(--cr-del,var(--_comark-danger));--_cr-comment:var(--cr-comment,#f5a524);--_cr-icon:var(--cr-icon,${icon})}`,
+  `@media (prefers-color-scheme:dark){:where(${parts}){--_cr-comment:var(--cr-comment,#fbbf24)}}`,
   // What a screen reader says around a change, since <del> and <ins> alone are silent in most of them.
   ".cr-sg :is(del,ins)::before,.cr-sg :is(del,ins)::after{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}",
   '.cr-sg del::before{content:" [removed: "}.cr-sg ins::before{content:" [added: "}.cr-sg :is(del,ins)::after{content:"] "}',
-  ".cr-sg,.cr-cm{border-radius:.25rem;transition:box-shadow .12s}",
-  ".cr-sg :is(del,ins){padding:.0625rem .1875rem;border-radius:.25rem;-webkit-box-decoration-break:clone;box-decoration-break:clone}",
+  ".cr-sg,.cr-cm{border-radius:calc(var(--_comark-radius) - 6px);transition:box-shadow .12s}",
+  ".cr-sg :is(del,ins){padding:.0625rem .1875rem;border-radius:calc(var(--_comark-radius) - 6px);-webkit-box-decoration-break:clone;box-decoration-break:clone}",
   ".cr-sg del{color:color-mix(in oklab,var(--_cr-del) 70%,var(--_comark-foreground));background:color-mix(in srgb,var(--_cr-del) 11%,transparent);text-decoration:line-through 1.5px color-mix(in srgb,var(--_cr-del) 75%,transparent)}",
   ".cr-sg ins{color:color-mix(in oklab,var(--_cr-ins) 60%,var(--_comark-foreground));background:color-mix(in srgb,var(--_cr-ins) 13%,transparent);text-decoration:none}",
   ".cr-sg del+ins{margin-left:.125rem}",
@@ -36,9 +36,9 @@ export const css = `@layer comark{${[
   `${pen}[data-kind="insert"] ins{transform:translateX(-50%) rotate(-2.5deg);transform-origin:center}`,
   `${pen} .cr-caret{display:inline-block;position:relative;width:0}`,
   `${pen} .cr-caret svg{position:absolute;left:-.32em;top:.18em;width:.64em;height:.5em;overflow:visible;fill:none;stroke:var(--_cr-del);stroke-width:2.25;stroke-linecap:round;stroke-linejoin:round}`,
-  ".cr-cm{color:inherit;background:color-mix(in srgb,var(--_cr-comment) 22%,transparent);border-bottom:2px solid color-mix(in srgb,var(--_cr-comment) 80%,transparent);border-radius:.125rem;padding:0 .0625rem}",
+  ".cr-cm{color:inherit;background:color-mix(in srgb,var(--_cr-comment) 22%,transparent);border-bottom:2px solid color-mix(in srgb,var(--_cr-comment) 80%,transparent);border-radius:calc(var(--_comark-radius) - 8px);padding:0 .0625rem}",
   // The bubble stays on its anchor's line: a plain inline box after a word joiner, with the icon as its background.
-  ".cr-bub{display:inline;margin-left:.25em;padding:.25em .5em .25em 1.75em;vertical-align:.1em;border:1px solid var(--_comark-border);border-radius:999px;background:var(--_comark-background) var(--_cr-icon) no-repeat .42em 50%/1em;color:var(--_comark-muted);font:600 .6875rem/1 var(--_comark-font);font-variant-numeric:tabular-nums;cursor:pointer;box-shadow:0 1px 2px rgb(0 0 0/.05);transition:color .12s,border-color .12s}",
+  ".cr-bub{display:inline;margin-left:.25em;padding:.25em .5em .25em 1.75em;vertical-align:.1em;border:1px solid var(--_comark-border);border-radius:9999px;background:var(--_comark-background) var(--_cr-icon) no-repeat .42em 50%/1em;color:var(--_comark-muted);font:600 .6875rem/1 var(--_comark-font);font-variant-numeric:tabular-nums;cursor:pointer;transition:color .12s,border-color .12s}",
   ".cr-bub:empty{padding-right:.3em}",
   ".cr-tg{position:absolute;width:1px;height:1px;margin:0;opacity:0;pointer-events:none}",
   ".cr-tg:focus-visible+.cr-bub{outline:2px solid var(--_comark-ring);outline-offset:2px}",
@@ -47,7 +47,7 @@ export const css = `@layer comark{${[
   ".cr-card{display:none;box-sizing:border-box;padding:.5rem .75rem;border:1px solid var(--_comark-border);border-radius:var(--_comark-radius);background:var(--_comark-background);color:var(--_comark-foreground);font:400 .8125rem/1.5 var(--_comark-font);text-align:left;text-indent:0;white-space:normal;transition:border-color .12s,box-shadow .12s}",
   ".cr-entry{display:block}.cr-entry+.cr-entry{margin-top:.5rem;padding-top:.5rem;border-top:1px solid var(--_comark-border)}",
   ".cr-entry b{margin-right:.375rem;font-weight:600}",
-  ".cr-av{display:inline-grid;place-items:center;width:1.125rem;height:1.125rem;margin-right:.375rem;border-radius:999px;background:var(--cr-av);color:#fff;font:600 .5625rem/1 var(--_comark-font);vertical-align:calc(.722cap - .5625rem)}",
+  ".cr-av{display:inline-grid;place-items:center;width:1.125rem;height:1.125rem;margin-right:.375rem;border-radius:9999px;background:color-mix(in oklab,oklch(.7 .12 var(--cr-hue)) 30%,var(--_comark-background));color:color-mix(in oklab,oklch(.55 .14 var(--cr-hue)) 60%,var(--_comark-foreground));font:600 .5625rem/1 var(--_comark-font);vertical-align:calc(.722cap - .5625rem)}",
   // Centered on the name's capitals: the card's text is 1.444 times the avatar's, so its cap height is .722cap here.
   // A ring keeps a white logo or a transparent photo apart from the card.
   "img.cr-av{display:inline-block;background:#fff;object-fit:cover;outline:1px solid color-mix(in srgb,var(--_comark-foreground) 12%,transparent);outline-offset:-1px}",
@@ -56,6 +56,6 @@ export const css = `@layer comark{${[
   // Wide: every block leaves a margin, and each card floats into it from its anchor's line. Crowded cards stack down.
   // The margin is !important so a page's own paragraph margins, which beat the layer, can't close it.
   ".cr{container:cr/inline-size;display:flow-root}",
-  "@container cr (min-width:50rem){.cr>*{margin-right:19.5rem!important}.cr-card,.cr-tg:checked+.cr-bub+.cr-card{display:block;position:relative;float:right;clear:right;width:17.5rem;margin:0 -19.5rem .5rem 0}.cr-tg:checked+.cr-bub+.cr-card,.cr-bub:hover+.cr-card,.cr-card:hover{border-color:var(--_comark-ring);box-shadow:0 4px 16px rgb(0 0 0/.08)}}",
+  "@container cr (min-width:50rem){.cr>*{margin-right:19.5rem!important}.cr-card,.cr-tg:checked+.cr-bub+.cr-card{display:block;position:relative;float:right;clear:right;width:17.5rem;margin:0 -19.5rem .5rem 0}.cr-tg:checked+.cr-bub+.cr-card,.cr-bub:hover+.cr-card,.cr-card:hover{border-color:var(--_comark-ring);box-shadow:var(--_comark-shadow)}}",
   "@media print{.cr>*{margin-right:12.5rem!important}.cr-card{display:block!important;float:right!important;clear:right;width:11.5rem!important;margin:0 -12.5rem .375rem 0!important;font-size:.6875rem;box-shadow:none!important}.cr-bub{display:none}}",
 ].join("")}}`;

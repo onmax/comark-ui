@@ -12,7 +12,7 @@ const swap = (hex: string, color: string, props = ["fill", "stroke"]) =>
  */
 export const css = `@layer comark{${[
   disclosureMotion(".cch-data"),
-  theme(".cch"),
+  theme(".cch", "shadow"),
   // The Data footer runs to the card's edges, so it spans the same side padding the card has.
   ":where(.cch){--cch-padding:1.5rem}",
   // A card, as shadcn/ui frames its charts: the title on top, the chart, and the data as its footer.
@@ -31,6 +31,8 @@ export const css = `@layer comark{${[
   // A narrow column outlines a mark that draws nothing, which on a screenshot shows its area; on a chart it marks a
   // point, so it would be a broken ring under the letter, which marks the point alone.
   ".cch-marked .ca .ca-mark.ca-none{outline:none}",
+  // A chart sits on the page, not on a screenshot, so a mark without a color takes the text's, and its number the page's.
+  ".cch-marked .ca{--ca-color:var(--_comark-foreground);--ca-solid:var(--_comark-foreground);--ca-ink:var(--_comark-background)}",
   swap(INK.foreground, "var(--_comark-foreground)"),
   swap(INK.muted, "var(--_comark-muted)"),
   swap(INK.border, "var(--_comark-border)"),
@@ -53,7 +55,7 @@ export const css = `@layer comark{${[
   ".cch:is(:hover,:focus-within)>.cch-bar,.cch-bar:has([aria-expanded=true],.cch-status:not(:empty)){opacity:1}",
   "@media (hover:none){.cch-bar{opacity:1}}",
   ".cch-status:not(:empty){padding:.125rem .375rem;border-radius:calc(var(--_comark-radius) - 4px);background:var(--_comark-background);color:var(--_comark-muted)}",
-  ".cch-copy{position:relative;display:inline-flex;border:1px solid var(--_comark-border);border-radius:calc(var(--_comark-radius) - 4px);background:var(--_comark-background);box-shadow:0 1px 2px rgb(0 0 0/.05)}",
+  ".cch-copy{position:relative;display:inline-flex;border:1px solid var(--_comark-border);border-radius:calc(var(--_comark-radius) - 4px);background:var(--_comark-background)}",
   ".cch-copy>button{display:inline-grid;place-items:center;height:1.625rem;padding:0;border:0;background:none;color:var(--_comark-muted);font:inherit;cursor:pointer;transition:background-color .15s,color .15s}",
   ".cch-copy-main{width:1.75rem;border-radius:calc(var(--_comark-radius) - 5px) 0 0 calc(var(--_comark-radius) - 5px)}",
   ".cch-copy>.cch-copy-more{width:1.25rem;border-inline-start:1px solid var(--_comark-border);border-radius:0 calc(var(--_comark-radius) - 5px) calc(var(--_comark-radius) - 5px) 0}",
@@ -63,7 +65,7 @@ export const css = `@layer comark{${[
   ".cch-copy-main svg+svg,.cch-copy-main[data-state=done] svg:first-child{display:none}",
   ".cch-copy-main[data-state=done] svg+svg{display:block}",
   ".cch-copy>button:focus-visible{outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--_comark-ring) 50%,transparent)}",
-  ".cch-menu{position:absolute;top:calc(100% + .25rem);right:-1px;display:grid;min-width:15rem;padding:.25rem;border:1px solid var(--_comark-border);border-radius:var(--_comark-radius);background:var(--_comark-background);box-shadow:0 4px 16px rgb(0 0 0/.12),0 1px 3px rgb(0 0 0/.08)}",
+  ".cch-menu{position:absolute;top:calc(100% + .25rem);right:-1px;display:grid;min-width:15rem;padding:.25rem;border:1px solid var(--_comark-border);border-radius:var(--_comark-radius);background:var(--_comark-background);box-shadow:var(--_comark-shadow)}",
   ".cch-menu[hidden]{display:none}",
   ".cch-menu button{display:grid;grid-template-columns:.875rem 1fr;gap:.5rem;align-items:start;padding:.375rem .5rem;border:0;border-radius:calc(var(--_comark-radius) - 4px);background:none;color:var(--_comark-foreground);font:inherit;text-align:start;cursor:pointer}",
   ".cch-menu button:focus-visible{outline:none;background:var(--_comark-accent)}",

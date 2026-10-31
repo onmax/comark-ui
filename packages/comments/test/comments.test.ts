@@ -39,8 +39,8 @@ describe("comark-comments", () => {
       '<div class="cr">' +
         '<p>To <span class="cr-sg" data-mark="track" data-kind="replace"><del>log in</del><ins>sign in</ins></span>' +
         '&#8288;<input class="cr-tg" type="checkbox" id="cr-x-1" aria-label="1 comment on “sign in”"><label class="cr-bub" for="cr-x-1"></label>' +
-        '<span class="cr-card" role="note"><span class="cr-entry"><span class="cr-av" style="--cr-av:' +
-        html.match(/--cr-av:(#[0-9a-f]+)/)![1] +
+        '<span class="cr-card" role="note"><span class="cr-entry"><span class="cr-av" style="--cr-hue:' +
+        html.match(/--cr-hue:(\d+)/)![1] +
         '" aria-hidden="true">C</span><b>Claude</b>The button says Sign in.</span></span>, enter your email.</p>' +
         html.slice(html.indexOf("<p>The link")),
     );

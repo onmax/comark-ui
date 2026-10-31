@@ -236,6 +236,7 @@ Players read these [shared tokens](/guide/theming/):
 | `--comark-accent` | The space a video takes before its first frame loads, and hovered buttons |
 | `--comark-ring` | Focus rings |
 | `--comark-radius` | Corners |
+| `--comark-shadow` | The volume panel and the video bar |
 | `--comark-font` | The times |
 
 The play button and the played part of the seek bar use Nuxt UI's `--ui-primary`, else your `--primary`, when the page sets one. The play icon uses `--primary-foreground`.

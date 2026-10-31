@@ -6,7 +6,7 @@ import { theme } from "comark-zoom/theme";
  * so any unlayered rule of the host's wins.
  */
 export const css = `@layer comark{${[
-  theme(".ctb"),
+  theme(".ctb", "shadow"),
   ".ctb{margin:1.5rem 0}",
   ".ctb-scroll{overflow-x:auto}",
   ".ctb-scroll>table{margin:0}",
@@ -22,7 +22,7 @@ export const css = `@layer comark{${[
   ".ctb-copy-main svg+svg,.ctb-copy-main[data-state=done] svg:first-child{display:none}",
   ".ctb-copy-main[data-state=done] svg+svg{display:block}",
   // Over the table, not in the bar, so a menu never pushes the table down.
-  ".ctb-menu{position:absolute;top:calc(100% + .25rem);right:-1px;z-index:10;display:grid;min-width:15rem;padding:.25rem;border:1px solid var(--_comark-border);border-radius:var(--_comark-radius);background:var(--_comark-background);box-shadow:0 4px 16px rgb(0 0 0/.12),0 1px 3px rgb(0 0 0/.08)}",
+  ".ctb-menu{position:absolute;top:calc(100% + .25rem);right:-1px;z-index:10;display:grid;min-width:15rem;padding:.25rem;border:1px solid var(--_comark-border);border-radius:var(--_comark-radius);background:var(--_comark-background);box-shadow:var(--_comark-shadow)}",
   ".ctb-menu[hidden]{display:none}",
   ".ctb-menu button{display:grid;grid-template-columns:.875rem 1fr;gap:.5rem;align-items:start;padding:.375rem .5rem;border:0;border-radius:calc(var(--_comark-radius) - 4px);background:none;color:var(--_comark-foreground);font:inherit;text-align:start;cursor:pointer}",
   ".ctb-menu button:focus-visible{outline:none;background:var(--_comark-accent)}",
@@ -38,7 +38,7 @@ export const css = `@layer comark{${[
   "html[data-table-ready] .ctb-sort::after{content:'↕';color:var(--_comark-muted);font-weight:400}",
   "html[data-table-ready] [aria-sort='ascending']>.ctb-sort::after{content:'↑';color:inherit}",
   "html[data-table-ready] [aria-sort='descending']>.ctb-sort::after{content:'↓';color:inherit}",
-  ".ctb-copy>button:focus-visible{outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--_comark-ring) 50%,transparent)}",
-  ".ctb-sort:focus-visible{outline:none;border-radius:calc(var(--_comark-radius) - 4px);box-shadow:0 0 0 3px color-mix(in srgb,var(--_comark-ring) 50%,transparent)!important}",
+  ".ctb-copy>button:focus-visible{outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--_comark-ring) 50%,transparent)!important}",
+  ".ctb-sort:focus-visible{outline:none;border-radius:calc(var(--_comark-radius) - 4px);box-shadow:0 0 0 3px color-mix(in srgb,var(--_comark-ring) 50%,transparent)}",
   "@media print{.ctb-bar{display:none}.ctb-sort::after{content:none!important}}",
 ].join("")}}`;
