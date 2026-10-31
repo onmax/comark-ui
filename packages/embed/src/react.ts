@@ -45,6 +45,7 @@ export function Embed({ provider, src, label, size, href, title, host }: EmbedAt
       "div",
       { className: "ce-frame" },
       createElement("iframe", {
+        key: src,
         src,
         title: label,
         loading: "lazy",

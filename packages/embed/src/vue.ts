@@ -1,4 +1,4 @@
-import { defineComponent, h, onBeforeUnmount, onMounted } from "vue";
+import { defineComponent, h, onBeforeUnmount, onMounted, watchEffect } from "vue";
 import { addStyles, allow, icons, referrerPolicy, start } from "./client.ts";
 
 export { default } from "./index.ts";
@@ -38,7 +38,9 @@ export const Embed = defineComponent({
     let stop: (() => void) | undefined;
     onMounted(() => {
       addStyles();
-      if (props.provider === "x") stop = start();
+      stop = watchEffect((onCleanup) => {
+        if (props.provider === "x") onCleanup(start());
+      });
     });
     onBeforeUnmount(() => stop?.());
     return () => {
@@ -56,6 +58,7 @@ export const Embed = defineComponent({
         [
           h("div", { class: "ce-frame" }, [
             h("iframe", {
+              key: props.src,
               src: props.src,
               title: props.label,
               loading: "lazy",
