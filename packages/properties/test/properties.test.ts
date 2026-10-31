@@ -32,11 +32,11 @@ describe("comark-properties", () => {
     expect(await render(review)).toMatch(
       new RegExp(
         '^<dl class="cfm">' +
-          '<div data-key="status"><dt>Status</dt><dd>Ready for review</dd></div>' +
-          '<div data-key="pr"><dt>PR</dt><dd><a href="https://github.com/onmax/comark-ui/pull/111">onmax/comark-ui#111</a></dd></div>' +
-          '<div data-key="author"><dt>Author</dt><dd>onmax</dd></div>' +
-          '<div data-key="date"><dt>Date</dt><dd>2026-10-23</dd></div>' +
-          '<div data-key="tags"><dt>Tags</dt><dd><span class="cfm-tag">colors</span><span class="cfm-tag">docs</span></dd></div>' +
+          '<div data-key="status" data-kind="status"><dt>Status</dt><dd><span class="cfm-status">Ready for review</span></dd></div>' +
+          '<div data-key="pr" data-kind="pr"><dt>PR</dt><dd><a href="https://github.com/onmax/comark-ui/pull/111">onmax/comark-ui#111</a></dd></div>' +
+          '<div data-key="author" data-kind="person"><dt>Author</dt><dd>onmax</dd></div>' +
+          '<div data-key="date" data-kind="date"><dt>Date</dt><dd><time datetime="2026-10-23">Oct 23, 2026</time></dd></div>' +
+          '<div data-key="tags" data-kind="tags"><dt>Tags</dt><dd><span class="cfm-tag">colors</span><span class="cfm-tag">docs</span></dd></div>' +
           "</dl><p>Body</p>",
       ),
     );
@@ -56,7 +56,7 @@ describe("comark-properties", () => {
       options,
     );
     expect(html).toContain(
-      '<div data-key="owner"><dt>Owner</dt><dd>maxi</dd></div><div data-key="due"><dt>Due date</dt>',
+      '<div data-key="owner" data-kind="text"><dt>Owner</dt><dd>maxi</dd></div><div data-key="due" data-kind="date"><dt>Due date</dt><dd><time datetime="2026-11-01">Nov 1, 2026</time></dd>',
     );
     expect(html).toContain(">group/project#7</a>");
     expect(await render(review, { top: false })).not.toContain("cfm");
@@ -66,10 +66,24 @@ describe("comark-properties", () => {
     const html = await render(
       "---\nstatus: <b>wip</b> & co\npr: https://www.example.com/review/7?x=1\n---\n",
     );
-    expect(html).toContain("<dd>&lt;b&gt;wip&lt;/b&gt; & co</dd>");
+    expect(html).toContain('<dd><span class="cfm-status">&lt;b&gt;wip&lt;/b&gt; & co</span></dd>');
     expect(html).toContain(
       '<a href="https://www.example.com/review/7?x=1">example.com/review/7</a>',
     );
+  });
+
+  it("picks each other key's icon from its value", async () => {
+    const html = await render(
+      "---\nsite: https://example.com\ncount: 3\ndone: true\nlabels: [a]\nwhen: 2026-02-30\n---\n",
+      { keys: ["site", "count", "done", "labels", "when"] },
+    );
+    expect([...html.matchAll(/data-kind="(\w+)"/g)].map((match) => match[1])).toEqual([
+      "link",
+      "number",
+      "boolean",
+      "tags",
+      "date",
+    ]);
   });
 
   it("shows nothing when the frontmatter has none of the keys", async () => {

@@ -11,7 +11,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock("../src/editor.ts", () => ({
   ComarkKit: { configure: () => ({}) },
   checkMarkdown: async () => ({ editable: true }),
-  fromMarkdown: async (source: string) => ({ doc: { source }, frontmatter: {} }),
+  fromMarkdown: async (source: string) => ({ doc: { source }, frontmatter: { status: source } }),
   toMarkdown: mocks.serialize,
 }));
 vi.mock("@tiptap/vue-3", () => ({
@@ -53,6 +53,21 @@ it("does not overwrite an external load when an older save finishes", async () =
       ),
     );
     expect(markdown.value).toBe("New external document");
+  } finally {
+    scope.stop();
+  }
+});
+
+it("returns the frontmatter it reads, and saves it back", async () => {
+  const scope = effectScope();
+  const markdown = ref("Draft");
+  mocks.serialize.mockResolvedValueOnce("Saved");
+  const binding = scope.run(() => useComarkEditor(markdown))!;
+  try {
+    await vi.waitFor(() => expect(binding.editor.value).toBeDefined());
+    expect(binding.frontmatter.value).toEqual({ status: "Draft" });
+    mocks.update();
+    expect(mocks.serialize).toHaveBeenLastCalledWith({}, { frontmatter: { status: "Draft" } });
   } finally {
     scope.stop();
   }

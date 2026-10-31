@@ -50,7 +50,7 @@ describe("comark-properties renderers", async () => {
 
   it("renders the box under the title in HTML", () => {
     expect(expected).toContain(
-      '<h1 id="palette">Palette</h1><dl class="cfm"><div data-key="status">',
+      '<h1 id="palette">Palette</h1><dl class="cfm"><div data-key="status" data-kind="status">',
     );
     expect(expected).toContain('<span class="cfm-tag">colors</span>');
   });
