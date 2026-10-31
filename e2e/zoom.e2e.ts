@@ -107,8 +107,7 @@ test("a zoom opened as another closes keeps scroll restoration off until it clos
   );
   await page.goBack();
   await expect(page.locator(".cz-dialog")).toBeVisible();
-  await page.waitForTimeout(50);
-  expect(await page.evaluate(() => history.scrollRestoration)).toBe("manual");
+  await expect.poll(() => page.evaluate(() => history.scrollRestoration)).toBe("manual");
   await page.keyboard.press("Escape");
   await expect(page.locator(".cz-dialog")).toHaveCount(0);
   await expect.poll(() => page.evaluate(() => history.scrollRestoration)).toBe("auto");

@@ -76,7 +76,7 @@ test("synced blocks switch together, keep the clicked tab still, and remember th
   expect(
     Math.abs((await tab.evaluate((element) => element.getBoundingClientRect().top)) - before),
   ).toBeLessThan(2);
-  expect(await page.evaluate(() => localStorage.getItem("comark-tabs:os"))).toBe("B");
+  await expect.poll(() => page.evaluate(() => localStorage.getItem("comark-tabs:os"))).toBe("B");
 
   // A later page restores the choice, in blocks the script meets after it starts too.
   await open(page, `${block("A", "os")}\n\n${block("X", "os")}`);

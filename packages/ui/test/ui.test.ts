@@ -18,6 +18,8 @@ const offline: PresetOptions = {
   icon: { fetch: false },
   diagrams: { draw: false },
 };
+const renderHtml = (markdown: string, options: PresetOptions = {}) =>
+  createHtmlRenderer(html({ ...offline, ...options }))(markdown);
 const document = [
   "> [!TIP]\n> Read this.",
   "Released :badge[New]",
@@ -79,7 +81,7 @@ describe("comark-ui", () => {
   it("themes Mermaid diagrams once per document, and turns them off", async () => {
     const markdown =
       "```mermaid\nsequenceDiagram\n  A->>B: Hi\n```\n\n```mermaid\nflowchart LR\n  A --> B\n```";
-    const out = await createHtmlRenderer(html(offline))(markdown);
+    const out = await renderHtml(markdown);
     expect(out.match(/<style data-comark-mermaid>/g)).toHaveLength(1);
     expect(out).toContain(":where(:root){--_comark-background:var(--comark-background");
     expect(out).toContain(":where(:root){--pele-bg:var(--_comark-background)");
@@ -89,7 +91,7 @@ describe("comark-ui", () => {
     expect(out).toMatch(
       /<div class="cmm" data-wide style="--cmm-svg:\d+px" data-source="flowchart LR/,
     );
-    const off = await createHtmlRenderer(html({ ...offline, mermaid: false }))(markdown);
+    const off = await renderHtml(markdown, { mermaid: false });
     expect(off).not.toContain("pele-diagram");
     expect(off).toContain('class="language-mermaid"');
   });
@@ -97,8 +99,7 @@ describe("comark-ui", () => {
   it("zooms a Mermaid diagram and gives it Copy image and Copy source, with one script per document", async () => {
     const markdown =
       '```mermaid\nflowchart LR\n  A -->|"a & b"| B\n```\n\n```mermaid\nflowchart TD\n  C --> D\n```';
-    const render = createHtmlRenderer(html(offline));
-    const out = await render(markdown);
+    const out = await renderHtml(markdown);
     // The card zooms, and the bar sits beside it in the wrapper, so a click on a button never opens the zoom.
     expect(out.match(/<div data-zoom tabindex="0" class="pele-diagram"/g)).toHaveLength(2);
     expect(
@@ -111,11 +112,11 @@ describe("comark-ui", () => {
     // One script for the buttons and one for zoom, and the buttons' script is the exported text, on every render.
     expect(out.split(`<script>${mermaidScript}</script>`)).toHaveLength(2);
     expect(out.match(/<style data-comark-zoom>/g)).toHaveLength(1);
-    expect(await render(markdown)).toContain(`<script>${mermaidScript}</script>`);
+    expect(await renderHtml(markdown)).toContain(`<script>${mermaidScript}</script>`);
     expect(mermaidScript).toMatch(/^\(function start\(\) \{[\s\S]*\}\)\(\)$/);
     expect(mermaidScript).not.toContain("</");
 
-    const still = await createHtmlRenderer(html({ ...offline, zoom: false }))(markdown);
+    const still = await renderHtml(markdown, { zoom: false });
     expect(still).not.toContain("data-zoom");
     expect(still).not.toContain("data-comark-zoom");
     expect(still.match(/class="cmm-bar"/g)).toHaveLength(2);
@@ -123,7 +124,7 @@ describe("comark-ui", () => {
   });
 
   it("keeps the source of a Mermaid diagram that fails, with nothing to zoom", async () => {
-    const out = await createHtmlRenderer(html(offline))("```mermaid\nflowchart LR\n  A -->\n```");
+    const out = await renderHtml("```mermaid\nflowchart LR\n  A -->\n```");
     expect(out).toContain("data-error=");
     expect(out).toContain('<div class="cmm" data-source="flowchart LR\n  A --&gt;\n">');
     expect(out).not.toContain("data-zoom");
@@ -132,7 +133,7 @@ describe("comark-ui", () => {
 
   it("styles the text by default, scoped to the element the document renders into", async () => {
     const markdown = "# Title\n\nSome `code`.\n\n| A | B |\n| - | - |\n| 1 | 2 |";
-    const out = await createHtmlRenderer(html(offline))(markdown);
+    const out = await renderHtml(markdown);
     expect(out.match(/<style data-comark-typeset>/g)).toHaveLength(1);
     // The styles come last, so the first heading is still the first child and adds no space above.
     expect(out.trimEnd()).toMatch(/<style data-comark-typeset>[^<]*<\/style>$/);
@@ -152,7 +153,7 @@ describe("comark-ui", () => {
     expect(css).toContain(
       ":scope>[data-wide]{--_ty-start:max(0px,var(--comark-wide-start,0px));--_ty-end:max(0px,var(--comark-wide-end,0px));",
     );
-    const off = await createHtmlRenderer(html({ ...offline, typeset: false }))(markdown);
+    const off = await renderHtml(markdown, { typeset: false });
     expect(off).not.toContain("data-comark-typeset");
     expect(Object.keys(html({ ...offline, typeset: false }).components)).not.toContain(
       "typeset-styles",
@@ -162,15 +163,15 @@ describe("comark-ui", () => {
   it("includes files only when asked", async () => {
     const read = (path: string) => (path === "note.md" ? "Pasted." : undefined);
     const markdown = ':include{src="note.md"}';
-    const off = await createHtmlRenderer(html(offline))(markdown);
+    const off = await renderHtml(markdown);
     expect(off).not.toContain("Pasted.");
-    const on = await createHtmlRenderer(html({ ...offline, include: { read } }))(markdown);
+    const on = await renderHtml(markdown, { include: { read } });
     expect(on).toContain("Pasted.");
   });
 
   it("adds the side outline only when asked", async () => {
     const markdown = "## Install\n\n## Usage";
-    expect(await createHtmlRenderer(html(offline))(markdown)).not.toContain("cto-rail");
+    expect(await renderHtml(markdown)).not.toContain("cto-rail");
     for (const preset of [html, vue, react]) {
       const { plugins } = preset({ ...offline, outline: { rail: true } });
       const { nodes } = await parseMarkdown(markdown, { plugins });
@@ -181,9 +182,9 @@ describe("comark-ui", () => {
   it("reads a table's file only when given a reader", async () => {
     const read = (path: string) => (path === "birds.csv" ? "Bird,Seen\nHeron,2" : undefined);
     const markdown = '::table{src="birds.csv"}\n::';
-    const off = await createHtmlRenderer(html(offline))(markdown);
+    const off = await renderHtml(markdown);
     expect(off).not.toContain("Heron");
-    const on = await createHtmlRenderer(html({ ...offline, table: { read } }))(markdown);
+    const on = await renderHtml(markdown, { table: { read } });
     expect(on).toContain("Heron");
   });
 

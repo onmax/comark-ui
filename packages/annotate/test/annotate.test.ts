@@ -8,8 +8,6 @@ import { parseMarkdown } from "comark";
 import security from "comark/plugins/security";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 import annotate, { components } from "../src/html.ts";
-import { draw } from "../src/marks.ts";
-import { css } from "../src/styles.ts";
 
 async function run(markdown: string, options?: Parameters<typeof annotate>[0]) {
   const document = await parseMarkdown(markdown, { plugins: [annotate(options)] });
@@ -19,6 +17,9 @@ async function run(markdown: string, options?: Parameters<typeof annotate>[0]) {
     document,
   };
 }
+
+// The stylesheet the renderer inlines, so the tests read the CSS a reader's browser gets.
+const styles = (html: string) => /<style>([^]*?)<\/style>/.exec(html)?.[1] ?? "";
 
 const compare = `
 ::compare
@@ -109,7 +110,8 @@ describe("comark-annotate", () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it("styles only the notes themselves, so a list inside a note keeps its bullets", () => {
+  it("styles only the notes themselves, so a list inside a note keeps its bullets", async () => {
+    const css = styles((await run(compare)).html);
     expect(css).toContain(".ca-notes>li{display:flex");
     expect(css).not.toMatch(/\.ca-notes li\b/);
   });
@@ -196,10 +198,10 @@ describe("comark-annotate", () => {
     );
     expect(issues).toEqual([]);
     expect(html).toContain('ca-stamp" style="left:3px;top:3px"');
-    expect(css.match(/\.ca-mark\.ca-box\{[^}]+\}/)?.[0]).toBe(
+    expect(styles(html).match(/\.ca-mark\.ca-box\{[^}]+\}/)?.[0]).toBe(
       ".ca-mark.ca-box{box-sizing:content-box;padding:6px;margin:-6px}",
     );
-    expect(css.includes("--ca-pad")).toBe(false);
+    expect(styles(html)).not.toContain("--ca-pad");
   });
 
   it("reports numbers that overlap at every corner", async () => {
@@ -255,8 +257,8 @@ describe("comark-annotate", () => {
       /<div class="ca-frame"><img src="a.png"[^>]*><span class="ca-mark[^]*?<\/span><button type="button" class="ca-copy"[^]*?<\/button><span class="ca-copy-status" role="status"><\/span><\/div>/,
     );
     expect(html.match(/<script>\(function start\(\) \{/g)).toHaveLength(1);
-    expect(css).toContain(".ca-copy{display:none}");
-    expect(css).toContain("[data-annotate-copy] .ca-copy{");
+    expect(styles(html)).toContain(".ca-copy{display:none}");
+    expect(styles(html)).toContain("[data-annotate-copy] .ca-copy{");
 
     const slider = await run(compare.replace("::compare", '::compare{mode="slider"}'));
     expect(slider.html).not.toContain('class="ca-copy"');
@@ -286,7 +288,7 @@ describe("comark-annotate", () => {
       /class="ca-arrow ca-arrow-bottom" data-n="1" style="left:50%;top:60%;bottom:calc\(-1 \* var\(--ca-gap\)\)"/,
     );
     expect(html).toMatch(/class="ca-callout ca-callout-bottom" id="ca-[a-z0-9]+-1"/);
-    expect(css).toContain(".ca-bottom .ca-stage{--ca-pb:var(--ca-bottom-gutter)");
+    expect(styles(html)).toContain(".ca-bottom .ca-stage{--ca-pb:var(--ca-bottom-gutter)");
   });
 
   it("sets a note off to one side with `at` and sweeps its arrow into the `to` point", async () => {
@@ -365,9 +367,9 @@ describe("comark-annotate", () => {
     expect(html).toMatch(/data-n="1"[^>]*style="--ca-color:var\(--ca-violet\);/);
     expect(html).toMatch(/data-n="2"[^>]*style="--ca-color:var\(--ca-red\);/);
     expect(html).toMatch(/data-n="3"[^>]*style="--ca-color:#16a34a;/);
-    expect(css).toContain("--ca-violet:#8b5cf6");
+    expect(styles(html)).toContain("--ca-violet:#8b5cf6");
     // Violet is also the default, so marks without a color or an ink take it.
-    expect(css).toContain("--ca-color:var(--ca-violet);--ca-solid:var(--ca-violet-solid)");
+    expect(styles(html)).toContain("--ca-color:var(--ca-violet);--ca-solid:var(--ca-violet-solid)");
   });
 
   it("reports `at` and `to` without a side, out of range, or written wrong, and a bad ink", async () => {
@@ -761,39 +763,46 @@ Duck
     ]);
   });
 
-  it("loops a circle around its whole area, and only a little past a long one's ends", () => {
-    // The points the loop passes through, from its path's curve ends.
-    const loop = (width: number, height: number) =>
-      [
-        ...draw("circle", width, height, 7).paths[0]!.matchAll(
-          /(?:^M| )(-?[\d.]+) (-?[\d.]+)(?=C|$)/g,
-        ),
-      ].map(([, x, y]) => [Number(x), Number(y)] as const);
+  it("loops a circle around its whole area, and only a little past a long one's ends", async () => {
+    // A square viewport makes a box's pixels at the reference size 4.2 times its percentages.
+    const scale = 4.2;
+    const loop = async (w: number, h: number) => {
+      const { html } = await run(
+        `::screenshot{src="a.png" alt="A" viewport="1000x1000"}\n:::annotation{x=2 y=2 w=${w} h=${h} mark="circle"}\nNote\n:::\n::`,
+      );
+      const path = /<span class="ca-mark[^>]*><svg[^>]*><path d="([^"]*)"/.exec(html)?.[1] ?? "";
+      // The points the loop passes through, from its path's curve ends.
+      return [...path.matchAll(/(?:^M| )(-?[\d.]+) (-?[\d.]+)(?=C|$)/g)].map(
+        ([, x, y]) => [Number(x), Number(y)] as const,
+      );
+    };
     // Even-odd ray casting: a point inside the loop crosses its outline an odd number of times.
     const inside = (points: (readonly [number, number])[], [x, y]: readonly [number, number]) =>
       points.reduce((odd, [x1, y1], index) => {
         const [x2, y2] = points[(index + 1) % points.length]!;
         return y1 > y !== y2 > y && x < ((x2 - x1) * (y - y1)) / (y2 - y1) + x1 ? !odd : odd;
       }, false);
-    for (const [width, height] of [
-      [40, 40],
-      [120, 30],
-      [400, 40],
-      [24, 300],
+    for (const [w, h] of [
+      [10, 10],
+      [30, 8],
+      [90, 10],
+      [6, 70],
     ] as const) {
-      const points = loop(width, height);
+      const [width, height] = [w * scale, h * scale];
+      const points = await loop(w, h);
+      expect(points.length, `${w}x${h}`).toBeGreaterThan(2);
       for (const corner of [
         [0, 0],
         [width, 0],
         [width, height],
         [0, height],
       ] as const)
-        expect(inside(points, corner), `${width}x${height} at ${corner.join(",")}`).toBe(true);
+        expect(inside(points, corner), `${w}x${h} at ${corner.join(",")}`).toBe(true);
       const [long, from, to] =
         width >= height
           ? [width, Math.min(...points.map(([x]) => x)), Math.max(...points.map(([x]) => x))]
           : [height, Math.min(...points.map(([, y]) => y)), Math.max(...points.map(([, y]) => y))];
-      expect(to - from - long, `${width}x${height}`).toBeLessThan(Math.max(40, long * 0.2));
+      expect(to - from - long, `${w}x${h}`).toBeLessThan(Math.max(40, long * 0.2));
     }
   });
 });

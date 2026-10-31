@@ -5,6 +5,11 @@ import { describe, expect, it } from "vite-plus/test";
 import charts, { components } from "../src/html.ts";
 
 const render = createHtmlRenderer({ plugins: [charts()], components });
+// Charts take annotations from comark-annotate.
+const annotated = createHtmlRenderer({
+  plugins: [charts(), annotate()],
+  components: { ...annotateComponents, ...components },
+});
 const issues = async (markdown: string) =>
   (await parseMarkdown(markdown, { plugins: [charts()] })).meta.issues;
 const chart = (table: string, props = "") => `::chart${props}\n${table.trim()}\n::`;
@@ -281,10 +286,7 @@ Cache on.
 ::`;
     const both = [charts(), annotate()];
     expect((await parseMarkdown(markdown, { plugins: both })).meta.issues).toEqual([]);
-    const html = await createHtmlRenderer({
-      plugins: both,
-      components: { ...annotateComponents, ...components },
-    })(markdown);
+    const html = await annotated(markdown);
     expect(html).toContain('<div class="cch-plot cch-marked">');
     expect(html).toMatch(
       /<span class="ca-mark ca-circle[^"]*" data-n="1"[^>]*left:[\d.]+%;top:[\d.]+%/,
@@ -315,10 +317,7 @@ Cache on.
   });
 
   it("rings a row of bars with its values and its name", async () => {
-    const html = await createHtmlRenderer({
-      plugins: [charts(), annotate()],
-      components: { ...annotateComponents, ...components },
-    })(`::chart{horizontal labels}
+    const html = await annotated(`::chart{horizontal labels}
 | step | cache miss | cache hit |
 | --- | --: | --: |
 | Client build | 8.8 | 0 |
@@ -373,10 +372,7 @@ Runs on every build.
   });
 
   it("centers a mark on the point it names", async () => {
-    const html = await createHtmlRenderer({
-      plugins: [charts(), annotate()],
-      components: { ...annotateComponents, ...components },
-    })(`::chart{type="scatter"}
+    const html = await annotated(`::chart{type="scatter"}
 | pigeons | deploys |
 | --: | --: |
 | 2 | 1 |
@@ -425,10 +421,7 @@ The second point.
 The first slice.
 :::
 ::`;
-    const html = await createHtmlRenderer({
-      plugins: [charts(), annotate()],
-      components: { ...annotateComponents, ...components },
-    })(markdown);
+    const html = await annotated(markdown);
     expect(html).toContain('viewBox="0 0 544 397"');
     expect(html).toContain('ca-stamp" style="left:0;top:0;translate:-50% -50%"');
   });
@@ -737,10 +730,7 @@ No such run.
       '`::chart` 1, annotation 2: `at="compile"` names a row in `before` and `after`. Add `series` with the `run` of the one it marks.',
       '`::chart` 1, annotation 3: `series="during"` isn\'t a `run` in the table. Use `before` or `after`, or leave it out.',
     ]);
-    const html = await createHtmlRenderer({
-      plugins,
-      components: { ...annotateComponents, ...components },
-    })(markdown);
+    const html = await annotated(markdown);
     expect(html.match(/class="ca-mark /g)).toHaveLength(3);
     expect(html).toContain("Twice as fast.");
   });
@@ -927,10 +917,6 @@ No such run.
     const marked = (annotation: string, table = sizes, props = "") =>
       `${chart(table, props).slice(0, -2)}${annotation}\n::`;
     const both = [charts(), annotate()];
-    const draw = createHtmlRenderer({
-      plugins: both,
-      components: { ...annotateComponents, ...components },
-    });
     const box = (html: string) =>
       /class="ca-mark ca-line"[^>]*left:([\d.]+)%;top:([\d.]+)%;width:([\d.]+)%;height:([\d.]+)%/
         .exec(html)!
@@ -945,18 +931,18 @@ No such run.
     for (const value of ["30", "90"])
       expect((await parseMarkdown(line(value), { plugins: both })).meta.issues).toEqual([]);
     // Across an upright chart, and higher up for a bigger value, even one past every bar.
-    const [left, low, width, height] = box(await draw(line("30")));
+    const [left, low, width, height] = box(await annotated(line("30")));
     expect(width).toBeGreaterThan(80);
     expect(height).toBeLessThan(5);
     // It starts past the value axis's labels.
     expect(left).toBeLessThan(15);
-    const [, high] = box(await draw(line("90")));
+    const [, high] = box(await annotated(line("90")));
     expect(high).toBeLessThan(low!);
     expect(high).toBeGreaterThanOrEqual(0);
-    expect(await draw(line("90"))).toContain('class="ca-callout ca-callout-right"');
+    expect(await annotated(line("90"))).toContain('class="ca-callout ca-callout-right"');
     // Down a sideways one, whose values run across.
     const [, , across, down] = box(
-      await draw(
+      await annotated(
         marked(
           ':::annotation{mark="line" value="50"}\nSLA.\n:::',
           `| first comment | minutes |\n| --- | --: |\n| nit: this file uses tabs and the rest of the repo uses spaces | 84 |\n| why does the deploy script check for pigeons | 47 |`,
@@ -1056,10 +1042,7 @@ No axis.
       '`::chart` 1, annotation 3: `at="taxes"` isn\'t a node in `from` or `to` in the table. Copy it from the table, such as `salary`, `budget`, `freelance`.',
       '`::chart` 1, annotation 4: `mark="line"` crosses the plot at a number on its value axis, and a sankey has none. Mark a node with `at` and another mark, such as `box`.',
     ]);
-    const html = await createHtmlRenderer({
-      plugins,
-      components: { ...annotateComponents, ...components },
-    })(markdown);
+    const html = await annotated(markdown);
     expect(html).toMatch(/class="ca-mark ca-circle[^"]*" data-n="1"[^>]*left:[\d.]+%;top:[\d.]+%/);
     expect(html).toContain("Everything passes through here.");
   });
