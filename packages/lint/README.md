@@ -12,8 +12,6 @@ pnpm add -D comark-linter
 pnpm comark-lint "docs/**/*.md"
 ```
 
-The package is `comark-linter`, since npm refuses `comark-lint` as too close to `remark-lint`. Its command and config file are `comark-lint`; `lint-comark` still works for both.
-
 ```txt
 docs/pigeons-vs-deploys.md:8:1 comark/unclosed-block `::compare` opened on line 8 is never closed. Add a line with `::` after its last child.
 ```

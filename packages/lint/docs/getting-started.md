@@ -14,8 +14,6 @@ Install comark-lint, run it on your documents, and teach it your own components.
 pnpm add -D comark-linter
 ```
 
-The package is `comark-linter`, since npm refuses `comark-lint` as too close to `remark-lint`. Its command and config file are `comark-lint`. The command is also installed as `lint-comark`, and a `lint-comark.config.ts` still loads.
-
 ### Run it
 
 Pass files or globs. Quote a glob so the shell passes it as it is.
