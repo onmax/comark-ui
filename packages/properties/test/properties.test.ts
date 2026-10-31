@@ -1,12 +1,14 @@
 import { createHtmlRenderer } from "@comark/html";
 import { parseMarkdown } from "comark";
 import { describe, expect, it } from "vite-plus/test";
+import { localizeDates } from "../src/client.ts";
 import properties, { components } from "../src/html.ts";
 
 const render = (markdown: string, options = {}) =>
   createHtmlRenderer({ plugins: [properties(options)], components })(markdown).then((html) =>
     html
       .replace(/<style[^>]*>.*?<\/style>/s, "")
+      .replace(/<script>.*?<\/script>/s, "")
       .replace(/>\s+/g, ">")
       .replace(/\s+</g, "<"),
   );
@@ -41,6 +43,32 @@ describe("comark-properties", () => {
       ),
     );
     expect(await issues(review)).toEqual([]);
+  });
+
+  it("rewrites the dates in the reader's locale unless the locale option fixes one", async () => {
+    const renderer = createHtmlRenderer({ plugins: [properties()], components });
+    expect((await renderer(review)).match(/<\/dl><script>\(function localizeDates/g)).toHaveLength(
+      1,
+    );
+    expect(await renderer("---\nstatus: Draft\n---\n")).not.toContain("<script>");
+
+    const fixed = await createHtmlRenderer({
+      plugins: [properties({ locale: "de-DE" })],
+      components,
+    })(review);
+    expect(fixed).toContain('<time datetime="2026-10-23" lang="de-DE">23. Okt. 2026</time>');
+
+    const time = { dateTime: "2026-10-23", textContent: "Oct 23, 2026" };
+    // SAFETY: `localizeDates` only calls `querySelectorAll` and reads `dateTime` and writes `textContent`.
+    localizeDates({ querySelectorAll: () => [time] } as unknown as ParentNode);
+    expect(time.textContent).toBe(
+      new Date("2026-10-23T00:00:00Z").toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        timeZone: "UTC",
+      }),
+    );
   });
 
   it("goes where ::properties sits instead", async () => {

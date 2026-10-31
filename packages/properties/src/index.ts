@@ -9,6 +9,11 @@ export interface PropertiesOptions {
   labels?: Record<string, string>;
   /** Puts the box at the top of a document that has no `::properties`. Default true. */
   top?: boolean;
+  /**
+   * The locale dates show in, such as `"de-DE"`. Without it, dates render in English and the reader's browser rewrites
+   * them in its own locale.
+   */
+  locale?: string;
 }
 
 export type PropertiesMeta = {
@@ -67,18 +72,19 @@ function kindOf(key: string, value: unknown): string {
 }
 
 /** `2026-10-23` as `Oct 23, 2026`, in a `time` that keeps the date for machines. */
-function day(text: string): ElementNode {
+function day(text: string, locale: string | undefined): ElementNode {
   const date = new Date(`${text}T00:00:00Z`);
   // `Date` rolls an impossible day, such as February 30, over into the next month.
   if (Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== text)
     return ["span", {}, text];
-  const shown = date.toLocaleDateString("en-US", {
+  // Keep these in step with `localizeDates`, which rewrites a date without a `lang` in the reader's locale.
+  const shown = date.toLocaleDateString(locale ?? "en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
     timeZone: "UTC",
   });
-  return ["time", { datetime: text }, shown];
+  return ["time", locale ? { datetime: text, lang: locale } : { datetime: text }, shown];
 }
 
 /** A frontmatter value as nodes: text, a link for an http(s) URL, or one tag per item of a list of those. */
@@ -130,7 +136,7 @@ export function rowsOf(
       kind === "status" && text !== undefined
         ? [["span", { class: "cfm-status" }, ...nodes]]
         : kind === "date" && text !== undefined && DAY.test(text)
-          ? [day(text)]
+          ? [day(text, options.locale)]
           : nodes;
     rows.push([
       "div",
