@@ -155,19 +155,38 @@ export interface ContentSetup {
   remarkPlugins: Pluggable[];
   alerts: boolean;
   emoji: boolean;
+  /** Whether the project reads GFM: false only when every setup found is one that leaves remark-gfm out. */
+  gfm: boolean;
   /** Syntax plugins the project uses that couldn't be loaded, so content would escape the syntax they add. */
   missing: string[];
 }
 
 /** How the content codemod must parse this project's Markdown: with its syntax plugins and alert markers. */
-export async function contentSetup(root: string, setups: Setup[]): Promise<ContentSetup> {
+export async function contentSetup(
+  root: string,
+  setups: Setup[],
+  sources: string[] = [],
+): Promise<ContentSetup> {
   const names = setups.flatMap((setup) => setup.plugins.map((plugin) => plugin.name));
+  // Code `rewrite` already moved to Comark still says what the Markdown holds: its plugins replace remark's.
+  const code = sources.join("\n");
+  if (/["'](?:@comark\/html|comark)\/plugins\/math["']/.test(code)) names.push("remark-math");
   const missing: string[] = [];
   const remarkPlugins = await syntaxPlugins(root, names, missing);
+  // Astro, Docusaurus, Gatsby, and Nuxt Content read GFM on their own; a bare unified chain or react-markdown doesn't.
+  const gfmByDefault = setups.some((setup) =>
+    ["astro", "docusaurus", "gatsby", "nuxt"].includes(setup.host),
+  );
+  const comarkGfm = /comarkOptions\((?![^)]*gfm:\s*false)/.test(code);
   return {
     remarkPlugins,
-    alerts: names.some((name) => ALERTS.test(name)),
-    emoji: names.some((name) => /^remark-(gemoji|emoji)$/.test(name)),
+    alerts:
+      names.some((name) => ALERTS.test(name)) ||
+      /["']comark\/plugins\/alert["']|["']comark-github["']/.test(code),
+    emoji:
+      names.some((name) => /^remark-(gemoji|emoji)$/.test(name)) ||
+      /["']comark\/plugins\/emoji["']/.test(code),
+    gfm: !setups.length || gfmByDefault || comarkGfm || names.includes("remark-gfm"),
     missing,
   };
 }
@@ -265,6 +284,7 @@ export async function check(
   const setup = await contentSetup(
     root,
     scanned.flatMap((entry) => entry.setups),
+    scanned.map((entry) => entry.source),
   );
   const documents = (await reader.glob("**/*.{md,mdx}")).sort();
   const split = await splitMdx(reader, documents);

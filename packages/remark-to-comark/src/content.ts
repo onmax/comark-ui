@@ -22,6 +22,8 @@ export interface ContentOptions {
   emoji?: boolean;
   /** Internal: parse one block without remark-gfm's autolink transform, to edit a block that transform touched. */
   block?: boolean;
+  /** Whether the project reads GFM (remark-gfm). Without it, `~a~` stays text and tables stay paragraphs. */
+  gfm?: boolean;
 }
 
 export interface ContentChange {
@@ -61,11 +63,11 @@ function withoutAutolinkTransform(this: Processor) {
 }
 
 /** The HTML remark renders, synchronously, to check a block's edits against. */
-const render = (markdown: string, plugins: PluggableList = []) =>
+const render = (markdown: string, plugins: PluggableList = [], gfm = true) =>
   String(
     unified()
       .use(remarkParse)
-      .use(remarkGfm)
+      .use(gfm ? [remarkGfm] : [])
       .use(plugins)
       .use(remarkRehype, { allowDangerousHtml: true })
       .use(rehypeRaw)
@@ -171,19 +173,24 @@ const cachedStarts: { source?: string; starts?: number[] } = {};
 export function migrateContent(source: string, options: ContentOptions = {}): ContentResult {
   const syntax = options.syntax ?? "comark";
   const tree = (
-    options.block
+    options.gfm === false
       ? unified()
           .use(remarkParse)
-          .use(remarkGfm)
-          .use(withoutAutolinkTransform)
+          .use(remarkFrontmatter, ["yaml", "toml"])
           .use(options.remarkPlugins ?? [])
-      : options.remarkPlugins?.length
+      : options.block
         ? unified()
             .use(remarkParse)
             .use(remarkGfm)
-            .use(remarkFrontmatter, ["yaml", "toml"])
-            .use(options.remarkPlugins)
-        : parser
+            .use(withoutAutolinkTransform)
+            .use(options.remarkPlugins ?? [])
+        : options.remarkPlugins?.length
+          ? unified()
+              .use(remarkParse)
+              .use(remarkGfm)
+              .use(remarkFrontmatter, ["yaml", "toml"])
+              .use(options.remarkPlugins)
+          : parser
   ).parse(source);
   // remark-gfm links a URL after an unclosed `[` in a transform that leaves nodes without positions, and escaping that
   // `[` would move remark onto its other autolink path, with different link ends. Such blocks stay as written.
@@ -273,7 +280,8 @@ export function migrateContent(source: string, options: ContentOptions = {}): Co
     if (!edited.changes.length) continue;
     if (
       /\\\[(?:www\.|[^\s@\]]+@)/.test(edited.markdown) ||
-      render(edited.markdown, options.remarkPlugins) !== render(text, options.remarkPlugins)
+      render(edited.markdown, options.remarkPlugins, options.gfm !== false) !==
+        render(text, options.remarkPlugins, options.gfm !== false)
     ) {
       skipped.push(block.position!.start.line);
       continue;
@@ -299,6 +307,15 @@ export function migrateContent(source: string, options: ContentOptions = {}): Co
       // remark-gfm reads `~a~` as strikethrough; markdown-exit needs `~~a~~`.
       if (start == null || end == null || source[start + 1] === "~") return;
       const line = node.position!.start.line;
+      // Widening an outer `~a~` around an inner `~~b~~` makes the tildes pair up differently; that's left to a person.
+      let nested = false;
+      visitParents(node, "delete", (inner: Nodes) => {
+        if (inner !== node) nested = true;
+      });
+      if (nested) {
+        skipped.push(line);
+        return "skip";
+      }
       edits.push({
         offset: start,
         remove: 0,
@@ -342,6 +359,15 @@ export function migrateContent(source: string, options: ContentOptions = {}): Co
       const start = node.position?.start.offset;
       const end = node.position?.end.offset;
       if (start == null || end == null) return "skip";
+      // A label is matched as written, so a strikethrough in it can't be widened without breaking the reference.
+      let struck = false;
+      visitParents(node, "delete", () => {
+        struck = true;
+      });
+      if (struck) {
+        skipped.push(node.position!.start.line);
+        return "skip";
+      }
       const labelStart = start + (node.type === "imageReference" ? 2 : 1);
       const labelEnd = node.referenceType === "collapsed" ? end - 3 : end - 1;
       const line = node.position!.start.line;

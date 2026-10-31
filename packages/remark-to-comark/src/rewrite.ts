@@ -28,6 +28,8 @@ export interface RewriteResult {
   rewrites: Rewrite[];
 }
 
+// Plugins whose Comark counterpart is advice for a person, not a drop-in: the rewrite leaves their chains.
+const VISIBLE_TOC = new Set(["remark-toc", "rehype-toc"]);
 const REWRITABLE = new Set(["pipeline", "setup", "builtin", "plugin", "port"]);
 
 /** The object literal `options` holds, parsed on its own, if it is one. */
@@ -233,7 +235,8 @@ function usedAsString(node: Node, parent: WeakMap<Node, Node>): boolean {
     up.arguments[0] === self
   )
     return true;
-  if (up.type === "TemplateLiteral") return true;
+  // A tagged template hands its substitutions to the tag as they are.
+  if (up.type === "TemplateLiteral") return parent.get(up)?.type !== "TaggedTemplateExpression";
   if (
     up.type === "MemberExpression" &&
     up.object === self &&
@@ -263,9 +266,8 @@ function resultUse(chainNode: Node, info: Facts, source: string): string | undef
       !holder.id.typeAnnotation
     ) {
       const name = holder.id.name;
-      const reads = (info.references.get(name) ?? []).filter(
-        (reference) => reference.start > holder.end,
-      );
+      // Every read, even one in a closure written above the declaration, which can run after it.
+      const reads = info.references.get(name) ?? [];
       if (reads.length && reads.every((reference) => usedAsString(reference, parent)))
         return undefined;
       return `reads \`${name}\` as the VFile \`process\` returns; \`renderHtml\` returns a string`;
@@ -301,12 +303,17 @@ function inputUse(
   program: Program,
 ): string | undefined {
   const type = chain.inputType;
-  if (type === "Literal" || type === "TemplateLiteral" || type === "MemberExpression")
+  if (type === "Literal" || type === "TemplateLiteral") return undefined;
+  // `props.markdown`, `Astro.props.body`: a property named for Markdown text. `ctx.file` could be a VFile, so it stays.
+  if (
+    type === "MemberExpression" &&
+    /\.(markdown|md|body|content|text|source|value)$/i.test(chain.input ?? "")
+  )
     return undefined;
   // `content.trim()`, `String(x)`: calls that always return a string.
   if (
     type === "CallExpression" &&
-    /^(String\(|[\w$.]+\.(trim|trimStart|trimEnd|replace|replaceAll|slice|toString|normalize|toLowerCase|toUpperCase|padEnd|padStart)\()/.test(
+    /^(String\(|[\w$.]+\.(trim|trimStart|trimEnd|replace|replaceAll|toString|normalize|toLowerCase|toUpperCase|padEnd|padStart)\()/.test(
       chain.input ?? "",
     )
   )
@@ -347,6 +354,11 @@ function blocker(
   node: Node | undefined,
 ): string | undefined {
   const chain = setup.chain!;
+  if (chain.root === "rehype")
+    return "parses HTML (`rehype()`), not Markdown, so `renderHtml` can't replace it";
+  const listed = setup.plugins.find((plugin) => VISIBLE_TOC.has(plugin.name));
+  if (listed)
+    return `${listed.name} writes a visible table of contents, and Comark's \`toc()\` only writes \`meta.toc\`; render the list from it, then rewrite by hand`;
   const blocked = setup.plugins.filter((plugin) => !REWRITABLE.has(plugin.mapping.kind));
   if (blocked.length) {
     const own = blocked
@@ -491,7 +503,9 @@ function rewriteScript(source: string, file: string, outside = ""): RewriteResul
   // The binding to use for `name` from `from`: the file's own value import if it has one, else a name nothing uses.
   const local = (name: string, from: string) => {
     const key = `${from}:${name}`;
-    const existing = bound.get(key) ?? allocated.get(key);
+    // The file's own import, unless a parameter or variable somewhere shadows its name.
+    const own = bound.get(key);
+    const existing = (own && !info.shadowed.has(own) ? own : undefined) ?? allocated.get(key);
     if (existing) return existing;
     let candidate = name;
     for (let suffix = 1; taken.has(candidate); suffix++)
@@ -510,6 +524,21 @@ function rewriteScript(source: string, file: string, outside = ""): RewriteResul
   const done: [number, number][] = [];
   for (const setup of setups) {
     const chain = setup.chain!;
+    // An inner chain is copied into the replacement as written, so the outer one waits for it.
+    if (
+      setups.some(
+        (other) =>
+          other !== setup && other.chain!.start >= chain.start && other.chain!.end <= chain.end,
+      )
+    ) {
+      rewrites.push({
+        file,
+        line: setup.line,
+        rewritten: false,
+        reason: "holds another unified chain; run the rewrite again once that one is rewritten",
+      });
+      continue;
+    }
     if (done.some(([start, end]) => chain.start < end && chain.end > start)) {
       rewrites.push({
         file,

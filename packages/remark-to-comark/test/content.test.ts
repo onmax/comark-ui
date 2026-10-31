@@ -195,3 +195,18 @@ describe("migrateContent with emoji shortcodes", () => {
     expect(migrateContent("Hi :smile:").markdown).toBe("Hi \\:smile:");
   });
 });
+
+describe("migrateContent on the PR review's inputs", () => {
+  it("leaves `~a~` alone in a project without GFM", () => {
+    expect(migrateContent("~a~\n", { gfm: false }).markdown).toBe("~a~\n");
+  });
+
+  it.each([
+    ["a strikethrough nested in one being widened", "~a~~b~~a~\n"],
+    ["a strikethrough in a reference label", "[~a~]\n\n[~a~]: /u\n"],
+  ])("reports %s instead of editing it", (_, markdown) => {
+    const result = migrateContent(markdown);
+    expect(result.markdown).toBe(markdown);
+    expect(result.skipped).toEqual([1]);
+  });
+});

@@ -39,7 +39,7 @@ if (command === "check") {
     }),
   );
 } else if (command === "scan") {
-  const root = rest[0] ?? ".";
+  const root = directory(rest[0] ?? ".");
   for (const setup of await scan(root)) {
     console.log(`${setup.file}:${setup.line} (${setup.host})`);
     for (const plugin of setup.plugins) {
@@ -88,9 +88,11 @@ if (command === "check") {
   // The project's syntax plugins and Docusaurus configs decide what's safe to escape, wherever content runs from.
   const root = projectRoot(process.cwd());
   const reader = nodeReader(root);
+  const scanned = await scanProject(reader);
   const setup = await contentSetup(
     root,
-    (await scanProject(reader)).flatMap((entry) => entry.setups),
+    scanned.flatMap((entry) => entry.setups),
+    scanned.map((entry) => entry.source),
   );
   const split = await splitMdx(
     reader,

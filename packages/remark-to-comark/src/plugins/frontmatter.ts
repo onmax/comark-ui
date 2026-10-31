@@ -35,5 +35,9 @@ export const frontmatter = (): ComarkPlugin => ({
     if (!issue) return;
     const issues: string[] = (state.tree.meta.issues ??= []);
     issues.push(issue);
+    state.tree.meta.issueRules = {
+      ...state.tree.meta.issueRules,
+      [issue]: "comark/invalid-frontmatter",
+    };
   },
 });

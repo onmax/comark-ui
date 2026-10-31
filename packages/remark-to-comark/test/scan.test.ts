@@ -343,3 +343,90 @@ describe("rewriteSource on the second review's inputs", () => {
     ).toEqual(["remark-gfm"]);
   });
 });
+
+describe("rewriteSource on the PR review's inputs", () => {
+  const head = `import { remark } from "remark";\nimport html from "remark-html";\n`;
+  it.each([
+    [
+      "a rehype processor, which parses HTML",
+      `import { rehype } from "rehype";\nimport stringify from "rehype-stringify";\nexport const f = async (md) => String(await rehype().use(stringify).process(md));\n`,
+      "parses HTML",
+    ],
+    [
+      "remark-toc, whose list Comark's toc() doesn't render",
+      `${head}import toc from "remark-toc";\nexport const f = async (md) => String(await remark().use(toc).use(html).process(md));\n`,
+      "visible table of contents",
+    ],
+    [
+      "a property that may hold a VFile",
+      `${head}export const f = async (ctx) => String(await remark().use(html).process(ctx.file));\n`,
+      "an expression",
+    ],
+    [
+      "a Buffer slice",
+      `${head}export const f = async (buffer) => String(await remark().use(html).process(buffer.slice(0)));\n`,
+      "an expression",
+    ],
+    [
+      "a VFile read in a closure written above",
+      `${head}export async function f() { const read = () => file.value; const file = await remark().use(html).process("x"); return [String(file), read()]; }\n`,
+      "reads `file`",
+    ],
+    [
+      "a tagged template",
+      `${head}const tag = (_, file) => file.value;\nexport const f = async () => tag\`\${await remark().use(html).process("x")}\`;\n`,
+      "can't prove",
+    ],
+  ])("leaves %s", (_, source, reason) => {
+    const result = rewriteSource(source, "x.ts");
+    expect(result.code).toBe(source);
+    expect(result.rewrites[0]?.reason).toContain(reason);
+  });
+
+  it("rewrites an inner chain first and leaves the outer one, with the imports it still reads", () => {
+    const { code, rewrites } = rewriteSource(
+      `import { remark } from "remark";\nimport html from "remark-html";\nexport const f = async () => String(await remark().use(html).process(String(await remark().use(html).process("x"))));\n`,
+      "x.ts",
+    );
+    expect(rewrites.map((rewrite) => rewrite.rewritten)).toEqual([false, true]);
+    expect(rewrites[0]?.reason).toContain("holds another unified chain");
+    expect(code).toContain('import { remark } from "remark";');
+    expect(code).toContain("renderHtml(");
+  });
+
+  it("imports renderHtml under an alias when a parameter shadows the file's own import", () => {
+    const code = rewriteSource(
+      `import { renderHtml } from "@comark/html";\nimport { remark } from "remark";\nimport html from "remark-html";\nexport async function f(renderHtml) { return String(await remark().use(html).process("x")); }\n`,
+      "x.ts",
+    ).code;
+    expect(code).toContain("renderHtmlFromComark(");
+  });
+});
+
+describe("scanSource in component markup", () => {
+  it("reads plugin lists in Svelte and Vue markup, and a react-markdown with no plugins", () => {
+    const names = (source: string, file: string) =>
+      scanSource(source, file).map((setup) => [
+        setup.host,
+        setup.plugins.map((plugin) => plugin.name),
+      ]);
+    expect(
+      names(
+        `<script>\nimport math from "remark-math";\n</script>\n<Markdown remarkPlugins={[math]} md={text} />\n`,
+        "a.svelte",
+      ),
+    ).toEqual([["component", ["remark-math"]]]);
+    expect(
+      names(
+        `<template>\n  <Remark :remark-plugins="[gfm]" />\n</template>\n<script setup>\nimport gfm from "remark-gfm";\n</script>\n`,
+        "a.vue",
+      ),
+    ).toEqual([["component", ["remark-gfm"]]]);
+    expect(
+      names(
+        `import ReactMarkdown from "react-markdown";\nexport const C = ({ t }) => <ReactMarkdown>{t}</ReactMarkdown>;\n`,
+        "a.tsx",
+      ),
+    ).toEqual([["react-markdown", []]]);
+  });
+});

@@ -4,7 +4,7 @@ description: Check a remark project, rewrite its unified chains, migrate its Mar
 install: pnpm add -D remark-to-comark
 ---
 
-Run the check, apply the two rewrites it suggests, and run the check again to see what's left.
+Run the check, migrate the Markdown, rewrite the unified chains, and run the check again to see what's left.
 
 ## Installation
 
@@ -20,6 +20,15 @@ pnpm remark-to-comark check .
 
 `check` reads the project's code and Markdown and prints one diagnostic per finding, warnings first. `--verbose` adds the info findings, which say what each plugin becomes. `--json` prints every finding with its full file list, for agents. Each diagnostic links its section in [Diagnostics](/remark-to-comark/diagnostics/).
 
+## Migrate the Markdown
+
+```sh
+pnpm remark-to-comark content "**/*.{md,mdx}"          # what it would change
+pnpm remark-to-comark content "**/*.{md,mdx}" --write  # apply it
+```
+
+`content` parses each file with the project's own syntax plugins, such as remark-math, and edits only text remark read as text. It finds those plugins in the code `rewrite` replaces, so run it first. With `--syntax plain` it skips the escaping, for a project that reads its Markdown with `comarkOptions({ syntax: "plain" })`, where Comark's component syntax is off. MDX files, and the `.md` files a Docusaurus site compiles as MDX, are reported and left alone.
+
 ## Rewrite unified chains
 
 ```sh
@@ -32,15 +41,6 @@ A chain like `unified().use(remarkParse).use(remarkRehype).use(rehypeStringify).
 ```sh
 pnpm add comark @comark/html remark-to-comark
 ```
-
-## Migrate the Markdown
-
-```sh
-pnpm remark-to-comark content "**/*.{md,mdx}"          # what it would change
-pnpm remark-to-comark content "**/*.{md,mdx}" --write  # apply it
-```
-
-`content` parses each file with the project's own syntax plugins, such as remark-math, and edits only text remark read as text. With `--syntax plain` it skips the escaping, for a project that reads its Markdown with `comarkOptions({ syntax: "plain" })`, where Comark's component syntax is off. MDX files, and the `.md` files a Docusaurus site compiles as MDX, are reported and left alone.
 
 ## Check again
 

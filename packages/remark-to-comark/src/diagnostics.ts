@@ -128,9 +128,9 @@ export const catalog = {
     ruleId: "remark-to-comark/content",
     severity: "warn",
     why: (p: Where & { count: number; lines: string }) =>
-      `${p.at} has ${p.count} ${p.count === 1 ? "block" : "blocks"} the rewrite left as written, on lines ${p.lines}: a URL follows an unclosed \`[\`, and escaping that \`[\` would change where remark ends the link. Comark may read the bracket as a span there.`,
+      `${p.at} has ${p.count} ${p.count === 1 ? "block" : "blocks"} the rewrite left as written, on lines ${p.lines}, because no edit kept remark's output the same. Comark may read ${p.count === 1 ? "it" : "them"} differently.`,
     fix: () =>
-      "Where the bracket is plain text, escape it by hand (`\\[`) or wrap the URL in `<…>` so both parsers see an autolink, then run the check again.",
+      "Look at each line. A URL after an unclosed `[`: escape the bracket by hand (`\\[`) or wrap the URL in `<…>`. A strikethrough nested in another or inside a reference label: rewrite it with `~~`. Then run the check again.",
   },
 } as const;
 

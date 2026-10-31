@@ -167,4 +167,16 @@ describe("check", () => {
       count: 1,
     });
   });
+
+  it("keeps parsing math after rewrite moved the project's chain to Comark", async () => {
+    const findings = await check(
+      project({
+        "render.ts": `import math from "@comark/html/plugins/math";\nimport { comarkOptions } from "remark-to-comark/setup";\nexport const options = comarkOptions({ plugins: [math()] });\n`,
+        "doc.md": "Sum $x_{i}$ and {y}.\n",
+      }),
+    );
+    expect(findings.find((finding) => finding.code === "RTC0302")?.params).toMatchObject({
+      count: 1,
+    });
+  });
 });

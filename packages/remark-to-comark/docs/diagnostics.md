@@ -74,5 +74,10 @@ Docusaurus v3 compiles `.md` files as MDX too, unless `docusaurus.config` sets `
 
 ## rtc0303
 
-**A block left as written.** A URL follows an unclosed `[` in it. remark links that URL in a later pass, and escaping the `[` can move where the link ends, so `content` edits such a block only when remark still renders it exactly as before. This block failed that check, and Comark may read its bracket as a span. Escape the bracket by hand where it's plain text, or wrap the URL in `<…>`, then run the check again.
+**A block left as written**, because no edit kept remark's output the same. Comark may read it differently. There are two cases.
+
+- A URL follows an unclosed `[`. remark links that URL in a later pass, and escaping the `[` can move where the link ends, so `content` edits such a block only when remark still renders it exactly as before. Escape the bracket by hand where it's plain text, or wrap the URL in `<…>`.
+- A strikethrough sits inside another one (`~a~~b~~a~`) or inside a reference label (`[~a~]`). Widening `~` to `~~` there changes how the tildes pair up, or breaks the reference. Rewrite it with `~~` by hand.
+
+Then run the check again.
 

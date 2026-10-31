@@ -268,3 +268,14 @@ describe("setup matches remark on review inputs", () => {
     ).toEqual([]);
   });
 });
+
+describe("frontmatter issues", () => {
+  it("name their rule, as every issue in meta.issueRules does", async () => {
+    const setup = comarkSetup();
+    const { meta } = await parseMarkdown("---\ntitle: [\n---\n\nBody\n", {
+      ...setup.options,
+      plugins: setup.plugins,
+    });
+    expect(meta.issueRules).toMatchObject({ [meta.issues[0]!]: "comark/invalid-frontmatter" });
+  });
+});

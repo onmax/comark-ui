@@ -119,7 +119,7 @@ export function scanSource(source: string, file: string): Setup[] {
   const shared = new Map<string, string>();
   for (const block of blocks)
     for (const [name, from] of importsOf(block.code, block.name)) shared.set(name, from);
-  return blocks.flatMap((block) => {
+  const inScripts = blocks.flatMap((block) => {
     const offset = lineOffset(source, block);
     // Offsets stay relative to the block: only rewriteSource reads them, and it rewrites block by block.
     return scanScript(block.code, block.name, shared).map((setup) => ({
@@ -129,6 +129,49 @@ export function scanSource(source: string, file: string): Setup[] {
       plugins: setup.plugins.map((plugin) => ({ ...plugin, line: plugin.line + offset })),
     }));
   });
+  return [...inScripts, ...scanMarkup(source, file, blocks, shared)];
+}
+
+/**
+ * Plugin lists passed in a component's markup: `remarkPlugins={[math]}` in Svelte and Astro, `:remark-plugins="[math]"`
+ * in Vue. Each expression is scanned with the scripts' imports in scope, so `math` resolves to remark-math.
+ */
+function scanMarkup(
+  source: string,
+  file: string,
+  blocks: { start: number; code: string }[],
+  shared: Map<string, string>,
+): Setup[] {
+  let markup = source;
+  for (const block of [...blocks].sort((a, b) => b.start - a.start))
+    markup =
+      markup.slice(0, block.start) +
+      " ".repeat(block.code.length) +
+      markup.slice(block.start + block.code.length);
+  const setups: Setup[] = [];
+  const pattern =
+    /(?:\b(remarkPlugins|rehypePlugins)=\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}|:(remark-plugins|rehype-plugins|remarkPlugins|rehypePlugins)="([^"]*)")/g;
+  for (const match of markup.matchAll(pattern)) {
+    const expression = match[2] ?? match[4] ?? "";
+    const line = source.slice(0, match.index).split("\n").length;
+    try {
+      for (const setup of scanScript(
+        `const props = { remarkPlugins: ${expression} };`,
+        `${file}.ts`,
+        shared,
+      ))
+        setups.push({
+          ...setup,
+          file,
+          line,
+          host: "component",
+          plugins: setup.plugins.map((plugin) => ({ ...plugin, line })),
+        });
+    } catch {
+      // An expression oxc can't read stays unscanned, like a script it can't parse.
+    }
+  }
+  return setups;
 }
 
 /** The module each imported name comes from, in one script. */
@@ -419,6 +462,21 @@ function scanScript(source: string, file: string, shared?: Map<string, string>):
         ? "react-markdown"
         : "component";
       if (plugins.length) setups.push({ file, line: lineOf(node.start), host: owner, plugins });
+      return;
+    }
+    // `<ReactMarkdown>{text}</ReactMarkdown>` with no plugin props still renders with remark.
+    if (
+      node.type === "JSXOpeningElement" &&
+      node.name.type === "JSXIdentifier" &&
+      imports.get(node.name.name) === "react-markdown"
+    ) {
+      const props = node.attributes.flatMap((attribute) =>
+        attribute.type === "JSXAttribute" && attribute.name.type === "JSXIdentifier"
+          ? [attribute.name.name]
+          : [],
+      );
+      if (!props.some((prop) => PLUGIN_LISTS.has(prop)))
+        setups.push({ file, line: lineOf(node.start), host: "react-markdown", plugins: [] });
     }
   });
   return setups;
