@@ -71,7 +71,6 @@ const lucideNames = [
   "file-text",
   "git-compare",
   "graduation-cap",
-  "sparkles",
   "workflow",
   "flask-conical",
   "search",
@@ -360,7 +359,7 @@ const sections: Section[] = [
   {
     slug: "skills",
     label: "Skills",
-    icon: "sparkles",
+    icon: "graduation-cap",
     lists: [
       { slugs: ["skills"] },
       { title: "Document skills", slugs: skillOrder.map((name) => `skills/${name}`) },
@@ -869,7 +868,7 @@ const packageGrid: NodeHandler = async ([, , ...children]) => {
   const list = packages
     .map(
       (pkg) =>
-        `<li><a href="${href(pkg.slug)}"><span class="grid-icon">${siteIcon(pkg.icon, 20)}</span><strong>${escapeHtml(pkg.label)}</strong><span>${escapeHtml(pkg.blurb)}</span><span class="grid-arrow">${siteIcon("arrow-up-right", 16)}</span></a></li>`,
+        `<li><a href="${href(pkg.slug)}"><span class="grid-icon">${siteIcon(pkg.icon, 20)}</span><strong>${escapeHtml(pkg.label)}</strong><span>${escapeHtml(pkg.blurb)}</span></a></li>`,
     )
     .join("");
   return (
@@ -963,6 +962,14 @@ const skill: NodeHandler = async ([, attrs], state) => {
 // The Skills page's gallery: a card per skill with a still of its example, as the landing's canvas draws a block's.
 // The still can't hold a link, so the card's title link covers it.
 const skillStyles = new Set<string>();
+const skillIcon = (page: { slug: string; document: { frontmatter: Record<string, unknown> } }) => {
+  const icon = rawText(page.document.frontmatter.icon);
+  if (!icon)
+    throw new Error(
+      `docs/pages/${page.slug}.md needs an \`icon\` in its frontmatter, a Lucide name such as \`git-compare\`.`,
+    );
+  return icon;
+};
 const skillCards: NodeHandler = async () => {
   const cards = await Promise.all(
     skillOrder.map(async (name) => {
@@ -973,7 +980,7 @@ const skillCards: NodeHandler = async () => {
       );
       return (
         `<li class="skill-card"><div class="skill-card-screen" inert><div class="skill-card-paper"><div class="demo-page">${still}</div></div></div>` +
-        `<div class="skill-card-text"><a href="${href(page.slug)}">${siteIcon(rawText(page.document.frontmatter.icon) || "sparkles", 16)}<strong>${escapeHtml(page.label)}</strong></a>` +
+        `<div class="skill-card-text"><a href="${href(page.slug)}">${siteIcon(skillIcon(page), 16)}<strong>${escapeHtml(page.label)}</strong></a>` +
         `<p>${escapeHtml(page.description)}</p></div></li>`
       );
     }),
@@ -1835,9 +1842,9 @@ await writeFile(
     description: landing.tagline,
     body: `<link rel="preload" href="/canvas-cards.json" as="fetch" crossorigin>
 <div class="landing">
-<div class="landing-hero enter"><div><h1>${escapeHtml(landing.headline)}</h1><p>${escapeHtml(landing.tagline)}</p>${pageActions("")}</div>
+<div class="landing-hero"><div><h1>${escapeHtml(landing.headline)}</h1><p>${escapeHtml(landing.tagline)}</p>${pageActions("")}</div>
 <div>${installerFor(landing.install)}<div class="actions"><a class="button primary" href="/play/">${siteIcon("flask-conical", 15)}Open the playground</a><a class="button" href="/introduction/">Read the docs${siteIcon("arrow-right", 15)}</a></div></div></div>
-<main class="enter" style="--i:1">${await renderHtmlFromDocument(landing.document, { components: { ...components, packages: packageGrid, drop, hero } })}</main>
+<main>${await renderHtmlFromDocument(landing.document, { components: { ...components, packages: packageGrid, drop, hero } })}</main>
 ${footer()}
 </div>
 <script>${script.trim()}</script>`,
@@ -1862,9 +1869,9 @@ for (const page of parsed) {
       description: page.tagline,
       body: `<div class="page${page.slug === "badges" ? " page-badges" : ""}">
 <div class="content">
-<div class="hero enter">${eyebrow ? `<p class="eyebrow mono">${eyebrow}</p>` : ""}${page.rule ? `<p class="eyebrow mono">${page.rule.code} · ${page.rule.severity ?? "warning"}</p>` : ""}<div class="hero-title"><h1>${escapeHtml(page.title)}</h1>${page.slug === "badges" ? "" : pageActions(page.slug)}</div><p>${page.rule ? inlineCode(page.rule.title) : escapeHtml(page.tagline)}</p>
+<div class="hero">${eyebrow ? `<p class="eyebrow mono">${eyebrow}</p>` : ""}${page.rule ? `<p class="eyebrow mono">${page.rule.code} · ${page.rule.severity ?? "warning"}</p>` : ""}<div class="hero-title"><h1>${escapeHtml(page.title)}</h1>${page.slug === "badges" ? "" : pageActions(page.slug)}</div><p>${page.rule ? inlineCode(page.rule.title) : escapeHtml(page.tagline)}</p>
 ${page.install ? installerFor(page.install) : skillOf(page.slug) ? skillInstall(skillOf(page.slug)) : ""}</div>
-<main class="enter" style="--i:1">${eagerFirst(
+<main>${eagerFirst(
         sized(
           await renderHtmlFromDocument(
             { ...page.document, nodes: asFields(page.document.nodes) },
