@@ -3,6 +3,8 @@ import { resolveAttributes } from "comark/render";
 import { escapeHtml } from "comark/utils";
 import { start } from "./client.ts";
 import { css } from "./styles.ts";
+import { scalar } from "../../../shared/text.ts";
+import { attr } from "../../../shared/html.ts";
 
 export { default } from "./index.ts";
 export type { MagicMoveMeta } from "./index.ts";
@@ -18,13 +20,6 @@ export function runtime(state: State): string {
   return `<style data-comark-magic-move>${css}</style><script>(${start.toString()})("")</script>`;
 }
 
-const attr = (value: string) => escapeHtml(value, { '"': "&quot;" });
-const text = (value: unknown) =>
-  value === undefined || value === null || value instanceof Object
-    ? undefined
-    : // SAFETY: undefined, null, objects, and arrays returned above, so only a string, number, or boolean is left.
-      String(value as string | number | boolean);
-
 // `:bound` props resolve the way Comark's Vue, React, and Svelte renderers resolve them, so all four agree.
 const props = (attrs: Record<string, unknown>, state: State) =>
   resolveAttributes(attrs, state.renderData, { parseJson: true });
@@ -39,7 +34,7 @@ const idFor = (uid: unknown, state: State) => {
     ).join("");
     namespaces.set(state.context, namespace);
   }
-  return attr(`${text(uid) ?? "cmv"}-${namespace}`);
+  return attr(`${scalar(uid) ?? "cmv"}-${namespace}`);
 };
 
 const tab = (uid: string, label: string, index: number) =>
@@ -48,7 +43,7 @@ const tab = (uid: string, label: string, index: number) =>
 const magicMove: NodeHandler = async ([, attrs, ...children], state) => {
   const { uid, labels, title } = props(attrs, state);
   const id = idFor(uid, state);
-  const name = text(title);
+  const name = scalar(title);
   const tabs = (Array.isArray(labels) ? labels.map(String) : []).map((label, at) =>
     tab(id, label, at + 1),
   );
@@ -60,11 +55,11 @@ const magicMove: NodeHandler = async ([, attrs, ...children], state) => {
 
 const step: NodeHandler = async ([, attrs, ...children], state) => {
   const { uid, index, label } = props(attrs, state);
-  const at = attr(text(index) ?? "");
+  const at = attr(scalar(index) ?? "");
   const base = idFor(uid, state);
   return (
     `<div class="cmv-step" role="tabpanel" id="${base}-panel-${at}" aria-labelledby="${base}-tab-${at}" tabindex="0"${Number(index) > 1 ? " data-inactive" : ""}>` +
-    `<div class="cmv-caption">${escapeHtml(text(label) ?? "")}</div>${await state.flow(["div", {}, ...children], state)}</div>`
+    `<div class="cmv-caption">${escapeHtml(scalar(label) ?? "")}</div>${await state.flow(["div", {}, ...children], state)}</div>`
   );
 };
 

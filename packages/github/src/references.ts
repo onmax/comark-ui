@@ -1,6 +1,7 @@
-import type { ElementNode, Node } from "comark";
+import type { Node } from "comark";
 import { defineComarkPlugin } from "comark";
 import { type GitHubMeta, report } from "./meta.ts";
+import { isElement } from "../../../shared/nodes.ts";
 
 export interface ReferencesOptions {
   /** The repository a bare `#123` points into, as `owner/name`. Without it, `#123` stays text. */
@@ -14,9 +15,6 @@ const REPO = /^[a-z\d-]+\/[\w.-]+$/i;
 // is an npm scope such as `@comark/html`, so it isn't a mention.
 const REFERENCE =
   /(?<![\w/.@#-])(?:([a-z\d-]+\/[\w.-]+)?#(\d+)|@([a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}))(?![\w/-])/gi;
-
-const isElement = (node: Node | undefined): node is ElementNode =>
-  Array.isArray(node) && node[0] !== null;
 
 function link(text: string, repo: string | undefined): Node[] {
   const nodes: Node[] = [];

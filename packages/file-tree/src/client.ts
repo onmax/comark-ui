@@ -1,13 +1,8 @@
 import { css } from "./styles.ts";
+import { addStyles as add } from "../../../shared/styles.ts";
 
 /** Adds the file tree styles to the page once. The Vue, React, and Svelte components call it when they mount. */
-export function addStyles(): void {
-  if (document.querySelector("style[data-comark-file-tree]")) return;
-  const style = document.createElement("style");
-  style.dataset.comarkFileTree = "";
-  style.textContent = css;
-  document.head.append(style);
-}
+export const addStyles = (): void => add("file-tree", css);
 
 /**
  * Lucide's folder and file (ISC), each as one path, for entries without an icon. Every renderer draws them in the

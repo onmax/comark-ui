@@ -1,8 +1,8 @@
 import type { NodeHandler, State } from "comark";
-import { escapeHtml } from "comark/utils";
 import type { IconData } from "comark-icon";
 import { iconHtml, iconStyles } from "comark-icon/html";
 import { css } from "./styles.ts";
+import { attr } from "../../../shared/html.ts";
 
 export { default } from "./index.ts";
 export type {
@@ -14,13 +14,6 @@ export type {
 
 // Each render gets a fresh `state.context`, so a document carries the styles once.
 const styled = new WeakSet<object>();
-
-const attr = (value: unknown) =>
-  escapeHtml(
-    // SAFETY: the parse plugin writes every attribute the renderer reads as a string.
-    String(value as string),
-    { '"': "&quot;" },
-  );
 
 const styles = (state: State) => {
   if (styled.has(state.context)) return "";

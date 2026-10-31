@@ -1,5 +1,6 @@
 import { theme } from "comark-zoom/theme";
 import { start } from "./script.ts";
+import { addStyles } from "../../../shared/styles.ts";
 
 /** The typeset styles, for a page that renders Markdown without comark-ui, such as a rich-text editor. */
 export { typesetCss } from "./typeset-css.ts";
@@ -73,11 +74,7 @@ export function addMermaidStyles(): void {
       block.style.removeProperty("--cmm-svg");
     }
   }
-  if (document.querySelector("style[data-comark-mermaid]")) return;
-  const style = document.createElement("style");
-  style.dataset.comarkMermaid = "";
-  style.textContent = mermaidCss;
-  document.head.append(style);
+  addStyles("mermaid", mermaidCss);
 }
 
 const icon = (name: string, path: string) =>

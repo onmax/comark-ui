@@ -2,6 +2,8 @@ import type { ElementNode, Node } from "comark";
 import { resolveAttributes } from "comark/render";
 import { textContent } from "comark/utils";
 import type { QuizLabels } from "./labels.ts";
+import { hash, text } from "../../../shared/text.ts";
+import { childrenOf, isElement } from "../../../shared/nodes.ts";
 
 export type Kind = "question" | "poll" | "recall";
 
@@ -55,15 +57,6 @@ const POSITIONAL = [
   /\b(?:first|second|third|last)\s+(?:two|three|options?|answers?|choices?)\b/i,
 ];
 
-export const isElement = (node: Node | undefined): node is ElementNode =>
-  Array.isArray(node) && node[0] !== null;
-// SAFETY: an element node is [tag, attributes, ...children], so everything after index 1 is a child node.
-export const childrenOf = (node: ElementNode) => node.slice(2) as Node[];
-const text = (value: unknown) =>
-  value === undefined || value === null || value instanceof Object
-    ? ""
-    : // SAFETY: undefined, null, objects, and arrays returned above, so only a string, number, or boolean is left.
-      String(value as string | number | boolean).trim();
 const isOn = (value: unknown) => value === true || value === "true" || value === "";
 const isOff = (value: unknown) => value === false || value === "false";
 const clip = (value: string) => {
@@ -78,14 +71,6 @@ const or = (words: readonly string[]) => {
     ? `${quoted.slice(0, -1).join(", ")}, or ${quoted.at(-1)}`
     : quoted.join(" or ");
 };
-
-/** FNV-1a, in base 36: short, and the same every time the same text is hashed. */
-export function hash(source: string) {
-  let value = 0x811c9dc5;
-  for (let at = 0; at < source.length; at++)
-    value = Math.imul(value ^ source.charCodeAt(at), 0x01000193);
-  return (value >>> 0).toString(36);
-}
 
 // mulberry32: a few lines, and enough to shuffle a handful of options the same way on every render.
 function random(seed: number) {

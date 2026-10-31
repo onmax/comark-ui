@@ -1,6 +1,7 @@
 import type { ElementNode, Node } from "comark";
 import { defineComarkPlugin } from "comark";
 import comarkHtml from "comark/plugins/html";
+import { isElement } from "../../../shared/nodes.ts";
 
 // GitHub's allowlist, from its html-pipeline sanitization filter, plus the `picture` and `source` it allows for
 // light and dark images.
@@ -35,9 +36,6 @@ const TAG_ATTRIBUTES = new Map([
 const DROPPED = new Set(["script", "style"]);
 const SCHEME = /^([a-z][a-z\d+.-]*):/i;
 const URLS = new Set(["href", "src", "srcset", "cite", "longdesc"]);
-
-const isElement = (node: Node | undefined): node is ElementNode =>
-  Array.isArray(node) && node[0] !== null;
 
 // Relative URLs and http(s) pass everywhere, and links may also be mailto. Browsers skip tabs and newlines inside a
 // scheme, so `java\nscript:` is read as `javascript:`.

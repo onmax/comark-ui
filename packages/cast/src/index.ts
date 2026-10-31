@@ -3,6 +3,9 @@ import { defineComarkPlugin } from "comark";
 import { resolveAttributes } from "comark/render";
 import { textContent } from "comark/utils";
 import { Terminal, toNodes } from "./term.ts";
+import { childrenOf, isElement } from "../../../shared/nodes.ts";
+import { errorText, scalar, text } from "../../../shared/text.ts";
+import { OutsideRoot, diskReader, resolvePath } from "../../../shared/disk.ts";
 
 /** Reads a file by its POSIX path relative to `root`, such as `demos/test.cast`. Returns undefined when it doesn't exist. */
 export type CastReader = (path: string) => string | undefined | Promise<string | undefined>;
@@ -31,59 +34,12 @@ export type CastAttributes = { mode?: "screen" | "log"; title?: string };
 
 type Data = Parameters<typeof resolveAttributes>[1];
 
-const isElement = (node: Node): node is ElementNode => Array.isArray(node) && node[0] !== null;
-const childrenOf = ([, , ...rest]: ElementNode): Node[] => rest;
-const scalar = (value: unknown) =>
-  value === undefined || value === null || value instanceof Object
-    ? undefined
-    : // SAFETY: undefined, null, objects, and arrays returned above, so only a string, number, or boolean is left.
-      String(value as string | number | boolean);
-const text = (value: unknown) => scalar(value)?.trim() ?? "";
-const errorText = (error: unknown) => (error instanceof Error ? error.message : String(error));
 const isObject = (value: unknown): value is Record<string, unknown> =>
   value instanceof Object && !Array.isArray(value);
 const size = (value: unknown, fallback: number) =>
   Number.isInteger(value) && Number(value) > 0 && Number(value) <= 1000 ? Number(value) : fallback;
 
 const PROPS = ["src", "mode", "title"];
-
-class OutsideRoot extends Error {}
-
-// Paths are joined as strings, so the root check runs the same in Node, browsers, and edge runtimes.
-function resolve(src: string) {
-  const parts: string[] = [];
-  for (const part of src.split(/[/\\]/)) {
-    if (part === "" || part === ".") continue;
-    if (part !== "..") parts.push(part);
-    else if (parts.pop() === undefined) return;
-  }
-  return parts.join("/");
-}
-
-function diskReader(root: string): CastReader {
-  const folder = (root || ".").replace(/[/\\]+$/, "");
-  return async (path) => {
-    // Imported on first read, so the plugin loads in runtimes without node:fs when they pass their own `read`.
-    const { readFile, realpath } = await import("node:fs/promises");
-    const paths = await import("node:path");
-    try {
-      // The string check can't see symlinks, so the real target must sit under the real root too.
-      const [base, target] = await Promise.all([realpath(folder), realpath(`${folder}/${path}`)]);
-      const inside = paths.relative(base, target);
-      if (inside === ".." || inside.startsWith(`..${paths.sep}`) || paths.isAbsolute(inside))
-        throw new OutsideRoot();
-      return await readFile(target, "utf8");
-    } catch (error) {
-      if (
-        error instanceof Error &&
-        "code" in error &&
-        (error.code === "ENOENT" || error.code === "ENOTDIR")
-      )
-        return undefined;
-      throw error;
-    }
-  };
-}
 
 /** Replays a cast's output, or says what's wrong with it. */
 function replay(source: string, name: string, log: boolean): { nodes: Node[] } | { issue: Issue } {
@@ -188,7 +144,7 @@ async function cast(
   if (src) {
     if (/^[a-z][a-z\d+.-]*:/i.test(src))
       return fail("comark/cast/remote-file", `${name}: only local files can be read.`);
-    const path = resolve(src);
+    const path = resolvePath("", src);
     const leaves = `${name}: the path leaves the root. Move the file under the root or widen \`root\`.`;
     if (path === undefined) return fail("comark/cast/path-outside-root", leaves);
     try {

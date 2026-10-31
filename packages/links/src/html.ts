@@ -2,7 +2,7 @@ import type { NodeHandler, State } from "comark";
 import { escapeHtml, textContent } from "comark/utils";
 import type { Anchor } from "./anchors.ts";
 import { STYLES_TAG } from "./external.ts";
-import { text } from "./text.ts";
+import { rawText } from "../../../shared/text.ts";
 import { css } from "./styles.ts";
 
 export { anchors, external, STYLES_TAG } from "./index.ts";
@@ -25,7 +25,7 @@ const heading: NodeHandler = async ([tag, { anchor, ...attrs }, ...children], st
   state.renderData = { ...outer, props };
   try {
     const html = (await state.handlers.html([tag, attrs, ...children], state, parent)).trimEnd();
-    const id = text(attrs.id);
+    const id = rawText(attrs.id);
     if (!anchor || !id) return html;
     // SAFETY: the parse plugin is the only writer of `anchor`, always as an `Anchor`.
     const { label, icon } = anchor as Anchor;

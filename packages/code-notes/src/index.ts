@@ -1,5 +1,7 @@
 import type { ComarkParseTokensState, ElementNode, Node } from "comark";
 import { defineComarkPlugin } from "comark";
+import { childrenOf, isElement } from "../../../shared/nodes.ts";
+import { hash } from "../../../shared/text.ts";
 
 export type CodeNotesMeta = {
   /** One readable sentence per problem with a fence's markers or notes. Other plugins add theirs too. */
@@ -36,20 +38,10 @@ const BLOCK_WORDS = new RegExp(String.raw`^(.*?)(/\*|<!--)(.*?)\s+(${MARKERS})\s
 
 const MARKDOWN = new Set(["md", "mdc", "markdown", "comark"]);
 
-const isElement = (node: Node): node is ElementNode => Array.isArray(node) && node[0] !== null;
-const childrenOf = ([, , ...rest]: ElementNode): Node[] => rest;
 const textOf = (node: Node): string =>
   !Array.isArray(node) ? node : isElement(node) ? childrenOf(node).map(textOf).join("") : "";
 const numbers = (markers: string) =>
   [...markers.matchAll(/\d+/g)].map(([digits]) => Number(digits));
-
-// FNV-1a of the fence, so ids differ between documents on one page yet stay the same every time one renders.
-function hash(text: string) {
-  let value = 0x811c9dc5;
-  for (let at = 0; at < text.length; at++)
-    value = Math.imul(value ^ text.charCodeAt(at), 0x01000193);
-  return (value >>> 0).toString(36);
-}
 
 /** Strips the markers off each line, and says where they were. */
 function strip(content: string) {

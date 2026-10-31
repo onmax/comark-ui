@@ -9,6 +9,8 @@ import {
   type IconData,
   type Icons,
 } from "comark-icon";
+import { hash, text } from "../../../shared/text.ts";
+import { childrenOf, isElement } from "../../../shared/nodes.ts";
 
 export type DetailsOptions = {
   /**
@@ -42,17 +44,8 @@ export type DisclosureSummaryAttributes = { icon?: IconData; show?: string; hide
 
 type Data = Parameters<typeof resolveAttributes>[1];
 
-const isElement = (node: Node | undefined): node is ElementNode =>
-  Array.isArray(node) && node[0] !== null;
 // Comments render nothing, so they aren't content a block would drop.
 const isContent = (node: Node) => (Array.isArray(node) ? node[0] !== null : node.trim() !== "");
-// SAFETY: an element node is [tag, attributes, ...children], so everything after index 1 is a child node.
-const childrenOf = (node: ElementNode) => node.slice(2) as Node[];
-const text = (value: unknown) =>
-  value === undefined || value === null || value instanceof Object
-    ? ""
-    : // SAFETY: undefined, null, objects, and arrays returned above, so only a string, number, or boolean is left.
-      String(value as string | number | boolean).trim();
 const clip = (value: string) => {
   const words = value.trim().replace(/\s+/g, " ");
   return words.length > 40 ? `${words.slice(0, 39)}…` : words;
@@ -79,15 +72,6 @@ function describe(node: Node) {
   const kind = KINDS.get(tag) ?? (/^h[1-6]$/.test(tag) ? "heading" : `\`::${tag}\` block`);
   const words = clip(textContent(node));
   return `the ${kind}${words ? ` "${words}"` : ""}`;
-}
-
-// FNV-1a of the source. Names from it differ between documents on one page, so one accordion never closes another's
-// items, yet stay the same every time a document renders.
-function hash(source: string) {
-  let value = 0x811c9dc5;
-  for (let at = 0; at < source.length; at++)
-    value = Math.imul(value ^ source.charCodeAt(at), 0x01000193);
-  return (value >>> 0).toString(36);
 }
 
 interface Walk {

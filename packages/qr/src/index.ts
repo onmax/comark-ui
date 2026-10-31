@@ -2,6 +2,8 @@ import type { ElementNode, Node } from "comark";
 import { defineComarkPlugin } from "comark";
 import { resolveAttributes } from "comark/render";
 import { encode } from "uqr";
+import { errorText, text } from "../../../shared/text.ts";
+import { isElement } from "../../../shared/nodes.ts";
 
 export type QrMeta = {
   /** One readable sentence per problem with a `:qr`. Empty when the document has none. Other plugins add theirs too. */
@@ -20,15 +22,8 @@ export type QrAttributes = { value?: string; size?: number; path?: string };
 
 type Data = Parameters<typeof resolveAttributes>[1];
 
-const isElement = (node: Node): node is ElementNode => Array.isArray(node) && node[0] !== null;
-const text = (value: unknown) =>
-  value === undefined || value === null || value instanceof Object
-    ? ""
-    : // SAFETY: undefined, null, objects, and arrays returned above, so only a string, number, or boolean is left.
-      String(value as string | number | boolean).trim();
 // Comments render nothing, so they aren't content a `:qr` would drop.
 const isContent = (node: Node) => (Array.isArray(node) ? node[0] !== null : node.trim() !== "");
-const errorText = (error: unknown) => (error instanceof Error ? error.message : String(error));
 
 /** Each row's runs of dark modules as one rectangle, so a code is one short path. */
 function pathOf(data: boolean[][]) {

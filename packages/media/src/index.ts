@@ -2,6 +2,8 @@ import type { ComarkParseTokensState, ElementNode, Node } from "comark";
 import { defineComarkPlugin } from "comark";
 import { resolveAttributes } from "comark/render";
 import { measure } from "comark-zoom/size";
+import { text } from "../../../shared/text.ts";
+import { childrenOf, isElement } from "../../../shared/nodes.ts";
 
 export type MediaMeta = {
   /** One readable sentence per problem with a video or audio file. Empty when the document has none. Other plugins add theirs too. */
@@ -53,13 +55,6 @@ const FLAGS = ["autoplay", "loop", "muted"] as const;
 const SIDES = ["width", "height"] as const;
 const KNOWN = new Set<string>(["src", "alt", "kind", "poster", ...FLAGS]);
 
-const isElement = (node: Node): node is ElementNode => Array.isArray(node) && node[0] !== null;
-const childrenOf = ([, , ...rest]: ElementNode): Node[] => rest;
-const text = (value: unknown) =>
-  value === undefined || value === null || value instanceof Object
-    ? ""
-    : // SAFETY: undefined, null, objects, and arrays returned above, so only a string, number, or boolean is left.
-      String(value as string | number | boolean).trim();
 const kindOf = (src: string) => {
   const path = src.replace(/[?#].*$/, "");
   return VIDEO.test(path) ? "video" : AUDIO.test(path) ? "audio" : undefined;

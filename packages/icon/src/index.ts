@@ -8,6 +8,8 @@ import {
   type IconOptions,
   type Icons,
 } from "./resolve.ts";
+import { text } from "../../../shared/text.ts";
+import { childrenOf, isElement } from "../../../shared/nodes.ts";
 
 export {
   createIcons,
@@ -33,14 +35,6 @@ type Issue = { rule: `comark/icon/${string}`; message: string };
 
 /** The node an icon is. After parsing, its attributes are `name`, `src`, `ratio`, `mask`, and `label`. */
 export const ICON_TAG = "icon";
-
-const isElement = (node: Node): node is ElementNode => Array.isArray(node) && node[0] !== null;
-const childrenOf = ([, , ...rest]: ElementNode): Node[] => rest;
-const text = (value: unknown) =>
-  value === undefined || value === null || value instanceof Object
-    ? ""
-    : // SAFETY: undefined, null, objects, and arrays returned above, so only a string, number, or boolean is left.
-      String(value as string | number | boolean).trim();
 
 const PROPS = ["name", "label", "id", "class"];
 

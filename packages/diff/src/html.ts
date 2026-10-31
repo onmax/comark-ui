@@ -2,6 +2,7 @@ import type { NodeHandler, State } from "comark";
 import { escapeHtml } from "comark/utils";
 import { readDiff } from "./read.ts";
 import { css } from "./styles.ts";
+import { attr } from "../../../shared/html.ts";
 
 export { default } from "./index.ts";
 export type { DiffMeta } from "./index.ts";
@@ -14,7 +15,6 @@ function styles(state: State) {
   return `<style data-comark-diff>${css}</style>`;
 }
 
-const attr = (value: string) => escapeHtml(value, { '"': "&quot;" });
 // Comark restores shared render state after each node, so rows render one at a time to keep the output deterministic.
 async function each<T>(items: T[], render: (item: T) => Promise<string>) {
   let html = "";

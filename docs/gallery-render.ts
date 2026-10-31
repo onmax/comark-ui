@@ -4,6 +4,7 @@ import { renderHtmlFromDocument } from "@comark/html";
 import { parseMarkdown } from "comark";
 import { highlighted, sitePlugins, withoutFor } from "./example-plugins.ts";
 import { components } from "./plugins.ts";
+import { errorText } from "../shared/text.ts";
 
 // One list per package, since Comark caches a parser per list of plugins. A browser may not download another site's
 // images, so chips and badges load theirs as links.
@@ -28,6 +29,6 @@ export async function render(source: string, group: string) {
       issues: document.meta.issues,
     };
   } catch (error) {
-    return { html: "", issues: [error instanceof Error ? error.message : String(error)] };
+    return { html: "", issues: [errorText(error)] };
   }
 }

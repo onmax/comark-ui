@@ -2,18 +2,18 @@ import type { ElementNode, NodeHandler, State } from "comark";
 import { resolveAttributes } from "comark/render";
 import { escapeHtml } from "comark/utils";
 import {
-  childrenOf,
   DEFERRED,
   type DeferredMetadata,
   type Entry,
-  hash,
-  isElement,
   nativeAttributes,
   ROOT,
   transform,
   wrapParagraphs,
 } from "./read.ts";
 import { css, fontCss } from "./styles.ts";
+import { attr } from "../../../shared/html.ts";
+import { childrenOf, isElement } from "../../../shared/nodes.ts";
+import { hash } from "../../../shared/text.ts";
 
 export { default } from "./index.ts";
 export type { CommentsMeta, CommentsOptions, Entry, Mark } from "./index.ts";
@@ -28,7 +28,6 @@ function once(set: WeakSet<object>, state: State, html: string) {
 }
 const styles = (state: State) => once(styled, state, `<style data-comark-comments>${css}</style>`);
 
-const attr = (value: string) => escapeHtml(value, { '"': "&quot;" });
 const valueOf = (value: unknown): string =>
   value === undefined || value === null
     ? ""

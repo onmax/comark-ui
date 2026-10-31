@@ -15,6 +15,8 @@ import {
 import { catalog, type RuleInfo } from "./rules/index.ts";
 import { find, findAny, read, type Source } from "./source.ts";
 import { closest, decode, listIds } from "./words.ts";
+import { errorText, rawText } from "../../../shared/text.ts";
+import { isElement } from "../../../shared/nodes.ts";
 
 export { defineConfig, resolveConfig, type Config } from "./config.ts";
 export type { LinkOptions, Pattern, Routes } from "./links.ts";
@@ -324,7 +326,7 @@ const couldNotParse = (error: unknown): Finding => ({
   rule: "comark/plugin-issue",
   cause: error,
   line: 1,
-  message: `Comark could not parse this document: ${error instanceof Error ? error.message : String(error)}`,
+  message: `Comark could not parse this document: ${errorText(error)}`,
   fix: "Fix what the error names; a plugin that throws stops the whole document from rendering.",
 });
 
@@ -332,7 +334,7 @@ const crashed = (rule: Rule, error: unknown): Finding => ({
   rule,
   cause: error,
   line: 1,
-  message: `lint-comark crashed while checking \`${rule}\`: ${error instanceof Error ? error.message : String(error)}.`,
+  message: `lint-comark crashed while checking \`${rule}\`: ${errorText(error)}.`,
   fix: "The other rules still ran. Report this with the document at https://github.com/onmax/comark-ui/issues.",
 });
 
@@ -523,15 +525,7 @@ function unknownComponents(
   });
 }
 
-// Comark text nodes are strings, elements are arrays, and comments are arrays with a null tag.
-const isElement = (node: Node): node is ElementNode => Array.isArray(node) && node[0] !== null;
-
 // Attribute values and meta entries arrive as strings, numbers, or booleans; anything else is no text.
-const text = (value: unknown) =>
-  value === undefined || value === null || value instanceof Object
-    ? ""
-    : // SAFETY: undefined, null, objects, and arrays returned above, so only a string, number, or boolean is left.
-      String(value as string | number | boolean);
 
 function* elements(nodes: Node[]): Generator<ElementNode> {
   for (const node of nodes) {
@@ -626,9 +620,9 @@ function brokenAnchors(nodes: Node[], source: Source): Finding[] {
   const ids = new Set<string>();
   const links: string[] = [];
   for (const [, attributes] of elements(nodes)) {
-    const id = text(attributes.id);
+    const id = rawText(attributes.id);
     if (id) ids.add(id);
-    const href = text(attributes.href);
+    const href = rawText(attributes.href);
     if (href.startsWith("#") && href.length > 1) links.push(href);
   }
   const locate = locator(
@@ -662,7 +656,7 @@ function idsOf(nodes: Node[]): Set<string> | undefined {
   try {
     const ids = new Set<string>();
     for (const [, attributes] of elements(nodes)) {
-      const id = text(attributes.id);
+      const id = rawText(attributes.id);
       if (id) ids.add(id);
     }
     return ids;
@@ -678,7 +672,7 @@ function linksOf(nodes: Node[], source: Source): Link[] {
   const links: Link[] = [];
   for (const [, attributes] of elements(nodes))
     for (const key of ["href", "src"]) {
-      const value = text(attributes[key]);
+      const value = rawText(attributes[key]);
       if (!value || value.startsWith("#") || value.startsWith("data:")) continue;
       const attribute = !/^https?:/i.test(value);
       for (const needle of new Set([value, decode(value)])) {
@@ -747,7 +741,7 @@ function unsafeUrls(nodes: Node[], source: Source): Finding[] {
   const found: Finding[] = [];
   for (const [tag, attributes] of elements(nodes)) {
     for (const key of ["href", "src"]) {
-      const value = text(attributes[key]);
+      const value = rawText(attributes[key]);
       if (!value) continue;
       const scheme = unsafeScheme(value);
       if (!scheme) continue;
@@ -766,7 +760,7 @@ function unsafeUrls(nodes: Node[], source: Source): Finding[] {
 
 function duplicateIds(nodes: Node[], source: Source, headingIds?: HeadingIdsOption): Finding[] {
   const tagged = [...elements(nodes)].flatMap(([tag, attributes]) => {
-    const id = text(attributes.id);
+    const id = rawText(attributes.id);
     return id ? [{ tag, id }] : [];
   });
   const seen = new Map<string, number>();
@@ -849,7 +843,7 @@ function missingAlts(nodes: Node[], source: Source): Finding[] {
   const found: Finding[] = [];
   const occurrences = new Map<string, number>();
   for (const [tag, attributes] of elements(nodes)) {
-    const src = text(attributes.src);
+    const src = rawText(attributes.src);
     const nth = occurrences.get(src) ?? 0;
     if (src) occurrences.set(src, nth + 1);
     // An empty `alt`, written `{alt=""}` or in HTML, marks an image as decoration on purpose.
@@ -872,11 +866,16 @@ function emptyLinks(nodes: Node[], source: Source): Finding[] {
   const found: Finding[] = [];
   const occurrences = new Map<string, number>();
   for (const [tag, attributes, ...children] of elements(nodes)) {
-    const href = text(attributes.href);
+    const href = rawText(attributes.href);
     const nth = occurrences.get(href) ?? 0;
     if (href) occurrences.set(href, nth + 1);
-    const named = text(attributes["aria-label"]);
-    if (tag !== "a" || !href || named || children.some((child) => isElement(child) || text(child)))
+    const named = rawText(attributes["aria-label"]);
+    if (
+      tag !== "a" ||
+      !href ||
+      named ||
+      children.some((child) => isElement(child) || rawText(child))
+    )
       continue;
     const at = findAny(source, [`](${href}`, `href="${href}"`, `href='${href}'`, `href=${href}`], {
       nth,
@@ -895,13 +894,13 @@ function emptyLinks(nodes: Node[], source: Source): Finding[] {
 
 function pluginIssues(meta: Record<string, unknown>, source: Source, blocks: Block[]): Finding[] {
   const issues = Array.isArray(meta.issues)
-    ? meta.issues.flatMap((issue) => text(issue) || [])
+    ? meta.issues.flatMap((issue) => rawText(issue) || [])
     : [];
   const named: Record<string, unknown> =
     meta.issueRules instanceof Object ? { ...meta.issueRules } : {};
   const locate = locator(source);
   return issues.map((issue) => {
-    const rule = text(named[issue]);
+    const rule = rawText(named[issue]);
     const known = Object.hasOwn(catalog, rule);
     const { line, column } = place(issue, blocks, locate);
     const sentences = issue.split(/(?<=[.!?])\s+(?=[A-Z`])/);

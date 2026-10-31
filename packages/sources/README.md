@@ -43,6 +43,6 @@ The plugin adds every problem to `meta.issues`: a citation with no number or of 
 
 Each entry exports the parse plugin as `default` and the renderer's `components`. The Vue, React, and Svelte components add the styles and start the card when they mount; import `comark-sources/style.css` with your styles so a server-rendered page doesn't shift.
 
-For manual integration, `comark-sources/client` exports `css` and `start(css)`, which returns a function to stop the card. The existing `addStyles()` export still adds only the styles, once per page.
+For manual integration, `comark-sources/client` exports `css` and `start(css)`, which returns a function to stop the card.
 
 The styles follow shadcn/ui: they read its CSS variables, such as `--background` and `--border`, when the page has them, and use its neutral theme otherwise. Set the shared `--comark-*` tokens to theme every plugin at once; the rules sit in a `comark` CSS layer, so any plain rule of your own wins.

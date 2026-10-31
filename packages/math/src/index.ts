@@ -1,4 +1,4 @@
-import type { ElementNode, Node } from "comark";
+import type { Node } from "comark";
 import { defineComarkPlugin } from "comark";
 import {
   addRule,
@@ -8,6 +8,7 @@ import {
   type Token,
 } from "../../../shared/markdown-it.ts";
 import { type MathOutput, typesetter } from "./typeset.ts";
+import { isElement } from "../../../shared/nodes.ts";
 
 export type { MathOutput } from "./typeset.ts";
 
@@ -145,7 +146,6 @@ const generated = new WeakMap<
   { tag: string; formulas: { tex: string; display: boolean }[] }
 >();
 
-const isElement = (node: Node): node is ElementNode => Array.isArray(node) && node[0] !== null;
 const MAX_QUOTED = 60;
 const quoted = (tex: string) => {
   const line = tex.replace(/\s+/g, " ");

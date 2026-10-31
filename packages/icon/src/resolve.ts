@@ -3,6 +3,7 @@ import { getIconData } from "@iconify/utils/lib/icon-set/get-icon";
 import { iconToSVG } from "@iconify/utils/lib/svg/build";
 import { iconToHTML } from "@iconify/utils/lib/svg/html";
 import { svgToData } from "@iconify/utils/lib/svg/url";
+import { errorText } from "../../../shared/text.ts";
 
 /**
  * An icon set: an Iconify set as `@iconify-json/*` exports it, such as `icons` from `@iconify-json/lucide`, or SVG
@@ -171,7 +172,7 @@ export function createIcons(options: IconOptions = {}): Icons {
         } catch (error) {
           return {
             problem: "load",
-            reason: error instanceof Error ? error.message : String(error),
+            reason: errorText(error),
           };
         }
       };

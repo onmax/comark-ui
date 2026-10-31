@@ -4,6 +4,7 @@ import type { CodeOptions } from "../packages/code/src/index.ts";
 import type { CalloutsOptions, ReferencesOptions } from "../packages/github/src/index.ts";
 import type { AnchorsOptions, ExternalOptions } from "../packages/links/src/index.ts";
 import type { ZoomOptions } from "../packages/zoom/src/index.ts";
+import { errorText } from "../shared/text.ts";
 
 export interface PlayConfig {
   "comark-code"?: CodeOptions;
@@ -45,7 +46,7 @@ export function readConfig(text: string): { config: PlayConfig; issues: string[]
   try {
     value = JSON.parse(text);
   } catch (error) {
-    const reason = error instanceof Error ? error.message : String(error);
+    const reason = errorText(error);
     return {
       config: {},
       issues: [`The config isn't valid JSON (${reason}); fix it or empty it to {}.`],
