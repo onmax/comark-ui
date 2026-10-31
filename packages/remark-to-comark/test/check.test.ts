@@ -28,18 +28,50 @@ const fixture = project({
 });
 
 describe("check", () => {
-  it("keeps literal single tildes for an explicitly empty ReactMarkdown setup in content --write", () => {
-    const root = project({
-      "view.tsx": `import Markdown from "react-markdown"; export const C = () => <Markdown remarkPlugins={[]} />;`,
-      "doc.md": "~a~\n",
-    });
-    execFileSync(
-      process.execPath,
-      [fileURLToPath(new URL("../src/cli.ts", import.meta.url)), "content", "doc.md", "--write"],
-      { cwd: root },
-    );
-    expect(readFileSync(join(root, "doc.md"), "utf8")).toBe("~a~\n");
-  });
+  it.each([
+    "remarkPlugins={getPlugins()}",
+    "remarkPlugins={enabled ? [gfm] : []}",
+    "remarkPlugins={config.remarkPlugins}",
+    "remarkPlugins={plugins}",
+    "remarkPlugins={[...getPlugins()]}",
+    "{...props}",
+  ])(
+    "refuses an unresolved ReactMarkdown plugin list in content --write: %s",
+    async (attribute) => {
+      const root = project({
+        "view.tsx": `import Markdown from "react-markdown"; export const C = () => <Markdown ${attribute} />;`,
+        "doc.md": "{x}\n",
+      });
+      const result = spawnSync(
+        process.execPath,
+        [fileURLToPath(new URL("../src/cli.ts", import.meta.url)), "content", "doc.md", "--write"],
+        { cwd: root, encoding: "utf8" },
+      );
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain("RTC0303");
+      expect(result.stderr).toContain("can't be statically enumerated");
+      expect(readFileSync(join(root, "doc.md"), "utf8")).toBe("{x}\n");
+      expect(
+        (await check(root)).find((finding) => finding.code === "RTC0303")?.params.reason,
+      ).toContain("can't be statically enumerated");
+    },
+  );
+
+  it.each(["", "remarkPlugins={[]}"])(
+    "keeps literal single tildes for a proven GFM-less ReactMarkdown setup in content --write: %s",
+    (attribute) => {
+      const root = project({
+        "view.tsx": `import Markdown from "react-markdown"; export const C = () => <Markdown ${attribute} />;`,
+        "doc.md": "~a~\n",
+      });
+      execFileSync(
+        process.execPath,
+        [fileURLToPath(new URL("../src/cli.ts", import.meta.url)), "content", "doc.md", "--write"],
+        { cwd: root },
+      );
+      expect(readFileSync(join(root, "doc.md"), "utf8")).toBe("~a~\n");
+    },
+  );
 
   it("scopes syntax plugins and alert/emoji flags to their site for check and content --write", async () => {
     const root = project({

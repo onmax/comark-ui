@@ -392,7 +392,7 @@ function inputUse(
   return declaration?.type === "VariableDeclaration" &&
     declaration.kind === "const" &&
     init &&
-    ((init.type === "Literal" && typeof init.value === "string") || init.type === "TemplateLiteral")
+    ((init.type === "Literal" && /^["']/.test(init.raw ?? "")) || init.type === "TemplateLiteral")
     ? undefined
     : unknown;
 }

@@ -159,7 +159,7 @@ export interface ContentSetup {
   gfm: boolean;
   /** Syntax plugins the project uses that couldn't be loaded, so content would escape the syntax they add. */
   missing: string[];
-  /** Conflicting setups in this scope: the document's renderer can't be determined safely. */
+  /** Unresolved or conflicting setups in this scope: the document's parser can't be determined safely. */
   reason?: string;
 }
 
@@ -224,15 +224,19 @@ export async function contentSetup(
       profiles.push(contentProfile([], source));
   }
   const profile = profiles[0] ?? contentProfile([]);
-  if (profiles.some((other) => JSON.stringify(other) !== JSON.stringify(profile)))
+  const reason =
+    setups.find((setup) => setup.unresolved)?.unresolved ??
+    (profiles.some((other) => JSON.stringify(other) !== JSON.stringify(profile))
+      ? "The Markdown setups in this site or package disagree about syntax, and the document's owning renderer is ambiguous."
+      : undefined);
+  if (reason)
     return {
       remarkPlugins: [],
       alerts: false,
       emoji: false,
       gfm: false,
       missing: [],
-      reason:
-        "The Markdown setups in this site or package disagree about syntax, and the document's owning renderer is ambiguous.",
+      reason,
     };
   const missing: string[] = [];
   return {
@@ -295,7 +299,7 @@ export async function scanProject(reader: ProjectReader): Promise<ScannedFile[]>
   ).sort()) {
     if (/\.d\.[cm]?ts$/.test(file)) continue;
     const source = reader.read(file);
-    if (!source || !/remark|rehype|unified/.test(source)) continue;
+    if (!source || !/remark|rehype|unified|react-markdown/.test(source)) continue;
     try {
       files.push({ file, source, setups: scanSource(source, file) });
     } catch {

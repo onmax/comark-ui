@@ -42,6 +42,8 @@ export interface Setup {
   line: number;
   host: Host;
   plugins: FoundPlugin[];
+  /** A plugin list whose runtime contents couldn't be enumerated, so it can't define a content parser. */
+  unresolved?: string;
   /** For unified chains: the whole expression and its offsets, which the rewrite replaces. */
   chain?: {
     start: number;
@@ -302,6 +304,19 @@ function scanScript(source: string, file: string, shared?: Map<string, string>):
   const isList = (node: Node): boolean =>
     node.type === "ArrayExpression" || node.type === "Identifier";
 
+  const completeList = (node: Node, seen = new Set<string>()): boolean => {
+    if (node.type === "Identifier") {
+      const array = arrays.get(node.name);
+      return !!array && !seen.has(node.name) && completeList(array, new Set([...seen, node.name]));
+    }
+    return (
+      node.type === "ArrayExpression" &&
+      node.elements.every(
+        (item) => !item || item.type !== "SpreadElement" || completeList(item.argument, seen),
+      )
+    );
+  };
+
   // One plugin-list element: `plugin`, `[plugin, options]`, `"gatsby-remark-x"`, or `{ resolve, options }`.
   const element = (node: Node): FoundPlugin | undefined => {
     if (node.type === "ArrayExpression") {
@@ -459,19 +474,29 @@ function scanScript(source: string, file: string, shared?: Map<string, string>):
         node.name.type === "JSXIdentifier" && imports.get(node.name.name) === "react-markdown"
           ? "react-markdown"
           : "component";
+      let unresolved: string | undefined;
+      const unresolvedList = `${file}:${lineOf(node.start)} has a plugin list that can't be statically enumerated. Write its plugins as an explicit array before migrating this site's content.`;
       const plugins = node.attributes.flatMap((attribute) => {
+        if (attribute.type === "JSXSpreadAttribute") {
+          if (owner === "react-markdown") unresolved = unresolvedList;
+          return [];
+        }
         if (
           attribute.type !== "JSXAttribute" ||
           attribute.name.type !== "JSXIdentifier" ||
-          !PLUGIN_LISTS.has(attribute.name.name) ||
-          attribute.value?.type !== "JSXExpressionContainer"
+          !PLUGIN_LISTS.has(attribute.name.name)
         )
           return [];
+        if (attribute.value?.type !== "JSXExpressionContainer") {
+          unresolved = unresolvedList;
+          return [];
+        }
         const value = attribute.value.expression;
+        if (!completeList(value)) unresolved = unresolvedList;
         return isList(value) ? list(value) : [];
       });
-      if (plugins.length || owner === "react-markdown")
-        setups.push({ file, line: lineOf(node.start), host: owner, plugins });
+      if (plugins.length || unresolved || owner === "react-markdown")
+        setups.push({ file, line: lineOf(node.start), host: owner, plugins, unresolved });
     }
   });
   return setups;
@@ -494,7 +519,7 @@ export async function scan(root: string): Promise<Setup[]> {
   const setups: Setup[] = [];
   for (const path of files.sort()) {
     const source = readFileSync(join(root, path), "utf8");
-    if (!/remark|rehype|unified/.test(source)) continue;
+    if (!/remark|rehype|unified|react-markdown/.test(source)) continue;
     try {
       setups.push(...scanSource(source, relative(root, join(root, path))));
     } catch {

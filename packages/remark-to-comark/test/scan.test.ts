@@ -8,6 +8,35 @@ const names = (source: string, file = "x.ts") =>
   ]);
 
 describe("scanSource", () => {
+  it.each([
+    "getPlugins()",
+    "enabled ? [gfm] : []",
+    "config.remarkPlugins",
+    "plugins",
+    "[...getPlugins()]",
+  ])("preserves an unresolved ReactMarkdown plugin list: %s", (expression) => {
+    const [setup] = scanSource(
+      `import Markdown from "react-markdown"; export const C = () => <Markdown remarkPlugins={${expression}} />;`,
+      "view.tsx",
+    );
+    expect(setup?.host).toBe("react-markdown");
+    expect(setup?.unresolved).toContain("can't be statically enumerated");
+  });
+
+  it("keeps statically enumerated JSX lists resolved", () => {
+    const setups = scanSource(
+      `import Markdown from "react-markdown"; import gfm from "remark-gfm"; const plugins = [gfm]; export const C = () => <><Markdown /><Markdown remarkPlugins={[]} /><Markdown remarkPlugins={[...plugins]} /></>;`,
+      "view.tsx",
+    );
+    expect(setups).toHaveLength(3);
+    expect(setups.every((setup) => !setup.unresolved)).toBe(true);
+    expect(setups.map((setup) => setup.plugins.map((plugin) => plugin.name))).toEqual([
+      [],
+      [],
+      ["remark-gfm"],
+    ]);
+  });
+
   it("reads a unified chain and maps each plugin", () => {
     const source = `import { unified } from "unified";\nimport remarkParse from "remark-parse";\nimport remarkGfm from "remark-gfm";\nimport remarkRehype from "remark-rehype";\nimport rehypeSlug from "rehype-slug";\nimport rehypeStringify from "rehype-stringify";\nexport const html = (md: string) => unified().use(remarkParse).use(remarkGfm).use(remarkRehype).use(rehypeSlug).use(rehypeStringify).process(md);\n`;
     expect(names(source)).toEqual([
@@ -349,6 +378,9 @@ describe("rewriteSource on the PR review's inputs", () => {
   const head = `import { remark } from "remark";\nimport html from "remark-html";\n`;
   it.each([
     ['const input = Buffer.from("# Hi");', ""],
+    ["const input = 42;", ""],
+    ["const input = true;", ""],
+    ["const input = /text/;", ""],
     ['import input from "./input.js";', ""],
     ["", "input"],
     ["", ""],
