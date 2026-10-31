@@ -111,20 +111,12 @@ describe("comark-code", () => {
       actions: [{ id: "share", icon: "lucide:nope", title: "Share" }],
     };
     expect(await bar(sh, options)).toContain('data-code-action="share">Share</button>');
-    const document = await parseMarkdown(sh, { plugins: [code(options)] });
-    expect(document.meta.issues).toEqual([
+    const { meta } = await parseMarkdown(sh, { plugins: [code(options)] });
+    expect(meta.issues).toEqual([
       expect.stringMatching(
         /^The comark-code action "share" shows "Share" as text on its code blocks, because it can't draw its icon "lucide:nope": The `lucide` set has no icon `nope`\./,
       ),
     ]);
-  });
-
-  it("names its icon issue's rule after comark-icon's", async () => {
-    const options = {
-      iconResolver,
-      actions: [{ id: "share", icon: "lucide:nope", title: "Share" }],
-    };
-    const { meta } = await parseMarkdown(sh, { plugins: [code(options)] });
     expect(meta.issueRules).toEqual({ [meta.issues[0]]: "comark/icon/unknown-icon" });
   });
 
