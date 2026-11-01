@@ -23,6 +23,7 @@ export {
   toMarkdown,
   type EditorDocument,
   type MarkdownCheck,
+  type SplitMarkdown,
 } from "./editor/markdown.ts";
 export {
   findUpload,

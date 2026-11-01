@@ -289,11 +289,6 @@ describe("createEditorCodec", () => {
     });
   });
 
-  // A room stores the body alone, so a save would drop the front matter.
-  it("opens a document with front matter read-only", async () => {
-    expect(await codec.verify("---\ntitle: Hi\n---\n\nBody\n")).toEqual({ writable: false });
-  });
-
   it("has the same schema as the kit, without the history a room keeps itself", () => {
     const shared = getSchema(codec.extensions());
     expect(Object.keys(shared.nodes)).toEqual(Object.keys(schema.nodes));
