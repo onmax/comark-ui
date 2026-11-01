@@ -247,7 +247,7 @@ For Vue, React, or Svelte, import from `comark-github/vue`, `comark-github/react
 
 ## Theme
 
-Callouts follow shadcn/ui's Alert, a bordered card with the icon and title in the type's color. The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
+Callouts follow shadcn/ui's Alert, a bordered card with the icon in the type's color and the title in that color mixed 70% with the foreground, so it reads as text on light and dark cards. The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
 
 ### Shared tokens
 
