@@ -31,6 +31,8 @@ comarkUi({
 
 `include` is off because it reads files from disk; turn it on to paste files into a document. `cast`, `table`, and `tests` are on but read no files until you pass `{ root }` or `{ read }`. When you parse in a browser, pass `chips: { download: false }`, since a browser may not download another site's images. comark-critic has no component for its styles, so put the exported `criticCss` in the page. The text around the blocks (headings, paragraphs, lists, tables, code, and quotes) is styled too, from shadcn/typeset on the same tokens and scoped to the document; pass `typeset: false` when your site already styles Markdown. For content outside a document, such as an editor, import `comark-ui/typeset.css` and add the `comark-typeset` class. See [Typeset](https://comark-ui.onmax.me/guide/typeset/).
 
+It also returns `tags` and `blocks`. `tags` is every element a parsed document can hold besides the components; with the components' names, it's the allowlist for Comark's `security` plugin. `blocks` are the blocks the plugins replace while parsing, such as `::code-group`, which a linter needs beside the components' names.
+
 ## Renderers
 
 | Renderer | Import |

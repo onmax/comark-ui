@@ -1,6 +1,7 @@
 import { createHtmlRenderer } from "@comark/html";
 import { describe, expect, it } from "vite-plus/test";
-import { html } from "../src/html.ts";
+import { parseMarkdown } from "comark";
+import { html, HTML_TAGS } from "../src/html.ts";
 
 const render = (markdown: string, registerDefaultPlugins = true) =>
   createHtmlRenderer({ plugins: [html()], registerDefaultPlugins })(markdown);
@@ -27,6 +28,21 @@ describe("comark-github html", () => {
     );
     expect(out).not.toMatch(/script|alert|style|p\{\}|iframe|custom-el/);
     expect(out).toContain("kept");
+  });
+
+  it("exports the tags it keeps, so a host can allow the same ones", async () => {
+    const raw = `<div>${["section", "iframe", ...HTML_TAGS].map((tag) => `<${tag}>x</${tag}>`).join("")}</div>`;
+    const { nodes } = await parseMarkdown(raw, { plugins: [html()] });
+    const kept = new Set<string>();
+    const walk = (node: unknown) => {
+      if (!Array.isArray(node) || typeof node[0] !== "string") return;
+      kept.add(node[0]);
+      node.slice(2).forEach(walk);
+    };
+    nodes.forEach(walk);
+    expect([...kept].filter((tag) => !HTML_TAGS.includes(tag))).toEqual([]);
+    expect(HTML_TAGS).toContain("kbd");
+    expect(HTML_TAGS).not.toContain("iframe");
   });
 
   it("keeps GitHub's attributes and drops the rest", async () => {

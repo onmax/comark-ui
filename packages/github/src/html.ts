@@ -5,7 +5,7 @@ import { CALLOUT_TAG } from "./callouts.ts";
 import { css } from "./styles.ts";
 import { rawText } from "../../../shared/text.ts";
 
-export { CALLOUT_TAG, callouts, html, references } from "./index.ts";
+export { CALLOUT_TAG, callouts, html, HTML_TAGS, references } from "./index.ts";
 export type { CalloutsOptions, CalloutType, GitHubMeta, ReferencesOptions } from "./index.ts";
 
 // Each render gets a fresh `state.context`, so a document carries the styles once.

@@ -3,15 +3,16 @@ import { defineComarkPlugin } from "comark";
 import comarkHtml from "comark/plugins/html";
 import { isElement } from "../../../shared/nodes.ts";
 
-// GitHub's allowlist, from its html-pipeline sanitization filter, plus the `picture` and `source` it allows for
-// light and dark images.
-const TAGS = new Set(
-  (
-    "a abbr b bdo blockquote br caption cite code dd del details dfn div dl dt em figcaption figure h1 h2 h3 h4 h5 " +
-    "h6 hr i img ins kbd li mark ol p picture pre q rp rt ruby s samp small source span strike strong sub summary " +
-    "sup table tbody td tfoot th thead time tr tt ul var wbr"
-  ).split(" "),
-);
+/**
+ * The raw HTML tags `html()` keeps: GitHub's allowlist, from its html-pipeline sanitization filter, plus the `picture`
+ * and `source` it allows for light and dark images. A host that sanitizes the parsed tree again can allow these.
+ */
+export const HTML_TAGS: readonly string[] = (
+  "a abbr b bdo blockquote br caption cite code dd del details dfn div dl dt em figcaption figure h1 h2 h3 h4 h5 " +
+  "h6 hr i img ins kbd li mark ol p picture pre q rp rt ruby s samp small source span strike strong sub summary " +
+  "sup table tbody td tfoot th thead time tr tt ul var wbr"
+).split(" ");
+const TAGS = new Set(HTML_TAGS);
 const ATTRIBUTES = new Set(
   (
     "abbr accept accept-charset accesskey action align alt aria-describedby aria-hidden aria-label " +
