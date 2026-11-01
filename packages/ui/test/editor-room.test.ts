@@ -126,8 +126,15 @@ describe("frontmatter in a collaborative room", () => {
     ["a blank block", "---\n  \n---\n\nBody\n", /block is empty/],
     ["only comments", "---\n# draft\n---\n\nBody\n", /only YAML comments/],
     ["a comment beside a key", "---\ntitle: Hi # short\n---\n\nBody\n", /has YAML comments/],
-    ["plain text", "---\njust text\n---\n\nBody\n", /a YAML string/],
+    ["plain text", "---\njust text\n---\n\nBody\n", /a YAML scalar/],
+    ["a number", "---\n42\n---\n\nBody\n", /a YAML scalar/],
+    ["a boolean", "---\ntrue\n---\n\nBody\n", /a YAML scalar/],
     ["a list", "---\n- a\n- b\n---\n\nBody\n", /a YAML list/],
+    [
+      "a __proto__ key",
+      "---\n__proto__: poison\ntitle: Hi\n---\n\nBody\n",
+      /`__proto__` key.*room/,
+    ],
     ["invalid YAML", "---\ntitle: [a\n---\n\nBody\n", /isn't valid YAML \(.+\)/],
   ])("opens frontmatter with %s read-only and says why", async (_, stored, reason) => {
     expect(codec.split(stored)).toEqual({ body: stored, fields: {} });

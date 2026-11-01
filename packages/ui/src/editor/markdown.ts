@@ -718,7 +718,7 @@ export function readFrontmatter(markdown: string): Frontmatter {
   if (!(value instanceof Object) || Array.isArray(value))
     return {
       kind: "lost",
-      problem: `The frontmatter is a YAML ${Array.isArray(value) ? "list" : typeof value}, which a save would rewrite; turn it into \`key: value\` lines to edit the document.`,
+      problem: `The frontmatter is a YAML ${Array.isArray(value) ? "list" : "scalar"}, which a save would rewrite; turn it into \`key: value\` lines to edit the document.`,
     };
   const comments = hasComment(yaml);
   if (!Object.keys(data).length)
@@ -733,6 +733,13 @@ export function readFrontmatter(markdown: string): Frontmatter {
       kind: "lost",
       problem:
         "The frontmatter has YAML comments, which a save would drop; delete them or move them into the text to edit the document.",
+    };
+  // Y.Map.toJSON() assigns entries to a plain object, whose __proto__ setter drops this key.
+  if (Object.hasOwn(data, "__proto__"))
+    return {
+      kind: "lost",
+      problem:
+        "The frontmatter has a `__proto__` key, which the room's fields would drop on save; rename it to edit the document.",
     };
   return { kind: "kept", body: read.content.replace(/^(?:\r?\n)+/, ""), fields: data };
 }
