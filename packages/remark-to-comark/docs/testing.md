@@ -18,11 +18,11 @@ Of 14,470 sampled documents that aren't MDX, 95.7% render the same HTML in Comar
 
 `rewrite` replaced 13 of the 161 unified chains it found, the other 148 having a reason to stay. Each of the 13 was rebuilt from its plugins and run against its replacement on that project's documents, and they match at 99.8 to 100%.
 
-Most of what still differs are Comark bugs: about 30 causes, each with a minimal input and a playground link in [comarkdown/comark#525](https://github.com/comarkdown/comark/issues/525). The setup that `comarkOptions()` returns works around the ones it can, such as tight lists that keep a `<p>`, Markdown images that lose `alt=""`, and inline tags left open across blocks.
+Most of what still differs are Comark bugs, 31 cases so far in [comarkdown/comark#525](https://github.com/comarkdown/comark/issues/525), each with a minimal input and a playground link. `comarkOptions()` works around the ones it can, such as tight lists that keep a `<p>` and Markdown images that lose `alt=""`.
 
 ## Speed and size
 
-Comark renders the same Markdown to HTML 6 to 7 times faster than remark in these measurements. Each pipeline renders every file of a corpus 15 times on Node 24.21.0, interleaved with the others, and this is the median pass using the commands below:
+Comark renders the same Markdown to HTML 6 to 7 times faster than remark. Each pipeline rendered every file 15 times on Node 24.21.0, taking turns, and the table shows the median pass:
 
 | Corpus | remark | remark + rehype-raw | Comark, `comarkOptions()` |
 | --- | --: | --: | --: |
@@ -31,9 +31,9 @@ Comark renders the same Markdown to HTML 6 to 7 times faster than remark in thes
 
 remark is remark-parse, remark-gfm, remark-frontmatter, remark-rehype, and rehype-stringify. rehype-raw parses raw HTML the way `comarkOptions()` keeps it.
 
-In the browser Comark costs more. Bundled and minified, the Comark setup is 118 KiB gzipped, remark 48 KiB, and remark with rehype-raw 98 KiB. Most of the difference is js-yaml: Comark parses frontmatter into an object, where remark-frontmatter keeps the string.
+In the browser Comark costs more. Minified and gzipped, the Comark setup is 118 KiB, remark 48 KiB, and remark with rehype-raw 98 KiB. Most of the difference is js-yaml, because Comark parses frontmatter into an object where remark-frontmatter keeps the string.
 
-After installing this repository's frozen pnpm lockfile, run from `packages/remark-to-comark`. The first command selects the installed remark, rehype, and unified README corpus in pnpm's layout, including both README filename cases; the glob is relative to the repository root. With no glob, the second command selects repository Markdown and excludes `node_modules`. Both exclude `dist`, and a glob matching no files exits with an error instead of reporting timings.
+To rerun them, install the repository with `pnpm install --frozen-lockfile` and run these from `packages/remark-to-comark`. The first times the remark, rehype, and unified READMEs installed at the repository root, the second this repository's Markdown, and the third measures the bundles.
 
 ```sh
 node bench/render.mjs "node_modules/.pnpm/*/node_modules/{remark*,rehype*,unified*}/{readme,README}.md"
@@ -41,4 +41,4 @@ node bench/render.mjs
 node bench/size.mjs
 ```
 
-Timings depend on the machine. The installed README count depends on dependency versions and the package-manager layout; the script prints the file count and total size so a rerun can identify its corpus. The table replaces the earlier 403-README measurement, whose corpus selection was not recorded, with the explicit selection above.
+Timings depend on the machine, and the README count on the installed versions. Each run prints its file count and size.
