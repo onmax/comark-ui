@@ -2,8 +2,8 @@
 // edited in the browser renders as its page does.
 import shiki from "@comark/html/plugins/shiki";
 import type { IconOptions } from "comark-icon";
-import dark from "shiki/themes/vitesse-dark.mjs";
-import light from "shiki/themes/vitesse-light.mjs";
+import dark from "shiki/themes/github-dark-default.mjs";
+import light from "shiki/themes/github-light-high-contrast.mjs";
 import { browserPlugins } from "./plugins.ts";
 
 // `#123` on the site links to this repository's issues. The site styles its own text in style.css, so its pages leave
