@@ -23,6 +23,7 @@ import icon from "./icon.ts";
 import include from "./include.ts";
 import magicMove from "./magic-move.ts";
 import math from "./math.ts";
+import mermaid from "./mermaid.ts";
 import media from "./media.ts";
 import outline from "./outline.ts";
 import qr from "./qr.ts";
@@ -78,4 +79,5 @@ export const catalog = {
   ...math,
   ...magicMove,
   ...comments,
+  ...mermaid,
 } satisfies Record<string, RuleInfo>;
