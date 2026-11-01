@@ -190,7 +190,7 @@ function subPages(slug: string) {
   return [...new Set(linked)];
 }
 // A package's group picks its section and its heading there: blocks under Components, syntax under Typography, the
-// authoring tools under the docs' Utilities, and the linter on its own, with the remark migration beside it. comark-ui has no page: Getting started is it.
+// authoring tools under the docs' Utilities, and the linter and the remark migration each in its own. comark-ui has no page: Getting started is it.
 const groups = [
   "Review blocks",
   "Charts and diagrams",
@@ -381,7 +381,6 @@ const sections: Section[] = [
     icon: "stethoscope",
     lists: [
       { slugs: inGroup("Linter") },
-      { title: "Migration", slugs: inGroup("Migration") },
       { title: "Rules", slugs: ["doctor"] },
       ...[...new Set(doctorRules.map((entry) => entry.group))].map((group) => ({
         title: group === "core" ? "Core" : group,
@@ -390,11 +389,18 @@ const sections: Section[] = [
         fold: true,
         slugs: doctorRules.filter((entry) => entry.group === group).map((entry) => entry.slug),
       })),
-      // remark-to-comark's rules check a project's code, not a document, so each links its first code on the Diagnostics
-      // page instead of a page of examples.
+    ],
+  },
+  // remark-to-comark moves a project off remark, which isn't linting, so it has its own column. Its rules check a
+  // project's code, not a document, so each links its first code on the Diagnostics page instead of a page of examples.
+  {
+    slug: "remark-to-comark",
+    label: "From remark",
+    icon: "arrow-right-left",
+    lists: [
+      { slugs: inGroup("Migration") },
       {
-        title: "remark-to-comark",
-        icon: packages.find((pkg) => pkg.slug === "remark-to-comark")?.icon,
+        title: "Rules",
         fold: true,
         slugs: [],
         anchors: Object.entries(migrationCatalog)
