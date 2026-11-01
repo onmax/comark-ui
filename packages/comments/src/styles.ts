@@ -47,8 +47,9 @@ export const css = `@layer comark{${[
   ".cr-card{display:none;box-sizing:border-box;padding:.5rem .75rem;border:1px solid var(--_comark-border);border-radius:var(--_comark-radius);background:var(--_comark-background);color:var(--_comark-foreground);font:400 .8125rem/1.5 var(--_comark-font);text-align:left;text-indent:0;white-space:normal;transition:border-color .12s,box-shadow .12s}",
   ".cr-entry{display:block}.cr-entry+.cr-entry{margin-top:.5rem;padding-top:.5rem;border-top:1px solid var(--_comark-border)}",
   ".cr-entry b{margin-right:.375rem;font-weight:600}",
-  ".cr-av{display:inline-grid;place-items:center;width:1.125rem;height:1.125rem;margin-right:.375rem;border-radius:9999px;background:color-mix(in oklab,oklch(.7 .12 var(--cr-hue)) 30%,var(--_comark-background));color:color-mix(in oklab,oklch(.55 .14 var(--cr-hue)) 60%,var(--_comark-foreground));font:600 .5625rem/1 var(--_comark-font);vertical-align:calc(.722cap - .5625rem)}",
+  ".cr-av{display:inline-block;overflow:hidden;width:1.125rem;height:1.125rem;margin-right:.375rem;border-radius:9999px;background:color-mix(in oklab,oklch(.7 .12 var(--cr-hue)) 30%,var(--_comark-background));color:color-mix(in oklab,oklch(.55 .14 var(--cr-hue)) 60%,var(--_comark-foreground));font:600 .5625rem/2 var(--_comark-font);text-align:center;vertical-align:calc(.722cap - .5625rem)}",
   // Centered on the name's capitals: the card's text is 1.444 times the avatar's, so its cap height is .722cap here.
+  // overflow:hidden puts an initial's baseline at its bottom edge, where an image's is, so the offset moves both alike.
   // A ring keeps a white logo or a transparent photo apart from the card.
   "img.cr-av{display:inline-block;background:#fff;object-fit:cover;outline:1px solid color-mix(in srgb,var(--_comark-foreground) 12%,transparent);outline-offset:-1px}",
   // Narrow: a checked bubble opens its card as a block under the line.
@@ -57,5 +58,6 @@ export const css = `@layer comark{${[
   // The margin is !important so a page's own paragraph margins, which beat the layer, can't close it.
   ".cr{container:cr/inline-size;display:flow-root}",
   "@container cr (min-width:50rem){.cr>*{margin-right:19.5rem!important}.cr-card,.cr-tg:checked+.cr-bub+.cr-card{display:block;position:relative;float:right;clear:right;width:17.5rem;margin:0 -19.5rem .5rem 0}.cr-tg:checked+.cr-bub+.cr-card,.cr-bub:hover+.cr-card,.cr-card:hover{border-color:var(--_comark-ring);box-shadow:var(--_comark-shadow)}}",
-  "@media print{.cr>*{margin-right:12.5rem!important}.cr-card{display:block!important;float:right!important;clear:right;width:11.5rem!important;margin:0 -12.5rem .375rem 0!important;font-size:.6875rem;box-shadow:none!important}.cr-bub{display:none}}",
+  // Print's .6875rem text is 1.222 times the avatar's, so its cap height is .611cap there.
+  "@media print{.cr>*{margin-right:12.5rem!important}.cr-card{display:block!important;float:right!important;clear:right;width:11.5rem!important;margin:0 -12.5rem .375rem 0!important;font-size:.6875rem;box-shadow:none!important}.cr-av{vertical-align:calc(.611cap - .5625rem)}.cr-bub{display:none}}",
 ].join("")}}`;

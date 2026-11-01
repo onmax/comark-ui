@@ -126,3 +126,48 @@ for (const mark of ["track", "pen"] as const) {
     expect(broken.found).toEqual([]);
   });
 }
+
+// Each avatar is centered on its name's capitals: the gap between their middles, in px, for every avatar on the page.
+const avatarOffsets = (page: Page) =>
+  page.evaluate(() =>
+    [...document.querySelectorAll<HTMLElement>(".cr-av")].map((avatar) => {
+      const name = avatar.nextElementSibling!;
+      const mark = document.createElement("span");
+      mark.style.cssText = "display:inline-block;width:0;height:0";
+      name.after(mark);
+      const baseline = mark.getBoundingClientRect().top;
+      mark.remove();
+      const context = document.createElement("canvas").getContext("2d")!;
+      context.font = getComputedStyle(name).font;
+      const cap = context.measureText("H").actualBoundingBoxAscent;
+      const box = avatar.getBoundingClientRect();
+      return box.top + box.height / 2 - (baseline - cap / 2);
+    }),
+  );
+
+test("initial and image avatars stay centered on their names, on screen and in print", async ({
+  page,
+}) => {
+  const photo = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"><rect width="1" height="1" fill="#888"/></svg>')}`;
+  const render = createHtmlRenderer({
+    plugins: [comments({ avatars: { onmax: photo } })],
+    components,
+  });
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/no-such-page");
+  await page.setContent(
+    `<!doctype html><html lang="en"><body style="margin:0;font:16px/1.75 system-ui,sans-serif"><main style="width:68rem;margin:0 auto">${await render(review)}</main></body></html>`,
+  );
+  await expect(page.locator("img.cr-av").first()).toBeVisible();
+  const screen = await avatarOffsets(page);
+  await page.emulateMedia({ media: "print" });
+  expect(
+    await page
+      .locator(".cr-card")
+      .first()
+      .evaluate((card) => getComputedStyle(card).fontSize),
+  ).toBe("11px");
+  const print = await avatarOffsets(page);
+  expect(screen.length).toBeGreaterThan(4);
+  for (const offset of [...screen, ...print]) expect(Math.abs(offset)).toBeLessThan(0.5);
+});
