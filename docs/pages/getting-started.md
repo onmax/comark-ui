@@ -167,6 +167,12 @@ comarkUi({ mermaid: { languages: ["mermaid"] } }); // only `mermaid` fences, not
 comarkUi({ mermaid: false }); // leave `mermaid` fences as code
 ```
 
+A site that renders documents other people write, on a Worker for example, can limit how much Pele draws per document. A diagram past `maxDiagrams`, or past `maxSource` characters of Mermaid over the whole document, shows its source as a code block, and `meta.issues` says which one and why:
+
+```ts
+comarkUi({ mermaid: { maxDiagrams: 4, maxSource: 8000 } });
+```
+
 > [!NOTE]
 > Pele adds about 260 KB gzipped to a bundle. Turn it off if a size limit matters more than diagrams.
 

@@ -123,6 +123,33 @@ describe("comark-ui", () => {
     expect(still).toContain(`<script>${mermaidScript}</script>`);
   });
 
+  it("shows the Mermaid diagrams past a document's limits as code, each with an issue", async () => {
+    const fence = (body: string) => `\`\`\`mermaid\nflowchart LR\n  ${body}\n\`\`\``;
+    const markdown = [fence("A --> B"), fence("C --> D"), fence("E --> F")].join("\n\n");
+    const preset = html({ ...offline, mermaid: { maxDiagrams: 2 } });
+    const tree = await parseMarkdown(markdown, { plugins: preset.plugins });
+    expect(tree.meta.issues).toEqual([
+      "Mermaid diagram 3 shows its source as code, because a document draws at most 2 Mermaid diagrams. Move it to another document.",
+    ]);
+    const out = await createHtmlRenderer(preset)(markdown);
+    expect(out.match(/class="pele-diagram"/g)).toHaveLength(2);
+    expect(out).toContain('class="ck"');
+    expect(out).toContain("E --&gt; F");
+
+    const long = fence(`A --> ${"B".repeat(40)}`);
+    const limited = html({ ...offline, mermaid: { maxSource: 40 } });
+    const short = await parseMarkdown(`${long}\n\n${fence("C --> D")}`, {
+      plugins: limited.plugins,
+    });
+    expect(short.meta.issues).toEqual([
+      "Mermaid diagram 1 shows its source as code, because a document draws at most 40 characters of Mermaid. Shorten it or move it to another document.",
+    ]);
+    expect(short.meta.issueRules).toEqual({
+      [short.meta.issues[0]]: "comark/mermaid/source-too-long",
+    });
+    expect(JSON.stringify(short.nodes)).toContain('["pele",');
+  });
+
   it("keeps the source of a Mermaid diagram that fails, with nothing to zoom", async () => {
     const out = await renderHtml("```mermaid\nflowchart LR\n  A -->\n```");
     expect(out).toContain("data-error=");

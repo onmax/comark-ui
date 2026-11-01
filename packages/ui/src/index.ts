@@ -31,10 +31,12 @@ import type { TabsOptions } from "comark-tabs";
 import type { TestsOptions } from "comark-tests";
 import xref, { type XrefOptions } from "comark-xref";
 import type { ZoomOptions } from "comark-zoom";
+import mermaidLimits, { type MermaidOptions } from "./mermaid-limits.ts";
 import { typeset, TYPESET_TAG } from "./typeset.ts";
 
 /** comark-critic's styles. It has no component to add them, so put them in the page yourself. */
 export { css as criticCss } from "comark-critic";
+export type { MermaidOptions } from "./mermaid-limits.ts";
 export { typeset, typesetCss, typesetStylesheet, TYPESET_TAG } from "./typeset.ts";
 
 /**
@@ -64,8 +66,11 @@ export type PresetOptions = {
   comments?: CommentsOptions | boolean;
   /** Sends each diagram's source to `https://kroki.io` unless you pass your own `server`, or `{ draw: false }`. */
   diagrams?: DiagramsOptions | boolean;
-  /** Draws `mermaid` fences with comark-pele, on the server and offline. */
-  mermaid?: PeleConfig | boolean;
+  /**
+   * Draws `mermaid` fences with comark-pele, on the server and offline. A host that renders documents it didn't write
+   * can pass `{ maxDiagrams, maxSource }`: the diagrams past either limit show their source as code, each with an issue.
+   */
+  mermaid?: MermaidOptions | boolean;
   /** HTML only: Vue, React, and Svelte have no diff components. */
   diff?: boolean;
   embed?: boolean;
@@ -213,7 +218,13 @@ export function preset<C>(renderer: Renderer<C>, options: PresetOptions = {}): P
   add(renderer.chips, options.chips);
   add(renderer.colors, options.colors);
   add(renderer.diagrams, options.diagrams);
-  add(renderer.mermaid, options.mermaid);
+  if (on(options.mermaid)) {
+    const { maxDiagrams, maxSource, ...pele } = optionsOf(options.mermaid) ?? {};
+    add(renderer.mermaid, true, pele);
+    // Before code, which reads the code blocks it turns diagrams back into.
+    if (maxDiagrams !== undefined || maxSource !== undefined)
+      plugins.push(mermaidLimits({ maxDiagrams, maxSource }));
+  }
   add(renderer.diff, options.diff);
   add(renderer.embed, options.embed);
   parse(footnotes, options.footnotes);
