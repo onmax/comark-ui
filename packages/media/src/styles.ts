@@ -88,7 +88,9 @@ export const css = `@layer comark{${[
   ".cm-choices label:has(:checked){background:var(--_comark-background);color:var(--_comark-foreground);box-shadow:0 1px 2px rgb(0 0 0/.08)}",
   "@media (hover:hover){.cm-choices label:hover{color:var(--_comark-foreground)}}",
   `.cm-choices label:has(:focus-visible){${ring}}`,
-  "@container (width<24rem){.cm-menu{grid-template-columns:auto;gap:.25rem}.cm-choices{justify-self:start;margin-bottom:.25rem}}",
+  // Fit the panel to the bar, leaving room for the full screen button beside its desktop anchor. Choices can wrap
+  // in a smaller player without shrinking their text; the touch anchor sits at the bar's right edge instead.
+  "@container (width<24rem){.cm-menu{grid-template-columns:minmax(0,1fr);gap:.25rem;max-width:100cqw}.cm-video .cm-menu{max-width:calc(100cqw - 3rem)}.cm-choices{justify-self:stretch;min-width:0;flex-wrap:wrap;margin-bottom:.25rem}.cm-choices label{flex:1 0 auto;min-width:0;padding-inline:.25rem}}",
   "@media (prefers-reduced-motion:reduce){:is(.cm-level,.cm-menu){transition:none}}",
   // Vertical, with silence at the bottom.
   ".cm-volume{--_cm-fill:to top;width:1rem;height:5rem;margin:0;background:none;appearance:none;cursor:pointer;writing-mode:vertical-lr;direction:rtl}",
@@ -117,7 +119,7 @@ export const css = `@layer comark{${[
   // settings in the top corner, out of the thumb's way, and the time along the bottom. Each sits on its own surface,
   // since a picture can be any color, and the gaps between them pass taps to the video.
   `@media (pointer:coarse){${[
-    ".cm-video[data-media-ready]:not([data-error])>.cm-bar{inset:0;display:grid;grid-template:auto 1fr auto/auto 1fr auto auto;gap:.5rem;padding:.75rem;border:0;border-radius:inherit;background:none;box-shadow:none;backdrop-filter:none;pointer-events:none}",
+    ".cm-video[data-media-ready]:not([data-error])>.cm-bar{inset:0;display:grid;grid-template:auto 1fr auto/auto 1fr auto auto;gap:.5rem;padding:.75rem;border:0;border-radius:inherit;background:none;box-shadow:none;backdrop-filter:none;pointer-events:none;container-type:size}",
     // The surface behind the time blurs what is behind it, which paints it over items without a z-index.
     ".cm-video>.cm-bar>*{z-index:1;pointer-events:auto}",
     `.cm-video>.cm-bar::before{content:"";grid-area:3/1/4/-1;align-self:stretch;margin:-.25rem;border-radius:var(--_comark-radius);${glass}}`,
@@ -131,6 +133,8 @@ export const css = `@layer comark{${[
     ".cm-video>.cm-bar>.cm-seek+.cm-time{grid-area:3/3;align-self:center;justify-self:end;margin:0}",
     ".cm-video>.cm-bar>.cm-seek+.cm-time::before{content:none}",
     ".cm-video>.cm-bar>.cm-full{grid-area:3/4}",
-    ".cm-video .cm-menu{top:calc(100% + .5rem);bottom:auto;transform-origin:top right}",
+    ".cm-video .cm-menu{top:calc(100% + .5rem);bottom:auto;max-width:100cqw;transform-origin:top right}",
+    // A short frame cannot stack all three rows. Play shares the top row, away from sound and settings.
+    "@container (height<9.5rem){.cm-video>.cm-bar>.cm-play{grid-area:auto;position:absolute;top:.75rem;left:.75rem}}",
   ].join("")}}`,
 ].join("")}}`;

@@ -271,11 +271,9 @@ test("a narrow player gives its seek bar a row of its own, above the buttons", a
 });
 
 test.describe("touch video controls", () => {
-  test.use({ hasTouch: true });
+  test.use({ hasTouch: true, reducedMotion: "reduce" });
 
-  test("spread over the video: play in the middle, sound and settings in the top corner, the time along the bottom", async ({
-    page,
-  }) => {
+  test("spread over the video and keep settings within its width", async ({ page }) => {
     await open(page, "![A gray clip](clip.webm)");
     const player = page.getByRole("group", { name: "A gray clip" });
     await expect(player.locator(".cm-time").last()).toHaveText("0:04");
@@ -299,11 +297,15 @@ test.describe("touch video controls", () => {
         [".cm-play", ".cm-mute", ".cm-settings", ".cm-seek", ".cm-full"].map(box),
       );
       expect(play.width).toBe(56);
-      expect(Math.abs(play.x + play.width / 2 - (frame.x + frame.width / 2))).toBeLessThan(1);
+      if (frame.height < 176) {
+        expect(play.x + play.width).toBeLessThan(mute.x);
+      } else {
+        expect(Math.abs(play.x + play.width / 2 - (frame.x + frame.width / 2))).toBeLessThan(1);
+        expect(mute.y + mute.height, `top row at ${width}px`).toBeLessThan(play.y);
+      }
       expect(mute.y).toBe(settings.y);
       expect(mute.x + mute.width).toBeLessThan(settings.x);
       expect(settings.x + settings.width).toBeLessThanOrEqual(frame.x + frame.width);
-      expect(mute.y + mute.height, `top row at ${width}px`).toBeLessThan(play.y);
       expect(play.y + play.height).toBeLessThan(seek.y);
       expect(Math.abs(seek.y + seek.height / 2 - (full.y + full.height / 2))).toBeLessThan(1);
       expect(full.x + full.width).toBeLessThanOrEqual(frame.x + frame.width);
@@ -313,21 +315,69 @@ test.describe("touch video controls", () => {
         expect((await end.boundingBox())!.x + (await end.boundingBox())!.width).toBeLessThanOrEqual(
           full.x,
         );
+
+      // Open at every supported width, including the narrowest player.
+      await player.getByRole("button", { name: "Settings" }).tap();
+      await expect(player.getByRole("button", { name: "Settings" })).toHaveAttribute(
+        "aria-expanded",
+        "true",
+      );
+      const menu = (await player.locator(".cm-menu").boundingBox())!;
+      expect(menu.y).toBeGreaterThan(settings.y + settings.height);
+      expect(menu.x, `menu left at ${width}px`).toBeGreaterThanOrEqual(frame.x);
+      expect(menu.x + menu.width, `menu right at ${width}px`).toBeLessThanOrEqual(
+        frame.x + frame.width,
+      );
+      expect(
+        await player
+          .locator(".cm-choices")
+          .evaluateAll((rows) => rows.every((row) => row.scrollWidth <= row.clientWidth)),
+      ).toBe(true);
+      await player.getByRole("radio", { name: "1.5×" }).tap();
+      await expect(player.locator("video")).toHaveJSProperty("playbackRate", 1.5);
+      await player.getByRole("button", { name: "Settings" }).tap();
     }
     await expect(player.locator(".cm-time").first()).toBeVisible();
+  });
 
-    // The settings open below their button, inside the frame's width.
-    await player.getByRole("button", { name: "Settings" }).tap();
-    await expect(player.getByRole("button", { name: "Settings" })).toHaveAttribute(
-      "aria-expanded",
-      "true",
-    );
-    const menu = (await player.locator(".cm-menu").boundingBox())!;
-    const settings = (await player.locator(".cm-settings").boundingBox())!;
-    expect(menu.y).toBeGreaterThan(settings.y + settings.height);
-    expect(menu.x).toBeGreaterThanOrEqual((await player.boundingBox())!.x);
-    await player.getByRole("radio", { name: "1.5×" }).tap();
-    await expect(player.locator("video")).toHaveJSProperty("playbackRate", 1.5);
+  test("controls stay inside short video frames", async ({ page }) => {
+    await open(page, "![A gray clip](clip.webm)");
+    const player = page.getByRole("group", { name: "A gray clip" });
+    await expect(player.locator(".cm-time").last()).toHaveText("0:04");
+    await player.locator("video").evaluate((video) => {
+      video.style.aspectRatio = "16 / 9";
+      video.style.objectFit = "contain";
+    });
+    for (const width of [240, 320, 375]) {
+      await page.locator("body").evaluate((body, width) => {
+        body.style.width = `${width}px`;
+      }, width);
+      const frame = (await player.boundingBox())!;
+      const controls = [".cm-play", ".cm-mute", ".cm-settings", ".cm-seek", ".cm-full"];
+      const boxes = await Promise.all(
+        controls.map(async (selector) => (await player.locator(selector).boundingBox())!),
+      );
+      for (const [index, box] of boxes.entries()) {
+        const selector = controls[index];
+        expect(box.x, `${selector} left at ${width}px`).toBeGreaterThanOrEqual(frame.x);
+        expect(box.y, `${selector} top at ${width}px`).toBeGreaterThanOrEqual(frame.y);
+        expect(box.x + box.width, `${selector} right at ${width}px`).toBeLessThanOrEqual(
+          frame.x + frame.width,
+        );
+        expect(box.y + box.height, `${selector} bottom at ${width}px`).toBeLessThanOrEqual(
+          frame.y + frame.height,
+        );
+        for (const other of boxes.slice(index + 1)) {
+          const overlapX =
+            Math.min(box.x + box.width, other.x + other.width) - Math.max(box.x, other.x);
+          const overlapY =
+            Math.min(box.y + box.height, other.y + other.height) - Math.max(box.y, other.y);
+          expect(overlapX > 0 && overlapY > 0, `${selector} overlaps a control at ${width}px`).toBe(
+            false,
+          );
+        }
+      }
+    }
   });
 });
 

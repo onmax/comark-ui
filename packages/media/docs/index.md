@@ -34,7 +34,7 @@ The alert sound the reviewer asked for:
 - Only the first frame and the length load until the reader presses play.
 - The controls match the page. The browser's own show until the script runs, and when the file can't play.
 - A settings panel sets the speed, from 0.5× to 2×, and turns looping on or off.
-- On a touch screen, a video's controls spread over it: play in the middle, sound and settings in the top corner, and the time along the bottom.
+- On a touch screen, a video's controls spread over it: play in the middle, sound and settings in the top corner, and the time along the bottom. In a short frame, play moves to the top left to keep every control inside the picture.
 - One player with sound plays at a time. Starting one pauses the others, while a muted one plays on.
 
 ## Usage
@@ -224,7 +224,7 @@ For Vue, React, or Svelte, import from `comark-media/vue`, `comark-media/react`,
 
 ## Theme
 
-A video sits in a bordered frame at most the page's width. A bar of controls floats over its bottom edge: a play button, the time, a seek bar, a mute button with the volume over it, a settings button, and a full screen button. The settings open in a panel over the bar, with a row of choices for each setting, like shadcn/ui's tabs. The bar fades out while the video plays, unless the pointer or the focus is on the video or the settings are open. An audio player takes the page's width and is the same bar on its own, without full screen. A player narrower than 24rem gives the seek bar a row of its own above the buttons and stacks each setting's choices under its name. One narrower than 16rem drops the times. On a touch screen, a video's controls spread over it, each on its own surface so it reads over any frame: a round play button in the middle, the mute and settings buttons in the top corner, and the times, seek bar, and full screen button in a bar along the bottom. There, the settings open downward, and a video narrower than 18rem drops the times. The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
+A video sits in a bordered frame at most the page's width. A bar of controls floats over its bottom edge: a play button, the time, a seek bar, a mute button with the volume over it, a settings button, and a full screen button. The settings open in a panel over the bar, with a row of choices for each setting, like shadcn/ui's tabs. The bar fades out while the video plays, unless the pointer or the focus is on the video or the settings are open. An audio player takes the page's width and is the same bar on its own, without full screen. A player narrower than 24rem gives the seek bar a row of its own above the buttons and stacks each setting's choices under its name. One narrower than 16rem drops the times. On a touch screen, a video's controls spread over it, each on its own surface so it reads over any frame: a round play button in the middle, the mute and settings buttons in the top corner, and the times, seek bar, and full screen button in a bar along the bottom. In a short frame, play moves to the top left so the controls fit without changing the video's aspect ratio. There, the settings open downward, and a video narrower than 18rem drops the times. The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
 
 ### Shared tokens
 
