@@ -158,6 +158,20 @@ Pass `chips: { download: false }` when you parse in a browser, which may block d
 
 comark-ui also styles the headings, paragraphs, lists, tables, code, and quotes around the blocks, with the same tokens. Pass `typeset: false` if your site already styles Markdown. [Typeset](/guide/typeset/) has the details.
 
+### Untrusted Markdown
+
+`comarkUi()` also returns `tags`, every element a parsed document can hold besides the components: Markdown's own, the raw HTML that GitHub's `html()` keeps, and the plain elements the plugins draw with. With the components' names, it's the allowlist for Comark's `security` plugin, and it follows the options you pass.
+
+```ts
+import security from "comark/plugins/security";
+
+const { plugins, components, tags } = comarkUi();
+const allowedTags = [...tags, ...Object.keys(components)];
+const render = createHtmlRenderer({ plugins: [...plugins, security({ allowedTags })], components });
+```
+
+`blocks` lists the blocks the plugins replace while parsing, such as `::code-group`. A linter that reports unknown components needs them beside the components' names.
+
 ## Mermaid
 
 comark-ui draws `mermaid` fences with [comark-pele](/mermaid/), a third-party plugin by farnabaz, themed by the shared `--comark-*` tokens. The `mermaid` option takes comark-pele's options, or `false`:

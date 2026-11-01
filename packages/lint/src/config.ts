@@ -14,8 +14,8 @@ const packages = [
     "comark-ui/html",
     // comark-ui brings every package as its own dependency, which the project can't import. It comes first, since
     // Comark keeps the first plugin of each name, so a package also installed on its own doesn't run twice. Its
-    // plugins get the options and blocks the entries below give their own: nothing drawn or downloaded, and files
-    // read from disk.
+    // plugins get the options the entries below give their own: nothing drawn or downloaded, and files read from disk.
+    // The preset names its own blocks.
     () =>
       import("comark-ui/html").then((module) => {
         const preset = module.default({
@@ -30,18 +30,13 @@ const packages = [
           table: {},
           tests: {},
         });
-        return { default: () => preset.plugins, components: preset.components };
+        return {
+          default: () => preset.plugins,
+          components: preset.components,
+          blocks: preset.blocks,
+        };
       }),
-    [
-      "code-group",
-      "tabs-item",
-      "stats",
-      "table",
-      "details",
-      "accordion-item",
-      "collapsible",
-      "ref",
-    ],
+    [],
   ],
   ["comark-annotate/html", () => import("comark-annotate/html"), []],
   ["comark-carousel/html", () => import("comark-carousel/html"), []],
@@ -207,7 +202,11 @@ export async function resolveConfig(
     ...config,
     plugins: [...found.flatMap(({ module }) => module.default()), ...(config.plugins ?? [])],
     components: [
-      ...found.flatMap(({ module, blocks }) => [...Object.keys(module.components), ...blocks]),
+      ...found.flatMap(({ module, blocks }) => [
+        ...Object.keys(module.components),
+        ...("blocks" in module ? module.blocks : []),
+        ...blocks,
+      ]),
       ...(Array.isArray(extra) ? extra : Object.keys(extra)),
     ],
   };
