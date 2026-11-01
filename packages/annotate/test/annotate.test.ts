@@ -8,6 +8,7 @@ import { parseMarkdown } from "comark";
 import security from "comark/plugins/security";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 import annotate, { components } from "../src/html.ts";
+import xref from "../../xref/src/index.ts";
 
 async function run(markdown: string, options?: Parameters<typeof annotate>[0]) {
   const document = await parseMarkdown(markdown, { plugins: [annotate(options)] });
@@ -108,6 +109,39 @@ describe("comark-annotate", () => {
     expect(first.match(/<style>/g)).toHaveLength(1);
     const ids = [...first.matchAll(/ id="([^"]+)"/g)].map((match) => match[1]);
     expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it("keeps an authored id, so a comark-xref reference reaches the screenshot", async () => {
+    const markdown =
+      'See :ref{#fig-login} and :ref{#fig-toolbar}.\n\n::screenshot{src="https://example.com/login.png" alt="Login" #fig-login}\n:::annotation{x=10 y=10 w=20 h=20}\nThe button.\n:::\n::\n\n' +
+      compare
+        .replace("::compare", "::compare{#fig-toolbar}")
+        .replace('alt="New toolbar"', 'alt="New toolbar" #fig-new');
+    const document = await parseMarkdown(markdown, { plugins: [annotate(), xref()] });
+    expect(document.meta.issues).toEqual([]);
+    const html = await renderHtmlFromDocument(document, { components });
+    expect(html).toContain(
+      'See <a href="#fig-login" class="cxr-ref">Figure 1</a> and <a href="#fig-toolbar" class="cxr-ref">Figure 2</a>.',
+    );
+    expect(html).toContain('<figure id="fig-login" class="ca-screenshot">');
+    expect(html).toContain('<div id="fig-toolbar" class="ca ca-compare" data-wide>');
+    expect(html).toContain('<figure id="fig-new" class="ca-screenshot">');
+    expect(html).toMatch(/<li id="ca-[a-z\d]+-1"/);
+    const ids = [...html.matchAll(/ id="([^"]+)"/g)].map((match) => match[1]);
+    expect(new Set(ids).size).toBe(ids.length);
+
+    const slider = (
+      await run(
+        compare
+          .replace("::compare", '::compare{mode="slider" #fig-swipe}')
+          .replace('alt="Old toolbar"', `alt="Old toolbar" id='a"b<'`),
+      )
+    ).html;
+    expect(slider).toContain('<div id="fig-swipe" class="ca ca-compare ca-slider" data-wide>');
+    expect(slider).toContain('<div id="a&quot;b&lt;" class="ca-side ca-side-before">');
+    expect((await run('::screenshot{src="a.png" alt="A"}\n::')).html).toContain(
+      '<figure class="ca-screenshot">',
+    );
   });
 
   it("styles only the notes themselves, so a list inside a note keeps its bullets", async () => {

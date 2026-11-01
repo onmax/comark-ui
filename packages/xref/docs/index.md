@@ -65,7 +65,12 @@ Use a `fig-` id on an image alone in its paragraph to make it a numbered `figure
 ![The login page](login.png){#fig-login}
 ```
 
-A `::figure{#fig-...}` block of your own is numbered as it is, and so is any other element with a `fig-` id, such as a comark-annotate `::screenshot`.
+A `::figure{#fig-...}` block of your own is numbered as it is: references to it read its number, and it keeps its own caption. So is any other element with a `fig-` id, such as a comark-annotate `::screenshot` or `::compare`.
+
+```md
+::screenshot{src="login.png" alt="The login page" #fig-login}
+::
+```
 
 > [!NOTE]
 > A labeled image that shares its paragraph with text isn't a figure, and is reported. Put it on a line of its own.

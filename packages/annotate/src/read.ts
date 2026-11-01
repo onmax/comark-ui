@@ -28,6 +28,8 @@ export interface Annotation {
 }
 
 export interface Screenshot {
+  /** The author's id, such as `fig-login`, which links and comark-xref references point at. */
+  id?: string;
   src: string;
   /** The color of every mark that doesn't set its own. */
   ink?: string;
@@ -47,6 +49,8 @@ export const MODES = ["columns", "slider"] as const;
 export type Mode = (typeof MODES)[number];
 
 export interface Compare {
+  /** The author's id, which links and comark-xref references point at. */
+  id?: string;
   title?: string;
   ink?: string;
   mode: Mode;
@@ -314,6 +318,7 @@ export function readScreenshot(
       message: `${where}: the numbers of annotations ${a} and ${b} overlap at every corner of their marks. Leave room between the marks, or merge them into one annotation.`,
     });
   return {
+    id: text(attrs.id) || undefined,
     src,
     alt,
     title: text(attrs.title) || undefined,
@@ -591,7 +596,13 @@ export function readCompare(
       rule: "comark/annotate/invalid-mode",
       message: `${where}: \`mode\` is ${quote(mode)}, which isn't a compare mode. Use \`columns\` (side by side, the default) or \`slider\`.`,
     });
-  return { title: text(attrs.title) || undefined, ink, mode: known ?? "columns", shots };
+  return {
+    id: text(attrs.id) || undefined,
+    title: text(attrs.title) || undefined,
+    ink,
+    mode: known ?? "columns",
+    shots,
+  };
 }
 
 // Every screenshot is named by its src when no other screenshot shares it, and otherwise by its position and alt.
