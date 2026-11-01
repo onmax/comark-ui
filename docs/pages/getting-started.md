@@ -114,7 +114,7 @@ Every plugin is on except [include](/include/), which reads files from disk.
 
 ### Turn a plugin off
 
-Use `false` to turn a plugin off. Its components go too.
+Pass `false` to turn a plugin and its components off.
 
 ```ts
 comarkUi({ zoom: false });
@@ -122,7 +122,7 @@ comarkUi({ zoom: false });
 
 ### Pass a plugin options
 
-Use an object to pass a plugin its options. Each block's page lists its options under API.
+Pass an object to set a plugin's options. Each block's page lists them under API.
 
 ```ts
 comarkUi({
@@ -133,34 +133,34 @@ comarkUi({
 });
 ```
 
-The keys are the packages' names without `comark-`, in camelCase: `fileTree`, `codeNotes`, `readingTime`. `mermaid` turns on comark-pele. `github` takes its three plugins by name, `callouts`, `references`, and `html`. `links` takes `external` and `anchors`.
+Each key is the package name without `comark-`, in camelCase, such as `fileTree`, `codeNotes`, or `readingTime`. `mermaid` is comark-pele. `github` takes its three plugins by name, `callouts`, `references`, and `html`. `links` takes `external` and `anchors`.
 
 ### Read files
 
-[cast](/cast/), [table](/table/), and [tests](/tests/) read files from disk on their own, so comark-ui gives them a reader that finds none: inline casts, CSV fences, and pasted reports still render. Use `{ root }` to read files under a folder, or `{ read }` to read them yourself.
+[cast](/cast/), [table](/table/), and [tests](/tests/) can read files from disk, so comark-ui gives them a reader that finds none. Inline casts, CSV fences, and pasted reports still render. Pass `{ root }` to read files under a folder, or `{ read }` to read them yourself.
 
 ### Icons
 
-The icon resolver from `icon`'s options also draws the icons of cards, details, file trees, tabs, and code actions, so its `collections` and `fetch` apply to all of them.
+`icon`'s resolver also draws the icons in cards, details, file trees, tabs, and code actions, so its `collections` and `fetch` apply to all of them.
 
 ### Parse in a browser
 
-Use `chips: { download: false }` when you parse in a browser, since a browser may not download another site's images.
+Pass `chips: { download: false }` when you parse in a browser, which may block downloading another site's images.
 
 > [!WARNING]
 > [diagrams](/diagrams/) sends each diagram's source to `https://kroki.io` unless you pass your own `server`.
 
 ### Critic styles
 
-[critic](/critic/) has no component to add its styles. Put `criticCss`, exported by every entry, in the page.
+[critic](/critic/) has no component for its styles. Put `criticCss`, which every entry exports, in the page.
 
 ### Text styles
 
-The text around the blocks is styled too: headings, paragraphs, lists, tables, code, and quotes, on the same tokens as the blocks. Use `typeset: false` when your site already styles Markdown. [Typeset](/guide/typeset/) covers what it styles and how to change it.
+comark-ui also styles the headings, paragraphs, lists, tables, code, and quotes around the blocks, with the same tokens. Pass `typeset: false` if your site already styles Markdown. [Typeset](/guide/typeset/) has the details.
 
 ## Mermaid
 
-comark-ui draws `mermaid` fences with [comark-pele](/mermaid/), a third-party plugin by farnabaz, and puts its diagrams on the shared `--comark-*` tokens. The `mermaid` option takes comark-pele's options, or `false`:
+comark-ui draws `mermaid` fences with [comark-pele](/mermaid/), a third-party plugin by farnabaz, themed by the shared `--comark-*` tokens. The `mermaid` option takes comark-pele's options, or `false`:
 
 ```ts
 comarkUi({ mermaid: { languages: ["mermaid"] } }); // only `mermaid` fences, not `pele` ones
@@ -168,17 +168,17 @@ comarkUi({ mermaid: false }); // leave `mermaid` fences as code
 ```
 
 > [!NOTE]
-> Pele adds about 260 KB gzipped to a bundle. Turn it off when a bundle size limit matters more than diagrams.
+> Pele adds about 260 KB gzipped to a bundle. Turn it off if a size limit matters more than diagrams.
 
-If you register Comark's built-in `mermaid` plugin instead, pass `mermaid: false`, since both read `mermaid` fences. [Mermaid](/mermaid/) covers the syntax and theming.
+If you use Comark's built-in `mermaid` plugin instead, pass `mermaid: false`, since both read `mermaid` fences. [Mermaid](/mermaid/) covers syntax and theming.
 
 ## One block alone
 
-Every block is also its own package, and comark-ui only registers them. To install fewer, each block's page ends with its package: what to install and how to register it alone. [Renderers](/guide/renderers/) shows several of them in one renderer.
+Every block is its own package, and comark-ui only registers them. To install fewer, each block's page ends with how to install and register it alone. [Renderers](/guide/renderers/) shows several in one renderer.
 
 ## Versions
 
-comark-ui ships in lockstep with the blocks, so `comark-ui@X` holds every block at version `X`. [comark-linter](/lint/) finds comark-ui when it's installed and checks documents with its plugins.
+`comark-ui@X` holds every block at version `X`. [comark-linter](/lint/) finds an installed comark-ui and checks documents with its plugins.
 
 ## Next steps
 

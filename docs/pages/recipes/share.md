@@ -35,14 +35,14 @@ Link the page from the pull request, or upload it as a CI artifact. GitHub shows
 
 ## Which to use
 
-Drop fits a review that goes back and forth. Comments sit on the screenshot they're about, and the agent fixes what they ask without anyone copying feedback into a chat.
+Use Drop for a review with several rounds. Comments sit on their screenshot, and the agent reads them itself, so nobody pastes feedback into a chat.
 
-Your own page fits a team that wants no service in the loop, or that already reviews on preview deployments.
+Use your own page if your team wants no service in the loop or already reviews on preview deployments.
 
-Either way, write the document first, as [A review document](/recipes/review/) shows, and check it with [comark-lint](/lint/) before it goes out.
+Either way, write the document as [A review document](/recipes/review/) shows, and check it with [comark-lint](/lint/) first.
 
 ## About Drop
 
-Drop is made by the author of these plugins. Anyone with a GitHub account can sign in at drop.vitehub.dev. A new drop is visible only to you until you share it with your team or by link. Its [docs](https://drop.vitehub.dev/docs?utm_source=comark-ui&utm_medium=recipe) cover sharing, versions, and how long each kind of drop is kept.
+The author of these plugins makes Drop. Anyone with a GitHub account can sign in at drop.vitehub.dev. Only you see a new drop until you share it with your team or by link. The [docs](https://drop.vitehub.dev/docs?utm_source=comark-ui&utm_medium=recipe) cover sharing, versions, and how long Drop keeps each kind of drop.
 
-Drop is open source under Apache-2.0, so a team can [run its own](https://drop.vitehub.dev/docs/self-host?utm_source=comark-ui&utm_medium=recipe) on Cloudflare, Vercel, Netlify, Deno Deploy, or a VPS, and keep its review documents on its own infrastructure.
+Drop is open source under Apache-2.0. A team can [run its own](https://drop.vitehub.dev/docs/self-host?utm_source=comark-ui&utm_medium=recipe) on Cloudflare, Vercel, Netlify, Deno Deploy, or a VPS, and keep its documents on its own servers.

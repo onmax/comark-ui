@@ -49,10 +49,10 @@ Duck tests moved to Vitest: :progress{value=0.85 label="Migrated"}
 
 ## Features
 
-- `:delta` turns two numbers into the arrow, the percent change, and whether the change is better or worse.
-- `:progress` draws a progress bar with its percent after it.
+- `:delta` turns two numbers into an arrow, a percent change, and a color for better or worse.
+- `:progress` draws a progress bar with its percent.
 - `::stats` adds a Change column to a table of befores and afters, or shows each row as a tile.
-- No script: every change is worked out while parsing.
+- No script runs. The plugin works out every change while parsing.
 
 ## Usage
 
@@ -78,7 +78,7 @@ Use the `from` and `to` props to set the numbers. Both are required.
 ```
 ::
 
-When `from` is 0 there is no percent, so the delta shows the difference instead, such as `↑ 1.5 s`. When both are equal, it shows `= 0%`.
+When `from` is 0, the delta shows the difference instead of a percent, such as `↑ 1.5 s`. When both are equal, it shows `= 0%`.
 
 #### Unit
 
@@ -92,7 +92,7 @@ Use the `unit` prop to write a unit after both numbers, such as `kB`, `s`, or `%
 
 #### Better or worse
 
-Use the `better` prop to color the change: green when it's better, red when it's worse. Write `lower` for sizes and durations, and `higher` for scores.
+Use the `better` prop to color the change green when it's better and red when it's worse. Write `lower` for sizes and durations, and `higher` for scores.
 
 ::example
 ```md
@@ -104,11 +104,11 @@ Without `better`, the change is gray.
 
 ### Progress
 
-`:progress` is a native `<progress>` with its percent after it. A raw `<progress>` in the Markdown stays as written.
+`:progress` is a native `<progress>`. A raw `<progress>` in the Markdown stays as written.
 
 #### Value
 
-Use the `value` prop to fill the bar. It's a fraction from 0 to 1. It's required.
+Use the `value` prop to fill the bar with a fraction from 0 to 1. It's required.
 
 ::example
 ```md
@@ -117,7 +117,7 @@ Use the `value` prop to fill the bar. It's a fraction from 0 to 1. It's required
 ::
 
 > [!NOTE]
-> A `value` outside 0 to `max` is clamped to the bar and reported.
+> The plugin clamps a `value` outside 0 to `max` and reports it.
 
 #### Maximum
 
@@ -131,7 +131,7 @@ Use the `max` prop to count up to a number other than 1.
 
 #### Label
 
-Use the `label` prop to show a label before the bar. It also names the bar for screen readers.
+Use the `label` prop to show a label before the bar, which also names it for screen readers.
 
 ::example
 ```md
@@ -141,7 +141,7 @@ Use the `label` prop to show a label before the bar. It also names the bar for s
 
 ### Stats
 
-`::stats` wraps a table of three columns: a name, the value before, and the value after. The plugin adds a Change column with each row's arrow and percent, and aligns the numbers. Name the headers what you like.
+`::stats` wraps a table of three columns: a name, the value before, and the value after. The plugin adds a Change column with each row's arrow and percent, and aligns the numbers. The headers can say anything.
 
 ::example
 ```md
@@ -154,7 +154,7 @@ Use the `label` prop to show a label before the bar. It also names the bar for s
 ```
 ::
 
-A cell is a number, with commas if you like, and an optional unit after it.
+A cell is a number, commas allowed, with an optional unit after it.
 
 > [!NOTE]
 > Both cells of a row need the same unit.
@@ -190,7 +190,7 @@ Use the `unit` prop to set the unit of a difference from 0, for cells written wi
 
 #### Tiles
 
-Use the `tiles` prop to show each row as a tile. The name sits above the after value, and the change sits below it in a pill. The before value counts toward the change but isn't shown.
+Use the `tiles` prop to show each row as a tile, with the name above the after value and the change below it in a pill. The before value counts toward the change but doesn't show.
 
 ::example
 ```md
@@ -203,7 +203,7 @@ Use the `tiles` prop to show each row as a tile. The name sits above the after v
 ```
 ::
 
-Tiles also take a two-column table when there is no before value. The value can be any text, and it shows without a change:
+With no before value, tiles take a two-column table. The value can be any text and shows without a change:
 
 ::example
 ```md
@@ -220,7 +220,7 @@ Tiles also take a two-column table when there is no before value. The value can 
 
 ### Benchmarks in a pull request
 
-Put the numbers where the claim is. A sentence that says what changed carries a `:delta`, and a table of every measurement goes in `::stats` under it:
+Put a `:delta` in the sentence that makes the claim, and every measurement in a `::stats` under it:
 
 ```md
 Moving the map to a worker cut the main bundle :delta{from=412 to=388 unit="kB" better="lower"} on every page
@@ -233,11 +233,11 @@ Moving the map to a worker cut the main bundle :delta{from=412 to=388 unit="kB" 
 ::
 ```
 
-Copy the numbers from the tool's output as it prints them: `1,204` and `2.4 s` both read.
+Paste the numbers as the tool prints them. `1,204` and `2.4 s` both read.
 
 ### Where better differs by row
 
-`better` applies to the whole table. When some rows are better lower, such as sizes, and others better higher, such as scores, write two tables, one for each.
+`better` applies to the whole table. When some rows are better lower and others higher, such as sizes and scores, write one table for each.
 
 ## API
 
@@ -281,7 +281,7 @@ The plugin adds these problems to `meta.issues`, as [Validation](/guide/validati
 - A `max` that isn't a number above 0.
 - A `value` outside 0 to `max`.
 - A `::stats` without a table, or with content besides its table, which is dropped.
-- A table with other than three columns, or two or three with `tiles`, and a row with the wrong number of cells.
+- A table without three columns, or two or three with `tiles`, and a row with the wrong number of cells.
 - A row whose cells aren't numbers, or are in different units.
 - A prop a block doesn't read.
 
@@ -313,7 +313,7 @@ For Vue, React, or Svelte, import from `comark-metrics/vue`, `comark-metrics/rea
 
 ## Theme
 
-A delta's change is green when it's better, red when it's worse, and muted when there's no verdict. A progress bar follows shadcn/ui's Progress: the primary color on a track of itself. The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
+A progress bar follows shadcn/ui's Progress, the primary color on a track of itself. The rules sit in a `comark` CSS layer, so any plain rule of yours wins.
 
 ### Shared tokens
 

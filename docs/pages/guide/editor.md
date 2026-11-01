@@ -5,9 +5,7 @@ keywords: WYSIWYG, rich text, ProseMirror
 tagline: A Tiptap editor for Comark Markdown, with Vue bindings, file uploads, and a codec for collaborative rooms.
 ---
 
-Use `comark-ui/editor` to edit Comark documents and save them back to Markdown.
-
-[Open the editor playground](/play/editor/) to edit Markdown and rich text side by side, or use the [Markdown playground](/play/) to preview the rendered plugins.
+Use `comark-ui/editor` to edit Comark documents and save them back to Markdown. [Open the editor playground](/play/editor/) to edit Markdown and rich text side by side, or use the [Markdown playground](/play/) to preview the rendered plugins.
 
 ## Setup
 
@@ -23,7 +21,7 @@ For the Vue binding, also install `vue` and `@tiptap/vue-3`.
 
 ### Bind a Vue component
 
-Import `ComarkEditor` from `comark-ui/editor/vue` and bind a Markdown string with `v-model`. Pass the parse plugins your document renders with so the editor can check whether it can preserve their syntax.
+Import `ComarkEditor` from `comark-ui/editor/vue` and bind a Markdown string with `v-model`. Pass the parse plugins you render with, so the editor can check it keeps their syntax.
 
 ```vue
 <script setup lang="ts">
@@ -40,13 +38,17 @@ const { plugins } = comarkUi({ chips: { download: false }, icon: { fetch: false 
 </template>
 ```
 
-The frontmatter keys that [Properties](/properties/) shows on the page show above the text the same way, read-only. Pass Properties' options in `properties`, or `:properties="false"` to hide them.
+The editor shows the frontmatter above the text as read-only [Properties](/properties/) rows. Pass Properties' options in `properties`, or `:properties="false"` to hide them.
 
-Mount the editor in the browser. In Nuxt, put it inside `<ClientOnly>`. `ComarkEditor` renders Tiptap's `EditorContent`; your app supplies the toolbar and styles.
+Mount the editor in the browser, inside `<ClientOnly>` in Nuxt. `ComarkEditor` renders Tiptap's `EditorContent`, and your app supplies the toolbar and styles.
 
 ### Use the composable
 
-Use `useComarkEditor(markdown, options)` from `comark-ui/editor/vue` when you need the Tiptap instance. It returns `editor`, a shallow ref that is empty until the document loads, `editable`, a ref that says whether the document can be saved, and `frontmatter`, the document's frontmatter, which the editor writes back on each save.
+Use `useComarkEditor(markdown, options)` from `comark-ui/editor/vue` when you need the Tiptap instance. It returns:
+
+- `editor`, a shallow ref, empty until the document loads.
+- `editable`, a ref that says whether you can save the document.
+- `frontmatter`, which the editor writes back on each save.
 
 ```ts
 import { ref } from "vue";
@@ -60,7 +62,7 @@ function bold() {
 }
 ```
 
-Call the composable inside a Vue setup scope. It destroys the editor when that scope ends. Edits update the Markdown ref, and changes to the ref reload the document.
+Call it inside a Vue setup scope. It destroys the editor when the scope ends. Edits update the Markdown ref, and changing the ref reloads the document.
 
 ## Markdown conversion
 
@@ -75,19 +77,17 @@ if (!lossy) {
 }
 ```
 
-`fromMarkdown()` returns an `EditorDocument` with `doc`, `frontmatter`, and `lossy`. Keep the frontmatter beside the document and pass it to `toMarkdown()` when saving. `lossy` means the schema cannot preserve something in the source; use `checkMarkdown()` for the full check before allowing edits.
+`fromMarkdown()` returns an `EditorDocument` with `doc`, `frontmatter`, and `lossy`. Pass the `frontmatter` back to `toMarkdown()` when you save. `lossy` means the schema can't keep something in the source. Run `checkMarkdown()` for the full check before you allow edits.
 
 ### Check before editing
 
-`checkMarkdown(markdown, { plugins })` checks whether the editor can read and write the document without losing its structure or changing the text the plugins render. It returns `{ editable: true, markdown }` with the normalized Markdown, or `{ editable: false }`. When the frontmatter is what it can't keep, `reason` says why: the block is empty, holds YAML comments, isn't a mapping of keys, isn't valid YAML, or has a `__proto__` key at any depth that a room's fields would drop.
+`checkMarkdown(markdown, { plugins })` checks that the editor can read and write the document without losing structure or changing the rendered text. It returns `{ editable: true, markdown }` with the normalized Markdown, or `{ editable: false }`. If the frontmatter is the problem, `reason` says which: the block is empty, holds YAML comments, isn't `key: value` lines, isn't valid YAML, or has a `__proto__` key at any depth that a room's fields would drop.
 
-Pass the same parse plugins you use to render the document. Syntax only those plugins read, such as a third-party plugin's, otherwise escapes the check. The Vue bindings run this check and open a document read-only when it fails.
-
-The editor may normalize Markdown formatting. A successful check does not promise byte-for-byte preservation.
+Pass the plugins you render with, or the check misses syntax only they read. The Vue bindings run it and open a failing document read-only. A passing check doesn't promise byte-for-byte output.
 
 ### What the editor keeps
 
-The editor reads and writes all of comark-ui's syntax, so a document that uses it opens editable:
+The editor reads and writes all of comark-ui's syntax, so these open editable:
 
 - Every block and inline component, with its props and slots, written flush and with its props on its own line. A component written `:name{}` alone on its line stays that way.
 - Quiz options, as tasks with the `>` rationale under each.
@@ -96,23 +96,21 @@ The editor reads and writes all of comark-ui's syntax, so a document that uses i
 - CriticMarkup: insertions, deletions, substitutions, highlights, and comments.
 - Definition lists, and emphasis next to Chinese, Japanese, and Korean punctuation.
 
-The first save normalizes formatting without changing the document: it pads table cells, quotes attribute values, and puts a blank line between blocks. It refuses ordered task lists and HTML comments inside a paragraph, because the schema has nowhere to keep them.
+Without changing the document, the first save pads table cells, quotes attribute values, and puts a blank line between blocks. The editor refuses ordered task lists and HTML comments inside a paragraph, since the schema has nowhere to keep them.
 
 ## Schema
 
-`ComarkKit` from `comark-ui/editor` combines Tiptap's StarterKit with task lists, inline images, tables, footnotes, definition lists, CriticMarkup, and Comark components, slots, and comments. It preserves Comark attributes that have no editor field, through the clipboard too.
+`ComarkKit` from `comark-ui/editor` combines Tiptap's StarterKit with task lists, inline images, tables, footnotes, definition lists, CriticMarkup, and Comark components, slots, and comments. It keeps Comark attributes that have no editor field, through the clipboard too.
 
-Use `[ComarkKit]` as the extensions of a Tiptap editor you create yourself. Pass StarterKit options through `ComarkKit.configure({ starterKit: { ... } })`. Underline stays off because Comark has no underline syntax.
+Pass `[ComarkKit]` as the extensions of your own Tiptap editor, and StarterKit options through `ComarkKit.configure({ starterKit: { ... } })`. Underline stays off, since Comark has no underline syntax.
 
-The component nodes preserve a block's structure and editable content. Supply your own Tiptap node views to draw a block as it appears in your app.
+The component nodes keep a block's structure and editable content. Add your own Tiptap node views to draw it as your app does.
 
-`ComarkImage` draws video and audio URLs as native players for the file extensions the editor recognizes. Images stay inline. The other exported nodes are `ComarkBlock`, `ComarkInline`, `ComarkSlot`, `ComarkComment`, `FootnoteReference`, `InlineFootnote`, `FootnoteDefinition`, `DefinitionList`, `DefinitionTerm`, `DefinitionDescription`, and `CriticComment`, and the marks `CriticInsertion`, `CriticDeletion`, and `CriticHighlight`; `ComarkKit` already includes them.
+`ComarkImage` plays video and audio URLs it recognizes by extension in native players, and keeps images inline. `ComarkKit` includes it and the other exported nodes: `ComarkBlock`, `ComarkInline`, `ComarkSlot`, `ComarkComment`, `FootnoteReference`, `InlineFootnote`, `FootnoteDefinition`, `DefinitionList`, `DefinitionTerm`, `DefinitionDescription`, and `CriticComment`, and the marks `CriticInsertion`, `CriticDeletion`, and `CriticHighlight`.
 
 ## File uploads
 
-Add `Upload` from `comark-ui/editor` to the editor's `extensions`. It handles pasted and dropped images, video, and audio. Supply an `upload(file, progress)` callback that returns the uploaded file's URL.
-
-For example, an endpoint at `/api/uploads` can accept a file and return `{ url }`:
+Add `Upload` from `comark-ui/editor` to the editor's `extensions` to take pasted and dropped images, video, and audio. Its `upload(file, progress)` callback returns the uploaded file's URL. Here an endpoint at `/api/uploads` takes a file and returns `{ url }`:
 
 ```ts
 import { Upload } from "comark-ui/editor";
@@ -132,17 +130,17 @@ const upload = Upload.configure({
 });
 ```
 
-Pass `[upload]` to `<ComarkEditor :extensions="[upload]" />` or to the composable's `extensions` option. Each file gets a placeholder until the callback resolves. A rejected upload removes its placeholder and calls `onError`.
+Pass `[upload]` to `<ComarkEditor :extensions="[upload]" />` or the composable's `extensions` option. Each file shows a placeholder until the callback resolves. A rejected upload removes it and calls `onError`.
 
-The callback's second argument reports progress as a fraction from 0 to 1. Use it with `XMLHttpRequest.upload.onprogress` when you need byte progress; `fetch` does not report upload progress. Use `accept(file)` to restrict which files the editor takes.
+The callback's second argument reports progress as a fraction from 0 to 1. `fetch` doesn't report upload progress, so use `XMLHttpRequest.upload.onprogress` for it. `accept(file)` limits which files the editor takes.
 
-The placeholder is a local decoration, so collaborative documents never contain a file that has not finished uploading. `uploadPlugin(options)`, `startUploads(view, files, pos, options)`, `findUpload(state, id)`, and `uploadKey` are exported for hosts that integrate at the ProseMirror level.
+The placeholder is a local decoration, so a collaborative document never holds a half-uploaded file. Hosts that work at the ProseMirror level can use `uploadPlugin(options)`, `startUploads(view, files, pos, options)`, `findUpload(state, id)`, and `uploadKey`.
 
 ## Collaborative rooms
 
-Use `createEditorCodec({ plugins, kit })` from `comark-ui/editor` to share the schema and Markdown conversion between a server and its editors. The returned codec fits ViteHub Realtime's `editor` option.
+`createEditorCodec({ plugins, kit })` from `comark-ui/editor` shares the schema and Markdown conversion between a server and its editors. The codec fits ViteHub Realtime's `editor` option.
 
-A room holds a document in two parts. The body is the editor's document, bound to the editors through Tiptap's collaboration extension. The frontmatter is the room's fields: a map, such as a `Y.Map`, with one value per key. An edit to the text never touches the fields, and two people who change different keys at the same time both keep their change. When two people change the same key at once, every editor ends with the same one of the two values.
+A room holds a document in two parts. The body is the editor's document, bound through Tiptap's collaboration extension. The frontmatter is the room's fields, a map such as a `Y.Map` with one value per key. Text edits never touch the fields. When two people change different keys at once, both changes stay. On the same key, one value wins in every editor.
 
 ```ts
 import { createEditorCodec } from "comark-ui/editor";
@@ -157,33 +155,33 @@ if (result.writable) {
 }
 ```
 
-Pass your renderer's plugins for the same preservation check as `checkMarkdown()`. The codec provides the document format; your host supplies room storage, transport, and a collaboration extension.
+Pass your renderer's plugins for the same check as `checkMarkdown()`. The codec gives the document format, and your host supplies room storage, transport, and a collaboration extension.
 
 | Method | Returns |
 | --- | --- |
-| `extensions()` | The shared Tiptap extensions, with StarterKit's undo history and trailing paragraph disabled by default for collaboration. |
-| `split(markdown)` | `{ body, fields }`: the stored file's body and its frontmatter as a plain object. Frontmatter a save couldn't write back stays in `body`. |
+| `extensions()` | The shared Tiptap extensions. StarterKit's undo history and trailing paragraph are off by default, for collaboration. |
+| `split(markdown)` | `{ body, fields }`, the stored file's body and its frontmatter as a plain object. Frontmatter a save couldn't write back stays in `body`. |
 | `join({ body, fields })` | The file to store, with the fields as YAML frontmatter above the body. |
 | `fromMarkdown(markdown)` | The body as Tiptap JSON. |
 | `toMarkdown(doc)` | The body as Markdown, without frontmatter. |
-| `verify(markdown)` | `{ writable: true, canonical }` when the room can save the body, or `{ writable: false }`, with `issues` that say why when the frontmatter is the problem. |
+| `verify(markdown)` | `{ writable: true, canonical }` when the room can save the body, else `{ writable: false }`. Its `issues` say why when the frontmatter is the problem. |
 
-`verify()` refuses a body that still starts with frontmatter, because the room would drop it on the first save. Split the file first. Frontmatter that `split()` leaves in the body also opens read-only, with an issue that names the reason: an empty block, YAML comments, plain text or a list instead of `key: value` lines, invalid YAML, or a `__proto__` key at any depth, including mappings inside lists. A save would drop or rewrite each of these.
+`verify()` refuses a body that still starts with frontmatter, since the room would drop it on the first save. Split the file first. Frontmatter that `split()` leaves in the body opens read-only too, because a save would drop or rewrite it. The issue gives the same reasons as `checkMarkdown()`, and it finds a `__proto__` key in mappings inside lists too.
 
-A host that stores frontmatter apart from the body, such as ViteHub Content, already passes the body alone and its fields; it needs no `split()` or `join()`. A host that keeps the whole file as the body and doesn't call them opens a document with frontmatter read-only, as before.
+A host that stores frontmatter apart, such as ViteHub Content, needs no `split()` or `join()`. A host that keeps the whole file as the body and skips them opens any document with frontmatter read-only.
 
-The [Properties](/properties/) rows of a room come from its fields. Build them with `rowsOf(fields, options)` from comark-properties. They stay read-only; the editor doesn't edit fields yet.
+Build a room's [Properties](/properties/) rows from its fields with `rowsOf(fields, options)` from comark-properties. They stay read-only, since the editor doesn't edit fields yet.
 
 ## Vue options
 
 | Option | Used by | Description |
 | --- | --- | --- |
 | `extensions` | Component and composable | Extra Tiptap extensions added after `ComarkKit`, such as `Upload`. |
-| `plugins` | Component and composable | Parse plugins used to check the document before editing. |
+| `plugins` | Component and composable | Parse plugins that check the document before editing. |
 | `kit` | Composable | `ComarkKitOptions`, including StarterKit configuration. |
-| `modelValue` | Component | The Markdown string, bound with `v-model`; changes emit `update:modelValue`. |
+| `modelValue` | Component | The Markdown string, bound with `v-model`. Changes emit `update:modelValue`. |
 | `properties` | Component | `PropertiesOptions` for the read-only rows above the text, or `false` to hide them. Default `true`. |
 
 ## Next steps
 
-[Installation](/getting-started/) registers the blocks for rendering. [Renderers](/guide/renderers/) shows how to display the saved Markdown. [Validation](/guide/validation/) checks documents for authoring problems.
+[Installation](/getting-started/) registers the blocks for rendering, [Renderers](/guide/renderers/) displays the saved Markdown, and [Validation](/guide/validation/) checks documents for authoring problems.

@@ -44,11 +44,10 @@ export const MAX_FILTERS = 3;
 ## Features
 
 - Two ordinary fenced blocks, before and after, become a suggested change like a review's.
-- The header shows the file and how many lines were added and removed.
-- Removed lines are red and added lines green. Within a pair of changed lines, the words that changed are a shade deeper.
+- The header shows the file and the counts of added and removed lines.
+- Removed lines are red and added lines green, with the changed words a shade deeper.
 - The line numbers and the `+` and `−` come from CSS, so copying a selection copies only the code.
-- With Comark's `shiki` plugin, both blocks keep their highlighting.
-- To mark a change inside one block of code instead, such as pasted `git diff` output, use a `diff` fence with [Code](/code/#diffs).
+- To mark changes inside one block, such as pasted `git diff` output, use a `diff` fence with [Code](/code/#diffs).
 
 ## Usage
 
@@ -68,7 +67,7 @@ if (opened) history.back();
 ::
 
 > [!NOTE]
-> Keep both blocks to the lines around the change. One diff shows one file, and it takes no unified diff. It's for a change a reader should see, and a few lines before and after show that best.
+> One diff shows one file and takes no unified diff. Keep both blocks to the few lines around the change.
 
 ### File
 
@@ -92,7 +91,7 @@ export const MAX_FILTERS = 5;
 
 ### Line numbers
 
-Use the `line` prop to number the lines. It's the file's line number for the first line of both blocks. Without it, the diff has no line numbers.
+Use the `line` prop to number the lines. Set it to the file's line number where both blocks start. Without it, the diff has no line numbers.
 
 ::example
 ````md
@@ -163,7 +162,7 @@ function close() {
 
 ## Accessibility
 
-The header reads as the figure's caption: the label, the file, and the counts. The code scrolls in its own box, which is a tab stop, so a keyboard reaches a long line.
+The header, with the label, file, and counts, is the figure's caption. The code scrolls in its own box, a tab stop, so a keyboard reaches a long line.
 
 ### Keyboard interactions
 
@@ -188,7 +187,7 @@ The plugin takes no options. In `comarkUi()`, `diff: false` turns it off.
 
 ### Issues
 
-The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation/) describes. Each issue names its diff, by its file, and says how to fix it:
+The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation/) describes. Each names its diff by file and says how to fix it:
 
 - A count of code blocks other than two.
 - Anything inside besides the two blocks.
@@ -198,13 +197,13 @@ The plugin adds every problem to `meta.issues`, as [Validation](/guide/validatio
 - A `line` that isn't a whole number from 1.
 - A block over 200 lines.
 - Before and after that are the same.
-- A prop `::diff` doesn't read, or a `:prop` bound to a value that is undefined.
+- A prop `::diff` doesn't read, or a `:prop` bound to an undefined value.
 
 Each kind has its own rule in [Doctor](/doctor/).
 
 ### Package
 
-[comark-ui](/getting-started/) brings `comark-diff` and registers it. To use it alone, install it and pass the renderer's `components`:
+[comark-ui](/getting-started/) installs and registers `comark-diff`. To use it alone, install it and pass the renderer's `components`:
 
 ```sh
 pnpm add comark @comark/html comark-diff
@@ -217,18 +216,18 @@ import diff, { components } from "comark-diff/html";
 const render = createHtmlRenderer({ plugins: [diff()], components });
 ```
 
-It's HTML only: Vue, React, and Svelte have no diff components. Add Comark's `shiki` plugin to keep the code's highlighting. [Renderers](/guide/renderers/) covers using it with other plugins.
+It's HTML only, with no Vue, React, or Svelte components. Add Comark's `shiki` plugin to keep the highlighting. [Renderers](/guide/renderers/) covers using it with other plugins.
 
 ## Theme
 
-A diff is a card in the style of shadcn/ui's Card, so it follows the shared tokens in [Theming](/guide/theming/) and turns dark with them. Removed and added lines take their own red and green, which mean something in any theme. The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
+A diff is a card like shadcn/ui's Card, so it follows the shared tokens in [Theming](/guide/theming/), dark mode included. Removed and added lines keep their own red and green in any theme. The rules sit in a `comark` CSS layer, so any plain rule of yours wins.
 
 ### Shared tokens
 
 | Token | Used for |
 | --- | --- |
 | `--comark-background` | The card |
-| `--comark-foreground` | The code, and mixed into the red and green of the counts and markers so they stay readable |
+| `--comark-foreground` | The code, and mixed into the counts' and markers' red and green so they stay readable |
 | `--comark-muted` | The icon, the file's name, and the line numbers |
 | `--comark-border` | The card's edge and the line under the header |
 | `--comark-accent` | The header, half and half with the background |
@@ -263,7 +262,7 @@ Lines take a tint of each color, and the changed words a deeper tint. Both follo
 | `.cd-scroll` | The box the code scrolls in when a line is too long |
 | `table.cd-code` | The lines, with the first block's Shiki class when it has one |
 | `tr.cd-del`, `tr.cd-add`, `tr.cd-same` | A removed, added, or unchanged line, with `data-highlight` when its block highlights it |
-| `.cd-num` | A line number, in `data-line`; two per line, before and after, and only with `line` |
+| `.cd-num` | A line number, in `data-line`. Two per line, before and after, and only with `line` |
 | `.cd-line` | The code of a line, with its `+` or `−` in `::before` |
 | `.cd-code del`, `.cd-code ins` | The words that changed within a pair of lines |
 

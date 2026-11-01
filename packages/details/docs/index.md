@@ -44,11 +44,10 @@ No. Each item is a native `<details>`, and `type="single"` gives them one `name`
 
 ## Features
 
-- Every block renders as `<details>` with a real `<summary>`, so it opens and closes with no script.
+- Every block renders as `<details>` with a real `<summary>`, even from a `#summary` slot, so it opens and closes with no script.
 - The browser's search finds text inside a closed block, and it prints.
-- A `#summary` slot renders as a real `<summary>`.
 - A single accordion keeps one item open through the `name` attribute, which [every current browser](https://caniuse.com/mdn-html_elements_details_name) supports.
-- Nuxt UI's syntax, unchanged, so a page renders the same accordions and collapsibles under Nuxt UI.
+- It uses Nuxt UI's syntax, so a page renders the same under Nuxt UI.
 
 ## Usage
 
@@ -145,7 +144,7 @@ No.
 
 #### Default value
 
-Use the `defaultValue` prop to open items when the page loads. It takes their positions from 0, as Nuxt UI does: `:defaultValue='["0", "2"]'`, or `defaultValue="1"` for one.
+Use the `defaultValue` prop to open items on load. It takes positions from 0, as in Nuxt UI: `:defaultValue='["0", "2"]'`, or `defaultValue="1"` for one.
 
 ::example
 ```md
@@ -168,7 +167,7 @@ No.
 
 #### Label
 
-Use the `label` prop to set the item's summary. It's required: an item without one shows "Item 1", "Item 2", and so on, and adds an issue.
+Use the required `label` prop to set the item's summary. An item without one shows "Item 1", "Item 2", and so on, and adds an issue.
 
 ```md
 :::accordion-item{label="Is it free?"}
@@ -218,7 +217,7 @@ Use `::collapsible` to hide content behind a quiet line of text.
 
 #### Name
 
-Use the `name` prop to say what the collapsible hides. It defaults to "properties". With `name="options"`, the summary reads "Show options" while it's closed and "Hide options" while it's open.
+Use the `name` prop to say what the collapsible hides. It defaults to "properties". With `name="options"`, the summary reads "Show options" when closed and "Hide options" when open.
 
 ::example
 ```md
@@ -257,11 +256,11 @@ Anything.
 
 ### Accordions on one page
 
-Two `type="single"` accordions on one page never close each other's items, even when they come from two documents rendered into one page.
+Two `type="single"` accordions on one page never close each other's items, even when they come from different documents.
 
 ## Accessibility
 
-Each block is a native `<details>`, so the browser handles focus, keys, and what a screen reader hears. Each summary is a tab stop.
+Each block is a native `<details>`, so the browser handles focus, keys, and what a screen reader hears. Every summary is a tab stop.
 
 ### Keyboard interactions
 
@@ -332,7 +331,7 @@ const plugins = [details({ iconResolver: createIcons() })];
 
 ### Your own renderer
 
-Every block becomes a `disclosure` node, drawn as `<details>`, whose first child is a `disclosure-summary`, drawn as `<summary>`, holding the label. An accordion becomes an `accordion` node of disclosures:
+Every block becomes a `disclosure` node, drawn as `<details>`. Its first child is a `disclosure-summary`, drawn as `<summary>`, which holds the label. An accordion becomes an `accordion` node of disclosures:
 
 ```json
 ["accordion", {},
@@ -348,13 +347,13 @@ Every block becomes a `disclosure` node, drawn as `<details>`, whose first child
 The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation/) describes:
 
 - A `::details` with no summary shows "Details".
-- Content in an `::accordion` outside every `:::accordion-item` doesn't render, and an accordion with no items is reported.
+- Content in an `::accordion` outside every `:::accordion-item`, which doesn't render, and an accordion with no items.
 - An item without a `label`, a `defaultValue` that isn't an item's position, and a `type` that isn't `single` or `multiple`.
 - An `:::accordion-item` outside `::accordion` renders on its own.
 - An empty `::collapsible`, and an icon comark-icon can't draw.
 - A prop the block doesn't read, such as a misspelled `summary`.
 
-Each issue names its block and says how to fix it. Each one has its own rule in [Doctor](/doctor/).
+Each issue names its block, says how to fix it, and has its own rule in [Doctor](/doctor/).
 
 ### Package
 
@@ -373,11 +372,11 @@ import details, { components } from "comark-details/html";
 const render = createHtmlRenderer({ plugins: [details()], components });
 ```
 
-For Vue, React, or Svelte, import from `comark-details/vue`, `comark-details/react`, or `comark-details/svelte`. The components add the styles when they mount. When you render on a server, import `comark-details/style.css` with your own styles so the page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-details/vue`, `comark-details/react`, or `comark-details/svelte`. The components add the styles when they mount. On a server, import `comark-details/style.css` with your own styles so the page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
 
 ## Theme
 
-Details and accordions are bordered boxes with a chevron that turns as they open. A collapsible is a quiet line of text. They follow the shared tokens in [Theming](/guide/theming/).
+Details and accordions are bordered boxes with a chevron that turns as they open. A collapsible is a quiet line of text. All three use the shared tokens in [Theming](/guide/theming/).
 
 ### Shared tokens
 
@@ -402,4 +401,4 @@ Details and accordions are bordered boxes with a chevron that turns as they open
 
 ### Important rules
 
-The rules sit in a `comark` CSS layer, so any plain rule of your own wins, except the spacing that draws each box. The padding of `.cdt` and its summary, the margins between accordion items, and the edge margins of a box's content are `!important`. Override those with `!important` too.
+The rules sit in a `comark` CSS layer, so any plain rule of yours wins, except the spacing that draws each box. The padding of `.cdt` and its summary, the margins between accordion items, and the edge margins of a box's content are `!important`, so override them with `!important` too.

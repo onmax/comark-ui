@@ -48,7 +48,7 @@ digraph {
 
 - PlantUML, Graphviz, D2, DBML, GoAT, and Svgbob fences become SVG in the page.
 - A [Kroki](https://kroki.io) server draws each diagram while parsing.
-- The plugin takes out anything in the SVG that could run.
+- The plugin strips anything in the SVG that could run.
 - Each diagram sits on a white card, since the tools draw dark lines on white.
 - A title names the diagram for screen readers.
 
@@ -96,9 +96,9 @@ user -> api -> db
 
 ### Where the source goes
 
-Each diagram's source goes to the Kroki server in a POST request while the document is parsed. With the default `server`, that's `https://kroki.io`, a free public service run by the Kroki project. Don't send it a diagram you wouldn't post publicly: an internal architecture, a schema with sensitive names, anything under an NDA.
+While parsing, the plugin POSTs each diagram's source to the Kroki server. The default `server` is `https://kroki.io`, a free public service run by the Kroki project. Don't send it a diagram you wouldn't post publicly, such as an internal architecture, a schema with sensitive names, or anything under an NDA.
 
-The readers of the page never contact Kroki. They get the SVG inline.
+Readers never contact Kroki. They get the SVG inline.
 
 ### Run your own Kroki
 
@@ -126,21 +126,21 @@ diagrams({ draw: false });
 
 ### Diagrams on a dark page
 
-The tools draw dark lines on white, so each diagram sits on a white card on any page, in its own frame. Set `--cdg-canvas` to change it, as [Theme](#theme) shows. A diagram wider than its card shrinks to fit it.
+Each diagram keeps its white card on a dark page. Set `--cdg-canvas` to change it, as [Theme](#theme) shows. A diagram wider than its card shrinks to fit.
 
 ### Styles from the SVG
 
-Some tools, such as D2, put a `<style>` in their SVG, scoped to the drawing's own ids. Inline SVG shares the page's styles, so the plugin keeps those and only drops `@import`. Theming the diagram itself is up to the tool's own syntax.
+Some tools, such as D2, put a `<style>` in their SVG. It's scoped to the drawing's own ids, so the plugin keeps it in the page and drops only `@import`. Theme the diagram itself with the tool's own syntax.
 
 ### What's kept from the SVG
 
-The plugin keeps the drawing and drops what could run: scripts, event handlers such as `onclick`, embedded HTML (`foreignObject`), animations, links that aren't to a web page or within the drawing, and `@import` in its styles. The XML prolog, doctype, and comments go too.
+The plugin keeps the drawing and drops what could run: scripts, event handlers such as `onclick`, embedded HTML in `foreignObject`, animations, links that aren't to a web page or within the drawing, and `@import` in its styles. The XML prolog, doctype, and comments go too.
 
 ## API
 
 ### Options
 
-Options go under `diagrams` in `comarkUi()`, or to `diagrams()` when you use it alone.
+Pass options under `diagrams` in `comarkUi()`, or to `diagrams()` alone.
 
 | Option | Default | Description |
 | --- | --- | --- |
@@ -149,7 +149,7 @@ Options go under `diagrams` in `comarkUi()`, or to `diagrams()` when you use it 
 
 ### Issues
 
-A diagram Kroki can't draw stays as code, and the plugin adds a sentence to `meta.issues`, as [Validation](/guide/validation/) describes, with the first two lines of the tool's error. So does a diagram drawn while the server can't be reached:
+A diagram Kroki can't draw stays as code. The plugin adds a sentence with the first two lines of the tool's error to `meta.issues`, as [Validation](/guide/validation/) describes. The same happens when the server can't be reached:
 
 ```txt
 The ```dot fence 2: Kroki couldn't draw it: Error: <stdin>: syntax error in line 1 near 'a'. Fix the diagram's source.
@@ -160,7 +160,7 @@ Each issue has its own rule in [Doctor](/doctor/).
 
 ### Package
 
-[comark-ui](/getting-started/) brings `comark-diagrams` and registers it. To use it alone, install it and pass the renderer's `components`:
+[comark-ui](/getting-started/) installs and registers `comark-diagrams`. To use it alone, install it and pass the renderer's `components`:
 
 ```sh
 pnpm add comark @comark/html comark-diagrams
@@ -173,11 +173,11 @@ import diagrams, { components } from "comark-diagrams/html";
 const render = createHtmlRenderer({ plugins: [diagrams()], components });
 ```
 
-For Vue, React, or Svelte, import from `comark-diagrams/vue`, `comark-diagrams/react`, or `comark-diagrams/svelte`. The components add the styles when they mount. Import `comark-diagrams/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-diagrams/vue`, `comark-diagrams/react`, or `comark-diagrams/svelte`. The components add the styles on mount. Import `comark-diagrams/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
 
 ## Theme
 
-Each diagram sits on a card in a 1px frame with its title under it. The card stays white on a dark page, since diagram tools draw dark lines on white whatever the page's theme. The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
+Each diagram sits on a white card in a 1px frame, with its title under it, even on a dark page. The rules sit in a `comark` CSS layer, so any plain rule of yours wins.
 
 ### Shared tokens
 

@@ -56,11 +56,11 @@ Promise callbacks are microtasks. The event loop empties the microtask queue aft
 
 ## Features
 
-- A question is a task list with a reason under each option. The reader picks an option and presses Check.
+- A question is a task list with a reason under each option, answered with a Check button.
 - A right answer shows its reason and the explanation. A wrong one shows why it's wrong, with Try again and Show answer.
-- The options are shuffled the same way for every reader, and saved answers still match after the author reorders them.
+- Every reader sees the same shuffle, and saved answers still match after the author reorders the options.
 - Polls collect votes through a host, and recall cards blur an answer until the reader asks for it.
-- Every block is open on the page as the reader scrolls. Without the script, the options are a plain list and the answer sits in a Show answer disclosure.
+- Every block is open on the page. Without the script, the options are a plain list and the answer sits in a Show answer disclosure.
 
 ## Usage
 
@@ -78,13 +78,13 @@ Which callback runs first once the current script ends?
 ```
 ::
 
-The prompt is everything before the options, and can hold any Markdown, code blocks included.
+The prompt, everything before the options, can hold any Markdown, even code blocks.
 
 ### Question
 
 #### Reasons
 
-Use a `>` line under an option to say why it's right or wrong. The reader sees it after checking that option, and every one after Show answer. An option and its reason can hold inline code, links, images, and citations.
+Use a `>` line under an option to say why it's right or wrong. The reader sees it after checking that option, and Show answer reveals them all. Options and reasons can hold inline code, links, images, and citations.
 
 ::example
 ```md
@@ -100,11 +100,11 @@ Which callback runs first once the current script ends?
 ::
 
 > [!NOTE]
-> A wrong option with no reason adds an issue. So does an option that runs onto a second line, which is usually a reason missing its `>`.
+> A wrong option with no reason adds an issue, and so does an option that runs onto a second line, usually a reason missing its `>`.
 
 #### Id
 
-Use the `#id` prop to give the block the id a host saves answers by. Without one, the id changes whenever the prompt or options do, and the plugin adds an issue.
+Use the `#id` prop to set the id a host saves answers by. Without one, the id changes with the prompt or options, and the plugin adds an issue.
 
 ```md
 ::question{#event-loop-order}
@@ -112,7 +112,7 @@ Use the `#id` prop to give the block the id a host saves answers by. Without one
 
 #### Multiple
 
-Use the `multiple` prop to show checkboxes, even with one right option. One right option makes radios, and several make checkboxes. With `multiple`, the control doesn't tell how many are right.
+Use the `multiple` prop to show checkboxes even with one right option, so the control doesn't give away how many are right. Without it, one right option makes radios and several make checkboxes.
 
 ::example
 ```md
@@ -148,7 +148,7 @@ How many times does `then(fn)` call `fn` once the promise resolves?
 
 #### Number
 
-Use `number="false"` to leave the block out of the count. Questions and recall cards share one count, so a lesson numbers them 1, 2, 3 down the page. Polls aren't numbered.
+Use `number="false"` to leave the block out of the count. Questions and recall cards share one count down the page, and polls aren't numbered.
 
 ::example
 ```md
@@ -164,7 +164,7 @@ Is JavaScript in a page single-threaded?
 
 #### Hint
 
-Use the `#hint` slot to put a hint behind a Hint button, for a reader who's stuck.
+Use the `#hint` slot to put a hint behind a Hint button.
 
 ::example
 ```md
@@ -205,7 +205,7 @@ After every task, the event loop empties the microtask queue.
 
 ### Poll
 
-Use `::poll` to collect votes. Its options are a task list with none marked, and it has no Check button: picking an option is the vote. It keeps the order you wrote. Its results show once the reader votes, the way a social network shows them, and the vote can change until voting closes.
+Use `::poll` to collect votes. Its options are a task list with none marked, kept in the order you wrote. Picking one is the vote, with no Check button. Results show after the vote, which the reader can change until voting closes.
 
 ::example
 ```md
@@ -223,7 +223,7 @@ What should the next lesson cover?
 
 #### Multiple
 
-Use the `multiple` prop to show checkboxes, so a reader votes for several options. Percentages count over voters.
+Use the `multiple` prop to show checkboxes, so a reader can vote for several options. Percentages count over voters.
 
 ```md
 ::poll{#next-topics multiple}
@@ -242,7 +242,7 @@ Use the `closes` prop to close voting on an ISO date. After it, the poll shows a
 
 ### Recall
 
-Use `::recall` to ask the reader to answer from memory. The `#answer` stays blurred until the reader presses Show answer, then I knew it and Not yet record how it went. It takes `#id` and `number`, as a question does.
+Use `::recall` to have the reader answer from memory. The `#answer` stays blurred until Show answer. Then I knew it and Not yet record how it went. It takes `#id` and `number` like a question.
 
 ::example
 ```md
@@ -262,7 +262,7 @@ Promise callbacks are microtasks, and a timer's callback is a task.
 
 ### A lesson
 
-A lesson teaches one thing, then has the reader use it right away. This one explains why `await` doesn't let a page paint, with numbered [steps](/steps/), a [callout](/github/), and [citations](/sources/), then checks it with a question and a recall card:
+This lesson explains why `await` doesn't let a page paint with [steps](/steps/), a [callout](/github/), and [citations](/sources/), then checks it with a question and a recall card:
 
 ::examples
 :::example{label="Lesson"}
@@ -314,26 +314,26 @@ After every task, before it renders or takes the next task :cite[1].
 
 ### Writing the questions
 
-- **Knowledge first, then practice.** Explain the one idea with sources, then ask about it while it's fresh. A recall card near the end asks for it again from memory, which is what makes it stick.
-- **Give every wrong option a reason.** The reason is the lesson for a reader who picked it, so say what that option gets wrong, not only that it's wrong.
-- **Make the options look alike.** Keep them about as long as each other and in the same form, so the right one doesn't stand out. The plugin reports a right option that's much longer than the rest.
-- **Don't point at other options.** The options are shuffled, so "All of the above" or "Both A and B" stops making sense. Write out what you mean.
-- **Give each block an id.** Answers are saved by id, so a lesson you edit keeps its readers' answers. Keep the id when you reword the prompt.
+- **Knowledge first, then practice.** Explain the idea with sources, then ask about it while it's fresh. A recall card near the end asks again from memory, which makes it stick.
+- **Give every wrong option a reason.** It's the lesson for a reader who picked it, so say what the option gets wrong.
+- **Make the options look alike.** Keep them about the same length and form, so the right one doesn't stand out. The plugin reports a right option much longer than the rest.
+- **Don't point at other options.** The shuffle breaks "All of the above" and "Both A and B". Write out what you mean.
+- **Give each block an id.** Hosts save answers by id, so an edited lesson keeps its readers' answers. Keep the id when you reword the prompt.
 - **Cite the claims.** comark-sources' `:cite` works in prompts, options, reasons, and answers.
 
 ### Order and keys
 
-The shuffle is stable. Every reader, and the page without its script, sees the same order, whatever order you write the options in. Reordering options keeps saved answers. Editing an option's words resets the saved answers to it.
+Every reader, and the page without its script, sees the same shuffled order. Reordering options keeps saved answers, but editing an option's words resets the answers that picked it.
 
 ### Hosting
 
-Opened as a file, a lesson keeps the reader's answers in their browser. In [Drop](https://drop.vitehub.dev), answers follow the reader across devices, polls collect votes, and each question shows how everyone answered. Any other host can do the same through the [events](#events) in [Saving answers](#saving-answers).
+Opened as a file, a lesson keeps answers in the reader's browser. In [Drop](https://drop.vitehub.dev), answers follow the reader across devices, polls collect votes, and questions show how everyone answered. Other hosts can do the same with the [events](#events) in [Saving answers](#saving-answers).
 
 ## Accessibility
 
-A question or poll is a `fieldset` of radios or checkboxes. A question is labelled by its number and prompt; a poll is labelled by its prompt alone. The status line under the options is a live region, so a screen reader hears the verdict once after each check. It includes the count of answers when a host supplies aggregate results.
+A question or poll is a `fieldset` of radios or checkboxes, labelled by its number and prompt, or the prompt alone for a poll. The status line under the options is a live region, so a screen reader hears the verdict once after each check, with the count of answers when a host sends results.
 
-A state's color always comes with an icon, a border, and a tint, and the status line says the verdict in words, so color never carries it alone.
+A state never relies on color alone. It also gets an icon, a border, and a tint, and the status line says the verdict in words.
 
 Focus follows what the reader does:
 
@@ -386,13 +386,13 @@ In right-to-left text, `ArrowLeft` and `ArrowRight` swap.
 
 | Slot | Description |
 | --- | --- |
-| `#hint` | A question's hint, behind a Hint button, for a reader who's stuck. |
+| `#hint` | A question's hint, behind a Hint button. |
 | `#explain` | A question's explanation, which opens after a right answer or Show answer. |
 | `#answer` | A recall card's answer, blurred until the reader presses Show answer. Required. |
 
 ### Options
 
-The options go under `quiz` in `comarkUi()`, or to `quiz()` when you use the plugin alone. Every word the blocks show is a label, so a host can translate them:
+Pass options under `quiz` in `comarkUi()`, or to `quiz()` when you use the plugin alone. Every word the blocks show is a label you can translate:
 
 ```ts
 quiz({ labels: { check: "Comprobar", tryAgain: "Otra vez", showAnswer: "Ver respuesta" } });
@@ -423,9 +423,9 @@ Each label you leave out keeps its English default.
 
 With no host, each answer stays in the reader's browser, in `localStorage` under `comark-quiz:<path>:<id>`. In a sandboxed frame, where storage throws or forgets, the blocks still work for the visit.
 
-A host such as [Drop](https://drop.vitehub.dev) keeps the answers instead, and sends back how everyone answered. It talks to the script through the [events](#events) on `document`.
+A host such as [Drop](https://drop.vitehub.dev) keeps the answers instead and sends back how everyone answered, through the [events](#events) on `document`.
 
-The server's HTML carries what a host needs to check a posted answer: `data-quiz-id` and `data-quiz-kind` on each block, `data-key` on each option, and `data-correct` on a question's right options.
+The server's HTML has what a host needs to check a posted answer: `data-quiz-id` and `data-quiz-kind` on each block, `data-key` on each option, and `data-correct` on a question's right options.
 
 ### Events
 
@@ -452,14 +452,14 @@ document.dispatchEvent(
 ```
 
 - **Answers** restore with no motion. An empty `choice` takes an answer back, except a question's `choice: []` with `correct: false`, which is a shown answer. Once the first state arrives, the script stops using `localStorage`.
-- **Results** show once the reader has answered: a question's after a right answer or Show answer, a poll's after a vote. A poll with `multiple` counts percentages over voters, so send the number of voters as `total`.
+- **Results** show after a question's right answer or Show answer, and after a poll's vote. A poll with `multiple` counts percentages over voters, so send the number of voters as `total`.
 - **Voting** opens polls. With `open: false`, polls show their results and `notice`, and send no votes. Questions and recall cards still work.
 
 ### Functions
 
 | Function | Description |
 | --- | --- |
-| `window.__comarkQuiz.apply(state)` | Does the same as `comark-quiz:state`, for a host that would rather call a function. |
+| `window.__comarkQuiz.apply(state)` | Does what `comark-quiz:state` does, as a function call. |
 | `window.__comarkQuiz.ids()` | Lists the ids of the blocks on the page. |
 
 ### Issues
@@ -500,7 +500,7 @@ Only the HTML renderer exists. [Renderers](/guide/renderers/) covers using it wi
 
 ## Theme
 
-Every block is a card in the style of shadcn/ui's Card, with options like its RadioGroup, so it follows the shared tokens in [Theming](/guide/theming/) and turns dark with them. Color comes only from state: the primary color for a selection, green for right, red for wrong, and a fill for results. The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
+Each block is styled like shadcn/ui's Card and follows the shared tokens in [Theming](/guide/theming/), dark mode included. Only state adds color: primary for a selection, green for right, red for wrong, and a fill for results. The rules sit in a `comark` CSS layer, so any plain rule of yours wins.
 
 ### Shared tokens
 
@@ -512,7 +512,7 @@ Every block is a card in the style of shadcn/ui's Card, with options like its Ra
 | `--comark-border` | The card, the options, and the line over the explanation |
 | `--comark-accent` | Hovered options and buttons, and a pressed grade |
 | `--comark-ring` | Focus rings |
-| `--comark-radius` | Corners: the card's a little rounder, the options' a little less |
+| `--comark-radius` | Corners, a little rounder on the card and less on the options |
 | `--comark-font` | All of it |
 
 ### Variables
@@ -546,9 +546,9 @@ Every part has a `data-slot`, and the block and each option a `data-state`:
 | `[data-slot="indicator"]` | The radio or checkbox, and the icon that replaces it once answered |
 | `[data-slot="label"]`, `[data-slot="rationale"]` | An option's text and its reason |
 | `[data-slot="verdict"]`, `[data-slot="percent"]`, `[data-slot="bar"]` | An option's label ("Your answer" or "Correct answer"), percent, and fill |
-| `[data-slot="actions"]`, `[data-slot="status"]` | The buttons, and the status line: the verdict and the count of answers, read out after each check |
+| `[data-slot="actions"]`, `[data-slot="status"]` | The buttons, and the status line with the verdict and count of answers, read out after each check |
 | `[data-slot="hint"]`, `[data-slot="explain"]`, `[data-slot="answer"]` | The slots |
-| `[data-slot="footer"]`, `[data-slot="total"]`, `[data-slot="notice"]` | A poll's footer: the count of votes and the host's notice |
+| `[data-slot="footer"]`, `[data-slot="total"]`, `[data-slot="notice"]` | A poll's footer, with the vote count and the host's notice |
 | `[data-slot="reveal"]` | A recall card's answer, blurred until it's shown |
 
 | `data-state` | On |
@@ -558,13 +558,13 @@ Every part has a `data-slot`, and the block and each option a `data-state`:
 | `revealed` | A question after Show answer, its right options the reader didn't pick, and a recall card once shown |
 | `voted`, `closed` | A poll after a vote or once voting closes, and the reader's options |
 
-Buttons carry `data-variant` (`default`, `outline`, `ghost`, or `link`) and `data-action`. `<html>` gets `data-quiz-ready` once the script runs.
+Buttons have `data-variant` (`default`, `outline`, `ghost`, or `link`) and `data-action`. `<html>` gets `data-quiz-ready` once the script runs.
 
 A recall card also gets `data-grade` (`knew` or `missed`) once the reader grades it.
 
 ### Important rules
 
-Only one kind of declaration uses `!important`: the first and last blocks of the prompt, an option, a reason, the hint, the explanation, and the answer drop their top and bottom margins. A page's paragraph margins are almost always plain rules, which beat the layer, and would push the text off the card's edges.
+Only one declaration uses `!important`. It drops the top and bottom margins of the first and last blocks in the prompt, options, reasons, hint, explanation, and answer. A page's plain paragraph rules would otherwise beat the layer and push the text off the card's edges.
 
 ### Example
 

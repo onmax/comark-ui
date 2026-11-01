@@ -76,7 +76,7 @@ Put blocks inside `::carousel`. Each one is a slide.
 
 ### Title
 
-Use the `title` prop to name the carousel for screen readers. It is also the heading of a zoomed slide that has no title or image of its own.
+Use the `title` prop to name the carousel for screen readers. It's also the heading of a zoomed slide with no title or image of its own.
 
 ::example
 ```md
@@ -106,11 +106,11 @@ Use the `columns` prop to show 2 or 3 slides at once on a wide page. A narrow pa
 ::
 
 > [!NOTE]
-> `columns` takes 1, 2, or 3. Any other value is reported.
+> `columns` takes 1, 2, or 3. Any other value adds an issue.
 
 ### Zoom
 
-Use the `zoom` prop to turn zoom off. A click on a slide no longer zooms it, and the slides are no longer tab stops.
+Use the `zoom` prop to turn zoom off. Slides then don't zoom on a click and aren't tab stops.
 
 ```md
 ::carousel{zoom=false}
@@ -141,19 +141,19 @@ Pass the plugin and its `components` to the renderer.
 ::
 
 > [!NOTE]
-> Once a carousel has a `:::slide`, only its slides count. Anything else inside it is dropped and reported. A `:::slide` outside a carousel renders as plain content.
+> Once a carousel has a `:::slide`, only its slides count, and the plugin drops and reports anything else. A `:::slide` outside a carousel renders as plain content.
 
 ## Examples
 
 ### Zoom a slide
 
-A click zooms a slide, with the others in a strip at the bottom. Paging in the zoomed view moves the carousel, so closing it lands on the slide you were looking at. Zoom comes from [comark-zoom](/zoom/), which comes with the package.
+The zoomed view shows the other slides in a strip at the bottom. Paging there moves the carousel too, so closing it lands on the slide you were viewing. Zoom comes from [comark-zoom](/zoom/), which the package installs.
 
 For annotated screenshots in a carousel, see the [recipe](/recipes/carousel/).
 
 ### Images in slides
 
-An image alone in a slide, or alone in its paragraph, is centered. So is a link around one. An image inside a sentence stays in the text.
+An image alone in a slide or in its paragraph is centered, and so is a link around one. An image inside a sentence stays in the text.
 
 ```md
 ::carousel
@@ -165,7 +165,7 @@ The dashboard ![icon](/dashboard.png) sits in this sentence.
 
 ## Accessibility
 
-The carousel follows the [WAI-ARIA carousel pattern](https://www.w3.org/WAI/ARIA/apg/patterns/carousel/). It is a region that screen readers announce as a carousel, named by its `title`, or "Carousel" without one. Each slide is a group announced as a slide and named by its position, such as "2 of 3".
+The carousel follows the [WAI-ARIA carousel pattern](https://www.w3.org/WAI/ARIA/apg/patterns/carousel/). It's a region that screen readers announce as a carousel, named by its `title`, or "Carousel" without one. Each slide is a group announced as a slide and named by its position, such as "2 of 3".
 
 The counter is a polite live region, so screen readers read the new position after each page. The arrows are buttons named "Previous slide" and "Next slide". At either end an arrow is marked disabled but keeps its focus, so the keys keep working.
 
@@ -182,7 +182,7 @@ When the reader prefers reduced motion, paging jumps instead of scrolling smooth
 | `Tab`, `Shift+Tab` | Moves focus through the slides, when they zoom, and then the arrows. |
 | `Escape` | Closes the zoomed view. |
 
-The carousel leaves the arrow keys alone when they are pressed with Alt, Ctrl, Meta, or Shift. It also leaves them to whatever has focus and uses them:
+The carousel ignores the arrow keys when pressed with Alt, Ctrl, Meta, or Shift. It also leaves them to whatever has focus and uses them:
 
 - A form field, a video or audio player, a `<summary>`, or editable text.
 - A tab list, slider, radio group, list box, combo box, spin button, menu, menu bar, or tree.
@@ -216,7 +216,7 @@ comark-carousel takes no options. `carousel: false` in `comarkUi()` turns it off
 
 ### Issues
 
-The plugin adds a problem with any carousel to `meta.issues`, as [Validation](/guide/validation/) describes:
+The plugin adds each carousel's problems to `meta.issues`, as [Validation](/guide/validation/) describes:
 
 ```txt
 carousel 2 ("Setup") drops the paragraph "Pass the plugin" because it sits outside every :::slide; move it into a :::slide.
@@ -252,7 +252,7 @@ For Vue, React, or Svelte, import from `comark-carousel/vue`, `comark-carousel/r
 
 ## Theme
 
-The arrows, counter, and slide panels follow the shared tokens in [Theming](/guide/theming/), and four variables of its own set the space and the sizes. The rules sit in a `comark` CSS layer, so a plain rule of your own wins over any of them.
+The arrows, counter, and slide panels use the shared tokens in [Theming](/guide/theming/), plus four variables for spacing and sizes. The rules sit in a `comark` CSS layer, so any plain rule of yours wins.
 
 ### Shared tokens
 
@@ -291,7 +291,7 @@ Each slide sits on a soft panel as tall as the tallest one, so slides of differe
 | `.cc-controls` | The row under the slides, shown once the script runs |
 | `.cc-count` | The position, such as `1 / 3` |
 | `.cc-step` | An arrow, with `aria-disabled="true"` at either end |
-| `[data-carousel-ready]` | On `<html>` once the script runs; without it the track shows its scrollbar instead of arrows |
+| `[data-carousel-ready]` | On `<html>` once the script runs. Without it, the track shows its scrollbar instead of arrows |
 
 ### Example
 

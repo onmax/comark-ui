@@ -98,17 +98,17 @@ credits: 'Laid out by Microsoft Research''s <a href="https://github.com/microsof
 
 ## Features
 
-- The chart's source is a plain Markdown table, so a person or an agent reading the Markdown reads the numbers, not a chart spec.
-- The page shows the same table under the chart, folded into **Data**, so a tool that turns the page into text keeps the numbers too.
+- The source is a plain Markdown table, not a chart spec.
+- The table stays under the chart, folded into **Data**, so text tools keep the numbers.
 - Vega draws every chart while parsing, so the browser never loads it.
 - A Copy button copies the chart as a PNG, and its menu copies the data as a table for a spreadsheet or as Markdown.
 - [Notes](/charts/notes/) mark a row or a value, or draw a line across the chart at a target.
-- Ten types cover bars, lines, pies, [gantt charts](#gantt-charts), and [sankeys](#sankey), and a [Vega-Lite spec](#vega-lite) draws anything else, all in the same card, colors, and type.
+- Ten types cover bars, lines, pies, [gantt charts](#gantt-charts), and [sankeys](#sankey). A [Vega-Lite spec](#vega-lite) draws anything else in the same card, colors, and type.
 - Without the plugin, the table still renders as a table.
 
 ## Usage
 
-Put one table between `::chart` and `::`, with a header row, then one row per bar, point, or step. The first column is x, and every other column is a series of numbers, named by its header. Rows are drawn in table order.
+Put one table between `::chart` and `::`, with a header row, then one row per bar, point, or step. The first column is x. Every other column is a series of numbers, named by its header. Rows draw in table order.
 
 ```md
 ::chart{type="line" x="month" y="coffee cups, commits" title="Coffee cups and commits"}
@@ -118,9 +118,9 @@ Put one table between `::chart` and `::`, with a header row, then one row per ba
 ::
 ```
 
-Cells hold plain numbers, with commas between thousands if you like, such as `1,200`. Put units in the header or the title, such as `size (kB)`.
+Cells hold plain numbers, with commas between thousands if you like, such as `1,200`. Put units in the header or title, such as `size (kB)`.
 
-x values in the form `2026`, `2026-04`, `2026-04-15`, or an ISO date and time sit on a time axis, and numbers sit on a number axis. Bars, steps, and dumbbells are the exception, and give each value its own row.
+x values like `2026`, `2026-04`, `2026-04-15`, or an ISO date and time sit on a time axis, and numbers on a number axis. Bars, steps, and dumbbells instead give each value its own row.
 
 ### Type
 
@@ -136,7 +136,7 @@ Use the `type` prop to pick the chart. It defaults to `bar`, whatever the table 
 | `dumbbell` | Before and after for several metrics. | Metric names, then two or more columns, such as `before` and `after`. |
 | `waterfall` | How changes add up to a total. | The starting total, then each change, negative for a drop, then the end total, all in one column. |
 | `pie` | Shares of one whole. | Names, then one column of numbers that aren't negative. |
-| `gantt` | Steps or tasks over time, such as a build, a deploy, or a plan. | One row per bar: its name, then where it starts and where it ends, as numbers or dates. See [Gantt charts](#gantt-charts). |
+| `gantt` | Steps or tasks over time, such as a build, a deploy, or a plan. | One row per bar: its name, its start, and its end, as numbers or dates. See [Gantt charts](#gantt-charts). |
 | `sankey` | Where an amount goes: a budget, a cashflow, a bundle's bytes. | One row per flow: where it comes from, where it goes, and how much. See [Sankey](#sankey). |
 
 ::examples
@@ -219,7 +219,7 @@ Use the `type` prop to pick the chart. It defaults to `bar`, whatever the table 
 :::
 ::
 
-In a waterfall, the first row is the start total and the last row the end total. The rows between are changes, green up and red down, and the plugin reports an end total that isn't the start plus every change.
+In a waterfall, the first row is the start total and the last row the end total. The rows between are changes, green up and red down. The plugin reports an end total that isn't the start plus every change.
 
 ### X axis
 
@@ -239,7 +239,7 @@ Use the `x` prop to pick the column along the x axis. It defaults to the first c
 
 ### Series
 
-Use the `y` prop to pick the columns to draw, separated by commas. It defaults to every column but `x`. A chart of two or more series names them in a legend over the plot, as a pie names its slices and a gantt its groups.
+Use the `y` prop to pick the columns to draw, separated by commas. It defaults to every column but `x`. Two or more series get a legend over the plot, as do a pie's slices and a gantt's groups.
 
 ::example
 ```md
@@ -285,11 +285,11 @@ Use the `horizontal` prop to turn a `bar` or `stacked` chart's bars sideways, so
 ```
 ::
 
-Upright bars wrap a long name onto up to three lines under its bar, and cut it short past that. A chart of more than 40 bars runs sideways without `horizontal`, since an upright plot can't hold them all. Dumbbells and gantts always run sideways, so the plugin reports `horizontal` on them.
+Upright bars wrap a long name onto up to three lines, and cut it short past that. A chart of more than 40 bars runs sideways without `horizontal`. Dumbbells and gantts always run sideways, so the plugin reports `horizontal` on them.
 
 ### Labels
 
-Use the `labels` prop to print the chart's numbers on it. Write it alone, with no value. Without it, no chart prints its numbers: the value axis and the **Data** table carry them.
+Use the `labels` prop to print the numbers on the chart. Write it alone, with no value. Without it, the value axis and the **Data** table carry the numbers.
 
 ::example
 ```md
@@ -302,22 +302,22 @@ Use the `labels` prop to print the chart's numbers on it. Write it alone, with n
 ```
 ::
 
-Each type prints its numbers where they belong:
+Where the numbers print depends on the type:
 
-- **Bars and stacked bars** write each value inside its bar or segment, in white, and the value axis goes. A bar too short or too thin for its value writes it just past its end instead. A stack has one end, so only its outermost part writes past it; a thinner part elsewhere, or a value that would cover another bar's, leaves its value to the **Data** table.
+- **Bars and stacked bars** write each value in white inside its bar or segment, and drop the value axis. A value that doesn't fit goes just past the bar's end, but in a stack only the outermost part can do that. Other values that don't fit, or would cover another bar's, appear only in the **Data** table.
 - **Waterfalls** print each step's change and each total's value beside it, when the numbers fit their steps.
-- **Dumbbells** print each row's least and most values beside its outer dots, when the plot has room for them.
+- **Dumbbells** print each row's least and most values beside its outer dots, when the plot has room.
 - **Gantts** print how long each bar lasts past its end.
 - **Sankeys** print each node's amount under its name.
 
 A `bar` worth zero draws as a thin, faded stroke in its series' color at the base, so a grouped chart keeps a lane for it.
 
 > [!NOTE]
-> Lines, areas, scatter plots, and pies have no bars, steps, dots, or nodes to print on, so the plugin reports `labels` on them.
+> Lines, areas, scatter plots, and pies have nothing to print on, so the plugin reports `labels` on them.
 
 ### Gantt charts
 
-Use `type="gantt"` with a table of three columns: the bar's name, where it starts, and where it ends. The chart draws one bar per row, top to bottom in table order. The start and end columns hold numbers or dates.
+Use `type="gantt"` with a table of three columns: the bar's name, its start, and its end. Start and end hold numbers or dates. Each row is one bar, top to bottom in table order.
 
 ```md
 ::chart{type="gantt" title="A Friday deploy, minutes after 16:55"}
@@ -329,16 +329,16 @@ Use `type="gantt"` with a table of three columns: the bar's name, where it start
 ::
 ```
 
-Use the `y` prop to name the start and end columns when the table has other numbers too, such as a duration: `y="start, end"`.
+When the table has other numbers too, such as a duration, name the start and end columns with `y="start, end"`.
 
-A column of names, such as a phase, an owner, or a run, colors the bars, one color per name, with a legend over the chart. A task may then repeat in another group, like the same step in two runs. To mark a task that repeats, name its group in the [note](/charts/notes/#series)'s `series`.
+A column of names, such as a phase, an owner, or a run, gives each name its own color and a legend. A task can then repeat across groups, like one step in two runs. To mark one, name its group in the [note](/charts/notes/#series)'s `series`.
 
 > [!NOTE]
 > A column of numbers reads as times, so write numbered groups as names, like `shard 1`.
 
-A row that ends where it starts is a milestone, and draws as a diamond. With `labels`, every other bar prints how long it lasts past its end. For numbers that's the difference, and for dates it's a span in the table's unit, such as `3y`, `2mo`, `7d`, or `1.5h`. A gantt has no value axis, so it takes no target line.
+A row that ends where it starts is a milestone, drawn as a diamond. With `labels`, every other bar prints how long it lasts past its end. That's the difference for numbers, or a span in the table's unit for dates, such as `3y`, `2mo`, `7d`, or `1.5h`. A gantt has no value axis, so it takes no target line.
 
-Dates take the forms x takes: `2026`, `2026-04`, `2026-04-15`, or an ISO date and time. A time without a zone is UTC, and the axis shows UTC, so the chart reads the same wherever it's drawn.
+Dates take the same forms as x values. A time without a zone is UTC, and so is the axis, so the chart reads the same anywhere.
 
 ::example
 ```md
@@ -356,7 +356,7 @@ Dates take the forms x takes: `2026`, `2026-04`, `2026-04-15`, or an ISO date an
 
 ### Sankey
 
-Use `type="sankey"` with a table of three columns: where each flow comes from, where it goes, and how much. Each name is a node, drawn as tall as what flows through it, and each row a flow between two nodes, as wide as its amount. Each node takes its place, top to bottom, from the row that first names it, and nodes that only take flows in sit in the last column.
+Use `type="sankey"` with a table of three columns: where each flow comes from, where it goes, and how much. Each name is a node, and each row a flow between two nodes. Nodes stack top to bottom in the order the rows first name them, and nodes that only take flows in sit in the last column.
 
 ::example
 ```md
@@ -373,16 +373,16 @@ Use `type="sankey"` with a table of three columns: where each flow comes from, w
 ```
 ::
 
-The first column is where a flow comes from, unless `x` names another. The next column of names is where it goes, and the column of numbers is the amount, unless `y` names one. A flow into a node that ends there takes that node's color, and any other flow its source's.
+A flow comes from the first column unless `x` names another, and goes to the next column of names. Its amount is the column of numbers unless `y` names one. A flow into a node that ends there takes that node's color, and any other flow its source's.
 
 > [!NOTE]
-> A sankey runs one way, so a flow back into a node it came from is reported, and the chart shows its table. Split such a node in two, such as `pond (spring)` and `pond (summer)`.
+> A sankey runs one way, so the plugin reports a flow back into a node it came from, and the chart shows its table. Split such a node in two, such as `pond (spring)` and `pond (summer)`.
 
-The plugin also reports a flow of 0 or less, a flow from a node into itself, two rows with the same pair of nodes, and a node in the middle that sends out more than flows into it. A sankey has no value axis, so it takes no target line, and a [note](/charts/notes/) marks a node by its name in `at`.
+The plugin also reports a flow of 0 or less, a flow from a node into itself, two rows with the same pair of nodes, and a middle node that sends out more than it takes in. A sankey has no value axis, so it takes no target line. A [note](/charts/notes/) marks a node by its name in `at`.
 
 ### Notes
 
-Put an `::annotation` after the table to mark a row or a value with a hand-drawn mark and a note, or to draw a target across the plot. [Notes](/charts/notes/) has their props.
+Put an `::annotation` after the table to mark a row or a value with a hand-drawn mark and a note, or draw a target across the plot. [Notes](/charts/notes/) lists their props.
 
 ::example
 ```md
@@ -404,9 +404,9 @@ Team goal: 45 min.
 
 ### Vega-Lite
 
-For a chart the types don't cover, such as a box plot, a heatmap, or error bands, put a [Vega-Lite](https://vega.github.io/vega-lite/) spec after the table in a `vega-lite` block. The table is still its data, so it stays in the page: each row becomes one data point, with a field per column named by its header. Cells that read as numbers become numbers, empty ones become null, and the rest stay text.
+For a chart the types don't cover, such as a box plot, a heatmap, or error bands, put a [Vega-Lite](https://vega.github.io/vega-lite/) spec in a `vega-lite` block after the table. The table stays on the page as the data. Each row becomes one data point, with a field per column named by its header. Cells that read as numbers become numbers, empty ones null, and the rest stay text.
 
-Leave `data` out of the spec, because the table replaces it, and name the columns in the spec's `encoding`. The spec can't load files or URLs.
+Leave `data` out of the spec, and name the columns in its `encoding`. The spec can't load files or URLs.
 
 ::example
 ````md
@@ -437,11 +437,11 @@ Leave `data` out of the spec, because the table replaces it, and name the column
 ````
 ::
 
-The chart takes the same card, colors, and typeface as the other types wherever the spec sets none. Use the spec's own `config` to change them, since it wins over the chart's. A chart drawn from a spec takes only `title` from the props, and no notes: draw them with a `text` or `rule` layer in the spec.
+The chart gets the other types' card, colors, and typeface wherever the spec sets none, and the spec's own `config` wins over them. A spec chart takes only `title` from the props, and no notes. Draw notes with a `text` or `rule` layer in the spec.
 
 ### Copy
 
-Hover a chart, or tab to it, for its Copy button in the top corner. It copies the chart as a PNG at twice its size, in the page's colors. The arrow beside it opens a menu that also copies the **Data** table: as a table, which Google Sheets, Excel, Notion, and Docs paste as cells, or as Markdown, a table that renders on GitHub. A chart with [notes](/charts/notes/) copies its data instead, since the PNG would leave the notes out. The button only shows once the script runs.
+Hover or tab to a chart for the Copy button in its top corner. It copies a PNG at twice the chart's size, in the page's colors. Its arrow opens a menu that copies the **Data** table, as a table that Google Sheets, Excel, Notion, and Docs paste as cells, or as Markdown that renders on GitHub. A chart with [notes](/charts/notes/) copies its data, since the PNG would leave the notes out. The button needs the script.
 
 ## Examples
 
@@ -461,17 +461,17 @@ To check documents without drawing them, as comark-linter does, pass `charts({ d
 
 ### Fit the column
 
-Every chart is laid out the same way, so two charts of one table look alike wherever they are:
+Two charts of one table look alike anywhere:
 
 - A chart keeps the size its text was set for instead of stretching to the column, so labels read the same in every chart.
-- A narrower column, or a printed page, shrinks it to fit, as it does a screenshot.
+- A narrower column or a printed page shrinks it to fit, like a screenshot.
 - No row is ever dropped. A long sideways chart grows taller.
 
 ## Accessibility
 
-Each chart's SVG is an image named by its `title`. Without one, the name says what it draws, such as "bar chart of ducks by team". Charts are static: they have no tooltips, and the **Data** table under the chart holds every number for a screen reader. A chart with marks zooms like a [screenshot](/annotate/components/screenshot/#accessibility).
+Each chart's SVG is an image named by its `title`, or else by what it draws, such as "bar chart of ducks by team". Charts have no tooltips. The **Data** table under the chart holds every number for a screen reader. A chart with marks zooms like a [screenshot](/annotate/components/screenshot/#accessibility).
 
-The Copy button is named "Copy the chart as an image", or "Copy the chart's data" on a chart with notes, and the arrow beside it is "More ways to copy", a button that opens a `menu` of `menuitem`s. A status line beside them announces "Copied as image", "Copied as table", "Copied as Markdown", or "Couldn't copy here". The bar shows while the chart has focus, so a keyboard reaches it the way a pointer does.
+The Copy button is named "Copy the chart as an image", or "Copy the chart's data" on a chart with notes. The arrow beside it is "More ways to copy", a button that opens a `menu` of `menuitem`s. A status line beside them announces "Copied as image", "Copied as table", "Copied as Markdown", or "Couldn't copy here". The bar shows while the chart has focus, so a keyboard reaches it too.
 
 ### Keyboard interactions
 
@@ -494,8 +494,8 @@ The Copy button is named "Copy the chart as an image", or "Copy the chart's data
 | `x` | The first column | The column along the x axis. |
 | `y` | Every column but `x` | The columns to draw, separated by commas. |
 | `title` | — | The chart's caption, and its name for screen readers. |
-| `labels` | Off | Prints the numbers on the chart: on each bar, beside each waterfall step, dumbbell row, and sankey node, and past each gantt bar. Takes no value. Lines, areas, scatter plots, and pies don't take it. |
-| `horizontal` | Off, or on past 40 bars | Turns bars sideways. Takes no value. Only `bar` and `stacked` charts take it; dumbbells and gantts always run sideways. |
+| `labels` | Off | Prints the numbers on the chart, as [Labels](#labels) shows. Takes no value. Lines, areas, scatter plots, and pies don't take it. |
+| `horizontal` | Off, or on past 40 bars | Turns bars sideways. Takes no value. Only `bar` and `stacked` charts take it. Dumbbells and gantts always run sideways. |
 
 ### Options
 
@@ -527,7 +527,7 @@ The plugin adds these problems to `meta.issues`. Each issue names its chart by i
 - A gantt without one start and one end column, a row missing its start or its end, a bar that ends before it starts, and two columns of names to color by.
 - A Vega-Lite spec that isn't one JSON object, has `data`, reads a field that's neither a column nor made by a transform, or that Vega-Lite can't draw, and a spec chart with `type`, `x`, `y`, or an `::annotation`.
 
-[Notes](/charts/notes/#issues) have checks of their own, on their page.
+[Notes](/charts/notes/#issues) have their own checks.
 
 Rendering never throws. A chart with a problem draws what it can:
 
@@ -573,9 +573,9 @@ import charts, { components } from "comark-charts/html";
 const render = createHtmlRenderer({ plugins: [charts()], components });
 ```
 
-The package installs [Flint](https://github.com/microsoft/flint-chart) and [Vega](https://vega.github.io). Vue, React, and Svelte have renderers too, as [Renderers](#renderers) shows.
+The package installs [Flint](https://github.com/microsoft/flint-chart) and [Vega](https://vega.github.io). [Renderers](#renderers) lists the Vue, React, and Svelte entries.
 
-The comark-ui agent skill knows the table shape for each chart type and how to check the result. Agents install it with `vp dlx skills add onmax/comark-ui`. `vp` comes with [Vite+](https://viteplus.dev/guide/global-cli); without it, `pnpm dlx` takes the same arguments. Agents read charts without the skill: in the Markdown and in the page, each chart's data is a table.
+The comark-ui agent skill knows the table shape for each chart type and how to check the result. Install it with `vp dlx skills add onmax/comark-ui`. `vp` comes with [Vite+](https://viteplus.dev/guide/global-cli), and without it `pnpm dlx` takes the same arguments. Agents read charts without it too, since the data is a table.
 
 ## Theme
 
@@ -610,7 +610,7 @@ Marks on a chart use comark-annotate's styles, and its [variables](/annotate/#va
 
 ### Classes
 
-A chart is a `figure.cch` with `data-type`, such as `data-type="bar"`, holding a `figcaption`, the SVG in `.cch-plot`, and the table in `details.cch-data` as its footer. A chart with marks adds `.cch-marked` to `.cch-plot`. `.cch-bar`, over the card's top corner, holds `.cch-status` and `.cch-copy`: the Copy button, `.cch-copy-main`, the arrow, `.cch-copy-more`, and the menu, `.cch-menu`, whose items are `button[data-chart-copy]`.
+A chart is a `figure.cch` with `data-type`, such as `data-type="bar"`, holding a `figcaption`, the SVG in `.cch-plot`, and the table in `details.cch-data` as its footer. A chart with marks adds `.cch-marked` to `.cch-plot`. `.cch-bar`, over the card's top corner, holds `.cch-status` and `.cch-copy`. `.cch-copy` holds the Copy button `.cch-copy-main`, the arrow `.cch-copy-more`, and the menu `.cch-menu`, whose items are `button[data-chart-copy]`.
 
 ```css
 :root {

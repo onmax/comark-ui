@@ -32,10 +32,10 @@ The alert sound the reviewer asked for:
 - An image that points at a video or audio file plays where it sits, labeled by its alt text.
 - A GitHub attachment link alone in its paragraph plays too.
 - Only the first frame and the length load until the reader presses play.
-- The controls match the page. The browser's own show until the script runs, and when the file can't play.
+- The controls match the page. The browser's own show before the script runs and when the file can't play.
 - A settings panel sets the speed, from 0.5× to 2×, and turns looping on or off.
-- On a touch screen, a video's controls spread over it: play in the middle, sound and settings in the top corner, and the time along the bottom. In a short frame, play moves to the top left to keep every control inside the picture.
-- One player with sound plays at a time. Starting one pauses the others, while a muted one plays on.
+- On a touch screen, a video's controls spread over the picture, with play in the middle.
+- Starting a player with sound pauses the others. Muted ones play on.
 
 ## Usage
 
@@ -45,7 +45,7 @@ Write an image whose address ends in a video or audio extension, before any `?` 
 ![Signing in with a passkey](./recordings/login.mp4){width=1280 height=720}
 ```
 
-The alt text is the player's label for screen readers. It's also the text of a link to the file, for a browser that can't play it. Every other image stays an image.
+The alt text labels the player for screen readers. It's also the text of a link to the file, for browsers that can't play it. Every other image stays an image.
 
 ### Autoplay
 
@@ -56,7 +56,7 @@ Use the `autoplay` prop to start playing when the page loads.
 ```
 
 > [!NOTE]
-> Browsers only start a video by itself when it's muted, so `autoplay` needs `muted`.
+> Browsers only autoplay muted video, so `autoplay` needs `muted`.
 
 ### Loop
 
@@ -85,11 +85,11 @@ Use the `poster` prop to show an image before a video plays.
 ```
 
 > [!NOTE]
-> Audio has no picture, so a `poster` on audio is dropped.
+> The plugin drops a `poster` on audio.
 
 ### GitHub attachments
 
-A video dropped into a GitHub comment becomes a bare link alone in its paragraph. GitHub plays it, and so does the plugin.
+A video dropped into a GitHub comment becomes a bare link alone in its paragraph. The plugin plays it, as GitHub does.
 
 ```md
 https://github.com/user-attachments/assets/2f3c0e3e-1c4b-4c3a-9a6b-0b1e2f3a4b5c
@@ -101,14 +101,14 @@ A link with text of its own, or one inside a sentence, stays a link.
 
 ### Recordings as evidence
 
-A screen recording is often the clearest evidence in a pull request. It shows a reviewer what a screenshot can't: a transition, a loading state, a sound. Keep it short and small:
+A recording shows a reviewer what a screenshot can't, such as a transition, a loading state, or a sound. Keep it short and small:
 
 - Record only the part of the screen that changes, for a few seconds.
 - Encode it as H.264 `.mp4` for every browser, or `.webm` for a smaller file. `.mov` files from macOS play in Safari and Chrome but not always in Firefox.
-- Describe what happens in the alt text, so a reader who can't play it still learns what it shows.
+- Describe what happens in the alt text, for readers who can't play it.
 - Add `loop muted` to a clip that shows one motion, so it reads like an animated screenshot once played.
 
-The player loads only the file's first frame and length until the reader presses play, so a page with several recordings stays light.
+Players load only the first frame and length until play, so several recordings keep a page light.
 
 ### Room before it loads
 
@@ -118,7 +118,7 @@ Give a video its `width` and `height` in pixels so the page keeps its room befor
 ![Signing in with a passkey](./login.mp4){width=1280 height=720}
 ```
 
-`media({ size: true })` also reads remote videos' dimensions from their first bytes while parsing. Enable it only for trusted documents: requests follow redirects and can reach private networks. Without a size, a video takes a 16:9 box until its own size is known. Pass `media({ size: false })` to disable measurement.
+`media({ size: true })` also reads a remote video's dimensions from its first bytes while parsing. Enable it only for trusted documents, because the requests follow redirects and can reach private networks. Without a size, a video takes a 16:9 box until its own size is known. `media({ size: false })` turns measuring off.
 
 ### The browser's controls
 
@@ -134,11 +134,15 @@ Its place in `plugins` doesn't matter. [comark-zoom](/zoom/) never sees a video 
 
 ### Private attachments
 
-A GitHub attachment from a private repository only plays for a reader signed in to GitHub with access to it. For a page that readers outside the repository see, download the file and serve it with the page instead.
+A GitHub attachment from a private repository plays only for readers signed in to GitHub with access to it. For readers outside the repository, download the file and serve it with the page.
 
 ## Accessibility
 
-Each player is a group named by its alt text. Its buttons are named for what they do next: Play or Pause, Mute or Unmute, Full screen or Exit full screen. The seek bar is a slider named "Seek" that reads its position, such as "0:12 of 1:30". The volume is a slider named "Volume" in a panel over the mute button, which opens when the pointer or the focus reaches the button; a touch screen has no panel, since its own buttons set the volume. Turning the volume to zero mutes the player. The Settings button reports whether its panel is expanded. The panel holds two radio groups, "Speed" and "Loop", and stays open while you choose. A click outside it or `Escape` closes it. A click on a video plays or pauses it.
+Each player is a group named by its alt text. Its buttons say what they do next, such as Play or Pause, Mute or Unmute, and Full screen or Exit full screen. The seek bar is a slider named "Seek" that reads its position, such as "0:12 of 1:30".
+
+The "Volume" slider sits in a panel that opens when the pointer or focus reaches the mute button. Touch screens have no panel, since the device's buttons set the volume. Volume zero mutes the player.
+
+The Settings button reports whether its panel is expanded. The panel holds two radio groups, "Speed" and "Loop", and stays open while you choose, until a click outside it or `Escape`. A click on a video plays or pauses it.
 
 ### Keyboard interactions
 
@@ -168,7 +172,7 @@ In a right-to-left page, `ArrowLeft` and `ArrowRight` swap.
 | `poster` | — | An image to show before a video plays. Video only. |
 | `width`, `height` | — | The video's size in pixels, together. The page keeps that room until the video loads. Video only. |
 
-Write `{loop=false}` to turn a prop off. Other props, such as a class, are dropped.
+Write `{loop=false}` to turn a prop off. The plugin drops other props, such as a class.
 
 ### File types
 
@@ -179,12 +183,12 @@ Write `{loop=false}` to turn a prop off. Other props, such as a class, are dropp
 
 ### Options
 
-The options go under `media` in `comarkUi()`, or to `media()` when you use the plugin alone.
+Pass options under `media` in `comarkUi()`, or to `media()` when you use the plugin alone.
 
 | Option | Default | Description |
 | --- | --- | --- |
 | `controls` | `"styled"` | `"styled"` draws the controls with the [shared tokens](/guide/theming/), which a small script runs. `"native"` always uses the browser's controls and leaves the script out. |
-| `size` | Data URIs only | Reads video dimensions while parsing. `true` also fetches remote URLs with range requests; enable it only for trusted documents. `false` disables measurement. |
+| `size` | Data URIs only | Reads video dimensions while parsing. `true` also fetches remote URLs with range requests. Enable it only for trusted documents. `false` disables measurement. |
 
 ### Issues
 
@@ -224,7 +228,14 @@ For Vue, React, or Svelte, import from `comark-media/vue`, `comark-media/react`,
 
 ## Theme
 
-A video sits in a bordered frame at most the page's width. A bar of controls floats over its bottom edge: a play button, the time, a seek bar, a mute button with the volume over it, a settings button, and a full screen button. The settings open in a panel over the bar, with a row of choices for each setting, like shadcn/ui's tabs. The bar fades out while the video plays, unless the pointer or the focus is on the video or the settings are open. An audio player takes the page's width and is the same bar on its own, without full screen. A player narrower than 24rem gives the seek bar a row of its own above the buttons and stacks each setting's choices under its name. One narrower than 16rem drops the times. On a touch screen, a video's controls spread over it, each on its own surface so it reads over any frame: a round play button in the middle, the mute and settings buttons in the top corner, and the times, seek bar, and full screen button in a bar along the bottom. In a short frame, play moves to the top left so the controls fit without changing the video's aspect ratio. There, the settings open downward, and a video narrower than 18rem drops the times. The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
+A video sits in a bordered frame no wider than the page. A bar of controls floats over its bottom edge, with play, the time, a seek bar, mute with the volume over it, settings, and full screen. The settings open in a panel over the bar, with a row of choices per setting like shadcn/ui's tabs. The bar fades out while the video plays, unless the pointer or focus is on the video or the settings are open. An audio player is the same bar at the page's width, without full screen.
+
+- Below 24rem, the seek bar gets its own row above the buttons, and each setting's choices stack under its name.
+- Below 16rem, the times drop.
+- On a touch screen, a video's controls spread over it, each on its own surface so it reads over any frame. A round play button sits in the middle, mute and settings in the top corner, and the times, seek bar, and full screen in a bar along the bottom. The settings open downward, and a video below 18rem drops the times.
+- In a short touch frame, play moves to the top left so the controls fit without changing the video's aspect ratio.
+
+The rules sit in a `comark` CSS layer, so any plain rule of yours wins.
 
 ### Shared tokens
 

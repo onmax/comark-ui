@@ -62,7 +62,7 @@ Use `{attributes}` right after the closing pair to set them on the `<mark>`.
 ```
 ::
 
-A class there styles that one highlight alone: `==Do not deploy=={.warning}` renders `<mark class="cmk-mark warning">`.
+A class there styles that highlight alone, so `==Do not deploy=={.warning}` renders `<mark class="cmk-mark warning">`.
 
 > [!NOTE]
 > A single `=`, as in `a = b`, stays text, and so does a `==` with nothing to close it.
@@ -102,7 +102,7 @@ H<sub>2</sub>O
 
 ### In review documents
 
-A highlight marks the words a reviewer should read first, such as the number that changed or the condition a fix adds. Keep it to a few words per paragraph. A highlighted paragraph is a paragraph nobody skims.
+Highlight the words a reviewer should read first, such as the number that changed or the condition a fix adds. Keep it to a few words per paragraph, or the highlight stops standing out.
 
 ### Your own highlight color
 
@@ -133,7 +133,7 @@ The plugin takes no options. `mark: false` in `comarkUi()` turns it off.
 
 ### Package
 
-comark-ui brings `comark-mark` and registers it with its components. To use it alone, install it:
+comark-ui installs `comark-mark` and registers it with its components. To use it alone, install it:
 
 ```sh
 pnpm add comark @comark/html comark-mark
@@ -148,16 +148,16 @@ import mark, { components } from "comark-mark/html";
 const render = createHtmlRenderer({ plugins: [mark()], components });
 ```
 
-For Vue, React, or Svelte, import from `comark-mark/vue`, `comark-mark/react`, or `comark-mark/svelte`. The components add the styles when they mount. When you render on a server, import `comark-mark/style.css` with your own styles so the page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-mark/vue`, `comark-mark/react`, or `comark-mark/svelte`. The components add the styles on mount. When you render on a server, also import `comark-mark/style.css` so the page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
 
-Without the components, the plugin still works in any renderer: the nodes stay plain `mark` and `sup`, which the browser paints yellow and raises.
+Without the components, it still works in any renderer, as plain `mark` and `sup` that the browser paints yellow and raises.
 
 ## Theme
 
-A highlight is a `<mark class="cmk-mark">` tinted with `--cmk-mark`, amber by default, over the page's own text color, so it reads on light and dark pages. With forced colors on, it takes the system's highlight color. A superscript is a `<sup class="cmk-sup">` raised without changing its line's height. A class from `{attributes}` sits beside the component's. Highlights read one [shared token](/guide/theming/):
+A highlight is a `<mark class="cmk-mark">` tinted with `--cmk-mark`, amber by default, that keeps the page's own text color, so it reads on light and dark pages. With forced colors on, it takes the system's highlight color. A superscript is a `<sup class="cmk-sup">` that doesn't change its line's height. Highlights read one [shared token](/guide/theming/):
 
 | Token | Used for |
 | --- | --- |
 | `--comark-radius` | Corners |
 
-Set `--cmk-mark` on `:root` or any element around the highlights to change the color. The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
+Set `--cmk-mark` on `:root` or any element around the highlights to change the color. The rules sit in a `comark` CSS layer, so any plain rule of yours wins.

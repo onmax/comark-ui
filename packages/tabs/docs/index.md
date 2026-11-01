@@ -74,12 +74,12 @@ bun add -d comark-tabs
 - Each `:::tabs-item` inside `::tabs` is a tab, and it holds any Markdown, even other tabs.
 - `::code-group` turns code blocks into tabs named by the label after their language.
 - A code block marked `pm` becomes a tab for each package manager, whichever one it's written in.
-- Blocks with the same `sync` key switch together, and the choice is remembered on the next visit.
-- Without a script, every tab shows under its label, one after another. The script adds the tab strip, whose highlight slides to the tab you pick, and the arrow keys.
+- Blocks with the same `sync` key switch together and remember the choice on the next visit.
+- Without a script, every tab shows under its label. The script adds the tab strip, with a sliding highlight, and the arrow keys.
 
 ## Usage
 
-Put `:::tabs-item` blocks inside `::tabs`. Each one is a tab.
+Put a `:::tabs-item` inside `::tabs` for each tab.
 
 ::example
 ```md
@@ -106,11 +106,11 @@ Press **⌘K** to search.
 ```
 
 > [!NOTE]
-> Every tab needs a `label`, and labels in one block must differ, because `sync` matches tabs by label. A missing or repeated label is reported.
+> Every tab needs a `label`, unique within its block, because `sync` matches tabs by label. The plugin reports a missing or repeated label.
 
 ### Sync
 
-Use the `sync` prop to switch blocks together. Picking a tab picks the tab with the same label in every block with that key, now and on the next visit. Tabs and code groups with the same key switch together.
+Use the `sync` prop to switch blocks together. Picking a tab picks the same label in every block with that key, tabs and code groups alike.
 
 ::example
 ```md
@@ -136,11 +136,11 @@ Pigeon data lives in `%APPDATA%\Pigeons`.
 ```
 ::
 
-The script saves the choice in `localStorage` under `comark-tabs:` and the key, and restores it on the next page that uses it. When a switch changes the height of blocks above the one the reader clicked, the page scrolls by as much, so the tab stays under the pointer.
+The script saves the choice in `localStorage` under `comark-tabs:` plus the key, and restores it on the next page with that key. If a switch changes the height of blocks above the clicked one, the page scrolls to keep the tab under the pointer.
 
 ### Icon
 
-Use the `icon` prop to draw an icon before a tab's label. It takes an [Iconify](https://icones.js.org) name, such as `lucide:apple` or `logos:pnpm`, or the URL of an image. [comark-icon](/icon/) resolves it while parsing and draws it. The icon shows without the script too, and looks and sizes like an `:icon`.
+Use the `icon` prop to draw an icon before a tab's label. It takes an [Iconify](https://icones.js.org) name, such as `lucide:apple` or `logos:pnpm`, or an image URL. [comark-icon](/icon/) resolves and draws it while parsing. It shows without the script and looks and sizes like an `:icon`.
 
 ::example
 ```md
@@ -160,7 +160,7 @@ In a code group, write a code block's icon after its label, as `icon=logos:pnpm`
 
 ### Code group
 
-Use `::code-group` to show code blocks as tabs. Each tab is named by the label in brackets after the block's language. The label becomes the tab, so the code block doesn't repeat it, and the tabs sit in a header joined to the block. Without a script, each block keeps its label as a header of its own.
+Use `::code-group` to show code blocks as tabs, each named by the label in brackets after its language. The tabs sit in a header joined to the block, and the block doesn't repeat the label. Without a script, each block keeps its label as its own header.
 
 ::example
 ````md
@@ -177,11 +177,11 @@ npm install comark-tabs
 ::
 
 > [!NOTE]
-> Only code blocks go inside a code group, and each one needs a label. Anything else is reported.
+> A code group holds only code blocks, each with a label. The plugin reports anything else.
 
 ### Package managers
 
-Use the `pm` word after a code block's language to turn its commands into a code group with a tab for each package manager: npm, pnpm, yarn, and bun. Write the commands in whichever manager you use, npm, pnpm, yarn, bun, or deno, and its tab keeps them as written. The group has `sync="pm"`, so it switches with the code groups you write with that key.
+Use the `pm` word after a code block's language to turn it into a code group with a tab each for npm, pnpm, yarn, and bun. Write the commands for npm, pnpm, yarn, bun, or deno, and that manager's tab keeps them as written. The group has `sync="pm"`, so it switches with your own `sync="pm"` groups.
 
 ::example
 ````md
@@ -192,7 +192,7 @@ pnpm dlx nuxi@latest module add ui
 ````
 ::
 
-Only commands that start a line or follow `&&`, `||`, or `;` change, so `cd my-npm-app` stays as written. comark-tabs reads these commands, and their usual aliases, such as `npm i` and `pnpx`:
+Only commands that start a line or follow `&&`, `||`, or `;` change, so `cd my-npm-app` stays as written. comark-tabs reads these commands and their usual aliases, such as `npm i` and `pnpx`:
 
 | Command | npm | pnpm | yarn | bun | deno |
 | --- | --- | --- | --- | --- | --- |
@@ -205,23 +205,23 @@ Only commands that start a line or follow `&&`, `||`, or `;` change, so `cd my-n
 | Create a project | `npm create x@latest` | `pnpm create x` | `yarn create x` | `bun create x` | `deno init --npm x` |
 | Start a package | `npm init` | `pnpm init` | `yarn init` | `bun init` | `deno init` |
 
-Update commands and local execution with `pnpm exec` stay only in their source manager’s tab. Other managers’ tabs are left out, with an issue. Add takes `-D` for a dev dependency, `-E` for an exact version, `-O` for an optional one, `--save-peer` for a peer one, and `-g` to install globally, each in the manager's own flag. In a `::code-group` the block is one tab already, and `pm` does nothing. Set the managers with the [`managers` option](#choose-the-package-managers).
+Update commands and local execution with `pnpm exec` stay in their own manager's tab, and the plugin leaves out the other tabs with an issue. Add takes `-D` for a dev dependency, `-E` for an exact version, `-O` for an optional one, `--save-peer` for a peer one, and `-g` for global, each as the manager's own flag. Inside a `::code-group`, `pm` does nothing, since the block is already one tab. Set the managers with the [`managers` option](#choose-the-package-managers).
 
 ## Examples
 
 ### Choose the package managers
 
-A code block marked `pm` gets a tab for npm, pnpm, yarn, and bun, in that order. Use the `managers` option to set others, in the order you want. Deno is there to add:
+Use the `managers` option to change which tabs a `pm` block gets, and their order. Deno is off by default:
 
 ```ts
 tabs({ managers: ["pnpm", "npm", "yarn", "bun", "deno"] });
 ```
 
-A command a manager has no form for, such as `npm install -g` in yarn, leaves that manager's tab out, keeps the tab of the manager the block is written in, and adds an issue. So does a command comark-tabs doesn't read, such as `npm publish`, in every other manager. Write that block as a `::code-group{sync="pm"}` by hand. Register comark-tabs before Shiki, so Shiki highlights every tab it adds.
+When a manager has no form for a command, such as `npm install -g` in yarn, comark-tabs leaves out its tab and adds an issue. The block's own manager keeps its tab. A command comark-tabs doesn't read, such as `npm publish`, does the same in every other manager. Write that block as a `::code-group{sync="pm"}` by hand. Register comark-tabs before Shiki, so Shiki highlights every tab it adds.
 
 ### Icons for every block
 
-Use the `icons` option to set icons once for every block, by label, for tabs that don't set their own. Icons come from the Iconify API by default. Pass the resolver the page's `:icon` uses as `iconResolver`:
+Use the `icons` option to set icons by label once, for every tab without its own. They come from the Iconify API unless you pass the page's `:icon` resolver as `iconResolver`:
 
 ```ts
 import { icons as logos } from "@iconify-json/logos";
@@ -239,15 +239,15 @@ Size them with `--comark-icon-size`, and style them as [comark-icon's theme](/ic
 
 ### Zoom images in tabs
 
-Images in tabs zoom with [comark-zoom](/zoom/) like any other image. A gallery or zoom group only pages through what's shown, so images in closed tabs stay out of it.
+Images in tabs zoom with [comark-zoom](/zoom/). A gallery or zoom group pages only through what's shown, so it skips images in closed tabs.
 
 ## Accessibility
 
-The tabs follow the [WAI-ARIA tabs pattern](https://www.w3.org/WAI/ARIA/apg/patterns/tabs/). The strip is a tab list, and each tab is a button that screen readers announce as a tab, with whether it's selected. Each panel is a tab panel named by its tab.
+The tabs follow the [WAI-ARIA tabs pattern](https://www.w3.org/WAI/ARIA/apg/patterns/tabs/). The strip is a tab list of buttons that screen readers announce as tabs, with whether each is selected. Each panel is a tab panel named by its tab.
 
-Only the open tab is a tab stop. Tab moves focus into the strip, then on to the open panel. The arrow keys move between tabs and open each one as focus lands on it.
+Only the open tab is a tab stop, and the arrow keys open each tab as focus lands on it.
 
-Without the script, the strip is hidden and every panel shows under its label, so a screen reader reads them one after another.
+Without the script, the strip is hidden, and a screen reader reads every panel under its label in turn.
 
 ### Keyboard interactions
 
@@ -259,7 +259,7 @@ Without the script, the strip is hidden and every panel shows under its label, s
 | `Home` | Moves focus to the first tab and opens it. |
 | `End` | Moves focus to the last tab and opens it. |
 
-On a right-to-left page, the arrow keys follow the reading direction. The keys do nothing when pressed with Alt, Ctrl, or Meta.
+On a right-to-left page, the arrow keys follow the reading direction. The keys do nothing with Alt, Ctrl, or Meta held.
 
 ## API
 
@@ -288,12 +288,12 @@ Each code block in a code group takes its label in brackets after its language, 
 
 ### Options
 
-The options go under `tabs` in `comarkUi()`, or to `tabs()` when you use it alone.
+Pass options under `tabs` in `comarkUi()`, or to `tabs()` when you use it alone.
 
 | Option | Default | Description |
 | --- | --- | --- |
 | `managers` | `["npm", "pnpm", "yarn", "bun"]` | The tabs a `pm` code block becomes, in order. Add `"deno"` for Deno. See [Choose the package managers](#choose-the-package-managers). |
-| `icons` | `{}` | Icons for tabs that don't set one, by label, such as `{ pnpm: "logos:pnpm" }`. Labels match without regard to case. Each value is an Iconify name or an image URL, like the `icon` prop. See [Icons for every block](#icons-for-every-block). |
+| `icons` | `{}` | Icons for tabs that don't set one, by label, such as `{ pnpm: "logos:pnpm" }`. Labels match case-insensitively. Each value is an Iconify name or an image URL, like the `icon` prop. See [Icons for every block](#icons-for-every-block). |
 | `iconResolver` | The Iconify API | Resolves the icons, from `createIcons()` in comark-icon. Pass the one the page's other plugins use, so they share its `collections` and `fetch`. comark-ui passes the one its `icon` uses. |
 
 ### Issues
@@ -338,7 +338,7 @@ When you render on a server, import `comark-tabs/style.css` with your own styles
 
 ## Theme
 
-The tab strip is a segmented control in the style of shadcn/ui, and follows the shared tokens in [Theming](/guide/theming/). Five variables of its own change the strip, the open tab, and the space under them. The rules sit in a `comark` CSS layer, so a plain rule of your own wins over any of them.
+The tab strip is a shadcn/ui-style segmented control that follows the shared tokens in [Theming](/guide/theming/). The rules sit in a `comark` CSS layer, so any plain rule of yours wins.
 
 ### Shared tokens
 
@@ -365,7 +365,7 @@ Set these on `.ct` or any ancestor, such as `:root`:
 | `--ct-gap` | `0.75rem` | The space between the strip and the open panel, except in a code group, whose block hangs from its strip |
 | `--ct-font-size` | `0.8125rem` | The labels and captions |
 
-Icons in tabs come from comark-icon: size them with `--comark-icon-size`, as [its theming](/icon/#variables) describes.
+Size icons in tabs with comark-icon's `--comark-icon-size`, as [its theming](/icon/#variables) describes.
 
 ### Classes and attributes
 
@@ -378,7 +378,7 @@ Icons in tabs come from comark-icon: size them with `--comark-icon-size`, as [it
 | `.ct-caption` | The label over each panel, shown only without the script |
 | `[data-tabs-ready]` | On `<html>` once the script runs |
 
-One rule sits outside the `comark` layer: pages style code blocks with plain rules, so the rule that drops a code group's block margin and top corners, to join it to its strip, has to beat them.
+One rule sits outside the `comark` layer. It drops a code group's block margin and top corners to join it to its strip, and has to beat the plain rules pages use for code blocks.
 
 ### Example
 

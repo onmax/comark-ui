@@ -94,7 +94,7 @@ Stand-up
 ::
 
 > [!NOTE]
-> A line right after a definition is read as more of that definition. Leave a blank line before the next term.
+> A line right after a definition continues it. Leave a blank line before the next term.
 
 ### Long definitions
 
@@ -115,7 +115,7 @@ Deploy freeze
 
 ### Empty definition
 
-Use a marker with nothing after it to leave a definition empty. Keep another term after it; a lone `:` at the end of the document requires Comark's `autoClose: false`.
+Use a marker with nothing after it to leave a definition empty. Put another term after it, since a lone `:` at the end of the document needs Comark's `autoClose: false`.
 
 ```md
 TBD
@@ -129,7 +129,7 @@ Ready
 
 ### Tight and loose
 
-A definition holding one paragraph renders its text straight inside `<dd>`. With more blocks, each paragraph keeps its `<p>`. A list is loose when a blank line sits inside a definition or between a term and its definition. With Comark's `autoUnwrap: false`, a loose list keeps `<p>` in every definition.
+A definition of one paragraph puts its text straight in `<dd>`. With more blocks, each paragraph keeps its `<p>`. A list is loose when a blank line sits inside a definition or between a term and its definition. With Comark's `autoUnwrap: false`, a loose list keeps `<p>` in every definition.
 
 ### What isn't a definition
 
@@ -142,7 +142,7 @@ The odds were
 
 ### Styling
 
-The plugin adds no classes and no styles. Browsers indent `<dd>`, and a prose stylesheet such as Tailwind Typography styles all three tags. To set terms in bold:
+Browsers indent `<dd>`, and a prose stylesheet such as Tailwind Typography styles all three tags. To set terms in bold:
 
 ```css
 dt {
@@ -155,7 +155,7 @@ dd + dt {
 
 ### Lists or tables
 
-A definition list reads better than a two-column table when definitions run longer than a line or hold more than a paragraph, since a table cell holds neither a list nor code. For short values side by side, such as options and defaults, a table is easier to scan.
+Pick a definition list over a two-column table when definitions run past a line or hold more than a paragraph, since a table cell holds neither a list nor code. For short values side by side, such as options and defaults, a table scans faster.
 
 ## API
 
@@ -174,7 +174,7 @@ The plugin takes no options. `deflist: false` in `comarkUi()` turns it off.
 
 ### Package
 
-comark-ui brings `comark-deflist` and registers it. To use it alone, install it and register the plugin:
+comark-ui installs and registers `comark-deflist`. To use it alone, install it and register the plugin:
 
 ```sh
 pnpm add comark @comark/html comark-deflist

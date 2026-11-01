@@ -31,15 +31,15 @@ Read [the incident report](https://example.com/incidents/42){target="_blank"} be
 
 ## Features
 
-- `anchors()` puts a `#` after each h2, h3, and h4 that links to the heading itself, so readers can share a section.
+- `anchors()` puts a `#` link after each h2, h3, and h4, so readers can share a section.
 - `external()` writes `target` and `rel` on links to other sites, in any renderer.
 - Nothing opens in a new tab unless you ask.
-- A link that opens a new tab ends with ↗ and "(opens in a new tab)" for screen readers, so nobody is surprised by a new tab.
-- Without it, Comark gives headings ids but draws no link to them, and changes a link's target only when you write `{target="_blank"}` on it.
+- A link that opens a new tab ends with ↗, and screen readers hear "(opens in a new tab)".
+- Without it, Comark gives headings ids but no links, and sets a link's target only from a `{target="_blank"}` on it.
 
 ## Usage
 
-The package is two plugins, and each one works alone. Register the ones you want:
+The package is two plugins that each work alone. Register the ones you want:
 
 ```ts
 import { anchors, external } from "comark-links/html";
@@ -49,7 +49,7 @@ const plugins = [anchors(), external()];
 
 ### Heading links
 
-Use `anchors()` to put a `#` link after each heading. A heading needs an id for a link. Comark gives every heading one from its text, or the one you write with `{#id}`:
+Use `anchors()` to put a `#` link after each heading that has an id. Comark gives every heading one from its text, or takes the one you write with `{#id}`:
 
 ```md
 ## Install with pnpm {#install}
@@ -78,7 +78,7 @@ anchors({ levels: [2, 3] });
 
 #### Label
 
-Use the `label` option to change what screen readers hear for the link. It is a function that takes the heading's text.
+Use the `label` option, a function of the heading's text, to change what screen readers hear for the link.
 
 ```ts
 anchors({ label: (text) => `Sección "${text}"` });
@@ -103,7 +103,7 @@ Use `external()` to write `target` and `rel` on links to other sites. A link kee
 
 #### Target
 
-Use the `target` option to set where external links open, such as `"_blank"` for a new tab. By default they open where the reader chooses. [Open new tabs only where readers lose work](#open-new-tabs-only-where-readers-lose-work) says when a new tab helps.
+Use the `target` option to set where external links open, such as `"_blank"` for a new tab. By default they open where the reader chooses. [Open new tabs only where readers lose work](#open-new-tabs-only-where-readers-lose-work) says when that helps.
 
 ```ts
 external({ target: "_blank" });
@@ -132,7 +132,7 @@ external({ rel: ["nofollow", "ugc"] });
 
 #### Warning
 
-Use the `icon` and `label` options to change the warning after a link that opens a new tab. Every such link gets ↗ and "(opens in a new tab)", which screen readers read after the link's text. That holds whether the new tab comes from the `target` option or from a `{target}` you write. For a site in another language, change the words:
+Every link that opens a new tab, from the `target` option or a `{target}` you write, gets ↗ and a hidden "(opens in a new tab)" for screen readers. Use the `icon` and `label` options to change them, such as for a site in another language:
 
 ```ts
 external({ target: "_blank", label: "(se abre en una pestaña nueva)" });
@@ -162,7 +162,7 @@ external({ target: "_blank", test: (href) => /^https?:/.test(href) && !href.star
 
 Leave `target` off unless you have a reason. A reader who wants a new tab can open one, and one who doesn't can't stop a link from opening it.
 
-Some pages have a reason, such as a form the reader would lose by leaving, or a playground with unsaved work. Open external links in a new tab there, and list your own hosts so links to the rest of your site stay in the tab:
+A form the reader would lose by leaving, or a playground with unsaved work, is a reason. There, open external links in a new tab, and list your own hosts so links to the rest of your site stay in the tab:
 
 ```ts
 external({ target: "_blank", hosts: ["example.com", "docs.example.com"] });
@@ -226,11 +226,11 @@ const render = createHtmlRenderer({
 });
 ```
 
-Each plugin works alone, in any order. The package has no default export, so import the plugins by name.
+The plugins work in any order. The package has no default export, so import them by name.
 
-For Vue, React, or Svelte, import from `comark-links/vue`, `comark-links/react`, or `comark-links/svelte`; the components add the styles when they mount. Import `comark-links/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-links/vue`, `comark-links/react`, or `comark-links/svelte`. The components add the styles when they mount. Import `comark-links/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
 
-The components replace how `h1` to `h6` render, and draw a heading as it would be without them unless `anchors()` gave it a link. The heading stays where it was in the document's tree, so a table of contents built from the tree still finds it.
+The components replace `h1` to `h6`, but change only the headings `anchors()` gave a link. Headings stay in place in the document's tree, so a table of contents built from the tree still finds them.
 
 ## Theme
 
@@ -258,7 +258,7 @@ The heading links read these [shared tokens](/guide/theming/):
 
 `.cl-heading` is a flex row, so the heading keeps its own font and margins, and the link sits on its first line. Two things change for a heading inside it:
 
-- Its margins no longer merge with the paragraph's above it, so the gap can grow. Set the margins on `.cl-heading` and zero them on the heading if that matters.
+- Its margins no longer collapse into the paragraph's above it, so the gap can grow. If that matters, set the margins on `.cl-heading` and zero them on the heading.
 - Its border or background ends at the end of its text. Move them to `.cl-heading:has(> h2)`.
 
 ### Example

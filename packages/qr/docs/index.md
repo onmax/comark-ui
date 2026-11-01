@@ -23,7 +23,7 @@ Open [comark-ui.onmax.me/qr](https://comark-ui.onmax.me/qr/), or scan it on your
 
 - A reviewer scans the code to open a preview link on their phone.
 - The code is an inline SVG, so it needs no script and no image to fetch.
-- It's dark on white in both color schemes, so a phone's camera reads it off any page, and it prints.
+- It's dark on white in both color schemes, so a phone reads it off any page, and it prints.
 - `:qr` is inline, so it sits in a sentence, a table cell, or a list item.
 - Screen readers hear "QR code: " and its value.
 
@@ -44,7 +44,7 @@ Use the `value` prop to set the text to encode, usually a link.
 
 ### Preview links in review documents
 
-A review of a visual change often comes with a preview deployment. Put its link and a code side by side, so a reviewer at a desk clicks and one with a phone scans:
+Put a preview deployment's link and its code side by side, so a reviewer at a desk clicks and one with a phone scans:
 
 ::example
 ```md
@@ -66,7 +66,7 @@ Codes are 8rem wide by default. Set `--cqr-size` on `.cqr` or any element above 
 
 ### Border
 
-The code has no border. To outline it, give the `svg` a border:
+To outline the code, give its `svg` a border:
 
 ```css
 .cqr svg {
@@ -92,18 +92,18 @@ Codes use error correction level M and a quiet zone of two modules.
 
 ### Issues
 
-The plugin adds these problems to `meta.issues`, as [Validation](/guide/validation/) describes:
+The plugin adds these to `meta.issues`, as [Validation](/guide/validation/) describes:
 
 - A `:qr` with no `value`.
 - A `value` too long to encode.
 - Text in its brackets.
 - A prop it doesn't read.
 
-Each issue names its block and says how to fix it, and each has its own rule in [Doctor](/doctor/).
+Each names its block and the fix, and has its own rule in [Doctor](/doctor/).
 
 ### Package
 
-comark-ui brings `comark-qr` and registers it. To use it alone, install it with Comark and a renderer:
+comark-ui installs and registers `comark-qr`. To use it alone, install it with Comark and a renderer:
 
 ```sh
 pnpm add comark @comark/html comark-qr
@@ -118,11 +118,11 @@ import qr, { components } from "comark-qr/html";
 const render = createHtmlRenderer({ plugins: [qr()], components });
 ```
 
-For Vue, React, or Svelte, import from `comark-qr/vue`, `comark-qr/react`, or `comark-qr/svelte`. The components add the styles when they mount. Import `comark-qr/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-qr/vue`, `comark-qr/react`, or `comark-qr/svelte`. The components add the styles on mount. On a server-rendered page, also import `comark-qr/style.css` so it doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
 
 ## Theme
 
-The code sits on a white tile with no border. The modules are always black on white, in both color schemes. The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
+The code sits on a white tile with no border, black on white in both color schemes. The rules sit in a `comark` CSS layer, so any plain rule of yours wins.
 
 ### Shared tokens
 

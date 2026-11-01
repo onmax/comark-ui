@@ -4,7 +4,7 @@ description: Two screenshots side by side or under a slider, and their props.
 tagline: Two screenshots of one view, before and after a change, side by side or under a slider.
 ---
 
-Two screenshots of the same view, before and after a change. They're titled **Before** and **After** unless they set their own `title`, and their notes are numbered on from one to the other.
+Two screenshots of one view, before and after a change. They're titled **Before** and **After** unless they set their own `title`.
 
 ::example
 ```md
@@ -29,7 +29,7 @@ Fixed.
 - The two screenshots sit side by side, and on a narrow screen they show one at a time.
 - They zoom as one gallery.
 - Notes are numbered on from the first screenshot to the second.
-- A slider lays the pair in one frame, and you drag the divider to reveal one or the other.
+- A slider lays the pair in one frame, with a divider to drag.
 - Without the script, a slider's screenshots stack.
 
 ## Usage
@@ -47,11 +47,11 @@ Put exactly two [`screenshot`](/annotate/components/screenshot/) blocks inside, 
 ```
 
 > [!NOTE]
-> Set the same `viewport` on both screenshots. The plugin checks that they match. Screenshots of different sizes can't be compared.
+> Give both screenshots the same `viewport`, since screenshots of different sizes can't be compared. The plugin checks it.
 
 ### Title
 
-Use the `title` prop to say what the comparison shows. Side by side, screen readers read it as the comparison's name, and it defaults to "Comparison". In a slider, it titles the zoomed view, and it defaults to the screenshots' titles, such as "Before / After".
+Use the `title` prop to say what the comparison shows. Side by side, it's the name screen readers read, and defaults to "Comparison". In a slider, it titles the zoomed view, and defaults to the screenshots' titles, such as "Before / After".
 
 ```md
 ::compare{title="Toolbar alignment"}
@@ -65,7 +65,7 @@ Use the `title` prop to say what the comparison shows. Side by side, screen read
 
 ### Slider
 
-Use the `mode` prop set to `slider` to lay the two screenshots in one frame: Before shows left of a divider, After right of it. Use it when both screenshots show the same spot and the change is small, so the reader sees it at full width.
+Use the `mode` prop set to `slider` to lay the two screenshots in one frame, Before left of a divider and After right of it. Use it for a small change in one spot, so the reader sees it at full width.
 
 ::example
 ```md
@@ -87,8 +87,7 @@ Use the `mode` prop set to `slider` to lay the two screenshots in one frame: Bef
 
 - Drag anywhere on the pair to move the divider, or focus its handle and use the arrow keys.
 - A click that doesn't drag zooms the pair.
-- Side notes join the numbered list, since an arrow would cross the divider.
-- Without the script, the two screenshots stack.
+- Side notes join the numbered list.
 
 ### Ink
 
@@ -116,7 +115,7 @@ Use the `ink` prop to color every mark and note in both screenshots that doesn't
 
 ### Side notes in a pair
 
-Side by side, a note with `side="left"` or `side="right"` joins the numbered list under its screenshot. Beside it, the note would press against the other screenshot and shrink its own image. Notes with `side="top"` and `side="bottom"` stay above and below, and both images keep the same room for them so they stay level.
+Side by side, a note with `side="left"` or `side="right"` joins the numbered list under its screenshot. Notes with `side="top"` and `side="bottom"` stay above and below, and both images keep the same room for them so they line up.
 
 ::example
 ```md
@@ -138,7 +137,7 @@ Side by side, a note with `side="left"` or `side="right"` joins the numbered lis
 
 ## Accessibility
 
-Side by side, the pair is a carousel region named by its `title`, and each screenshot is a slide, such as "1 of 2". Each screenshot is a tab stop that opens the [zoomed view](/zoom/).
+Side by side, the pair is a carousel region named by its `title`. Each screenshot is a slide, such as "1 of 2", and a tab stop that opens the [zoomed view](/zoom/).
 
 In a slider, the pair is one tab stop that zooms. Its divider is a slider named "Divider between Before and After", with a value such as "Before 50%, After 50%". It takes the arrow keys on the page and in the zoomed view.
 
@@ -174,6 +173,6 @@ The plugin adds these problems to `meta.issues`:
 - The two screenshots' `viewport` sizes differ.
 - `mode` isn't `columns` or `slider`.
 - `ink` isn't a named color or a 3- or 6-digit hex color.
-- A prop isn't one of the above. `label`, `color`, and `viewport` get a hint.
+- An unknown prop. `label`, `color`, and `viewport` get a hint.
 
 Each has its own rule in [Doctor](/doctor/). [Annotate](/annotate/#issues) covers how issues name their block.

@@ -4,7 +4,7 @@ description: An image with marks on it, and its props.
 tagline: An image with hand-drawn marks on it, and their notes under it or beside it.
 ---
 
-An image with marks on it. Each `annotation` inside it draws one mark, and any other content becomes the caption.
+An image with marks on it. Content other than its annotations becomes the caption.
 
 ::example
 ```md
@@ -33,7 +33,7 @@ Use the `src` prop for the image and the `alt` prop to say what it shows. Both a
 
 ### Title
 
-Use the `title` prop to put a heading above the image. It also titles the zoomed view, which shows the `alt` text without it.
+Use the `title` prop to put a heading above the image and title the zoomed view. Without it, the zoomed view shows the `alt` text.
 
 ::example
 ```md
@@ -47,7 +47,7 @@ Use the `title` prop to put a heading above the image. It also titles the zoomed
 
 ### Link
 
-Use the `href` prop to link the page you captured. The link shows the page's host next to the title.
+Use the `href` prop to link the page you captured, shown by its host next to the title.
 
 ::example
 ```md
@@ -64,7 +64,7 @@ Extra filters collapse into **+2 filters**.
 
 ### Viewport
 
-Use the `viewport` prop to record the capture size in pixels, like `1440x900`. The plugin then judges where each number fits against the image's real shape. A `compare` checks that both its screenshots have the same viewport.
+Use the `viewport` prop to record the capture size in pixels, like `1440x900`. The plugin then places each number against the image's real shape, and a `compare` checks that both its screenshots match.
 
 ```md
 ::screenshot{src="/before.png" alt="Filter toolbar wrapping onto a second row" viewport="640x250"}
@@ -73,7 +73,7 @@ Use the `viewport` prop to record the capture size in pixels, like `1440x900`. T
 
 ### Ink
 
-Use the `ink` prop to color every mark and note that doesn't set its own `color`. It takes the same values as an annotation's [`color`](/annotate/components/annotation/#color).
+Use the `ink` prop to color every mark and note that doesn't set its own `color`. It takes an annotation's [`color`](/annotate/components/annotation/#color) values.
 
 ::example
 ```md
@@ -91,7 +91,7 @@ This filter ignores the moon phase.
 
 ### Caption
 
-Write any content after the annotations to give the screenshot a caption. It sits above the numbered notes.
+Write content after the annotations to give the screenshot a caption. It sits above the numbered notes.
 
 ::example
 ```md
@@ -109,7 +109,7 @@ Captured on the staging dashboard, after the filter fix.
 
 ### Copy a screenshot
 
-Press a screenshot's Copy button, or focus it and press Ctrl+C (⌘C on a Mac). You get a PNG with the marks and notes drawn in. The browser's own Copy Image gives you the same PNG once the pointer has been over the screenshot.
+Press a screenshot's Copy button, or focus it and press Ctrl+C or ⌘C, to copy a PNG with its marks and notes drawn in. The browser's own Copy Image gives the same PNG once the pointer has been over the screenshot.
 
 Copying needs setup in two cases:
 
@@ -120,7 +120,7 @@ Copying needs setup in two cases:
 
 The image keeps its `alt` text. Each numbered mark is an image named by its number and note, such as "Annotation 1: Extra filters collapse into +2 filters." A side note's mark is named "Side note:" and its note. The arrows are hidden from screen readers.
 
-The image is one tab stop, and it opens the [zoomed view](/zoom/). The Copy button is labelled "Copy the screenshot with its marks", and a status announces "Copied" once the PNG is on the clipboard.
+The image is one tab stop that opens the [zoomed view](/zoom/). The Copy button is labelled "Copy the screenshot with its marks", and a status announces "Copied" once the PNG is on the clipboard.
 
 ### Keyboard interactions
 
@@ -152,11 +152,11 @@ The plugin adds these problems to `meta.issues`:
 - `href` isn't an http:// or https:// URL with a host.
 - `viewport` isn't a size in pixels, like `1440x900`.
 - `ink` isn't a named color or a 3- or 6-digit hex color.
-- A prop isn't one of the above. Likely slips such as `label`, `url`, `color`, `caption`, `width`, and `height` get a hint.
+- An unknown prop. Likely slips such as `label`, `url`, `color`, `caption`, `width`, and `height` get a hint.
 - A `:bound` prop resolves to nothing, or to an unsafe URL.
 - A `screenshot`, `compare`, or `annotation` sits inside the caption.
 - Side notes on one side sit so close that they would overlap.
 - Two numbers overlap at every corner of their marks.
-- More than 40 annotations sit in one screenshot or compare, past which hovering stops linking marks to notes.
+- More than 40 annotations in one screenshot or compare. Past 40, hovering stops linking marks to notes.
 
 Each has its own rule in [Doctor](/doctor/). [Annotate](/annotate/#issues) covers how issues name their block.

@@ -49,22 +49,22 @@ const hidden = filters.length - visible.length;
 
 ## The order
 
-A reviewer decides whether to approve, so give them the decision first and the evidence after it:
+The reviewer decides whether to approve, so lead with the decision:
 
-1. A callout states what changed and why, in a sentence or two. `IMPORTANT` fits a decision, `WARNING` a risk the reviewer should weigh.
-2. A `::compare` shows the change. Mark the problem in red on the before side and the fix on the after side, so the two sets of notes read as one story.
-3. A `::diff` shows the lines that matter. Keep it to a few lines around the change, since the pull request already has the full diff.
+1. A callout says what changed and why in a sentence or two. `IMPORTANT` fits a decision, `WARNING` a risk to weigh.
+2. A `::compare` shows the change. Mark the problem in red on the before side and the fix on the after side.
+3. A `::diff` shows a few lines around the change. The pull request already has the full diff.
 4. A table of numbers goes in `::zoom`, so a wide one opens at full size.
 5. A link card points to where the reviewer can try it.
 
 ## Setup
 
-Register the plugins in one renderer, as [Renderers](/guide/renderers/#several-plugins) shows. This document needs annotate, diff, github, embed, and zoom. Annotate brings zoom with it for the screenshots, and `zoom()` adds it for the table.
+Register the plugins in one renderer, as [Renderers](/guide/renderers/#several-plugins) shows. This document needs annotate, diff, github, embed, and zoom. Annotate brings zoom for the screenshots, and `zoom()` adds it for the table.
 
 ## Check it
 
-Run [comark-linter](/lint/) on the file before you post it, and open the rendered page to see that each mark sits on its target. [Agents](/guide/agents/#check-the-result) shows both commands.
+Run [comark-linter](/lint/) on the file before you post it, then open the rendered page and check that each mark sits on its target. [Agents](/guide/agents/#check-the-result) shows both commands.
 
 ## Share it
 
-[Sharing a review](/recipes/share/) puts the document in front of reviewers, either on Drop, where they comment on the exact spot, or on a page you host.
+[Sharing a review](/recipes/share/) puts the document on Drop, where reviewers comment on the exact spot, or on a page you host.

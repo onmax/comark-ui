@@ -40,10 +40,10 @@ The pigeon tracker before the redesign is in :ref{#fig-before}, and after it in 
 
 - An image alone in its paragraph with a `fig-` id becomes a numbered figure, captioned from its alt text.
 - A `::table` with a `tbl-` id gets a numbered caption.
-- `:ref{#id}` becomes a link that reads "Figure 1" or "Table 1", and stays right when figures move.
-- Figures and tables are numbered separately, in the order they appear, and a reference can come before what it points at.
-- A reference to a label that doesn't exist is an issue, not a broken link.
-- It needs no components or styles. The output is plain `figure`, `figcaption`, `caption`, and `a` elements.
+- `:ref{#id}` links to either as "Figure 1" or "Table 1", and the number follows when figures move.
+- Figures and tables count separately, in page order. A reference can come before its target.
+- A reference to a missing label is an issue, not a broken link.
+- No components or styles. The output is plain `figure`, `figcaption`, `caption`, and `a` elements.
 
 ## Usage
 
@@ -59,13 +59,13 @@ A label is `fig-` or `tbl-` followed by letters, digits, `_`, or `-`.
 
 ### Figures
 
-Use a `fig-` id on an image alone in its paragraph to make it a numbered `figure`. Its caption reads "Figure 1: The login page", from its alt text. An image with no alt text reads "Figure 1".
+Use a `fig-` id on an image alone in its paragraph to make it a numbered `figure`. The caption is "Figure 1: The login page", from the alt text, or "Figure 1" without one.
 
 ```md
 ![The login page](login.png){#fig-login}
 ```
 
-A `::figure{#fig-...}` block of your own is numbered as it is: references to it read its number, and it keeps its own caption. So is any other element with a `fig-` id, such as a comark-annotate `::screenshot` or `::compare`.
+Any other element with a `fig-` id, such as your own `::figure` or a comark-annotate `::screenshot` or `::compare`, keeps its own caption and gets a number for references to read.
 
 ```md
 ::screenshot{src="login.png" alt="The login page" #fig-login}
@@ -73,11 +73,11 @@ A `::figure{#fig-...}` block of your own is numbered as it is: references to it 
 ```
 
 > [!NOTE]
-> A labeled image that shares its paragraph with text isn't a figure, and is reported. Put it on a line of its own.
+> A labeled image that shares its paragraph with text isn't a figure, and adds an issue. Put it on a line of its own.
 
 ### Tables
 
-Use a `tbl-` id on `::table` to number a table. Use its `caption` prop to set the text after the number, "Table 1: Homing times by bird".
+Use a `tbl-` id on `::table` to number it, and its `caption` prop for the text after the number, as in "Table 1: Homing times by bird".
 
 ```md
 ::table{#tbl-times caption="Homing times by bird"}
@@ -92,20 +92,20 @@ Use a `tbl-` id on `::table` to number a table. Use its `caption` prop to set th
 
 ### References
 
-Use `:ref{#id}` to link to a label. The link reads "Figure 1" or "Table 1". It can point at a label above or below it.
+Use `:ref{#id}` to link to a label above or below it. The link reads "Figure 1" or "Table 1".
 
 ```md
 As :ref{#fig-login} shows, the button moved.
 ```
 
 > [!NOTE]
-> A reference to a label that doesn't exist renders as `[id]` and is reported. Text inside a `:ref` is dropped, since the reference reads as its label's number.
+> A reference to a missing label renders as `[id]` and adds an issue. The plugin drops text inside a `:ref`, since the link reads as the label's number.
 
 ## Examples
 
 ### Long review documents
 
-A review with several screenshots reads better when the text says which one it means. Label each screenshot and refer to it by label, and the numbers stay right when you add, remove, or reorder them:
+Refer to each screenshot by its label, and the numbers stay right when you add, remove, or reorder them:
 
 ```md
 The empty state in :ref{#fig-empty} replaces the spinner in :ref{#fig-loading}.
@@ -125,7 +125,7 @@ xref({ figure: "Abbildung", table: "Tabelle" });
 
 ### Coming from Pandoc
 
-Pandoc's `@fig-login` isn't read, since `@name` is a mention in comark-chips and comark-github. Write `:ref{#fig-login}` instead.
+The plugin doesn't read Pandoc's `@fig-login`, since `@name` is a mention in comark-chips and comark-github. Write `:ref{#fig-login}` instead.
 
 ## API
 
@@ -142,7 +142,7 @@ Pandoc's `@fig-login` isn't read, since `@name` is a mention in comark-chips and
 | Prop | Default | Description |
 | --- | --- | --- |
 | `#tbl-…` | — | Numbers the table. |
-| `caption` | — | The text after the number in the table's caption. |
+| `caption` | — | The text after the number in the caption. |
 
 #### Ref
 
@@ -152,7 +152,7 @@ Pandoc's `@fig-login` isn't read, since `@name` is a mention in comark-chips and
 
 ### Options
 
-The options go under `xref` in `comarkUi()`, or to `xref()` when you use the plugin alone.
+Pass options under `xref` in `comarkUi()`, or to `xref()` alone.
 
 | Option | Default | Description |
 | --- | --- | --- |
@@ -161,19 +161,19 @@ The options go under `xref` in `comarkUi()`, or to `xref()` when you use the plu
 
 ### Issues
 
-The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation/) describes:
+The plugin adds these to `meta.issues`, as [Validation](/guide/validation/) describes:
 
 - A reference with no id.
-- A reference to a label that doesn't exist. It renders as `[id]`.
+- A reference to a missing label. It renders as `[id]`.
 - A label used twice.
 - A labeled image that shares its paragraph with text, so it isn't a figure.
 - Text inside a `:ref`, which it drops.
 
-Each issue names its block and says how to fix it, and each has its own rule in [Doctor](/doctor/).
+Each names its block and the fix, and has its own rule in [Doctor](/doctor/).
 
 ### Package
 
-comark-ui brings `comark-xref` and registers it. To use it alone, install it and register the plugin with any renderer:
+comark-ui installs and registers `comark-xref`. To use it alone, install it and register the plugin with any renderer:
 
 ```sh
 pnpm add comark @comark/html comark-xref
@@ -194,7 +194,7 @@ The plugin ships no styles. Figures, captions, and links use the page's.
 
 ### Classes and attributes
 
-These classes are there for your own rules:
+Target these classes with your own rules:
 
 | Selector | Is |
 | --- | --- |

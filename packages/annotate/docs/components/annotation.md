@@ -4,7 +4,7 @@ description: One mark on a screenshot and its note, and its props.
 tagline: One hand-drawn mark on a screenshot, and the note that explains it.
 ---
 
-One mark on the screenshot. The block's content is its note.
+One mark on a screenshot. Its content is the note.
 
 ::example
 ```md
@@ -23,10 +23,10 @@ r now counts the office cat.
 ## Features
 
 - A note goes in the numbered list under the image.
-- A side note sits beside, above, or below the image instead, and an arrow points from it to the mark.
+- A side note sits beside, above, or below the image instead, with an arrow to the mark.
 - Hover a mark to highlight its note, or a note to highlight its mark.
-- Each mark is hand-drawn and a little different, and the same Markdown always draws the same marks.
-- Props can be inline, in a YAML props block, or bound with `:x`.
+- Each mark is hand-drawn and a little different, but the same Markdown always draws the same marks.
+- Props go inline, in a YAML props block, or bound with `:x`.
 
 ## Usage
 
@@ -77,12 +77,12 @@ Use the `mark` prop to pick the shape. `box` is the default.
 ```
 ::
 
-- A `line` runs straight through the middle of its box, along its longer side, such as a fold or a limit.
-- A `bracket` stands on the edge that faces its side note, or the left one without a note. It spans a run of rows or a group without covering it.
-- `none` draws nothing, and lets a side note's arrow do the pointing.
+- `line` runs through the middle of its box along its longer side, for a fold or a limit.
+- `bracket` stands on the edge that faces its side note, or the left edge without one. It spans a run of rows or a group without covering it.
+- `none` draws nothing and leaves the pointing to a side note's arrow.
 
 > [!NOTE]
-> `mark="none"` needs a `side`, since nothing else points at the spot.
+> `mark="none"` needs a `side`.
 
 ### Color
 
@@ -90,7 +90,7 @@ Use the `color` prop to say what a mark means. Each named color has one meaning:
 
 | Color | Meaning |
 | --- | --- |
-| `violet` | Points something out. It's the default, and reads on light and dark screenshots alike. |
+| `violet` | Points something out. It's the default, and reads on light and dark screenshots. |
 | `red` | Flags a problem. |
 | `amber` | A warning. |
 | `green` | A fix. |
@@ -115,11 +115,11 @@ This filter ignores the moon phase.
 ```
 ::
 
-Each named color has a dark-mode value. A 3- or 6-digit hex color like `#e11d48` works too, and its stamp gets whichever of a white or dark number reads better. Without a `color`, the mark takes its screenshot's or compare's `ink`.
+Each named color has a dark-mode value. A 3- or 6-digit hex color like `#e11d48` works too, and its stamp gets a white or dark number, whichever reads better. Without a `color`, the mark takes its screenshot's or compare's `ink`.
 
 ### Side note
 
-Use the `side` prop to move the note out of the list to the `left`, `right`, `top`, or `bottom` of the image, with a hand-drawn arrow to its mark. Side notes have no number, because the arrow already links them to their mark.
+Use the `side` prop to move the note out of the list to the `left`, `right`, `top`, or `bottom` of the image, with a hand-drawn arrow to its mark. Side notes have no number.
 
 ::example
 ```md
@@ -139,14 +139,12 @@ Week 15 is missing for the pigeons.
 ```
 ::
 
-Add `mark="none"` to point at something without drawing a mark.
-
 > [!NOTE]
 > On narrow screens, side notes drop under the image and the arrows hide. Each note and its target get a matching letter instead.
 
 ### Note position
 
-Use the `at` prop to move a side note along its margin, as a percentage of the image: across it for `top` and `bottom`, down it for `left` and `right`. Without it, the note sits level with the arrow's point. The arrow then leaves the note level and sweeps into the mark, the way a hand-drawn leader does. A note set off to one side starts where its arrow leaves it and reads away from the point.
+Use the `at` prop to move a side note along its margin, as a percentage of the image. It runs across the image for `top` and `bottom`, and down it for `left` and `right`. Without it, the note sits level with the arrow's point. A note moved off to one side starts where its arrow leaves it and reads away from the point.
 
 ::example
 ```md
@@ -167,7 +165,7 @@ The pigeons ate week 15.
 
 ### Arrow target
 
-Use the `to` prop to aim the arrow at one point, as two percentages of the image, like `to="42,18"`. Without it, the arrow lands on the middle of the mark's edge that faces the note. It suits `mark="none"`: the arrow alone points, and nothing covers the screen.
+Use the `to` prop to aim the arrow at one point, as two percentages of the image, like `to="42,18"`. Without it, the arrow lands on the middle of the mark's edge that faces the note. It suits `mark="none"`, where the arrow alone points.
 
 ::example
 ```md
@@ -202,13 +200,13 @@ For a full-page screenshot, add the scroll offset and divide by the page size in
 
 ### Where the numbers go
 
-Numbers place themselves. Each sits on a corner of its mark, so it reads as that mark's number and not its neighbor's. It tries top left, top right, bottom left, then bottom right, and takes the first corner clear of other numbers, marks, and arrows. If it would hang past the image's edge, it lines up with the mark's edge instead.
+Each number sits on a corner of its mark. It takes the first of top left, top right, bottom left, and bottom right that's clear of other numbers, marks, and arrows. Where it would hang past the image's edge, it lines up with the mark's edge instead.
 
-Set [`viewport`](/annotate/components/screenshot/#viewport) on the screenshot so the plugin judges the corners against the image's real shape. If marks crowd so close that two numbers overlap at every corner, the plugin reports both annotations.
+Set [`viewport`](/annotate/components/screenshot/#viewport) on the screenshot so the plugin judges corners against the image's real shape. If two numbers overlap at every corner, the plugin reports both annotations.
 
 ### Side notes that fit
 
-Notes on the same side need room. The plugin reports side notes that sit close together along their margin, since they would likely overlap. It can't measure the text, so check the rendered page too. If two notes collide, move one with `at`, to the other side, or into the list.
+The plugin reports side notes that sit close together on one margin. It can't measure the text, so check the rendered page too. If two notes collide, move one with `at`, to another side, or into the list.
 
 In a [compare](/annotate/components/compare/#side-notes-in-a-pair) side by side, only notes above and below the image keep their arrow. In a slider, every note joins the list.
 
@@ -231,14 +229,14 @@ The plugin adds these problems to `meta.issues`:
 
 - `x`, `y`, `w`, or `h` is missing, isn't a number, or is out of range.
 - The box runs past the image edge.
-- `x`, `y`, `w`, and `h` are all 1 or less, as fractions instead of percentages.
+- `x`, `y`, `w`, and `h` are all 1 or less, like fractions.
 - `mark` isn't one of the marks, or is `none` without a `side`.
 - `color` isn't a named color or a 3- or 6-digit hex color.
 - `side` isn't `left`, `right`, `top`, or `bottom`.
 - `at` or `to` isn't a percentage, or has no `side`.
 - The annotation has no note.
 - A `screenshot`, `compare`, or `annotation` sits inside the note.
-- The annotation sits outside a screenshot, so it has nothing to point at.
-- A prop isn't one of the above. Likely slips such as `width`, `height`, `colour`, `left`, `top`, `target`, and `label` get a hint.
+- The annotation sits outside a screenshot.
+- An unknown prop. Likely slips such as `width`, `height`, `colour`, `left`, `top`, `target`, and `label` get a hint.
 
 Each has its own rule in [Doctor](/doctor/). [Annotate](/annotate/#issues) covers how issues name their block.

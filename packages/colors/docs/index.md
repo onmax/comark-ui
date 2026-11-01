@@ -35,12 +35,12 @@ The button moves from `#3b82f6` to `oklch(0.55 0.2 264)`, and its hover from `rg
 - It reads hex, `rgb()`, `hsl()`, `hwb()`, `lab()`, `lch()`, `oklab()`, and `oklch()` colors.
 - The document reads the same without the plugin.
 - A `::palette` draws named colors as a grid of tiles.
-- A swatch sits on a checkerboard, so a translucent color shows as translucent.
-- Swatches print with their colors, since a swatch is nothing but its background.
+- A checkerboard under each swatch shows a translucent color as translucent.
+- Swatches keep their colors in print.
 
 ## Usage
 
-Write a color in inline code. It gets a swatch before it.
+Write a color in inline code to give it a swatch.
 
 ::example
 ```md
@@ -60,11 +60,11 @@ Use any of these forms. The code must hold the color and nothing else.
 | `lab()`, `lch()`, `oklab()`, `oklch()` | `lab(54.6 8.6 -65.7)`, `oklch(0.62 0.19 260)` |
 
 > [!NOTE]
-> Code blocks are left alone, and so is inline code with anything else in it, such as `` `color: #fff` ``. Named colors such as `red` aren't read, since a word in code is far more often a name in a program than a color. Nor are `var()`, `color()`, and `color-mix()`, whose color depends on the page.
+> The plugin skips code blocks and inline code with anything else in it, such as `` `color: #fff` ``. It also skips named colors such as `red`, since a word in code is more often a program's name than a color, and `var()`, `color()`, and `color-mix()`, whose color depends on the page.
 
 ### Palette
 
-Use `::palette` to draw a list of `name: color` lines as tiles, each with its name and its value. The list can be bulleted or numbered, and the color can be in inline code or not. Close the block with `::`.
+Use `::palette` to draw a list of `name: color` lines as tiles with their name and value. The list can be bulleted or numbered, with the color in inline code or not. Close the block with `::`.
 
 ::example
 ```md
@@ -76,13 +76,13 @@ Use `::palette` to draw a list of `name: color` lines as tiles, each with its na
 ::
 
 > [!NOTE]
-> A palette takes no props, and it drops everything but its list. A line with no name, or with a color it can't draw, is left out.
+> A palette takes no props and drops everything but its list. It leaves out a line with no name or a color it can't draw.
 
 ## Examples
 
 ### Review a theme change
 
-A pull request that changes design tokens reads best with the old and new values side by side. Write them in inline code and each one shows its color.
+When a pull request changes design tokens, write the old and new values side by side in inline code, and each shows its color.
 
 ::example
 ```md
@@ -93,13 +93,13 @@ A pull request that changes design tokens reads best with the old and new values
 ```
 ::
 
-For the whole set, use a `::palette` per theme. Reviewers see the colors as they would on a page.
+For the whole set, use a `::palette` per theme.
 
 ## API
 
 ### Functions
 
-Every entry exports `isColor()`, the test the plugin runs on inline code, for a host that wants to check a value the same way.
+Every entry exports `isColor()`, the test the plugin runs on inline code, to check a value the same way.
 
 | Function | Returns | Description |
 | --- | --- | --- |
@@ -111,19 +111,19 @@ The plugin takes no options. In `comarkUi()`, `colors: false` turns it off.
 
 ### Issues
 
-The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation/) describes. Each issue names its palette and says how to fix it:
+The plugin adds these to `meta.issues`, as [Validation](/guide/validation/) describes. Each names its palette and the fix:
 
 - A palette with no list.
-- Content beside the list, which is dropped.
+- Content beside the list, which it drops.
 - A line with no name or color.
-- A color it can't draw. The line is left out.
+- A color it can't draw. It leaves the line out.
 - A prop, which a palette doesn't have.
 
-Each one has its own rule in [Doctor](/doctor/).
+Each has its own rule in [Doctor](/doctor/).
 
 ### Package
 
-[comark-ui](/getting-started/) brings `comark-colors` and registers it. To use it alone, install it and pass the renderer's `components`:
+[comark-ui](/getting-started/) installs and registers `comark-colors`. To use it alone, install it and pass the renderer's `components`:
 
 ```sh
 pnpm add comark @comark/html comark-colors
@@ -136,11 +136,11 @@ import colors, { components } from "comark-colors/html";
 const render = createHtmlRenderer({ plugins: [colors()], components });
 ```
 
-For Vue, React, or Svelte, import from `comark-colors/vue`, `comark-colors/react`, or `comark-colors/svelte`. The components add the styles when they mount. Import `comark-colors/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-colors/vue`, `comark-colors/react`, or `comark-colors/svelte`. The components add the styles on mount. On a server-rendered page, also import `comark-colors/style.css` so it doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
 
 ## Theme
 
-Swatches and tiles follow the [shared tokens](/guide/theming/). A tile's value is in the system's monospace font. The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
+Swatches and tiles follow the [shared tokens](/guide/theming/). A tile's value is in the system's monospace font. The rules sit in a `comark` CSS layer, so any plain rule of yours wins.
 
 ### Shared tokens
 

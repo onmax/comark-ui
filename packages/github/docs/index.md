@@ -72,10 +72,10 @@ The source has a <code>&lt;script&gt;</code> after this sentence. GitHub drops i
 
 ## Features
 
-- Three plugins, each one on its own, in any order: `callouts()`, `references()`, and `html()`.
-- `callouts()` draws GitHub's five alerts with an icon, a color, and a title. Comark's built-in [alert plugin](https://comark.dev/plugins/defaults/alert) only tags the quote with its type and leaves the drawing to you.
+- Three plugins that each work alone, in any order: `callouts()`, `references()`, and `html()`.
+- `callouts()` draws GitHub's five alerts with an icon, a color, and a title. Comark's built-in [alert plugin](https://comark.dev/plugins/defaults/alert) only tags the quote with its type.
 - `references()` links `@user` to the profile and `#123` or `owner/name#123` to the issue or pull request, as GitHub does in comments.
-- `html()` renders raw HTML the way GitHub does: GitHub's tags and attributes stay, and scripts and anything else it doesn't allow go. Comark renders all raw HTML as written.
+- `html()` keeps the raw HTML GitHub allows and drops the rest, scripts included. Without it, Comark renders all raw HTML as written.
 - References and the HTML GitHub allows render as plain elements, so your page's styles apply to them.
 
 ## Usage
@@ -143,11 +143,11 @@ Thanks @onmax: this fixes #51, and onmax/comark-ui#73 builds on it.
 | `owner/name#123` | `https://github.com/owner/name/issues/123` |
 
 > [!NOTE]
-> A reference must stand on its own: `me@example.com`, `C#9`, and `@comark/html` stay text. So does anything in a link or in code. A bare `#123` needs the `repo` [option](#options).
+> A reference must stand on its own, so `me@example.com`, `C#9`, and `@comark/html` stay text. So does anything in a link or in code. A bare `#123` needs the `repo` [option](#options).
 
 ### HTML
 
-Use raw HTML as GitHub allows it. Anything else goes.
+Use raw HTML as GitHub allows it. `html()` drops the rest.
 
 ::example
 ```md
@@ -157,18 +157,18 @@ Water is H<sub>2</sub>O. <script>alert("hi")</script>
 
 These tags stay, as on GitHub: `a`, `abbr`, `b`, `bdo`, `blockquote`, `br`, `caption`, `cite`, `code`, `dd`, `del`, `details`, `dfn`, `div`, `dl`, `dt`, `em`, `figcaption`, `figure`, `h1` to `h6`, `hr`, `i`, `img`, `ins`, `kbd`, `li`, `mark`, `ol`, `p`, `picture`, `pre`, `q`, `rp`, `rt`, `ruby`, `s`, `samp`, `small`, `source`, `span`, `strike`, `strong`, `sub`, `summary`, `sup`, `table`, `tbody`, `td`, `tfoot`, `th`, `thead`, `time`, `tr`, `tt`, `ul`, `var`, and `wbr`.
 
-- `script` and `style` are removed with their content. Any other tag, such as `iframe`, `form`, or a component's tag, is replaced by its content.
+- `html()` removes `script` and `style` with their content, and replaces any other tag, such as `iframe`, `form`, or a component's tag, with its content.
 - Attributes that change the layout or describe the content stay, such as `align`, `width`, `height`, `alt`, `title`, `open`, `colspan`, and `aria-label`. So do `href` on links, `src` and `srcset` on images, and `srcset` and `media` on `source`. `class`, `id`, `style`, and event handlers such as `onclick` go.
 - A URL must be relative, http, or https, or mailto in a link. Any other, such as `javascript:` or `data:`, is removed.
 
 > [!NOTE]
-> Markdown between an HTML tag and its closing tag, after a blank line, renders after the element instead of inside it. Content on the lines right after the opening tag, with no blank line, stays inside, but as plain text.
+> Markdown after a blank line inside an HTML element renders after the element, not inside it. Lines right after the opening tag, with no blank line, stay inside as plain text.
 
 ## Examples
 
 ### Callouts in another language
 
-Use the `titles` option of `callouts()` to change the default titles, for a site in another language.
+Use the `titles` option of `callouts()` to translate the default titles.
 
 ```ts
 callouts({ titles: { note: "Nota", warning: "Aviso" } });
@@ -176,7 +176,7 @@ callouts({ titles: { note: "Nota", warning: "Aviso" } });
 
 ### Lists and code in a callout
 
-A callout holds any Markdown. Callouts also work inside lists and other blocks.
+A callout holds any Markdown, and works inside lists and other blocks too.
 
 ::example
 ````md
@@ -196,7 +196,7 @@ A callout holds any Markdown. Callouts also work inside lists and other blocks.
 
 ### Options
 
-Options go under `github` in `comarkUi()`, by plugin, such as `comarkUi({ github: { references: { repo: "onmax/comark-ui" } } })`, or to each plugin function when you use it alone. `false` in place of a plugin's options turns that plugin off, and `github: false` turns off all three.
+Options go under `github` in `comarkUi()`, keyed by plugin, such as `comarkUi({ github: { references: { repo: "onmax/comark-ui" } } })`, or to each plugin when you use it alone. `false` for a plugin's options turns that plugin off, and `github: false` turns off all three.
 
 #### callouts()
 
@@ -212,7 +212,7 @@ Options go under `github` in `comarkUi()`, by plugin, such as `comarkUi({ github
 
 #### html()
 
-`html()` takes no options. It keeps GitHub's allowed tags and attributes; [HTML](#html) lists what goes.
+`html()` takes no options. [HTML](#html) lists the tags and attributes it keeps.
 
 ### Issues
 
@@ -241,13 +241,13 @@ const render = createHtmlRenderer({
 });
 ```
 
-Each plugin works alone, in any order. `callouts()` replaces Comark's built-in alert plugin, and `html()` replaces its html plugin.
+`callouts()` replaces Comark's built-in alert plugin, and `html()` replaces its html plugin.
 
-For Vue, React, or Svelte, import from `comark-github/vue`, `comark-github/react`, or `comark-github/svelte`. The callout components add the styles when they mount. When you render on a server, import `comark-github/style.css` with your own styles so the page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-github/vue`, `comark-github/react`, or `comark-github/svelte`. The callout components add the styles when they mount. On a server, import `comark-github/style.css` with your own styles so the page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
 
 ## Theme
 
-Callouts follow shadcn/ui's Alert, a bordered card with the icon in the type's color and the title in that color mixed 70% with the foreground, so it reads as text on light and dark cards. The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
+Callouts follow shadcn/ui's Alert, a bordered card with the icon in the type's color. The title mixes that color 70% with the foreground, so it reads as text on light and dark cards. The rules sit in a `comark` CSS layer, so any plain rule of yours wins.
 
 ### Shared tokens
 

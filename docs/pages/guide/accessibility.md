@@ -7,11 +7,11 @@ tagline: The blocks render native HTML where it exists, follow the WAI-ARIA patt
 
 ## Reads without a script
 
-Every block renders HTML that reads top to bottom before any script runs. A script only adds behavior: switching tabs, zooming, moving between slides, copying code. A reader with scripts off, a feed reader, or an agent fetching the page still gets every word.
+Every block's HTML reads top to bottom before any script runs. Scripts only add behavior: switching tabs, zooming, changing slides, copying code. A reader with scripts off, a feed reader, or an agent fetching the page gets every word.
 
 ## Native elements first
 
-A block uses the HTML element made for its job, so browsers and screen readers already know it:
+Each block uses the HTML element made for its job:
 
 | Block | Renders |
 | --- | --- |
@@ -33,27 +33,27 @@ When no element fits, a block follows the matching [WAI-ARIA pattern](https://ww
 | [Zoom](/zoom/) | [Modal dialog](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/) | `Enter`, `Space`, `Escape`, `ArrowLeft`, `ArrowRight` |
 | [Annotate](/annotate/)'s compare slider | [Slider](https://www.w3.org/WAI/ARIA/apg/patterns/slider/) | Arrow keys, `Home`, `End`, `PageUp` (+25%), `PageDown` (−25%) |
 
-Status messages, such as "Copied" after a code block's copy button or a quiz's result, go in a live region, so a screen reader announces them.
+Status messages, such as "Copied" from a code block or a quiz's result, go in a live region that screen readers announce.
 
 ## Focus
 
-- An item that opens something, such as a zoomable image, is a tab stop. Focus returns to it when what it opened closes.
-- A dialog keeps focus inside it while it is open.
+- Anything that opens something, such as a zoomable image, is a tab stop, and focus returns to it on close.
+- A dialog keeps focus inside while open.
 - Every focusable part shows a ring in `--comark-ring`. [Theming](/guide/theming/) sets its color.
 
 ## Reduced motion
 
-When the reader asks for reduced motion, zoom skips its opening and closing animations, and carousels scroll instantly. Tabs replace the sliding indicator with a 150 ms opacity fade. Some blocks retain other transitions; reduced motion does not disable every animation.
+With reduced motion on, zoom skips its open and close animations, and carousels scroll instantly. Tabs fade the indicator over 150 ms instead of sliding it. Some blocks keep other transitions.
 
 ## Links
 
-- A link card is one link named after its title, so a screen reader hears one link, not the card's whole text.
-- [Links](/links/) can mark external links that open in a new tab, and warns before they do.
+- A link card is one link, named after its title rather than the card's whole text.
+- [Links](/links/) can mark external links that open in a new tab, with a warning before they do.
 
 ## What you write
 
-The blocks can only pass on what the document gives them:
+The blocks only pass on what you write:
 
 - Give every image `alt` text that says what it shows. [comark-linter](/lint/) reports images without it.
-- Give a zoomed block, a comparison, and a carousel a `title`, so a screen reader can name them.
+- Give zoomed blocks, comparisons, and carousels a `title` so a screen reader can name them.
 - Keep headings in order. The table of contents and heading links follow them.

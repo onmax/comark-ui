@@ -7,55 +7,55 @@ tagline: Comark UI is a free, open source library of 40+ blocks for Comark, for 
 
 ## What is Comark UI?
 
-[Comark](https://comark.dev) parses Markdown with blocks like `::tabs` into a tree, and renders it with HTML, Vue, React, or Svelte. Comark UI adds the blocks: tabs and charts, annotated screenshots, suggested code changes, callouts, and more.
+[Comark](https://comark.dev) parses Markdown with blocks like `::tabs` and renders it with HTML, Vue, React, or Svelte. Comark UI adds the blocks, such as tabs, charts, annotated screenshots, and suggested code changes.
 
-You install every block with one package, `comark-ui`, or each block on its own. All of them share one version.
+Install them all with `comark-ui`, or each block on its own. They share one version.
 
-Comark UI is an independent project by [@onmax](https://github.com/onmax), not made by the Comark team.
+Comark UI is an independent project by [@onmax](https://github.com/onmax), not the Comark team.
 
 ## Key features
 
 **Reads without a script**
 
-Every block renders to HTML that reads on its own. Tabs, carousels, and zoom add behavior when their script runs, and the page still reads top to bottom when it doesn't.
+Every block renders to HTML that reads on its own. Tabs, carousels, and zoom add behavior with a script.
 
 **Same markup in every renderer**
 
-The HTML, Vue, React, and Svelte renderers output the same markup, so the same styles and tokens apply to each. [Renderers](/guide/renderers/) lists which package supports which.
+HTML, Vue, React, and Svelte get the same markup, so one set of styles fits all four. [Renderers](/guide/renderers/) lists which package supports which.
 
 **Never throws**
 
-A block that's written wrong still renders. Its problem goes in `meta.issues` as one sentence that names the block and says how to fix it. [Validation](/guide/validation/) shows how to read them.
+A block written wrong still renders. `meta.issues` gets one sentence that names the block and the fix. [Validation](/guide/validation/) shows how to read them.
 
 **Themed by shadcn/ui tokens**
 
-The blocks follow [shadcn/ui](https://ui.shadcn.com)'s CSS variables, so they match a site that uses them with no setup. Elsewhere, the `--comark-*` tokens theme every block at once. [Theming](/guide/theming/) lists them.
+The blocks use [shadcn/ui](https://ui.shadcn.com)'s CSS variables, so they match a shadcn site with no setup. Elsewhere, the `--comark-*` tokens theme every block at once. [Theming](/guide/theming/) lists them.
 
 **Made for agents**
 
-Agents write most of these documents. An agent skill teaches the syntax, and [comark-linter](/lint/) checks a document before anyone reads it. [Agents](/guide/agents/) shows how to set them up.
+A skill teaches agents the syntax, and [comark-linter](/lint/) checks what they write before anyone reads it. [Agents](/guide/agents/) sets both up.
 
 ## How it works
 
 Each package is a parse plugin and a set of components.
 
-1. The **parse plugin** reads its blocks while Comark parses. It checks their props, does any work that needs the network or the disk, such as downloading a favicon, and reports problems.
+1. The **parse plugin** reads its blocks while Comark parses. It checks props, fetches what it needs from the network or disk, such as a favicon, and reports problems.
 2. The **components** draw the result in HTML, Vue, React, or Svelte.
-3. The **script**, for blocks that have one, adds behavior in the browser: switching tabs, zooming, copying code.
+3. The **script**, if the block has one, adds browser behavior such as switching tabs, zooming, or copying code.
 
 ## The blocks
 
 | Section | What's in it |
 | --- | --- |
-| Review blocks | Annotated screenshots, diffs, embeds, chips, metrics, test results, and other blocks for reviews and reports. |
+| Review blocks | Annotated screenshots, diffs, embeds, chips, metrics, test results, and more. |
 | Charts and diagrams | Charts from a Markdown table, gantt charts, and Mermaid, D2, Graphviz, and PlantUML diagrams. |
-| Docs blocks | Badges, cards, details, fields, file trees, steps, and quizzes for documentation. |
+| Docs blocks | Badges, cards, details, fields, file trees, steps, and quizzes. |
 | Page behavior | Zoom, carousels, tabs, code buttons, heading links, and a table of contents. |
 | Typography | Markdown syntax: footnotes, definition lists, highlights, keys, figures, CriticMarkup, and CJK emphasis. |
-| Linter | comark-linter, which checks documents from a script, the command line, ESLint, or Vite Doctor. |
-| From remark | remark-to-comark, which moves a remark project to Comark and reports what it leaves to you. |
+| Linter | comark-linter checks documents from a script, the command line, ESLint, or Vite Doctor. |
+| From remark | remark-to-comark moves a remark project to Comark and reports what it leaves to you. |
 
-Each block's page starts with its demos. Open any demo in the [playground](/play/) to edit it live.
+Each block's page starts with demos you can open in the [playground](/play/) and edit live.
 
 ## Next steps
 

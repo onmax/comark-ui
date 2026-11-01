@@ -29,15 +29,15 @@ Open **+2 filters** and set the moon phase. The export includes only the rows th
 ```
 ::
 
-Each screenshot is a slide. Its `title` heads the slide, so the reader knows which step they're on, and the notes stay with their screenshot. A click zooms the current slide, and the zoomed view pages through the others.
+Each screenshot is a slide, headed by its `title` and carrying its own notes. A click zooms the current slide, and the zoomed view pages through the rest.
 
 ## When to use it
 
-Use a carousel for a sequence, such as the steps of a flow or one view at several sizes. For one view before and after a change, use [`::compare`](/annotate/components/compare/), which is a two-column carousel already and continues the note numbers from one side to the other.
+Use a carousel for a sequence, such as the steps of a flow or one view at several sizes. For one view before and after a change, use [`::compare`](/annotate/components/compare/). It's a two-column carousel that numbers notes across both sides.
 
 ## Two at a time
 
-`columns=2` shows two steps side by side on a wide page and one at a time on a narrow one:
+`columns=2` shows two steps side by side on a wide page, and one at a time on a narrow one:
 
 ```md
 ::carousel{title="Exporting the pigeon data" columns=2}
@@ -49,4 +49,4 @@ Use a carousel for a sequence, such as the steps of a flow or one view at severa
 ::
 ```
 
-Each slide sits on a soft panel as tall as the tallest one, so screenshots of different heights line up. Set `--cc-surface: transparent` and `--cc-padding: 0` to drop the panel, as the carousel's [Theming](/carousel/#theme) page shows.
+Each slide sits on a panel as tall as the tallest one, so screenshots of different heights line up. To drop the panel, set `--cc-surface: transparent` and `--cc-padding: 0`, as the carousel's [Theming](/carousel/#theme) shows.

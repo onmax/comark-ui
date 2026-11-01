@@ -31,7 +31,7 @@ credits: 'After <a href="https://github.com/arve0/markdown-it-implicit-figures">
 ## Features
 
 - An image alone in its paragraph with a title renders as `<figure>`, with the title in `<figcaption>`.
-- The alt text still describes the image to screen readers. The caption is what everyone reads under it.
+- The alt text still describes the image to screen readers, and the caption shows under it for everyone.
 - A linked image keeps its link, and the caption sits outside it.
 - No classes, no styles, and no components, so it works in any renderer.
 
@@ -45,7 +45,7 @@ Write the caption as the image's title, the quoted text after its URL. Keep the 
 ```
 ::
 
-The image keeps its `src`, its alt text, and any `{attributes}`. It loses only the `title`, since the caption now says it:
+The image keeps its `src`, alt text, and any `{attributes}`, and loses only its `title` to the caption:
 
 ```html
 <figure>
@@ -56,7 +56,7 @@ The image keeps its `src`, its alt text, and any `{attributes}`. It loses only t
 
 ### Linked image
 
-Use a link around a captioned image to keep the image clickable, here to the full-size file. The link stays around the image, and the caption sits under it, outside the link.
+Use a link around a captioned image to keep it clickable, here to the full-size file. The caption sits under the image, outside the link.
 
 ::example
 ```md
@@ -99,11 +99,11 @@ The caption is plain text, as a title is.
 
 ### Inside a component
 
-A `::component` that holds only the image is left alone, and so is an inline `:component[![alt](src "Title")]` alone on its line. Add another block to the component, and its image becomes a figure.
+The plugin leaves alone a `::component` that holds only the image, and an inline `:component[![alt](src "Title")]` alone on its line. Add another block to the component, and its image becomes a figure.
 
 ### Alt text and captions
 
-Screen readers read both, so they shouldn't say the same thing. Alt text says what the image shows, for someone who can't see it. The caption says why it's there, for everyone:
+Screen readers read both, so don't repeat one in the other. Alt text says what the image shows, and the caption says why it's there:
 
 ```md
 ![Bar chart: deploys per day, highest on Tuesday](/deploys.png "Most deploys land on Tuesday, after the Monday freeze")
@@ -111,11 +111,11 @@ Screen readers read both, so they shouldn't say the same thing. Alt text says wh
 
 ### Size block images apart
 
-With `unwrap: true`, an image alone in its paragraph renders as a bare `<img>` with no `<p>` around it. A stylesheet can then size block images apart from the ones inside a sentence with `.prose > img`.
+With `unwrap: true`, an image alone in its paragraph renders as a bare `<img>`, with no `<p>`. Size those apart from images in a sentence with `.prose > img`.
 
 ### Styling
 
-The plugin adds no classes and no styles. Browsers indent a figure by 40px on each side. To set it flush with the text and the caption small and muted:
+Browsers indent a figure by 40px on each side. To set it flush with the text, with a small, muted caption:
 
 ```css
 figure {
@@ -130,13 +130,13 @@ figcaption {
 
 ### With comark-zoom
 
-With [comark-zoom](/zoom/), the image inside a figure zooms as any other image does, in either plugin order.
+With [comark-zoom](/zoom/), a figure's image zooms like any other, in either plugin order.
 
 ## API
 
 ### Options
 
-The options go under `figure` in `comarkUi()`, or to `figure()` when you use the plugin alone.
+Pass options under `figure` in `comarkUi()`, or to `figure()` alone.
 
 | Option | Default | Description |
 | --- | --- | --- |
@@ -144,7 +144,7 @@ The options go under `figure` in `comarkUi()`, or to `figure()` when you use the
 
 ### Package
 
-comark-ui brings `comark-figure` and registers it. To use it alone, install it and register the plugin:
+comark-ui installs and registers `comark-figure`. To use it alone, install it and register the plugin:
 
 ```sh
 pnpm add comark @comark/html comark-figure

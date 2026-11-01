@@ -26,13 +26,17 @@ const { messages, status } = useChat();
 </template>
 ```
 
-A message is a list of parts. `MessageParts` renders each one: text as Markdown through `@comark/vue`, `@comark/react`, or `@comark/svelte`, which closes unfinished syntax while the text streams; images and files; and each run of reasoning, tool calls, and sources as one trace, a list of quiet lines that fold open to the thought or the call's input, output, and error.
+`MessageParts` renders each part of a message:
 
-It renders and nothing else. Your app sends messages, stores them, and lays out the conversation, with `useChat()` or anything that keeps AI SDK `UIMessage`s.
+- Text as Markdown through `@comark/vue`, `@comark/react`, or `@comark/svelte`, closing unfinished syntax while it streams.
+- Images and files.
+- Each run of reasoning, tool calls, and sources as one trace. Its lines fold open to the thought, or to a call's input, output, and error.
+
+It only renders. Your app sends, stores, and lays out messages, with `useChat()` or anything that keeps AI SDK `UIMessage`s.
 
 ## Usage
 
-Pass the parts, and `streaming` for the message that is still arriving. A streaming reasoning reads "Thinking" and text shows a caret.
+Pass the parts, and `streaming` for the message still arriving. While it streams, reasoning reads "Thinking" and text shows a caret.
 
 ### Your plugins in messages
 
@@ -53,7 +57,7 @@ const { plugins, components } = comarkUi();
 
 ### Replace a kind of part
 
-Each slot gets what `read()` made of its part, with `index` and the original `part`. `part` replaces any part; the others replace their kind: `text`, `reasoning`, `tool`, `source`, `file`, `step` for AI SDK's `step-start`, and `fallback` for any other part, such as your `data-*` parts, which render nothing without it.
+Each slot gets what `read()` made of its part, with `index` and the original `part`. The `part` slot replaces any part. The others replace one kind each: `text`, `reasoning`, `tool`, `source`, `file`, `step` for AI SDK's `step-start`, and `fallback` for any other part. Your `data-*` parts render nothing without `fallback`.
 
 ```vue
 <MessageParts :parts="message.parts">
@@ -66,9 +70,9 @@ Each slot gets what `read()` made of its part, with `index` and the original `pa
 </MessageParts>
 ```
 
-`markdown` gets `{ value, streaming }` and replaces how every text and reasoning part renders its Markdown, for an app that already has a Markdown component with its own plugins and styles.
+The `markdown` slot gets `{ value, streaming }` and renders the Markdown of every text and reasoning part, for an app that already has a Markdown component.
 
-React takes the same functions in `render`, and returns `undefined` from one to keep the default. Svelte takes them as snippets.
+React takes the same slots as functions in `render`. Return `undefined` from one to keep the default. Svelte takes them as snippets.
 
 ```tsx
 import { MessageParts } from "comark-chat/react";
@@ -89,7 +93,7 @@ Use `read()` from `comark-chat` to build your own renderer. It returns the block
 | `file` | `name`, `mediaType`, `href` for a link the browser may open, `download`, and `image` for an image the page may load. |
 | `step-start`, `other` | The part, for the `step` and `fallback` slots. |
 
-A tool's `status` is `running`, `waiting` for one that needs the user's approval, `error`, or `done`. Its title is the tool's name with dashes and underscores as spaces, or a dynamic tool's `title`. Values are JSON; a cyclic one shows `[Circular]`, and one that throws shows `[Value cannot be shown]`. A link is offered only for http and https URLs and, for a named file, data URLs, and an image only for those, data images, and blob URLs.
+A tool's `status` is `running`, `waiting` for the user's approval, `error`, or `done`. Its title is the tool's name with dashes and underscores as spaces, or a dynamic tool's `title`. Values show as JSON. A cyclic one shows `[Circular]`, and one that throws shows `[Value cannot be shown]`. Only http and https URLs, and a named file's data URL, get a link. Images load only from http and https, data image, and blob URLs.
 
 ### Package
 
@@ -97,7 +101,7 @@ A tool's `status` is `running`, `waiting` for one that needs the user's approval
 pnpm add comark-chat @comark/vue
 ```
 
-Use `@comark/react` or `@comark/svelte` for those frameworks, with `comark-chat/react` or `comark-chat/svelte`. The components add their styles on mount; on a server-rendered page, import `comark-chat/style.css` too.
+For React or Svelte, install `@comark/react` or `@comark/svelte` and import from `comark-chat/react` or `comark-chat/svelte`. The components add their styles on mount. On a server-rendered page, also import `comark-chat/style.css`.
 
 ## Theme
 

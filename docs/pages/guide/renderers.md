@@ -7,7 +7,7 @@ tagline: Register every plugin at once with comark-ui, or the ones you pick in o
 
 ## Every plugin at once
 
-[`comark-ui`](/getting-started/) is the install the docs recommend: every package in one install, registered in the order they need, with one icon resolver shared by `:icon`, cards, details, file trees, tabs, and code actions. It returns the `plugins` and `components` for one renderer:
+[`comark-ui`](/getting-started/) is the recommended install. It registers every package in the order they need, with one icon resolver for `:icon`, cards, details, file trees, tabs, and code actions. It returns the `plugins` and `components` for one renderer:
 
 ```ts
 import { createHtmlRenderer } from "@comark/html";
@@ -16,7 +16,7 @@ import comarkUi from "comark-ui/html"; // or /vue, /react, /svelte
 const render = createHtmlRenderer(comarkUi({ zoom: false, github: { references: { repo: "owner/name" } } }));
 ```
 
-Every plugin is on but `include`, which reads from disk, and cast, table, and tests read no files until you give them options. `false` turns one off along with its components, and an object passes it options. The Vue, React, and Svelte entries leave out annotate, comments, diff, and quiz, which render only to HTML. comark-ui ships with the plugins, so its version is theirs.
+Every plugin is on except `include`, which reads from disk. cast, table, and tests read no files until you give them options. `false` turns a plugin and its components off, and an object passes it options. The Vue, React, and Svelte entries leave out annotate, comments, diff, and quiz. comark-ui shares the plugins' version.
 
 ## Support
 
@@ -58,15 +58,15 @@ Every plugin is on but `include`, which reads from disk, and cast, table, and te
 | [tests](/tests/) | `comark-tests/html` | `comark-tests/vue` | `comark-tests/react` | `comark-tests/svelte` |
 | [zoom](/zoom/) | `comark-zoom/html` | `comark-zoom/vue` | `comark-zoom/react` | `comark-zoom/svelte` |
 
-Each entry exports the parse plugin as `default` and the renderer's `components`. [github](/github/) and [links](/links/) export their plugins by name instead, since each has several.
+Each entry exports the parse plugin as `default` and the renderer's `components`. [github](/github/) and [links](/links/) have several plugins, so they export them by name.
 
-Annotate renders only to HTML. It also draws the marks on a chart, so those marks show only in `@comark/html`. The other renderers draw the chart without them. [diff](/diff/) and [quiz](/quiz/) render only to HTML too.
+Annotate, comments, [diff](/diff/), and [quiz](/quiz/) render only to HTML. Annotate's marks on a chart show only in `@comark/html`, and the other renderers draw the chart without them.
 
-[cjk](/cjk/), [critic](/critic/), [deflist](/deflist/), [figure](/figure/), [footnotes](/footnotes/), [keys](/keys/), [reading-time](/reading-time/), and [xref](/xref/) have no components: they turn their syntax into plain HTML elements, or write to the document's meta, so they work with any renderer. [include](/include/) has none either. [chat](/chat/) renders AI SDK messages with `@comark/vue`, `@comark/react`, or `@comark/svelte` rather than plugging into them. [lint](/lint/) checks documents and doesn't render them.
+[cjk](/cjk/), [critic](/critic/), [deflist](/deflist/), [figure](/figure/), [footnotes](/footnotes/), [keys](/keys/), [reading-time](/reading-time/), [xref](/xref/), and [include](/include/) have no components. They output plain HTML elements or write to the document's meta, so they work with any renderer. [chat](/chat/) renders AI SDK messages with `@comark/vue`, `@comark/react`, or `@comark/svelte` instead of plugging into them. [lint](/lint/) checks documents and doesn't render them.
 
 ## Several plugins
 
-To pick plugins yourself, pass them all to one renderer, and spread their `components` into one map:
+To pick plugins yourself, pass them to one renderer and spread their `components` into one map:
 
 ```ts
 import { createHtmlRenderer } from "@comark/html";
@@ -89,27 +89,25 @@ const render = createHtmlRenderer({
 });
 ```
 
-Put `include` first, because it pastes files into the Markdown before the others read it. `callouts()` replaces Comark's built-in alert plugin.
+Put `include` first, since it pastes files into the Markdown before the others read it. `callouts()` replaces Comark's built-in alert plugin.
 
-Annotate brings zoom and carousel with it, so screenshots and comparisons zoom without `zoom()`. Add `zoom()` when content images and `::zoom` blocks should zoom too.
+Annotate brings zoom and carousel, so screenshots and comparisons zoom without `zoom()`. Add `zoom()` to zoom content images and `::zoom` blocks too.
 
 ## Scripts and styles
 
-Nothing needs a script to read. Zoom, carousel, tabs, code, annotate, and Mermaid add behavior on top: zooming, arrows and keys, switching tabs, copying and wrapping code, hover and copy, and copying a diagram as an image or its source. Callouts and embeds need only styles.
+Every page reads without a script. Scripts add zooming to zoom, arrows and keys to carousel, switching to tabs, copying and wrapping to code, hover and copy to annotate, and copying a diagram as an image or source to Mermaid. Callouts and embeds need only styles.
 
-The HTML renderers inline each plugin's styles and script in the page.
+The HTML renderers inline each plugin's styles and script in the page. Vue, React, and Svelte render the [text styles](/guide/typeset/) with the document too, since they're scoped to the element the document renders into.
 
-The [text styles](/guide/typeset/) are the exception in every renderer: Vue, React, and Svelte render them with the document too, since they're scoped to the element the document renders into.
+The Vue, React, and Svelte components add the styles and start the script on mount, and stop it when the last one unmounts. To render on a server, import each package's `style.css`, such as `comark-zoom/style.css`, with your own styles, so the page doesn't shift on mount.
 
-The Vue, React, and Svelte components add the styles and start the script when they mount. They stop the script when the last one unmounts. When you render on a server, import each package's `style.css`, such as `comark-zoom/style.css`, with your own styles, so the page doesn't shift when the components mount.
-
-Without a renderer, call `start()` from `comark-zoom/client` once on a page with `data-zoom` elements. It adds the styles and returns a function that stops it.
+Without a renderer, call `start()` from `comark-zoom/client` once on a page with `data-zoom` elements. It adds the styles and returns a stop function.
 
 ## Content Security Policy
 
-The inlined `<style>` and `<script>` elements need `'unsafe-inline'` in `style-src` and `script-src`, or a hash of each. A script's text changes only between versions. Annotate also places marks with `style` attributes, so its pages need `style-src 'unsafe-inline'`.
+The inlined `<style>` and `<script>` elements need `'unsafe-inline'` in `style-src` and `script-src`, or a hash of each. A script's text changes only between versions. Annotate places marks with `style` attributes, so its pages need `style-src 'unsafe-inline'`.
 
-To allow a script by hash without rendering a document first, hash the text a package exports. `mermaidScript` from `comark-ui/html` is the Mermaid buttons' script:
+To hash a script without rendering a document first, hash the text a package exports. `mermaidScript` from `comark-ui/html` is the Mermaid buttons' script:
 
 ```ts
 import { createHash } from "node:crypto";
@@ -119,8 +117,8 @@ const hash = `'sha256-${createHash("sha256").update(mermaidScript).digest("base6
 // Content-Security-Policy: script-src 'self' <hash>, plus the hash of each other script your documents use
 ```
 
-Copy image draws the diagram from a `data:` image before it becomes a PNG, so the policy also needs `img-src data:`.
+Copy image draws the diagram from a `data:` image to make the PNG, so the policy also needs `img-src data:`.
 
-For any other script, render a document that uses it once, at startup, and hash the text between its `<script>` tags.
+For any other script, render a document that uses it once at startup and hash the text between its `<script>` tags.
 
-Notes, slides, and callouts are ordinary Markdown, so raw HTML in them renders like anywhere else in the document. For untrusted input, add Comark's `security` plugin and list the tags to drop, such as `security({ blockedTags: ["script", "style", "iframe"] })`.
+Raw HTML in notes, slides, and callouts renders like anywhere else in the document. For untrusted input, add Comark's `security` plugin with the tags to drop, such as `security({ blockedTags: ["script", "style", "iframe"] })`.

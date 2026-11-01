@@ -62,15 +62,15 @@ packages/
 
 ## Features
 
-- You write the tree in a fenced block, so names stay as they are: `__init__.py` isn't bold, and `[slug].vue` isn't a span.
-- Paste what `tree` prints, in Unicode or ASCII, and it reads the same as indented paths.
+- The tree sits in a fenced block, so `__init__.py` isn't bold and `[slug].vue` isn't a span.
+- Output pasted from `tree`, in Unicode or ASCII, reads the same as indented paths.
 - Mark entries added, removed, or changed, and add a note to any line.
-- Folders are open `<details>`, so a reader folds the ones they don't need.
-- With [comark-icon](/icon/), each file gets the icon of its type, the way VS Code shows it.
+- Folders are open `<details>` a reader can fold.
+- With [comark-icon](/icon/), each file gets its type's icon, as in VS Code.
 
 ## Usage
 
-Write one entry per line in a fenced block inside `::file-tree`. Any language, or none, works.
+Write one entry per line in a fenced block inside `::file-tree`, with any language or none.
 
 ::example
 ````md
@@ -86,7 +86,7 @@ README.md
 
 ### Nesting
 
-Use two spaces before a name to put it inside the entry above that starts further left. Four spaces, or tabs, work the same.
+Use two spaces before a name to put it inside the nearest entry above that starts further left. Four spaces or tabs work too.
 
 ::example
 ````md
@@ -113,7 +113,7 @@ src
 
 ### Output from tree
 
-Paste what `tree` prints, in Unicode or ASCII. Its `.` root and its `3 directories, 5 files` summary are dropped.
+Paste what `tree` prints, in Unicode or ASCII. The block drops its `.` root and its `3 directories, 5 files` summary.
 
 ::example
 ````md
@@ -132,7 +132,7 @@ Paste what `tree` prints, in Unicode or ASCII. Its `.` root and its `3 directori
 
 ### Changes
 
-Use `+`, `-`, or `~` and a space before a name to mark it added, removed, or changed. The entry takes a color, keeps the sign beside its name, and a removed one is struck through.
+Use `+`, `-`, or `~` and a space before a name to mark it added, removed, or changed. The entry takes a color and keeps the sign, and a removed one is struck through.
 
 ::example
 ````md
@@ -203,7 +203,7 @@ fileTree({
 });
 ```
 
-A name wins over an extension, and names match whatever their case. An icon that doesn't resolve leaves its entry with the plain glyph.
+A name wins over an extension, and names match in any case. An icon that doesn't resolve leaves the plain glyph.
 
 ## Accessibility
 
@@ -235,14 +235,14 @@ Each folder is a native `<details>`, so the browser handles focus and keys. A fo
 
 ### Options
 
-The options go under `fileTree` in `comarkUi()`, or to `fileTree()` when you use it alone.
+Pass options under `fileTree` in `comarkUi()`, or to `fileTree()` alone.
 
 | Option | Default | Description |
 | --- | --- | --- |
-| `iconResolver` | — | Resolves each entry's icon, from `createIcons()` in [comark-icon](/icon/). Without it, every folder and file gets the same plain glyph, and nothing is fetched. In `comarkUi()` it defaults to the resolver built from the `icon` options. |
+| `iconResolver` | — | Resolves each entry's icon, from `createIcons()` in [comark-icon](/icon/). Without it, every entry gets a plain glyph and nothing is fetched. `comarkUi()` passes the resolver built from the `icon` options. |
 | `icons` | Iconify's vscode-icons | Icons by file name, extension, or `name/` for a folder, on top of the built-in ones. `folder` and `file` set the fallbacks. |
 
-Pass an `iconResolver` to give each file the icon of its type:
+Pass an `iconResolver` to give each file its type's icon:
 
 ```ts
 import { createIcons } from "comark-icon";
@@ -252,7 +252,7 @@ const icons = createIcons();
 const plugins = [fileTree({ iconResolver: icons })];
 ```
 
-The icons come from Iconify's [vscode-icons](https://icon-sets.iconify.design/vscode-icons/) set, through the API or a `collections` entry for `vscode-icons`. [Icons of your own](#icons-of-your-own) covers choosing your own.
+The icons come from Iconify's [vscode-icons](https://icon-sets.iconify.design/vscode-icons/) set, through the API or a `collections` entry for `vscode-icons`. To pick your own, see [Icons of your own](#icons-of-your-own).
 
 ### Your own renderer
 
@@ -271,7 +271,7 @@ The parse plugin replaces the block with a `file-tree` node holding one `file-tr
 
 The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation/) describes:
 
-- A Markdown list instead of a fence renders as the list, with the fix: write the tree in a fenced block.
+- A Markdown list instead of a fence. It renders as the list, and the issue says to use a fenced block.
 - Content beside the fence doesn't render, and only the first fenced block does.
 - An empty fence, or a block with nothing in it.
 - A prop, which the block doesn't read.
@@ -280,7 +280,7 @@ Each one has its own rule in [Doctor](/doctor/).
 
 ### Package
 
-comark-ui brings `comark-file-tree` and registers it. To use it alone, install it:
+comark-ui installs and registers `comark-file-tree`. To use it alone, install it:
 
 ```sh
 pnpm add comark @comark/html comark-file-tree
@@ -295,7 +295,7 @@ import fileTree, { components } from "comark-file-tree/html";
 const render = createHtmlRenderer({ plugins: [fileTree()], components });
 ```
 
-For Vue, React, or Svelte, import from `comark-file-tree/vue`, `comark-file-tree/react`, or `comark-file-tree/svelte`. The components add the styles when they mount. When you render on a server, import `comark-file-tree/style.css` with your own styles so the page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-file-tree/vue`, `comark-file-tree/react`, or `comark-file-tree/svelte`. The components add the styles on mount. On a server, import `comark-file-tree/style.css` with your styles so the page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
 
 ## Theme
 
@@ -335,4 +335,4 @@ Set these on `.cft`:
 
 ### Important rules
 
-The rules sit in a `comark` CSS layer, so any plain rule of your own wins, except the spacing that draws the tree. The margins, padding, and bullets of its lists, `details`, and `summary` are `!important`. Override those with `!important` too.
+The rules sit in a `comark` CSS layer, so any plain rule of yours wins, except the spacing that draws the tree. The margins, padding, and bullets of its lists, `details`, and `summary` are `!important`, so override them with `!important` too.

@@ -58,11 +58,11 @@ Every other test passes.
 
 ## Features
 
-- A link card is one link that covers the card, named after its title, so a click anywhere opens it.
+- A link card is one link, named after its title, that covers the card, so a click anywhere opens it.
 - A screen reader hears one link, not a card's worth of text, and links in the card's own text still work.
 - Links to other sites open in a new tab, with an arrow in the corner.
 - Groups and columns stack into one column when they're narrower than 36rem, whatever the screen's width.
-- Nuxt UI's syntax, with no script.
+- It uses Nuxt UI's syntax and needs no script.
 
 ## Usage
 
@@ -156,7 +156,7 @@ Use the `color` prop to tint the icon and a hovered link card's border.
 
 #### Variant
 
-Use the `variant` prop to change the card's look: `outline` keeps the plain card, `soft` washes it in its color, and `subtle` adds a border in the color.
+Use the `variant` prop to change the card's look. `outline` keeps the plain card, `soft` washes it in its color, and `subtle` adds a border in the color.
 
 ::example
 ```md
@@ -174,7 +174,7 @@ A wash with a colored border.
 
 ### Card group
 
-Use `::card-group` to set cards in two columns. A group narrower than 36rem shows one, so a group in a sidebar or a narrow column stacks too. A card works on its own as well.
+Use `::card-group` to set cards in two columns. A group narrower than 36rem, such as one in a sidebar, shows one column. A card also works on its own.
 
 ::example
 ```md
@@ -210,7 +210,7 @@ two paragraphs.
 
 #### Cols
 
-Use the `cols` prop to set how many columns there are, from 1 to 6. Every row stacks into one column when the block is narrower than 36rem.
+Use the `cols` prop to set the number of columns, from 1 to 6. A block narrower than 36rem stacks into one column.
 
 ::example
 ```md
@@ -228,7 +228,7 @@ Third cell.
 
 ### Link cards
 
-A card with `to` renders the way Nuxt UI renders it. An empty link, named by the card's title, stretches over the card, and the card's content follows it. A screen reader reads the card as one link, and its text stays selectable. Links inside it sit on top of the stretched one, so they open on their own.
+A card with `to` renders as Nuxt UI's does, with an empty link named by its title stretched over the card. Its text stays selectable, and links inside it sit on top, so they open on their own.
 
 Links to other sites open in a new tab with `rel="noopener noreferrer"`. Set `target="_self"` to keep them in the tab.
 
@@ -283,20 +283,20 @@ The parse plugin replaces each card's attributes with the ones it renders from, 
   "Read it."]
 ```
 
-The plugin sets `external` when the link opens in a new tab. `label` is the link's name, which is the title's text or "Card link".
+The plugin sets `external` when the link opens in a new tab. `label` is the link's name, the title's text or "Card link".
 
 ### Issues
 
 The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation/) describes:
 
-- `href` instead of `to`. The card still links, but Nuxt UI ignores `href`, so the issue says to write `to`.
+- `href` instead of `to`. The card still links, but Nuxt UI ignores `href`.
 - A `to` that runs a script, such as `javascript:`, which doesn't link.
 - A `color` it doesn't know, which shows as primary.
 - A `variant` it doesn't know, which shows as outline.
 - A `cols` outside 1 to 6, an empty `::columns`, and an icon comark-icon can't draw.
 - A prop `::card` or `::columns` doesn't read, such as `link` or `columns`, which is ignored.
 
-Each issue names its block, by its title when it has one, and says how to fix it. Each one has its own rule in [Doctor](/doctor/).
+Each issue names its block, by its title when it has one, says how to fix it, and has its own rule in [Doctor](/doctor/).
 
 ### Package
 
@@ -315,11 +315,11 @@ import cards, { components } from "comark-cards/html";
 const render = createHtmlRenderer({ plugins: [cards()], components });
 ```
 
-For Vue, React, or Svelte, import from `comark-cards/vue`, `comark-cards/react`, or `comark-cards/svelte`. The components add the styles when they mount. When you render on a server, import `comark-cards/style.css` with your own styles so the page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-cards/vue`, `comark-cards/react`, or `comark-cards/svelte`. The components add the styles when they mount. On a server, import `comark-cards/style.css` with your own styles so the page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
 
 ## Theme
 
-Cards follow the shared tokens in [Theming](/guide/theming/), and a variable per color. The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
+Cards use the shared tokens in [Theming](/guide/theming/), plus a variable per color. The rules sit in a `comark` CSS layer, so any plain rule of yours wins.
 
 ### Shared tokens
 

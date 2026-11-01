@@ -83,7 +83,7 @@ keys({ separator: " " });
 
 ### Custom keys
 
-Use the `keys` option to add keys, or to give built-in ones new labels. Name each key by its full name.
+Use the `keys` option to add keys or relabel built-in ones, by full name.
 
 ```ts
 keys({ keys: { hyper: "Hyper", control: "Control" } });
@@ -97,7 +97,7 @@ Then `++hyper+k++` renders Hyper and K, and `++ctrl+k++` renders Control and K.
 
 One unknown name leaves the whole shortcut as text, so `++ctrl+nope++` shows as written. Quote the key to show it anyway.
 
-Text also stays text when:
+A shortcut also stays text when:
 
 - it has spaces inside, as in `++ctrl + k++`
 - the `++` follows a letter, digit, `_`, or `+`, as in `C++`
@@ -127,11 +127,11 @@ The plugin adds no styles, and browsers show `<kbd>` in a monospace font. To dra
 }
 ```
 
-The `ckb-` class on each key picks one out, for example to draw `.ckb-command` as ⌘.
+Each key's `ckb-` class picks it out, for example to draw `.ckb-command` as ⌘.
 
 ### With other plugins
 
-The plugin reads `++` before emphasis, so `**++esc++**` is a bold key. comark-critic's `{++insertion++}` starts with a `{`, which keys never follow, so the two plugins work together in any order.
+The plugin reads `++` before emphasis, so `**++esc++**` is a bold key. comark-critic's `{++insertion++}` starts with `{`, which keys never follow, so the two plugins work in any order.
 
 ### Attributes
 
@@ -151,20 +151,20 @@ Names aren't case sensitive. Letters and digits render uppercase, `f1` to `f24` 
 | Others | `print-screen`, `prtsc`, `menu` |
 | Punctuation | `plus`, `minus`, `equal`, `comma`, `period`, `slash`, `backslash`, `semicolon`, `colon`, `grave`, `tilde`, `bracket-left`, `bracket-right`, `brace-left`, `brace-right`, `less`, `greater`, `question`, `exclam`, `bar`, `underscore`, `single-quote`, `double-quote` |
 
-The names and aliases are pymdownx.keys'. Its numpad, media, browser, mouse, and left and right modifier keys are left out. Add the ones you need with the `keys` option.
+The names and aliases come from pymdownx.keys, without its numpad, media, browser, mouse, and left and right modifier keys. Add the ones you need with the `keys` option.
 
 ### Options
 
-The options go under `keys` in `comarkUi()`, or to `keys()` when you use the plugin alone.
+Pass options under `keys` in `comarkUi()`, or to `keys()` alone.
 
 | Option | Default | Description |
 | --- | --- | --- |
 | `separator` | `"+"` | What sits between two keys. `""` puts nothing between them. |
-| `keys` | `{}` | More keys, or new labels for built-in ones, by full name: `{ hyper: "Hyper", control: "Control" }`. |
+| `keys` | `{}` | More keys, or new labels for built-in ones, by full name, such as `{ hyper: "Hyper", control: "Control" }`. |
 
 ### Package
 
-comark-ui brings `comark-keys` and registers it. To use it alone, install it and register the plugin:
+comark-ui installs and registers `comark-keys`. To use it alone, install it and register the plugin:
 
 ```sh
 pnpm add comark @comark/html comark-keys

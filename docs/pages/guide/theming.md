@@ -5,33 +5,27 @@ keywords: CSS, colors, dark mode, light mode, CSS variables, custom properties, 
 tagline: The blocks match a Nuxt UI or shadcn/ui site as it is. Elsewhere, a dozen tokens theme them all at once.
 ---
 
-This page shows how the blocks pick up your site's theme, how to change it with the `--comark-*` tokens, and how to carry a Nuxt UI app's theme to a page rendered outside the app.
+Change the theme with the `--comark-*` tokens, or carry a Nuxt UI app's theme to a page rendered outside the app.
 
 ## Nuxt UI and shadcn/ui
 
-Every plugin reads the CSS variables of [Nuxt UI](https://ui.nuxt.com) and [shadcn/ui](https://ui.shadcn.com). On a site built with either one, the blocks match it with no CSS of your own, and a `.dark` class anywhere above a block switches it to dark mode. On a site with neither, they use shadcn's neutral theme and follow the system's light or dark mode.
+Every plugin reads the CSS variables of [Nuxt UI](https://ui.nuxt.com) and [shadcn/ui](https://ui.shadcn.com). On a site built with either, the blocks match with no CSS of your own, and a `.dark` class on any ancestor switches them to dark mode. On a site with neither, they use shadcn's neutral theme and follow the system's color mode.
 
-When a site sets both, Nuxt UI's variables win.
+If a site sets both, Nuxt UI's variables win.
 
 ### Nuxt UI
 
-The blocks follow the app's `app.config` colors, its `--ui-radius`, and its color mode:
+The blocks follow the app's `app.config` colors, its `--ui-radius`, and its color mode. [Tokens](#tokens) lists the `--ui-*` variable behind each token, such as `--ui-bg` for surfaces and `--ui-success` for a passing test. Chart series read `--ui-chart-1` to `-6`. Focus rings use `--ui-primary`, like Nuxt UI's own components, and corners are twice `--ui-radius`.
 
-- Surfaces, text, and borders read `--ui-bg`, `--ui-text-highlighted`, `--ui-text-muted`, `--ui-border`, and `--ui-bg-elevated`. The table under [Tokens](#tokens) maps each one.
-- Brand colors, such as a primary badge or a progress bar, read `--ui-primary` and `--ui-secondary`, with text on them in `--ui-text-inverted`. Status colors, such as a passing test or a removed line, read `--ui-success`, `--ui-error`, `--ui-warning`, and `--ui-info`.
-- Chart series read `--ui-chart-1` to `-6`.
-- Focus rings use `--ui-primary`, like Nuxt UI's own components.
-- Corners are twice `--ui-radius`.
-
-To render the blocks somewhere the app's stylesheet isn't loaded, see [Outside a Nuxt UI app](#outside-a-nuxt-ui-app).
+Where the app's stylesheet isn't loaded, see [Outside a Nuxt UI app](#outside-a-nuxt-ui-app).
 
 ### shadcn/ui
 
-shadcn/ui before Tailwind 4 stores colors as bare HSL numbers, which the blocks can't read. Map those through the tokens below: `--comark-border: hsl(var(--border))`, `--comark-primary: hsl(var(--primary))` for the brand color, and `--comark-danger: hsl(var(--destructive))` for the red.
+Before Tailwind 4, shadcn/ui stores colors as bare HSL numbers, which the blocks can't read. Map them through the tokens, such as `--comark-border: hsl(var(--border))`, `--comark-primary: hsl(var(--primary))`, and `--comark-danger: hsl(var(--destructive))`.
 
 ## Tokens
 
-Set the `--comark-*` tokens to theme every plugin at once. Each one wins over the Nuxt UI and shadcn variables, and works on `:root` or on any ancestor:
+The `--comark-*` tokens theme every plugin at once. Each wins over the Nuxt UI and shadcn variables, on `:root` or any ancestor:
 
 | Token | Falls back to | Used for |
 | --- | --- | --- |
@@ -48,8 +42,8 @@ Set the `--comark-*` tokens to theme every plugin at once. Each one wins over th
 | `--comark-danger` | `--ui-error`, `--destructive` | Failing tests, removed lines, a worse change, an error or a required field |
 | `--comark-warning` | `--ui-warning` | Warnings, changed entries, a caution |
 | `--comark-info` | `--ui-info` | Notes and info badges |
-| `--comark-shadow` | A soft shadow, deeper in dark mode | The shadow under a menu, a popover card, or the handle on a slider. Blocks that rest on the page have a border and no shadow |
-| `--comark-radius` | twice `--ui-radius`, `--radius` | Image and code block corners; controls, chips, and marks use a smaller radius derived from it |
+| `--comark-shadow` | A soft shadow, deeper in dark mode | Menus, popover cards, and slider handles. Blocks that rest on the page get a border instead |
+| `--comark-radius` | twice `--ui-radius`, `--radius` | Image and code block corners. Controls, chips, and marks use a smaller radius derived from it |
 | `--comark-font` | `--font-sans` | The text around the blocks, the zoomed view's header, callouts, and the links under players |
 
 ```css
@@ -59,19 +53,19 @@ Set the `--comark-*` tokens to theme every plugin at once. Each one wins over th
 }
 ```
 
-Try them in the [playground's Theme pane](/play/): it shows them in light and dark and copies the CSS for what you change.
+The [playground's Theme pane](/play/) shows them in light and dark and copies the CSS for what you change.
 
-To theme one part only, set the tokens on its root instead: `.ca` for annotate, `.cc` for a carousel, `.cch` for charts, `.cp` for chips, `.ck` for code headers, `.cd` for diffs, `.ce` and `.ce-card` for embeds, `.cgc` for callouts, `.ct` for tabs, and `.cz-dialog` for the zoomed view.
+To theme one part, set the tokens on its root: `.ca` for annotate, `.cc` for a carousel, `.cch` for charts, `.cp` for chips, `.ck` for code headers, `.cd` for diffs, `.ce` and `.ce-card` for embeds, `.cgc` for callouts, `.ct` for tabs, and `.cz-dialog` for the zoomed view.
 
 The same tokens color the text around the blocks. [Typeset](/guide/typeset/) lists its own variables for size, spacing, and fonts.
 
 ## Your own rules
 
-The rules sit in a `comark` CSS layer, so any plain rule of your own wins without `!important`, such as `.cc-step { border-radius: 0 }`.
+The plugins' rules sit in a `comark` CSS layer, so a plain rule of yours wins without `!important`, such as `.cc-step { border-radius: 0 }`.
 
 ## Outside a Nuxt UI app
 
-A review document, a static export, or an email built by a script doesn't load the app's stylesheet. The `--ui-*` variables are missing there, so the blocks fall back to shadcn's neutral theme. `nuxtUiTheme()` from `comark-ui/nuxt-ui` writes those variables from your app's theme. Put its CSS on the page and the blocks match the app again.
+A review document, static export, or email built by a script doesn't load the app's stylesheet, so the blocks fall back to shadcn's neutral theme. `nuxtUiTheme()` from `comark-ui/nuxt-ui` writes the `--ui-*` variables from your app's theme. Put its CSS on the page and the blocks match the app.
 
 ### Pass the app's theme
 
@@ -95,7 +89,7 @@ const page = `<style>${css}</style>${await render(markdown)}`;
 > [!NOTE]
 > Copy the colors instead of importing `app.config.ts`. It calls `defineAppConfig()`, which only exists inside a Nuxt build.
 
-Both options are optional. With neither, you get Nuxt UI's default theme: a green primary on slate.
+Both options are optional. With neither, you get Nuxt UI's default theme, a green primary on slate.
 
 ### What it reads
 
@@ -105,19 +99,19 @@ Both options are optional. With neither, you get Nuxt UI's default theme: a gree
 | `@theme` in `css` | Your own palettes, any Tailwind shades you override, and `--font-sans` |
 | `:root`, `.light`, and `.dark` in `css` | Every `--ui-*` variable you set there, such as `--ui-primary: var(--ui-color-primary-700)` or `--ui-radius` |
 
-It skips the rest of the file. It doesn't load fonts either: if `--font-sans` names a web font, the page needs its `@font-face`, or the text falls back to the next font in the list.
+It skips the rest of the file and loads no fonts. If `--font-sans` names a web font, add its `@font-face` to the page, or the text falls back to the next font in the list.
 
 ### Light and dark
 
-The CSS sets light mode on `:root` and `.light`, and dark mode on `.dark`. With neither class on the page, it follows the system, like a Nuxt app with the default color mode. It all sits in a `theme` layer, so any plain rule of your own wins.
+The CSS sets light mode on `:root` and `.light`, and dark mode on `.dark`. With neither class, it follows the system, like a Nuxt app's default color mode. It sits in a `theme` layer, so a plain rule of yours wins.
 
 ### Issues
 
-`issues` lists what it couldn't resolve, one sentence each. The CSS leaves those colors out, and the blocks use their defaults for them:
+`issues` lists what it couldn't resolve, one sentence each. The CSS leaves those colors out, so the blocks use their defaults:
 
 - A color in `colors` that isn't in Tailwind's palette and has no shades in your CSS's `@theme`, such as `primary: "brand"` without `--color-brand-50` to `-950`.
 - A `var(--color-…)` that one of your `--ui-*` values reads and nothing defines.
 
 ## Each plugin's own
 
-Each package's own variables and class names are on its Theming page: [annotate](/annotate/#theme), [carousel](/carousel/#theme), [charts](/charts/#theme), [chips](/chips/#theme), [code](/code/#theme), [diff](/diff/#theme), [embed](/embed/#theme), [github](/github/#theme), [icon](/icon/#theme), [tabs](/tabs/#theme), and [zoom](/zoom/#theme).
+Each package's page lists its own variables and class names: [annotate](/annotate/#theme), [carousel](/carousel/#theme), [charts](/charts/#theme), [chips](/chips/#theme), [code](/code/#theme), [diff](/diff/#theme), [embed](/embed/#theme), [github](/github/#theme), [icon](/icon/#theme), [tabs](/tabs/#theme), and [zoom](/zoom/#theme).

@@ -10,15 +10,15 @@ icon: list-checks
 blurb: Catches what Comark forgives
 ---
 
-Comark forgives a lot. It closes a `::` block you forgot to close, reads a missing `}` as the end of the line, and renders a misspelled component as an empty element. comark-lint reports each of these with its line, so whoever wrote the document, often an agent, can fix it.
+Comark closes a `::` block you forgot, treats the end of the line as a missing `}`, and renders a misspelled component as an empty element. comark-lint reports each one with its line, so whoever wrote the document, often an agent, can fix it.
 
 ## Features
 
 - Every message names the block and says how to fix it.
-- It reports each problem with its file, line, and column.
-- It checks links to files, anchors in them, and, on request, external URLs.
-- The command line, ESLint, and Vite Doctor load every comark-ui package you have installed, so they know its blocks and its issues.
-- It runs from the command line, as a library, as an [ESLint](/lint/eslint/) plugin, or as a [Vite Doctor](/lint/vite-doctor/) extension.
+- Each problem has its file, line, and column.
+- It checks links to files and their anchors, and external URLs on request.
+- The command line, ESLint, and Vite Doctor load every installed comark-ui package, so they know its blocks and issues.
+- It runs from the command line, a script, [ESLint](/lint/eslint/), or [Vite Doctor](/lint/vite-doctor/).
 - `lint()` never throws.
 
 ## Usage
@@ -36,11 +36,11 @@ docs/pigeons-vs-deploys.md:8:1 comark/unclosed-block `::compare` opened on line 
 docs/pigeons-vs-deploys.md:12:1 comark/unknown-component `::screnshot` on line 12 is not a known component. Did you mean `screenshot`? Known: `annotation`, `compare`, `diff`, `screenshot`.
 ```
 
-[Getting started](/lint/getting-started/) installs it and covers the config and the library.
+[Getting started](/lint/getting-started/) covers installing, the config, and the library.
 
 ## Rules
 
-Every problem is reported under a rule, and [Doctor](/doctor/) has a page for each one, with Markdown that triggers it and the same Markdown fixed. The core rules check what Comark forgives:
+Each problem belongs to a rule. [Doctor](/doctor/) has a page per rule, with Markdown that triggers it and the same Markdown fixed. The core rules check what Comark forgives:
 
 | Rule | Reports |
 | --- | --- |
@@ -57,11 +57,11 @@ Every problem is reported under a rule, and [Doctor](/doctor/) has a page for ea
 | [`comark/blocked-url`](/doctor/blocked-url/) | A localhost, private, tunnel, or deploy preview URL |
 | [`comark/dead-url`](/doctor/dead-url/) | An external URL that answers 404 or 410, or whose host is gone, with `--check-urls` |
 
-Each comark-ui package adds a rule for every kind of problem its plugin reports, such as [`comark/embed/insecure-url`](/doctor/embed/insecure-url/). A problem from a plugin of your own is [`comark/plugin-issue`](/doctor/plugin-issue/), unless the plugin names its rule in `meta.issueRules`.
+Each comark-ui package adds a rule per kind of problem its plugin reports, such as [`comark/embed/insecure-url`](/doctor/embed/insecure-url/). Your own plugins report [`comark/plugin-issue`](/doctor/plugin-issue/), unless the plugin names a rule in `meta.issueRules`.
 
 ## Positions
 
-Comark gives parsed nodes no source positions. comark-lint takes block components' lines from the parser's tokens, and finds everything else by searching the source:
+Comark's nodes have no source positions. comark-lint takes block components' lines from the parser's tokens and finds the rest by searching the source:
 
 - A component inside a paragraph gets its line and the first matching column.
 - A URL matches where it starts an attribute or link, not in prose.

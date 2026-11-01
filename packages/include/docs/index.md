@@ -37,7 +37,7 @@ credits: 'Arguments from <a href="https://github.com/unjs/automd">automd</a>.'
 
 ## Features
 
-- A Markdown file is pasted into the page, and any other file becomes a code block in the language of its extension.
+- A Markdown file pastes into the page, and any other file becomes a code block in its extension's language.
 - Pick lines by number, or by a named region that moves with the code.
 - The page parses once, so heading ids stay unique across partials.
 - Paths can't leave `root`, in any runtime.
@@ -45,7 +45,7 @@ credits: 'Arguments from <a href="https://github.com/unjs/automd">automd</a>.'
 
 ## Usage
 
-Write `:include` with one colon, alone on its own line, with the file in `src`. The examples on this page include real files from this site's source.
+Write `:include` with one colon, alone on its line, with the file in `src`.
 
 ::example
 ```md
@@ -53,7 +53,7 @@ Write `:include` with one colon, alone on its own line, with the file in `src`. 
 ```
 ::
 
-A `.md`, `.mdc`, or `.markdown` file is pasted without its frontmatter, and its own includes resolve from its folder. An include inside fenced code stays as it is, which is how this page shows the syntax.
+A `.md`, `.mdc`, or `.markdown` file pastes without its frontmatter, and its own includes resolve from its folder. An include inside fenced code stays as written.
 
 ### Source
 
@@ -77,7 +77,7 @@ Use the `lines` prop to include some of the file's lines, 1-based and inclusive.
 
 ### Region
 
-Use the `region` prop to include the lines between `#region estimate` and `#endregion estimate`. A marker starts its line, after a comment opener if any: `//`, `#`, `/*`, `<!--`, `--`, `;`, `%`, or `'`. Marker lines are dropped.
+Use the `region` prop to include the lines between `#region estimate` and `#endregion estimate`. A marker starts its line, after a comment opener if any: `//`, `#`, `/*`, `<!--`, `--`, `;`, `%`, or `'`. The marker lines are left out.
 
 ::example
 ```md
@@ -86,7 +86,7 @@ Use the `region` prop to include the lines between `#region estimate` and `#endr
 ::
 
 > [!NOTE]
-> Use `lines` or `region`, not both. Together they add an issue, and the include is dropped.
+> Use `lines` or `region`, not both. Together they drop the include and add an issue.
 
 ### Code
 
@@ -98,7 +98,7 @@ Use the `code` prop to show a Markdown file as code instead of pasting it.
 ```
 ::
 
-Code gets a fence longer than any backtick run in the file, and `lines` and `region` are dedented.
+The fence is longer than any backtick run in the file, and the plugin dedents `lines` and `region`.
 
 ### Language
 
@@ -112,7 +112,7 @@ Use the `lang` prop to set the code block's language instead of the extension. I
 
 ### Indentation
 
-Indent the include to paste into a list item. Pasted lines are indented like the include.
+Indent the include to paste into a list item. The pasted lines take the include's indent.
 
 ```md
 1. Count the pigeons on the roof.
@@ -141,7 +141,7 @@ include({ read: async (path) => files[`./content/${path}`]?.() });
 
 ### GitHub and npm
 
-GitHub and npm show a README's source, and no Comark renderer runs there. For those files, use [automd](https://github.com/unjs/automd)'s `file` generator, which writes the included text into the file itself. Its arguments share these names: `src`, `lines="a:b"`, `code`, and `lang`.
+GitHub and npm render a README without Comark. For those files, use [automd](https://github.com/unjs/automd)'s `file` generator, which writes the included text into the file. It takes the same `src`, `lines="a:b"`, `code`, and `lang` arguments.
 
 ## API
 
@@ -149,7 +149,7 @@ GitHub and npm show a README's source, and no Comark renderer runs there. For th
 
 | Prop | Default | Description |
 | --- | --- | --- |
-| `src` | — | Required. The file. A relative path starts at the page's folder, or at the including partial's; `/` starts at `root`. |
+| `src` | — | Required. The file. A relative path starts at the page's folder, or at the including partial's. A path starting with `/` starts at `root`. |
 | `lines` | The whole file | `"10:24"`: lines 10 to 24, 1-based and inclusive. `"10:"` and `":24"` leave one end open. Lines count from the top of the file, frontmatter included. |
 | `region` | — | The lines between `#region name` and `#endregion name`, without the marker lines. Can't go with `lines`. |
 | `code` | `false` for Markdown, `true` for any other file | Shows a Markdown file as code instead of pasting it. |
@@ -157,7 +157,7 @@ GitHub and npm show a README's source, and no Comark renderer runs there. For th
 
 ### Options
 
-The plugin reads files from disk, so it is the one plugin comark-ui leaves off. Turn it on with `include: true`, or pass its options under `include` in `comarkUi()`, or to `include()` when you use the plugin alone:
+The plugin reads files from disk, so it's the one plugin comark-ui leaves off. Turn it on with `include: true` or with options under `include` in `comarkUi()`. Alone, pass them to `include()`:
 
 ```ts
 const render = createHtmlRenderer(comarkUi({ include: { root: "content", base: "guide" } }));
@@ -170,9 +170,7 @@ const render = createHtmlRenderer(comarkUi({ include: { root: "content", base: "
 | `read(path)` | Reads from disk | Reads a file by its POSIX path relative to `root`, and returns its text or `undefined`. It may be async. |
 | `depth` | `8` | How many levels of includes may nest. |
 
-Set `base` to the page's folder.
-
-`../` can't leave `root` in any runtime, and `read` only gets paths under it. The default reader also refuses a symlink that leads out of `root`. If your own `read` can meet symlinks, it has to refuse them itself.
+`../` can't leave `root` in any runtime, and `read` only gets paths under it. The default reader also refuses symlinks that lead out of `root`. Your own `read` must refuse them itself.
 
 ### Meta
 
@@ -182,7 +180,7 @@ Set `base` to the page's folder.
 
 ### Issues
 
-The plugin drops an include that fails. It adds a sentence to `meta.issues` that names the include and says how to fix it, as [Validation](/guide/validation/) describes:
+The plugin drops an include that fails. Its sentence in `meta.issues` names the include and the fix, as [Validation](/guide/validation/) describes:
 
 ```txt
 include "./duck-log.md": file not found. It resolved to "guide/duck-log.md" under the root; check the path or base.
@@ -201,11 +199,11 @@ It reports:
 - A reader that throws.
 - An include that isn't alone on its line, or is written `::include`.
 
-A partial that leaves a `::block` open is closed at the end of its paste, and reported. Each one has its own rule in [Doctor](/doctor/).
+If a partial leaves a `::block` open, the plugin closes it at the end of the paste and reports it. Each problem has its own rule in [Doctor](/doctor/).
 
 ### Package
 
-comark-ui brings `comark-include` and registers it when you turn it on. To use it alone, install it and register the plugin:
+comark-ui installs `comark-include` and registers it when you turn it on. To use it alone, install it and register the plugin:
 
 ```sh
 pnpm add comark @comark/html comark-include
