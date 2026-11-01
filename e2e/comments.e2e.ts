@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { createHtmlRenderer } from "@comark/html";
 import { expect, type Page, test } from "@playwright/test";
 import comments, { components } from "../packages/comments/src/html.ts";
@@ -155,9 +156,14 @@ test("initial and image avatars stay centered on their names, on screen and in p
   });
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/no-such-page");
+  // One font file on every machine, since each system font draws its capitals at its own height.
+  const geist = readFileSync(
+    new URL("../node_modules/geist/dist/fonts/geist-sans/Geist-Variable.woff2", import.meta.url),
+  ).toString("base64");
   await page.setContent(
-    `<!doctype html><html lang="en"><body style="margin:0;font:16px/1.75 system-ui,sans-serif"><main style="width:68rem;margin:0 auto">${await render(review)}</main></body></html>`,
+    `<!doctype html><html lang="en"><style>@font-face{font-family:Geist;src:url(data:font/woff2;base64,${geist})}</style><body style="margin:0;font:16px/1.75 Geist;--comark-font:Geist"><main style="width:68rem;margin:0 auto">${await render(review)}</main></body></html>`,
   );
+  await page.evaluate(() => document.fonts.ready);
   await expect(page.locator("img.cr-av").first()).toBeVisible();
   const screen = await avatarOffsets(page);
   await page.emulateMedia({ media: "print" });
