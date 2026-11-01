@@ -4,11 +4,18 @@
 [![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/remark-to-comark)
 [![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/remark-to-comark/)
 
-Moves a project from [remark](https://github.com/remarkjs/remark) to [Comark](https://comark.dev). It lists each remark setup and what its plugins become, rewrites unified chains to Comark's `renderHtml`, and escapes the Markdown Comark would read differently. remark still renders every escaped file byte for byte as before. It's a CLI, a library, and a [Vite Doctor](https://github.com/onmax/vite-doctor) extension, and each finding comes with a fix and a docs link.
+Moves a project from [remark](https://github.com/remarkjs/remark) to [Comark](https://comark.dev). It finds every remark setup in the code, rewrites the unified chains it can, and escapes the Markdown Comark would read differently. What it can't do, it reports, with the fix and a docs link.
+
+[Docs](https://comark-ui.onmax.me/remark-to-comark/) · [Getting started](https://comark-ui.onmax.me/remark-to-comark/getting-started/) · [Diagnostics](https://comark-ui.onmax.me/remark-to-comark/diagnostics/) · [How it was tested](https://comark-ui.onmax.me/remark-to-comark/testing/)
+
+## Try it
+
+Run the check without installing anything. It only reads the project:
 
 ```sh
-pnpm add -D remark-to-comark
-pnpm remark-to-comark check .
+pnpm dlx remark-to-comark check .
+# or
+npx remark-to-comark check .
 ```
 
 ```txt
@@ -17,8 +24,50 @@ pnpm remark-to-comark check .
 ╰▶ see: https://comark-ui.onmax.me/remark-to-comark/diagnostics#rtc0302
 ```
 
-`check` ends with what the migration leaves undone and the commands to run next: `rewrite <dir> --write` for unified chains, and `content <glob> --write` for Markdown. Rewritten code imports `comarkOptions` from `remark-to-comark/setup`, the Comark setup that reads Markdown like remark-parse with remark-gfm, without the rest of the package. `remark-to-comark/plugins` has Comark versions of rehype-slug, rehype-autolink-headings, rehype-external-links, rehype-unwrap-images, remark-squeeze-paragraphs, remark-reading-time, and Docusaurus' npm2yarn, each tested against the original.
+`check` ends with what's left and the commands to run next. `--json` prints every finding for an agent.
 
-On a sample of 14,470 Markdown files from the 100 most-starred repositories that declare a remark dependency, 95.7% render the same HTML in Comark as in remark after migration, once whitespace is normalized. The rest are mostly Comark bugs, listed in [comarkdown/comark#525](https://github.com/comarkdown/comark/issues/525).
+## Why move to Comark
 
-See the [docs](https://comark-ui.onmax.me/remark-to-comark/) for every command, each diagnostic, and the limits.
+remark has the bigger plugin ecosystem, and for Markdown to HTML on a server it works fine. Comark is worth the move when you want what remark doesn't do:
+
+- Components in Markdown that stay plain text, such as `::alert{type="warning"}`, drawn by your own Vue, React, or Svelte component.
+- One parse tree for every renderer: Vue, React, Svelte, Angular, HTML, and the terminal. The tree is plain JSON, so a server parses once and the client renders without parsing again.
+- Streaming. Comark closes an unfinished `**bold`, code fence, or component, so a model's reply renders correctly at every token. `comarkOptions()` turns this off, since a file on disk is already complete.
+- [comark-ui](https://comark-ui.onmax.me), 40+ blocks for docs and reviews, from tabs and charts to annotated screenshots.
+
+It's also 5 to 8 times faster. Rendering the same files to HTML on Node 24, median of 15 passes:
+
+| Corpus | remark | Comark, `comarkOptions()` | Speedup |
+| --- | --: | --: | --: |
+| 403 READMEs of remark, rehype, and unified packages (4.4 MiB) | 5,039 ms | 664 ms | 7.6× |
+| 515 Markdown files in this repository (1.1 MiB) | 763 ms | 140 ms | 5.5× |
+
+remark here is remark-parse, remark-gfm, remark-frontmatter, remark-rehype, and rehype-stringify. Adding rehype-raw, which keeps raw HTML the way `comarkOptions()` does, makes it 4 to 10% slower.
+
+The cost is size in the browser. Minified, the Comark setup is 118 KiB gzipped and the remark pipeline 48 KiB, or 98 KiB with rehype-raw. Most of the difference is js-yaml, because Comark parses frontmatter into an object where remark-frontmatter keeps a string. [`bench/`](https://github.com/onmax/comark-ui/tree/main/packages/remark-to-comark/bench) has the scripts that measured both.
+
+## The migration
+
+```sh
+pnpm add -D remark-to-comark
+pnpm remark-to-comark check .                           # what's there and what each plugin becomes
+pnpm remark-to-comark content "**/*.{md,mdx}" --write   # escape Markdown Comark reads differently
+pnpm remark-to-comark rewrite . --write                 # unified chains to renderHtml
+pnpm remark-to-comark check .                           # what's left for you
+```
+
+Without `--write`, `content` and `rewrite` print the change and touch nothing. remark still renders every escaped file byte for byte as before, so you can migrate the Markdown first and switch the renderer later.
+
+Rewritten code imports `comarkOptions` from `remark-to-comark/setup`, the Comark setup that reads Markdown like remark-parse with remark-gfm, without the rest of the package. `remark-to-comark/plugins` has Comark versions of rehype-slug, rehype-autolink-headings, rehype-external-links, rehype-unwrap-images, remark-squeeze-paragraphs, remark-reading-time, and Docusaurus' npm2yarn, each tested against the original. For other plugins, [RTC0102](https://comark-ui.onmax.me/remark-to-comark/diagnostics#rtc0102) names the [comark-ui](https://comark-ui.onmax.me) package that does the same job.
+
+The same findings run as a [Vite Doctor](https://comark-ui.onmax.me/remark-to-comark/vite-doctor/) extension, next to comark-linter.
+
+## How close it gets
+
+On 14,470 Markdown files from the 100 most-starred repositories with a remark dependency, 95.7% render the same HTML in Comark as in remark after migration, once whitespace is normalized. Most of the rest are Comark bugs, each with a minimal input in [comarkdown/comark#525](https://github.com/comarkdown/comark/issues/525).
+
+It leaves some work to you, and reports each piece:
+
+- MDX stays as it is. JSX and expressions need a JavaScript runtime Comark doesn't have.
+- Framework configs (Astro, Next.js, Docusaurus, Gatsby, Nuxt) are reported, not rewritten, because the framework owns the parser.
+- A project's own remark plugins need porting by hand.
