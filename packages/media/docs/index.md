@@ -14,7 +14,7 @@ credits: 'Syntax from <a href="https://docs.gitlab.com/user/markdown/#media">Git
 ```md
 The flower opens once the page loads, as it did before the change:
 
-![A flower opening, recorded before the fix](https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm){loop muted}
+![A flower opening, recorded before the fix](https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm){loop muted width=960 height=540}
 ```
 :::
 
@@ -42,7 +42,7 @@ The alert sound the reviewer asked for:
 Write an image whose address ends in a video or audio extension, before any `?` or `#`. [File types](#file-types) lists the extensions.
 
 ```md
-![Signing in with a passkey](./recordings/login.mp4)
+![Signing in with a passkey](./recordings/login.mp4){width=1280 height=720}
 ```
 
 The alt text is the player's label for screen readers. It's also the text of a link to the file, for a browser that can't play it. Every other image stays an image.
@@ -52,7 +52,7 @@ The alt text is the player's label for screen readers. It's also the text of a l
 Use the `autoplay` prop to start playing when the page loads.
 
 ```md
-![The spinner while the build runs](./spinner.mp4){autoplay muted}
+![The spinner while the build runs](./spinner.mp4){autoplay muted width=1280 height=720}
 ```
 
 > [!NOTE]
@@ -63,7 +63,7 @@ Use the `autoplay` prop to start playing when the page loads.
 Use the `loop` prop to start again at the end.
 
 ```md
-![The spinner while the build runs](./spinner.mp4){loop}
+![The spinner while the build runs](./spinner.mp4){loop width=1280 height=720}
 ```
 
 ### Muted
@@ -72,7 +72,7 @@ Use the `muted` prop to start without sound.
 
 ::example
 ```md
-![A flower opening](https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm){muted}
+![A flower opening](https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm){muted width=960 height=540}
 ```
 ::
 
@@ -81,7 +81,7 @@ Use the `muted` prop to start without sound.
 Use the `poster` prop to show an image before a video plays.
 
 ```md
-![The spinner while the build runs](./spinner.mp4){poster="./spinner.png"}
+![The spinner while the build runs](./spinner.mp4){poster="./spinner.png" width=1280 height=720}
 ```
 
 > [!NOTE]

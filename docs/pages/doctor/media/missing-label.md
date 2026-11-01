@@ -2,12 +2,12 @@ A video or audio file takes its label from the image's alt text. Without one, a 
 
 ::incorrect
 ```md
-![](/pond-tour.mp4)
+![](/pond-tour.mp4){width=1280 height=720}
 ```
 ::
 
 ::correct
 ```md
-![A tour of the duck pond at feeding time](/pond-tour.mp4)
+![A tour of the duck pond at feeding time](/pond-tour.mp4){width=1280 height=720}
 ```
 ::

@@ -2,12 +2,12 @@ A video takes `autoplay`, `loop`, `muted`, `poster`, `width`, and `height`, and 
 
 ::incorrect
 ```md
-![A tour of the duck pond](/pond-tour.mp4){controls="false"}
+![A tour of the duck pond](/pond-tour.mp4){controls="false" width=1280 height=720}
 ```
 ::
 
 ::correct
 ```md
-![A tour of the duck pond](/pond-tour.mp4)
+![A tour of the duck pond](/pond-tour.mp4){width=1280 height=720}
 ```
 ::

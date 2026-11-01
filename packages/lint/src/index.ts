@@ -898,10 +898,13 @@ function pluginIssues(meta: Record<string, unknown>, source: Source, blocks: Blo
     : [];
   const named: Record<string, unknown> =
     meta.issueRules instanceof Object ? { ...meta.issueRules } : {};
-  const locate = locator(source);
+  const locators = new Map<string, ReturnType<typeof locator>>();
   return issues.map((issue) => {
     const rule = rawText(named[issue]);
     const known = Object.hasOwn(catalog, rule);
+    // Different rules can report the same image or quoted value without advancing past it.
+    let locate = locators.get(rule);
+    if (!locate) locators.set(rule, (locate = locator(source)));
     const { line, column } = place(issue, blocks, locate);
     const sentences = issue.split(/(?<=[.!?])\s+(?=[A-Z`])/);
     return {
@@ -916,8 +919,8 @@ function pluginIssues(meta: Record<string, unknown>, source: Source, blocks: Blo
   });
 }
 
-// Plugins name their block in prose, such as `compare 2`, `` `::chart` 2 ``, or `screenshot "before.png"`, so that is what
-// gets searched for.
+// Plugins name their block in prose, such as `compare 2`, `` `::chart` 2 ``, or `screenshot "before.png"`, or quote a
+// media image in backticks, so that is what gets searched for.
 function place(
   issue: string,
   blocks: Block[],
@@ -928,6 +931,11 @@ function place(
     numbered &&
     blocks.filter((candidate) => candidate.name === numbered[1])[Number(numbered[2]) - 1];
   if (block) return block;
+  const image = /^`(!\[[^\n]*?\]\([^\n]*?\))`/.exec(issue)?.[1];
+  if (image) {
+    const at = locate(image);
+    if (at.column) return at;
+  }
   const quoted = /"((?:[^"\\]|\\.)+)"/.exec(issue)?.[1];
   if (quoted) {
     const at = locate(unescape(quoted));
