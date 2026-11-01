@@ -20,6 +20,7 @@ describe("comark-media", () => {
     expect(Object.values(meta.issueRules)).toEqual([
       "comark/media/missing-label",
       "comark/media/poster-on-audio",
+      "comark/media/missing-size",
     ]);
   });
 
@@ -112,28 +113,32 @@ describe("comark-media", () => {
   });
 
   it("runs before comark-chips and comark-zoom in any order", async () => {
-    const markdown = `![Flow](flow.mp4)\n\n${attachment}`;
+    const markdown = `![Flow](flow.mp4){width=1280 height=720}\n\n${attachment}`;
     const value = await parseMarkdown(markdown, {
       plugins: [chips({ download: false }), zoom({ size: false }), media({ size: false })],
     });
     expect(value.nodes).toEqual([
-      ["p", {}, ["media", { kind: "video", src: "flow.mp4", label: "Flow" }]],
+      [
+        "p",
+        {},
+        ["media", { kind: "video", src: "flow.mp4", label: "Flow", width: 1280, height: 720 }],
+      ],
       ["p", {}, ["media", { kind: "video", src: attachment }]],
     ]);
     expect(value.meta.issues).toEqual([]);
   });
 
-  it("reports a missing label, autoplay without muted, a poster on audio, and unknown attributes", async () => {
-    expect(await issues("![](demo.mp4)")).toEqual([
+  it("reports a missing label, autoplay without muted, a poster on audio, unknown attributes, and a video without its size", async () => {
+    expect(await issues("![](demo.mp4){width=1280 height=720}")).toEqual([
       "`![](demo.mp4)` has no label. Describe the video in the brackets, like `![Signing in with a passkey](demo.mp4)`.",
     ]);
-    expect(await issues("![Demo](demo.mp4){autoplay}")).toEqual([
+    expect(await issues("![Demo](demo.mp4){autoplay width=1280 height=720}")).toEqual([
       "`![Demo](demo.mp4)`: browsers only start a video by itself when it's muted. Add `muted`, or remove `autoplay`.",
     ]);
     expect(await issues('![Song](a.mp3){poster="a.png"}')).toEqual([
       "`![Song](a.mp3)`: audio has no picture, so `poster` was dropped. Remove it.",
     ]);
-    expect(await issues("![Demo](demo.mp4){chapters=1 .wide}")).toEqual([
+    expect(await issues("![Demo](demo.mp4){chapters=1 .wide width=1280 height=720}")).toEqual([
       "`![Demo](demo.mp4)`: `chapters`, `class` aren't video options, so they were dropped. Use autoplay, loop, muted, poster, width, or height.",
     ]);
     expect(await issues("![Song](a.mp3){width=600}")).toEqual([
@@ -142,6 +147,10 @@ describe("comark-media", () => {
     expect(await issues("![Demo](demo.mp4){width=600}")).toEqual([
       "`![Demo](demo.mp4)`: `width` and `height` are the video's size in pixels and go together, like `{width=1280 height=720}`, so it was dropped. Supply both sides.",
     ]);
+    expect(await issues("![Demo](demo.mp4)")).toEqual([
+      "`![Demo](demo.mp4)` has no size, so the page holds a 16:9 box until it loads and moves if the video isn't 16:9. Add its `width` and `height` in pixels, like `{width=1280 height=720}`.",
+    ]);
+    expect(await issues(attachment)).toEqual([]);
   });
 
   describe("sizes", () => {

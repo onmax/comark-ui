@@ -20,4 +20,8 @@ export default {
     code: "COMARK3906",
     title: "Give a video's `width` and `height` together, in pixels",
   },
+  "comark/media/missing-size": {
+    code: "COMARK3907",
+    title: "Give every video its `width` and `height`",
+  },
 } satisfies Record<`comark/media/${string}`, RuleInfo>;
