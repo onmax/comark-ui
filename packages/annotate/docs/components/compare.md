@@ -162,6 +162,7 @@ In a slider, the pair is one tab stop that zooms. Its divider is a slider named 
 | `title` | "Comparison" | What the comparison shows. Screen readers read it side by side. In a slider, it titles the zoomed view, and defaults to the screenshots' titles joined by " / ". |
 | `mode` | `columns` | `columns` puts the screenshots side by side. `slider` lays one over the other with a divider to drag. |
 | `ink` | — | The color of every mark and note in both screenshots that doesn't set its own. A screenshot's own `ink` wins. |
+| `id` | — | An id for the comparison, such as `#fig-toolbar`, that links and [comark-xref](/xref/) references point at. |
 
 ### Issues
 

@@ -8,6 +8,7 @@ import { draw } from "./marks.ts";
 import { BOX_PADDING, pixels, place } from "./place.ts";
 import {
   type Annotation,
+  type Compare,
   noteAt,
   PALETTE,
   readCompare,
@@ -51,6 +52,10 @@ function idFor(shots: Screenshot[], state: State) {
   seen.set(hash, count);
   return `ca-${(hash >>> 0).toString(36)}${count > 1 ? `-${count}` : ""}`;
 }
+
+// The author's id sits beside the generated ones, which all start with `ca-`, so links and comark-xref references reach
+// the block. Zoom strips ids from its copies, so it stays unique.
+const anchor = (id?: string) => (id ? ` id="${attr(id)}"` : "");
 
 const named = new Set<string>(PALETTE);
 // The stamp's number takes whichever of white or the dark ink contrasts more with a hex color, by WCAG luminance.
@@ -313,7 +318,7 @@ async function figure(
   );
   const classes = [...new Set([...sides, ...margins.map((side) => ` ca-${side}`)])].join("");
   return (
-    `<figure class="ca-screenshot${classes}">${heading}<div class="ca-stage" data-zoom tabindex="0" data-zoom-context=".ca,.ca-screenshot${zoomContext ? `,${zoomContext}` : ""}" data-zoom-aside="figcaption" data-zoom-title="${attr(shot.title || shot.alt)}">${frame}${callouts}</div>` +
+    `<figure${anchor(shot.id)} class="ca-screenshot${classes}">${heading}<div class="ca-stage" data-zoom tabindex="0" data-zoom-context=".ca,.ca-screenshot${zoomContext ? `,${zoomContext}` : ""}" data-zoom-aside="figcaption" data-zoom-title="${attr(shot.title || shot.alt)}">${frame}${callouts}</div>` +
     (notes ? `<figcaption>${notes}</figcaption>` : "") +
     "</figure>"
   );
@@ -323,14 +328,14 @@ const GRIP = `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${
 
 // Without the script the two screenshots stack, each under its title. The script lays them over each other and lets
 // the reader drag the divider; the notes stay under the pair, and beside it when zoomed.
-async function slider(title: string | undefined, shots: Screenshot[], state: State, id: string) {
+async function slider({ id: own, title, shots }: Compare, state: State, id: string) {
   const names = shots.map((shot) => shot.title || shot.alt);
   let sides = "";
   let notes = "";
   for (const [index, shot] of shots.entries()) {
     const part = await parts(shot, state, id);
     const which = index ? "after" : "before";
-    sides += `<div class="ca-side ca-side-${which}">${part.heading}<div class="ca-stage">${part.frame}</div></div>`;
+    sides += `<div${anchor(shot.id)} class="ca-side ca-side-${which}">${part.heading}<div class="ca-stage">${part.frame}</div></div>`;
     if (part.notes)
       notes += `<div class="ca-side-notes ca-notes-${which}">${shot.title ? `<div class="ca-heading"><span class="ca-label">${escapeHtml(shot.title)}</span></div>` : ""}${part.notes}</div>`;
   }
@@ -338,7 +343,7 @@ async function slider(title: string | undefined, shots: Screenshot[], state: Sta
     `<div class="ca-handle" role="slider" tabindex="0" aria-label="${attr(`Divider between ${names.join(" and ")}`)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" aria-valuetext="${attr(`${names[0]} 50%, ${names[1]} 50%`)}">` +
     `<span class="ca-grip">${GRIP}</span></div>`;
   return (
-    `<div class="ca ca-compare ca-slider" data-wide><div class="ca-swipe" data-zoom tabindex="0" data-zoom-context=".ca"${notes ? ' data-zoom-aside=".ca-swipe-notes"' : ""} data-zoom-title="${attr(title ?? names.join(" / "))}">${sides}${shots.length === 2 ? handle : ""}</div>` +
+    `<div${anchor(own)} class="ca ca-compare ca-slider" data-wide><div class="ca-swipe" data-zoom tabindex="0" data-zoom-context=".ca"${notes ? ' data-zoom-aside=".ca-swipe-notes"' : ""} data-zoom-title="${attr(title ?? names.join(" / "))}">${sides}${shots.length === 2 ? handle : ""}</div>` +
     `${notes && `<div class="ca-swipe-notes">${notes}</div>`}</div>${zoomRuntime(state)}${runtime(state)}`
   );
 }
@@ -369,16 +374,17 @@ const screenshot: NodeHandler = async (node, state) => {
 };
 
 const compare: NodeHandler = async (node, state) => {
-  const { title, mode, shots } = readCompare(node, [], state.renderData);
+  const read = readCompare(node, [], state.renderData);
+  const { title, mode, shots } = read;
   const id = idFor(shots, state);
-  if (mode === "slider") return `${styles(state)}${await slider(title, shots, state, id)}`;
+  if (mode === "slider") return `${styles(state)}${await slider(read, state, id)}`;
   const margins = (["top", "bottom"] as const).filter((side) =>
     shots.some((shot) => shot.annotations.some((annotation) => annotation.side === side)),
   );
   const figures: string[] = [];
   for (const shot of shots) figures.push(await figure(shot, state, id, margins));
   // Side by side on a wide page, one at a time on a narrow one; both screenshots zoom as one gallery.
-  return `${styles(state)}<div class="ca ca-compare" data-wide>${carouselHtml(figures, { columns: 2, title: title ?? "Comparison" }, state)}</div>${runtime(state)}`;
+  return `${styles(state)}<div${anchor(read.id)} class="ca ca-compare" data-wide>${carouselHtml(figures, { columns: 2, title: title ?? "Comparison" }, state)}</div>${runtime(state)}`;
 };
 
 /** HTML renderers for `::screenshot`, `::compare`, and `::annotation`. Pass them as `components`; the styles are inlined once per document. */
