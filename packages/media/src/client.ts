@@ -13,8 +13,21 @@ const icon = (name: string, paths: string, fill: boolean) =>
 const speaker =
   '<path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"/>';
 
+const SPEEDS = [0.5, 1, 1.25, 1.5, 2];
+// Radios, so the arrow keys move between a row's choices; the script names each player's, since names are per page.
+const option = (name: string, label: string, paths: string, choices: string[][]) =>
+  `<span class="cm-option">${icon(name, paths, false)}${label}</span><span class="cm-choices" role="radiogroup" aria-label="${label}">` +
+  choices
+    .map(
+      ([value, text]) =>
+        `<label><input type="radio" data-option="${name}" value="${value}">${text}</label>`,
+    )
+    .join("") +
+  "</span>";
+
 /**
- * A player's controls, the same in every renderer; a video's add a full screen button. They show once the script runs;
+ * A player's controls, the same in every renderer: play, the time, volume, and a settings panel for the speed and
+ * looping; a video's add a full screen button. They show once the script runs;
  * until then, and when the file can't play, the browser's own controls show instead.
  */
 export const controls = (kind: "audio" | "video") =>
@@ -22,6 +35,24 @@ export const controls = (kind: "audio" | "video") =>
   '<span class="cm-time">0:00</span><input type="range" class="cm-seek" min="0" max="0" step="any" value="0" aria-label="Seek"><span class="cm-time">0:00</span>' +
   `<span class="cm-sound"><button type="button" class="cm-mute" aria-label="Mute">${icon("volume", `${speaker}<path d="M16 9a5 5 0 0 1 0 6"/><path d="M19.364 18.364a9 9 0 0 0 0-12.728"/>`, false)}${icon("muted", `${speaker}<path d="m22 9-6 6"/><path d="m16 9 6 6"/>`, false)}</button>` +
   '<span class="cm-level"><input type="range" class="cm-volume" min="0" max="1" step="0.05" value="1" aria-label="Volume"></span></span>' +
+  `<span class="cm-more"><button type="button" class="cm-settings" aria-label="Settings" aria-expanded="false">${icon("settings", '<path d="M14 17H5"/><path d="M19 7h-9"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/>', false)}</button>` +
+  '<span class="cm-menu">' +
+  option(
+    "speed",
+    "Speed",
+    '<path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/>',
+    SPEEDS.map((speed) => [String(speed), `${speed}&#215;`]),
+  ) +
+  option(
+    "loop",
+    "Loop",
+    '<path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>',
+    [
+      ["off", "Off"],
+      ["on", "On"],
+    ],
+  ) +
+  "</span></span>" +
   (kind === "video"
     ? `<button type="button" class="cm-full" aria-label="Full screen">${icon("full", '<path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/>', false)}${icon("exit", '<path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/>', false)}</button>`
     : "");
@@ -95,6 +126,14 @@ export function start(css: string): () => void {
     const [now, end] = player.querySelectorAll(".cm-time");
     if (now) now.textContent = clock(at);
     if (end) end.textContent = clock(total);
+    for (const input of player.querySelectorAll<HTMLInputElement>(".cm-choices input")) {
+      // One name per row and player, so each row is its own group of radios.
+      input.name ||= `cm-${input.dataset.option}-${(player.dataset.mediaId ||= Math.random().toString(36).slice(2))}`;
+      input.checked =
+        input.dataset.option === "speed"
+          ? Number(input.value) === media.playbackRate
+          : (input.value === "on") === media.loop;
+    }
     const seek = player.querySelector<HTMLInputElement>(".cm-seek");
     if (!seek) return;
     seek.max = String(total);
@@ -143,6 +182,7 @@ export function start(css: string): () => void {
     "ended",
     "seeked",
     "volumechange",
+    "ratechange",
     "emptied",
     "error",
   ])
@@ -168,6 +208,40 @@ export function start(css: string): () => void {
       if (media && !media.muted && !media.paused) pauseAudible(media);
     },
     { capture: true, signal },
+  );
+
+  const openMenu = (player: Element, open: boolean) => {
+    player.toggleAttribute("data-menu", open);
+    player.querySelector(".cm-settings")?.setAttribute("aria-expanded", String(open));
+  };
+  document.addEventListener(
+    "click",
+    (event) => {
+      const target = event.target instanceof Element ? event.target : null;
+      const owner = playerOf(target?.closest(".cm-settings") ?? null);
+      const menu = target?.closest(".cm-menu") ?? null;
+      // A click anywhere but in the panel closes it, as a menu does.
+      for (const open of document.querySelectorAll("[data-menu]"))
+        if (open !== owner && !open.contains(menu)) openMenu(open, false);
+      if (owner) openMenu(owner, !owner.hasAttribute("data-menu"));
+    },
+    { signal },
+  );
+  document.addEventListener(
+    "change",
+    (event) => {
+      const input =
+        event.target instanceof HTMLInputElement && event.target.matches(".cm-choices input")
+          ? event.target
+          : null;
+      const player = playerOf(input);
+      const media = player && mediaOf(player);
+      if (!input || !player || !media) return;
+      if (input.dataset.option === "speed") media.playbackRate = Number(input.value);
+      else media.loop = input.value === "on";
+      draw(player);
+    },
+    { signal },
   );
 
   document.addEventListener(
@@ -247,6 +321,12 @@ export function start(css: string): () => void {
   document.addEventListener(
     "keydown",
     (event) => {
+      const open = event.key === "Escape" && playerOf(event.target);
+      if (open && open.hasAttribute("data-menu")) {
+        openMenu(open, false);
+        open.querySelector<HTMLElement>(".cm-settings")?.focus();
+        return;
+      }
       const seek = seekOf(event.target);
       const player = playerOf(seek);
       const media = player && mediaOf(player);
