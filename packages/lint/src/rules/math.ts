@@ -7,4 +7,8 @@ export default {
     code: "COMARK4102",
     title: "Install `katex` for math's `html` output",
   },
+  "comark/math/authored-html": {
+    code: "COMARK4103",
+    title: "Write math between `$` signs, not as a formula's `html`",
+  },
 } satisfies Record<`comark/math/${string}`, RuleInfo>;

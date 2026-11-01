@@ -173,6 +173,17 @@ describe("comark-mathml", () => {
     expect(Object.keys(tree.meta.issueRules ?? {})).toHaveLength(2);
   });
 
+  it("ignores an `html` the document writes on a formula itself", async () => {
+    const markdown =
+      'A :formula{html="<img src=x onerror=alert(1)>"}\n\n<div>\n<formula html="<img src=x onerror=alert(1)>"></formula>\n</div>\n\nand $x$';
+    const html = await render(markdown);
+    expect(html).not.toContain("onerror");
+    expect(html.match(/<mi>x<\/mi>/g)).toHaveLength(1);
+    const { meta } = await parse(markdown);
+    expect(Object.values(meta.issueRules ?? {})).toEqual(["comark/math/authored-html"]);
+    expect(meta.issues).toHaveLength(2);
+  });
+
   it("takes the place of Comark's math plugin", async () => {
     const { default: core } = await import("comark/plugins/math");
     expect(math().name).toBe(core().name);

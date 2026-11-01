@@ -173,6 +173,17 @@ describe("comark-diagrams", () => {
     expect(requests).toEqual([]);
   });
 
+  it("ignores an `svg` the document writes on a diagram itself", async () => {
+    const markdown = '::diagram{svg="<svg onload=alert(1)></svg>"}\n::\n\n```d2\nuser -> api\n```';
+    for (const options of [undefined, { draw: false }]) {
+      expect(await render(markdown, options)).not.toContain("onload");
+      expect(await issues(markdown, options)).toEqual([
+        "`::diagram` 1 sets `svg`, which only comark-diagrams writes, so it's ignored. Draw the diagram from a fence, such as ```d2.",
+      ]);
+    }
+    expect(await render(markdown)).toContain("user -&gt; api");
+  });
+
   it("drops scripts, event handlers, embedded documents, animations, and unsafe links from the SVG", () => {
     expect(
       sanitizeSvg(

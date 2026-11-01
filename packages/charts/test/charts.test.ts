@@ -500,6 +500,21 @@ ${sizes.trim()}
     expect(Object.keys(meta.issueRules)).toEqual(meta.issues);
   });
 
+  it("ignores an `svg` or `marks` the document writes on a chart itself", async () => {
+    const svg = 'svg="<svg onload=alert(1)></svg>"';
+    const marks = `marks='[{"label":"<img src=x onerror=alert(1)>"}]'`;
+    const undrawn = chart(sizes, `{${svg} ${marks}}`);
+    const nested = chart(`| package | size (kB) |\n| --- | --: |\n| :chart{${svg}} | 41.2 |`);
+    const drawFalse = createHtmlRenderer({ plugins: [charts({ draw: false })], components });
+    for (const html of [await drawFalse(undrawn), await render(nested)]) {
+      expect(html).not.toContain("onload");
+      expect(html).not.toContain("onerror");
+    }
+    expect(await issues(undrawn)).toEqual(
+      expect.arrayContaining([expect.stringContaining("`svg` isn't a prop of `::chart`")]),
+    );
+  });
+
   it("escapes text from the table in the SVG", async () => {
     const html = await render(
       chart(`

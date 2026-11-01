@@ -39,8 +39,9 @@ function eachChart(nodes: Node[], visit: (node: ElementNode, number: number) => 
   const walk = (children: Node[]) => {
     for (const node of children) {
       if (!isElement(node)) continue;
+      // A chart's table can hold another, which the renderers print too.
       if (node[0] === "chart") visit(node, ++count);
-      else walk(childrenOf(node));
+      walk(childrenOf(node));
     }
   };
   walk(nodes);
@@ -63,7 +64,12 @@ export default /* @__PURE__ */ defineComarkPlugin<ChartsOptions | void, ChartsMe
       const table = childrenOf(node).find(
         (child): child is ElementNode => isElement(child) && child[0] === "table",
       );
-      if (options?.draw === false) continue;
+      if (options?.draw === false) {
+        // The renderers print these as they are, so only a chart this plugin drew may carry them.
+        delete node[1].svg;
+        delete node[1].marks;
+        continue;
+      }
       if (!chart || !table) {
         // Nothing to draw: the renderers show the content as it is.
         node[1] = {};
