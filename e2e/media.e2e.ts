@@ -227,6 +227,23 @@ test("a video without its size keeps the column's 16:9 room until its file answe
   expect((await player.locator(".cm-bar").boundingBox())!.height).toBeLessThan(60);
 });
 
+test("a video's poster sizes its frame before the file answers", async ({ page }) => {
+  await page.route("**/slow.webm", () => {});
+  await page.route("**/tall.svg", (route) =>
+    route.fulfill({
+      contentType: "image/svg+xml",
+      body: '<svg xmlns="http://www.w3.org/2000/svg" width="180" height="320"/>',
+    }),
+  );
+  await open(page, '![A tall clip](slow.webm){poster="tall.svg"}');
+  const player = page.getByRole("group", { name: "A tall clip" });
+  await expect(player).toHaveAttribute("data-sized");
+  const frame = (await player.boundingBox())!;
+  const video = (await player.locator("video").boundingBox())!;
+  expect(video.width).toBe(180);
+  expect(frame.width - video.width).toBeLessThanOrEqual(2);
+});
+
 test("the settings panel sets the speed and looping, and closes on Escape or a click outside", async ({
   page,
 }) => {

@@ -94,6 +94,22 @@ export function start(css: string): () => void {
     target instanceof Element ? target.closest<HTMLElement>(players) : null;
   const mediaOf = (player: Element) =>
     player.querySelector<HTMLMediaElement>(":scope>audio,:scope>video");
+  // A poster sizes its video before the file does, but the video doesn't say when its poster loads, so the script
+  // loads the poster too and remembers which videos have their size from it.
+  const posters = new WeakMap<HTMLVideoElement, boolean>();
+  const posterSized = (video: HTMLVideoElement, player: HTMLElement) => {
+    if (!video.poster) return false;
+    if (!posters.has(video)) {
+      posters.set(video, false);
+      const image = new Image();
+      image.addEventListener("load", () => {
+        posters.set(video, true);
+        draw(player);
+      });
+      image.src = video.poster;
+    }
+    return posters.get(video) === true;
+  };
   // A stream has no end, so it gets no length and no seeking.
   const length = (media: HTMLMediaElement) =>
     Number.isFinite(media.duration) ? media.duration : 0;
@@ -111,7 +127,7 @@ export function start(css: string): () => void {
     if (media instanceof HTMLVideoElement) {
       // A video that can't play gets the browser's controls back, so they can say why.
       media.controls = Boolean(media.error);
-      player.toggleAttribute("data-sized", media.videoWidth > 0);
+      player.toggleAttribute("data-sized", media.videoWidth > 0 || posterSized(media, player));
       // A frame without the fullscreen permission can't go full screen, so the button would do nothing.
       const full = player.querySelector<HTMLElement>(".cm-full");
       if (full) full.hidden = !document.fullscreenEnabled && !media.webkitEnterFullscreen;
