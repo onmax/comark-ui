@@ -18,10 +18,10 @@ meta.readingTime; // { words: 1240, minutes: 7 }
 
 ## Features
 
-- The plugin draws nothing. It writes the numbers to `meta`, and your layout shows them where it wants, such as under the title or in a list of posts.
-- It counts the text a reader reads, and leaves out code blocks, since a reader skims them.
+- The plugin draws nothing. It writes the numbers to `meta` for your layout to show, such as under the title or in a list of posts.
+- It leaves out code blocks, since readers skim them.
 - Frontmatter, comments, and raw `script`, `style`, and `textarea` elements don't count. Inline code does.
-- Chinese, Japanese, and Korean are written without spaces between words, so each of their characters counts as a word.
+- Each Chinese, Japanese, and Korean character counts as a word, since those languages don't put spaces between words.
 - It works with any renderer, since it changes nothing a renderer draws.
 
 ## Usage
@@ -38,7 +38,7 @@ const label = `${meta.readingTime.minutes} min read`;
 
 ### Speed
 
-Use the `wordsPerMinute` option to set how many words a reader reads a minute. It defaults to 200.
+Use the `wordsPerMinute` option to set the reading speed. It defaults to 200.
 
 ```ts
 const { meta } = await parseMarkdown(markdown, { plugins: [readingTime({ wordsPerMinute: 230 })] });
@@ -51,7 +51,7 @@ const { meta } = await parseMarkdown(markdown, { plugins: [readingTime({ wordsPe
 
 ### Show it in a layout
 
-The plugin only counts, so the layout decides where the time goes. With `@comark/html`, parse once, read the meta, and render the same document:
+With `@comark/html`, parse once, read the meta, and render the same document:
 
 ```ts
 import { renderHtmlFromDocument } from "@comark/html";
@@ -69,13 +69,13 @@ With `@comark/vue` or `@comark/react`, read `meta.readingTime` from the parsed d
 
 200 words a minute is a cautious pace for technical prose. For light reading, 230 to 250 is closer to how adults read. For review documents dense with code and names, keep the default or go lower.
 
-A page of CJK text counts characters, and most readers get through more than 200 of those a minute. A site mostly in Chinese or Japanese may want a higher `wordsPerMinute`.
+CJK text counts characters, and most readers get through more than 200 a minute, so a site mostly in Chinese or Japanese may want a higher `wordsPerMinute`.
 
 ## API
 
 ### Options
 
-The options go under `readingTime` in `comarkUi()`, or to `readingTime()` when you use the plugin alone.
+Pass options under `readingTime` in `comarkUi()`, or to `readingTime()` alone.
 
 | Option | Default | Description |
 | --- | --- | --- |
@@ -96,7 +96,7 @@ The options go under `readingTime` in `comarkUi()`, or to `readingTime()` when y
 
 ### Package
 
-comark-ui brings `comark-reading-time` and registers it. To use it alone, install it and register the plugin:
+comark-ui installs and registers `comark-reading-time`. To use it alone, install it and register the plugin:
 
 ```sh
 pnpm add comark @comark/html comark-reading-time

@@ -148,13 +148,13 @@ Week 15 is missing for the pigeons.
 - Hover a mark to highlight its note, or a note to highlight its mark.
 - Click a screenshot to zoom it, with its notes beside it.
 - Copy a screenshot as a PNG with its marks and notes drawn in.
-- A comparison shows two screenshots side by side, or one over the other with a slider.
-- Everything reads the same without a script.
+- Compare two screenshots side by side, or one over the other with a slider.
+- It all reads the same without a script.
 - [zoom](/zoom/) and [carousel](/carousel/) come with the package.
 
 ## Usage
 
-Put each `annotation` inside the `screenshot` it marks. The annotation's content is its note.
+Put each `annotation` inside the `screenshot` it marks. Its content is the note.
 
 ```md
 ::screenshot{src="/after.png" alt="Filter toolbar on one row" title="After" href="https://pr42.preview.example.com/plan"}
@@ -164,15 +164,15 @@ Extra filters collapse into **+2 filters**.
 ::
 ```
 
-Props can be inline, in a YAML props block, or bound with `:x`. Each block has its own page, with its props.
+Props go inline, in a YAML props block, or bound with `:x`.
 
 ### Screenshot
 
-Use [`screenshot`](/annotate/components/screenshot/) for an image with marks on it. Any content besides its annotations becomes the caption.
+Use [`screenshot`](/annotate/components/screenshot/) for an image with marks on it. Other content becomes its caption.
 
 ### Annotation
 
-Use [`annotation`](/annotate/components/annotation/) for one mark and its note, inside a screenshot. Notes go in a numbered list under the image, or beside it with an arrow.
+Use [`annotation`](/annotate/components/annotation/) for one mark and its note, numbered under the image or beside it with an arrow.
 
 ### Compare
 
@@ -182,11 +182,11 @@ Use [`compare`](/annotate/components/compare/) to show two screenshots side by s
 
 ### Share a screenshot
 
-Press a screenshot's Copy button to copy it as a PNG with the marks and notes drawn in. The [screenshot page](/annotate/components/screenshot/#copy-a-screenshot) covers the keys and the setup some pages need.
+The Copy button copies a screenshot as a PNG with its marks and notes. The [screenshot page](/annotate/components/screenshot/#copy-a-screenshot) has the keys and the setup some pages need.
 
 ### Side notes
 
-Give an annotation a `side` to move its note beside, above, or below the image, with a hand-drawn arrow to its mark. Add `mark="none"` to point at something without drawing a mark.
+Give an annotation a `side` to put its note beside, above, or below the image, with a hand-drawn arrow to its mark. Add `mark="none"` to point without drawing a mark.
 
 ::example
 ```md
@@ -202,51 +202,51 @@ The [annotation page](/annotate/components/annotation/#side-note) covers where s
 
 ### Place marks on their target
 
-Measure each element in the page you captured, and don't estimate from the image. The [annotation page](/annotate/components/annotation/#place-marks-on-their-target) shows how.
+Measure each element in the page you captured instead of estimating from the image. The [annotation page](/annotate/components/annotation/#place-marks-on-their-target) shows how.
 
 ### Page through screenshots across a page
 
-To page through screenshots spread across a page, or show a flow one step at a time, see the [recipes](/recipes/zoom/).
+The [recipes](/recipes/zoom/) show how to page through screenshots spread across a page, or through a flow one step at a time.
 
 ## API
 
 ### Options
 
-Screenshots reserve their authored `viewport`, or their dimensions read from a data URI. `annotate({ size: true })` also measures remote screenshots at render time; enable it only for trusted documents, since requests follow redirects and can reach private networks. `annotate({ size: false })` disables measurement and still uses authored viewports. In `comarkUi()`, pass these options under `annotate`; `annotate: false` turns the plugin off.
+A screenshot reserves its space from `viewport`, or from a data URI's size. `annotate({ size: true })` also measures remote images at render time. Use it only for trusted documents, since its requests follow redirects and can reach private networks. `annotate({ size: false })` uses only `viewport`. In `comarkUi()`, these go under `annotate`, and `annotate: false` turns the plugin off.
 
 ### CLI
 
-The package comes with a small CLI that knows zoom and carousel too.
+The package has a small CLI that knows zoom and carousel too.
 
 | Command | Description |
 | --- | --- |
-| `check` | Lists every problem in one or more files, and exits with 1 if there are any. |
-| `render` | Writes a standalone page next to each file, or to `-o` for one file. Open it and take a screenshot to confirm each mark sits on its target. |
+| `check` | Lists every problem in one or more files, and exits with 1 if it finds any. |
+| `render` | Writes a standalone page next to each file, or to `-o` for one file. Screenshot it to check that each mark sits on its target. |
 
-Install comark-annotate directly in the workspace package where you will run the CLI. With pnpm, use `pnpm add -D comark-annotate@<version>`, replacing `<version>` with the exact version of the project's installed Comark UI packages. Add `-w` when installing at the workspace root. For a standalone preview with no Comark UI packages installed, omit `@<version>`. Then run the local executable:
+Install comark-annotate as a direct dependency of the workspace package where you run the CLI, at the exact version of the project's Comark UI packages: `pnpm add -D comark-annotate@<version>`. Add `-w` at the workspace root. With no Comark UI packages installed, leave out `@<version>`. Then run the local executable:
 
 ```sh
 vp exec comark-annotate check duck-audit.md pigeons.md
 vp exec comark-annotate render duck-audit.md -o duck-audit.html
 ```
 
-`vp` comes with the [global Vite+ CLI](https://viteplus.dev/guide/global-cli). Without it, use `pnpm dlx` for `vp dlx` and `pnpm exec` for `vp exec`.
+`vp` is the [global Vite+ CLI](https://viteplus.dev/guide/global-cli). Without it, use `pnpm exec` for `vp exec` and `pnpm dlx` for `vp dlx`.
 
-A direct dependency links the executable in pnpm workspaces. When comark-annotate is only transitive, npx stops with `comark-annotate: not found`, and `@latest` can run a different release from the project's renderers.
+pnpm links the executable only for a direct dependency. When comark-annotate is only transitive, npx stops with `comark-annotate: not found`, and `@latest` can run a different release from the project's renderers.
 
 ### Issues
 
-The plugin adds a problem with any block to `meta.issues`, as [Validation](/guide/validation/) describes. Each issue names its block:
+The plugin adds each problem to `meta.issues`, as [Validation](/guide/validation/) describes. Each issue names its block:
 
-- A screenshot goes by its `src`, or by its position and `alt` when another screenshot has the same `src`.
-- A compare goes by its position, and its `title` when it has one.
-- An annotation goes by its position in its screenshot.
+- A screenshot by its `src`, or by its position and `alt` when another screenshot has the same `src`.
+- A compare by its position, and its `title` if it has one.
+- An annotation by its position in its screenshot.
 
 ```txt
 screenshot "after.png", annotation 2: the box runs past the image edge. Keep x + w and y + h within 100.
 ```
 
-The plugin reports an unknown prop with a list of the valid ones, and a `:bound` prop that points at missing frontmatter. It leaves bindings to `data` or `props` to the renderer. Each block's page lists the rest:
+It also reports an unknown prop, with the valid ones, and a `:bound` prop that points at missing frontmatter. The renderer resolves bindings to `data` or `props`. Each block's page lists the rest:
 
 - [screenshot](/annotate/components/screenshot/#issues)
 - [annotation](/annotate/components/annotation/#issues)
@@ -272,11 +272,11 @@ const html = await render(markdown);
 
 Annotate renders only to HTML. [Renderers](/guide/renderers/) covers using it with other plugins, a strict Content Security Policy, and untrusted notes.
 
-The comark-ui agent skill knows the syntax, how to measure marks from the page, and how to check the result. Agents install it with `vp dlx skills add onmax/comark-ui`, and [Agents](/guide/agents/) covers the rest.
+The comark-ui agent skill knows the syntax, how to measure marks, and how to check the result. Install it with `vp dlx skills add onmax/comark-ui`, and see [Agents](/guide/agents/).
 
 ## Theme
 
-Screenshots and comparisons follow the page's theme through the shared tokens. The mark colors are separate from the theme, because each one means something. The rules sit in a `comark` CSS layer, so any plain rule of your own wins. `::diff` is in [comark-diff](/diff/), which has its own [Theme section](/diff/#theme).
+Screenshots and comparisons follow the page's theme, but mark colors don't, because each one means something. The rules sit in a `comark` CSS layer, so any plain rule of your own wins. `::diff` is in [comark-diff](/diff/), with its own [Theme section](/diff/#theme).
 
 ### Shared tokens
 
@@ -314,11 +314,11 @@ Set them on `.ca`, the root of every block:
 | `--ca-bottom-gutter` | `5rem` | The room below the image for `side="bottom"` notes |
 | `--ca-gap` | `1.25rem` | The space between a side note and the image, where its arrow runs |
 
-A screenshot's or compare's `ink` colors its annotations the same way. An annotation's `color` sets `--ca-color`, `--ca-solid`, and `--ca-ink` on its own mark and note, so it wins over `.ca`. Caveat comes inlined with the styles, about 32 KB.
+A screenshot's or compare's `ink` sets `--ca-color`, `--ca-solid`, and `--ca-ink` for its annotations. An annotation's `color` sets them on its own mark and note, so it wins over `.ca`. The Caveat font is inlined with the styles, about 32 KB.
 
 ### Classes
 
-- Every block sits in a `.ca`: a screenshot's `figure.ca-screenshot` inside it, and `.ca.ca-compare` for a compare (plus `.ca-slider` with `mode="slider"`).
+- Every block sits in a `.ca`. A screenshot's `figure.ca-screenshot` is inside it, and a compare is `.ca.ca-compare`, plus `.ca-slider` with `mode="slider"`.
 - A screenshot holds `.ca-heading` with its title in `.ca-label`, then `.ca-stage` with the image in `.ca-frame`, and a `figcaption` with the notes in `ol.ca-notes`. It has `.ca-left`, `.ca-right`, `.ca-top`, or `.ca-bottom` when it has side notes there.
 - A mark is a `.ca-mark` with its shape as a class, such as `.ca-box` or `.ca-circle`, and its number in `.ca-stamp`. A side note is a `.ca-callout` with its arrow in `.ca-arrow`. A mark, its arrow, and its note share a `data-n`.
 - The Copy button is `.ca-copy`. A slider's divider is `.ca-handle`, with its knob in `.ca-grip`.

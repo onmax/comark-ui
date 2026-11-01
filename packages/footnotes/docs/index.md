@@ -46,7 +46,7 @@ The retro moved to Thursday^[Friday is pizza day.], and the rubber duck^[A yello
 - They're listed in a section at the end of the page.
 - A definition can run over indented lines and hold paragraphs, lists, and code.
 - `^[text]` writes a note where it applies, with no label.
-- The nodes are the ones `comark/plugins/footnotes` writes, so styles and renderers made for it keep working.
+- It writes the same nodes as `comark/plugins/footnotes`, so styles and renderers made for that plugin keep working.
 
 ## Usage
 
@@ -62,7 +62,7 @@ The duck has a name[^name].
 
 ### Long notes
 
-Use lines indented by four spaces to continue a definition, as in a list item. A note can then hold several paragraphs, a list, or code. A line that isn't indented continues the paragraph above it.
+Indent lines by four spaces to continue a definition, as in a list item, so a note can hold several paragraphs, a list, or code. A line that isn't indented continues the paragraph above it.
 
 ::example
 ````md
@@ -79,7 +79,7 @@ and start again on Monday.
 ````
 ::
 
-Markdown in a note renders as it does anywhere else. The note's links back go at the end of its last paragraph.
+Markdown in a note renders as usual. The links back go at the end of its last paragraph.
 
 ### Inline notes
 
@@ -146,19 +146,19 @@ Three things render differently:
 - Markdown in a note renders. Comark's plugin keeps the note as text, so `**bold**` stays as written.
 - A note can run over several lines and blocks. Comark's plugin keeps the first line, and its indented lines become a code block in the page.
 
-A reference used twice gets the id `fnref-label-2` the second time, where Comark's plugin repeats `fnref-label`, and its note gets a link back to each reference. A note of several blocks is an `li` holding `p` elements, with the links back inside the last one.
+A second reference to a label gets the id `fnref-label-2`, where Comark's plugin repeats `fnref-label`, and the note links back to each. A note of several blocks is an `li` of `p` elements, with the links back in the last one.
 
-Comark's `Footnote` handler for `renderMarkdown` reads the same nodes, so it writes a note of one paragraph back to `[^label]: …`. A note of several blocks comes back as its first block only.
+Comark's `Footnote` handler for `renderMarkdown` writes a one-paragraph note back to `[^label]: …`, but keeps only the first block of a longer one.
 
 ### Streaming
 
-A stream renders notes as they arrive. `^[an unfinished note` already shows as a note, and `[^label]` shows as text until its definition arrives. Blocks Comark reuses from the last parse keep their notes.
+Notes render as the stream arrives. `^[an unfinished note` already shows as a note, and `[^label]` shows as text until its definition arrives. Blocks Comark reuses from the last parse keep their notes.
 
 ## API
 
 ### Options
 
-The options go under `footnotes` in `comarkUi()`, or to `footnotes()` when you use the plugin alone. They are Comark's, with the same defaults.
+Pass options under `footnotes` in `comarkUi()`, or to `footnotes()` alone. They're Comark's, with the same defaults.
 
 | Option | Default | Description |
 | --- | --- | --- |
@@ -182,7 +182,7 @@ footnotes: [^1]: is defined more than once, and only the first shows; give the o
 
 ### Package
 
-comark-ui brings `comark-footnotes` and registers it. To use it alone, install it and register it instead of `comark/plugins/footnotes`:
+comark-ui installs and registers `comark-footnotes`. To use it alone, install it and register it instead of `comark/plugins/footnotes`:
 
 ```sh
 pnpm add comark @comark/html comark-footnotes
@@ -196,5 +196,3 @@ const document = await parseMarkdown(markdown, {
   plugins: [footnotes()],
 });
 ```
-
-Remove `comark/plugins/footnotes` when you add this one.

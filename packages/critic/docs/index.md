@@ -32,7 +32,7 @@ Pizza is on Friday{>>Pineapple still needs a vote.<<}.
 
 ## Usage
 
-Write a mark inside a paragraph. It opens and closes in that paragraph.
+A mark opens and closes inside one paragraph.
 
 ```md
 The deploy waits for {++fifteen++} pigeons.
@@ -93,7 +93,7 @@ Count them from the {==east window==}{>>Not the west one.<<}.
 
 ### Markdown inside
 
-Use Markdown inside a mark to format its text. It can hold `**bold**`, `` `code` ``, and links.
+A mark's text can hold Markdown, such as `**bold**`, `` `code` ``, and links.
 
 ::example
 ```md
@@ -119,13 +119,13 @@ Use the `mode` option to render the document with the changes made or undone. `a
 critic({ mode: "accept" });
 ```
 
-`The deploy waits when more than {--twelve--}{++fifteen++} pigeons sit on the roof.` then renders as "The deploy waits when more than fifteen pigeons sit on the roof." [Modes](#modes) has what each mode does to each mark.
+`The deploy waits when more than {--twelve--}{++fifteen++} pigeons sit on the roof.` then renders as "The deploy waits when more than fifteen pigeons sit on the roof." [Modes](#modes) lists what each mode does to each mark.
 
 ## Examples
 
 ### Review, then publish
 
-Keep the suggestions in the source while a draft is in review, and render it twice. Use `mode: "view"` for the reviewers and `mode: "accept"` for the page you publish. The source stays one file, and nobody copies the accepted text by hand.
+Keep the suggestions in the source during review, and render it twice. Use `mode: "view"` for reviewers and `mode: "accept"` for the published page, so nobody copies the accepted text by hand.
 
 ```ts
 const review = await parseMarkdown(draft, { plugins: [critic()] });
@@ -136,7 +136,7 @@ Removing a word leaves the spaces around it, so `a {--big--} duck` accepts as `a
 
 ### Write the characters themselves
 
-Escape the brace, `\{++`, to write the characters themselves. Inside a code span, a mark stays as written.
+Write `\{++` to keep the characters as text. Inside a code span, a mark stays as written.
 
 ```text
 Type \{++ to open an insertion, or write `{++this++}` in code.
@@ -144,7 +144,7 @@ Type \{++ to open an insertion, or write `{++this++}` in code.
 
 ### Without the plugin
 
-Comark reads a `{` in text as the start of attributes. Without this plugin, `{++fifteen++}` doesn't stay as text. The attribute rule takes the whole mark and renders nothing, so a suggestion vanishes from the page without a warning. The plugin's rule runs first and leaves every other brace, such as `{.class}` and `{#id}`, to Comark.
+Comark reads a `{` in text as the start of attributes. Without this plugin, the attribute rule swallows `{++fifteen++}` and renders nothing, so the suggestion vanishes without a warning. The plugin's rule runs first and leaves every other brace, such as `{.class}` and `{#id}`, to Comark.
 
 ## API
 
@@ -160,7 +160,7 @@ Comark reads a `{` in text as the start of attributes. Without this plugin, `{++
 
 ### Options
 
-The options go under `critic` in `comarkUi()`, or to `critic()` when you use the plugin alone.
+Pass options under `critic` in `comarkUi()`, or to `critic()` alone.
 
 | Option | Default | Description |
 | --- | --- | --- |
@@ -192,7 +192,7 @@ critic: `mode` must be "view", "accept", or "reject", not "draft"; until then it
 
 ### Package
 
-comark-ui brings `comark-critic` and registers it. To use it alone, install it and register the plugin:
+comark-ui installs and registers `comark-critic`. To use it alone, install it and register the plugin:
 
 ```sh
 pnpm add comark @comark/html comark-critic
@@ -211,7 +211,7 @@ const document = await parseMarkdown(markdown, {
 
 ### Styles
 
-The package's styles tint insertions green, strike deletions in red, highlight in amber, and draw comments as chips. Without them, the browser underlines `<ins>`, strikes `<del>`, and paints `<mark>` yellow, and comments are plain text. Import them with yours:
+The package's styles tint insertions green with an underline, strike deletions in red, highlight in amber, and draw comments as muted chips. Without them, the browser underlines `<ins>`, strikes `<del>`, and paints `<mark>` yellow, and comments are plain text. Import them with yours:
 
 ```ts
 import "comark-critic/style.css";
@@ -223,11 +223,11 @@ Or inline the same styles from `css`:
 import { css } from "comark-critic";
 ```
 
-The plugin has no component to add them. comark-ui re-exports `css` as `criticCss` from every entry, so put it in the page.
+No component adds them, so put them in the page yourself. comark-ui re-exports `css` as `criticCss` from every entry.
 
 ### Shared tokens
 
-Each mark carries a class, so the styles reach only CriticMarkup and not a `~~strikethrough~~`, which Comark also writes as `<del>`. An insertion is tinted green over a line, a deletion struck through in red, a highlight amber, and a comment a muted chip. They read these [shared tokens](/guide/theming/):
+The marks read these [shared tokens](/guide/theming/):
 
 | Token | Used for |
 | --- | --- |
@@ -239,7 +239,7 @@ Each mark carries a class, so the styles reach only CriticMarkup and not a `~~st
 
 ### Variables
 
-The colors are variables of their own, read wherever they're set, on `:root` or any element around the marks. The deletion's red is shadcn/ui's `--destructive` when the page has it:
+Set the colors on `:root` or any element around the marks. The deletion's red is shadcn/ui's `--destructive` when the page has it:
 
 | Variable | Default |
 | --- | --- |
@@ -249,7 +249,7 @@ The colors are variables of their own, read wherever they're set, on `:root` or 
 
 ### Example
 
-The rules sit in a `comark` CSS layer, so any plain rule of your own wins. Recolor them as a pull request does, for instance:
+The rules sit in a `comark` CSS layer, so any plain rule of yours wins. To color the marks like a pull request:
 
 ```css
 :root {

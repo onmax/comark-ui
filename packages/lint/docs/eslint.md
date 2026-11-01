@@ -18,7 +18,7 @@ It needs ESLint 9.15 or later and `@eslint/markdown` 8 or later, which parses th
 
 ### Add the config
 
-`comark-linter/eslint` is an ESLint plugin. Add its `recommended` config to `eslint.config.js`:
+Add the `recommended` config of the `comark-linter/eslint` plugin to `eslint.config.js`:
 
 ```js
 // eslint.config.js
@@ -27,7 +27,7 @@ import comark from "comark-linter/eslint";
 export default [comark.configs.recommended];
 ```
 
-It lints `**/*.md` and `**/*.mdc` with the `markdown/commonmark` language and YAML frontmatter, and turns every rule on but `comark/dead-url`. Each rule keeps its severity: frontmatter Comark can't read and unsafe URLs are errors, and most of the rest are warnings.
+It lints `**/*.md` and `**/*.mdc` with the `markdown/commonmark` language and YAML frontmatter. It turns on every rule but `comark/dead-url`, each at its own severity. Unreadable frontmatter and unsafe URLs are errors, and most of the rest are warnings.
 
 ### Run it
 
@@ -35,7 +35,7 @@ It lints `**/*.md` and `**/*.mdc` with the `markdown/commonmark` language and YA
 pnpm eslint .
 ```
 
-Each problem is reported at its line and column, under its rule, with the fix after the message. Most rules are warnings, so add `--max-warnings 0` where a warning should fail the run:
+ESLint reports each problem at its line and column, under its rule, with the fix after the message. Most rules are warnings, so add `--max-warnings 0` if a warning should fail the run:
 
 ```txt
 content/review.md
@@ -46,7 +46,7 @@ content/review.md
 
 ### Turn a rule off or up
 
-Every rule is an ESLint rule, named as on its page in [Doctor](/doctor/). Set it in `rules` after the recommended config:
+Each rule has the name its page in [Doctor](/doctor/) gives it. Set it in `rules` after the recommended config:
 
 ```js
 // eslint.config.js
@@ -74,7 +74,7 @@ Turn one off for a single line with a comment above it:
 
 ### Add your own components
 
-The plugin loads every comark-ui package you have installed, as the [command line](/lint/getting-started/) does. Point `settings.comark.config` at a `comark-lint.config.mjs` to add your own plugins and components:
+Like the [command line](/lint/getting-started/), the plugin loads every installed comark-ui package. To add your own plugins and components, point `settings.comark.config` at a `comark-lint.config.mjs`:
 
 ```js
 // eslint.config.js
@@ -93,7 +93,7 @@ Create the config as a JavaScript ES module:
 export default { components: ["duck-count"] };
 ```
 
-The path resolves from ESLint's working directory, and the file is the one `comark-lint --config` reads. Node imports it without a TypeScript loader. To use `comark-lint.config.ts` with erasable TypeScript syntax, run ESLint on Node 22.18 or later, or enable `--experimental-strip-types` on Node 22.12–22.17. The same requirement applies to the Node runtime used by your editor's ESLint extension.
+The path resolves from ESLint's working directory, and it's the same file `comark-lint --config` reads. Node imports it without a TypeScript loader. For a `comark-lint.config.ts` with erasable TypeScript syntax, run ESLint on Node 22.18 or later, or enable `--experimental-strip-types` on Node 22.12–22.17. Your editor's ESLint extension needs that Node version too.
 
 Restart ESLint after you edit a config or a module it imports. In VS Code, run **ESLint: Restart ESLint Server**.
 
@@ -120,11 +120,11 @@ export default [
 ];
 ```
 
-Some of them read Comark syntax as plain Markdown. `markdown/no-missing-label-refs`, for example, reports the brackets of a `[text]{.class}` span and a `:badge[text]` component, so turn it off where it misfires.
+Some read Comark syntax as plain Markdown. `markdown/no-missing-label-refs`, for example, reports the brackets of a `[text]{.class}` span and a `:badge[text]` component, so turn it off where it misfires.
 
 ## oxlint
 
-oxlint can't run this plugin yet. Its JS plugins lint JavaScript and TypeScript files only, and custom file formats and parsers are [not supported yet](https://oxc.rs/docs/guide/usage/linter/js-plugins.html), so it never reads a `.md` file. Run `comark-lint` next to it, as the [Guides](/lint/guides/#run-it-next-to-oxlint) show.
+oxlint can't run this plugin yet. Its JS plugins only lint JavaScript and TypeScript, and it [doesn't support](https://oxc.rs/docs/guide/usage/linter/js-plugins.html) custom file formats or parsers yet, so it never reads a `.md` file. Run `comark-lint` next to it, as the [Guides](/lint/guides/#run-it-next-to-oxlint) show.
 
 ## API
 
@@ -132,8 +132,8 @@ oxlint can't run this plugin yet. Its JS plugins lint JavaScript and TypeScript 
 
 | Setting | Default | Description |
 | --- | --- | --- |
-| `settings.comark.config` | — | A `comark-lint.config.mjs`, from the working directory, whose plugins and components are added to the installed comark-ui packages. |
+| `settings.comark.config` | — | A `comark-lint.config.mjs`, from the working directory, whose plugins and components add to the installed comark-ui packages'. |
 
 ### How it runs
 
-Links to other files are checked against the disk, from the file ESLint lints. A config that fails to load is reported as `comark/plugin-issue` on line 1, and ESLint keeps going.
+The plugin checks links to other files on disk, relative to the file ESLint lints. A config that fails to load shows as `comark/plugin-issue` on line 1, and ESLint keeps going.

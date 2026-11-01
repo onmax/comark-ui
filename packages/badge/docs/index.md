@@ -31,10 +31,10 @@ Use `useFetch` instead. :badge[v4]{color="info"} :badge[stable]{color="success"}
 
 - A prose badge is one `<span>`, written inline or as Nuxt UI's block `::badge`.
 - Seven colors from Nuxt UI, each a tint with text in the color, so a badge reads on light and dark pages.
-- Primary follows the shared `--comark-primary`: the page's Nuxt UI or shadcn/ui primary, or the text color without one.
+- Primary follows the shared `--comark-primary`, which is the page's Nuxt UI or shadcn/ui primary, or else the text color.
 - On a Nuxt UI page, every color but neutral takes the app's `--ui-*` variable.
-- Static SVG badges and live npm versions, downloads, and GitHub Actions status, with a [builder](/badges/) for sharing and export.
-- No script: the components add the styles when they mount.
+- SVG image badges, static or with live npm versions, downloads, and GitHub Actions status, and a [builder](/badges/) to share and export them.
+- No script. The components add the styles when they mount.
 
 ## Usage
 
@@ -46,7 +46,7 @@ Write a badge inline, with its text in brackets.
 
 ### Block
 
-Use the block `::badge` to write the badge's content inside it, as Nuxt UI does. Its paragraph is unwrapped, so it renders as one badge.
+Use the block `::badge` to write the content inside it, as Nuxt UI does. The plugin unwraps its paragraph, so it renders as one badge.
 
 ::example
 ```md
@@ -71,7 +71,7 @@ Use the `color` prop to change the badge's color. It defaults to `primary`.
 
 ### Label
 
-Use the `label` prop to draw the left side of a self-contained SVG badge. Its text can also come from the brackets. Static images are embedded in the document and need no server.
+Use the `label` prop to draw a self-contained SVG badge, with the label on its left and the bracket text on its right. The document embeds static images, so they need no server.
 
 ::example
 ```md
@@ -89,7 +89,7 @@ Use the `value` prop to set a static image's text without brackets.
 
 ### Source
 
-Use `source` to show live data. npm sources need `package`; GitHub Actions needs a public `repository` and a workflow filename, with an optional `branch` filter. Without `branch`, GitHub returns the latest finished run across branches. Parsing fetches the data and draws it into the document like a static image, so a page loads no badge; it shows the data as of the build. When the data is unavailable, or with `download: false`, the badge loads from the hosted endpoint instead and stays current.
+Use the `source` prop to show live data. npm sources need `package`. GitHub Actions needs a public `repository` and a `workflow` filename, and takes an optional `branch`. Parsing fetches the data and draws it into the document like a static image, so the page shows the data as of the build and loads no badge. When the data is unavailable, or with `download: false`, the badge loads from the hosted endpoint instead and stays current.
 
 ```md
 :badge{source="npm-version" package="comark-ui"}
@@ -131,7 +131,7 @@ Use the `workflow` prop to choose the workflow's YAML filename.
 
 ### Branch
 
-Use the `branch` prop to filter workflow runs to one branch. Without it, the badge shows the latest finished run across branches. A run still in progress never shows; the badge keeps the last result until it finishes.
+Use the `branch` prop to filter workflow runs to one branch. Without it, the badge shows the latest finished run across branches. A run in progress never shows. The badge keeps the last result until it finishes.
 
 ```md
 :badge{source="github-actions" repository="onmax/comark-ui" workflow="ci.yaml" branch="main"}
@@ -139,7 +139,7 @@ Use the `branch` prop to filter workflow runs to one branch. Without it, the bad
 
 ### Icon
 
-Use the `icon` prop to add a built-in symbol or logo, or `none` to remove it. npm sources use the npm, npmx, or Nuxt logo to match the preset. An explicit icon overrides that default; GitHub Actions uses GitHub in every preset.
+Use the `icon` prop to add a built-in symbol or logo, or `none` to remove it. By default, npm sources use the npm, npmx, or Nuxt logo to match the preset, and GitHub Actions uses GitHub in every preset. An explicit icon overrides the default.
 
 ::example
 ```md
@@ -149,7 +149,7 @@ Use the `icon` prop to add a built-in symbol or logo, or `none` to remove it. np
 
 ### Label color
 
-Use the `labelColor` prop to change the label background in the default preset's subtle and solid styles. Image colors accept semantic names or six-digit hex values and do not inherit CSS tokens. CI chooses the value's color from its status.
+Use the `labelColor` prop to change the label's background in the default preset's subtle and solid styles. Image colors take a semantic name or a six-digit hex value, and don't inherit CSS tokens. A CI badge colors its value by status.
 
 ::example
 ```md
@@ -159,7 +159,7 @@ Use the `labelColor` prop to change the label background in the default preset's
 
 ### Style
 
-Use the `style` prop to choose shadcn outlines, subtle tints, or solid backgrounds. These styles apply to the default preset; shadcn is its default. Solid badges choose black or white text for contrast.
+Use the `style` prop to choose shadcn outlines, subtle tints, or solid backgrounds, in the default preset only. shadcn is the default. Solid badges pick black or white text for contrast.
 
 ::example
 ```md
@@ -169,7 +169,7 @@ Use the `style` prop to choose shadcn outlines, subtle tints, or solid backgroun
 
 ### Preset
 
-Use the `preset` prop to choose `default`, `npmx`, `nuxt`, `flat`, or `for-the-badge`. The default keeps the existing styles. npmx uses monospace text and a colored slash; Nuxt uses a navy label and a green value block. Flat uses the compact 20px label/value shape familiar from Shields.io. For the badge uses a 28px block with uppercase text. Every preset supports status colors for CI and a custom color. Presets other than default ignore `style` and `labelColor`.
+Use the `preset` prop to choose `default`, `npmx`, `nuxt`, `flat`, or `for-the-badge`. npmx has monospace text and a colored slash, and Nuxt a navy label and a green value block. Flat is the compact 20px shape from Shields.io, and For the badge a 28px block with uppercase text. Every preset takes CI status colors and a custom color. Presets other than default ignore `style` and `labelColor`.
 
 ::example
 ```md
@@ -180,7 +180,7 @@ Use the `preset` prop to choose `default`, `npmx`, `nuxt`, `flat`, or `for-the-b
 ```
 ::
 
-For live npm badges, npmx and Nuxt supply their matching logo; the other presets use npm:
+Live npm badges take the npmx or Nuxt logo in those presets, and npm's in the others:
 
 ```md
 :badge{source="npm-version" package="comark-ui" preset="npmx"}
@@ -189,7 +189,7 @@ For live npm badges, npmx and Nuxt supply their matching logo; the other presets
 
 ### Theme
 
-Images follow the reader's light or dark theme by default, on GitHub too: the SVG carries both palettes and picks one from the page around it. Use the `theme` prop to lock an image to `light` or `dark`. Nuxt, Flat, and For the badge keep their palettes in both modes, with a faint outline in dark mode.
+Use the `theme` prop to lock an image to `light` or `dark`. By default the SVG carries both palettes and follows the reader's theme, on GitHub too. Nuxt, Flat, and For the badge keep their palettes in both modes, with a faint outline in dark mode.
 
 ::example
 ```md
@@ -209,13 +209,13 @@ A badge in a heading sits on the heading's line, a little smaller than its text.
 ```
 ::
 
-The heading's `id` takes the badge's words too, as Comark builds ids from all of a heading's text. `## useFetch :badge[deprecated]` links as `#usefetch-deprecated`.
+The heading's `id` includes the badge's words, since Comark builds ids from all of a heading's text. `## useFetch :badge[deprecated]` links as `#usefetch-deprecated`.
 
 ### Build a README badge
 
-Open the [badge builder](/badges/), choose Custom, npm version, Downloads, GitHub Actions, License, or Docs, and edit the options. Choose a preset from the Appearance swatches, then a color scheme and logo. Copy Markdown for a README, Comark for a document, or the image URL. Copy builder link preserves the configuration and export format in the URL. Download SVG saves the current result as a snapshot.
+Open the [badge builder](/badges/), pick Custom, npm version, Downloads, GitHub Actions, License, or Docs, and edit the options. Pick a preset from the Appearance swatches, then a color scheme and logo. Copy Markdown for a README, Comark for a document, or the image URL. Copy builder link keeps the setup and export format in the URL, and Download SVG saves a snapshot.
 
-The hosted endpoint accepts the same image options as query parameters:
+The hosted endpoint takes the same image options as query parameters:
 
 ```text
 https://comark-ui.onmax.me/badge.svg?label=built%20with&value=Comark%20UI&icon=package
@@ -224,7 +224,11 @@ https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-ui&preset
 
 ### Host the endpoint
 
-Use `createBadgeHandler()` from `comark-badge/server` in a server or Worker. Create one handler and reuse it for every request. In a Worker, pass a `cache` from the Cache API so every instance in a location shares the data, a GitHub `token` so workflow badges don't share the IP's limit of 60 requests an hour, and the request's context so data refreshes after the response.
+Use `createBadgeHandler()` from `comark-badge/server` in a server or Worker, and reuse one handler for every request. In a Worker, pass:
+
+- a `cache` from the Cache API, so instances in a location share the data
+- a GitHub `token`, so workflow badges don't share the IP's limit of 60 requests an hour
+- the request's context, so data refreshes after the response
 
 ```ts
 import { createBadgeHandler } from "comark-badge/server";
@@ -238,7 +242,7 @@ export default {
 };
 ```
 
-The handler accepts GET and HEAD, rejects malformed options with HTTP 400, and fetches only public npm and GitHub APIs. The token needs no scopes and goes only to GitHub. A workflow badge shows only when GitHub marks the run's repository as public. A private or unknown repository returns `unavailable`, even with a broader token.
+The handler takes GET and HEAD, answers malformed options with HTTP 400, and calls only public npm and GitHub APIs. The token needs no scopes and goes only to GitHub. A workflow badge shows only when GitHub marks the repository public. A private or unknown repository returns `unavailable`, even with a broader token.
 
 | Source | Cache lifetime |
 | --- | --- |
@@ -248,13 +252,13 @@ The handler accepts GET and HEAD, rejects malformed options with HTTP 400, and f
 | GitHub Actions | One minute |
 | Unavailable upstream | 30 seconds |
 
-Once a lifetime ends, the handler answers with the last value it has and refreshes it in the background. A missing package, missing workflow, no runs, rate limit, or failed request with no earlier value displays `unavailable`, never a passing status. Browsers and image proxies show the last image while they fetch the next.
+When a lifetime ends, the handler serves the last value and refreshes it in the background. With no earlier value, a missing package or workflow, no runs, a rate limit, or a failed request shows `unavailable`, never a passing status. Browsers and image proxies show the last image while they fetch the next.
 
 ### Serve badges behind Cloudflare
 
-Allow anonymous GET and HEAD requests to your badge endpoint. README image proxies and scripts cannot solve browser challenges. Cloudflare's Browser Integrity Check can reject them with HTTP 403 and error code 1010 before the request reaches the handler.
+README image proxies and scripts can't solve browser challenges, so Cloudflare's Browser Integrity Check can reject them with HTTP 403 and error code 1010 before they reach the handler. Allow anonymous GET and HEAD requests to your badge endpoint.
 
-If Security Events identifies Browser Integrity Check as the cause, add a Configuration Rule for your badge's hostname, path, and methods. For the hosted endpoint, use this rule in the `http_config_settings` phase:
+If Security Events names Browser Integrity Check as the cause, add a Configuration Rule for the badge's hostname, path, and methods. For the hosted endpoint, it's this rule in the `http_config_settings` phase:
 
 ```json
 {
@@ -266,9 +270,9 @@ If Security Events identifies Browser Integrity Check as the cause, add a Config
 }
 ```
 
-Use your own hostname and path when self-hosting. This rule changes only Browser Integrity Check for matching requests. Other paths, methods, and security settings keep their existing configuration. Wrangler's Worker configuration does not apply zone Configuration Rules; manage this rule separately in Cloudflare.
+When self-hosting, use your own hostname and path. The rule turns off Browser Integrity Check for matching requests and changes nothing else. Wrangler doesn't apply zone Configuration Rules, so manage it in Cloudflare.
 
-Verify the endpoint from the client that failed. A valid badge request returns HTTP 200 with `Content-Type: image/svg+xml`. A remaining 403 requires checking Security Events for the blocking feature; changing the badge handler cannot fix a rejection at Cloudflare's edge.
+Test from the client that failed. A badge request should return HTTP 200 with `Content-Type: image/svg+xml`. If a 403 remains, Security Events names the feature that blocks it. No change to the handler fixes a rejection at Cloudflare's edge.
 
 ## API
 
@@ -276,7 +280,7 @@ Verify the endpoint from the client that failed. A valid badge request returns H
 
 | Prop | Default | Description |
 | --- | --- | --- |
-| `color` | `primary` | `primary`, `secondary`, `success`, `info`, `warning`, `error`, or `neutral`. Images also accept six-digit hex. Prose badges fall back to primary on an unknown color. CI images use their status color. |
+| `color` | `primary` | `primary`, `secondary`, `success`, `info`, `warning`, `error`, or `neutral`. Images also take six-digit hex. Prose badges fall back to primary on an unknown color. CI images use their status color. |
 | `source` | `static` | Enables image mode: `static`, `npm-version`, `npm-downloads`, or `github-actions`. |
 | `label` | Source name | Left-hand text, up to 80 characters. Empty by default for static images. |
 | `value` | Bracket text | Static image text, up to 80 characters. Live sources resolve their own value. |
@@ -285,11 +289,11 @@ Verify the endpoint from the client that failed. A valid badge request returns H
 | `repository` | — | Public GitHub repository as `owner/repo`. |
 | `workflow` | — | Workflow filename, such as `ci.yml`. |
 | `branch` | — | Optional workflow branch filter. |
-| `icon` | Source icon | `none`, `package`, `npm`, `npmx`, `nuxt`, `github`, `comark`, `shadcn`, or `check`. npm sources default to the preset's logo; GitHub Actions defaults to GitHub. Brand marks are embedded in the SVG. |
+| `icon` | Source icon | `none`, `package`, `npm`, `npmx`, `nuxt`, `github`, `comark`, `shadcn`, or `check`. npm sources default to the preset's logo, and GitHub Actions to GitHub. The SVG embeds brand marks. |
 | `labelColor` | `neutral` | Semantic or six-digit hex color for the label background in the default preset's subtle and solid styles. |
 | `preset` | `default` | `default`, `npmx`, `nuxt`, `flat`, or `for-the-badge`. All but default ignore `style` and `labelColor`. |
-| `style` | `shadcn` | In the default preset: `shadcn`, `subtle`, or `solid`. shadcn uses a neutral outline and text, with a dot in the value's color unless it is primary, secondary, or neutral. Solid automatically chooses black or white text for contrast. |
-| `theme` | `auto` | `auto` follows the page's light or dark theme; `light` or `dark` locks the image to one. |
+| `style` | `shadcn` | In the default preset: `shadcn`, `subtle`, or `solid`. shadcn uses a neutral outline and text, with a dot in the value's color unless it is primary, secondary, or neutral. Solid picks black or white text for contrast. |
+| `theme` | `auto` | `auto` follows the page's light or dark theme. `light` or `dark` locks the image to one. |
 
 ### Options
 
@@ -302,7 +306,16 @@ In `comarkUi()`, `badge: false` turns it off, and `badge: { endpoint, download }
 
 ### Functions
 
-`comark-badge/svg` exports `readBadge(options)`, returning `{ ok, value }` or `{ ok, error, field }`; `badgeSvg(image)` renders resolved text as SVG; `badgeParams(spec)` writes canonical query parameters; `badgeIcon(name)` renders a built-in logo or symbol for option controls. `badgePresets` lists the presets; `badgeDefaultIcon({ source, preset })` returns their source-specific default icon. This entry has no framework or server dependency. `comark-badge/server` exports `createBadgeHandler(options?)` separately.
+`comark-badge/svg` has no framework or server dependency. It exports:
+
+- `readBadge(options)` returns `{ ok, value }` or `{ ok, error, field }`.
+- `badgeSvg(image)` renders resolved text as SVG.
+- `badgeParams(spec)` writes canonical query parameters.
+- `badgeIcon(name)` renders a built-in logo or symbol for option controls.
+- `badgePresets` lists the presets.
+- `badgeDefaultIcon({ source, preset })` returns the default icon for a source and preset.
+
+`comark-badge/server` exports `createBadgeHandler(options?)`.
 
 ### Your own renderer
 
@@ -312,7 +325,7 @@ The parse plugin replaces each badge's attributes with its `color`, `primary` un
 ["badge", { "color": "warning" }, "deprecated"]
 ```
 
-`colors`, exported from every renderer entry, lists the seven semantic colors. Image mode replaces the attributes with `src`, a data URI or the endpoint's URL, and `label`, with no children; render an image with `label` as its alt text.
+Every renderer entry exports `colors`, the seven semantic colors. An image badge's attributes become `src`, a data URI or the endpoint's URL, and `label`, with no children. Render it as an image with `label` as its alt text.
 
 ### Issues
 
@@ -342,7 +355,7 @@ import badge, { components } from "comark-badge/html";
 const render = createHtmlRenderer({ plugins: [badge()], components });
 ```
 
-For Vue, React, or Svelte, import from `comark-badge/vue`, `comark-badge/react`, or `comark-badge/svelte`. The components add the styles when they mount. When you render on a server, import `comark-badge/style.css` with your own styles so the page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-badge/vue`, `comark-badge/react`, or `comark-badge/svelte`. When you render on a server, import `comark-badge/style.css` with your own styles so the page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
 
 ## Theme
 
@@ -372,8 +385,6 @@ Each color defaults to a shared token. Set one on `.cb` to change badges alone:
 | `--cb-warning` | `--comark-warning` |
 | `--cb-error` | `--comark-danger` |
 | `--cb-neutral` | `--comark-muted` |
-
-Primary's default matches the page's brand color, or stays neutral without one.
 
 ### Classes and attributes
 

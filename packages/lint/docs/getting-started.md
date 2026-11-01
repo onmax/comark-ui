@@ -4,7 +4,7 @@ description: Run comark-linter from the command line, a script, ESLint, or Vite 
 install: pnpm add -D comark-linter
 ---
 
-Install comark-lint, run it on your documents, and teach it your own components.
+Install comark-lint, run it, and teach it your components.
 
 ## Installation
 
@@ -16,7 +16,7 @@ pnpm add -D comark-linter
 
 ### Run it
 
-Pass files or globs. Quote a glob so the shell passes it as it is.
+Pass files or globs. Quote a glob so the shell doesn't expand it.
 
 ```sh
 pnpm comark-lint "docs/**/*.md"
@@ -24,11 +24,11 @@ pnpm comark-lint ducks-vs-bugs.md --format json
 pnpm comark-lint "docs/**/*.md" --check-urls
 ```
 
-It checks each file with the plugins and components of every comark-ui package installed. `comark-ui` counts as every package in it. It prints one `file:line:column rule message fix` line per problem, and `No problems.` when there are none. Links resolve from the working directory. `--check-urls` also requests every external URL and reports the dead ones.
+It checks each file with the plugins and components of every installed comark-ui package, and `comark-ui` counts as all of them. It prints one `file:line:column rule message fix` line per problem, or `No problems.` when there are none. Links resolve from the working directory. `--check-urls` also requests every external URL and reports the dead ones.
 
 ### Add your own components
 
-Put components and plugins of your own in a `comark-lint.config.ts` in the working directory:
+Put your own components and plugins in a `comark-lint.config.ts` in the working directory:
 
 ```ts
 // comark-lint.config.ts
@@ -41,13 +41,13 @@ export default defineConfig({
 });
 ```
 
-The command loads it, or a `.mts`, `.mjs`, or `.js` one, when you run it from that directory. Pass a config elsewhere with `--config`:
+The command loads it, or a `.mts`, `.mjs`, or `.js` one, from the working directory. Pass another path with `--config`:
 
 ```sh
 pnpm comark-lint "docs/**/*.md" --config config/comark-lint.config.ts
 ```
 
-Its `plugins` and `components` are added to the installed packages'. It takes every [library option](#library) but `file`.
+Its `plugins` and `components` add to the installed packages'. It takes every [library option](#library) but `file`.
 
 > [!NOTE]
 > Node loads a `.ts` config from 22.18 on. On older versions, write it as `.mjs`.
@@ -64,17 +64,17 @@ const diagnostics = await lint(markdown, { plugins: [annotate()], components });
 // [{ rule: "comark/unclosed-block", severity: "warn", line: 8, column: 1, message: "…", fix: "…" }]
 ```
 
-Each diagnostic carries its rule's `severity`, `error` or `warn`, the same one Vite Doctor and ESLint report, so a script can fail on errors alone:
+Each diagnostic has its rule's `severity`, `error` or `warn`, as Vite Doctor and ESLint report it, so a script can fail on errors alone:
 
 ```ts
 if (diagnostics.some((diagnostic) => diagnostic.severity === "error")) process.exitCode = 1;
 ```
 
-`lint()` never throws. If a rule crashes on a document, that rule reports one diagnostic saying so, and the others still run.
+`lint()` never throws. A rule that crashes reports one diagnostic saying so, and the others still run.
 
 ### Add it to ESLint
 
-Add `comark-linter/eslint`'s recommended config to `eslint.config.js` to lint your Markdown with `eslint .` and in your editor. [ESLint](/lint/eslint/) has the setup.
+Add `comark-linter/eslint`'s recommended config to `eslint.config.js` to lint Markdown with `eslint .` and in your editor. [ESLint](/lint/eslint/) has the setup.
 
 ### Add it to Vite Doctor
 
@@ -111,7 +111,7 @@ A glob skips `node_modules` and `dist`.
 | --- | --- | --- |
 | `plugins` | `[]` | The parse plugins you render with. Their `meta.issues` become `comark/plugin-issue`, unless a plugin names their rule. |
 | `components` | — | Your components map, or a list of names. Without it, `comark/unknown-component` is off, since any name could be valid. HTML elements are always known. |
-| `file` | — | The document's path, absolute or from `root`. Without it, links to files aren't checked. |
+| `file` | — | The document's path, absolute or from `root`. Without it, file links go unchecked. |
 | `root` | The working directory | Where `/` links and the URL cache resolve from. |
 | `read(path)` | node:fs | Reads a file by absolute path, or returns `undefined`. |
 | `exists(path)` | node:fs | Whether a file or folder exists. |
@@ -119,7 +119,7 @@ A glob skips `node_modules` and `dist`.
 | `headingIds` | Comark's | The `headingIds` you render with, so anchors match the ids readers get. |
 | `links` | — | How links are checked. See [Links](#links). |
 
-`lintFiles(paths, options)` checks many files in one run, as the command line and Vite Doctor do. It returns `{ file, text, diagnostics }` for each path, with no `text` when the file can't be read.
+`lintFiles(paths, options)` checks many files in one run, like the command line and Vite Doctor. It returns `{ file, text, diagnostics }` per path, without `text` when the file can't be read.
 
 ```ts
 import { lintFiles, resolveConfig } from "comark-linter";
@@ -155,11 +155,11 @@ export default defineConfig({
 | `block` | The built-in list | Patterns added to the built-in list of local, private, tunnel, and preview URLs. `false` turns that list off. |
 | `urls` | Off | `true`, or the [URL options](#url-checks), turns on `comark/dead-url`. |
 
-Each link goes through them in order: `skip`, then `block` and the built-in list, then `allow`. Then a local link gets the file check, and an external one the request.
+Links go through them in order: `skip`, then `block` and the built-in list, then `allow`. Then local links get the file check and external ones the request.
 
 #### Routes
 
-A record maps URL prefixes to folders from `root`, one or several. The longest prefix wins. `/blog/first/` above tries `content/blog/first/index.md`, `content/blog/first.md`, and `content/blog/first`, then the same in `content/archive`. A route that resolves to a Markdown file gets its fragments checked too.
+A record maps URL prefixes to one or more folders from `root`. The longest prefix wins. `/blog/first/` above tries `content/blog/first/index.md`, `content/blog/first.md`, and `content/blog/first`, then the same in `content/archive`. If a route resolves to a Markdown file, its fragments get checked too.
 
 A function takes the path and returns one of these:
 
@@ -194,7 +194,7 @@ routes: (path) => (path.startsWith("/api/") ? true : `content${path}`),
 | `cache` | `"node_modules/.cache/comark-linter/urls.json"` | The cache file from `root`, or `false`. |
 | `maxAge` | `86_400_000` | Milliseconds a URL that worked stays cached. |
 
-When parsing or a rule throws, the result's optional `cause` holds the original exception, including any nested diagnostic. The CLI omits it from JSON.
+When parsing or a rule throws, the result's optional `cause` holds the original exception, nested diagnostics included. The CLI leaves it out of JSON.
 
 ## Next steps
 

@@ -47,7 +47,7 @@ credits: 'Reads the <a href="https://github.com/testmoapp/junitxml">JUnit XML</a
 ## Features
 
 - Reads the JUnit XML that Vitest, Jest, pytest, Go, and most CI tools write, from a file or a fence.
-- Shows how many tests passed, failed, and were skipped, and how long they took.
+- Shows the passed, failed, and skipped counts and the duration.
 - Each failure opens to its message and stack.
 - The counts show with no script.
 
@@ -116,7 +116,7 @@ Have CI write the report next to the review document, then point the block at it
 ::
 ```
 
-The summary is one line, and the failures stay closed until a reader opens one, so a long report doesn't push the rest of the review down. In print, every failure prints open.
+The summary is one line and the failures stay closed, so a long report doesn't push the review down. In print, every failure prints open.
 
 ## Accessibility
 
@@ -140,7 +140,7 @@ The results are a section named by their title, or "Test results" without one. E
 
 ### What it shows
 
-- **Passed, failed, and skipped.** Counted from the `<testcase>` elements, so the totals always match the cases. A case with `<failure>` or `<error>` failed, and one with `<skipped>` was skipped. Failed and skipped show only when there are any.
+- **Passed, failed, and skipped.** Counted from the `<testcase>` elements, so the totals match the cases. A case with `<failure>` or `<error>` failed, and one with `<skipped>` was skipped. Failed and skipped show only when there are any.
 - **Duration.** The `time` of the root element, else the sum of the suites', else the sum of the cases', as `250 ms`, `4.2 s`, or `1 min 21 s`.
 - **Failures.** Each one is a `<details>` named `classname › name`, with the failure's `message` and its stack in a code block. With [comark-code](/code/), the stack gets a Copy button.
 
@@ -148,13 +148,13 @@ The root can be `<testsuites>` or a single `<testsuite>`.
 
 ### Options
 
-The options go under `tests` in `comarkUi()`, or to `tests()` when you use the plugin alone. In `comarkUi()`, a `::tests` block reads no files until you pass options, such as `comarkUi({ tests: { root: "." } })`.
+Pass options under `tests` in `comarkUi()`, or to `tests()` alone. In `comarkUi()`, a `::tests` block reads no files until you pass options, such as `comarkUi({ tests: { root: "." } })`.
 
 | Option | Default | Description |
 | --- | --- | --- |
 | `root` | `"."` | The folder `src` can't leave, as in [comark-include](/include/). |
 | `base` | `""` | The document's folder under `root`, where relative paths start. |
-| `read` | Reads from disk | A function that takes a path under the root and returns the file's text. Pass it in a browser or an edge runtime. |
+| `read` | Reads from disk | Takes a path under the root and returns the file's text. Pass one in a browser or an edge runtime. |
 
 ### Issues
 
@@ -165,10 +165,10 @@ The plugin adds these problems to `meta.issues`, as [Validation](/guide/validati
 - A `base` option that leaves the root.
 - XML that isn't well-formed, with the line.
 - A document that isn't a JUnit report.
-- Content inside a block that has `src`. It's dropped.
+- Content inside a block that has `src`. The block drops it.
 - A prop it doesn't read. It's ignored.
 
-A block whose report can't be read renders nothing. Each issue names the block and says how to fix it, and each has its own rule in [Doctor](/doctor/):
+A block with an unreadable report renders nothing. Each issue names the block and the fix, and has its own rule in [Doctor](/doctor/):
 
 ```txt
 `::tests` 1 ("junit.xml"): its XML is malformed at line 3: `</testsuite>` closes `<testcase>`. Fix the report, or run the tests again to rewrite it.
@@ -177,7 +177,7 @@ A block whose report can't be read renders nothing. Each issue names the block a
 
 ### Package
 
-comark-ui brings `comark-tests` and registers it. To use it alone, install it with Comark and a renderer:
+comark-ui installs and registers `comark-tests`. To use it alone, install it with Comark and a renderer:
 
 ```sh
 pnpm add comark @comark/html comark-tests
@@ -192,11 +192,11 @@ import tests, { components } from "comark-tests/html";
 const render = createHtmlRenderer({ plugins: [tests({ root: "." })], components });
 ```
 
-For Vue, React, or Svelte, import from `comark-tests/vue`, `comark-tests/react`, or `comark-tests/svelte`. The components add the styles when they mount. Import `comark-tests/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-tests/vue`, `comark-tests/react`, or `comark-tests/svelte`. The components add the styles on mount. Import `comark-tests/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
 
 ## Theme
 
-Results sit in a bordered card. Each count is a badge tinted in its color, green for passed, red for failed, and muted for skipped, and each failure is a disclosure with its stack. The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
+Results sit in a bordered card. Each count is a tinted badge, green for passed, red for failed, and muted for skipped. The rules sit in a `comark` CSS layer, so any plain rule of yours wins.
 
 ### Shared tokens
 

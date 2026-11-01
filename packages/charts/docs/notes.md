@@ -62,15 +62,15 @@ Team goal: 45 min.
 
 ## Features
 
-- Notes use [comark-annotate](/annotate/)'s marks, and comark-annotate comes with comark-charts and checks them the same way.
-- The renderer finds the shape it draws for the value, such as a bar, a point, a slice, or a step, and draws the mark around it.
+- Notes use [comark-annotate](/annotate/)'s marks and checks, and comark-charts installs it.
+- The mark wraps the shape drawn for its value, such as a bar, a point, a slice, or a step.
 - Marks stay on their data when the numbers change.
 - Notes are numbered under the chart, as under a screenshot.
 - A marked chart zooms like a screenshot.
 
 ## Usage
 
-Put an `::annotation` inside the chart, after the table. Use the `at` prop to name the row it marks: the row's x value, copied from the table. Write the note as the block's content.
+Put an `::annotation` inside the chart, after the table. Use the `at` prop to name the row it marks, by its x value as the table writes it. Write the note as the block's content.
 
 ::example
 ```md
@@ -91,7 +91,7 @@ Bought in bulk after the Tuesday incident.
 
 ### Series
 
-Use the `series` prop to mark one column's value in the row. Without it, the mark covers every series in the row and their values, and a `circle` on bars loops around the row's name too.
+Use the `series` prop to mark one column's value in the row. Without it, the mark covers every series in the row and their values, and a `circle` on bars also loops around the row's name.
 
 ::example
 ```md
@@ -108,11 +108,11 @@ The office flooded in March.
 ```
 ::
 
-On a [gantt chart](/charts/#gantt-charts), `series` names the group of the bar instead, for a task that repeats across groups. On a [sankey](/charts/#sankey), `at` names a node, from either column, and there's no `series`.
+On a [gantt chart](/charts/#gantt-charts), `series` names the bar's group instead, for a task that repeats across groups. On a [sankey](/charts/#sankey), `at` names a node from either column, and there's no `series`.
 
 ### Mark, color, and side
 
-Use the `mark`, `color`, and `side` props as on a [screenshot's annotation](/annotate/components/annotation/). A side note sits in the margin with an arrow, instead of in the numbered list.
+Use the `mark`, `color`, and `side` props as on a [screenshot's annotation](/annotate/components/annotation/). A side note sits in the margin with an arrow instead of in the list.
 
 ::example
 ```md
@@ -148,12 +148,12 @@ The 200 ms budget.
 ```
 ::
 
-The line runs across an upright chart and down a sideways one, wherever its values run. The value axis grows to reach a value past the data, so a target nobody has met yet still shows. Its note is numbered under the chart, or sits in the margin with `side`, like any other mark's.
+The line runs across an upright chart and down a sideways one. The value axis stretches to reach a target past the data. Its note goes in the numbered list, or in the margin with `side`.
 
 > [!NOTE]
 > A line crosses every row and series, so it takes no `at` or `series`. Pies, gantt charts, and sankeys have no value axis, so the plugin reports a line on them.
 
-On a [screenshot](/annotate/components/annotation/#mark), `line` draws a straight stroke through the middle of its box, along its longer side.
+On a [screenshot](/annotate/components/annotation/#mark), `line` instead draws a stroke through the middle of its box.
 
 ## API
 
@@ -177,7 +177,7 @@ The plugin adds these problems to `meta.issues`:
 - The mark points at an empty cell.
 - A line has no number in `value`, or sits on a chart without a value axis.
 - A line has `at` or `series`, or a mark that isn't a line has `value`.
-- A prop isn't one of the above.
+- An unknown prop.
 - The mark, color, side, and note have the problems comark-annotate checks on [screenshots](/annotate/components/annotation/#issues).
 
-A mark the plugin can't place is left out, and the chart draws without it. Each problem has its own rule in [Doctor](/doctor/).
+The chart draws without any mark the plugin can't place. Each problem has its own rule in [Doctor](/doctor/).

@@ -10,7 +10,7 @@ icon: arrow-right-left
 blurb: Leave remark for Comark
 ---
 
-remark-to-comark moves a Markdown project from remark to Comark. It finds the remark setups in the code, says what each plugin becomes, rewrites the unified chains it can, and escapes the Markdown Comark would read differently, so remark still renders every file exactly as before. What it can't do, it reports, with the fix and a link to the diagnostic.
+remark-to-comark moves a Markdown project from remark to Comark. It changes only what remark would still render the same, and reports the rest with a fix.
 
 ## Features
 
@@ -24,7 +24,7 @@ Tested on [100 projects](/remark-to-comark/testing/).
 
 ## Why Comark
 
-Comark reads components in Markdown that stay plain text, renders one JSON parse tree in Vue, React, Svelte, Angular, HTML, and the terminal, and closes unfinished syntax so a streamed reply renders at every token. It also renders Markdown to HTML 6 to 7 times faster than remark in the measured corpora, at the price of a larger browser bundle. [Speed and size](/remark-to-comark/testing/#speed-and-size) has the numbers.
+Comark renders components written in plain-text Markdown to Vue, React, Svelte, Angular, HTML, and the terminal, and it renders a half-streamed reply without breaking. It turns Markdown into HTML 6 to 7 times faster than remark, but its browser bundle is bigger. [Speed and size](/remark-to-comark/testing/#speed-and-size) has the numbers.
 
 ## Usage
 
@@ -34,7 +34,7 @@ Try the check without installing anything. It only reads the project:
 pnpm dlx remark-to-comark check .
 ```
 
-[Getting started](/remark-to-comark/getting-started/) walks through a migration, command by command.
+The whole migration is four commands. [Getting started](/remark-to-comark/getting-started/) explains each one.
 
 ```sh
 pnpm remark-to-comark check .
@@ -45,7 +45,7 @@ pnpm remark-to-comark check .
 
 ## Limits
 
-- MDX stays as it is: JSX and expressions need a JavaScript runtime Comark doesn't have. Docusaurus compiles `.md` as MDX too, unless its config sets `markdown.format: "detect"`.
-- Framework configs are reported, not rewritten: the framework owns the parser.
-- A project's own remark plugins need porting by hand.
-- A block no edit can migrate without changing remark's output, such as a URL after an unclosed `[`, is left as written and reported as RTC0303.
+- It leaves MDX alone, because JSX and expressions need a JavaScript runtime. Docusaurus compiles `.md` as MDX too, unless its config sets `markdown.format: "detect"`.
+- It reports framework configs but doesn't rewrite them, since the framework owns the parser.
+- You port your own remark plugins by hand.
+- It leaves a block as written when no edit keeps remark's output the same, and reports it as RTC0303.

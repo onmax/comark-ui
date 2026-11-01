@@ -36,10 +36,10 @@ Signing out on one device doesn’t sign you out on :suggestion[your other devic
 ## Features
 
 - A suggestion strikes the old words and inserts the new ones, as a redline or in a hand-drawn pen.
-- A note opens a card in the margin that starts on its anchor's line, and crowded cards stack down without opening gaps in the text.
+- A note opens a card in the margin, level with its line. Crowded cards stack down without opening gaps in the text.
 - A reply written anywhere in the document joins its thread, and the bubble counts the messages.
 - On a phone, a click on a bubble opens its card under the line. In print, the cards stay in a narrower margin.
-- No script. An avatar is the image you give the author in `avatars`, or else their initial on a color from the name.
+- No script. An avatar is the author's image from `avatars`, or their initial on a color picked from the name.
 - A screen reader hears "removed" and "added" around each change, and each card is a note that starts with its author.
 
 ## Usage
@@ -84,7 +84,7 @@ Signing out doesn’t sign you out on :suggestion[your other devices]{from="the 
 
 ### Author
 
-Use the `by` prop to name who wrote it. It shows as written, without a leading `@`, beside an avatar of its initial, or the image you give that name in the plugin's `avatars`:
+Use the `by` prop to name the author. It shows without a leading `@`, beside their initial or the image the plugin's `avatars` gives that name:
 
 ::example
 ```md
@@ -94,7 +94,7 @@ To :suggestion[sign in]{from="log in" by="@onmax" note="The button says Sign in.
 
 ### Mark
 
-Use the `mark` prop to draw a suggestion with a hand-drawn `pen`: the old words struck through and the new ones handwritten above them. An insertion hangs over a caret.
+Use the `mark` prop to draw a suggestion with a hand-drawn `pen`, which strikes the old words and writes the new ones above them. An insertion hangs over a caret.
 
 ::example
 ```md
@@ -103,7 +103,7 @@ To :suggestion[sign in]{from="log in" mark="pen" note="The button says Sign in."
 ::
 
 > [!NOTE]
-> Pen fits short changes: both sides 24 characters or fewer, on one line, and plain text with no code or links. Any other suggestion draws as `track`.
+> Pen only draws short changes, with both sides 24 characters or fewer, on one line, and plain text with no code or links. Others draw as `track`.
 
 ### Comment
 
@@ -117,7 +117,7 @@ The link expires after :comment[15 minutes]{by="@onmax" note="Is 15 minutes enou
 
 ### Reply
 
-Give a comment or a suggestion an `#id`, and write `:comment{reply="id"}` with a `note` anywhere in the document. The reply joins that thread, and the paragraph it leaves is dropped:
+Give a comment or suggestion an `#id`, then write `:comment{reply="id"}` with a `note` anywhere in the document. The reply joins that thread, and its empty paragraph is dropped:
 
 ::example
 ```md
@@ -141,13 +141,13 @@ const { plugins, components } = comarkUi({ comments: { mark: "pen" } });
 
 ### Comments or critic
 
-[Critic](/critic/) reads CriticMarkup: plain inline marks with no notes, which a host shows, accepts, or rejects with its `mode`. Comments are authored suggestions and comment threads, each with its author and its reason in the margin. Use critic to publish an edited draft, and comments for a review someone answers.
+[Critic](/critic/) reads CriticMarkup, inline marks with no notes that a host shows, accepts, or rejects with its `mode`. Comments add an author, a reason in the margin, and replies. Use critic to publish an edited draft, and comments for a review someone answers.
 
 ## Accessibility
 
-Each deletion and insertion carries hidden text, "[removed: …]" and "[added: …]", since most screen readers say nothing for `<del>` and `<ins>`. Each card has `role="note"` and starts with its author.
+Each deletion and insertion has hidden text, "[removed: …]" and "[added: …]", because most screen readers say nothing for `<del>` and `<ins>`. Each card has `role="note"` and starts with its author.
 
-The bubble is a checkbox named by its thread, such as "2 comments on “15 minutes”". `Tab` reaches it, and `Space` pins the card's highlight, or on a narrow page opens the card under the line.
+The bubble is a checkbox named by its thread, such as "2 comments on “15 minutes”". `Tab` reaches it. `Space` pins the card's highlight, or opens the card under the line on a narrow page.
 
 ## API
 
@@ -186,7 +186,7 @@ The bubble is a checkbox named by its thread, such as "2 comments on “15 minut
 | Option | Default | Description |
 | --- | --- | --- |
 | `mark` | `track` | How suggestions draw unless one sets its own `mark`: `track` or `pen`. |
-| `avatars` | `{}` | An image URL per author, by the name in `by` without `@`, in any case: `{ onmax: "https://github.com/onmax.png" }`. |
+| `avatars` | `{}` | An image URL per author, by the name in `by` without `@`, in any case, such as `{ onmax: "https://github.com/onmax.png" }`. |
 
 `comments: false` in `comarkUi()` turns it off.
 
@@ -232,7 +232,7 @@ Comments render only to HTML. [Renderers](/guide/renderers/) covers the rest.
 
 ## Theme
 
-The cards and bubbles follow the shared tokens in [Theming](/guide/theming/), and three variables of their own set the marks' colors. The rules sit in a `comark` CSS layer, so a plain rule of your own wins over any of them. The one exception is the margin each block leaves on a wide page, which is `!important` so a page's paragraph margins can't close it.
+The cards and bubbles follow the shared tokens in [Theming](/guide/theming/). The rules sit in a `comark` CSS layer, so any plain rule of yours wins, except the margin each block leaves on a wide page. That one is `!important` so a page's paragraph margins can't close it.
 
 ### Shared tokens
 

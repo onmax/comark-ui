@@ -7,9 +7,9 @@ tagline: Three Comark plugins draw charts with Vega. In comark-charts you write 
 
 ## One block, two readers
 
-A review document has two readers. People look at the chart. Agents read the numbers, in the Markdown when they write it and in the page when they check it. A drawing is a poor place to read numbers from. Its bars are paths, its labels show only the values that fit, and the rest are spread across its attributes.
+People look at the chart. Agents read the numbers, in the Markdown when they write it and in the page when they check it. A drawing is a poor source of numbers. Its bars are paths, its labels show only the values that fit, and the rest hide in its attributes.
 
-So a `::chart` holds a Markdown table. The renderer draws the chart from it and keeps the table in the page, in the **Data** toggle under the chart. An agent writes a table it already knows how to write. A person sees the chart. Either one can check a number against the other.
+So a `::chart` holds a Markdown table. The renderer draws the chart and keeps the table in the page, in the **Data** toggle under it. The agent writes a table, the person sees a chart, and either can check a number against the other.
 
 ::example
 ```md
@@ -23,7 +23,7 @@ So a `::chart` holds a Markdown table. The renderer draws the chart from it and 
 ```
 ::
 
-The other two plugins draw the same chart from a JSON spec, and the page holds only the drawing:
+The other two plugins draw it from a JSON spec, and the page holds only the drawing:
 
 ::code-group
 ````md [comark-vega]
@@ -91,7 +91,7 @@ The other two plugins draw the same chart from a JSON spec, and the page holds o
 
 ## Which to use
 
-Use comark-charts for documents that agents write or check, such as pull request evidence and reports. The table is the source, and it stays in the page. comark-charts lays out the common chart types itself, and draws any other type from a Vega-Lite spec over the same table.
+Use comark-charts for documents that agents write or check, such as pull request evidence and reports. The table is the source and stays in the page. comark-charts lays out the common chart types itself and draws any other from a Vega-Lite spec over the same table.
 
 Use [comark-vega](https://github.com/miguelrk/comark-packages/tree/main/packages/comark-vega) for full Vega specs, data that isn't a table, such as maps, or interactive charts in a Vue app.
 

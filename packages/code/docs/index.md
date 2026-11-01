@@ -59,16 +59,16 @@ pnpm add comark @comark/html comark-code
 
 ## Features
 
-- Each code block gets a header above its first line: the file's name or the language on the left, the buttons on the right, so they never cover the code.
+- Each code block gets a header with the file's name or language on the left and the buttons on the right, so they never cover the code.
 - Copy puts the block's code on the clipboard, and Wrap breaks long lines in that block only.
 - Words after the fence's language mark lines as added, deleted, or worth a look, fold runs of lines, number the lines, and draw shell sessions as a terminal.
 - A `diff` fence with a `lang` turns pasted `git diff` output into highlighted code with its lines marked.
 - Buttons of your own, such as Run, hand the block's code to your app.
-- Without a script, the header keeps its title and hides the buttons, since they couldn't work.
+- Without a script, the header keeps its title and hides the buttons.
 
 ## Usage
 
-Write each attribute after the fence's language, the way [Expressive Code](https://expressive-code.com) writes them, so a block written for Expressive Code renders the same here. Comark's own `[file]` and `{2}` work beside them.
+Write attributes after the fence's language, as [Expressive Code](https://expressive-code.com) does, so a block written for it renders the same here. Comark's own `[file]` and `{2}` work beside them.
 
 ````md
 ```ts title="src/limits.ts" ins={3} del={2} collapse={5-9} showLineNumbers
@@ -81,7 +81,7 @@ export const limits = {
 ```
 ````
 
-A range is one line, `{7}`, or the first and last lines of a run, `{3-4}`, and a list takes both, `{1, 3-4}`. Lines count from 1, and collapsed lines are counted where they are.
+A range is one line, `{7}`, a run of lines, `{3-4}`, or a list of both, `{1, 3-4}`. Lines count from 1, collapsed ones included.
 
 ### Added and deleted lines
 
@@ -133,7 +133,7 @@ export default defineConfig({ plugins: [vue()] });
 
 ### Line numbers
 
-Use the `showLineNumbers` attribute to number the lines. Use `startLineNumber` to number them from another line, such as 120. It turns the numbers on too.
+Use the `showLineNumbers` attribute to number the lines. Use `startLineNumber` to start from another number, such as 120. Setting it turns the numbers on.
 
 ::example
 ````md
@@ -145,10 +145,10 @@ function close() {
 ````
 ::
 
-The numbers and the signs come from CSS, so selecting the code and copying it gets only the code. A numbered line wraps under its own code, not under its number.
+The numbers and signs come from CSS, so selecting and copying the code gets only the code. A numbered line wraps under its own code, not under its number.
 
 > [!NOTE]
-> `startLineNumber` takes a whole number. Any other value is reported, and the lines are numbered from 1.
+> `startLineNumber` takes a whole number. The plugin reports any other value and numbers the lines from 1.
 
 ### Title
 
@@ -174,13 +174,13 @@ pnpm add comark @comark/html comark-code
 ````
 ::
 
-`sh`, `bash`, `zsh`, `shell`, `shellscript`, `shellsession`, `console`, and `ansi` blocks are terminals unless their title is a file's name, like `install.sh`. A terminal's header shows its title, if it has one, but not its language. In a [code group](/tabs/#code-group) the tab names the block, so a terminal there draws no window.
+`sh`, `bash`, `zsh`, `shell`, `shellscript`, `shellsession`, `console`, and `ansi` blocks are terminals unless their title is a file's name, like `install.sh`. A terminal's header shows its title but not its language. In a [code group](/tabs/#code-group) the tab names the block, so a terminal there draws no window.
 
 ### Wrap
 
-Use the `wrap` attribute to start the block with Wrap on. The reader's choice applies to every code block and is saved in localStorage for later visits to the same site, overriding the attribute. If storage is unavailable, the choice lasts for the current page.
+Use the `wrap` attribute to start the block with Wrap on. The reader's choice applies to every code block and overrides the attribute. localStorage keeps it for later visits to the site, or it lasts for the current page when storage is unavailable.
 
-The Wrap button appears only when the unwrapped code would overflow. It stays available while those lines are wrapped, so the reader can turn wrapping off. Its visibility updates when the block resizes or its content changes.
+The Wrap button shows only while the unwrapped code would overflow, rechecked when the block resizes or its content changes. It stays while the lines are wrapped, so the reader can turn wrapping off.
 
 ::example
 ````md
@@ -206,16 +206,16 @@ Use the `lang` attribute on a `diff` fence to highlight it as that language. Eac
 ````
 ::
 
-Paste the output of `git diff` as it is. When the block has `@@` hunk headers, the plugin drops the hunk headers and the file headers before the first hunk. Without `lang`, a `diff` fence stays a diff in Shiki's colors.
+Paste `git diff` output as it is. If the block has `@@` hunk headers, the plugin drops them and the file headers before the first hunk. Without `lang`, a `diff` fence stays a diff in Shiki's colors.
 
 > [!TIP]
-> A `diff` fence marks a change inside one block of code. To set the code before and after a change side by side, use [Diff](/diff/).
+> A `diff` fence marks a change inside one block. To show the code before and after side by side, use [Diff](/diff/).
 
 ## Examples
 
 ### Run code from a button
 
-Use the `actions` option to add buttons of your own. Each one goes on the code blocks in its `languages`, or on every block when you leave them out, before Wrap and Copy:
+Use the `actions` option to add buttons of your own, before Wrap and Copy. Each goes on the blocks in its `languages`, or on every block without them:
 
 ```ts
 const render = createHtmlRenderer({
@@ -224,7 +224,7 @@ const render = createHtmlRenderer({
 });
 ```
 
-Your app decides what an action does. `onCodeAction()` from `comark-code/client` calls your function with the block's code and language whenever that action's button is clicked, and returns a function that stops it:
+Your app decides what an action does. `onCodeAction()` from `comark-code/client` calls your function with the block's code and language on each click of that action's button. It returns a function that stops it:
 
 ```ts
 import { onCodeAction } from "comark-code/client";
@@ -232,9 +232,9 @@ import { onCodeAction } from "comark-code/client";
 const stop = onCodeAction("run", ({ code, language }) => terminal.run(code));
 ```
 
-A click also sends a `comark-code-action` event from the block, with the action's `id`, the code, and the language in its `detail`. It bubbles up to the page, so you can listen for it yourself to handle every action in one place.
+A click also sends a `comark-code-action` event from the block, with the action's `id`, the code, and the language in its `detail`. It bubbles up, so one listener on the page can handle every action.
 
-`code()` with no actions only adds Copy and Wrap. To see an action's button, add one under `comark-code` in the [playground](/play/)'s Config tab.
+To try an action, add one under `comark-code` in the [playground](/play/)'s Config tab.
 
 ### Icons on your buttons
 
@@ -249,7 +249,7 @@ code({
 });
 ```
 
-If an icon can't be drawn, the plugin reports it in `meta.issues` under the same [Doctor](/doctor/) rule as an `:icon`'s, and the button shows its title as text instead.
+If the plugin can't draw an icon, it reports it in `meta.issues` under the same [Doctor](/doctor/) rule as an `:icon`'s, and the button shows its title as text.
 
 ### Highlight with Shiki
 
@@ -259,7 +259,7 @@ List `shiki` before comark-code in `plugins`:
 const render = createHtmlRenderer({ plugins: [shiki(), code()], components });
 ```
 
-Shiki draws every block again from its text, so comark-code marks the lines once Shiki has drawn them. If comark-code comes first, a block keeps its title, frame, and Wrap. It loses its markers, numbers, and collapsed ranges, and the plugin says so in `meta.issues`. Without Shiki, comark-code splits the lines itself.
+Shiki redraws every block from its text, so comark-code marks the lines after it. If comark-code comes first, a block keeps its title, frame, and Wrap. It loses its markers, numbers, and collapsed ranges, and the plugin reports that in `meta.issues`. Without Shiki, comark-code splits the lines itself.
 
 ### Shiki's notation
 
@@ -267,13 +267,13 @@ Shiki's [notation transformers](https://shiki.style/packages/transformers) work 
 
 ### What Copy takes
 
-Copy takes the code's text as written. It leaves out the highlighting, the line numbers, the lines marked `del`, and the row that counts a collapsed range's lines, so a diff copies as the code after the change. Your actions get the same text.
+Copy takes the code's text as written. It leaves out highlighting, line numbers, `del` lines, and the row that counts a collapsed range's lines, so a diff copies as the code after the change. Your actions get the same text.
 
 A check mark confirms the copy. When the page can't write to the clipboard, such as over plain http, Copy selects the code instead and says to press Ctrl+C or ⌘C.
 
 ## Accessibility
 
-The header's buttons are hidden until the script runs, so without it screen readers don't reach them. The title is plain text in the header.
+The header's buttons stay hidden until the script runs, so screen readers reach them only then. The title is plain text.
 
 - Copy is a button named "Copy code". After a click, a status line says "Copied", or, when the page can't write to the clipboard, "Couldn't copy, so the code is selected. Press Ctrl+C or ⌘C." Screen readers read it out.
 - Wrap is a toggle button named "Wrap lines", pressed while it's on.
@@ -295,8 +295,8 @@ The words you write after the fence's language.
 
 | Attribute | Default | Description |
 | --- | --- | --- |
-| `ins` | — | Lines to mark as added, such as `ins={3-4}`: green, with a `+` before them. |
-| `del` | — | Lines to mark as deleted, such as `del={2}`: red, with a `−` before them. Copy leaves them out. |
+| `ins` | — | Lines to mark as added, such as `ins={3-4}`, in green with a `+` before them. |
+| `del` | — | Lines to mark as deleted, such as `del={2}`, in red with a `−` before them. Copy leaves them out. |
 | `mark` | — | Lines to look at, such as `mark={7}`, like Comark's `{7}`. |
 | `collapse` | — | Lines to fold behind a row that counts them, such as `collapse={1-40}`. |
 | `showLineNumbers` | `false` | Numbers the lines. |
@@ -345,7 +345,7 @@ The plugin adds every problem to `meta.issues`, as [Validation](/guide/validatio
 - A range that isn't in braces, or a part of one that isn't a line or a run from a lower line to a higher one.
 - A `startLineNumber` that isn't a whole number.
 - A frame it doesn't draw.
-- comark-code listed before `shiki` in `plugins`, so blocks lose their markers, numbers, and collapsed ranges.
+- comark-code listed before `shiki` in `plugins`.
 - An action's icon it can't draw.
 
 Each issue names the block by its title, or else by its first line, and says how to write it. Each one has its own rule in [Doctor](/doctor/).
@@ -367,15 +367,15 @@ const render = createHtmlRenderer({ plugins: [code()], components });
 
 The components replace how `pre` renders. The block keeps its own markup, so Shiki's highlighting and your `pre` styles still apply, and it works in a [code group](/tabs/#code-group) whichever plugin comes first.
 
-For Vue, React, or Svelte, import from `comark-code/vue`, `comark-code/react`, or `comark-code/svelte` (Svelte 5.20 or later). [Renderers](/guide/renderers/) covers server rendering and using it with other plugins.
+For Vue, React, or Svelte, import from `comark-code/vue`, `comark-code/react`, or `comark-code/svelte`, which needs Svelte 5.20 or later. [Renderers](/guide/renderers/) covers server rendering and using it with other plugins.
 
 When you render on a server, import `comark-code/style.css` with your own styles so the code blocks are styled before the components mount.
 
 ## Theme
 
-The header sits on the code block's own background, so it takes your `pre` styles and Shiki's theme. The title and buttons follow the shared tokens in [Theming](/guide/theming/). Two variables of their own size the buttons and the header, and a third sets the title's font.
+The header sits on the code block's own background, so it takes your `pre` styles and Shiki's theme. The title and buttons follow the shared tokens in [Theming](/guide/theming/).
 
-The rules sit in a `comark` CSS layer, so a plain rule of your own wins over any of them. A few rules sit outside the layer, so they beat a page's own `pre` styles:
+The rules sit in a `comark` CSS layer, so any plain rule of your own wins. These sit outside the layer, so they beat a page's own `pre` styles:
 
 - The `padding-top` that makes room for the header above the first line.
 - The `overflow-x` that clips a marked line's tint.
@@ -403,15 +403,15 @@ Set these on `.ck` or any ancestor, such as `:root`:
 | Variable | Default | Used for |
 | --- | --- | --- |
 | `--ck-inset` | `0.375rem` | How far the buttons sit from the block's top right corner |
-| `--ck-button-size` | `1.5rem` | The buttons' height and least width. On touch screens the tap area is at least `2.75rem` tall without growing the button. Its width stays within the button to avoid overlapping adjacent controls. |
-| `--ck-title-font` | `ui-monospace, SFMono-Regular, Menlo, monospace` | The title. Set it to your code's font so the title matches the block. |
+| `--ck-button-size` | `1.5rem` | The buttons' height and least width. On touch screens the tap area is at least `2.75rem` tall without growing the button, and no wider than it, so it doesn't overlap the next control. |
+| `--ck-title-font` | `ui-monospace, SFMono-Regular, Menlo, monospace` | The title. Set it to your code's font to match the block. |
 | `--ck-green` | `--comark-success` | Lines marked `ins`, and their `+` |
 | `--ck-red` | `--comark-danger` | Lines marked `del`, and their `−`, and Shiki's errors |
 | `--ck-yellow` | `--comark-warning` | Shiki's warnings |
 
-The three colors come from the shared status tokens, so they lighten in dark mode with the rest of the theme.
+The three colors lighten in dark mode with the shared status tokens.
 
-The block's `padding-top` is the button size, the inset above the buttons, and `0.75rem` more, so the code starts that far below the header. A marked line is tinted from edge to edge, past the block's padding, so the block clips its overflow. Its sign sits in the block's left padding, which needs to be at least `1.5ch` wide. On a numbered block, the sign sits between the number and the code.
+The block's `padding-top` is the button size, plus the inset above the buttons, plus `0.75rem`, so the code starts that far below the header. A marked line's tint runs edge to edge, past the block's padding, so the block clips its overflow. The line's sign sits in the left padding, which needs to be at least `1.5ch` wide. On a numbered block, it sits between the number and the code.
 
 ### Classes and attributes
 
@@ -424,11 +424,11 @@ The block's `padding-top` is the button size, the inset above the buttons, and `
 | `.ck-wrap` | Wrap, with `aria-pressed="true"` while it's on |
 | `.ck-copy` | Copy, with `data-state="done"` or `data-state="failed"` for a moment after a click |
 | `.ck-status` | The line under the header that says what Copy did |
-| `[data-code-frame="terminal"]` | On `.ck` when the block is a terminal: dots on the left of the header, and the title in its middle |
-| `[data-code-lines]` | On `.ck` when the lines are blocks of their own: the block marks, numbers, or folds lines, or Shiki's transformers mark them |
+| `[data-code-frame="terminal"]` | On `.ck` when the block is a terminal, with dots on the left of the header and the title in its middle |
+| `[data-code-lines]` | On `.ck` when the lines are blocks of their own, because the block marks, numbers, or folds lines, or Shiki's transformers mark them |
 | `[data-code-numbers]` | On `.ck` when the lines are numbered, with the widest number's digits as its value; each line's number is in `data-line` |
 | `.ck-ins`, `.ck-del`, `.ck-mark` | Lines the fence marks with `ins`, `del`, and `mark`. A line Comark's `{2}` highlights has `.highlight`, and Shiki's transformers' `.diff.add`, `.diff.remove`, `.highlighted`, `.focused`, `.error`, and `.warning` look the same as the matching marker |
-| `.ck-fold` | A collapsed range: a `<details>` whose `<summary>` counts its lines |
+| `.ck-fold` | A collapsed range, a `<details>` whose `<summary>` counts its lines |
 | `[data-code-ready]` | On `<html>` once the script runs; the buttons hide until then, and the title doesn't |
 
 ### Example

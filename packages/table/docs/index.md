@@ -51,7 +51,7 @@ Count the pigeons,412,388
 - A ` ```csv ` or ` ```tsv ` fence becomes a table wherever it is.
 - `::table` reads a CSV, TSV, or JSON file or fence while parsing, so the table is plain HTML.
 - Every table gets a Copy button that pastes as cells in a spreadsheet, a menu that copies it as Markdown or CSV, and headers that sort.
-- A small script adds the buttons and sorting. Without it, the table still reads as plain headers, and print hides the buttons.
+- A small script adds the buttons and sorting. Without it, headers are plain text, and print hides the buttons.
 - Any table, Markdown or data, can color a cell or a row by its status.
 
 ## Usage
@@ -142,7 +142,7 @@ Heron,2
 
 ### Copy
 
-The Copy button copies the table as HTML with tab-separated text beside it, so Google Sheets, Excel, Notion, and Docs paste it as cells. The arrow beside it opens a menu with Markdown, a table that renders on GitHub, and CSV. Use `copy=false` to hide them.
+The Copy button writes HTML and tab-separated text, so Google Sheets, Excel, Notion, and Docs paste the table as cells. The arrow beside it opens a menu for Markdown, which renders on GitHub, and CSV. Use `copy=false` to hide them.
 
 ::example
 ````md
@@ -158,7 +158,7 @@ Heron,2
 
 ### Tone
 
-Use the `tone` prop on a span that fills a cell, as `[text]{tone="success"}`, to tint the cell. The tones are `success`, `warning`, `error`, and `info`. A tone on the first cell colors the whole row. The row's other cells keep a tone of their own, or take the row's.
+Use the `tone` prop on a span that fills a cell, as `[text]{tone="success"}`, to tint the cell. The tones are `success`, `warning`, `error`, and `info`. A tone on the first cell colors the whole row, except cells with a tone of their own.
 
 ::example
 ```md
@@ -172,13 +172,13 @@ Use the `tone` prop on a span that fills a cell, as `[text]{tone="success"}`, to
 A CSV, TSV, or JSON cell takes the same span.
 
 > [!NOTE]
-> A tone span must fill its whole cell. A partial span, or a tone other than the four, leaves the cell uncolored and reports an issue.
+> A tone span must fill its cell. A partial span or an unknown tone leaves the cell uncolored and adds an issue.
 
 ## Examples
 
 ### Benchmarks in a pull request
 
-Have the benchmark write CSV next to the document, and point a table at it, so the numbers in the review are the ones the run produced:
+Have the benchmark write CSV next to the document and point a table at it, so the review shows the numbers the run produced:
 
 ```md
 ::table{src="./bench/results.csv" sort}
@@ -187,15 +187,15 @@ Have the benchmark write CSV next to the document, and point a table at it, so t
 
 ### Big tables
 
-Every row becomes HTML, so a table of thousands of rows makes a heavy page. Trim the data to the rows a reader needs before writing it. A table wider than the page scrolls sideways inside its frame.
+Every row becomes HTML, so thousands of rows make a heavy page. Trim the data to the rows a reader needs. A table wider than the page scrolls sideways in its frame.
 
 ### Reading files
 
-Files are read as [comark-include](/include/) reads them, from disk under `root` or through your `read`. Symlinks that lead out of `root` are refused, and URLs aren't fetched, so download the data first.
+The plugin reads files like [comark-include](/include/), from disk under `root` or through your `read`. It refuses symlinks that lead out of `root` and doesn't fetch URLs, so download the data first.
 
 ## Accessibility
 
-A sortable header is a button inside its `th`, and the `th` carries `aria-sort` once sorted. The Copy button is named "Copy table", and the arrow beside it is "More ways to copy", a button that opens a `menu` of two `menuitem`s: Markdown and CSV. A status line beside them announces "Copied as table", "Copied as Markdown", "Copied as CSV", or "Couldn't copy here".
+A sortable header is a button inside its `th`, which gets `aria-sort` once sorted. The Copy button is named "Copy table". The arrow beside it, "More ways to copy", opens a `menu` with two `menuitem`s, Markdown and CSV. A status line announces "Copied as table", "Copied as Markdown", "Copied as CSV", or "Couldn't copy here".
 
 ### Keyboard interactions
 
@@ -224,15 +224,15 @@ A sortable header is a button inside its `th`, and the `th` carries `aria-sort` 
 
 | Format | Reads |
 | --- | --- |
-| CSV | Comma-separated, as RFC 4180 writes it: a cell in double quotes may hold commas and line breaks, and `""` is a quote. |
+| CSV | Comma-separated, as RFC 4180 writes it. A cell in double quotes may hold commas and line breaks, and `""` is a quote. |
 | TSV | Tab-separated, with no quoting. |
 | JSON | An array of objects, one per row. Every key becomes a column, in the order first seen. A nested value is written as JSON. |
 
-The first row of CSV and TSV is the header. A column whose cells are all numbers, with commas and a short unit if you like, lines up on the right.
+The first row of CSV and TSV is the header. A column of numbers lines up on the right, even with commas and a short unit.
 
 ### Options
 
-The options go under `table` in `comarkUi()`, or to `table()` when you use the plugin alone. In `comarkUi()`, a table reads no files until you pass options, such as `comarkUi({ table: { root: "docs" } })`.
+Pass options under `table` in `comarkUi()`, such as `comarkUi({ table: { root: "docs" } })`, or to `table()` when you use the plugin alone. Until you do, `comarkUi()` reads no table files.
 
 | Option | Default | Description |
 | --- | --- | --- |
@@ -282,7 +282,7 @@ For Vue, React, or Svelte, import from `comark-table/vue`, `comark-table/react`,
 
 ## Theme
 
-A table scrolls sideways in place, with its Copy button and the arrow for its menu in a bar above it, in the style of shadcn/ui's outline buttons. Sortable headers read as plain header text, with an arrow once the script runs. The rules sit in a `comark` CSS layer, so any plain rule of your own wins, except the reset that keeps a sortable header from taking a page's `button` styles.
+The Copy button and its arrow sit in a bar above the table, styled like shadcn/ui's outline buttons. Sortable headers look like plain headers, with an arrow once the script runs. The rules sit in a `comark` CSS layer, so any plain rule of yours wins, except the reset that keeps a sortable header from taking a page's `button` styles.
 
 ### Shared tokens
 
@@ -304,7 +304,7 @@ The table itself takes the page's own table styles.
 
 ### Tones
 
-A toned cell is tinted with its color at 20%. It takes the shared status tokens, so set these variables in your theme to match the rest of the page:
+A toned cell gets its color at 20%. Set the shared status tokens in your theme to match the rest of the page:
 
 | Variable | Used for |
 | --- | --- |
@@ -321,4 +321,4 @@ A toned cell is tinted with its color at 20%. It takes the shared status tokens,
 | `.ctb-bar` | The bar above it, with `.ctb-status` and `.ctb-copy` |
 | `.ctb-copy` | The Copy button, `.ctb-copy-main`, the arrow, `.ctb-copy-more`, and the menu, `.ctb-menu`, whose items are `button[data-table-copy]` |
 | `.ctb-scroll` | The frame the table scrolls in |
-| `.ctb-sort` | A sortable header's button; its `th` carries `aria-sort` once sorted |
+| `.ctb-sort` | A sortable header's button, whose `th` gets `aria-sort` once sorted |

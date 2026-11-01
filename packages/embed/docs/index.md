@@ -36,8 +36,8 @@ blurb: Videos, audio, and live code
 - A YouTube, Vimeo, Loom, Spotify, CodePen, StackBlitz, Figma, or X link becomes its player.
 - Any other `https://` link becomes a card.
 - The plugin never fetches, so a document renders the same offline, in tests, and at build time.
-- The link stays under every player, so the page still makes sense in a feed reader or where iframes are blocked.
-- In print, each player gives way to its address.
+- Every player keeps its link under it, for feed readers and pages that block iframes.
+- In print, each player shows its address instead.
 
 ## Usage
 
@@ -98,7 +98,7 @@ Use a link with no player to get a card with its `title` and host. Cards don't f
 | `https://stackblitz.com/edit/typescript/extra` | A card and an issue. An `/edit/<project>` link takes no more path. |
 | `https://www.figma.com/file/<key>/Example` | A Figma player. `/file/` is the older spelling of `/design/`. |
 | `https://open.spotify.com/artist/<id>` | A full Spotify player. |
-| `https://example.com/docs` | A card. Add `title` so the card names the page instead of showing `example.com`. |
+| `https://example.com/docs` | A card. Add `title` to name the page instead of showing `example.com`. |
 | `http://example.com/docs`, `javascript:...`, or a link with `user:password@` | Nothing, and an issue. |
 
 ### StackBlitz projects
@@ -116,7 +116,7 @@ A project that runs in WebContainers, such as a Node or Vite starter, needs a cr
 
 ### X posts
 
-Use a link to a post on `x.com` or `twitter.com`. The player is X's own, and it grows to the post's height: a small script reads the height X's player reports and sets it on the iframe.
+Use a link to a post on `x.com` or `twitter.com`. X's own player grows to the post's height, which a small script reads from the player and sets on the iframe.
 
 ::example
 ```md
@@ -139,12 +139,12 @@ Each player is an iframe named by its `title`. Without one, a screen reader hear
 | Prop | Default | Description |
 | --- | --- | --- |
 | `url` | — | Required. An `https://` link to a player or any page. |
-| `title` | Provider label for the player; host for the link or card | Names the player for screen readers, and is the text of the link under it or the card's title. |
+| `title` | Provider label for the player, host for the link or card | Names the player for screen readers, and is the text of the link under it or the card's title. |
 | `start` | — | Whole seconds into a YouTube or Vimeo video to start at. |
 
 ### Providers
 
-The plugin checks the path as well as the host. A link to a provider's host with a path it can't read becomes a card and adds a problem, so it stays followable without pretending to be a player.
+The plugin checks the path as well as the host. A provider link with a path it can't read becomes a card and adds an issue, so it still links without posing as a player.
 
 | Provider | Links it reads | Player |
 | --- | --- | --- |
@@ -190,11 +190,11 @@ import embed, { components } from "comark-embed/html";
 const render = createHtmlRenderer({ plugins: [embed()], components });
 ```
 
-For Vue, React, or Svelte, import from `comark-embed/vue`, `comark-embed/react`, or `comark-embed/svelte`. The components add the styles when they mount. When you render on a server, import `comark-embed/style.css` with your own styles so the page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-embed/vue`, `comark-embed/react`, or `comark-embed/svelte`. The components add the styles when they mount. On a server, import `comark-embed/style.css` with your own styles so the page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
 
 ## Theme
 
-Players sit in a bordered frame with their link under it. Cards follow shadcn/ui's Item, with a globe, the title, and the host. The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
+Players sit in a bordered frame with their link under it. Cards follow shadcn/ui's Item, with a globe, the title, and the host. The rules sit in a `comark` CSS layer, so any plain rule of yours wins.
 
 ### Shared tokens
 
@@ -220,7 +220,7 @@ Set them on `.ce`:
 | `--ce-post-width` | `550px` | The widest an X post gets, centered |
 | `--ce-post-height` | `30rem` | An X post's height until its player reports its own |
 
-Videos keep 16:9 and Shorts 9:16 at any width. Spotify and X draw their own cards, so their players have no frame. An X post's height comes from a script, which the HTML renderer inlines once per document that has a post, and the Vue, React, and Svelte components start when they mount.
+Videos keep 16:9 and Shorts 9:16 at any width. Spotify and X draw their own cards, so their players have no frame. An X post's height comes from a script. The HTML renderer inlines it once per document with a post, and the Vue, React, and Svelte components start it on mount.
 
 ### Classes and attributes
 

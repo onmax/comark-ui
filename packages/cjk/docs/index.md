@@ -81,9 +81,9 @@ Use `~~` to strike out a sentence that ends in punctuation.
 
 ### Why CommonMark shows the asterisks
 
-CommonMark decides whether `**` opens or closes bold by the characters around it. In `**太字。**次`, `。` is punctuation and `次` is a letter, so the closing `**` is left as text and the whole line shows its asterisks.
+CommonMark decides whether `**` opens or closes bold by the characters around it. In `**太字。**次`, `。` is punctuation and `次` is a letter, so the closing `**` stays text and the line shows its asterisks.
 
-English puts a space after a full stop, so it never hits this. Chinese, Japanese, and Korean put no space after `。`, `、`, `」`, or `.`. With the plugin, a delimiter next to a character from those scripts may open or close as if a space were there:
+English puts a space after a full stop, so it never hits this. Chinese, Japanese, and Korean put none after `。`, `、`, `」`, or `.`. With the plugin, a delimiter next to a character from those scripts can open or close as if a space were there:
 
 ::example
 ```md
@@ -93,7 +93,7 @@ English puts a space after a full stop, so it never hits this. Chinese, Japanese
 
 ### Text in other languages
 
-Text with no Chinese, Japanese, or Korean on either side of a delimiter parses as CommonMark says. So `**foo.**bar` still shows its asterisks.
+Without Chinese, Japanese, or Korean on either side of a delimiter, text parses as CommonMark says, so `**foo.**bar` still shows its asterisks.
 
 ```md
 **foo.**bar
@@ -101,11 +101,11 @@ Text with no Chinese, Japanese, or Korean on either side of a delimiter parses a
 
 ### Streaming
 
-Comark closes the bold a stream leaves open before parsing, so `**太字。` shows as bold while the rest arrives. Write `**` rather than `__` there too: an unmatched `__` is closed at the end of the line, not where you meant.
+Comark closes bold a stream leaves open before parsing, so `**太字。` shows as bold while the rest arrives. Write `**` rather than `__` there too, since Comark closes an unmatched `__` at the end of the line, not where you meant.
 
 ### Text that also renders on GitHub
 
-GitHub's Markdown follows CommonMark here, so a README in Japanese still shows the asterisks there. For text that has to read the same on GitHub, move the closing `**` before the punctuation:
+GitHub follows CommonMark here, so a Japanese README shows the asterisks there. For text that must read the same on GitHub, move the closing `**` before the punctuation:
 
 ```md
 **太字**。
@@ -113,7 +113,7 @@ GitHub's Markdown follows CommonMark here, so a README in Japanese still shows t
 
 ### Other Markdown tools
 
-The plugin's [upstream repository](https://github.com/tats-u/markdown-cjk-friendly) holds the specification, a proposal for CommonMark, and versions of the same fix for remark and micromark. A site that renders some pages with another Markdown tool can read them the same way.
+The plugin's [upstream repository](https://github.com/tats-u/markdown-cjk-friendly) holds the specification, a proposal for CommonMark, and the same fix for remark and micromark, so pages rendered with those tools parse the same way.
 
 ## API
 
@@ -123,7 +123,7 @@ The plugin takes no options. `cjk: false` in `comarkUi()` turns it off.
 
 ### Package
 
-comark-ui brings `comark-cjk` and registers it. To use it alone, install it and register the plugin:
+comark-ui installs and registers `comark-cjk`. To use it alone, install it and register the plugin:
 
 ```sh
 pnpm add comark @comark/html comark-cjk

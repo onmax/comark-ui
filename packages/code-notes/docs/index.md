@@ -40,9 +40,9 @@ ducks = ducks[ducks.seen > 0]  # <2>
 
 ## Features
 
-- A note sits beside the line it explains, which is easier to follow than a paragraph above the block.
+- A numbered marker ties each note to the line it explains.
 - The markers come from comments, so the code stays valid and copies clean.
-- The notes are an ordinary Markdown list that reads fine where the plugin doesn't run.
+- The notes are a plain Markdown list, readable where the plugin doesn't run.
 - Each marker links to its note, and each note links back.
 - Shiki highlights the code without the markers, and the output needs no script.
 
@@ -58,11 +58,11 @@ const res = await fetch(url) // <1>
 1. The note for that line.
 ````
 
-The comment goes away and a numbered marker takes its place.
+A numbered marker replaces the comment.
 
 ### Markers
 
-Use the comment of the fence's language for the marker. The plugin accepts any of these in any fence, so pick the one that keeps your code valid.
+Write the marker in the fence language's comment. Any of these works in any fence, so pick one that keeps your code valid.
 
 | Comment | Languages |
 | --- | --- |
@@ -72,7 +72,7 @@ Use the comment of the fence's language for the marker. The plugin accepts any o
 | `; <1>` and `% <1>` | Lisp, INI, assembly, LaTeX, Erlang |
 | `/* <1> */` and `<!-- <1> -->` | CSS, HTML, XML, Vue |
 
-A comment with words before the marker keeps the words: `// retry once <2>` shows `// retry once` and marker 2. A line can carry several markers, such as `// <1> <2>`, and two lines can share a number.
+A comment with words before the marker keeps them, so `// retry once <2>` shows `// retry once` and marker 2. A line can carry several markers, such as `// <1> <2>`, and two lines can share a number.
 
 ::example
 ````md
@@ -88,7 +88,7 @@ if (!res.ok) return 0 // <1> <2>
 
 ### Notes
 
-The numbered list right after the fence holds the notes: item 1 is note 1. Each note starts with its marker, which links back to the line.
+The numbered list right after the fence holds the notes, and item 1 is note 1. Each note starts with its marker, which links back to the line.
 
 Start the list at another number, such as `3.`, to number its notes from there.
 
@@ -109,9 +109,9 @@ ducks = ducks[ducks.seen > 0]  # <3>
 
 ### Notes in a pull request
 
-Annotate the lines a reviewer would ask about: the request that runs in parallel, the case that returns early, the number that came from a benchmark. Keep each note to a sentence or two. A longer explanation belongs in the text around the block.
+Annotate the lines a reviewer would ask about, such as a parallel request, an early return, or a number from a benchmark. Keep each note to a sentence or two, and put longer explanations in the text around the block.
 
-The source stays readable without the plugin. On GitHub, the comments show in the code and the notes as a numbered list under it.
+On GitHub, without the plugin, the comments show in the code and the notes as a numbered list under it.
 
 ### Plugin order
 
@@ -125,7 +125,7 @@ In the other order the code isn't highlighted, and `meta.issues` says to move it
 
 ### With comark-code
 
-[comark-code](/code/) adds a bar of buttons to each block. The marker's number is drawn by CSS, so Copy takes only the code.
+[comark-code](/code/) adds a bar of buttons to each block. CSS draws the marker's number, so Copy takes only the code.
 
 ## Accessibility
 
@@ -153,7 +153,7 @@ The plugin adds these problems to `meta.issues`, as [Validation](/guide/validati
 - A note has no marker.
 - `shiki` runs after the plugin.
 
-Each issue names its fence and says how to fix it, and each has its own rule in [Doctor](/doctor/):
+Each names its fence and the fix, and has its own rule in [Doctor](/doctor/):
 
 ```txt
 The ```ts fence 2: marker <3> has no note, since the list after it has 2 items. Add its note, or remove the marker.
@@ -162,7 +162,7 @@ The ```py fence 1 has markers like `<1>` but no numbered list right after it, so
 
 ### Package
 
-[comark-ui](/getting-started/) brings `comark-code-notes` and registers it. To use it alone, install it, register it after Comark's `shiki`, and pass the renderer's `components`:
+[comark-ui](/getting-started/) installs and registers `comark-code-notes`. To use it alone, install it and pass the renderer's `components`:
 
 ```sh
 pnpm add comark @comark/html comark-code-notes
@@ -178,11 +178,11 @@ const render = createHtmlRenderer({ plugins: [shiki(), codeNotes()], components 
 
 Register `codeNotes()` after `shiki()`, as [Plugin order](#plugin-order) explains.
 
-For Vue, React, or Svelte, import from `comark-code-notes/vue`, `comark-code-notes/react`, or `comark-code-notes/svelte`. The components add the styles when they mount. Import `comark-code-notes/style.css` with your styles so a server-rendered page doesn't shift. It works with [comark-code](/code/)'s buttons, whose Copy leaves the markers out. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-code-notes/vue`, `comark-code-notes/react`, or `comark-code-notes/svelte`. The components add the styles on mount. Import `comark-code-notes/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
 
 ## Theme
 
-Markers are round badges in a soft tint of the primary color, with the number in that color. Each note starts with its marker. The rules sit in a `comark` CSS layer, so any plain rule of your own wins, except the few that keep a page's `a`, `ol`, and paragraph rules from breaking the markers and the notes' alignment.
+Markers are round badges tinted with the primary color, with the number in that color. The rules sit in a `comark` CSS layer, so any plain rule of yours wins, except the few that keep a page's `a`, `ol`, and paragraph rules from breaking the markers and the notes' alignment.
 
 ### Shared tokens
 
@@ -208,4 +208,4 @@ Set them on `.cn-marker`:
 
 ### Classes
 
-A marker is `.cn-marker`, with its number in `data-note`, drawn by CSS so copying the code leaves it out. The notes are `ol.cn-notes`; each `li` holds its marker and a `div` with the note. The note a link jumps to is highlighted with `:target`.
+A marker is `.cn-marker`, with its number in `data-note`. The notes are `ol.cn-notes`, and each `li` holds its marker and a `div` with the note. `:target` highlights the note a link jumps to.

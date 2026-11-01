@@ -18,7 +18,7 @@ It needs `vite-doctor` 0.1 or later.
 
 ### Register the extension
 
-`comark-linter/doctor` is a Vite Doctor extension. Vite Doctor loads extensions from an executable config, so register it in `doctor.config.ts`:
+Vite Doctor loads extensions like `comark-linter/doctor` from an executable config, so register it in `doctor.config.ts`:
 
 ```ts
 // doctor.config.ts
@@ -31,7 +31,7 @@ export default defineDoctorConfig({
 });
 ```
 
-It runs whenever the extension is registered, and the `comark/recommended` preset turns every rule on. It also runs next to Vite Doctor's own presets, such as `extends: ["auto"]`.
+The extension runs once registered, and the `comark/recommended` preset turns every rule on. It works next to Vite Doctor's own presets, such as `extends: ["auto"]`.
 
 ### Run it
 
@@ -45,7 +45,7 @@ It lints `**/*.{md,mdc}`, except `node_modules` and `dist`. Set `include` and `e
 
 ### Lint this site's pages
 
-This site lints its own pages this way. Its `docs/build.ts` renders a few components itself, so the config names them, and its routes mirror the pages' URLs:
+This site lints its own pages this way. The config names the components `docs/build.ts` renders itself, and its routes mirror the pages' URLs:
 
 ```ts
 // doctor.config.ts
@@ -72,7 +72,7 @@ export default defineDoctorConfig({
 
 ### Links and the network
 
-Links resolve from the project root. `comark/dead-url` is marked `env-dependent`, since its result depends on the network.
+Links resolve from the project root. `comark/dead-url` is marked `env-dependent` because its result depends on the network.
 
 ## API
 
@@ -89,8 +89,8 @@ The [library options](/lint/getting-started/#library) list the rest, all but `fi
 
 ### Codes
 
-Each rule reports with its own code, and the code links to the rule's page in [Doctor](/doctor/). The core rules start at `COMARK0001`, and each package's rules get a hundred codes of their own. comark-annotate's start at `COMARK0101`, comark-cards' at `COMARK0201`, and so on.
+The core rules' codes start at `COMARK0001`, and each package gets a hundred codes. comark-annotate's start at `COMARK0101`, comark-cards' at `COMARK0201`, and so on.
 
-Of the core rules, frontmatter Comark can't read and unsafe URLs are errors. A few package rules are errors too, such as an unsafe card link, a path outside the project root, and a quiz question with no correct option. The rest are warnings. Each rule's page shows its severity, and [Doctor's overview](/doctor/#rules) lists every code.
+Of the core rules, unreadable frontmatter and unsafe URLs are errors. So are a few package rules, such as an unsafe card link, a path outside the project root, and a quiz question with no correct option. The rest are warnings. Each rule's page shows its severity, and [Doctor's overview](/doctor/#rules) lists every code.
 
-Each diagnostic carries `why`, `fix`, its docs link, and the Markdown location in `sources`. A parsing or rule failure also keeps the original exception in `cause`.
+Each diagnostic has `why`, `fix`, its docs link, and the Markdown location in `sources`. A parsing or rule failure also keeps the original exception in `cause`.

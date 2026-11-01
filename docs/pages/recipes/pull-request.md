@@ -40,18 +40,18 @@ tags: [map, performance]
 
 ## The order
 
-A reviewer reads from the top, so each block answers the next question they'd ask:
+Each block answers the reviewer's next question, top to bottom:
 
-1. The frontmatter holds what a script reads too: the status, the pull request, the author, and tags. [comark-properties](/properties/) shows them in a box at the top, and your tooling reads the same keys.
-2. A sentence says what changed. An icon in front of it, from [comark-icon](/icon/), sets it apart from the evidence.
+1. The frontmatter holds the status, pull request, author, and tags. [comark-properties](/properties/) shows them in a box at the top, and your scripts read the same keys.
+2. A sentence says what changed, with an icon from [comark-icon](/icon/) to set it apart from the evidence.
 3. A `::stats` table from [comark-metrics](/metrics/) shows the numbers that moved, each with its change and whether it got better.
-4. A `::tests` block from [comark-tests](/tests/) reads the JUnit report your test runner wrote, so the counts can't drift from the run.
-5. A suggestion still open goes in CriticMarkup, from [comark-critic](/critic/), with the reason as a comment, so the reviewer sees what you'd change and why.
+4. A `::tests` block from [comark-tests](/tests/) reads your runner's JUnit report, so the counts match the run.
+5. An open suggestion goes in CriticMarkup from [comark-critic](/critic/), with the reason as a comment.
 
 ## Setup
 
-Register the plugins in one renderer, as [Renderers](/guide/renderers/#several-plugins) shows. With a report on disk, point `::tests{src}` at it instead of pasting it in a fence, as [comark-tests](/tests/#usage) shows.
+Register the plugins in one renderer, as [Renderers](/guide/renderers/#several-plugins) shows. For a report on disk, point `::tests{src}` at it instead of pasting it, as [comark-tests](/tests/#usage) shows.
 
 ## Check it
 
-Run [comark-linter](/lint/) on the file before you post it. A delta that can't be read, a report that isn't JUnit, and a suggestion left open each name their block and say how to fix it.
+Run [comark-linter](/lint/) on the file before you post it. It reports an unreadable delta, a report that isn't JUnit, and an open suggestion, each with its block and the fix.

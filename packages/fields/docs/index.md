@@ -43,14 +43,14 @@ Inlines each image while parsing.
 
 ## Features
 
-- Each field is a row: its name in code, its type, a required tag, its default, and its description under them.
-- Fields inside a field describe an object's properties, and sit indented under it.
-- A field works on its own, or in a `::field-group` with a line between fields.
-- Nuxt UI's syntax.
+- A field is a row of its name in code, its type, a required tag, and its default, with the description under them.
+- Fields nest, indented, to describe an object's properties.
+- A field works alone or in a `::field-group`, with a line between fields.
+- It uses Nuxt UI's syntax.
 
 ## Usage
 
-Write a `::field` with its `name` and its description inside.
+Write a `::field` with a `name` and its description inside.
 
 ::example
 ```md
@@ -101,7 +101,7 @@ Tints the icon and the hovered border.
 
 ### Description
 
-Use the `description` prop to set the field's text when it has no content of its own, or when it holds nested fields.
+Use the `description` prop for a field with no content of its own, or one that holds nested fields.
 
 ::example
 ```md
@@ -111,7 +111,7 @@ Use the `description` prop to set the field's text when it has no content of its
 ::
 
 > [!NOTE]
-> On a field with content and no nested fields, `description` is ignored and adds an issue. Write the description as the field's first paragraph instead.
+> On a field with content and no nested fields, the plugin ignores `description` and adds an issue. Write it as the field's first paragraph instead.
 
 ### Nested fields
 
@@ -131,7 +131,7 @@ A key shared by blocks that switch together.
 
 ### Field group
 
-Use `::field-group` to set fields one under another, with a line between them.
+Use `::field-group` to stack fields with a line between them.
 
 ::example
 ```md
@@ -151,7 +151,7 @@ Tints the icon and the hovered border.
 
 ### Hiding optional fields
 
-A long list of options reads better with the rarely used ones folded away. With [comark-details](/details/), put them in a `::collapsible`, as Nuxt UI's docs do:
+Fold rarely used options into a `::collapsible` from [comark-details](/details/), as Nuxt UI's docs do:
 
 ```md
 ::field{name="options" type="object"}
@@ -193,17 +193,17 @@ The parse plugin replaces each field's attributes with the ones it renders from,
 
 ### Issues
 
-The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation/) describes:
+The plugin adds these to `meta.issues`, as [Validation](/guide/validation/) describes:
 
 - A field without a `name`.
 - A prop it doesn't read.
 - A `description` prop on a field with content and no nested fields, which hides the prop.
 
-Each one has its own rule in [Doctor](/doctor/).
+Each has its own rule in [Doctor](/doctor/).
 
 ### Package
 
-comark-ui brings `comark-fields` and registers it. To use it alone, install it:
+comark-ui installs and registers `comark-fields`. To use it alone, install it:
 
 ```sh
 pnpm add comark @comark/html comark-fields
@@ -218,7 +218,7 @@ import fields, { components } from "comark-fields/html";
 const render = createHtmlRenderer({ plugins: [fields()], components });
 ```
 
-For Vue, React, or Svelte, import from `comark-fields/vue`, `comark-fields/react`, or `comark-fields/svelte`. The components add the styles when they mount. When you render on a server, import `comark-fields/style.css` with your own styles so the page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-fields/vue`, `comark-fields/react`, or `comark-fields/svelte`. The components add the styles on mount. When you render on a server, also import `comark-fields/style.css` so the page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
 
 ## Theme
 
@@ -254,4 +254,4 @@ Set it on `.cfl`:
 
 ### Important rules
 
-The rules sit in a `comark` CSS layer, so any plain rule of your own wins, except the top and bottom margins of a field's description. Those are `!important`. To override them, use `!important` in a cascade layer declared before `comark`. An unlayered important rule loses.
+The rules sit in a `comark` CSS layer, so any plain rule of yours wins, except the `!important` top and bottom margins of a field's description. To override them, use `!important` in a cascade layer declared before `comark`. An unlayered important rule loses.

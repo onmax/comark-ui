@@ -70,7 +70,7 @@ export default defineConfig({
 ## Features
 
 - Every code block inside `::magic-move` is one step, with a tab named by the label after its language.
-- The words and marks two steps share move to their new places; new ones fade in and old ones fade out.
+- The words and marks two steps share move to their new places, and the rest fade in or out.
 - It reads the rendered code, so it works with Shiki or any other highlighter, or none.
 - Without the script, the steps read one after another, each under its label.
 - With reduced motion, the step changes without moving anything.
@@ -123,7 +123,7 @@ Use the `title` prop to name the tabs for screen readers. The page doesn't show 
 
 ### Keep what stays the same
 
-Code that stays the same in two steps moves; code that changes fades. Change one thing per step and keep the rest identical, so the reader can follow each move.
+Code two steps share moves, and code that changes fades. Change one thing per step so the reader can follow each move.
 
 ::example
 ````md
@@ -141,7 +141,7 @@ greet(name, { formal: true })
 
 ### Review a change instead
 
-An animation shows one step at a time, so a reviewer can't see every removed and added line at once. For a change someone approves, write a [`::diff`](/diff/).
+An animation shows one step at a time, so a reviewer can't see all the removed and added lines at once. For a change someone approves, write a [`::diff`](/diff/).
 
 ## Accessibility
 
@@ -179,7 +179,7 @@ comark-magic-move takes no options. `magicMove: false` in `comarkUi()` turns it 
 
 ### Issues
 
-The plugin adds a problem with any `::magic-move` to `meta.issues`, as [Validation](/guide/validation/) describes:
+The plugin adds each problem to `meta.issues`, as [Validation](/guide/validation/) describes:
 
 ```txt
 magic-move 1 has one code block, so there's nothing to move between; add a code block for each step, or use a plain code block.
@@ -188,14 +188,14 @@ magic-move 1 has one code block, so there's nothing to move between; add a code 
 It reports:
 
 - A block with fewer than two code blocks.
-- Content that isn't a code block. It's dropped.
+- Content that isn't a code block. The block drops it.
 - A prop it doesn't know.
 
 Each one has its own rule in [Doctor](/doctor/).
 
 ### Package
 
-comark-ui brings `comark-magic-move` and registers it. To use it alone, install it and pass the renderer's `components`:
+comark-ui installs and registers `comark-magic-move`. To use it alone, install it and pass the renderer's `components`:
 
 ```sh
 pnpm add comark @comark/html comark-magic-move
@@ -208,11 +208,11 @@ import magicMove, { components } from "comark-magic-move/html";
 const render = createHtmlRenderer({ plugins: [magicMove()], components });
 ```
 
-For Vue, React, or Svelte, import from `comark-magic-move/vue`, `comark-magic-move/react`, or `comark-magic-move/svelte`. When you render on a server, import `comark-magic-move/style.css` with your own styles. [Renderers](/guide/renderers/) covers the rest.
+For Vue, React, or Svelte, import from `comark-magic-move/vue`, `comark-magic-move/react`, or `comark-magic-move/svelte`. On a server, import `comark-magic-move/style.css` with your styles. [Renderers](/guide/renderers/) covers the rest.
 
 ## Theme
 
-The tabs follow the shared tokens in [Theming](/guide/theming/), and two variables of its own set the header and the space between steps. The code keeps its highlighter's colors. The rules sit in a `comark` CSS layer, so a plain rule of your own wins over any of them.
+The tabs follow the shared tokens in [Theming](/guide/theming/), and two variables set the header and the space between steps. The code keeps its highlighter's colors. The rules sit in a `comark` CSS layer, so any plain rule of yours wins.
 
 ### Shared tokens
 
@@ -246,7 +246,7 @@ Set these on `.cmv` or any ancestor, such as `:root`:
 | `.cmv-step` | Each step, with `data-inactive` on every step but the open one |
 | `.cmv-caption` | A step's label above its code, shown without the script |
 | `.cmv-t` | A word or mark the script cut from the code, on the first move |
-| `[data-magic-move-ready]` | On `<html>` once the script runs; without it every step shows |
+| `[data-magic-move-ready]` | On `<html>` once the script runs. Without it, every step shows |
 
 ### Example
 

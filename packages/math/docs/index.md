@@ -43,14 +43,14 @@ Bread costs $2 a pigeon and seed $5 in all, so $n$ pigeons cost $c = 2n + 5$.
 ## Features
 
 - `$…$` and `\(…\)` write inline math, and `$$…$$`, `\[…\]`, and a `math` fence write display math.
-- Each formula is typeset while parsing, as MathML, which every current browser draws with its own math font. The page loads no script, font, or stylesheet for it.
+- Formulas become MathML while parsing, drawn in the browser's math font, so the page loads no script, font, or stylesheet.
 - Prices such as `$5 and $10`, citations such as `\[1\]`, and anything in code stay text.
-- A formula that doesn't typeset shows its TeX, and the plugin reports it.
-- The TeX stays in the MathML, where screen readers and copy can read it.
+- A formula that doesn't typeset shows its TeX and adds an issue.
+- The MathML keeps the TeX for screen readers and copying.
 
 ## Usage
 
-Write inline math between single `$` signs, or between `\(` and `\)`. The opening `$` can't be followed by a space or a digit, and the closing one can't follow a space or come before a digit, as in Pandoc, so amounts of money stay text.
+Write inline math between single `$` signs, or between `\(` and `\)`. As in Pandoc, the opening `$` can't come before a space or a digit, and the closing one can't follow a space or come before a digit. Amounts of money stay text.
 
 ::example
 ```md
@@ -58,7 +58,7 @@ A duck with $m$ grams of bread and \(k\) friends keeps $\frac{m}{k+1}$ grams.
 ```
 ::
 
-Write display math between `$$` signs, between `\[` and `\]`, or in a fence with the language `math`. A display formula is centered on its own line, and scrolls sideways when it's wider than the page.
+Write display math between `$$` signs, between `\[` and `\]`, or in a fence with the language `math`. A display formula sits centered on its own line and scrolls sideways when it's wider than the page.
 
 ::example
 ````md
@@ -72,7 +72,7 @@ $$
 ````
 ::
 
-Math is never read inside code spans or code blocks. To show a dollar sign before a letter, escape it: `\$x`.
+Code spans and code blocks never hold math. To show a dollar sign before a letter, escape it as `\$x`.
 
 ### Macros
 
@@ -86,19 +86,17 @@ comarkUi({ math: { macros: { "\\R": "\\mathbb{R}" } } });
 
 ### What stays text
 
-- `$5 and $10`, `US$20`, and `$ x $`: a `$` followed by a digit or a space doesn't open a formula.
-- `\[1\]` and `\[2, 3\]`: brackets around numbers are citations.
-- Invalid formulas show their TeX and report an issue. In a streaming parse, an unfinished formula may report one until the rest arrives.
+- A `$` followed by a digit or a space doesn't open a formula, as in `$5 and $10`, `US$20`, and `$ x $`.
+- Brackets around numbers, such as `\[1\]` and `\[2, 3\]`, are citations.
+- An invalid formula shows its TeX and adds an issue. While streaming, an unfinished formula may add one until the rest arrives.
 
 ### From Comark's math plugin
 
-Swap `comark/plugins/math` for `comark-mathml`, and drop KaTeX's stylesheet and its `Math` component. Remove `comark/plugins/math` when you add this one.
-
-Comark's plugin leaves the TeX in the tree and typesets it with KaTeX in a component, in the reader's browser. This one typesets while parsing, so the page loads no KaTeX.
+Remove `comark/plugins/math`, KaTeX's stylesheet, and its `Math` component when you add `comark-mathml`. Comark's plugin leaves the TeX in the tree for a component to typeset with KaTeX in the reader's browser. This one typesets while parsing, so the page loads no KaTeX.
 
 ### KaTeX's HTML
 
-MathML is drawn in the browser's math font. For KaTeX's own fonts and layout, set `output` to `"html"`, or `"htmlAndMathml"` to keep MathML for screen readers. Install `katex` and put its stylesheet on the page:
+For KaTeX's own fonts and layout instead of the browser's math font, set `output` to `"html"`, or to `"htmlAndMathml"` to keep MathML for screen readers. Install `katex` and put its stylesheet on the page:
 
 ```sh
 pnpm add katex
@@ -114,7 +112,7 @@ comarkUi({ math: { output: "htmlAndMathml" } });
 
 ### Options
 
-The options go under `math` in `comarkUi()`, or to `math()` when you use the plugin alone.
+Pass options under `math` in `comarkUi()`, or to `math()` alone.
 
 | Option | Default | Description |
 | --- | --- | --- |
@@ -127,14 +125,14 @@ The options go under `math` in `comarkUi()`, or to `math()` when you use the plu
 - A macro that calls itself stops after 1,000 expansions.
 - Sizes go up to 20em.
 
-[Temml](https://temml.org) writes MathML that Chrome, Firefox, and Safari draw alike. KaTeX's MathML is written for screen readers, and Chrome draws it without `\cancel`, `\boxed`, wide accents such as `\widehat`, or `\mathbb` letters.
+[Temml](https://temml.org) writes MathML that Chrome, Firefox, and Safari draw alike. KaTeX writes its MathML for screen readers, and Chrome draws it without `\cancel`, `\boxed`, wide accents such as `\widehat`, or `\mathbb` letters.
 
 ### Issues
 
-The plugin adds these problems to `meta.issues`, as [Validation](/guide/validation/) describes:
+The plugin adds these to `meta.issues`, as [Validation](/guide/validation/) describes:
 
 - A formula whose TeX doesn't typeset, with the typesetter's reason. Its TeX shows in its place.
-- An `output` that needs KaTeX when `katex` isn't installed. Formulas are then typeset as MathML.
+- An `output` that needs KaTeX when `katex` isn't installed. Formulas fall back to MathML.
 
 ```txt
 Math `\frac{a}` failed to typeset: Unexpected end of input in a macro argument, expected '}'. Fix the TeX or wrap it in code.
@@ -144,7 +142,7 @@ Each has its own rule in [Doctor](/doctor/).
 
 ### Package
 
-comark-ui brings `comark-mathml` and registers it. To use it alone, install it with Comark and a renderer, and register it instead of `comark/plugins/math`:
+comark-ui installs and registers `comark-mathml`. To use it alone, install it with Comark and a renderer, and register it instead of `comark/plugins/math`:
 
 ```sh
 pnpm add comark @comark/html comark-mathml
@@ -157,11 +155,11 @@ import math, { components } from "comark-mathml/html";
 const render = createHtmlRenderer({ plugins: [math()], components });
 ```
 
-For Vue, React, or Svelte, import from `comark-mathml/vue`, `comark-mathml/react`, or `comark-mathml/svelte`. The components add the styles when they mount. Import `comark-mathml/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-mathml/vue`, `comark-mathml/react`, or `comark-mathml/svelte`. The components add the styles on mount. On a server-rendered page, also import `comark-mathml/style.css` so it doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
 
 ## Theme
 
-Formulas take the text's color and the system's math font. The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
+Formulas take the text's color and the system's math font. The rules sit in a `comark` CSS layer, so any plain rule of yours wins.
 
 ### Shared tokens
 

@@ -29,17 +29,17 @@ With moon phase and vibes behind **+2 filters**, everything fits on one row.
 ```
 ::
 
-Click either screenshot. The zoomed view shows both, and you move between them with its arrows, the strip at the bottom, or the arrow keys.
+Click either screenshot. The zoomed view holds both, and its arrows, the strip at the bottom, or the arrow keys move between them.
 
 ## When to use it
 
-A screenshot zooms on its own, with its notes beside it. A group is for screenshots that belong together but sit apart, with text between them, such as the steps of a bug report. For two screenshots of the same view side by side, use [`::compare`](/annotate/components/compare/) instead, which already zooms as one gallery.
+A screenshot zooms on its own, with its notes beside it. Use a group for screenshots that belong together but have text between them, such as the steps of a bug report. For two screenshots of one view side by side, use [`::compare`](/annotate/components/compare/), which already zooms as one gallery.
 
 ## How it works
 
-`::zoom` zooms the whole block, so the zoomed view shows the screenshot with its marks and its numbered notes under it. Its `title` names the item in the zoomed view's header and in the strip.
+`::zoom` zooms the whole block, so the screenshot keeps its marks and numbered notes. Its `title` names the item in the zoomed view's header and strip.
 
-Items with the same `group` page through one zoomed view, in the order they appear on the page. A group can mix screenshots with plain images, tables, or code:
+Items with the same `group` share one zoomed view, in page order. A group can mix screenshots with plain images, tables, or code:
 
 ```md
 ::zoom{group="toolbar" title="The design"}

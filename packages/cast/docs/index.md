@@ -63,11 +63,10 @@ credits: 'Reads <a href="https://docs.asciinema.org/manual/asciicast/v2/">asciin
 
 ## Features
 
-- The page gets the screen as the terminal last showed it.
-- A progress bar redrawn in place shows only its last state, and a cleared screen is gone.
+- It shows the terminal's last screen, so a redrawn progress bar shows only its final state and a cleared screen is gone.
 - The output keeps its colors, and a reader can select, search, and copy it.
-- No player and no script: the page gets a `pre` with colored spans. The asciinema player weighs 1.4 MB.
-- Casts in asciinema's v2 and v3 formats both work.
+- It renders a `pre` with colored spans, with no player and no script. The asciinema player weighs 1.4 MB.
+- It reads asciinema's v2 and v3 formats.
 
 ## Usage
 
@@ -79,11 +78,11 @@ Use the `src` prop to show a cast file, relative to the plugin's `root`.
 ```
 
 > [!NOTE]
-> Only local files are read. In `comarkUi()`, cast reads no files until you pass `root` or `read`, as [Options](#options) shows.
+> Cast reads only local files. In `comarkUi()`, it reads none until you pass `root` or `read`, as [Options](#options) shows.
 
 ### Inline cast
 
-Write a short cast inside the block instead of in a file, in a code block of its own. Inline casts render whatever the options.
+Put a short cast in a code block inside `::cast` instead of a file. Inline casts render whatever the options.
 
 ::example
 ````md
@@ -101,7 +100,7 @@ Write a short cast inside the block instead of in a file, in a code block of its
 
 ### Mode
 
-Use the `mode` prop to choose what the terminal shows. `screen`, the default, shows its last screen. `log` shows every line printed, from the first, so lines that scrolled off the top stay too.
+Use the `mode` prop to choose what the terminal shows. `screen`, the default, shows the last screen. `log` shows every line printed, including those that scrolled off the top.
 
 ::example
 ````md
@@ -135,7 +134,7 @@ Use the `title` prop to put a caption above the terminal.
 
 ### Record a cast
 
-Install [asciinema](https://docs.asciinema.org/getting-started/) and record the command, with the terminal sized to what the page has room for:
+Install [asciinema](https://docs.asciinema.org/getting-started/) and record the command at a size that fits the page:
 
 ```sh
 asciinema rec --cols 80 --rows 20 --command "pnpm test" docs/test.cast
@@ -145,7 +144,7 @@ Then show it with `::cast{src="test.cast"}`.
 
 ### Show a command's output in a review
 
-A screenshot of a terminal can't be searched or copied, and pasting the output loses its colors. Record the command instead and put the cast next to the document:
+Record the command and put the cast next to the document:
 
 ```sh
 asciinema rec --cols 80 --rows 12 --command "pnpm test" evidence/test.cast
@@ -158,18 +157,18 @@ The flaky homing test passes now:
 ::
 ```
 
-Use `mode="log"` when the part that matters scrolled off the screen, such as the first error in a long build. Keep `--rows` small for the default mode, so the screen holds only the end of the run.
+Use `mode="log"` when the part that matters scrolled off, such as the first error in a long build. In the default mode, keep `--rows` small so the screen holds only the end of the run.
 
 ### What the terminal replays
 
-Output events (`"o"`) and resizes (`"r"`) are replayed. Input, markers, and the exit code draw nothing. The terminal knows enough of xterm for what command-line tools print:
+The terminal replays output (`"o"`) and resize (`"r"`) events. Input, markers, and the exit code draw nothing. It handles the xterm features command-line tools print:
 
-- The 16 colors, 256 colors, and 24-bit colors, for text and background, and bold, dim, italic, underline, strikethrough, and inverse.
+- 16, 256, and 24-bit colors for text and background, and bold, dim, italic, underline, strikethrough, and inverse.
 - Carriage returns and backspaces, cursor moves and positions, erasing a line or the screen, and tabs.
 - Wide characters such as CJK and emoji, and long lines wrapping at the terminal's width.
-- The alternate screen of full-screen apps such as `vim` or `less`, which disappears when they quit, as in a real terminal.
+- The alternate screen of full-screen apps such as `vim` or `less`, gone when they quit.
 
-Window titles and links are dropped. A bare `\n` starts a new line from the left, so a cast written by hand doesn't need `\r\n`.
+It drops window titles and links. A bare `\n` starts a new line from the left, so a hand-written cast doesn't need `\r\n`.
 
 ## API
 
@@ -183,7 +182,7 @@ Window titles and links are dropped. A bare `\n` starts a new line from the left
 
 ### Options
 
-Options go under `cast` in `comarkUi()`, or to `cast()` when you use it alone. In `comarkUi()`, cast reads no files until you pass `root` or `read`. Inline casts render either way.
+Pass options under `cast` in `comarkUi()`, or to `cast()` alone. In `comarkUi()`, cast reads no files until you pass `root` or `read`.
 
 | Option | Default | Description |
 | --- | --- | --- |
@@ -205,11 +204,11 @@ The plugin adds these problems to `meta.issues`, as [Validation](/guide/validati
 - The block has both `src` and a code block.
 - A prop isn't one of the above.
 
-Each issue names its block and says how to fix it, and each has its own rule in [Doctor](/doctor/). A cast it can't read renders nothing.
+Each names its block and the fix, and has its own rule in [Doctor](/doctor/). A cast it can't read renders nothing.
 
 ### Package
 
-[comark-ui](/getting-started/) brings `comark-cast` and registers it. To use it alone, install it and pass the renderer's `components`:
+[comark-ui](/getting-started/) installs and registers `comark-cast`. To use it alone, install it and pass the renderer's `components`:
 
 ```sh
 pnpm add comark @comark/html comark-cast
@@ -222,13 +221,13 @@ import cast, { components } from "comark-cast/html";
 const render = createHtmlRenderer({ plugins: [cast({ root: "docs" })], components });
 ```
 
-For Vue, React, or Svelte, import from `comark-cast/vue`, `comark-cast/react`, or `comark-cast/svelte`. The components add the styles when they mount. Import `comark-cast/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-cast/vue`, `comark-cast/react`, or `comark-cast/svelte`. The components add the styles on mount. Import `comark-cast/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
 
 ## Theme
 
-The terminal is a window in the page's scheme, as shadcn/ui draws a code block: a muted surface with a border and three dots. Its 16 colors switch with the scheme, darker on a light page so a program's white and yellow still read, whether the system or a `.light` or `.dark` class above sets it.
+The terminal is a muted surface with a border and three dots, like shadcn/ui's code block. Its 16 colors follow the page's color scheme, set by the system or a `.light` or `.dark` class above, and turn darker on a light page so white and yellow text still reads.
 
-The rules sit in a `comark` CSS layer, so any plain rule of your own wins, except the terminal's background, text color, and margin. A page's `pre` styles would put the program's colors on the wrong ground or push the terminal away from its caption. Change the colors through the variables, and space the `.cca` figure instead.
+The rules sit in a `comark` CSS layer, so any plain rule of yours wins, except on the terminal's background, text color, and margin, which a page's `pre` styles would break. Change the colors through the variables, and space the `.cca` figure instead.
 
 ### Shared tokens
 
@@ -251,7 +250,7 @@ Set them on `.cca`:
 | `--cca-foreground` | `--comark-foreground` | Text with no color, and inverted backgrounds |
 | `--cca-0` to `--cca-15` | Tailwind's zinc, red, green, yellow, blue, purple, and cyan, a shade darker on a light page | The 16 terminal colors, then their bright versions |
 
-256-color and 24-bit colors are written as they were recorded.
+256-color and 24-bit colors render as recorded.
 
 ### Classes
 
