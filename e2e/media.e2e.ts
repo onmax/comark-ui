@@ -25,6 +25,7 @@ const silence = (() => {
   return wav;
 })();
 const clip = await readFile(new URL("clip.webm", import.meta.url));
+const portrait = await readFile(new URL("portrait.webm", import.meta.url));
 // The page loads its files from routes, since a Markdown image's src must end in a media extension. Chromium only
 // seeks in a file whose server answers byte ranges, as real hosts do.
 const serve = (body: Buffer, type: string) => (route: Route) => {
@@ -209,6 +210,103 @@ test("a video fills its frame under the typeset, with no margin above it", async
   const video = (await player.locator("video").boundingBox())!;
   expect(video.y - frame.y).toBeLessThanOrEqual(1);
   expect(frame.y + frame.height - (video.y + video.height)).toBeLessThanOrEqual(1);
+});
+
+test("a video without its size keeps the column's 16:9 room until its file answers", async ({
+  page,
+}) => {
+  // The file never answers, so the video never learns its size.
+  await page.route("**/slow.webm", () => {});
+  await open(page, "![A slow clip](slow.webm)");
+  const player = page.getByRole("group", { name: "A slow clip" });
+  await expect(player).toHaveAttribute("data-media-ready");
+  const column = (await page.locator("body").boundingBox())!;
+  const video = (await player.locator("video").boundingBox())!;
+  expect(video.width).toBeGreaterThan(column.width - 4);
+  expect(Math.abs(video.height - (video.width * 9) / 16)).toBeLessThanOrEqual(1);
+  // The bar keeps its single row instead of stacking its controls in a column.
+  expect((await player.locator(".cm-bar").boundingBox())!.height).toBeLessThan(60);
+});
+
+test("a video's poster sizes its frame before the file answers", async ({ page }) => {
+  await page.route("**/slow.webm", () => {});
+  await page.route("**/tall.svg", (route) =>
+    route.fulfill({
+      contentType: "image/svg+xml",
+      body: '<svg xmlns="http://www.w3.org/2000/svg" width="180" height="320"/>',
+    }),
+  );
+  await open(page, '![A tall clip](slow.webm){poster="tall.svg"}');
+  const player = page.getByRole("group", { name: "A tall clip" });
+  await expect(player).toHaveAttribute("data-sized");
+  const frame = (await player.boundingBox())!;
+  const video = (await player.locator("video").boundingBox())!;
+  expect(video.width).toBe(180);
+  expect(frame.width - video.width).toBeLessThanOrEqual(2);
+});
+
+test("poster sizing follows replacement, removal, and failed loads", async ({ page }) => {
+  await page.route("**/slow.webm", () => {});
+  const tall = '<svg xmlns="http://www.w3.org/2000/svg" width="180" height="320"/>';
+  await page.route("**/tall.svg", (route) =>
+    route.fulfill({ contentType: "image/svg+xml", body: tall }),
+  );
+  let release!: () => void;
+  const pending = new Promise<void>((resolve) => (release = resolve));
+  await page.route("**/replacement.svg", async (route) => {
+    await pending;
+    await route.fulfill({ contentType: "image/svg+xml", body: tall });
+  });
+  await page.route("**/missing.svg", (route) => route.fulfill({ status: 404 }));
+  await open(page, '![A changing poster](slow.webm){poster="tall.svg"}');
+  const player = page.getByRole("group", { name: "A changing poster" });
+  const video = player.locator("video");
+  await expect(player).toHaveAttribute("data-sized");
+
+  await video.evaluate((video) => video.setAttribute("poster", "replacement.svg"));
+  await expect(player).not.toHaveAttribute("data-sized");
+  release();
+  await expect(player).toHaveAttribute("data-sized");
+
+  await video.evaluate((video) => video.removeAttribute("poster"));
+  await expect(player).not.toHaveAttribute("data-sized");
+  const column = (await page.locator("body").boundingBox())!;
+  expect((await video.boundingBox())!.width).toBeGreaterThan(column.width - 4);
+
+  await video.evaluate((video) => video.setAttribute("poster", "tall.svg"));
+  await expect(player).toHaveAttribute("data-sized");
+  const failed = page.waitForResponse("**/missing.svg");
+  await video.evaluate((video) => video.setAttribute("poster", "missing.svg"));
+  await failed;
+  await expect(player).not.toHaveAttribute("data-sized");
+});
+
+test("an earlier poster load cannot size its pending replacement", async ({ page }) => {
+  await page.route("**/slow.webm", () => {});
+  let release!: () => void;
+  const pending = new Promise<void>((resolve) => (release = resolve));
+  const requested = page.waitForRequest("**/earlier.svg");
+  await page.route("**/earlier.svg", async (route) => {
+    await pending;
+    await route.fulfill({
+      contentType: "image/svg+xml",
+      body: '<svg xmlns="http://www.w3.org/2000/svg" width="180" height="320"/>',
+    });
+  });
+  await page.route("**/pending.svg", () => {});
+  await open(page, '![A pending poster](slow.webm){poster="earlier.svg"}');
+  await requested;
+  const player = page.getByRole("group", { name: "A pending poster" });
+  await player.locator("video").evaluate((video) => video.setAttribute("poster", "pending.svg"));
+  release();
+  // Decode the same resource and let its load handlers run before checking the old callback's effect.
+  await page.evaluate(async () => {
+    const image = new Image();
+    image.src = "earlier.svg";
+    await image.decode();
+    await new Promise(requestAnimationFrame);
+  });
+  await expect(player).not.toHaveAttribute("data-sized");
 });
 
 test("the settings panel sets the speed and looping, and closes on Escape or a click outside", async ({
@@ -412,13 +510,22 @@ test("one audio player plays at a time", async ({ page }) => {
 test("the browser's player shows without the script, and when the file can't play", async ({
   page,
 }) => {
-  await open(page, "![Silence](silence.wav)\n\n![A gray clip](clip.webm)", { script: false });
+  await page.route("**/portrait.webm", serve(portrait, "video/webm"));
+  await open(page, "![Silence](silence.wav)\n\n![A portrait clip](portrait.webm)", {
+    script: false,
+  });
   const player = page.getByRole("group", { name: "Silence" });
   await expect(player.locator("audio")).toBeVisible();
   await expect(player.locator(".cm-bar")).toBeHidden();
-  const clip = page.getByRole("group", { name: "A gray clip" });
+  const clip = page.getByRole("group", { name: "A portrait clip" });
   await expect(clip.locator("video")).toHaveAttribute("controls");
   await expect(clip.locator(".cm-bar")).toBeHidden();
+  await expect(clip.locator("video")).toHaveJSProperty("videoWidth", 180);
+  await expect(clip.locator("video")).toHaveJSProperty("videoHeight", 320);
+  await expect(clip).not.toHaveAttribute("data-media-ready");
+  const frame = (await clip.boundingBox())!;
+  const video = (await clip.locator("video").boundingBox())!;
+  expect(frame.width - video.width).toBeLessThanOrEqual(2);
 
   await open(page, "![Missing](missing.wav)");
   const missing = page.getByRole("group", { name: "Missing" });

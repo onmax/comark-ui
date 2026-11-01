@@ -94,6 +94,34 @@ export function start(css: string): () => void {
     target instanceof Element ? target.closest<HTMLElement>(players) : null;
   const mediaOf = (player: Element) =>
     player.querySelector<HTMLMediaElement>(":scope>audio,:scope>video");
+  // A poster sizes its video before the file does, but the video doesn't say when its poster loads, so the script
+  // loads the poster too and remembers which URL gives each video its size.
+  const posters = new WeakMap<HTMLVideoElement, { src: string; loaded: boolean }>();
+  const posterSized = (video: HTMLVideoElement, player: HTMLElement) => {
+    const src = video.poster;
+    if (!src) {
+      posters.delete(video);
+      return false;
+    }
+    let poster = posters.get(video);
+    if (poster?.src !== src) {
+      poster = { src, loaded: false };
+      posters.set(video, poster);
+      const current = poster;
+      const image = new Image();
+      image.addEventListener(
+        "load",
+        () => {
+          if (posters.get(video) !== current || video.poster !== src) return;
+          current.loaded = true;
+          draw(player);
+        },
+        { signal },
+      );
+      image.src = src;
+    }
+    return poster.loaded;
+  };
   // A stream has no end, so it gets no length and no seeking.
   const length = (media: HTMLMediaElement) =>
     Number.isFinite(media.duration) ? media.duration : 0;
@@ -111,6 +139,7 @@ export function start(css: string): () => void {
     if (media instanceof HTMLVideoElement) {
       // A video that can't play gets the browser's controls back, so they can say why.
       media.controls = Boolean(media.error);
+      player.toggleAttribute("data-sized", media.videoWidth > 0 || posterSized(media, player));
       // A frame without the fullscreen permission can't go full screen, so the button would do nothing.
       const full = player.querySelector<HTMLElement>(".cm-full");
       if (full) full.hidden = !document.fullscreenEnabled && !media.webkitEnterFullscreen;
@@ -347,12 +376,16 @@ export function start(css: string): () => void {
   let syncQueued = false;
   const observer = new MutationObserver((records) => {
     if (
-      !records.some((record) =>
-        [...record.addedNodes].some((node) =>
-          node instanceof Element
-            ? node.matches(players) || node.querySelector(players)
-            : node instanceof DocumentFragment && node.querySelector(players),
-        ),
+      !records.some(
+        (record) =>
+          (record.type === "attributes" &&
+            record.target instanceof HTMLVideoElement &&
+            playerOf(record.target)) ||
+          [...record.addedNodes].some((node) =>
+            node instanceof Element
+              ? node.matches(players) || node.querySelector(players)
+              : node instanceof DocumentFragment && node.querySelector(players),
+          ),
       ) ||
       syncQueued
     )
@@ -363,7 +396,12 @@ export function start(css: string): () => void {
       if (!signal.aborted) sync();
     });
   });
-  observer.observe(document, { childList: true, subtree: true });
+  observer.observe(document, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ["poster"],
+  });
 
   const state = {
     users: 1,

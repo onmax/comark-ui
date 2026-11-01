@@ -32,6 +32,9 @@ export const css = `@layer comark{${[
   "video.cm{height:auto}",
   // Round the video itself so the volume panel can extend above a short frame.
   ".cm-video{position:relative;width:fit-content}",
+  // A video with only a ratio adds no width to a frame that fits it. While the script runs, keep the column's width
+  // until its poster or metadata loads. Without the script, let the frame fit the browser's player.
+  ".cm-video[data-media-ready]:not([data-sized]):has(>video:not([width][height])){width:100%}",
   // Typeset gives a video a top margin, which inside the frame would push it down and crop its bottom.
   ".cm-video>video{display:block;max-width:100%;height:auto;margin:0;border-radius:inherit}",
   ".cm-video[data-media-ready]:not([data-error])>video{cursor:pointer}",
