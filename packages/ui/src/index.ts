@@ -14,7 +14,7 @@ import type { DiagramsOptions } from "comark-diagrams";
 import figure, { type FigureOptions } from "comark-figure";
 import type { FileTreeOptions } from "comark-file-tree";
 import footnotes, { type FootnotesOptions } from "comark-footnotes";
-import type { CalloutsOptions, ReferencesOptions } from "comark-github";
+import { HTML_TAGS, type CalloutsOptions, type ReferencesOptions } from "comark-github";
 import { createIcons, type IconOptions, type Icons } from "comark-icon";
 import include, { type IncludeOptions } from "comark-include";
 import keys, { type KeysOptions } from "comark-keys";
@@ -173,7 +173,59 @@ export type Renderer<C> = {
   typeset: C;
 };
 
-export type Preset<C> = { plugins: AnyPlugin[]; components: Record<string, C> };
+export type Preset<C> = {
+  plugins: AnyPlugin[];
+  components: Record<string, C>;
+  /**
+   * Every tag but `components`' that a document parsed with `plugins` can hold: Markdown's own, the raw HTML that
+   * GitHub's `html` plugin keeps, and the plain elements the plugins draw with. With `components`' names, it's the
+   * allowlist a host that sanitizes the tree needs. With GitHub's `html` off, raw HTML is left to the host.
+   */
+  tags: string[];
+  /**
+   * The blocks a document may write that the plugins turn into other nodes while parsing, such as `::code-group`. A
+   * linter that reports unknown components needs them beside `components`' names.
+   */
+  blocks: string[];
+};
+
+const words = (text: string) => text.split(" ");
+// What Comark's own parse writes, its task lists' checkboxes included.
+const MARKDOWN_TAGS = words(
+  "a blockquote br code del em h1 h2 h3 h4 h5 h6 hr img input li ol p pre span strong table tbody td th thead tr ul",
+);
+// The plain elements each plugin writes into the tree, by the option that turns it on.
+const TAGS: [keyof PresetOptions, string[]][] = [
+  ["codeNotes", words("div span")],
+  ["critic", words("del ins mark")],
+  ["deflist", words("dd dl dt")],
+  ["figure", words("figcaption figure")],
+  ["footnotes", words("section sup")],
+  ["keys", words("kbd")],
+  ["mark", words("mark sup")],
+  ["metrics", words("dd div dt")],
+  ["outline", words("a div li ul")],
+  ["properties", words("dd div dt time")],
+  [
+    "quiz",
+    words(
+      "quiz-after quiz-answer quiz-explain quiz-hint quiz-label quiz-option quiz-options quiz-prompt quiz-rationale",
+    ),
+  ],
+  ["sources", words("ol sup")],
+  ["table", words("button div span")],
+  ["tabs", words("tabs-item")],
+  ["tests", words("details div summary")],
+  ["xref", words("caption figcaption figure")],
+];
+// The blocks each plugin replaces while parsing, by the option that turns it on.
+const BLOCKS: [keyof PresetOptions, string[]][] = [
+  ["details", words("accordion-item collapsible details")],
+  ["metrics", words("stats")],
+  ["table", words("table")],
+  ["tabs", words("code-group tabs-item")],
+  ["xref", words("ref")],
+];
 
 const on = (value: unknown, fallback = true) => (value === undefined ? fallback : value !== false);
 const optionsOf = <T>(value: T | boolean | undefined): T | undefined =>
@@ -267,5 +319,18 @@ export function preset<C>(renderer: Renderer<C>, options: PresetOptions = {}): P
     plugins.push(typeset());
     components[TYPESET_TAG] = renderer.typeset;
   }
-  return { plugins, components };
+  // Annotate, comments, diff, and quiz have no Vue, React, or Svelte renderer, so those presets leave them out.
+  const { annotate, comments, diff, quiz } = renderer;
+  const absent = Object.entries({ annotate, comments, diff, quiz }).flatMap(([key, part]) =>
+    part ? [] : [key],
+  );
+  const enabled = (key: keyof PresetOptions) =>
+    on(options[key], key !== "include") && !absent.includes(key);
+  const tags = new Set([
+    ...MARKDOWN_TAGS,
+    ...(on(options.github) && on(optionsOf(options.github)?.html) ? HTML_TAGS : []),
+    ...TAGS.flatMap(([key, list]) => (enabled(key) ? list : [])),
+  ]);
+  const blocks = BLOCKS.flatMap(([key, list]) => (enabled(key) ? list : []));
+  return { plugins, components, tags: [...tags], blocks };
 }
