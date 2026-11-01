@@ -70,7 +70,7 @@ export function find(
   return undefined;
 }
 
-/** Find the nth occurrence of any of several source forms, in document order. */
+/** Find the nth occurrence of any source form, in document order, optionally matching what follows it. */
 export function findAny(
   source: Source,
   needles: string[],
@@ -79,7 +79,8 @@ export function findAny(
     from = 0,
     to = source.prose.length,
     attribute = false,
-  }: { nth?: number; from?: number; to?: number; attribute?: boolean } = {},
+    after,
+  }: { nth?: number; from?: number; to?: number; attribute?: boolean; after?: RegExp } = {},
 ): { line: number; column: number } | undefined {
   const matches: { line: number; column: number }[] = [];
   for (let index = from; index < Math.min(to, source.prose.length); index++) {
@@ -91,12 +92,14 @@ export function findAny(
         const re = new RegExp(`${html[1]}\\s*=\\s*(["'])${escaped}\\1`, "gi");
         for (const match of line.matchAll(re)) {
           const at = match.index!;
+          if (after && !after.test(line.slice(at + match[0].length))) continue;
           if (!attribute || /["'=(<]/.test(line[at - 1] ?? ""))
             matches.push({ line: index + 1, column: at + 1 });
         }
         continue;
       }
       for (let at = line.indexOf(needle); at !== -1; at = line.indexOf(needle, at + 1)) {
+        if (after && !after.test(line.slice(at + needle.length))) continue;
         if (
           [...needles].some(
             (other) =>

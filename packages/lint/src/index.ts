@@ -603,21 +603,25 @@ function locations(
 function locator(source: Source, attribute = false, needles: readonly string[] = []) {
   const indexed = locations(source, needles, attribute);
   const counts = new Map<string, number>();
-  return (...needles: (string | string[])[]) => {
+  const locate = (...needles: string[]) => {
     for (const needle of needles) {
-      const key = typeof needle === "string" ? needle : needle[0]!;
-      const nth = counts.get(key) ?? 0;
+      const nth = counts.get(needle) ?? 0;
       const at =
-        typeof needle === "string"
-          ? (indexed.get(needle)?.[nth] ??
-            find(source, needle, { nth, from: source.body, attribute }))
-          : findAny(source, needle, { nth, from: source.body, attribute });
+        indexed.get(needle)?.[nth] ?? find(source, needle, { nth, from: source.body, attribute });
       if (!at) continue;
-      counts.set(key, nth + 1);
+      counts.set(needle, nth + 1);
       return at;
     }
     return { line: source.body + 1, column: undefined };
   };
+  locate.any = (needles: string[], after?: RegExp) => {
+    const key = needles[0]!;
+    const nth = counts.get(key) ?? 0;
+    const at = findAny(source, needles, { nth, from: source.body, attribute, after });
+    if (at) counts.set(key, nth + 1);
+    return at ?? { line: source.body + 1, column: undefined };
+  };
+  return locate;
 }
 
 function brokenAnchors(nodes: Node[], source: Source): Finding[] {
@@ -937,8 +941,9 @@ function place(
   if (block) return block;
   const image = /^`(!\[[^\n]*?\]\()([^\n]*?)\)`/.exec(issue);
   if (image) {
-    // Comark removes destination brackets; search both spellings together to keep source order.
-    const at = locate([`${image[1]}${image[2]})`, `${image[1]}<${image[2]}>)`]);
+    // Comark removes destination brackets and titles. Match destination prefixes in source order,
+    // requiring a closing parenthesis or whitespace so a longer URL doesn't count as this one.
+    const at = locate.any([`${image[1]}${image[2]}`, `${image[1]}<${image[2]}>`], /^(?:\)|\s|$)/);
     if (at.column) return at;
   }
   const quoted = /"((?:[^"\\]|\\.)+)"/.exec(issue)?.[1];
