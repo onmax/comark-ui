@@ -145,7 +145,8 @@ const rules = `
   }
 
   &:where(img, video) { border-radius: var(--_ty-radius); max-width: 100%; height: auto; margin-block: var(--_ty-flow) 0; }
-  &:where(p img) { margin-block-start: 0; }
+  /* An image in a line of text sits on the text; a block's top margin would push it below. */
+  &:where(:is(p, li, td, th, a) img) { margin-block-start: 0; }
   &:where(figure) { margin-block: var(--_ty-flow) 0; margin-inline: 0; }
   &:where(figcaption, caption) {
     color: var(--_ty-muted); font-size: 0.875em; text-align: center; margin-block-start: calc(0.75em / 0.875);
@@ -183,10 +184,18 @@ const rules = `
 }
 
 /* Code highlighted with a light and a dark theme follows the page into dark mode, as the tokens do: a .dark class
-   above it, or the system's dark mode on a page with no .light class. Only spans that carry a dark color switch. */
-.shiki:where(.dark *) span[style*="--shiki-dark:"] { color: var(--shiki-dark) !important; }
+   above it, or the system's dark mode on a page with no .light class. A span switches what it has a dark value for. */
+.shiki:where(.dark *) span {
+  &[style*="--shiki-dark:"] { color: var(--shiki-dark) !important; }
+  &[style*="--shiki-dark-font-style:"] { font-style: var(--shiki-dark-font-style) !important; }
+  &[style*="--shiki-dark-font-weight:"] { font-weight: var(--shiki-dark-font-weight) !important; }
+}
 @media (prefers-color-scheme: dark) {
-  .shiki:not(:where(.light *)) span[style*="--shiki-dark:"] { color: var(--shiki-dark) !important; }
+  .shiki:not(:where(.light *)) span {
+    &[style*="--shiki-dark:"] { color: var(--shiki-dark) !important; }
+    &[style*="--shiki-dark-font-style:"] { font-style: var(--shiki-dark-font-style) !important; }
+    &[style*="--shiki-dark-font-weight:"] { font-weight: var(--shiki-dark-font-weight) !important; }
+  }
 }
 
 /* A block marked data-wide, such as a before/after comparison or a diagram wider than the text, grows past the column
@@ -228,3 +237,11 @@ export const typesetCss =
     // A colon followed by a space only ends a property's name; a selector's colon never has one after it.
     .replace(/: /g, ":")
     .trim();
+
+/**
+ * The same styles for a page's own stylesheet, scoped to every element that matches `selector`, for Comark content
+ * that isn't a rendered document, such as a rich-text editor. `comark-ui/typeset.css` is this with `.comark-typeset`.
+ * The rules are the same string as `typesetCss`, so the two can't drift.
+ */
+export const typesetStylesheet = (selector = ".comark-typeset") =>
+  typesetCss.replace("@scope{", `@scope (${selector}){`);

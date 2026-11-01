@@ -23,7 +23,9 @@
     "dist"
   ],
   "type": "module",
-  "sideEffects": false,
+  "sideEffects": [
+    "*.css"
+  ],
   "exports": {
     ".": "./dist/index.mjs",
     "./client": "./dist/client.mjs",
@@ -40,7 +42,8 @@
     "./vue": "./dist/vue.mjs",
     "./package.json": "./package.json",
     "./skills": "./dist/skills.mjs",
-    "./skills/*": "./dist/skills/*"
+    "./skills/*": "./dist/skills/*",
+    "./typeset.css": "./dist/typeset.css"
   },
   "publishConfig": {
     "access": "public",

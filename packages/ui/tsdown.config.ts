@@ -2,6 +2,7 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { parseMarkdown } from "comark";
 import { definePackage } from "../../tsdown.shared.ts";
 import type { Skill } from "./src/skills.ts";
+import { typesetStylesheet } from "./src/typeset-css.ts";
 
 const root = new URL("../../skills/", import.meta.url);
 const decoder = new TextDecoder("utf-8", { fatal: true });
@@ -68,5 +69,14 @@ export default definePackage({
   copy: [
     { from: "src/svelte", to: "dist" },
     { from: "../../skills", to: "dist" },
+  ],
+  plugins: [
+    {
+      // `comark-ui/typeset.css`, for an app that styles its own Comark content, such as an editor, with the same rules.
+      name: "typeset-css",
+      generateBundle() {
+        this.emitFile({ type: "asset", fileName: "typeset.css", source: typesetStylesheet() });
+      },
+    },
   ],
 });
