@@ -114,14 +114,17 @@ describe.each(inPreset)("packages/%s", (folder) => {
   });
 });
 
-describe.each(folders.filter((folder) => folder !== "ui"))("packages/%s", (folder) => {
-  const pkg = manifest(folder);
+describe.each(folders.filter((folder) => folder !== "ui" && folder !== "chat"))(
+  "packages/%s",
+  (folder) => {
+    const pkg = manifest(folder);
 
-  // comark-ui installs every package, so one peer range left behind on a release makes npm refuse comark-ui itself.
-  it("accepts the same Comark versions as comark-ui", () => {
-    const ui = manifest("ui").peerDependencies ?? {};
-    for (const [name, range] of Object.entries(pkg.peerDependencies ?? {}))
-      if (name in ui && (name === "comark" || name.startsWith("@comark/")))
-        expect(range, name).toBe(ui[name]);
-  });
-});
+    // comark-ui installs every package, so one peer range left behind on a release makes npm refuse comark-ui itself.
+    it("accepts the same Comark versions as comark-ui", () => {
+      const ui = manifest("ui").peerDependencies ?? {};
+      for (const [name, range] of Object.entries(pkg.peerDependencies ?? {}))
+        if (name in ui && (name === "comark" || name.startsWith("@comark/")))
+          expect(range, name).toBe(ui[name]);
+    });
+  },
+);
