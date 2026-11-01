@@ -35,7 +35,7 @@ import { typeset, TYPESET_TAG } from "./typeset.ts";
 
 /** comark-critic's styles. It has no component to add them, so put them in the page yourself. */
 export { css as criticCss } from "comark-critic";
-export { typeset, typesetCss, TYPESET_TAG } from "./typeset.ts";
+export { typeset, typesetCss, typesetStylesheet, TYPESET_TAG } from "./typeset.ts";
 
 /**
  * `false` turns a plugin off, and an object turns it on with those options. Everything but `include` is on, and cast,

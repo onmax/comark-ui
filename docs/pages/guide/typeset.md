@@ -133,13 +133,35 @@ The blocks keep their own styles either way.
 
 ## Without the preset
 
-comark-ui exports the plugin and its CSS on their own. Add `typeset()` to your plugins and render its `typeset-styles` node, or put `typesetCss` in a `<style>` inside the element you render into. In a browser, such as around a rich-text editor, import `typesetCss` from `comark-ui/client` to keep the parse plugins out of the bundle:
+comark-ui exports the plugin and its CSS on their own. Add `typeset()` to your plugins and render its `typeset-styles` node, or put `typesetCss` in a `<style>` inside the element you render into:
 
 ```ts
 import { typesetCss } from "comark-ui";
 
 const page = `<article><style>${typesetCss}</style>${html}</article>`;
 ```
+
+### In your own stylesheet
+
+Some Comark content isn't a rendered document, such as a rich-text editor whose root is an element of your app, so a `<style>` can't sit inside it. Import `comark-ui/typeset.css` with your CSS and give that element the `comark-typeset` class:
+
+```css
+@import "comark-ui/typeset.css";
+```
+
+```html
+<div class="comark-typeset" contenteditable="true">…</div>
+```
+
+It holds the same rules, layer, and variables as the inline styles, scoped with `@scope (.comark-typeset)`. To scope them to a class you already use, build the stylesheet with `typesetStylesheet()`. Import it from `comark-ui/client` in a browser to keep the parse plugins out of the bundle:
+
+```ts
+import { typesetStylesheet } from "comark-ui/client";
+
+document.head.append(Object.assign(document.createElement("style"), { textContent: typesetStylesheet(".editor") }));
+```
+
+The `comark` layer is declared where your CSS first names it. Name it before your utilities' layer, such as `@layer theme, base, comark, components, utilities;` with Tailwind, if you want utility classes to win over it.
 
 ## Next steps
 

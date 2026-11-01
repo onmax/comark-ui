@@ -1,6 +1,6 @@
 import { defineComarkPlugin } from "comark";
 
-export { typesetCss } from "./typeset-css.ts";
+export { typesetCss, typesetStylesheet } from "./typeset-css.ts";
 
 /** The node that adds the styles. The plugin adds one at the end of every document. */
 export const TYPESET_TAG = "typeset-styles";
