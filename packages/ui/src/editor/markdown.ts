@@ -1,7 +1,8 @@
 import type { JSONContent } from "@tiptap/core";
 import type { ComarkPlugin, ElementNode, ElementNodeAttributes, Node as AstNode } from "comark";
 import { parseMarkdown } from "comark";
-import { renderMarkdown } from "comark/render";
+import { parseFrontmatter } from "comark/parse";
+import { renderFrontmatter, renderMarkdown } from "comark/render";
 import { textContent } from "comark/utils";
 import {
   between,
@@ -652,7 +653,7 @@ function equal(a: unknown, b: unknown): boolean {
 export interface EditorDocument {
   /** The document as Tiptap JSON, for `setContent` or a collaborative room. */
   doc: JSONContent;
-  /** The front matter, which stays outside the editor: a collaborative room keeps only the body. */
+  /** The front matter, which stays outside the editor. A collaborative room keeps it beside the body, in its fields. */
   frontmatter: Record<string, unknown>;
   /** The Markdown holds something the editor can't keep, so writing it back would change more than the edit. */
   lossy: boolean;
@@ -676,10 +677,94 @@ export async function toMarkdown(
   options: { frontmatter?: Record<string, unknown> } = {},
 ): Promise<string> {
   const markdown = await renderMarkdown(
-    { nodes: writeBlocks(doc.content), frontmatter: options.frontmatter ?? {}, meta: {} },
+    { nodes: writeBlocks(doc.content), frontmatter: {}, meta: {} },
     writeOptions,
   );
-  return markdown.trim() ? `${markdown.trimEnd()}\n` : "";
+  return withFrontmatter(markdown.trim() ? `${markdown.trimEnd()}\n` : "", options.frontmatter);
+}
+
+/** A Markdown file as a collaborative room holds it: the body the editor shows, and the frontmatter beside it. */
+export interface SplitMarkdown {
+  body: string;
+  fields: Record<string, unknown>;
+}
+
+type Frontmatter =
+  | { kind: "none" }
+  | ({ kind: "kept" } & SplitMarkdown)
+  | {
+      kind: "lost";
+      problem: string;
+      /** The text below a block Comark can't parse. */ body?: string;
+    };
+
+/** Finds the frontmatter block where Comark does, and says why a save wouldn't write it back. */
+export function readFrontmatter(markdown: string): Frontmatter {
+  if (!markdown.startsWith("---") || !markdown.includes("\n---")) return { kind: "none" };
+  let read: ReturnType<typeof parseFrontmatter>;
+  try {
+    read = parseFrontmatter(markdown);
+  } catch (error) {
+    const reason = String(error instanceof Error && "reason" in error ? error.reason : error);
+    return {
+      kind: "lost",
+      problem: `The frontmatter isn't valid YAML (${reason}); fix it to edit the document.`,
+      body: markdown.slice(markdown.indexOf("\n---") + 4).replace(/^(?:\r?\n)+/, ""),
+    };
+  }
+  const { data, frontmatterText: yaml } = read;
+  // Comark types the parsed YAML as a mapping, but plain text parses to a string and a list to an array.
+  const value: unknown = data;
+  if (!(value instanceof Object) || Array.isArray(value))
+    return {
+      kind: "lost",
+      problem: `The frontmatter is a YAML ${Array.isArray(value) ? "list" : typeof value}, which a save would rewrite; turn it into \`key: value\` lines to edit the document.`,
+    };
+  const comments = hasComment(yaml);
+  if (!Object.keys(data).length)
+    return {
+      kind: "lost",
+      problem: comments
+        ? "The frontmatter holds only YAML comments, which a save would drop; delete them or move them into the text to edit the document."
+        : "The frontmatter block is empty, so a save wouldn't write it back; delete its `---` lines or add a `key: value` line to edit the document.",
+    };
+  if (comments)
+    return {
+      kind: "lost",
+      problem:
+        "The frontmatter has YAML comments, which a save would drop; delete them or move them into the text to edit the document.",
+    };
+  return { kind: "kept", body: read.content.replace(/^(?:\r?\n)+/, ""), fields: data };
+}
+
+/**
+ * Whether the YAML has a comment. A `#` after a space may sit inside a quoted value, so each candidate counts only when
+ * cutting the line there leaves the same data.
+ */
+function hasComment(yaml: string): boolean {
+  const lines = yaml.split("\n");
+  const data = (text: string) => {
+    try {
+      return { value: parseFrontmatter(`---\n${text}\n---\n`).data };
+    } catch {
+      return undefined;
+    }
+  };
+  const original = data(yaml);
+  return lines.some((line, index) =>
+    [...line.matchAll(/(?:^|\s)#/g)].some((match) => {
+      const cut = [...lines];
+      cut[index] = line.slice(0, match.index);
+      const read = data(cut.join("\n"));
+      return read !== undefined && equal(read.value, original?.value);
+    }),
+  );
+}
+
+/** Writes the frontmatter above the body. Comark's own writer leaves out the `---` lines when the body is empty. */
+export function withFrontmatter(body: string, frontmatter: Record<string, unknown> = {}): string {
+  if (!Object.keys(frontmatter).length) return body;
+  return `---\n${renderFrontmatter(frontmatter, "")}\n---\n${body ? `\n${body}` : ""}`;
 }
 
 export type MarkdownCheck =
@@ -687,7 +772,10 @@ export type MarkdownCheck =
       editable: true;
       /** The Markdown as the editor writes it, which the first save produces. */ markdown: string;
     }
-  | { editable: false };
+  | {
+      editable: false;
+      /** Why, when it's the frontmatter the editor can't keep. */ reason?: string;
+    };
 
 /**
  * Whether the editor can open this Markdown and save it without changing what readers see. Pass the parse plugins the
@@ -697,6 +785,8 @@ export async function checkMarkdown(
   markdown: string,
   options: { plugins?: readonly ComarkPlugin<any, any>[] } = {},
 ): Promise<MarkdownCheck> {
+  const frontmatter = readFrontmatter(markdown);
+  if (frontmatter.kind === "lost") return { editable: false, reason: frontmatter.problem };
   const first = await fromMarkdown(markdown);
   if (first.lossy) return { editable: false };
   const written = await toMarkdown(first.doc, first);
