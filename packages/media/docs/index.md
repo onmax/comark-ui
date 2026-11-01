@@ -33,6 +33,8 @@ The alert sound the reviewer asked for:
 - A GitHub attachment link alone in its paragraph plays too.
 - Only the first frame and the length load until the reader presses play.
 - The controls match the page. The browser's own show until the script runs, and when the file can't play.
+- A settings panel sets the speed, from 0.5× to 2×, and turns looping on or off.
+- On a touch screen, a video's controls spread over it: play in the middle, sound and settings in the top corner, and the time along the bottom.
 - One player with sound plays at a time. Starting one pauses the others, while a muted one plays on.
 
 ## Usage
@@ -136,7 +138,7 @@ A GitHub attachment from a private repository only plays for a reader signed in 
 
 ## Accessibility
 
-Each player is a group named by its alt text. Its buttons are named for what they do next: Play or Pause, Mute or Unmute, Full screen or Exit full screen. The seek bar is a slider named "Seek" that reads its position, such as "0:12 of 1:30". The volume is a slider named "Volume" in a panel over the mute button, which opens when the pointer or the focus reaches the button; a touch screen has no panel, since its own buttons set the volume. Turning the volume to zero mutes the player. A click on a video plays or pauses it.
+Each player is a group named by its alt text. Its buttons are named for what they do next: Play or Pause, Mute or Unmute, Full screen or Exit full screen. The seek bar is a slider named "Seek" that reads its position, such as "0:12 of 1:30". The volume is a slider named "Volume" in a panel over the mute button, which opens when the pointer or the focus reaches the button; a touch screen has no panel, since its own buttons set the volume. Turning the volume to zero mutes the player. The Settings button reports whether its panel is expanded. The panel holds two radio groups, "Speed" and "Loop", and stays open while you choose. A click outside it or `Escape` closes it. A click on a video plays or pauses it.
 
 ### Keyboard interactions
 
@@ -144,11 +146,13 @@ The keys work once the script runs. Until then, the browser's own controls take 
 
 | Key | Description |
 | --- | --- |
-| `Tab`, `Shift+Tab` | Moves between the play button, the seek bar, the mute button, the volume, and the full screen button. |
-| `Enter`, `Space` | Presses the focused button: plays or pauses, mutes or unmutes, or enters or leaves full screen. |
+| `Tab`, `Shift+Tab` | Moves between the play button, the seek bar, the mute button, the volume, the settings button, the settings when open, and the full screen button. |
+| `Enter`, `Space` | Presses the focused button: plays or pauses, mutes or unmutes, opens or closes the settings, or enters or leaves full screen. |
 | `ArrowLeft`, `ArrowDown` | On the seek bar, moves back 5 seconds, or a tenth of a clip shorter than 50 seconds. |
 | `ArrowRight`, `ArrowUp` | On the seek bar, moves forward by the same step. |
 | Arrow keys, `Home`, `End` | On the volume, turns it down or up by 5%, or to silent or full. |
+| Arrow keys | In the settings, moves to the previous or next speed, or turns looping off or on. |
+| `Escape` | Closes the settings and returns the focus to their button. |
 
 In a right-to-left page, `ArrowLeft` and `ArrowRight` swap.
 
@@ -220,7 +224,7 @@ For Vue, React, or Svelte, import from `comark-media/vue`, `comark-media/react`,
 
 ## Theme
 
-A video sits in a bordered frame at most the page's width. A bar of controls floats over its bottom edge: a play button, the time, a seek bar, a mute button with the volume over it, and a full screen button. The bar fades out while the video plays, unless the pointer or the focus is on the video. An audio player takes the page's width and is the same bar on its own, without full screen. A player narrower than 24rem gives the seek bar a row of its own above the buttons, and one narrower than 16rem drops the times. Touch video controls drop the times below 18rem to leave room for the larger buttons and hour-form timestamps. The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
+A video sits in a bordered frame at most the page's width. A bar of controls floats over its bottom edge: a play button, the time, a seek bar, a mute button with the volume over it, a settings button, and a full screen button. The settings open in a panel over the bar, with a row of choices for each setting, like shadcn/ui's tabs. The bar fades out while the video plays, unless the pointer or the focus is on the video or the settings are open. An audio player takes the page's width and is the same bar on its own, without full screen. A player narrower than 24rem gives the seek bar a row of its own above the buttons and stacks each setting's choices under its name. One narrower than 16rem drops the times. On a touch screen, a video's controls spread over it, each on its own surface so it reads over any frame: a round play button in the middle, the mute and settings buttons in the top corner, and the times, seek bar, and full screen button in a bar along the bottom. There, the settings open downward, and a video narrower than 18rem drops the times. The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
 
 ### Shared tokens
 
@@ -229,15 +233,15 @@ Players read these [shared tokens](/guide/theming/):
 | Token | Used for |
 | --- | --- |
 | `--comark-background` | The bar, a little see-through over a video, and the seek bar's handle |
-| `--comark-foreground` | Faded, the rest of the seek bar |
+| `--comark-foreground` | A video's times, the picked setting, and, faded, the rest of the seek bar |
 | `--comark-primary` | The play button and the played part of the seek bar |
 | `--comark-primary-foreground` | The play icon |
-| `--comark-muted` | The times and the mute and full screen buttons |
-| `--comark-border` | A video's frame, the audio bar, and the volume panel |
-| `--comark-accent` | The space a video takes before its first frame loads, and hovered buttons |
+| `--comark-muted` | An audio player's times, the mute, settings, and full screen buttons, and the settings choices not picked |
+| `--comark-border` | A video's frame, the audio bar, and the volume and settings panels |
+| `--comark-accent` | The space a video takes before its first frame loads, hovered buttons, and the track behind each setting's choices |
 | `--comark-ring` | Focus rings |
 | `--comark-radius` | Corners |
-| `--comark-shadow` | The volume panel and the video bar |
+| `--comark-shadow` | The volume and settings panels and the video bar |
 | `--comark-font` | The times |
 
 ### Classes
@@ -248,6 +252,8 @@ Players read these [shared tokens](/guide/theming/):
 | `.cm-bar` | Its controls |
 | `.cm-play`, `.cm-time`, `.cm-seek`, `.cm-mute`, `.cm-full` | The play button, the two times, the seek bar, the mute button, and a video's full screen button |
 | `.cm-level`, `.cm-volume` | The panel over the mute button and its volume slider |
+| `.cm-settings`, `.cm-menu`, `.cm-choices` | The settings button, its panel, and each setting's row of choices |
+| `[data-menu]` | A player while its settings are open |
 | `[data-playing]`, `[data-muted]`, `[data-fullscreen]` | A player while it plays, while it's muted, and while a video fills the screen |
 | `[data-error]` | A player whose file can't play, which shows the browser's controls instead |
 | `video.cm`, `audio.cm` | A player with `controls: "native"` |
