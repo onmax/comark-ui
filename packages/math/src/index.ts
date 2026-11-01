@@ -202,27 +202,35 @@ export default defineComarkPlugin<MathOptions | undefined, MathMeta>((options = 
       const source = generated.get(state);
       if (!source) return;
       const found: { list: Node[]; index: number; tex: string; display: boolean }[] = [];
-      const walk = (nodes: Node[], start: number) => {
+      const issues: Issue[] = [];
+      const walk = (nodes: Node[], start: number, html = false) => {
         for (let index = start; index < nodes.length; index++) {
           const node = nodes[index];
           if (!node || !isElement(node)) continue;
           const [tag, attrs] = node;
-          if (attrs.$?.html) continue;
-          if (tag === source.tag) {
+          // The renderers print `html` as it is, so only markup this plugin typeset may reach them.
+          if (tag === "formula" && "html" in attrs) {
+            delete attrs.html;
+            issues.push({
+              rule: "comark/math/authored-html",
+              message: `A \`formula\` element sets \`html\`, which only comark-mathml writes, so it's ignored. Write the formula between \`$\` signs instead.`,
+            });
+          }
+          const inHtml = html || !!attrs.$?.html;
+          if (!inHtml && tag === source.tag) {
             const formula = source.formulas[Number(attrs.index)];
             if (formula) found.push({ list: nodes, index, ...formula });
             continue;
           }
           // SAFETY: an element node is [tag, attributes, ...children], so its items from index 2 are nodes.
-          walk(node as Node[], 2);
+          walk(node as Node[], 2, inHtml);
         }
       };
       walk(tree.nodes, 0);
-      if (!found.length) return;
+      if (!found.length && !issues.length) return;
 
-      const issues: Issue[] = [];
       const { typeset, missing } = await typesetter(output, macros);
-      if (missing)
+      if (missing && found.length)
         issues.push({
           rule: "comark/math/katex-missing",
           message: `Math: \`output: "${output}"\` needs KaTeX, which isn't installed, so formulas render as MathML. Install \`katex\`, or drop the \`output\` option.`,

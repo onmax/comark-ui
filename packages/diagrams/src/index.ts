@@ -139,8 +139,8 @@ export default defineComarkPlugin<DiagramsOptions | undefined, DiagramsMeta>((op
   return {
     name: "comark-diagrams",
     async post(state) {
-      if (options.draw === false) return;
       const { tree } = state;
+      const issues: Issue[] = [];
       const found: {
         list: Node[];
         index: number;
@@ -149,10 +149,22 @@ export default defineComarkPlugin<DiagramsOptions | undefined, DiagramsMeta>((op
         name: string;
       }[] = [];
       let count = 0;
+      let authored = 0;
       const walk = (list: Node[], start: number) => {
         for (let index = start; index < list.length; index++) {
           const node = list[index];
           if (!node || !isElement(node)) continue;
+          // The renderers print `svg` as it is, so only the SVG this plugin drew and sanitized may reach them.
+          if (node[0] === "diagram") {
+            authored++;
+            if (!("svg" in node[1])) continue;
+            delete node[1].svg;
+            issues.push({
+              rule: "comark/diagrams/authored-svg",
+              message: `\`::diagram\` ${authored} sets \`svg\`, which only comark-diagrams writes, so it's ignored. Draw the diagram from a fence, such as \`\`\`d2.`,
+            });
+            continue;
+          }
           if (node[0] !== "pre") {
             // SAFETY: an element node is [tag, attributes, ...children], so its children start at index 2.
             walk(node as Node[], 2);
@@ -161,13 +173,11 @@ export default defineComarkPlugin<DiagramsOptions | undefined, DiagramsMeta>((op
           count++;
           const language = text(node[1].language).toLowerCase();
           const type = LANGUAGES[language];
-          if (type)
+          if (type && options.draw !== false)
             found.push({ list, index, node, type, name: `The \`\`\`${language} fence ${count}` });
         }
       };
       walk(tree.nodes, 0);
-      if (!found.length) return;
-      const issues: Issue[] = [];
       const drawn = await Promise.all(
         found.map(({ node, type }) => draw(server, type, textOf(node).trim())),
       );
@@ -183,6 +193,7 @@ export default defineComarkPlugin<DiagramsOptions | undefined, DiagramsMeta>((op
         const label = text(node[1].filename);
         list[index] = ["diagram", { type, svg: result.svg, ...(label && { label }) }];
       }
+      if (!issues.length) return;
       tree.meta.issues = [...(tree.meta.issues ?? []), ...issues.map((issue) => issue.message)];
       tree.meta.issueRules = {
         ...tree.meta.issueRules,
