@@ -100,6 +100,13 @@ describe("frontmatter in a collaborative room", () => {
     expect(await save(second)).toBe(file.replace("Draft", "Published"));
   });
 
+  it("keeps nested frontmatter mappings and lists on a second collaborator", async () => {
+    const stored = "---\nmeta:\n  title: Hi\n  authors:\n    - name: Ada\n---\n\nBody\n";
+    const { room, check } = await open(stored);
+    expect(check.writable).toBe(true);
+    expect(await save(join(room))).toBe(stored);
+  });
+
   it("merges a body edit and frontmatter edits made at the same time", async () => {
     const { room: first } = await open(file);
     const second = join(first);
@@ -133,6 +140,16 @@ describe("frontmatter in a collaborative room", () => {
     [
       "a __proto__ key",
       "---\n__proto__: poison\ntitle: Hi\n---\n\nBody\n",
+      /`__proto__` key.*room/,
+    ],
+    [
+      "a nested __proto__ key",
+      "---\nmeta: { __proto__: poison, title: Hi }\n---\n\nBody\n",
+      /`__proto__` key.*room/,
+    ],
+    [
+      "a __proto__ key inside a list",
+      "---\nmeta:\n  - details: { __proto__: poison, title: Hi }\n---\n\nBody\n",
       /`__proto__` key.*room/,
     ],
     ["invalid YAML", "---\ntitle: [a\n---\n\nBody\n", /isn't valid YAML \(.+\)/],

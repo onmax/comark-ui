@@ -79,7 +79,7 @@ if (!lossy) {
 
 ### Check before editing
 
-`checkMarkdown(markdown, { plugins })` checks whether the editor can read and write the document without losing its structure or changing the text the plugins render. It returns `{ editable: true, markdown }` with the normalized Markdown, or `{ editable: false }`. When the frontmatter is what it can't keep, `reason` says why: the block is empty, holds YAML comments, isn't a mapping of keys, isn't valid YAML, or has a `__proto__` key that a room's fields would drop.
+`checkMarkdown(markdown, { plugins })` checks whether the editor can read and write the document without losing its structure or changing the text the plugins render. It returns `{ editable: true, markdown }` with the normalized Markdown, or `{ editable: false }`. When the frontmatter is what it can't keep, `reason` says why: the block is empty, holds YAML comments, isn't a mapping of keys, isn't valid YAML, or has a `__proto__` key at any depth that a room's fields would drop.
 
 Pass the same parse plugins you use to render the document. Syntax only those plugins read, such as a third-party plugin's, otherwise escapes the check. The Vue bindings run this check and open a document read-only when it fails.
 
@@ -168,7 +168,7 @@ Pass your renderer's plugins for the same preservation check as `checkMarkdown()
 | `toMarkdown(doc)` | The body as Markdown, without frontmatter. |
 | `verify(markdown)` | `{ writable: true, canonical }` when the room can save the body, or `{ writable: false }`, with `issues` that say why when the frontmatter is the problem. |
 
-`verify()` refuses a body that still starts with frontmatter, because the room would drop it on the first save. Split the file first. Frontmatter that `split()` leaves in the body also opens read-only, with an issue that names the reason: an empty block, YAML comments, plain text or a list instead of `key: value` lines, invalid YAML, or a `__proto__` key. A save would drop or rewrite each of these.
+`verify()` refuses a body that still starts with frontmatter, because the room would drop it on the first save. Split the file first. Frontmatter that `split()` leaves in the body also opens read-only, with an issue that names the reason: an empty block, YAML comments, plain text or a list instead of `key: value` lines, invalid YAML, or a `__proto__` key at any depth, including mappings inside lists. A save would drop or rewrite each of these.
 
 A host that stores frontmatter apart from the body, such as ViteHub Content, already passes the body alone and its fields; it needs no `split()` or `join()`. A host that keeps the whole file as the body and doesn't call them opens a document with frontmatter read-only, as before.
 

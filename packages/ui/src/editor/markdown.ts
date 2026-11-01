@@ -734,14 +734,23 @@ export function readFrontmatter(markdown: string): Frontmatter {
       problem:
         "The frontmatter has YAML comments, which a save would drop; delete them or move them into the text to edit the document.",
     };
-  // Y.Map.toJSON() assigns entries to a plain object, whose __proto__ setter drops this key.
-  if (Object.hasOwn(data, "__proto__"))
+  // Y.Map.toJSON() and Yjs update decoding assign to plain objects, whose __proto__ setter drops this key.
+  if (hasProtoKey(data))
     return {
       kind: "lost",
       problem:
         "The frontmatter has a `__proto__` key, which the room's fields would drop on save; rename it to edit the document.",
     };
   return { kind: "kept", body: read.content.replace(/^(?:\r?\n)+/, ""), fields: data };
+}
+
+function hasProtoKey(value: unknown, seen = new Set<object>()): boolean {
+  if (value === null || typeof value !== "object" || seen.has(value)) return false;
+  seen.add(value);
+  return (
+    Object.hasOwn(value, "__proto__") ||
+    Object.values(value).some((child) => hasProtoKey(child, seen))
+  );
 }
 
 /**
