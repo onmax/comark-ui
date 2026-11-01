@@ -196,6 +196,7 @@ const MARKDOWN_TAGS = words(
 );
 // The plain elements each plugin writes into the tree, by the option that turns it on.
 const TAGS: [keyof PresetOptions, string[]][] = [
+  ["carousel", words("div")],
   ["codeNotes", words("div span")],
   ["critic", words("del ins mark")],
   ["deflist", words("dd dl dt")],
@@ -209,19 +210,19 @@ const TAGS: [keyof PresetOptions, string[]][] = [
   [
     "quiz",
     words(
-      "quiz-after quiz-answer quiz-explain quiz-hint quiz-label quiz-option quiz-options quiz-prompt quiz-rationale",
+      "div quiz-after quiz-answer quiz-explain quiz-hint quiz-label quiz-option quiz-options quiz-prompt quiz-rationale",
     ),
   ],
   ["sources", words("ol sup")],
   ["table", words("button div span")],
-  ["tabs", words("tabs-item")],
+  ["tabs", words("div tabs-item")],
   ["tests", words("details div summary")],
   ["xref", words("caption figcaption figure")],
 ];
 // The blocks each plugin replaces while parsing, by the option that turns it on.
 const BLOCKS: [keyof PresetOptions, string[]][] = [
   ["details", words("accordion-item collapsible details")],
-  ["metrics", words("stats")],
+  ["metrics", words("progress stats")],
   ["table", words("table")],
   ["tabs", words("code-group tabs-item")],
   ["xref", words("ref")],

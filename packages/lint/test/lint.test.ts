@@ -143,6 +143,12 @@ describe("comark/unknown-component", () => {
     const markdown = `::embed{url="https://www.youtube.com/watch?v=KCrXgy8qtjM" title="Vite in 100 Seconds"}\n::\n`;
     expect(await lint(markdown, await resolveConfig())).toEqual([]);
   });
+
+  it("knows the progress source name replaced by an installed preset", async () => {
+    const config = await resolveConfig();
+    expect(config.components).toContain("progress");
+    expect(await lint(":progress{value=0.85}", config)).toEqual([]);
+  });
 });
 
 describe("comark/malformed-attributes", () => {

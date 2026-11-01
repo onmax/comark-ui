@@ -50,13 +50,46 @@ describe("tags", () => {
 
   it("follows the options: a plugin that's off adds none of its tags or blocks", () => {
     expect(html().tags).toEqual(expect.arrayContaining(["kbd", "quiz-option", "tabs-item"]));
-    expect(html().blocks).toEqual(expect.arrayContaining(["code-group", "stats", "ref"]));
-    const off = html({ quiz: false, tabs: false, github: { html: false } });
+    expect(html().blocks).toEqual(
+      expect.arrayContaining(["code-group", "progress", "stats", "ref"]),
+    );
+    const off = html({ quiz: false, tabs: false, metrics: false, github: { html: false } });
     expect(off.tags).not.toContain("quiz-option");
     expect(off.tags).not.toContain("tabs-item");
     expect(off.tags).not.toContain("abbr");
     expect(off.blocks).not.toContain("code-group");
+    expect(off.blocks).not.toContain("progress");
+    expect(off.blocks).not.toContain("stats");
     // Quiz has no Vue renderer, so the Vue preset leaves it out.
     expect(vue().tags).not.toContain("quiz-option");
   });
+
+  it.each([
+    ["carousel", ":::slide\nPlain content.\n:::"],
+    ["tabs", ':::tabs-item{label="A"}\nPlain content.\n:::'],
+    ["quiz", "::recall{#r}\nWhy?\n\n#answer\n:::poll{#p}\nPick.\n\n- [ ] A\n- [ ] B\n:::\n::"],
+  ] as const)(
+    "includes %s fallback elements without another plugin contributing them",
+    async (key, source) => {
+      const isolated: PresetOptions = {
+        ...offline,
+        github: { html: false },
+        carousel: false,
+        tabs: false,
+        quiz: false,
+        codeNotes: false,
+        metrics: false,
+        outline: false,
+        properties: false,
+        table: false,
+        tests: false,
+      };
+      expect(html(isolated).tags).not.toContain("div");
+      const { plugins, components, tags } = html({ ...isolated, [key]: true });
+      const found = tagsIn((await parseMarkdown(source, { plugins })).nodes);
+      expect(found.has("div")).toBe(true);
+      const allowed = new Set([...tags, ...Object.keys(components)]);
+      expect([...found].filter((tag) => !allowed.has(tag))).toEqual([]);
+    },
+  );
 });
