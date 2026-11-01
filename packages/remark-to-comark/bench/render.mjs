@@ -1,5 +1,6 @@
 // Renders the same Markdown with a remark pipeline and with Comark, and prints the time per pass.
 // Run from packages/remark-to-comark: node bench/render.mjs [glob], with the glob relative to the repository root.
+// With no glob, dependencies are excluded; an explicit glob can select node_modules.
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { renderHtml } from "@comark/html";
@@ -13,13 +14,18 @@ import { glob } from "tinyglobby";
 import { unified } from "unified";
 import { comarkOptions } from "../src/setup.ts";
 
-const pattern = process.argv[2] ?? "**/*.md";
+const explicitPattern = process.argv[2];
+const pattern = explicitPattern ?? "**/*.md";
 const root = fileURLToPath(new URL("../../..", import.meta.url));
 const files = await glob(pattern, {
   cwd: root,
   absolute: true,
-  ignore: ["**/node_modules/**", "**/dist/**"],
+  ignore: ["**/dist/**", ...(explicitPattern === undefined ? ["**/node_modules/**"] : [])],
 });
+if (files.length === 0) {
+  console.error(`No files matched ${JSON.stringify(pattern)} relative to ${root}`);
+  process.exit(1);
+}
 const documents = files.map((file) => readFileSync(file, "utf8"));
 const bytes = documents.reduce((total, markdown) => total + Buffer.byteLength(markdown), 0);
 

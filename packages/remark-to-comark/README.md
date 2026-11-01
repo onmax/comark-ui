@@ -35,14 +35,14 @@ remark has the bigger plugin ecosystem, and for Markdown to HTML on a server it 
 - Streaming. Comark closes an unfinished `**bold`, code fence, or component, so a model's reply renders correctly at every token. `comarkOptions()` turns this off, since a file on disk is already complete.
 - [comark-ui](https://comark-ui.onmax.me), 40+ blocks for docs and reviews, from tabs and charts to annotated screenshots.
 
-It's also 5 to 8 times faster. Rendering the same files to HTML on Node 24, median of 15 passes:
+It's also 6 to 7 times faster in these measurements. Rendering the same files to HTML on Node 24.21.0, median of 15 passes:
 
 | Corpus | remark | Comark, `comarkOptions()` | Speedup |
 | --- | --: | --: | --: |
-| 403 READMEs of remark, rehype, and unified packages (4.4 MiB) | 5,039 ms | 664 ms | 7.6× |
-| 515 Markdown files in this repository (1.1 MiB) | 763 ms | 140 ms | 5.5× |
+| 49 installed READMEs of remark, rehype, and unified packages (1,213 KiB) | 1,176 ms | 165 ms | 7.1× |
+| 515 Markdown files in this repository (1,074 KiB) | 982 ms | 159 ms | 6.2× |
 
-remark here is remark-parse, remark-gfm, remark-frontmatter, remark-rehype, and rehype-stringify. Adding rehype-raw, which keeps raw HTML the way `comarkOptions()` does, makes it 4 to 10% slower.
+remark here is remark-parse, remark-gfm, remark-frontmatter, remark-rehype, and rehype-stringify. Adding rehype-raw, which keeps raw HTML the way `comarkOptions()` does, makes it 11 to 20% slower. [Speed and size](https://comark-ui.onmax.me/remark-to-comark/testing/#speed-and-size) has the full table and the exact commands to select both corpora. Timings and installed README counts vary by machine and installation.
 
 The cost is size in the browser. Minified, the Comark setup is 118 KiB gzipped and the remark pipeline 48 KiB, or 98 KiB with rehype-raw. Most of the difference is js-yaml, because Comark parses frontmatter into an object where remark-frontmatter keeps a string. [`bench/`](https://github.com/onmax/comark-ui/tree/main/packages/remark-to-comark/bench) has the scripts that measured both.
 

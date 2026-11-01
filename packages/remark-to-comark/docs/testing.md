@@ -22,20 +22,23 @@ Most of what still differs are Comark bugs: about 30 causes, each with a minimal
 
 ## Speed and size
 
-Comark renders the same Markdown to HTML 5 to 8 times faster than remark. Each pipeline renders every file of a corpus 15 times on Node 24, interleaved with the others, and this is the median pass:
+Comark renders the same Markdown to HTML 6 to 7 times faster than remark in these measurements. Each pipeline renders every file of a corpus 15 times on Node 24.21.0, interleaved with the others, and this is the median pass using the commands below:
 
 | Corpus | remark | remark + rehype-raw | Comark, `comarkOptions()` |
 | --- | --: | --: | --: |
-| 403 READMEs of remark, rehype, and unified packages (4.4 MiB) | 5,039 ms | 5,248 ms | 664 ms |
-| 515 Markdown files in this repository (1.1 MiB) | 763 ms | 843 ms | 140 ms |
+| 49 installed READMEs of remark, rehype, and unified packages (1,213 KiB) | 1,176 ms | 1,311 ms | 165 ms |
+| 515 Markdown files in this repository (1,074 KiB) | 982 ms | 1,180 ms | 159 ms |
 
 remark is remark-parse, remark-gfm, remark-frontmatter, remark-rehype, and rehype-stringify. rehype-raw parses raw HTML the way `comarkOptions()` keeps it.
 
 In the browser Comark costs more. Bundled and minified, the Comark setup is 118 KiB gzipped, remark 48 KiB, and remark with rehype-raw 98 KiB. Most of the difference is js-yaml: Comark parses frontmatter into an object, where remark-frontmatter keeps the string.
 
-To rerun both from `packages/remark-to-comark`, with the glob relative to the repository root:
+After installing this repository's frozen pnpm lockfile, run from `packages/remark-to-comark`. The first command selects the installed remark, rehype, and unified README corpus in pnpm's layout, including both README filename cases; the glob is relative to the repository root. With no glob, the second command selects repository Markdown and excludes `node_modules`. Both exclude `dist`, and a glob matching no files exits with an error instead of reporting timings.
 
 ```sh
-node bench/render.mjs "**/*.md"
+node bench/render.mjs "node_modules/.pnpm/*/node_modules/{remark*,rehype*,unified*}/{readme,README}.md"
+node bench/render.mjs
 node bench/size.mjs
 ```
+
+Timings depend on the machine. The installed README count depends on dependency versions and the package-manager layout; the script prints the file count and total size so a rerun can identify its corpus. The table replaces the earlier 403-README measurement, whose corpus selection was not recorded, with the explicit selection above.
