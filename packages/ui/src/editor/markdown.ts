@@ -745,7 +745,7 @@ export function readFrontmatter(markdown: string): Frontmatter {
 }
 
 function hasProtoKey(value: unknown, seen = new Set<object>()): boolean {
-  if (value === null || typeof value !== "object" || seen.has(value)) return false;
+  if (!(value instanceof Object) || seen.has(value)) return false;
   seen.add(value);
   return (
     Object.hasOwn(value, "__proto__") ||
