@@ -603,13 +603,17 @@ function locations(
 function locator(source: Source, attribute = false, needles: readonly string[] = []) {
   const indexed = locations(source, needles, attribute);
   const counts = new Map<string, number>();
-  return (...needles: string[]) => {
+  return (...needles: (string | string[])[]) => {
     for (const needle of needles) {
-      const nth = counts.get(needle) ?? 0;
+      const key = typeof needle === "string" ? needle : needle[0]!;
+      const nth = counts.get(key) ?? 0;
       const at =
-        indexed.get(needle)?.[nth] ?? find(source, needle, { nth, from: source.body, attribute });
+        typeof needle === "string"
+          ? (indexed.get(needle)?.[nth] ??
+            find(source, needle, { nth, from: source.body, attribute }))
+          : findAny(source, needle, { nth, from: source.body, attribute });
       if (!at) continue;
-      counts.set(needle, nth + 1);
+      counts.set(key, nth + 1);
       return at;
     }
     return { line: source.body + 1, column: undefined };
@@ -931,9 +935,10 @@ function place(
     numbered &&
     blocks.filter((candidate) => candidate.name === numbered[1])[Number(numbered[2]) - 1];
   if (block) return block;
-  const image = /^`(!\[[^\n]*?\]\([^\n]*?\))`/.exec(issue)?.[1];
+  const image = /^`(!\[[^\n]*?\]\()([^\n]*?)\)`/.exec(issue);
   if (image) {
-    const at = locate(image);
+    // Comark removes destination brackets; search both spellings together to keep source order.
+    const at = locate([`${image[1]}${image[2]})`, `${image[1]}<${image[2]}>)`]);
     if (at.column) return at;
   }
   const quoted = /"((?:[^"\\]|\\.)+)"/.exec(issue)?.[1];
