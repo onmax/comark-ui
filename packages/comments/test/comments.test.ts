@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import { createHtmlRenderer, renderHtmlFromDocument } from "@comark/html";
 import { defineComarkPlugin, type NodeHandler, parseMarkdown } from "comark";
 import { describe, expect, it } from "vite-plus/test";
@@ -93,6 +95,18 @@ describe("comark-comments", () => {
     expect(track).not.toContain("comark-caveat;src");
     const pen = await raw(`${review}\n\n:suggestion[b]{from="a"}`, { mark: "pen" });
     expect(pen.match(/<style data-comark-comments-font>/g)).toHaveLength(1);
+  });
+
+  it("ships the styles a document inlines as comark-comments/style.css and as css", async () => {
+    const html = await raw(review);
+    const inlined = /<style data-comark-comments>([\s\S]*?)<\/style>/.exec(html)?.[1];
+    // Read from the build through the package's exports, as an app would.
+    const require = createRequire(import.meta.url);
+    const stylesheet = readFileSync(require.resolve("comark-comments/style.css"), "utf8");
+    const { css } = await import("comark-comments");
+    expect(stylesheet).toBe(inlined);
+    expect(css).toBe(inlined);
+    expect(stylesheet).not.toContain("comark-caveat;src");
   });
 
   it("draws pen for short plain changes, and track for the rest", async () => {

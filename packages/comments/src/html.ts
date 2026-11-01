@@ -10,7 +10,8 @@ import {
   transform,
   wrapParagraphs,
 } from "./read.ts";
-import { css, fontCss } from "./styles.ts";
+import { fontCss } from "./font.ts";
+import { css } from "./styles.ts";
 import { attr } from "../../../shared/html.ts";
 import { childrenOf, isElement } from "../../../shared/nodes.ts";
 import { hash } from "../../../shared/text.ts";

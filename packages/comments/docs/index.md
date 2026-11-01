@@ -234,6 +234,22 @@ Comments render only to HTML. [Renderers](/guide/renderers/) covers the rest.
 
 The cards and bubbles follow the shared tokens in [Theming](/guide/theming/). The rules sit in a `comark` CSS layer, so any plain rule of yours wins, except the margin each block leaves on a wide page. That one is `!important` so a page's paragraph margins can't close it.
 
+### Styles
+
+The renderer adds the styles to every document with a comment or suggestion. To draw the same marks, bubbles, or cards outside a rendered document, such as review notes over a page, import them with yours:
+
+```ts
+import "comark-comments/style.css";
+```
+
+Or inline the same styles from `css`:
+
+```ts
+import { css } from "comark-comments";
+```
+
+comark-ui re-exports `css` as `commentsCss` from every entry. The pen's handwriting font isn't in them; the renderer adds it to a document with a pen mark.
+
 ### Shared tokens
 
 | Token | Used for |

@@ -25,10 +25,13 @@
     "dist"
   ],
   "type": "module",
-  "sideEffects": false,
+  "sideEffects": [
+    "*.css"
+  ],
   "exports": {
     ".": "./dist/index.mjs",
     "./html": "./dist/html.mjs",
+    "./style.css": "./dist/style.css",
     "./package.json": "./package.json"
   },
   "publishConfig": {

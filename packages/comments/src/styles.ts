@@ -1,4 +1,3 @@
-import { caveat } from "comark-annotate/font";
 import { theme } from "comark-zoom/theme";
 
 // A speech bubble in a grey that reads on light and dark pages. It's a background image because the bubble has to
@@ -6,8 +5,6 @@ import { theme } from "comark-zoom/theme";
 const icon = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.2' stroke-linejoin='round'%3E%3Cpath d='M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z'/%3E%3C/svg%3E")`;
 const parts = ".cr,.cr-sg,.cr-cm,.cr-bub,.cr-card";
 const pen = '.cr-sg[data-mark="pen"]';
-// Written once a document has a pen mark, since the font is about 32 KB.
-export const fontCss = `@font-face{font-family:comark-caveat;src:url(data:font/woff2;base64,${caveat}) format("woff2");font-display:block}`;
 
 /**
  * The marks, bubbles, and cards, on the shared `--comark-*` tokens. Override `--cr-ins`, `--cr-del`, and

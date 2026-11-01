@@ -35,7 +35,7 @@ import { addMermaidStyles, mermaidBar, startMermaid } from "./client.ts";
 import { type Preset, type PresetOptions, preset } from "./index.ts";
 import { typesetCss } from "./typeset-css.ts";
 
-export { criticCss } from "./index.ts";
+export { commentsCss, criticCss } from "./index.ts";
 export type { PresetOptions } from "./index.ts";
 
 const Pele = createPeleComponent({ onRender: addMermaidStyles, onError: addMermaidStyles });
