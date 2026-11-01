@@ -111,6 +111,7 @@ export function start(css: string): () => void {
     if (media instanceof HTMLVideoElement) {
       // A video that can't play gets the browser's controls back, so they can say why.
       media.controls = Boolean(media.error);
+      player.toggleAttribute("data-sized", media.videoWidth > 0);
       // A frame without the fullscreen permission can't go full screen, so the button would do nothing.
       const full = player.querySelector<HTMLElement>(".cm-full");
       if (full) full.hidden = !document.fullscreenEnabled && !media.webkitEnterFullscreen;

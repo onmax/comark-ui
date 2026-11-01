@@ -211,6 +211,22 @@ test("a video fills its frame under the typeset, with no margin above it", async
   expect(frame.y + frame.height - (video.y + video.height)).toBeLessThanOrEqual(1);
 });
 
+test("a video without its size keeps the column's 16:9 room until its file answers", async ({
+  page,
+}) => {
+  // The file never answers, so the video never learns its size.
+  await page.route("**/slow.webm", () => {});
+  await open(page, "![A slow clip](slow.webm)");
+  const player = page.getByRole("group", { name: "A slow clip" });
+  await expect(player).toHaveAttribute("data-media-ready");
+  const column = (await page.locator("body").boundingBox())!;
+  const video = (await player.locator("video").boundingBox())!;
+  expect(video.width).toBeGreaterThan(column.width - 4);
+  expect(Math.abs(video.height - (video.width * 9) / 16)).toBeLessThanOrEqual(1);
+  // The bar keeps its single row instead of stacking its controls in a column.
+  expect((await player.locator(".cm-bar").boundingBox())!.height).toBeLessThan(60);
+});
+
 test("the settings panel sets the speed and looping, and closes on Escape or a click outside", async ({
   page,
 }) => {
