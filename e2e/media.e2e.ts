@@ -25,6 +25,7 @@ const silence = (() => {
   return wav;
 })();
 const clip = await readFile(new URL("clip.webm", import.meta.url));
+const portrait = await readFile(new URL("portrait.webm", import.meta.url));
 // The page loads its files from routes, since a Markdown image's src must end in a media extension. Chromium only
 // seeks in a file whose server answers byte ranges, as real hosts do.
 const serve = (body: Buffer, type: string) => (route: Route) => {
@@ -445,13 +446,22 @@ test("one audio player plays at a time", async ({ page }) => {
 test("the browser's player shows without the script, and when the file can't play", async ({
   page,
 }) => {
-  await open(page, "![Silence](silence.wav)\n\n![A gray clip](clip.webm)", { script: false });
+  await page.route("**/portrait.webm", serve(portrait, "video/webm"));
+  await open(page, "![Silence](silence.wav)\n\n![A portrait clip](portrait.webm)", {
+    script: false,
+  });
   const player = page.getByRole("group", { name: "Silence" });
   await expect(player.locator("audio")).toBeVisible();
   await expect(player.locator(".cm-bar")).toBeHidden();
-  const clip = page.getByRole("group", { name: "A gray clip" });
+  const clip = page.getByRole("group", { name: "A portrait clip" });
   await expect(clip.locator("video")).toHaveAttribute("controls");
   await expect(clip.locator(".cm-bar")).toBeHidden();
+  await expect(clip.locator("video")).toHaveJSProperty("videoWidth", 180);
+  await expect(clip.locator("video")).toHaveJSProperty("videoHeight", 320);
+  await expect(clip).not.toHaveAttribute("data-media-ready");
+  const frame = (await clip.boundingBox())!;
+  const video = (await clip.locator("video").boundingBox())!;
+  expect(frame.width - video.width).toBeLessThanOrEqual(2);
 
   await open(page, "![Missing](missing.wav)");
   const missing = page.getByRole("group", { name: "Missing" });
