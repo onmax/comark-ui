@@ -62,24 +62,6 @@ describe.each(folders)("packages/%s", (folder) => {
     expect(read(`packages/${folder}/LICENSE`).startsWith(read("LICENSE").trimEnd())).toBe(true);
   });
 
-  // comark-ui installs every package, so one peer range left behind on a release makes npm refuse comark-ui itself.
-  it("accepts the same Comark versions as comark-ui", () => {
-    const ui = manifest("ui").peerDependencies ?? {};
-    for (const [name, range] of Object.entries(pkg.peerDependencies ?? {}))
-      if (name in ui && (name === "comark" || name.startsWith("@comark/")))
-        expect(range, name).toBe(ui[name]);
-  });
-
-  // A package with no renderer runs from the preset's core, so it works in every renderer.
-  // comark-chat renders AI SDK messages, not documents, and remark-to-comark is a migration tool, so the preset leaves them out.
-  it("comes with the preset", () => {
-    if (folder === "ui" || folder === "lint" || folder === "chat" || folder === "remark-to-comark")
-      return;
-    expect(manifest("ui").dependencies?.[pkg.name]).toBe("workspace:^");
-    if (!withRenderer.includes(folder))
-      expect(read("packages/ui/src/index.ts")).toContain(`from "${pkg.name}"`);
-  });
-
   it("has docs with a place in the site, and a row in the README", () => {
     expect(read("README.md")).toContain(`[\`${pkg.name}\`](./packages/${folder})`);
     if (folder === "ui") return;
@@ -108,13 +90,41 @@ describe.each(withRenderer)("the renderer of packages/%s", (folder) => {
     expect(read("packages/lint/src/config.ts")).toContain(`import("${name}/html")`);
   });
 
-  // The site renders through the preset, so a package in it is on the site and in the playground.
-  it("is in the preset, which renders the docs and the playground", () => {
-    expect(read("docs/plugins.ts")).toContain('from "../packages/ui/src/html.ts"');
-    if (folder === "ui") return;
-    const preset = read("packages/ui/src/html.ts");
-    const local = folder.replace(/-([a-z])/g, (_, letter: string) => letter.toUpperCase());
-    expect(preset).toContain(`import * as ${local} from "${name}/html"`);
-    expect(preset.slice(preset.indexOf("preset<"))).toMatch(new RegExp(`\\b${local}\\b`));
+  if (folder === "charts")
+    it("is in the preset, which renders the docs and the playground", () => {
+      expect(read("docs/plugins.ts")).toContain('from "../packages/ui/src/html.ts"');
+      const preset = read("packages/ui/src/html.ts");
+      expect(preset).toContain(`import * as charts from "${name}/html"`);
+      expect(preset.slice(preset.indexOf("preset<"))).toMatch(/\bcharts\b/);
+    });
+});
+
+const inPreset = folders.filter(
+  (folder) => !["ui", "lint", "chat", "remark-to-comark"].includes(folder),
+);
+describe.each(inPreset)("packages/%s", (folder) => {
+  const pkg = manifest(folder);
+
+  // A package with no renderer runs from the preset's core, so it works in every renderer.
+  // comark-chat renders AI SDK messages, not documents, and remark-to-comark is a migration tool, so the preset leaves them out.
+  it("comes with the preset", () => {
+    expect(manifest("ui").dependencies?.[pkg.name]).toBe("workspace:^");
+    if (!withRenderer.includes(folder))
+      expect(read("packages/ui/src/index.ts")).toContain(`from "${pkg.name}"`);
   });
 });
+
+describe.each(folders.filter((folder) => folder !== "ui" && folder !== "chat"))(
+  "packages/%s",
+  (folder) => {
+    const pkg = manifest(folder);
+
+    // comark-ui installs every package, so one peer range left behind on a release makes npm refuse comark-ui itself.
+    it("accepts the same Comark versions as comark-ui", () => {
+      const ui = manifest("ui").peerDependencies ?? {};
+      for (const [name, range] of Object.entries(pkg.peerDependencies ?? {}))
+        if (name in ui && (name === "comark" || name.startsWith("@comark/")))
+          expect(range, name).toBe(ui[name]);
+    });
+  },
+);

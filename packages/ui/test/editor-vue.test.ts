@@ -68,6 +68,8 @@ it("returns the frontmatter it reads, and saves it back", async () => {
     expect(binding.frontmatter.value).toEqual({ status: "Draft" });
     mocks.update();
     expect(mocks.serialize).toHaveBeenLastCalledWith({}, { frontmatter: { status: "Draft" } });
+    await vi.waitFor(() => expect(markdown.value).toBe("Saved"));
+    expect(binding.frontmatter.value).toEqual({ status: "Draft" });
   } finally {
     scope.stop();
   }
