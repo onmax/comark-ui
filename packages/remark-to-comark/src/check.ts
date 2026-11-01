@@ -14,6 +14,29 @@ export interface Finding {
   params: Record<string, unknown> & { at: string };
   file: string;
   line: number;
+  /** What `rewrite --write` or `content --write` would change in the file, when it would write it. */
+  edit?: Edit;
+}
+
+/** A span of the file's original text, as UTF-16 offsets, and the text that replaces it. */
+export interface Edit {
+  start: number;
+  end: number;
+  text: string;
+}
+
+/** The one span where `after` differs from `before`, so an editor replaces only what changed. */
+function edit(before: string, after: string): Edit {
+  let start = 0;
+  while (start < before.length && before[start] === after[start]) start++;
+  let tail = 0;
+  while (
+    tail < before.length - start &&
+    tail < after.length - start &&
+    before[before.length - 1 - tail] === after[after.length - 1 - tail]
+  )
+    tail++;
+  return { start, end: before.length - tail, text: after.slice(start, after.length - tail) };
 }
 
 /** How a check reads the project: the CLI uses the file system, the Vite Doctor extension its own `ctx.fs`. */
@@ -375,11 +398,13 @@ export async function check(
           });
       }
     }
-    for (const rewrite of rewriteSource(source, path).rewrites) {
+    const result = rewriteSource(source, path);
+    const rewritten = result.code === source ? undefined : edit(source, result.code);
+    for (const rewrite of result.rewrites) {
       const at = `${file}:${rewrite.line}`;
       findings.push(
         rewrite.rewritten
-          ? { code: "RTC0202", params: { at }, file, line: rewrite.line }
+          ? { code: "RTC0202", params: { at }, file, line: rewrite.line, edit: rewritten }
           : {
               code: "RTC0201",
               params: { at, reason: rewrite.reason ?? "" },
@@ -408,7 +433,7 @@ export async function check(
       });
       continue;
     }
-    const { changes, skipped } = migrateContent(source, setup);
+    const { markdown, changes, skipped } = migrateContent(source, setup);
     if (skipped.length)
       findings.push({
         code: "RTC0303",
@@ -432,6 +457,8 @@ export async function check(
       },
       file,
       line: lines[0]!,
+      // `content --write` refuses while a syntax plugin is missing, since the escapes would break its syntax.
+      edit: setup.missing.length ? undefined : edit(source, markdown),
     });
   }
   const mdx = [...split.mdx].sort().map(shown);

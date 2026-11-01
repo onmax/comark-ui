@@ -2824,16 +2824,8 @@ a.window-play:hover {
     grid-template-columns: minmax(0, 1fr) auto;
   }
 
-  .search-open {
-    width: 2.5rem;
-    height: 2.5rem;
-    justify-content: center;
-    padding: 0;
-    background: none;
-    box-shadow: none;
-  }
-
-  .search-open :is(.search-label, kbd),
+  /* A third item in the two columns would push the links and the menu to a second row, over the page. */
+  .top > .search-open,
   .top-end .npmx span,
   .github-label,
   .top-links {

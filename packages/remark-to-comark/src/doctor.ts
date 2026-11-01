@@ -1,5 +1,5 @@
 import { relative } from "node:path";
-import type { RuleContext } from "vite-doctor/extension";
+import type { RuleContext, RuleMeta } from "vite-doctor/extension";
 import {
   createRule,
   defineDoctorDiagnostics,
@@ -30,6 +30,20 @@ const TITLES = new Map([
   ["remark-to-comark/content", "Markdown Comark would read differently from remark"],
 ]);
 
+// Content edits keep remark's output byte for byte, so `--fix` applies them. A rewritten chain imports @comark/html and
+// remark-to-comark/setup, which the project may not have installed yet, so only `--unsafe-fix` applies it.
+const FIXES: Partial<Record<Code, { kind: "safe" | "unsafe"; message: string }>> = {
+  RTC0302: {
+    kind: "safe",
+    message: "Escapes the Markdown Comark would read differently; remark renders it as before.",
+  },
+  RTC0202: {
+    kind: "unsafe",
+    message:
+      "Replaces the chain with `renderHtml(markdown, comarkOptions(…))`; install @comark/html and remark-to-comark afterwards.",
+  },
+};
+
 /**
  * A Doctor Extension that reports what moving the project from remark to Comark involves, with the same diagnostics
  * as `remark-to-comark check`. Register it in `doctor.config.ts` next to comark-linter's and run `vite-doctor .`.
@@ -52,15 +66,17 @@ export default function remarkToComark() {
   };
 
   const doctorRules = rules.map((id) => {
-    const warns = codes.some(
-      (code) => catalog[code].ruleId === id && catalog[code].severity === "warn",
-    );
+    const own = codes.filter((code) => catalog[code].ruleId === id);
+    const warns = own.some((code) => catalog[code].severity === "warn");
+    const fixable: RuleMeta["fixable"] =
+      own.map((code) => FIXES[code]?.kind).find(Boolean) ?? false;
     return createRule({
       meta: {
         id,
         title: TITLES.get(id) ?? id,
         category: "migration",
         severity: warns ? "warn" : "info",
+        fixable,
         execution: "manifest",
         cacheScope: "none",
       },
@@ -72,6 +88,7 @@ export default function remarkToComark() {
               if (entry.ruleId !== id) continue;
               // SAFETY: check() gives each finding the params its code's why and fix read.
               const params = finding.params as never;
+              const fix = FIXES[finding.code];
               ctx.report(
                 diagnostics.diagnostics[finding.code]({
                   why: entry.why(params),
@@ -84,6 +101,19 @@ export default function remarkToComark() {
                     ctx.fs.readText(`${ctx.project.root}/${finding.file}`) ?? "",
                     finding.line,
                   ),
+                  ...(fix &&
+                    finding.edit && {
+                      fix: {
+                        kind: fix.kind,
+                        message: fix.message,
+                        edits: [
+                          {
+                            range: { start: finding.edit.start, end: finding.edit.end },
+                            text: finding.edit.text,
+                          },
+                        ],
+                      },
+                    }),
                 },
               );
             }

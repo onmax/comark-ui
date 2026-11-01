@@ -6,6 +6,7 @@ export {
   scanProject,
   splitMdx,
   type ContentSetup,
+  type Edit,
   type Finding,
   type MdxSplit,
   type ProjectReader,
