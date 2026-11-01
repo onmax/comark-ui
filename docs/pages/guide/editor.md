@@ -79,7 +79,7 @@ if (!lossy) {
 
 ### Check before editing
 
-`checkMarkdown(markdown, { plugins })` checks whether the editor can read and write the document without losing its structure or changing the text the plugins render. It returns `{ editable: true, markdown }` with the normalized Markdown, or `{ editable: false }`.
+`checkMarkdown(markdown, { plugins })` checks whether the editor can read and write the document without losing its structure or changing the text the plugins render. It returns `{ editable: true, markdown }` with the normalized Markdown, or `{ editable: false }`. When the frontmatter is what it can't keep, `reason` says why: the block is empty, holds YAML comments, isn't a mapping of keys, isn't valid YAML, or has a `__proto__` key at any depth that a room's fields would drop.
 
 Pass the same parse plugins you use to render the document. Syntax only those plugins read, such as a third-party plugin's, otherwise escapes the check. The Vue bindings run this check and open a document read-only when it fails.
 
@@ -142,15 +142,18 @@ The placeholder is a local decoration, so collaborative documents never contain 
 
 Use `createEditorCodec({ plugins, kit })` from `comark-ui/editor` to share the schema and Markdown conversion between a server and its editors. The returned codec fits ViteHub Realtime's `editor` option.
 
+A room holds a document in two parts. The body is the editor's document, bound to the editors through Tiptap's collaboration extension. The frontmatter is the room's fields: a map, such as a `Y.Map`, with one value per key. An edit to the text never touches the fields, and two people who change different keys at the same time both keep their change. When two people change the same key at once, every editor ends with the same one of the two values.
+
 ```ts
 import { createEditorCodec } from "comark-ui/editor";
 
 const codec = createEditorCodec();
-const markdown = "# Release notes\n";
-const result = await codec.verify(markdown);
+const { body, fields } = codec.split(storedMarkdown);
+const result = await codec.verify(body);
 if (result.writable) {
-  const doc = await codec.fromMarkdown(markdown);
-  const saved = await codec.toMarkdown(doc);
+  const doc = await codec.fromMarkdown(body);
+  // Seed the room with `doc` as its body and `fields` as its fields, then, on each save:
+  const saved = codec.join({ body: await codec.toMarkdown(doc), fields });
 }
 ```
 
@@ -159,11 +162,17 @@ Pass your renderer's plugins for the same preservation check as `checkMarkdown()
 | Method | Returns |
 | --- | --- |
 | `extensions()` | The shared Tiptap extensions, with StarterKit's undo history and trailing paragraph disabled by default for collaboration. |
-| `fromMarkdown(markdown)` | The document as Tiptap JSON. |
-| `toMarkdown(doc)` | The document as Markdown. |
-| `verify(markdown)` | `{ writable: true, canonical }` when the room can save the document, or `{ writable: false }`. |
+| `split(markdown)` | `{ body, fields }`: the stored file's body and its frontmatter as a plain object. Frontmatter a save couldn't write back stays in `body`. |
+| `join({ body, fields })` | The file to store, with the fields as YAML frontmatter above the body. |
+| `fromMarkdown(markdown)` | The body as Tiptap JSON. |
+| `toMarkdown(doc)` | The body as Markdown, without frontmatter. |
+| `verify(markdown)` | `{ writable: true, canonical }` when the room can save the body, or `{ writable: false }`, with `issues` that say why when the frontmatter is the problem. |
 
-A collaborative room holds only the body. `verify()` refuses documents whose parsed frontmatter contains keys. This does not guarantee preservation of empty or comment-only blocks: comment-only frontmatter can pass verification and be omitted on save. Hosts that need to preserve those blocks must reject them before opening a writable room.
+`verify()` refuses a body that still starts with frontmatter, because the room would drop it on the first save. Split the file first. Frontmatter that `split()` leaves in the body also opens read-only, with an issue that names the reason: an empty block, YAML comments, plain text or a list instead of `key: value` lines, invalid YAML, or a `__proto__` key at any depth, including mappings inside lists. A save would drop or rewrite each of these.
+
+A host that stores frontmatter apart from the body, such as ViteHub Content, already passes the body alone and its fields; it needs no `split()` or `join()`. A host that keeps the whole file as the body and doesn't call them opens a document with frontmatter read-only, as before.
+
+The [Properties](/properties/) rows of a room come from its fields. Build them with `rowsOf(fields, options)` from comark-properties. They stay read-only; the editor doesn't edit fields yet.
 
 ## Vue options
 

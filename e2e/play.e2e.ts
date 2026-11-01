@@ -153,3 +153,17 @@ test("the Theme pane themes the preview without rendering it again, light or dar
   await expect(next).toHaveCSS("background-color", "rgb(10, 10, 10)");
   await expect(page.getByRole("textbox", { name: "Background", exact: true })).toHaveValue("");
 });
+
+test.describe("on a phone", () => {
+  test.use({ viewport: { width: 360, height: 740 }, isMobile: true, hasTouch: true });
+
+  test("the header keeps its links on one row, clear of the playground's bar", async ({ page }) => {
+    await page.goto("/play/#preset=github-callouts");
+    const header = (await page.locator(".top").boundingBox())!;
+    const end = (await page.locator(".top-end").boundingBox())!;
+    expect(end.y + end.height).toBeLessThanOrEqual(header.y + header.height);
+    // A trial click fails when another element would take the tap.
+    for (const button of await page.locator(".play-bar button").all())
+      await button.click({ trial: true, timeout: 2000 });
+  });
+});

@@ -22,7 +22,17 @@ remark-to-comark moves a Markdown project from remark to Comark. It finds the re
 
 [How it was tested](/remark-to-comark/testing/) covers the 100 projects it ran on and what still differs.
 
+## Why Comark
+
+Comark reads components in Markdown that stay plain text, renders one JSON parse tree in Vue, React, Svelte, Angular, HTML, and the terminal, and closes unfinished syntax so a streamed reply renders at every token. It also renders Markdown to HTML 6 to 7 times faster than remark in the measured corpora, at the price of a larger browser bundle. [Speed and size](/remark-to-comark/testing/#speed-and-size) has the numbers.
+
 ## Usage
+
+Try the check without installing anything. It only reads the project:
+
+```sh
+pnpm dlx remark-to-comark check .
+```
 
 [Getting started](/remark-to-comark/getting-started/) walks through a migration, command by command.
 

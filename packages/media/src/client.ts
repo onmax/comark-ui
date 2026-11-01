@@ -95,20 +95,32 @@ export function start(css: string): () => void {
   const mediaOf = (player: Element) =>
     player.querySelector<HTMLMediaElement>(":scope>audio,:scope>video");
   // A poster sizes its video before the file does, but the video doesn't say when its poster loads, so the script
-  // loads the poster too and remembers which videos have their size from it.
-  const posters = new WeakMap<HTMLVideoElement, boolean>();
+  // loads the poster too and remembers which URL gives each video its size.
+  const posters = new WeakMap<HTMLVideoElement, { src: string; loaded: boolean }>();
   const posterSized = (video: HTMLVideoElement, player: HTMLElement) => {
-    if (!video.poster) return false;
-    if (!posters.has(video)) {
-      posters.set(video, false);
-      const image = new Image();
-      image.addEventListener("load", () => {
-        posters.set(video, true);
-        draw(player);
-      });
-      image.src = video.poster;
+    const src = video.poster;
+    if (!src) {
+      posters.delete(video);
+      return false;
     }
-    return posters.get(video) === true;
+    let poster = posters.get(video);
+    if (poster?.src !== src) {
+      poster = { src, loaded: false };
+      posters.set(video, poster);
+      const current = poster;
+      const image = new Image();
+      image.addEventListener(
+        "load",
+        () => {
+          if (posters.get(video) !== current || video.poster !== src) return;
+          current.loaded = true;
+          draw(player);
+        },
+        { signal },
+      );
+      image.src = src;
+    }
+    return poster.loaded;
   };
   // A stream has no end, so it gets no length and no seeking.
   const length = (media: HTMLMediaElement) =>
@@ -364,12 +376,16 @@ export function start(css: string): () => void {
   let syncQueued = false;
   const observer = new MutationObserver((records) => {
     if (
-      !records.some((record) =>
-        [...record.addedNodes].some((node) =>
-          node instanceof Element
-            ? node.matches(players) || node.querySelector(players)
-            : node instanceof DocumentFragment && node.querySelector(players),
-        ),
+      !records.some(
+        (record) =>
+          (record.type === "attributes" &&
+            record.target instanceof HTMLVideoElement &&
+            playerOf(record.target)) ||
+          [...record.addedNodes].some((node) =>
+            node instanceof Element
+              ? node.matches(players) || node.querySelector(players)
+              : node instanceof DocumentFragment && node.querySelector(players),
+          ),
       ) ||
       syncQueued
     )
@@ -380,7 +396,12 @@ export function start(css: string): () => void {
       if (!signal.aborted) sync();
     });
   });
-  observer.observe(document, { childList: true, subtree: true });
+  observer.observe(document, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ["poster"],
+  });
 
   const state = {
     users: 1,

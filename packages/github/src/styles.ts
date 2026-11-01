@@ -3,9 +3,10 @@ import { theme } from "comark-zoom/theme";
 const types = ["note", "tip", "important", "warning", "caution"];
 
 /**
- * Callouts in the style of shadcn/ui's Alert: a bordered card on the shared `--comark-*` tokens, its icon and title in
- * the type's color. Set `--cgc-note` through `--cgc-caution` to recolor a type; caution follows shadcn's
- * `--destructive`. The rules sit in the `comark` layer, so any unlayered rule of the host's wins.
+ * Callouts in the style of shadcn/ui's Alert: a bordered card on the shared `--comark-*` tokens, its icon in the type's
+ * color and its title in that color mixed toward the foreground. Set `--cgc-note` through `--cgc-caution` to recolor a
+ * type; caution follows shadcn's `--destructive`. The rules sit in the `comark` layer, so any unlayered rule of the
+ * host's wins.
  */
 export const css = `@layer comark{${[
   theme(".cgc", "status"),
@@ -15,7 +16,9 @@ export const css = `@layer comark{${[
   ".cgc{display:grid;grid-template-columns:1rem minmax(0,1fr);gap:.125rem .75rem;align-items:start;margin:1rem 0;padding:.75rem 1rem;border:1px solid var(--_comark-border);border-radius:var(--_comark-radius);background:var(--_comark-background);color:var(--_comark-foreground);font:400 .875rem/1.5 var(--_comark-font)}",
   ".cgc-icon{display:flex;height:1.3125rem;align-items:center;color:var(--cgc-color)}",
   ".cgc-icon svg{width:1rem;height:1rem}",
-  ".cgc-title{grid-column:2;margin:0;color:var(--cgc-color);font-weight:500}",
+  // Green, amber, and red at their icon shade are under 4.5:1 as text on a light card; 70% keeps every type above it on
+  // light and dark cards, and keeps the hue.
+  ".cgc-title{grid-column:2;margin:0;color:color-mix(in oklab,var(--cgc-color) 70%,var(--_comark-foreground));font-weight:500}",
   ".cgc-body{grid-column:2;color:var(--_comark-muted)}",
   ".cgc-body>:first-child{margin-top:0}",
   ".cgc-body>:last-child{margin-bottom:0}",

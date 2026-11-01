@@ -245,6 +245,70 @@ test("a video's poster sizes its frame before the file answers", async ({ page }
   expect(frame.width - video.width).toBeLessThanOrEqual(2);
 });
 
+test("poster sizing follows replacement, removal, and failed loads", async ({ page }) => {
+  await page.route("**/slow.webm", () => {});
+  const tall = '<svg xmlns="http://www.w3.org/2000/svg" width="180" height="320"/>';
+  await page.route("**/tall.svg", (route) =>
+    route.fulfill({ contentType: "image/svg+xml", body: tall }),
+  );
+  let release!: () => void;
+  const pending = new Promise<void>((resolve) => (release = resolve));
+  await page.route("**/replacement.svg", async (route) => {
+    await pending;
+    await route.fulfill({ contentType: "image/svg+xml", body: tall });
+  });
+  await page.route("**/missing.svg", (route) => route.fulfill({ status: 404 }));
+  await open(page, '![A changing poster](slow.webm){poster="tall.svg"}');
+  const player = page.getByRole("group", { name: "A changing poster" });
+  const video = player.locator("video");
+  await expect(player).toHaveAttribute("data-sized");
+
+  await video.evaluate((video) => video.setAttribute("poster", "replacement.svg"));
+  await expect(player).not.toHaveAttribute("data-sized");
+  release();
+  await expect(player).toHaveAttribute("data-sized");
+
+  await video.evaluate((video) => video.removeAttribute("poster"));
+  await expect(player).not.toHaveAttribute("data-sized");
+  const column = (await page.locator("body").boundingBox())!;
+  expect((await video.boundingBox())!.width).toBeGreaterThan(column.width - 4);
+
+  await video.evaluate((video) => video.setAttribute("poster", "tall.svg"));
+  await expect(player).toHaveAttribute("data-sized");
+  const failed = page.waitForResponse("**/missing.svg");
+  await video.evaluate((video) => video.setAttribute("poster", "missing.svg"));
+  await failed;
+  await expect(player).not.toHaveAttribute("data-sized");
+});
+
+test("an earlier poster load cannot size its pending replacement", async ({ page }) => {
+  await page.route("**/slow.webm", () => {});
+  let release!: () => void;
+  const pending = new Promise<void>((resolve) => (release = resolve));
+  const requested = page.waitForRequest("**/earlier.svg");
+  await page.route("**/earlier.svg", async (route) => {
+    await pending;
+    await route.fulfill({
+      contentType: "image/svg+xml",
+      body: '<svg xmlns="http://www.w3.org/2000/svg" width="180" height="320"/>',
+    });
+  });
+  await page.route("**/pending.svg", () => {});
+  await open(page, '![A pending poster](slow.webm){poster="earlier.svg"}');
+  await requested;
+  const player = page.getByRole("group", { name: "A pending poster" });
+  await player.locator("video").evaluate((video) => video.setAttribute("poster", "pending.svg"));
+  release();
+  // Decode the same resource and let its load handlers run before checking the old callback's effect.
+  await page.evaluate(async () => {
+    const image = new Image();
+    image.src = "earlier.svg";
+    await image.decode();
+    await new Promise(requestAnimationFrame);
+  });
+  await expect(player).not.toHaveAttribute("data-sized");
+});
+
 test("the settings panel sets the speed and looping, and closes on Escape or a click outside", async ({
   page,
 }) => {

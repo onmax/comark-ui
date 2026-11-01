@@ -142,6 +142,7 @@ The image is one tab stop, and it opens the [zoomed view](/zoom/). The Copy butt
 | `href` | — | The page you captured, linked by its host next to the title. An http:// or https:// URL with a host. |
 | `viewport` | — | Capture size in pixels, like `1440x900`. A `compare` checks that both sides match. |
 | `ink` | — | The color of every mark and note that doesn't set its own `color`. Takes the same values as `color`: `red`, `amber`, `green`, `blue`, `violet`, `gray`, or a 3- or 6-digit hex color. Without it, marks take the compare's `ink`, or else violet. |
+| `id` | — | An id for the screenshot, such as `#fig-login`, that links and [comark-xref](/xref/) references point at. |
 
 ### Issues
 
