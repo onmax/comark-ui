@@ -8,6 +8,6 @@ A `:media` block plays only files a browser can play on its own: `.mp4`, `.webm`
 
 ::correct
 ```md
-:media{src="/pond-tour.mp4" alt="A tour of the duck pond"}
+:media{src="/pond-tour.mp4" alt="A tour of the duck pond" width=1280 height=720}
 ```
 ::

@@ -7,12 +7,12 @@ comark-media plays an image that points at a video or a sound file, and a GitHub
 ```md
 The spinner now stops once the build finishes:
 
-![The build spinner stops and the Deploy button turns green](./recordings/build.mp4){loop muted}
+![The build spinner stops and the Deploy button turns green](./recordings/build.mp4){loop muted width=1280 height=720}
 ```
 
 - A `src` that ends in `.mp4`, `.webm`, `.mov`, or `.m4v`, before any `?` or `#`, plays as a video, and one in `.mp3`, `.wav`, `.ogg`, or `.m4a` as audio. Every other image stays an image.
 - The alt text is required. It names the player for screen readers, and it's the text of a link to the file where the browser can't play it.
-- `autoplay`, `loop`, and `muted` are off by default. Browsers start a file by itself only when it's muted, so `autoplay` needs `muted`. `poster="frame.png"` shows an image before a video plays; audio takes none. `{loop=false}` turns a prop off. A video's `width` and `height` must be paired whole pixel dimensions, like `{width=1280 height=720}`, to reserve its room before loading. Audio takes neither. Other props, such as a class, are dropped and reported.
+- `autoplay`, `loop`, and `muted` are off by default. Browsers start a file by itself only when it's muted, so `autoplay` needs `muted`. `poster="frame.png"` shows an image before a video plays; audio takes none. `{loop=false}` turns a prop off. Give every video its `width` and `height`, paired whole pixel dimensions like `{width=1280 height=720}`, so the page keeps its room before the file loads; read them with `ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0 clip.mp4`. Audio takes neither. Other props, such as a class, are dropped and reported.
 - A GitHub attachment link, `https://github.com/user-attachments/assets/<id>`, plays as a video when the bare URL sits alone in its paragraph, as on GitHub. With text of its own, or inside a sentence, it stays a link.
 
 ## Record the evidence

@@ -53,6 +53,8 @@ const AUDIO = /\.(?:mp3|wav|ogg|m4a)$/i;
 const ATTACHMENT = /^https:\/\/github\.com\/user-attachments\/assets\/[\w-]+\/?(?:[?#].*)?$/;
 const FLAGS = ["autoplay", "loop", "muted"] as const;
 const SIDES = ["width", "height"] as const;
+// How the issues name each video written as an image. A GitHub attachment link takes no props, so it has no name here.
+const names = new WeakMap<MediaAttributes, string>();
 const KNOWN = new Set<string>(["src", "alt", "kind", "poster", ...FLAGS]);
 
 const kindOf = (src: string) => {
@@ -134,6 +136,8 @@ function read(
     });
   else if (poster) result.poster = poster;
   const sides = kind === "video" ? SIDES.filter((side) => attrs[side] !== undefined) : [];
+  // A size written wrong is reported as invalid-size, so missing-size only reports one never written.
+  if (kind === "video" && attrs.alt !== undefined && !sides.length) names.set(result, name);
   if (sides.length) {
     const [width = 0, height = 0] = SIDES.map((side) => Number(text(attrs[side])));
     if (Number.isInteger(width) && Number.isInteger(height) && width > 0 && height > 0) {
@@ -198,6 +202,14 @@ export default defineComarkPlugin<MediaOptions | undefined, MediaMeta>((options 
           if (size) Object.assign(video, size);
         }),
       );
+    for (const video of videos) {
+      const name = names.get(video);
+      if (name && !video.width)
+        issues.push({
+          rule: "comark/media/missing-size",
+          message: `${name} has no size, so the page holds a 16:9 box until it loads and moves if the video isn't 16:9. Add its \`width\` and \`height\` in pixels, like \`{width=1280 height=720}\`.`,
+        });
+    }
     tree.meta.issues = [...(tree.meta.issues ?? []), ...issues.map((issue) => issue.message)];
     tree.meta.issueRules = {
       ...tree.meta.issueRules,
