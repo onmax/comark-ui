@@ -14,13 +14,13 @@ remark-to-comark moves a Markdown project from remark to Comark. It finds the re
 
 ## Features
 
-- `check` reports everything as [diagnostics](/remark-to-comark/diagnostics/), each with its file, line, fix, and docs link, then lists what's left and the commands to run next.
-- `rewrite` replaces a unified chain that renders HTML with Comark's `renderHtml`. It only does so when the code turns the result into a string and every plugin and option carries over.
-- `content` escapes `{`, `[`, and `:name` that Comark would read as attributes, spans, or components, widens `~a~` to `~~a~~`, and leaves code, HTML, and MDX alone.
-- It reads setups in unified chains, react-markdown, the scripts and markup of Vue, Svelte, and Astro components, and the configs of Astro, Next.js, Docusaurus, Gatsby, Contentlayer, Velite, and Nuxt Content. A setup built some other way, such as a plugin list returned by a function, isn't found.
-- The same findings run as a [Vite Doctor](/remark-to-comark/vite-doctor/) extension, next to comark-linter.
+- `check` lists every remark setup it finds, with a [fix](/remark-to-comark/diagnostics/) for each problem.
+- `rewrite` swaps a unified chain for Comark's `renderHtml` when every plugin carries over.
+- `content` escapes the Markdown Comark would read differently.
+- It finds setups in unified, react-markdown, Vue, Svelte, Astro, Next.js, Docusaurus, Gatsby, and Nuxt Content.
+- It also runs in [Vite Doctor](/remark-to-comark/vite-doctor/).
 
-[How it was tested](/remark-to-comark/testing/) covers the 100 projects it ran on and what still differs.
+Tested on [100 projects](/remark-to-comark/testing/).
 
 ## Why Comark
 
