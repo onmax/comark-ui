@@ -1,6 +1,6 @@
 {
   "name": "remark-to-comark",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "description": "Moves a project from remark to Comark: reports each remark setup and what its plugins become, rewrites unified chains to Comark's renderHtml, and escapes Markdown Comark would read differently. A CLI, a library, and a Vite Doctor extension.",
   "keywords": [
     "codemod",
