@@ -3,6 +3,7 @@ import { defer, hasRenderBindings, type Mark, transform } from "./read.ts";
 import { hash } from "../../../shared/text.ts";
 
 export type { Entry, Mark } from "./read.ts";
+export { css } from "./styles.ts";
 
 export type CommentsOptions = {
   /**

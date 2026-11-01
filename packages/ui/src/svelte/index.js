@@ -35,7 +35,7 @@ import * as zoom from "comark-zoom/svelte";
 import Mermaid from "./Mermaid.svelte";
 import typeset from "./Typeset.svelte";
 
-export { criticCss } from "comark-ui";
+export { commentsCss, criticCss } from "comark-ui";
 
 const mermaid = { default: pele, components: { pele: Mermaid } };
 

@@ -41,7 +41,7 @@ import { start } from "./script.ts";
 import { typesetCss } from "./typeset-css.ts";
 import { attr } from "../../../shared/html.ts";
 
-export { criticCss } from "./index.ts";
+export { commentsCss, criticCss } from "./index.ts";
 export type { PresetOptions } from "./index.ts";
 
 // Each render gets a fresh `state.context`, so a document carries the styles and the script once.

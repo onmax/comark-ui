@@ -34,6 +34,11 @@ import type { ZoomOptions } from "comark-zoom";
 import mermaidLimits, { type MermaidOptions } from "./mermaid-limits.ts";
 import { typeset, TYPESET_TAG } from "./typeset.ts";
 
+/**
+ * comark-comments' styles, for marks or cards drawn outside a rendered document. The renderer adds them to a document
+ * itself.
+ */
+export { css as commentsCss } from "comark-comments";
 /** comark-critic's styles. It has no component to add them, so put them in the page yourself. */
 export { css as criticCss } from "comark-critic";
 export type { MermaidOptions } from "./mermaid-limits.ts";
