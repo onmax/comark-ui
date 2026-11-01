@@ -1898,8 +1898,10 @@ const footer = (credits?: string) =>
 
 // Every page also has a Markdown copy at its path plus `.md`, as on ui.nuxt.com, for agents and for pasting into a chat.
 const markdownHref = (slug: string) => `/${slug || "index"}.md`;
+// The Markdown mark, from github.com/dcurtis/markdown-mark (CC0).
+const markdownIcon = `<svg viewBox="0 0 208 128" width="20" height="12" aria-hidden="true"><rect x="5" y="5" width="198" height="118" rx="10" fill="none" stroke="currentColor" stroke-width="10"/><path fill="currentColor" d="M30 98V30h20l20 25 20-25h20v68H90V59L70 84 50 59v39zm125 0-30-33h20V30h20v35h20z"/></svg>`;
 const pageActions = (slug: string) =>
-  `<div class="page-actions"><button type="button" class="button copy-page" data-markdown="${markdownHref(slug)}"><span class="copy-page-icon">${copyIcon}${checkIcon}</span>Copy page</button><a class="button" href="${markdownHref(slug)}">View as Markdown</a></div>`;
+  `<div class="page-actions" role="group" aria-label="This page in Markdown"><button type="button" class="copy-page" data-markdown="${markdownHref(slug)}"><span class="copy-page-icon">${copyIcon}${checkIcon}</span>Copy page</button><a class="page-markdown" href="${markdownHref(slug)}" aria-label="View as Markdown" title="View as Markdown">${markdownIcon}</a></div>`;
 
 // The landing page, as on vitehub.dev: the headline beside the install command, the packages, the example, and Drop.
 await writeFile(

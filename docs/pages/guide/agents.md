@@ -25,7 +25,7 @@ It teaches the blocks. To teach your agent a whole document, such as before/afte
 
 ## Markdown pages
 
-Every page on this site has a Markdown copy at its path plus `.md`, such as [`/zoom.md`](/zoom.md) for [`/zoom/`](/zoom/). A request for a page with `Accept: text/markdown` gets the copy too. The **Copy page** button on each page copies it, to paste into a chat.
+Every page on this site has a Markdown copy at its path plus `.md`, such as [`/zoom.md`](/zoom.md) for [`/zoom/`](/zoom/). A request for a page with `Accept: text/markdown` gets the copy too. The **Copy page** button at the top of each page copies it, to paste into a chat, and the Markdown mark beside it opens it.
 
 [`/llms.txt`](/llms.txt) lists every page's copy by section, and says how an agent reads the site.
 

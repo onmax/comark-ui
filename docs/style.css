@@ -2152,13 +2152,15 @@ nav > .nav-group:first-child {
   color: #16a34a;
 }
 
-/* Copy page and View as Markdown: under the landing's tagline, and on a page level with its title at the far right, as
-   on ui.nuxt.com. A title too long to leave them room pushes them under it, at the start. */
+/* Copy page and View as Markdown, as one split button: the copy is the action people want, so it keeps the label, and
+   the Markdown mark beside it opens the raw page. Under the landing's tagline, and on a page level with its title at
+   the far right, as on ui.nuxt.com. A title too long to leave room pushes it under, at the start. */
 .page-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+  display: inline-flex;
   margin-top: 1rem;
+  border-radius: var(--r-sm);
+  box-shadow: inset 0 0 0 1px var(--line);
+  transition: box-shadow 150ms ease;
 }
 
 .hero-title {
@@ -2181,11 +2183,57 @@ nav > .nav-group:first-child {
   margin: 0;
 }
 
-.page-actions .button {
+.page-actions > * {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   height: 2rem;
   padding: 0 0.75rem;
-  font-size: 0.8125rem;
+  border: 0;
+  background: none;
+  color: var(--fg);
+  font: 500 0.8125rem/1 var(--sans);
+  text-decoration: none;
   cursor: pointer;
+  transition: background-color 150ms ease;
+}
+
+.page-actions > :first-child {
+  border-radius: var(--r-sm) 0 0 var(--r-sm);
+}
+
+.page-actions > :last-child {
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  padding: 0 0.625rem;
+  box-shadow: inset 1px 0 0 var(--line);
+  color: var(--muted);
+}
+
+.page-actions > :active {
+  background: var(--soft);
+}
+
+.page-actions > :focus-visible {
+  outline: 2px solid var(--fg);
+  outline-offset: -2px;
+}
+
+@media (hover: hover) {
+  .page-actions:hover {
+    box-shadow: inset 0 0 0 1px var(--faint);
+  }
+
+  .page-actions > :hover {
+    background: var(--soft);
+  }
+
+  .page-actions:hover > .page-markdown {
+    box-shadow: inset 1px 0 0 var(--faint);
+  }
+
+  .page-actions > .page-markdown:hover {
+    color: var(--fg);
+  }
 }
 
 .copy-page-icon {
