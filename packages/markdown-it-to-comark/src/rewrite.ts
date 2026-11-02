@@ -96,6 +96,25 @@ function blocker(setup: Setup, file: string, isModule: boolean, info: Index): st
     return `reads the instance's helpers on line ${creation.reads[0]} (\`md.utils\`, \`md.options\`), which Comark's options don't have`;
   if (creation.scattered.length)
     return `configures the instance on line ${creation.scattered[0]} inside a branch, a function, or an expression, which may run later or not at all; move it beside the declaration`;
+  if (creation.statement && creation.statements.length) {
+    const declaration = [...info.parent.keys()].find(
+      (node) => node.start === creation.statement!.start && node.end === creation.statement!.end,
+    );
+    const container = declaration && info.parent.get(declaration);
+    const last = Math.max(...creation.statements.map((statement) => statement.end));
+    if (
+      [...info.parent].some(
+        ([node, parent]) =>
+          parent === container &&
+          node.start >= creation.statement!.end &&
+          node.end <= last &&
+          !creation.statements.some(
+            (statement) => statement.start === node.start && statement.end === node.end,
+          ),
+      )
+    )
+      return "configures the instance across other statements, so moving plugin options would change their evaluation order; move configuration beside the declaration";
+  }
   if (!setup.renders.length) return "has no `render` call in this file";
   if (!creation.binding && setup.renders.length !== 1) return "isn't bound to a name";
   if (/\.c[jt]s$/.test(file) || !isModule) return "is CommonJS; the rewrite emits ES imports";

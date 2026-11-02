@@ -23,6 +23,8 @@ export interface Finding {
 
 /** A span of the file's original text, as UTF-16 offsets, and the text that replaces it. */
 export interface Edit {
+  /** The exact input from which these offsets were computed. */
+  source: string;
   start: number;
   end: number;
   text: string;
@@ -39,7 +41,12 @@ function edit(before: string, after: string): Edit {
     before[before.length - 1 - tail] === after[after.length - 1 - tail]
   )
     tail++;
-  return { start, end: before.length - tail, text: after.slice(start, after.length - tail) };
+  return {
+    source: before,
+    start,
+    end: before.length - tail,
+    text: after.slice(start, after.length - tail),
+  };
 }
 
 /** How a check reads the project: the CLI uses the file system, the Vite Doctor extension its own `ctx.fs`. */

@@ -217,14 +217,15 @@ function configuration(
         setup.host === "marked" &&
         markedNames.some(
           (specifier) =>
-            specifier.local === callee.name && /^(use|setOptions)$/.test(specifier.imported),
+            specifier.local === callee.name &&
+            /^(use|setOptions|options)$/.test(specifier.imported),
         )
       );
     if (
       callee.type !== "MemberExpression" ||
       callee.computed ||
       callee.property.type !== "Identifier" ||
-      !/^(use|setOptions)$/.test(callee.property.name)
+      !/^(use|setOptions|options)$/.test(callee.property.name)
     )
       return false;
     return setup.host === "marked"

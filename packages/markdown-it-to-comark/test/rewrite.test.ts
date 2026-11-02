@@ -152,6 +152,14 @@ describe("rewriteSource", () => {
     );
   });
 
+  it("leaves plugin configuration whose evaluation would move across other statements", () => {
+    const code =
+      'import MarkdownIt from "markdown-it";\nimport anchor from "markdown-it-anchor";\nconst md = new MarkdownIt();\nconst opts = {};\nmd.use(anchor, opts);\nexport const render = async (s: string) => md.render(s);\n';
+    const result = rewrite(code);
+    expect(result.code).toBe(code);
+    expect(result.rewrites[0]?.reason).toMatch(/evaluation order/);
+  });
+
   it("drops options a preset resets", () => {
     const result = rewrite(
       'import MarkdownIt from "markdown-it";\nconst md = new MarkdownIt({ html: true, breaks: true }).configure("default");\nexport const render = async (s: string) => md.render(s);\n',

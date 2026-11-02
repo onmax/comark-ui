@@ -8,7 +8,7 @@ export interface Finding {
   params: Record<string, unknown> & { at: string };
   file: string;
   line: number;
-  edit?: { start: number; end: number; text: string };
+  edit?: { source: string; start: number; end: number; text: string };
 }
 
 /** The part of a migrator package the wizard drives. Each one exports these from its root. */
@@ -73,8 +73,14 @@ export async function plan(
   }
   const wanted = new Map<string, Change[]>();
   for (const { detection, findings } of reports) {
+    // Safe content edits can still be written, but switching parsers must wait for every unresolved document.
+    const unresolvedContent = findings?.some(
+      (finding) =>
+        finding.code.endsWith("0303") || (finding.code.endsWith("0302") && !finding.edit),
+    );
     for (const finding of findings ?? []) {
       if (!finding.edit) continue;
+      if (unresolvedContent && finding.code.endsWith("0202")) continue;
       const changes = wanted.get(finding.file) ?? [];
       // A migrator puts the same edit on every finding in a file, such as each rewritten chain in it.
       if (
@@ -86,7 +92,7 @@ export async function plan(
       changes.push({
         file: finding.file,
         migrator: detection.migrator,
-        source: readFileSync(join(root, finding.file), "utf8"),
+        source: finding.edit.source,
         edit: finding.edit,
       });
       wanted.set(finding.file, changes);

@@ -109,6 +109,18 @@ module.exports = (s) => md.parse(s) + parse(s);`),
 const parses = (code: string, file = "a.ts") => parseSync(file, code).errors.length === 0;
 
 describe("rewriteSource", () => {
+  it.each([
+    "if (enabled) marked.setOptions({ breaks: true });",
+    "function configure() { marked.use({ breaks: true }); }",
+    "enabled && marked.setOptions({ breaks: true });",
+    "marked.options({ breaks: true });",
+  ])("leaves configuration whose execution cannot be established: %s", (configuration) => {
+    const source = `import { marked } from "marked";\nexport async function render(text, enabled) { ${configuration} return marked(text); }\n`;
+    const result = rewriteSource(source, "a.ts");
+    expect(result.code).toBe(source);
+    expect(result.rewrites[0]?.reason).toMatch(/configuration.*execution order/);
+  });
+
   it("awaits renderHtml where the function is async, and carries options and extensions over", () => {
     const source = `import { marked } from "marked";
 import markedAlert from "marked-alert";

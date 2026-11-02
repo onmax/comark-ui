@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -30,8 +30,8 @@ const plain = new MarkdownIt({ linkify: true });
 export const c = async (source: string) => plain.render(source);
 `;
 
-const fixture = () =>
-  project({
+const fixture = () => {
+  const root = project({
     "package.json": "{}",
     "src/render.ts": RENDER,
     "docs/.vitepress/config.ts":
@@ -39,6 +39,14 @@ const fixture = () =>
     "docs/a.md": "# A\n\nSet [value] first.\n\n::: tip\nKept for VitePress.\n:::\n",
     "docs/b.md": "# B\n\nPlain.\n",
   });
+  // The CLI resolves these plugins from the project being migrated, including when its fixture lives in /tmp.
+  symlinkSync(
+    fileURLToPath(new URL("../node_modules", import.meta.url)),
+    join(root, "node_modules"),
+    "junction",
+  );
+  return root;
+};
 
 const cli = (root: string, ...args: string[]) =>
   spawnSync(process.execPath, [fileURLToPath(new URL("../src/cli.ts", import.meta.url)), ...args], {

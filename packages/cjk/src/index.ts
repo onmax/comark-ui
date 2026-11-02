@@ -1,4 +1,4 @@
-import { defineComarkPlugin } from "comark";
+import { defineComarkPlugin, type MarkdownExitPlugin } from "comark";
 import cjkFriendly from "markdown-it-cjk-friendly";
 
 /**
@@ -7,5 +7,6 @@ import cjkFriendly from "markdown-it-cjk-friendly";
  */
 export default defineComarkPlugin(() => ({
   name: "comark-cjk",
-  markdownItPlugins: [cjkFriendly],
+  // SAFETY: the plugin only subclasses inline.State and uses utils' punctuation helpers, which markdown-exit keeps.
+  markdownItPlugins: [cjkFriendly as unknown as MarkdownExitPlugin],
 }));

@@ -116,7 +116,7 @@ describe("plan and apply", () => {
           params: { at: "README.md:1" },
           file: "README.md",
           line: 1,
-          edit: { start: 6, end: 7, text },
+          edit: { start: 6, end: 7, text, source: "Hello {name}\n" },
         },
       ],
       catalog: { X0001: { severity: "warn", ruleId: "x/escape" } },
@@ -136,6 +136,71 @@ describe("plan and apply", () => {
     writeFileSync(join(root, "docs/a.md"), "# Edited\n");
     expect(apply(root, result.changes).stale).toEqual(["docs/a.md"]);
     expect(readFileSync(join(root, "docs/a.md"), "utf8")).toBe("# Edited\n");
+  });
+
+  it("skips a file edited while its migrator is still checking", async () => {
+    const root = project({
+      "package.json": manifest({ remark: "^15.0.0" }),
+      "README.md": "Hello {name}\n",
+    });
+    const result = await plan(root, {
+      load: async () => ({
+        check: async () => {
+          const source = readFileSync(join(root, "README.md"), "utf8");
+          writeFileSync(join(root, "README.md"), `Prepended\n${source}`);
+          return [
+            {
+              code: "RTC0302",
+              params: { at: "README.md:1" },
+              file: "README.md",
+              line: 1,
+              edit: { start: 6, end: 7, text: "\\{", source },
+            },
+          ];
+        },
+        catalog: {},
+        toDiagnostic: () => ({ why: "", fix: "" }),
+      }),
+    });
+    expect(apply(root, result.changes)).toEqual({ written: [], stale: ["README.md"] });
+    expect(readFileSync(join(root, "README.md"), "utf8")).toBe("Prepended\nHello {name}\n");
+  });
+
+  it.each([
+    ["remark", "RTC"],
+    ["markdown-it", "MIC"],
+    ["marked", "MKC"],
+  ])("keeps %s setup unchanged while content cannot be migrated", async (library, prefix) => {
+    const root = project({
+      "package.json": manifest({ [library]: "*" }),
+      "render.ts": "old",
+      "a.md": "{x}",
+    });
+    const result = await plan(root, {
+      load: async () => ({
+        check: async () => [
+          {
+            code: `${prefix}0202`,
+            params: { at: "render.ts:1" },
+            file: "render.ts",
+            line: 1,
+            edit: { start: 0, end: 3, text: "new", source: "old" },
+          },
+          { code: `${prefix}0303`, params: { at: "b.md:1" }, file: "b.md", line: 1 },
+          {
+            code: `${prefix}0302`,
+            params: { at: "a.md:1" },
+            file: "a.md",
+            line: 1,
+            edit: { start: 0, end: 1, text: "\\{", source: "{x}" },
+          },
+        ],
+        catalog: {},
+        toDiagnostic: () => ({ why: "", fix: "" }),
+      }),
+    });
+    expect(apply(root, result.changes)).toEqual({ written: ["a.md"], stale: [] });
+    expect(readFileSync(join(root, "render.ts"), "utf8")).toBe("old");
   });
 
   it("reports a migrator that can't be loaded instead of throwing", async () => {

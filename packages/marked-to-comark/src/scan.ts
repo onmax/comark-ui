@@ -148,6 +148,7 @@ function scanScript(source: string, file: string, shared?: Map<string, string>):
   const text = (node: Node) => source.slice(node.start, node.end);
   // Every imported name and the module it's from, and the names bound to marked itself.
   const imports = new Map<string, string>(shared);
+  const parents = new WeakMap<Node, Node>();
   const marked = new Map<string, Binding>();
   let commonjs = false;
   for (const [name, from] of shared ?? [])
@@ -187,7 +188,8 @@ function scanScript(source: string, file: string, shared?: Map<string, string>):
     return undefined;
   };
 
-  walk(program, (node) => {
+  walk(program, (node, parent) => {
+    if (parent) parents.set(node, parent);
     if (node.type === "ImportDeclaration") {
       const from = node.source.value;
       for (const specifier of node.specifiers) {
@@ -545,6 +547,15 @@ function scanScript(source: string, file: string, shared?: Map<string, string>):
     const method = found.method ?? "parse";
     const { setup } = found;
     if (setup.line === 0) setup.line = lineOf(node.start);
+    if (/^(use|setOptions|options)$/.test(method)) {
+      const statement = parents.get(node);
+      if (
+        statement?.type !== "ExpressionStatement" ||
+        parents.get(statement) !== program ||
+        setup.calls.length
+      )
+        setup.unresolved ??= `${file}:${lineOf(node.start)} has configuration whose execution order cannot be established; move it to the top level before the render calls.`;
+    }
     if (method === "use") for (const argument of node.arguments) extension(argument, setup);
     else if (method === "setOptions" || method === "options") {
       if (node.arguments[0]) settings(node.arguments[0], setup);
