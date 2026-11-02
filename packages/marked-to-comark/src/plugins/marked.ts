@@ -2,6 +2,7 @@ import type {
   ComarkParseTokensState,
   ComarkPlugin,
   ElementNode,
+  ElementNodeAttributes,
   MarkdownExitPlugin,
   Node,
 } from "comark";
@@ -131,7 +132,11 @@ export const inlineHtml = (): ComarkPlugin => ({
       for (const node of nodes) {
         if (!Array.isArray(node) || node[0] === null) continue;
         const held: unknown = node[1][MARK];
-        if (held instanceof Object) node[1] = Object.assign({ $: { html: 1, block: 0 } }, held);
+        if (held instanceof Object) {
+          const restored: ElementNodeAttributes = { $: { html: 1, block: 0 } };
+          for (const [key, value] of Object.entries(held)) restored[key] = value;
+          node[1] = restored;
+        }
         visit(childrenOf(node));
       }
     };
