@@ -465,7 +465,7 @@ A host whose script runs before the blocks' can't send the event yet, since noth
 
 ### In a frame
 
-When the lesson renders in an iframe and the host is the page around it, put `data-quiz-relay` on the lesson's `<html>`, with the host's origin as its value, or `*` for any. The script then posts `comark-quiz:ready` and `comark-quiz:answer` to the parent as `{ type, detail }`, and applies `{ type: "comark-quiz:state", detail }` messages from the parent:
+When the lesson renders in an iframe and the host is the page around it, put `data-quiz-relay` on the lesson's `<html>`, with the host's origin as its value, or `*` for any. An absent or empty `data-quiz-relay` leaves the relay off. The script then posts `comark-quiz:ready` and `comark-quiz:answer` to the parent as `{ type, detail }`, and applies `{ type: "comark-quiz:state", detail }` messages from the parent:
 
 ```html
 <html data-quiz-relay="https://app.example.com">

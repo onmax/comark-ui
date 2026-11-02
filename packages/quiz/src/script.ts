@@ -706,9 +706,8 @@ export function script(config: ScriptConfig): void {
 
   // In a frame, `data-quiz-relay` on the root hands the events to the parent page and takes its state back, so the
   // parent hosts the blocks with no script in the frame. Its value is the parent's origin, or `*` for any.
-  const relay = html.getAttribute("data-quiz-relay");
-  if (relay === null || window.parent === window) return;
-  const origin = relay || "*";
+  const origin = html.getAttribute("data-quiz-relay");
+  if (!origin || window.parent === window) return;
   const up = (event: Event) => {
     if (event instanceof CustomEvent)
       window.parent.postMessage({ type: event.type, detail: event.detail }, origin);
