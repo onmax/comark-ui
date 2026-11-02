@@ -4,7 +4,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vite-plus/test";
-import { check } from "../src/check.ts";
+import { runInNewContext } from "node:vm";
+import { check, pluginOf } from "../src/check.ts";
 import { formatFindings } from "../src/report.ts";
 
 function project(files: Record<string, string>) {
@@ -103,6 +104,14 @@ describe("check", () => {
       "docs/a.md": "::: demo\nHello\n:::\n",
     });
     expect((await check(root)).filter((finding) => finding.code === "MIC0302")).toEqual([]);
+  });
+
+  it("loads a plugin from another realm or a null-prototype module", () => {
+    const plugin = runInNewContext("(function plugin(md) {})");
+    expect(pluginOf({ default: plugin })).toBe(plugin);
+    expect(pluginOf({ default: Object.assign(Object.create(null), { default: plugin }) })).toBe(
+      plugin,
+    );
   });
 
   it("prints the same JSON shape as remark-to-comark", async () => {

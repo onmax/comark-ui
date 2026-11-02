@@ -74,7 +74,8 @@ describe("comarkSetup", () => {
     ["only a comment", "<!-- a -->\n\ntext\n"],
     ["elements and a comment", '<p><a href="#">x</a></p>\n<!-- end -->\n'],
     ["elements with loose text between them", "<h3>Title</h3>\nLoose text.\n<p><a>b</a></p>\n"],
-  ])("leaves an HTML block of %s out of a paragraph", async (_, markdown) => {
+    ["a tag with a quoted `>` that stays open", '<div title=">">\nhello\n\nnext\n\n</div>\n'],
+  ])("reads an HTML block of %s like markdown-it", async (_, markdown) => {
     const { markdownIt, comark } = both({ syntax: "plain", html: true });
     expect(compare(markdownIt(markdown), await comark(markdown)).differences).toEqual([]);
   });
@@ -85,15 +86,21 @@ describe("comarkSetup", () => {
     expect(compare(markdownIt(markdown), await comark(markdown)).differences).toEqual([]);
   });
 
-  it.each(["jsx:title=src/a/[...].js", "`C~", "{r}", "js {1,3}", 'js title="a.js"'])(
-    "gives a fence with the info string %s markdown-it's language",
-    async (info) => {
-      const { markdownIt, comark } = both({ syntax: "plain" });
-      const fence = info.includes("`") ? "~~~" : "```";
-      const markdown = `${fence}${info}\nx\n${fence}\n`;
-      expect(compare(markdownIt(markdown), await comark(markdown)).differences).toEqual([]);
-    },
-  );
+  it.each([
+    "jsx:title=src/a/[...].js",
+    "`C~",
+    "{r}",
+    "js {1,3}",
+    'js title="a.js"',
+    "foo&#35;",
+    "foo\\+bar",
+    "foo&#32;bar",
+  ])("gives a fence with the info string %s markdown-it's language", async (info) => {
+    const { markdownIt, comark } = both({ syntax: "plain" });
+    const fence = info.includes("`") ? "~~~" : "```";
+    const markdown = `${fence}${info}\nx\n${fence}\n`;
+    expect(compare(markdownIt(markdown), await comark(markdown)).differences).toEqual([]);
+  });
 
   it("writes an image's alt text without its markup", async () => {
     const { markdownIt, comark } = both({ syntax: "plain" });

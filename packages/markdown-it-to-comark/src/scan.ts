@@ -325,6 +325,8 @@ function scanScript(source: string, file: string): Setup[] {
           "calls `configure()` after registering plugins or rules, which resets them";
       if (preset?.type === "Literal" && isString(preset)) setup.preset = preset.value;
       else setup.unresolved ??= "it calls `configure()` with a preset the scan can't read";
+      // A preset replaces every option set before it with its own.
+      setup.options = {};
     } else
       setup.rules.push({
         method,

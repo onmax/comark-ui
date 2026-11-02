@@ -152,6 +152,13 @@ describe("rewriteSource", () => {
     );
   });
 
+  it("drops options a preset resets", () => {
+    const result = rewrite(
+      'import MarkdownIt from "markdown-it";\nconst md = new MarkdownIt({ html: true, breaks: true }).configure("default");\nexport const render = async (s: string) => md.render(s);\n',
+    );
+    expect(result.code).toContain("const md = comarkOptions();");
+  });
+
   it("leaves CommonJS alone", () => {
     const code =
       'const MarkdownIt = require("markdown-it");\nconst md = new MarkdownIt();\nexports.render = async (s) => md.render(s);\n';

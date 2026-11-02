@@ -97,7 +97,10 @@ export const markdownItTokens = (options: MarkdownItOptions): ComarkPlugin => {
           }
           // Comark reads a fence's language with its own grammar, which stops at `[` and `{` and drops a language that
           // starts with punctuation (`jsx:title=a/[...].js`, `{r}`); such a fence is drawn by markdown-it's renderer.
-          if (token.type === "fence" && md && /[^\w+#.:/@-]/.test(language(token.info, md))) {
+          // Escapes and entities too (`foo&#35;`): Comark reads the info string as written.
+          const raw = token.info.trim().split(/\s+/)[0] ?? "";
+          const lang = md ? language(token.info, md) : raw;
+          if (token.type === "fence" && md && (/[^\w+#.:/@-]/.test(lang) || lang !== raw)) {
             const renderer = rendererOf(md);
             const html = renderer.rules.fence?.(tokens, index, md.options, {}, renderer);
             if (isText(html)) {

@@ -194,10 +194,14 @@ export const htmlBlocks = (): ComarkPlugin => ({
       for (const child of inline.children ?? []) {
         if (child.type !== "html_inline") continue;
         if (child.content.startsWith("<!--")) continue;
-        const tag = /^<(\/?)([A-Za-z][\w-]*)[^>]*?(\/?)>$/.exec(child.content.trim());
-        if (!tag) continue;
+        // The name only: a quoted `>` in an attribute would end a pattern over the whole tag early.
+        const tag = /^<(\/?)([A-Za-z][\w-]*)/.exec(child.content.trim());
+        if (!tag) {
+          balanced = false;
+          continue;
+        }
         const name = tag[2]!.toLowerCase();
-        if (VOID.has(name) || tag[3]) continue;
+        if (VOID.has(name) || /\/\s*>$/.test(child.content.trim())) continue;
         if (!tag[1]) open.push(name);
         else if (open.at(-1) === name) open.pop();
         else balanced = false;
