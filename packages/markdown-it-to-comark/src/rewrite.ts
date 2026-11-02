@@ -70,16 +70,15 @@ function renderBlocker(render: Setup["renders"][number], info: Index): string | 
   const call = info.calls.get(`${render.start}:${render.end}`);
   if (!call) return "couldn't be located in the file";
   const fn = enclosingFunction(call, info);
-  // SAFETY: every function node type in FUNCTIONS has an `async` flag.
-  // SAFETY: every function node type in FUNCTIONS has a body; `await` is only allowed inside it, not in a default value.
-  const body = fn && (fn as unknown as { body: Node | null }).body;
-  if (
-    !fn ||
-    !(fn as unknown as { async: boolean }).async ||
-    !body ||
-    call.start < body.start ||
-    call.end > body.end
-  )
+  // `await` is only allowed in an async function's body, not in a parameter's default value.
+  const runs =
+    fn?.type === "FunctionDeclaration" ||
+    fn?.type === "FunctionExpression" ||
+    fn?.type === "ArrowFunctionExpression"
+      ? fn
+      : undefined;
+  const body = runs?.body;
+  if (!runs?.async || !body || call.start < body.start || call.end > body.end)
     return `renders on line ${render.line} outside an async function's body; Comark's \`renderHtml\` returns a promise, so the call needs an \`await\` that can't go there`;
   return undefined;
 }
@@ -250,7 +249,7 @@ function rewriteScript(source: string, file: string): RewriteResult {
       if (node.type === "ImportDeclaration") return;
       if (
         node.type === "Identifier" &&
-        !(parent?.type === "MemberExpression" && (parent as { property: Node }).property === node)
+        !(parent?.type === "MemberExpression" && parent.property === node)
       )
         used.add(node.name);
       for (const child of children(node)) visit(child, node);

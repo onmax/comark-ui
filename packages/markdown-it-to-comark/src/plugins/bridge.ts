@@ -1,20 +1,33 @@
 import type { ComarkParseTokensState, ComarkPlugin, MarkdownExitPlugin } from "comark";
 import { decodeHTML } from "entities";
+import { isFunction, isText } from "../guards.ts";
 
 type Token = ComarkParseTokensState["tokens"][number];
 type MarkdownExit = Parameters<MarkdownExitPlugin>[0];
 type TokenClass = new (type: string, tag: string, nesting: Token["nesting"]) => Token;
-type Rule = (
-  tokens: Token[],
-  index: number,
-  options: unknown,
-  env: unknown,
-  self: unknown,
-) => unknown;
-interface Renderer {
-  rules: Record<string, Rule | undefined>;
-  renderToken: (tokens: Token[], index: number, options: unknown) => string;
+type Renderer = MarkdownExit["renderer"];
+
+// markdown-exit's renderer and rulers, which its types don't describe the way markdown-it plugins use them.
+export const rendererOf = (md: MarkdownExit): Renderer => md.renderer;
+type Ruler =
+  | MarkdownExit["block"]["ruler"]
+  | MarkdownExit["inline"]["ruler"]
+  | MarkdownExit["core"]["ruler"];
+interface RuleEntry {
+  name: string;
+  fn: (state: { pos: number; src: string }, silent: boolean) => boolean;
 }
+// A ruler's list of rules is private in markdown-exit's types, and markdown-it plugins reorder it all the same.
+const rulesOf = (ruler: Ruler): RuleEntry[] => Reflect.get(ruler, "__rules__");
+function setRules(ruler: Ruler, rules: RuleEntry[]) {
+  Reflect.set(ruler, "__rules__", rules);
+  Reflect.set(ruler, "__cache__", null);
+}
+const rulers = (md: MarkdownExit) => ({
+  block: md.block.ruler,
+  inline: md.inline.ruler,
+  core: md.core.ruler,
+});
 
 // SAFETY: Comark's tokens are instances of markdown-exit's Token class, which takes a type, a tag, and a nesting.
 const tokenClass = (token: Token) => token.constructor as TokenClass;
@@ -186,17 +199,7 @@ function closing(tokens: Token[], start: number): number {
  */
 let bridges = 0;
 
-interface RulerHost {
-  ruler: {
-    disable?: (names: string, ignoreInvalid: boolean) => void;
-    __rules__: {
-      name: string;
-      fn: (state: { pos: number; src: string }, silent: boolean) => boolean;
-    }[];
-    __cache__: unknown;
-  };
-}
-// The environment each parse ran with, by its token list, for renderer rules that read it.
+// The environment each parse ran with, by its tokens, for renderer rules that read it.
 const environments = new WeakMap<Token, object>();
 // The rules bridged plugins added, by parser, for `precedence()`.
 const bridgedRules = new WeakMap<
@@ -214,46 +217,42 @@ export const precedence = (): ComarkPlugin => ({
     (instance: MarkdownExit) => {
       const added = bridgedRules.get(instance);
       if (!added) return;
-      const host = instance as unknown as Record<"block" | "inline" | "core", RulerHost>;
+      const host = rulers(instance);
       for (const chain of ["block", "inline"] as const) {
-        const list = host[chain].ruler.__rules__;
+        const list = rulesOf(host[chain]);
         const first = list.findIndex((rule) => rule.name.startsWith("comark_"));
         if (first < 0) continue;
         const moved = list.slice(first).filter((rule) => added[chain].has(rule.name));
         if (!moved.length) continue;
         const rest = list.filter((rule) => !moved.includes(rule));
         rest.splice(first, 0, ...moved);
-        host[chain].ruler.__rules__ = rest;
-        host[chain].ruler.__cache__ = null;
+        setRules(host[chain], rest);
       }
       // markdown-it-emoji replaces `:name:` after inline parsing, too late to stop Comark's `:name` component, so the
       // component rule leaves anything shaped like a shortcode as text for it. Unknown names stay text, as they would.
       // markdown-it-task-lists reads `[ ] ` at the start of a list item after inline parsing; Comark's span would take it.
       if ([...added.core].some((name) => /task/i.test(name))) {
-        const rule = host.inline.ruler.__rules__.find((item) => item.name === "comark_inline_span");
+        const rule = rulesOf(host.inline).find((item) => item.name === "comark_inline_span");
         if (rule) {
           const fn = rule.fn;
           rule.fn = (state, silent) =>
             state.pos === 0 && /^\[[ xX]\][ \t]/.test(state.src.slice(0, 4))
               ? false
               : fn(state, silent);
-          host.inline.ruler.__cache__ = null;
+          setRules(host.inline, rulesOf(host.inline));
         }
       }
       // markdown-it-attrs reads `{.class}` after parsing too; it takes the place of Comark's attribute syntax.
-      if (added.core.has("curly_attributes"))
-        host.inline.ruler.disable?.("comark_inline_props", true);
+      if (added.core.has("curly_attributes")) host.inline.disable("comark_inline_props", true);
       if (added.core.has("emoji")) {
-        const rule = host.inline.ruler.__rules__.find(
-          (item) => item.name === "comark_inline_component",
-        );
+        const rule = rulesOf(host.inline).find((item) => item.name === "comark_inline_component");
         if (rule) {
           const fn = rule.fn;
           rule.fn = (state, silent) =>
             /^:[\w+-]+:/.test(state.src.slice(state.pos, state.pos + 80))
               ? false
               : fn(state, silent);
-          host.inline.ruler.__cache__ = null;
+          setRules(host.inline, rulesOf(host.inline));
         }
       }
     },
@@ -263,33 +262,29 @@ export const precedence = (): ComarkPlugin => ({
 export function markdownItPlugin(plugin: unknown, ...options: unknown[]): ComarkPlugin {
   let md: MarkdownExit | undefined;
   const changed = new Set<string>();
-  const name = typeof plugin === "function" && plugin.name ? plugin.name : "markdown-it plugin";
+  const name = isFunction(plugin) && plugin.name ? plugin.name : "markdown-it plugin";
   return {
     // Comark keeps one plugin per name, and two bridges of the same plugin with different options are two plugins.
     name: `markdown-it:${name}:${++bridges}`,
     markdownItPlugins: [
       (instance: MarkdownExit) => {
         md = instance;
-        const renderer = instance.renderer as unknown as Renderer;
+        const renderer = rendererOf(instance);
         const before = { ...renderer.rules };
-        const rules = (chain: RulerHost) => new Set(chain.ruler.__rules__.map((rule) => rule.name));
-        const host = instance as unknown as Record<"block" | "inline" | "core", RulerHost>;
+        const rules = (chain: Ruler) => new Set(rulesOf(chain).map((rule) => rule.name));
+        const host = rulers(instance);
         const blockBefore = rules(host.block);
         const inlineBefore = rules(host.inline);
         const coreBefore = rules(host.core);
-        // SAFETY: a markdown-it plugin takes the instance and its options; markdown-exit keeps markdown-it's `use`.
         const highlight = instance.options.highlight;
+        // SAFETY: a markdown-it plugin takes the instance and its options; markdown-exit keeps markdown-it's `use`.
         instance.use(plugin as never, ...(options as []));
         for (const [type, rule] of Object.entries(renderer.rules))
           if (rule !== before[type]) changed.add(type);
         // markdown-it's own fence renderer reads `highlight`, so a plugin that sets it changes how fences draw.
         if (instance.options.highlight !== highlight) changed.add("fence");
-        if (!host.core.ruler.__rules__.some((rule) => rule.name === "markdown-it-to-comark-env"))
-          (
-            instance.core.ruler as unknown as {
-              push: (name: string, fn: (state: { tokens: Token[]; env: object }) => void) => void;
-            }
-          ).push("markdown-it-to-comark-env", (core) => {
+        if (!rulesOf(host.core).some((rule) => rule.name === "markdown-it-to-comark-env"))
+          host.core.push("markdown-it-to-comark-env", (core) => {
             for (const token of core.tokens) environments.set(token, core.env);
           });
         const added = bridgedRules.get(instance) ?? {
@@ -305,7 +300,7 @@ export function markdownItPlugin(plugin: unknown, ...options: unknown[]): Comark
     ],
     markdownItPost(state) {
       if (!md) return;
-      const renderer = md.renderer as unknown as Renderer;
+      const renderer = rendererOf(md);
       // The environment the parse ran with: renderer rules read what core rules left there.
       // Found by a token, since other plugins may replace the token list itself.
       const env = state.tokens.map((token) => environments.get(token)).find(Boolean) ?? {};
@@ -314,7 +309,7 @@ export function markdownItPlugin(plugin: unknown, ...options: unknown[]): Comark
         const html = rule
           ? rule(tokens, index, md!.options, env, renderer)
           : renderer.renderToken(tokens, index, md!.options);
-        return typeof html === "string" ? html : undefined;
+        return isText(html) ? html : undefined;
       };
       // Comark's tree builder reads a code block's language from its info string and drops attributes a plugin set on
       // it (markdown-it-attrs' `{data-x}`), so such a block is drawn by markdown-it too.

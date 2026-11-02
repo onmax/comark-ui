@@ -76,16 +76,16 @@ function instrumented(options: ContentOptions): Instrumented {
   const cached = instances.get(options);
   if (cached) return cached;
   const md = new MarkdownIt(options.preset ?? "default", options.options ?? {});
-  // SAFETY: a markdown-it plugin takes the instance and its options.
-  for (const [plugin, ...rest] of options.plugins ?? []) md.use(plugin as never, ...(rest as []));
+  for (const [plugin, ...rest] of options.plugins ?? [])
+    // SAFETY: a markdown-it plugin takes the instance and its options.
+    md.use(plugin as never, ...(rest as []));
   for (const [method, names] of ruleChanges(options)) md[method](names, true);
   const traces = new WeakMap<Token[], Trace>();
   const stack: Trace[] = [];
-  const ruler = md.inline.ruler as unknown as {
-    __rules__: { name: string; fn: (state: StateInline, silent: boolean) => boolean }[];
-    __cache__: unknown;
-  };
-  for (const rule of ruler.__rules__) {
+  // A ruler's rules are private in markdown-it's types; plugins read and wrap them all the same.
+  const rules: { name: string; fn: (state: StateInline, silent: boolean) => boolean }[] =
+    Reflect.get(md.inline.ruler, "__rules__");
+  for (const rule of rules) {
     const fn = rule.fn;
     const name = rule.name;
     rule.fn = (state, silent) => {
@@ -97,7 +97,7 @@ function instrumented(options: ContentOptions): Instrumented {
       return matched;
     };
   }
-  ruler.__cache__ = null;
+  Reflect.set(md.inline.ruler, "__cache__", null);
   const tokenize = md.inline.tokenize.bind(md.inline);
   md.inline.tokenize = (state) => {
     const trace = stack.at(-1);
@@ -331,9 +331,8 @@ export function migrateContent(source: string, options: ContentOptions = {}): Co
   // Table cells have no line map of their own; their row's is the line they're on.
   let lastMap: [number, number] | undefined;
   for (const token of tokens) {
-    if (token.type !== "inline" && token.map) lastMap = token.map as [number, number];
-    const map =
-      (token.map as [number, number] | null) ?? (token.type === "inline" ? lastMap : undefined);
+    if (token.type !== "inline" && token.map) lastMap = token.map;
+    const map = token.map ?? (token.type === "inline" ? lastMap : undefined);
     if (token.type !== "inline" || !map || !token.children) continue;
     const trace = traces.get(token);
     // The text as parsed: plugins (task lists) may trim `token.content` afterwards.

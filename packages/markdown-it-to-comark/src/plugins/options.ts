@@ -1,5 +1,6 @@
 import type { ComarkParseTokensState, ComarkPlugin, MarkdownExitPlugin } from "comark";
-import { drawHtml } from "./bridge.ts";
+import { isText } from "../guards.ts";
+import { drawHtml, rendererOf } from "./bridge.ts";
 
 type Token = ComarkParseTokensState["tokens"][number];
 type MarkdownExit = Parameters<MarkdownExitPlugin>[0];
@@ -28,11 +29,12 @@ export interface MarkdownItOptions {
 }
 
 /** Every rule change, in order: `rules` as written, else `enable` then `disable`. */
-export const ruleChanges = (options: MarkdownItOptions): RuleChange[] => [
-  ...(options.rules ?? []),
-  ...(options.enable?.length ? [["enable", options.enable] as RuleChange] : []),
-  ...(options.disable?.length ? [["disable", options.disable] as RuleChange] : []),
-];
+export function ruleChanges(options: MarkdownItOptions): RuleChange[] {
+  const changes: RuleChange[] = [...(options.rules ?? [])];
+  if (options.enable?.length) changes.push(["enable", options.enable]);
+  if (options.disable?.length) changes.push(["disable", options.disable]);
+  return changes;
+}
 
 /**
  * Configures Comark's markdown-exit instance the way the project configured markdown-it: the preset, then the
@@ -45,12 +47,10 @@ export const markdownItOptions = (options: MarkdownItOptions): ComarkPlugin => (
     (md: MarkdownExit) => {
       // Comark builds its parser with tables and strikethrough on; a preset resets the rules to its own list.
       if (options.preset && options.preset !== "default") md.configure(options.preset);
-      const set: Record<string, unknown> = { html: Boolean(options.html) };
-      if (options.typographer !== undefined) set.typographer = options.typographer;
-      if (options.quotes !== undefined) set.quotes = options.quotes;
-      if (options.breaks !== undefined) set.breaks = options.breaks;
-      if (options.linkify !== undefined) set.linkify = options.linkify;
-      md.set(set);
+      md.set({ html: Boolean(options.html) });
+      // Only what the project set: markdown-exit's own defaults are markdown-it's.
+      for (const name of ["typographer", "quotes", "breaks", "linkify"] as const)
+        if (options[name] !== undefined) md.set({ [name]: options[name] });
     },
   ],
   // Before the HTML fixes, which read soft breaks: markdown-it renders one as `<br>` with `breaks`, and Comark reads
@@ -98,10 +98,9 @@ export const markdownItTokens = (options: MarkdownItOptions): ComarkPlugin => {
           // Comark reads a fence's language with its own grammar, which stops at `[` and `{` and drops a language that
           // starts with punctuation (`jsx:title=a/[...].js`, `{r}`); such a fence is drawn by markdown-it's renderer.
           if (token.type === "fence" && md && /[^\w+#.:/@-]/.test(language(token.info, md))) {
-            const rule = (md.renderer as unknown as { rules: Record<string, Rule | undefined> })
-              .rules.fence;
-            const html = rule?.(tokens, index, md.options, {}, md.renderer);
-            if (typeof html === "string") {
+            const renderer = rendererOf(md);
+            const html = renderer.rules.fence?.(tokens, index, md.options, {}, renderer);
+            if (isText(html)) {
               // SAFETY: Comark's tokens are instances of markdown-exit's Token class.
               const drawn = drawHtml(html, token.constructor as TokenClass);
               tokens.splice(index, 1, ...drawn);
@@ -139,18 +138,10 @@ export const markdownItTokens = (options: MarkdownItOptions): ComarkPlugin => {
   };
 };
 
-type Rule = (
-  tokens: Token[],
-  index: number,
-  options: unknown,
-  env: object,
-  self: unknown,
-) => unknown;
-
 /** A fence's language as markdown-it reads it: the first word of its info string, escapes and entities resolved. */
 function language(info: string, md: MarkdownExit): string {
-  const unescape = (md as unknown as { utils?: { unescapeAll?: (text: string) => string } }).utils
-    ?.unescapeAll;
+  const utils: { unescapeAll?: (text: string) => string } | undefined = Reflect.get(md, "utils");
+  const unescape = utils?.unescapeAll;
   return (unescape ? unescape(info) : info).trim().split(/\s+/)[0] ?? "";
 }
 

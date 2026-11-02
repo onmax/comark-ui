@@ -4,6 +4,7 @@ import { dirname, join, posix, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { glob as globFiles } from "tinyglobby";
 import { migrateContent, type ContentOptions, type PluginUse } from "./content.ts";
+import { isFunction, isRecord, isText } from "./guards.ts";
 import { literal, type Literal } from "./literal.ts";
 import type { RuleChange } from "./plugins/options.ts";
 import type { Code } from "./diagnostics.ts";
@@ -161,15 +162,15 @@ export type Loader = (name: string, root: string) => Promise<unknown>;
 
 // Framework sites read `::: tip` and footnotes with these; this package carries its own copies for when the
 // framework keeps them out of the project's reach.
-const BUNDLED: Record<string, () => Promise<Record<string, unknown>>> = {
-  "markdown-it-container": () => import("markdown-it-container"),
-  "markdown-it-footnote": () => import("markdown-it-footnote"),
-};
+const BUNDLED = new Map<string, () => Promise<Record<string, unknown>>>([
+  ["markdown-it-container", () => import("markdown-it-container")],
+  ["markdown-it-footnote", () => import("markdown-it-footnote")],
+]);
 
 export const defaultLoader: Loader = async (name, root) => {
   const path = resolvePackage(name, root);
   if (!path) {
-    const bundled = BUNDLED[name];
+    const bundled = BUNDLED.get(name);
     if (bundled) return pluginOf(await bundled());
     throw new Error(`Cannot find ${name} from ${root}`);
   }
@@ -195,14 +196,10 @@ function resolvePackage(name: string, root: string): string | undefined {
       continue;
     }
     const entry = (value: unknown): string | undefined =>
-      typeof value === "string"
+      isText(value)
         ? value
-        : value && typeof value === "object"
-          ? entry(
-              (value as Record<string, unknown>)["."] ??
-                (value as Record<string, unknown>).import ??
-                (value as Record<string, unknown>).default,
-            )
+        : isRecord(value)
+          ? entry(value["."] ?? value.import ?? value.default)
           : undefined;
     const file = entry(manifest.exports) ?? manifest.module ?? manifest.main ?? "index.js";
     return pathToFileURL(join(dir, file)).href;
@@ -215,16 +212,14 @@ function resolvePackage(name: string, root: string): string | undefined {
  * packages resolve through `import`, so `require.resolve` can't find them.
  */
 export function pluginOf(module: Record<string, unknown>): unknown {
-  if (typeof module.default === "function") return module.default;
+  if (isFunction(module.default)) return module.default;
   // A CommonJS module imported as ESM puts its exports object on `default`.
-  const exports = (
-    module.default && typeof module.default === "object" ? module.default : module
-  ) as Record<string, unknown>;
-  return typeof exports.default === "function"
+  const exports = isRecord(module.default) ? module.default : module;
+  return isFunction(exports.default)
     ? exports.default
-    : typeof exports.full === "function"
+    : isFunction(exports.full)
       ? exports.full
-      : Object.values(exports).find((item) => typeof item === "function");
+      : Object.values(exports).find(isFunction);
 }
 
 /** One setup as markdown-it reads it: its preset, literal options, and the plugins that could be loaded. */
@@ -237,7 +232,7 @@ async function profile(
   comark: ContentSetup["comark"];
   plugins: PluginUse[];
   missing: string[];
-  unknown: string[];
+  unknown: ("html" | "linkify")[];
 }> {
   const host = HOSTS[setup.host];
   const options: Record<string, Literal> = { ...host?.options };
@@ -257,7 +252,7 @@ async function profile(
   const missing: string[] = [];
   for (const [name, ...args] of uses) {
     const loaded = await load(name, root).catch(() => undefined);
-    if (typeof loaded === "function") plugins.push([loaded, ...args]);
+    if (isFunction(loaded)) plugins.push([loaded, ...args]);
     else if (!missing.includes(name)) missing.push(name);
   }
   const names = uses.map(([name]) => name);
@@ -269,22 +264,22 @@ async function profile(
   // In the order the project made them: disabling a rule and enabling it again isn't the same as the reverse.
   const rules: RuleChange[] = setup.rules.map((rule) => {
     const found = literal(`[${rule.args}]`);
-    return [
-      rule.method,
-      Array.isArray(found) ? found.flat().filter((item) => typeof item === "string") : [],
-    ];
+    return [rule.method, Array.isArray(found) ? found.flat().filter(isText) : []];
   });
   // `html` and `linkify` decide what markdown-it reads as text; when the scan can't read one, both values are tried.
-  const unknown = ["html", "linkify"].filter((name) =>
+  const unknown = (["html", "linkify"] as const).filter((name) =>
     setup.options[name] === undefined
       ? Boolean(setup.unresolved)
       : literal(setup.options[name]) === undefined,
   );
-  const read = (key: string) =>
-    typeof options[key] === "boolean" ? (options[key] as boolean) : undefined;
+  const read = (key: string) => {
+    const value = options[key];
+    return value === true || value === false ? value : undefined;
+  };
   return {
     content: {
-      ...(preset ? { preset } : {}),
+      preset,
+      // SAFETY: only markdown-it's own option names (READ_OPTIONS and the hosts') are read, as literals.
       options: options as ContentOptions["options"],
       rules,
       plugins,
@@ -293,7 +288,7 @@ async function profile(
       tasks: names.some((name) => /task-?lists?/.test(name)),
     },
     comark: {
-      ...(preset ? { preset } : {}),
+      preset,
       html: read("html"),
       linkify: read("linkify"),
       typographer: read("typographer"),
@@ -341,7 +336,7 @@ export async function contentSetup(
     for (const name of item.unknown)
       add({
         ...item.content,
-        options: { ...item.content.options, [name]: !item.content.options?.[name as "html"] },
+        options: { ...item.content.options, [name]: !item.content.options?.[name] },
       });
   }
   return {
@@ -355,7 +350,7 @@ export async function contentSetup(
 
 // Plugins compare by their function's source, so two setups that load the same plugin are one.
 const keyOf = (_key: string, item: unknown) =>
-  typeof item === "function" ? String(item).slice(0, 200) : item;
+  isFunction(item) ? String(item).slice(0, 200) : item;
 
 const SITE = /(^|\/)(\.vitepress|\.vuepress)\/config\.[cm]?[jt]s$/;
 

@@ -22,15 +22,19 @@ function value(node: Node, top: boolean): Literal | undefined {
     case "ParenthesizedExpression":
       return value(node.expression, top);
     case "Literal":
-      return node.value instanceof RegExp || typeof node.value === "bigint"
-        ? undefined
-        : node.value;
+      return node.value === null ||
+        node.value === true ||
+        node.value === false ||
+        node.value === String(node.value) ||
+        node.value === Number(node.value)
+        ? node.value
+        : undefined;
     case "TemplateLiteral":
       return node.expressions.length ? undefined : (node.quasis[0]?.value.cooked ?? undefined);
     case "UnaryExpression":
       return node.operator === "-" &&
         node.argument.type === "Literal" &&
-        typeof node.argument.value === "number"
+        node.argument.value === Number(node.argument.value)
         ? -node.argument.value
         : undefined;
     case "ArrayExpression": {

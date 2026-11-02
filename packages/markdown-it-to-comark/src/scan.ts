@@ -113,8 +113,12 @@ export const keyName = (key: PropertyKey): string | undefined =>
       : undefined;
 
 const MARKDOWN_IT = /^markdown-it(?:\/(?:index|dist\/.*|lib\/index)(?:\.[cm]?js)?)?$/;
-const CONFIG = new Set(["use", "set", "enable", "disable", "configure"]);
-const RENDER = new Set(["render", "renderInline", "parse", "parseInline"]);
+const CONFIG = ["use", "set", "enable", "disable", "configure"] as const;
+const RENDER = ["render", "renderInline", "parse", "parseInline"] as const;
+const isConfig = (method: string | undefined): method is (typeof CONFIG)[number] =>
+  CONFIG.some((name) => name === method);
+const isRender = (method: string | undefined): method is Render["method"] =>
+  RENDER.some((name) => name === method);
 const HARMLESS = new Set(["utils", "helpers", "options"]);
 // Hooks frameworks call with their markdown-it instance, by the property or method they're written as.
 const HOOKS = new Map<string, Host>([
@@ -308,9 +312,9 @@ function scanScript(source: string, file: string): Setup[] {
     }
   };
   // `.use(a).set(b)` written on an instance or on the expression that creates it.
-  const configure = (setup: Setup, call: Node, method: string) => {
+  const configure = (setup: Setup, call: Node, method: (typeof CONFIG)[number]) => {
     if (call.type !== "CallExpression") return;
-    const args = call.arguments as Node[];
+    const args = call.arguments;
     if (method === "use") setup.plugins.push(plugin(args));
     else if (method === "set") readOptions(setup, args[0]);
     else if (method === "configure") {
@@ -323,7 +327,7 @@ function scanScript(source: string, file: string): Setup[] {
       else setup.unresolved ??= "it calls `configure()` with a preset the scan can't read";
     } else
       setup.rules.push({
-        method: method as "enable" | "disable",
+        method,
         args: args.map(text).join(", "),
         line: lineOf(call.start),
       });
@@ -349,31 +353,22 @@ function scanScript(source: string, file: string): Setup[] {
       )
         return current;
       const call = up(member);
-      if (
-        method &&
-        CONFIG.has(method) &&
-        call?.type === "CallExpression" &&
-        call.callee === member
-      ) {
+      if (isConfig(method) && call?.type === "CallExpression" && call.callee === member) {
         configure(setup, call, method);
         current = call;
         continue;
       }
-      if (
-        method &&
-        RENDER.has(method) &&
-        call?.type === "CallExpression" &&
-        call.callee === member
-      ) {
-        const [input, ...extra] = call.arguments as Node[];
-        setup.renders.push({
-          method: method as Render["method"],
+      if (isRender(method) && call?.type === "CallExpression" && call.callee === member) {
+        const [input, ...extra] = call.arguments;
+        const render: Render = {
+          method,
           line: lineOf(call.start),
           start: call.start,
           end: call.end,
-          ...(input ? { input: text(input) } : {}),
           extra: extra.length,
-        });
+        };
+        if (input) render.input = text(input);
+        setup.renders.push(render);
         return call;
       }
       if (method && HARMLESS.has(method)) {
@@ -427,7 +422,7 @@ function scanScript(source: string, file: string): Setup[] {
         (declarations.get(callee.name) ?? 0) > (required.has(callee.name) ? 1 : 0)
       )
         setup.unresolved = `uses \`${callee.name}\`, which is also bound locally, so it may not be markdown-it`;
-      const [first, second] = node.arguments as Node[];
+      const [first, second] = node.arguments;
       if (first?.type === "Literal" && isString(first)) {
         setup.preset = first.value;
         readOptions(setup, second);
@@ -483,7 +478,7 @@ function scanScript(source: string, file: string): Setup[] {
             creation.reads.push(lineOf(reference.start));
             return;
           }
-          if (last.type !== "CallExpression" || RENDER.has(methodOf(last.callee) ?? "")) return;
+          if (last.type !== "CallExpression" || isRender(methodOf(last.callee))) return;
           // `md.use(x);` beside the declaration runs once, right after it, so the plugins can move into Comark's
           // options; anywhere else it may run later, or not at all.
           // A change after a render would reach that render too once it moves to the options.
@@ -505,7 +500,7 @@ function scanScript(source: string, file: string): Setup[] {
         parent?.type === "Property" ||
         parent?.type === "PropertyDefinition"
       ) {
-        if (!(end.type === "CallExpression" && RENDER.has(methodOf(end.callee) ?? "")))
+        if (!(end.type === "CallExpression" && isRender(methodOf(end.callee))))
           creation.escapes.push(lineOf(end.start));
       }
       setup.creation = creation;
@@ -518,9 +513,7 @@ function scanScript(source: string, file: string): Setup[] {
       const holder = up(node);
       const markdown = holder && up(holder);
       const inMarkdown =
-        key === "config" &&
-        markdown?.type === "Property" &&
-        keyName((markdown as Extract<Node, { type: "Property" }>).key) === "markdown";
+        key === "config" && markdown?.type === "Property" && keyName(markdown.key) === "markdown";
       const host = (key ? HOOKS.get(key) : undefined) ?? (inMarkdown ? "vitepress" : undefined);
       if (!host || holder?.type !== "ObjectExpression") return;
       const setup = empty(lineOf(node.start), host);
@@ -555,11 +548,12 @@ function scanScript(source: string, file: string): Setup[] {
             ? node.id?.name
             : undefined;
       const grand = owner && up(owner);
+      const property = grand && up(grand);
       const inMarkdown =
         key === "config" &&
         grand?.type === "ObjectExpression" &&
-        up(grand)?.type === "Property" &&
-        keyName((up(grand) as Extract<Node, { type: "Property" }>).key) === "markdown";
+        property?.type === "Property" &&
+        keyName(property.key) === "markdown";
       const amend =
         owner?.type === "CallExpression" &&
         methodOf(owner.callee) === "amendLibrary" &&

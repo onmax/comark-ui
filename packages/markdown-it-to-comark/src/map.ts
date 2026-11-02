@@ -129,7 +129,11 @@ export function mapPlugin(name: string, imported = true): Mapping & { known: boo
   const base = name.replace(/\/(dist|lib|index)(\.[cm]?js)?$/, "");
   const ui = UI.get(base);
   const mapping = PLUGINS[base];
-  if (mapping) return { ...mapping, ...(ui ? { ui } : {}), known: true };
+  if (mapping) {
+    const found: Mapping & { known: boolean } = { ...mapping, known: true };
+    if (ui) found.ui = ui;
+    return found;
+  }
   if (!imported || !PACKAGE.test(base) || /^[~@#]\//.test(base) || base.startsWith(".")) {
     return {
       ...bridge(
@@ -139,12 +143,13 @@ export function mapPlugin(name: string, imported = true): Mapping & { known: boo
       known: true,
     };
   }
-  return {
+  const unknown: Mapping & { known: boolean } = {
     ...bridge(
       "It isn't in the plugin map yet, so its output on Comark hasn't been compared; `markdownItPlugin()` runs it, renderer rules included.",
     ),
     kind: "custom",
-    ...(ui ? { ui } : {}),
     known: false,
   };
+  if (ui) unknown.ui = ui;
+  return unknown;
 }
