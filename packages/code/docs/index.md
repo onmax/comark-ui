@@ -164,7 +164,7 @@ export function close() {}
 
 ### Frame
 
-Use the `frame` attribute to choose how the block is drawn. `frame="terminal"` draws a terminal window. `frame="code"` or `frame="none"` draws a plain block.
+Use the `frame` attribute to choose how the block is drawn. `frame="terminal"` draws a terminal, with a line under its header. `frame="code"` or `frame="none"` draws a plain block.
 
 ::example
 ````md
@@ -174,7 +174,7 @@ pnpm add comark @comark/html comark-code
 ````
 ::
 
-`sh`, `bash`, `zsh`, `shell`, `shellscript`, `shellsession`, `console`, and `ansi` blocks are terminals unless their title is a file's name, like `install.sh`. A terminal's header shows its title but not its language. In a [code group](/tabs/#code-group) the tab names the block, so a terminal there draws no window.
+`sh`, `bash`, `zsh`, `shell`, `shellscript`, `shellsession`, `console`, and `ansi` blocks are terminals unless their title is a file's name, like `install.sh`. A terminal's header shows its title but not its language. In a [code group](/tabs/#code-group) the tab names the block, so a terminal there draws no line under its header.
 
 ### Wrap
 
@@ -302,7 +302,7 @@ The words you write after the fence's language.
 | `showLineNumbers` | `false` | Numbers the lines. |
 | `startLineNumber` | `1` | The first line's number, such as `startLineNumber=120`. A whole number. Setting it turns the numbers on. |
 | `title` | — | The block's title, such as `title="src/x.ts"`, like `[src/x.ts]`. |
-| `frame` | `auto` | `terminal` draws a terminal window, and `code` or `none` a plain block. `auto` draws shell languages as terminals. |
+| `frame` | `auto` | `terminal` draws a terminal, with a line under its header, and `code` or `none` a plain block. `auto` draws shell languages as terminals. |
 | `wrap` | `false` | Starts the block with Wrap on. |
 | `lang` | — | On a `diff` fence, the language to highlight it as, such as `lang="ts"`. |
 
@@ -387,7 +387,7 @@ A collapsed range's margins, padding, and border are `!important`, so a page's o
 
 | Token | Used for |
 | --- | --- |
-| `--comark-muted` | The buttons' icons and labels, line numbers, a collapsed range's line, and a terminal's dots |
+| `--comark-muted` | The buttons' icons and labels, line numbers, and a collapsed range's line |
 | `--comark-foreground` | The title, at 72%, hovered buttons' icons and labels, the status line's background, and the tint of `mark` lines, highlighted words, and collapsed ranges |
 | `--comark-background` | The status line's text |
 | `--comark-border` | The line under a terminal's header |
@@ -424,7 +424,7 @@ The block's `padding-top` is the button size, plus the inset above the buttons, 
 | `.ck-wrap` | Wrap, with `aria-pressed="true"` while it's on |
 | `.ck-copy` | Copy, with `data-state="done"` or `data-state="failed"` for a moment after a click |
 | `.ck-status` | The line under the header that says what Copy did |
-| `[data-code-frame="terminal"]` | On `.ck` when the block is a terminal, with dots on the left of the header and the title in its middle |
+| `[data-code-frame="terminal"]` | On `.ck` when the block is a terminal, with a line under its header |
 | `[data-code-lines]` | On `.ck` when the lines are blocks of their own, because the block marks, numbers, or folds lines, or Shiki's transformers mark them |
 | `[data-code-numbers]` | On `.ck` when the lines are numbered, with the widest number's digits as its value; each line's number is in `data-line` |
 | `.ck-ins`, `.ck-del`, `.ck-mark` | Lines the fence marks with `ins`, `del`, and `mark`. A line Comark's `{2}` highlights has `.highlight`, and Shiki's transformers' `.diff.add`, `.diff.remove`, `.highlighted`, `.focused`, `.error`, and `.warning` look the same as the matching marker |

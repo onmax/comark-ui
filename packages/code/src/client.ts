@@ -308,7 +308,7 @@ function action({ id, label, title, icon: image }: ActionButton) {
  * nothing works without it.
  */
 export function buttons(actions: unknown, attributes: Record<string, unknown> = {}): string {
-  // A terminal's window needs no language to say it's a shell.
+  // A terminal needs no language to say it's a shell.
   const language = attributes.frame === "terminal" ? "" : attributes.language;
   // SAFETY: Comark writes a fence's filename and language as strings.
   const title = `${(attributes.filename || language || "") as string}`;

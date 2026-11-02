@@ -7,7 +7,7 @@ const chevrons = `url("data:image/svg+xml,${encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg>',
 )}")`;
 const lines = ".ck[data-code-lines]";
-// In a comark-tabs code group the tab names the block, so a terminal there draws no window.
+// In a comark-tabs code group the tab names the block, so a terminal there draws no line under its header.
 const terminal = ".ck[data-code-frame=terminal]:not([data-tabs-code] .ck)";
 
 /**
@@ -47,10 +47,8 @@ export const css = `${icons}@layer comark{${[
   ".ck-status:empty{display:none}",
   // Expand touch targets vertically only, so adjacent buttons cannot steal each other's taps.
   "@media (pointer:coarse){.ck-bar>button::after{content:'';position:absolute;top:50%;left:50%;width:100%;height:max(100%,2.75rem);translate:-50% -50%}}",
-  // A terminal is a window: three dots on the left and its title in the middle, over a line.
+  // A terminal block keeps a line under its header.
   `${terminal}>.ck-bar{border-bottom:1px solid var(--_comark-border)}`,
-  `${terminal}>.ck-bar::before{content:'';flex:none;width:.625rem;height:.625rem;margin:0 auto 0 .125rem;border-radius:50%;background:currentColor;box-shadow:1rem 0,2rem 0;color:color-mix(in srgb,var(--_comark-muted) 45%,transparent)}`,
-  `${terminal} .ck-title{position:absolute;left:50%;max-width:calc(100% - 12rem);margin:0;translate:-50%}`,
   ":where(.ck){--ck-red:var(--_comark-danger);--ck-green:var(--_comark-success);--ck-yellow:var(--_comark-warning);--_ck-digits:2}",
   ...[3, 4, 5, 6].map((digits) => `.ck[data-code-numbers="${digits}"]{--_ck-digits:${digits}}`),
   // Each line is a block, its newline inside it, so a marked one can be tinted. The tint is a border image that reaches

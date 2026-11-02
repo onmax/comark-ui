@@ -243,6 +243,15 @@ describe("comark-code lines", () => {
     );
   });
 
+  it("draws a terminal's header as a line, with no window dots", async () => {
+    const style = /<style data-comark-code>(.*?)<\/style>/s.exec(await render(sh))?.[1];
+    expect(style).toContain(
+      ".ck[data-code-frame=terminal]:not([data-tabs-code] .ck)>.ck-bar{border-bottom:1px solid var(--_comark-border)}",
+    );
+    expect(style).not.toContain(".ck-bar::before");
+    expect(style).not.toMatch(/data-code-frame=terminal[^{]*\.ck-title\{/);
+  });
+
   it("styles the lines Shiki's transformers mark, with their classes as strings", async () => {
     type Transformer = NonNullable<
       NonNullable<Parameters<typeof shiki>[0]>["transformers"]

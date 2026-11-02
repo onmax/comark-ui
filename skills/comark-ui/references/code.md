@@ -23,12 +23,12 @@ function close() {
 | `showLineNumbers` | Numbers the lines. |
 | `startLineNumber=120` | Numbers the lines from 120, and turns numbers on. |
 | `title="src/zoom.ts"` | Titles the block, like Comark's `[src/zoom.ts]`. A block without one shows its language. |
-| `frame="terminal"` | Draws a terminal window. `frame="code"` or `frame="none"` draws a plain block. |
+| `frame="terminal"` | Draws a terminal, with a line under its header. `frame="code"` or `frame="none"` draws a plain block. |
 | `wrap` | Starts the block with Wrap on. |
 
 A range is one line, `{7}`, a run, `{3-4}`, or a list of both, `{1, 3-4}`, always in braces. Ranges count the block's own lines from 1, folded lines included, whatever `startLineNumber` says: `startLineNumber=120 ins={3}` marks the line numbered 122.
 
-`sh`, `bash`, `zsh`, `shell`, `shellscript`, `shellsession`, `console`, and `ansi` blocks draw as terminals unless their title is a file name, such as `install.sh`. A terminal's header shows its title but not its language. In a code group the tab names the block, so a terminal there draws no window.
+`sh`, `bash`, `zsh`, `shell`, `shellscript`, `shellsession`, `console`, and `ansi` blocks draw as terminals unless their title is a file name, such as `install.sh`. A terminal's header shows its title but not its language. In a code group the tab names the block, so a terminal there draws no line under its header.
 
 When the host runs Shiki's notation transformers, comments such as `// [!code ++]`, `// [!code --]`, `// [!code highlight]`, `// [!code focus]`, `// [!code error]`, and `// [!code warning]` mark lines too, and comark-code styles them.
 
