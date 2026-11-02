@@ -6,16 +6,18 @@ const BLOCK =
 
 /**
  * Comark's frontmatter, except that YAML it can't read is dropped with an issue instead of failing the whole document.
- * Sites built on remark parse frontmatter themselves, often with laxer parsers, so their files can hold either.
+ * Sites built on markdown-it strip frontmatter themselves, often with laxer parsers, so their files can hold either.
  */
 export const frontmatter = (): ComarkPlugin => ({
   name: "frontmatter",
   pre(state) {
-    // remark-frontmatter matches after a byte order mark, which editors on Windows often write.
-    if (state.markdown.charCodeAt(0) === 0xfeff) state.markdown = state.markdown.slice(1);
-    const block = BLOCK.exec(state.markdown);
+    // Frontmatter parsers match after a byte order mark, which editors on Windows often write; without frontmatter,
+    // markdown-it keeps the mark as text, so it stays.
+    const bom = state.markdown.charCodeAt(0) === 0xfeff ? 1 : 0;
+    const block = BLOCK.exec(state.markdown.slice(bom));
     if (!block) return;
-    // Only YAML is parsed; TOML and language fences are dropped like remark-frontmatter drops them.
+    state.markdown = state.markdown.slice(bom);
+    // Only YAML is parsed; TOML and language fences are dropped, as the sites that strip them do.
     if (state.markdown.startsWith("---") && !block[1] && block[2]?.trim()) {
       try {
         const { content, data, frontmatterText } = parseFrontmatter(state.markdown);

@@ -174,10 +174,10 @@ function lines(source: string, from: number): Line[] {
 }
 
 /**
- * Where each line of an inline token's text starts in the source. markdown-it strips each line's indentation and
- * container markers (`> `, list indent) and trims the block, so a line of text is the end of its source line, or for
- * a table cell or a heading with closing `#`s, found after the previous match on that line. `undefined` when a line
- * can't be found as written (a tab expanded to spaces).
+ * Where each character of an inline token's text is in the source, plus one past the end. markdown-it strips each
+ * line's indentation and container markers (`> `, list indent) and trims the block, so a line of text is the end of
+ * its source line, or for a table cell or a heading with closing `#`s, found after the previous match on that line. A
+ * table cell's `|` may be written `\|`. `undefined` when a line can't be found as written (a tab expanded to spaces).
  */
 function locate(
   content: string,
@@ -185,24 +185,43 @@ function locate(
   source: Line[],
   cursors: Map<number, number>,
 ): number[] | undefined {
-  const starts: number[] = [];
+  const offsets: number[] = [];
   const parts = content.split("\n");
   for (const [index, part] of parts.entries()) {
     const number = map[0] + index;
     const line = source[number];
     if (!line || number >= map[1]) return undefined;
     const cursor = cursors.get(number) ?? 0;
+    // Each character's place in the line when the part starts at `at`, or undefined if it doesn't match there.
+    const match = (at: number): number[] | undefined => {
+      const found: number[] = [];
+      let column = at;
+      for (const char of part) {
+        if (line.text[column] === "\\" && line.text[column + 1] === "|" && char === "|") column++;
+        if (line.text[column] !== char) return undefined;
+        found.push(line.start + column++);
+      }
+      found.push(line.start + column);
+      return found;
+    };
     const trimmed = line.text.trimEnd();
     const wanted = part.trimEnd();
-    let at = -1;
-    if (trimmed.endsWith(wanted) && trimmed.length - wanted.length >= cursor)
-      at = trimmed.length - wanted.length;
-    else at = line.text.indexOf(part, cursor);
-    if (at < 0) return undefined;
-    cursors.set(number, at + part.length);
-    starts.push(line.start + at);
+    let found =
+      trimmed.endsWith(wanted) && trimmed.length - wanted.length >= cursor
+        ? match(trimmed.length - wanted.length)
+        : undefined;
+    for (let at = cursor; !found && at <= line.text.length - part.length; at++)
+      if (line.text[at] === part[0] || (part[0] === "|" && line.text[at] === "\\")) found = match(at);
+    if (!found) {
+      // A line that can't be found would let the next cell on it match inside this one.
+      cursors.set(number, Number.POSITIVE_INFINITY);
+      return undefined;
+    }
+    cursors.set(number, found.at(-1)! - line.start);
+    // One past a line's end is where the newline after it sits in the text.
+    offsets.push(...found);
   }
-  return starts;
+  return offsets;
 }
 
 /**
@@ -315,25 +334,13 @@ export function migrateContent(source: string, options: ContentOptions = {}): Co
     const shortcuts = trace.spans.filter(
       (span) => span.name === "link" && isShortcut(trace.src.slice(span.start, span.end)),
     );
-    const starts = locate(trace.src, map, source_, cursors);
+    const positions = locate(trace.src, map, source_, cursors);
     if (!found.length && !shortcuts.length) continue;
-    if (!starts) {
+    if (!positions) {
       unmapped.push(lineOf(source_, source_[map[0]]?.start ?? 0));
       continue;
     }
-    // An offset in the token's text, as an offset in the source.
-    const lineStarts: number[] = [0];
-    for (
-      let index = trace.src.indexOf("\n");
-      index !== -1;
-      index = trace.src.indexOf("\n", index + 1)
-    )
-      lineStarts.push(index + 1);
-    const at = (offset: number) => {
-      let line = 0;
-      while (line + 1 < lineStarts.length && lineStarts[line + 1]! <= offset) line++;
-      return starts[line]! + offset - lineStarts[line]!;
-    };
+    const at = (offset: number) => positions[offset]!;
     const edits: Edit[] = found.map(({ offset, char }) => {
       const position = at(offset);
       return {
@@ -350,7 +357,7 @@ export function migrateContent(source: string, options: ContentOptions = {}): Co
         change: { line: lineOf(source_, position), kind: "reference", text: "[]" },
       });
     }
-    blocks.push({ line: lineOf(source_, starts[0]!), edits });
+    blocks.push({ line: lineOf(source_, positions[0]!), edits });
   }
   if (!blocks.length) return { markdown: source, changes: [], skipped: unmapped };
   // Every kept edit is proven: markdown-it renders the edited document exactly as the original. When the whole set

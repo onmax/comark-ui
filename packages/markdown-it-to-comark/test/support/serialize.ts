@@ -31,10 +31,13 @@ function parseJson(value: unknown): unknown {
  * Comark's tree as plain HTML. The harness compares the tree every renderer starts from, so a formatting bug in one
  * renderer (see UPSTREAM.md) doesn't hide or fake a parser difference.
  */
-export function toHtml(nodes: Node[]): string {
+// Their text is raw: a browser doesn't decode `&amp;` inside them, so it's written as it is.
+const RAW = new Set(["script", "style"]);
+
+export function toHtml(nodes: Node[], raw = false): string {
   return nodes
     .map((node) => {
-      if (typeof node === "string") return escapeText(node);
+      if (typeof node === "string") return raw ? node : escapeText(node);
       if (node[0] === null) return `<!--${node[2]}-->`;
       const [tag, attributes, ...children] = node;
       const { $: _meta, ...rest } = attributes;
@@ -47,7 +50,7 @@ export function toHtml(nodes: Node[]): string {
         )
         .join("")}>`;
       if (VOID.has(tag)) return open;
-      return `${open}${toHtml(children as Node[])}</${tag}>`;
+      return `${open}${toHtml(children as Node[], RAW.has(tag))}</${tag}>`;
     })
     .join("");
 }

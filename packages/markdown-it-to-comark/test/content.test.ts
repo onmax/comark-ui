@@ -38,6 +38,8 @@ const cases: [string, string, ContentOptions?][] = [
   ["a block component with a space before its name", "::: info\nbody\n:::\n"],
   ["text in lists, quotes, and headings", "# A {x}\n\n> - [b]\n>   {c}\n\n1. :d\n"],
   ["table cells", "| a [x] | {b} |\n|---|---|\n| :c | d |\n"],
+  ["table cells with escaped pipes", "| a | b |\n|---|---|\n| `x \\| y[]` [z] | _u \\| v[]_ |\n"],
+  ["a paragraph over several lines", "a [b\nc] {d}\n  e :f\n"],
   [
     "code and raw HTML stay as written",
     "`[a]` <span>{b}</span>\n\n    [c]\n\n```\n{d}\n```\n",
