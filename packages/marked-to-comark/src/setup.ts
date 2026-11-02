@@ -5,7 +5,9 @@ import html from "comark/plugins/html";
 import taskList from "comark/plugins/task-list";
 import { frontmatter } from "./plugins/frontmatter.ts";
 import {
+  breakEndTags,
   breaks,
+  emptyHeadings,
   headerIds,
   htmlBlocks,
   htmlIndent,
@@ -80,6 +82,8 @@ export function comarkSetup(options: SetupOptions = {}): ComarkSetup {
         ? [dropHtml()]
         : // CommonMark HTML blocks are raw until a blank line; Comark otherwise reads Markdown inside them.
           [
+            emptyHeadings(),
+            breakEndTags(),
             htmlIndent(),
             htmlWhitespace(),
             inlineHtml(),

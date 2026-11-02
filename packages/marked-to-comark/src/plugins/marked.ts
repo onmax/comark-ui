@@ -420,3 +420,41 @@ export const linkText = (): ComarkPlugin => ({
     }
   },
 });
+
+/** A browser reads a stray `</br>` as `<br>`, as the HTML parser specifies; Comark drops it as a closing tag. */
+export const breakEndTags = (): ComarkPlugin => ({
+  name: "marked-to-comark:break-end-tags",
+  markdownItPost(state) {
+    for (const token of state.tokens) {
+      if (token.type === "html_block") token.content = token.content.replace(/<\/br\s*>/gi, "<br>");
+      for (const child of token.children ?? [])
+        if (child.type === "html_inline" && /^<\/br\s*>$/i.test(child.content))
+          child.content = "<br>";
+    }
+  },
+});
+
+/**
+ * An empty ATX heading (`##` alone) is an empty `<h2>` in CommonMark and marked, and keeps its margin on the page;
+ * Comark drops it. Before html() runs, it becomes the HTML block `<h2></h2>`.
+ */
+export const emptyHeadings = (): ComarkPlugin => ({
+  name: "marked-to-comark:empty-headings",
+  markdownItPost(state) {
+    const tokens = state.tokens;
+    for (let index = tokens.length - 3; index >= 0; index--) {
+      const open = tokens[index]!;
+      if (
+        open.type !== "heading_open" ||
+        tokens[index + 1]!.content.trim() ||
+        tokens[index + 2]!.type !== "heading_close"
+      )
+        continue;
+      // SAFETY: Comark's tokens are instances of markdown-exit's Token class, which takes a type, a tag, and a nesting.
+      const block = new (open.constructor as TokenClass)("html_block", "", 0);
+      block.content = `<${open.tag}></${open.tag}>\n`;
+      block.map = open.map;
+      tokens.splice(index, 3, block);
+    }
+  },
+});
