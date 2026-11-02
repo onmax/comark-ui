@@ -139,6 +139,39 @@ describe("CLI", () => {
     expect(out).toMatch(/breaks: true\s+setup\s+breaks: true\./);
   });
 
+  it("touches only Markdown, follows each document's own repository, and skips files that aren't text", () => {
+    const root = project({
+      "package.json": `{ "name": "x" }`,
+      "a.ts": `import { marked } from "marked";\nmarked.use({ extensions: [mine] });\nexport const a = (s: string) => marked.parse(s);\n`,
+      "doc.md": "{x}\n",
+      "binary.md": "\u00ff\u0000{x}\n",
+    });
+    writeFileSync(join(root, "binary.md"), Buffer.from([0xff, 0x00, 0x7b, 0x78, 0x7d, 0x0a]));
+    const other = project({ "note.md": "{y}\n" });
+    const result = cli(
+      other,
+      "content",
+      join(root, "doc.md"),
+      join(root, "binary.md"),
+      "note.md",
+      "--write",
+    );
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("MKC0303");
+    expect(result.stderr).toContain("isn't UTF-8 text");
+    expect(readFileSync(join(root, "doc.md"), "utf8")).toBe("{x}\n");
+    expect(readFileSync(join(other, "note.md"), "utf8")).toBe("\\{y}\n");
+    cli(other, "content", ".", "--write");
+    expect(readFileSync(join(other, ".git"), "utf8")).toBe("fixture");
+  });
+
+  it("names marked-highlight's port", async () => {
+    const root = project({
+      "a.ts": `import { marked } from "marked";\nimport { markedHighlight } from "marked-highlight";\nmarked.use(markedHighlight({ highlight: (c) => c }));\nexport async function a(s: string) { return marked.parse(s); }\n`,
+    });
+    expect((await check(root)).map((finding) => finding.code)).toContain("MKC0104");
+  });
+
   it("prints usage for an unknown command", () => {
     const result = cli(project({}), "nope");
     expect(result.status).toBe(1);

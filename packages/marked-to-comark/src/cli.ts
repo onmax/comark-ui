@@ -6,6 +6,7 @@ import { glob } from "tinyglobby";
 import {
   check,
   contentSetups,
+  type ContentSetup,
   declaredVersions,
   nodeReader,
   scanProject,
@@ -88,43 +89,65 @@ if (command === "check") {
     `\n${rewritten} marked ${rewritten === 1 ? "call" : "calls"} ${values.write ? "rewritten" : "can be rewritten (add --write)"}, ${left} left as ${left === 1 ? "it is" : "they are"}${left ? `. Run \`marked-to-comark check ${root} --verbose\` for what each needs` : ""}.`,
   );
 } else if (command === "content") {
+  // Only Markdown, whatever the patterns match: `content .` must not escape a package.json.
   const matched = (
     await glob(rest.length ? rest : ["**/*.{md,markdown}"], {
       ignore: ["**/node_modules/**"],
       absolute: true,
     })
-  ).sort();
-  // The project's marked setups decide what's safe to escape, wherever content runs from.
-  const root = projectRoot(process.cwd());
-  const reader = nodeReader(root);
-  const scanned = await scanProject(reader);
-  const setupFor = await contentSetups(root, reader, scanned);
+  )
+    .filter((file) => /\.(md|markdown)$/i.test(file))
+    .sort();
+  // Each document follows the marked setups of its own repository, wherever content runs from.
+  const setups = new Map<string, Promise<(file: string) => Promise<ContentSetup>>>();
+  const setupOf = (file: string) => {
+    const root = projectRoot(dirname(file));
+    let setupFor = setups.get(root);
+    if (!setupFor) {
+      const reader = nodeReader(root);
+      setupFor = scanProject(reader).then((scanned) => contentSetups(root, reader, scanned));
+      setups.set(root, setupFor);
+    }
+    return setupFor.then((resolve) => resolve(relative(root, file)));
+  };
   let changed = 0;
+  let skipped = 0;
   for (const file of matched) {
-    const setup = await setupFor(relative(root, file));
-    if (setup.reason || (setup.missing.length && values.write)) {
-      console.error(
-        `${relative(process.cwd(), file)}: left as written (MKC0303): ${setup.reason ?? `${setup.missing.join(", ")} couldn't be loaded. Install this project's dependencies, then run this again.`}`,
-      );
-      if (values.write) process.exitCode = 1;
+    const shown = relative(process.cwd(), file);
+    const bytes = readFileSync(file);
+    let source: string;
+    try {
+      source = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+      if (source.includes("\u0000")) throw new Error("binary");
+    } catch {
+      console.error(`${shown}: left as written: it isn't UTF-8 text.`);
+      skipped++;
       continue;
     }
-    const source = readFileSync(file, "utf8");
+    const setup = await setupOf(file);
+    if (setup.reason || (setup.missing.length && values.write)) {
+      console.error(
+        `${shown}: left as written (MKC0303): ${setup.reason ?? `${setup.missing.join(", ")} couldn't be loaded. Install this project's dependencies, then run this again.`}`,
+      );
+      if (values.write) process.exitCode = 1;
+      skipped++;
+      continue;
+    }
     const result = migrateContent(source, { ...setup, syntax });
     if (result.skipped.length)
       console.log(
-        `${relative(process.cwd(), file)}: left ${result.skipped.length} ${result.skipped.length === 1 ? "block" : "blocks"} as written on lines ${result.skipped.slice(0, 8).join(", ")} (MKC0303: no edit kept marked's output; check them by hand)`,
+        `${shown}: left ${result.skipped.length} ${result.skipped.length === 1 ? "block" : "blocks"} as written on lines ${result.skipped.slice(0, 8).join(", ")} (MKC0303: no edit kept marked's output; check them by hand)`,
       );
     if (!result.changes.length) continue;
     changed++;
     const lines = [...new Set(result.changes.map((change) => change.line))];
     console.log(
-      `${relative(process.cwd(), file)}: ${result.changes.length} changes on lines ${lines.slice(0, 12).join(", ")}${lines.length > 12 ? ", …" : ""}`,
+      `${shown}: ${result.changes.length} changes on lines ${lines.slice(0, 12).join(", ")}${lines.length > 12 ? ", …" : ""}`,
     );
     if (values.write) writeFileSync(file, result.markdown);
   }
   console.log(
-    `\n${changed} of ${matched.length} Markdown files ${values.write ? "changed" : "would change (add --write)"}.`,
+    `\n${changed} of ${matched.length} Markdown files ${values.write ? "changed" : "would change (add --write)"}${skipped ? `; ${skipped} left as written` : ""}.`,
   );
 } else {
   console.error(USAGE);

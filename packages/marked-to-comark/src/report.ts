@@ -75,7 +75,7 @@ export function formatFindings(
   ].filter(Boolean);
   const next = [
     count("MKC0302") &&
-      `marked-to-comark content ${[...new Set(findings.flatMap((finding) => (finding.code === "MKC0302" ? [finding.file] : [])))].slice(0, 3).map(quoted).join(" ")}${count("MKC0302") > 3 ? " …" : ""} --write   # ${count("MKC0302")} Markdown files`,
+      `marked-to-comark content ${[...new Set(findings.flatMap((finding) => (finding.code === "MKC0302" ? [finding.file.includes("/") ? `${finding.file.slice(0, finding.file.lastIndexOf("/"))}/**/*.md` : finding.file] : [])))].map(quoted).join(" ")} --write   # ${count("MKC0302")} Markdown files; content changes only what Comark would read differently`,
     count("MKC0202") &&
       `marked-to-comark rewrite ${quoted(root)} --write   # ${count("MKC0202")} marked calls`,
     (count("MKC0302") || count("MKC0202")) &&

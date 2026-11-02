@@ -55,7 +55,7 @@ The same findings run as a [Vite Doctor](https://comark-ui.onmax.me/marked-to-co
 
 ## How close it gets
 
-On 13,569 Markdown files from the 100 most-starred repositories that declare marked, 96.6% render the same HTML in Comark as in marked after migration, once whitespace is normalized, with each project's marked version and setup on marked's side. [How it was tested](https://comark-ui.onmax.me/marked-to-comark/testing/) has the method and what still differs.
+On 13,569 Markdown files from the 100 most-starred repositories that declare marked, Comark's parse tree matches marked's HTML for 96.6% after migration, once whitespace is normalized, with each project's marked version and setup on marked's side. Through `@comark/html` it's 88.3%, mostly because of that renderer's own formatting bugs. [How it was tested](https://comark-ui.onmax.me/marked-to-comark/testing/) has the method and what still differs.
 
 It leaves some work to you, and reports each piece:
 
