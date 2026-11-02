@@ -12,12 +12,16 @@ const render = createHtmlRenderer({ plugins: [quiz()], components });
 const host = `<script>window.answers=[];document.addEventListener("comark-quiz:answer",(e)=>answers.push(e.detail));document.addEventListener("comark-quiz:ready",(e)=>{window.ready=e.detail.ids})</script>`;
 // A page of its own for each case, on the docs site's origin so the blocks can save answers. Not a docs page:
 // `setContent` keeps the window, and with it the running script.
-const open = async (page: Page, markdown: string, options: { script?: boolean } = {}) => {
+const open = async (
+  page: Page,
+  markdown: string,
+  options: { script?: boolean; before?: string } = {},
+) => {
   let html = await render(markdown);
   if (options.script === false) html = html.replace(/<script>[\s\S]*?<\/script>/g, "");
   await page.goto("/no-such-page");
   await page.setContent(
-    `<!doctype html><html lang="en"><body style="width:40rem;margin:2rem">${host}${html}</body></html>`,
+    `<!doctype html><html lang="en"><body style="width:40rem;margin:2rem">${host}${options.before ?? ""}${html}</body></html>`,
   );
 };
 const answers = (page: Page) =>
@@ -307,6 +311,48 @@ test("a host's state replaces localStorage and restores answers and results with
   expect(
     await again.evaluate(() => localStorage.getItem("comark-quiz:/no-such-page:why")),
   ).toBeNull();
+});
+
+test("state a host leaves before the script starts is applied when it does", async ({ page }) => {
+  const streams = /data-key="([\w-]+)"(?:(?!data-key)[\s\S])*?Streams/.exec(await render(poll))![1];
+  const state: QuizState = {
+    answers: { "next-topic": { choice: [streams!] } },
+    voting: { open: true },
+  };
+  await open(page, poll, {
+    before: `<script>window.__comarkQuizState=${JSON.stringify(state)}</script>`,
+  });
+  await expect(page.locator(".cqz")).toHaveAttribute("data-state", "voted");
+  await expect(page.getByRole("radio", { name: "Streams" })).toBeChecked();
+  await expect(page.getByText("Voting needs a host that collects votes.")).toBeHidden();
+});
+
+test("with data-quiz-relay, a framed lesson posts its events to the parent and takes its state", async ({
+  page,
+}) => {
+  const lesson = `<!doctype html><html lang="en" data-quiz-relay="*"><body>${await render(poll)}</body></html>`;
+  await page.goto("/no-such-page");
+  // The parent answers each ready with its state, the way a host that keeps answers would.
+  await page.setContent(
+    `<!doctype html><script>window.messages=[];addEventListener("message",(e)=>{messages.push(e.data);if(e.data.type==="comark-quiz:ready")e.source.postMessage({type:"comark-quiz:state",detail:{voting:{open:true}}},"*")})</script><iframe srcdoc="${lesson.replaceAll("&", "&amp;").replaceAll('"', "&quot;")}" style="width:40rem;height:30rem"></iframe>`,
+  );
+  const frame = page.frameLocator("iframe");
+  const messages = () =>
+    page.evaluate(() => (window as unknown as { messages: unknown[] }).messages);
+  await expect
+    .poll(messages)
+    .toEqual([{ type: "comark-quiz:ready", detail: { ids: ["next-topic"] } }]);
+  await expect(frame.getByRole("radio").first()).toBeEnabled();
+  await frame.locator(".cqz-option", { hasText: "Streams" }).click();
+  const streams = await frame
+    .locator(".cqz-option", { hasText: "Streams" })
+    .getAttribute("data-key");
+  await expect
+    .poll(async () => (await messages()).at(-1))
+    .toEqual({
+      type: "comark-quiz:answer",
+      detail: { id: "next-topic", kind: "poll", choice: [streams], correct: null, first: true },
+    });
 });
 
 test("without the script, the options read as a list and Show answer opens the key", async ({
