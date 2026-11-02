@@ -166,9 +166,7 @@ export function mapExtension(name: string, imported = true): Mapping & { known: 
     !/^(?:@[\w.-]+\/)?[\w.-]+(?:\/[\w.-]+)*$/.test(name)
   )
     return {
-      ...custom(
-        "The project's own extension. Port it to a Comark plugin and compare its output with marked's on the project's content.",
-      ),
+      ...custom("It's a marked extension the project wrote."),
       known: true,
     };
   return {

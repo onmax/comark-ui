@@ -58,7 +58,7 @@ export const catalog = {
     ruleId: "marked-to-comark/custom-code",
     severity: "warn",
     why: (p: Plugin & { note: string }) =>
-      `${p.plugin} (${p.at}) is the project's own code for marked, so nothing replaces it: ${p.note}`,
+      `${p.plugin} (${p.at}) is the project's own code for marked, so nothing replaces it. ${p.note}`,
     fix: () =>
       `Port it to a Comark plugin (a \`post\` hook over \`state.tree\`) or a component, then compare its HTML with marked's on a few of the project's own documents. ${SKILL}`,
   },
