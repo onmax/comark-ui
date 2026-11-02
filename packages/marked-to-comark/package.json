@@ -1,6 +1,6 @@
 {
   "name": "marked-to-comark",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "Moves a project from marked to Comark: reports each marked setup and what its options and extensions become, rewrites marked calls to Comark's renderHtml, and escapes Markdown Comark would read differently. A CLI, a library, and a Vite Doctor extension.",
   "keywords": [
     "codemod",
