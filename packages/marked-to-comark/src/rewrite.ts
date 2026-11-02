@@ -399,6 +399,7 @@ function comarkSettings(plugins: FoundPlugin[], context: RewriteContext) {
   if (version && version[0] < 7 && setting(plugins, "headerIds") !== "false") settings.add(ids);
   else if (setting(plugins, "headerIds") === "true") settings.add(ids);
   if (version && version[0] >= 1 && version[0] < 18) settings.add("underscoreTags: true");
+  if (version && version[0] < 15) settings.add("rawAlt: true");
   if (version && version[0] < 4) settings.add(`expandTabs: "all"`);
   else if (version && version[0] < 14) settings.add(`expandTabs: "leading"`);
   if (version && version[0] === 0 && version[1] < 4) settings.add("legacyTables: true");

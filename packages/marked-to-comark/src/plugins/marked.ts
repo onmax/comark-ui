@@ -679,8 +679,8 @@ const tokenText = (tokens: Token[]): string =>
     .join("");
 
 /**
- * An image's alt is the plain text of its description in CommonMark and marked: `![[x](u) *y*](a.png)` has alt `x y`.
- * Comark keeps the description as written, Markdown and all.
+ * An image's alt is the plain text of its description in CommonMark and marked 15 and later: `![[x](u) *y*](a.png)`
+ * has alt `x y`. Comark keeps the description as written, Markdown and all, as marked did before v15.
  */
 export const imageAltText = (): ComarkPlugin => ({
   name: "marked-to-comark:image-alt-text",

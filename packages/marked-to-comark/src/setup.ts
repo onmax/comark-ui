@@ -64,6 +64,8 @@ export interface SetupOptions {
   expandTabs?: "all" | "leading";
   /** Tables as marked 0.3 split them, on every `|`, with each row's own cells. */
   legacyTables?: boolean;
+  /** An image's alt as written, Markdown and all, as marked before v15 wrote it; from v15 it's the plain text. */
+  rawAlt?: boolean;
   /** Tag names with an underscore (`<my_el>`) read as HTML, as marked from v1 to v17 read them. */
   underscoreTags?: boolean;
   /** The class before a code block's language, `language-` unless set; marked 0.3 wrote `lang-`. */
@@ -116,7 +118,7 @@ export function comarkSetup(options: SetupOptions = {}): ComarkSetup {
       ...(gfm ? [gfmLinks(), markedEmails()] : []),
       linkText(),
       tightLists(),
-      imageAltText(),
+      ...(options.rawAlt ? [] : [imageAltText()]),
       imageAlt(),
       ...(options.headerIds ? [headerIds(options.headerIds, options.headerPrefix)] : []),
       ...(options.langPrefix !== undefined && options.langPrefix !== "language-"

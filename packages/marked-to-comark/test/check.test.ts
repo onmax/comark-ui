@@ -122,7 +122,7 @@ describe("CLI", () => {
       "1 marked call rewritten, 2 left",
     );
     expect(readFileSync(join(root, "src/chat.ts"), "utf8")).toContain(
-      'return await renderHtml(text, comarkOptions({ breaks: true, underscoreTags: true, expandTabs: "leading" }));',
+      'return await renderHtml(text, comarkOptions({ breaks: true, underscoreTags: true, rawAlt: true, expandTabs: "leading" }));',
     );
     expect(cli(root, "content", "posts/*.md", "--write").stdout).toContain(
       "1 of 1 Markdown files changed",
