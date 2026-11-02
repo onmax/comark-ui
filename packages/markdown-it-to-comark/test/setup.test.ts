@@ -79,6 +79,22 @@ describe("comarkSetup", () => {
     expect(compare(markdownIt(markdown), await comark(markdown)).differences).toEqual([]);
   });
 
+  it("keeps an empty heading", async () => {
+    const { markdownIt, comark } = both({ syntax: "plain" });
+    const markdown = "#\n\n## \n\ntext\n";
+    expect(compare(markdownIt(markdown), await comark(markdown)).differences).toEqual([]);
+  });
+
+  it.each(["jsx:title=src/a/[...].js", "`C~", "{r}", "js {1,3}", 'js title="a.js"'])(
+    "gives a fence with the info string %s markdown-it's language",
+    async (info) => {
+      const { markdownIt, comark } = both({ syntax: "plain" });
+      const fence = info.includes("`") ? "~~~" : "```";
+      const markdown = `${fence}${info}\nx\n${fence}\n`;
+      expect(compare(markdownIt(markdown), await comark(markdown)).differences).toEqual([]);
+    },
+  );
+
   it("writes an image's alt text without its markup", async () => {
     const { markdownIt, comark } = both({ syntax: "plain" });
     const markdown = "![**hi** `c` ![x](y.png)](a.png)\n";

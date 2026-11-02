@@ -68,46 +68,91 @@ export const markdownItOptions = (options: MarkdownItOptions): ComarkPlugin => (
  * off a plugin's rule, and the token fixes that make Comark draw what markdown-it's renderer draws, after
  * `markdownItPlugin()` has drawn the tokens whose renderer a plugin changed.
  */
-export const markdownItTokens = (options: MarkdownItOptions): ComarkPlugin => ({
-  name: "markdown-it-to-comark:tokens",
-  markdownItPlugins: [
-    (md: MarkdownExit) => {
-      for (const [method, names] of ruleChanges(options)) md[method](names, true);
+export const markdownItTokens = (options: MarkdownItOptions): ComarkPlugin => {
+  let md: MarkdownExit | undefined;
+  return {
+    name: "markdown-it-to-comark:tokens",
+    markdownItPlugins: [
+      (instance: MarkdownExit) => {
+        md = instance;
+        for (const [method, names] of ruleChanges(options)) instance[method](names, true);
+      },
+    ],
+    markdownItPost(state) {
+      const fix = (tokens: Token[]) => {
+        for (let index = 0; index < tokens.length; index++) {
+          const token = tokens[index]!;
+          if (token.children) fix(token.children);
+          // Comark drops a heading with no text; markdown-it writes `<h2></h2>`.
+          if (
+            token.type === "heading_open" &&
+            !tokens[index + 1]?.children?.some((child) => child.content || child.type !== "text") &&
+            tokens[index + 2]?.type === "heading_close"
+          ) {
+            rename(token, "mdc_block_shorthand_open", token.tag);
+            rename(tokens[index + 2]!, "mdc_block_shorthand_close", token.tag);
+            tokens.splice(index + 1, 1);
+            index++;
+            continue;
+          }
+          // Comark reads a fence's language with its own grammar, which stops at `[` and `{` and drops a language that
+          // starts with punctuation (`jsx:title=a/[...].js`, `{r}`); such a fence is drawn by markdown-it's renderer.
+          if (token.type === "fence" && md && /[^\w+#.:/@-]/.test(language(token.info, md))) {
+            const rule = (md.renderer as unknown as { rules: Record<string, Rule | undefined> })
+              .rules.fence;
+            const html = rule?.(tokens, index, md.options, {}, md.renderer);
+            if (typeof html === "string") {
+              // SAFETY: Comark's tokens are instances of markdown-exit's Token class.
+              const drawn = drawHtml(html, token.constructor as TokenClass);
+              tokens.splice(index, 1, ...drawn);
+              index += drawn.length - 1;
+              continue;
+            }
+          }
+          // markdown-it-anchor's permalink symbol is an `html_block` inside a heading's text, which Comark only reads
+          // between blocks.
+          if (token.type === "html_block" && tokens !== state.tokens) {
+            // SAFETY: Comark's tokens are instances of markdown-exit's Token class.
+            const drawn = drawHtml(token.content, token.constructor as TokenClass);
+            tokens.splice(index, 1, ...drawn);
+            index += drawn.length - 1;
+            continue;
+          }
+          // Comark reads any text that starts with `<!--` as a comment, even text markdown-it shows (HTML off, a
+          // comment inside code a renderer rule drew), and drops what follows.
+          if (token.type === "text" && token.content.startsWith("<!--")) {
+            // SAFETY: Comark's tokens are instances of markdown-exit's Token class.
+            const rest = new (token.constructor as TokenClass)("text", "", 0);
+            rest.content = token.content.slice(1);
+            token.content = "<";
+            tokens.splice(index + 1, 0, rest);
+            index++;
+            continue;
+          }
+          // markdown-it draws strikethrough as `<s>`, and Comark's tree builder writes every `s_open` as `<del>`.
+          if (token.type === "s_open") rename(token, "mdc_inline_span_open", "s");
+          else if (token.type === "s_close") rename(token, "mdc_inline_span_close", "s");
+        }
+      };
+      fix(state.tokens);
     },
-  ],
-  markdownItPost(state) {
-    const fix = (tokens: Token[]) => {
-      for (let index = 0; index < tokens.length; index++) {
-        const token = tokens[index]!;
-        if (token.children) fix(token.children);
-        // markdown-it-anchor's permalink symbol is an `html_block` inside a heading's text, which Comark only reads
-        // between blocks.
-        if (token.type === "html_block" && tokens !== state.tokens) {
-          // SAFETY: Comark's tokens are instances of markdown-exit's Token class.
-          const drawn = drawHtml(token.content, token.constructor as TokenClass);
-          tokens.splice(index, 1, ...drawn);
-          index += drawn.length - 1;
-          continue;
-        }
-        // Comark reads any text that starts with `<!--` as a comment, even text markdown-it shows (HTML off, a
-        // comment inside code a renderer rule drew), and drops what follows.
-        if (token.type === "text" && token.content.startsWith("<!--")) {
-          // SAFETY: Comark's tokens are instances of markdown-exit's Token class.
-          const rest = new (token.constructor as TokenClass)("text", "", 0);
-          rest.content = token.content.slice(1);
-          token.content = "<";
-          tokens.splice(index + 1, 0, rest);
-          index++;
-          continue;
-        }
-        // markdown-it draws strikethrough as `<s>`, and Comark's tree builder writes every `s_open` as `<del>`.
-        if (token.type === "s_open") rename(token, "mdc_inline_span_open", "s");
-        else if (token.type === "s_close") rename(token, "mdc_inline_span_close", "s");
-      }
-    };
-    fix(state.tokens);
-  },
-});
+  };
+};
+
+type Rule = (
+  tokens: Token[],
+  index: number,
+  options: unknown,
+  env: object,
+  self: unknown,
+) => unknown;
+
+/** A fence's language as markdown-it reads it: the first word of its info string, escapes and entities resolved. */
+function language(info: string, md: MarkdownExit): string {
+  const unescape = (md as unknown as { utils?: { unescapeAll?: (text: string) => string } }).utils
+    ?.unescapeAll;
+  return (unescape ? unescape(info) : info).trim().split(/\s+/)[0] ?? "";
+}
 
 function rename(token: Token, type: string, tag: string) {
   token.type = type;
