@@ -30,6 +30,8 @@ showdown, Markdoc, markdown-to-jsx, commonmark.js, snarkdown, and markdown-wasm 
 
 The wizard writes only what each migrator's own `rewrite --write` and `content --write` would. Before writing a file, it checks the file hasn't changed since the check read it. Each migrator checks every Markdown file, so in a project with two libraries both want the same files. A file goes to the library that its nearest package.json declares, such as a VitePress site's own package. When that package.json declares both libraries, or none above the file declares either, the wizard leaves the file alone and names both migrators.
 
+Code that renders Markdown switches to Comark last. While any Markdown file its migrator handles still needs a fix by hand, or is left alone as above, the wizard keeps that code on its library and names the files it waits on, since switching it would change how they render. Fix them and run the wizard again.
+
 On the 100 projects remark-to-comark was [tested on](/remark-to-comark/testing/), `npx migrate-to-comark --yes` writes the same files, byte for byte, as running remark-to-comark's `content` and `rewrite` by hand.
 
 Everything else stays with each migrator: the warnings, what each plugin becomes, and the fixes. The wizard ends with the command that lists them.

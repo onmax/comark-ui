@@ -3,7 +3,7 @@ import { existsSync, statSync } from "node:fs";
 import { parseArgs } from "node:util";
 import * as prompts from "@clack/prompts";
 import type { Detected } from "./detect.ts";
-import { apply, load, plan, type Plan } from "./migrate.ts";
+import { apply, load, plan, type Held, type Plan } from "./migrate.ts";
 import { describe } from "./summary.ts";
 
 const USAGE = `Usage:
@@ -78,6 +78,7 @@ async function wizard() {
     prompts.log.warn(
       `${conflict.file} is left as it is: ${conflict.migrators.join(" and ")} would both change it. Run each one's \`content\` command on it and keep the result that renders right.`,
     );
+  for (const entry of result.held) prompts.log.warn(heldBack(entry));
   if (!result.changes.length) {
     prompts.outro(next(result));
     return;
@@ -86,12 +87,13 @@ async function wizard() {
     message: `Write ${result.changes.length} ${result.changes.length === 1 ? "file" : "files"}?`,
   });
   if (prompts.isCancel(go) || !go) return prompts.cancel("Nothing written.");
-  const { written, stale } = apply(root, result.changes);
+  const { written, stale, held } = apply(root, result.changes);
   prompts.log.success(`Wrote ${written.length} ${written.length === 1 ? "file" : "files"}.`);
   for (const file of stale)
     prompts.log.warn(
       `${file} changed while the wizard ran, so it was left as it is. Run the wizard again.`,
     );
+  for (const entry of held) prompts.log.warn(heldBack(entry));
   prompts.outro(next(result));
 }
 
@@ -103,10 +105,12 @@ async function report() {
     console.log(
       `${conflict.file} is left as it is: ${conflict.migrators.join(" and ")} would both change it.`,
     );
+  for (const entry of result.held) console.log(heldBack(entry));
   if (values.yes) {
-    const { written, stale } = apply(root, result.changes);
+    const { written, stale, held } = apply(root, result.changes);
     console.log(`\nWrote ${written.length} ${written.length === 1 ? "file" : "files"}.`);
     for (const file of stale) console.log(`${file} changed while the wizard ran; left as it is.`);
+    for (const entry of held) console.log(heldBack(entry));
   } else if (result.changes.length) {
     console.log(
       `\nNothing written. Run again with --yes to write ${result.changes.length} ${result.changes.length === 1 ? "file" : "files"}.`,
@@ -117,7 +121,7 @@ async function report() {
 
 async function json() {
   const result = await plan(root, { only, load });
-  const written = values.yes ? apply(root, result.changes) : undefined;
+  const applied = values.yes ? apply(root, result.changes) : undefined;
   console.log(
     JSON.stringify(
       {
@@ -132,7 +136,9 @@ async function json() {
         })),
         changes: result.changes.map(({ file, migrator }) => ({ file, migrator })),
         conflicts: result.conflicts,
-        ...written,
+        held: [...result.held, ...(applied?.held ?? [])],
+        written: applied?.written,
+        stale: applied?.stale,
       },
       null,
       2,
@@ -149,6 +155,13 @@ function found(detected: Detected, say: (line: string) => void): boolean {
     `No package.json under ${root} declares remark, markdown-it, or marked${detected.comark ? ", and comark is already a dependency" : ""}.`,
   );
   return false;
+}
+
+/** Why a setup file still uses its library, and which Markdown files it waits on. */
+function heldBack({ file, migrator, waiting }: Held): string {
+  const library = migrator.replace(/-to-comark$/, "");
+  const files = `${waiting.slice(0, 3).join(", ")}${waiting.length > 3 ? `, and ${waiting.length - 3} more` : ""}`;
+  return `${file} still renders with ${library}: switching it now would change how ${files} ${waiting.length === 1 ? "renders" : "render"}. Migrate ${waiting.length === 1 ? "it" : "them"} first (\`npx ${migrator} check ${JSON.stringify(root)} --verbose\` says how), then run the wizard again.`;
 }
 
 /** The commands that show what's left, one per migrator that ran. */

@@ -12,6 +12,7 @@ export {
   plan,
   type Change,
   type Finding,
+  type Held,
   type Load,
   type Migrator,
   type Plan,
