@@ -35,7 +35,10 @@ export const css = `${icons}@layer comark{${[
   "@supports (anchor-scope:all){.ck{anchor-scope:--ck-pre}.ck>pre{anchor-name:--ck-pre}.ck-bar{position-anchor:--ck-pre;top:anchor(top);left:anchor(left);right:anchor(right)}}",
   // The container's header already names the block.
   "[data-code-header] .ck-title{display:none}",
-  "[data-code-header] .ck>.ck-bar{top:auto;bottom:100%;left:auto;height:var(--ck-header);padding-top:0}",
+  // Very wide action sets scroll independently, leaving some of the header available to its tabs.
+  "[data-code-header] .ck>.ck-bar{top:auto;bottom:100%;left:auto;width:max-content;max-width:60%;height:var(--ck-header);padding-top:0;justify-content:flex-start;overflow-x:auto;scrollbar-width:none}",
+  "[data-code-header] .ck-bar>button{flex-shrink:0;white-space:nowrap}",
+  "[data-code-header] .ck-bar::-webkit-scrollbar{display:none}",
   ".ck-title{min-width:0;margin-right:auto;overflow:hidden;color:color-mix(in srgb,var(--_comark-foreground) 72%,transparent);font:.6875rem/1.5 var(--ck-title-font,ui-monospace,SFMono-Regular,Menlo,monospace);text-overflow:ellipsis;white-space:nowrap}",
   ".ck-bar>button{display:inline-flex;align-items:center;justify-content:center;gap:.25rem;min-width:var(--_ck-size);height:var(--_ck-size);margin:0;padding:0;border:1px solid transparent;border-radius:calc(var(--_comark-radius) - 2px);background:transparent;color:var(--_comark-muted);font:500 .75rem/1 var(--_comark-font);position:relative;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:background-color .15s ease,color .15s ease;visibility:hidden}",
   "[data-code-ready] .ck-bar>button{visibility:visible}",
@@ -53,6 +56,7 @@ export const css = `${icons}@layer comark{${[
   ".ck-copy[data-state=done] .ck-copy-done{display:block}",
   ".ck-status{position:absolute;top:calc(100% + .25rem);right:var(--_ck-inset);z-index:1;width:max-content;max-width:18rem;padding:.25rem .5rem;border-radius:calc(var(--_comark-radius) - 4px);background:var(--_comark-foreground);color:var(--_comark-background);font:.75rem/1.25rem var(--_comark-font);pointer-events:none}",
   ".ck-status:empty{display:none}",
+  "[data-code-header] .ck>.ck-status{top:.25rem}",
   // Expand touch targets vertically only, so adjacent buttons cannot steal each other's taps.
   "@media (pointer:coarse){.ck-bar>button::after{content:'';position:absolute;top:50%;left:50%;width:100%;height:max(100%,2.75rem);translate:-50% -50%}}",
   // A terminal block keeps a line under its header.

@@ -10,11 +10,13 @@ export const css = `@layer comark{${[
   ".cmv{margin:1.5rem 0}",
   // Without the script every step reads in turn under a caption with its label, and the tabs that couldn't switch
   // them hide.
-  // comark-code puts each step's buttons at the header's right end, in room the strip leaves for Copy and Wrap.
-  ".cmv{--ck-header:calc(2.5rem - 1px)}",
-  ".cmv-list{display:none;gap:2px;padding:.375rem 3.75rem .375rem .375rem;overflow-x:auto;scrollbar-width:none;border-radius:var(--_comark-radius) var(--_comark-radius) 0 0}",
+  // comark-code measures its buttons; their space stays outside the scrolling strip.
+  ".cmv{position:relative;--ck-header:calc(2.5rem - 1px)}",
+  "[data-magic-move-ready] .cmv::before{content:'';position:absolute;inset:0 0 auto;height:calc(var(--ck-header) + 1px);border-radius:var(--_comark-radius) var(--_comark-radius) 0 0;background:var(--cmv-surface,color-mix(in srgb,var(--_comark-accent) 50%,transparent));box-shadow:inset 0 0 0 1px var(--_comark-border);pointer-events:none}",
+  ".cmv-list{display:none;box-sizing:border-box;width:calc(100% - var(--ck-controls,3.75rem));gap:2px;padding:.375rem;overflow-x:auto;scrollbar-width:none;border-radius:var(--_comark-radius) var(--_comark-radius) 0 0}",
   ".cmv-list::-webkit-scrollbar{display:none}",
   ".cmv-list,.cmv-caption{background:var(--cmv-surface,color-mix(in srgb,var(--_comark-accent) 50%,transparent));box-shadow:inset 0 0 0 1px var(--_comark-border)}",
+  ".cmv-list{background:none;box-shadow:none}",
   "[data-magic-move-ready] .cmv-list{display:flex}",
   "[data-magic-move-ready] .cmv-caption,[data-magic-move-ready] .cmv-step[data-inactive]{display:none}",
   ".cmv-tab{display:inline-flex;flex:none;align-items:center;padding:.25rem .625rem;border:0;border-radius:calc(var(--_comark-radius) - 2px);background:none;color:var(--_comark-muted);font:500 .8125rem/1.25rem var(--_comark-font);white-space:nowrap;cursor:pointer;touch-action:manipulation;transition:color .15s,background-color .15s}",

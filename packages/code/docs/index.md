@@ -413,7 +413,7 @@ The three colors lighten in dark mode with the shared status tokens.
 
 ### Your own header
 
-A block that draws a header above its code blocks, like a [code group](/tabs/#code-group) or a [magic move](/magic-move/), puts `data-code-header` on its root and sets `--ck-header` to how far its header's top sits above the code block's top. Each code block inside then makes no room for a header of its own, hides its title, and puts its buttons at the right end of your header, centered in it. Leave about `3.75rem` free at the header's right end for Copy and Wrap.
+A block that draws a header above its code blocks, like a [code group](/tabs/#code-group) or a [magic move](/magic-move/), puts `data-code-header` on its root and sets `--ck-header` to how far its header's top sits above the code block's top. Each code block inside then makes no room for a header of its own, hides its title, and puts its buttons at the right end of your header, centered in it. The code script sets `--ck-controls` on your root to the active blocks' controls width, including configured actions. Reserve `var(--ck-controls, 3.75rem)` outside your header's scrolling content. Controls use at most 60% of the block's width and scroll independently when they need more room.
 
 ```css
 .my-group {

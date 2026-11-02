@@ -4,9 +4,53 @@ import {
   defineDoctorExtension,
   defineRulePack,
 } from "vite-doctor/extension";
+import ts from "typescript";
 
 const id = "comark-plugins/no-foreign-parts";
 const diagnostics = defineDoctorDiagnostics([{ code: "COMARKREPO0001", ruleId: id }]);
+
+// These packages use the host's styling rather than shared theme tokens.
+const unthemedRoots = new Map([
+  ["icon", ".ci"],
+  ["keys", ".ckb"],
+  ["xref", ".cxr"],
+]);
+
+function themeRoots(text: string): string[] {
+  const source = ts.createSourceFile("styles.ts", text, ts.ScriptTarget.Latest, true);
+  const constants = new Map<string, ts.Expression>();
+  const arguments_: ts.Expression[] = [];
+  const visit = (node: ts.Node) => {
+    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer)
+      constants.set(node.name.text, node.initializer);
+    if (
+      ts.isCallExpression(node) &&
+      ts.isIdentifier(node.expression) &&
+      node.expression.text === "theme" &&
+      node.arguments[0]
+    )
+      arguments_.push(node.arguments[0]);
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
+  // Resolve only static strings; never execute a package's source while linting it.
+  const stringOf = (node: ts.Expression, seen = new Set<string>()): string => {
+    if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) return node.text;
+    if (ts.isIdentifier(node) && !seen.has(node.text)) {
+      const value = constants.get(node.text);
+      if (value) return stringOf(value, new Set([...seen, node.text]));
+    }
+    if (ts.isTemplateExpression(node))
+      return (
+        node.head.text +
+        node.templateSpans
+          .map((span) => stringOf(span.expression, seen) + span.literal.text)
+          .join("")
+      );
+    return "";
+  };
+  return arguments_.map((argument) => stringOf(argument));
+}
 
 // A package's `theme()` call names its blocks' roots, the classes other packages may style. Every other class with its
 // prefix is a part, which only that package and the packages that render its markup know about. A package that styles
@@ -32,7 +76,7 @@ const rule = createRule({
         const owners = new Map<string, string>();
         const roots = new Set<string>();
         for (const [file, text] of sources)
-          for (const [, selectors = ""] of text.matchAll(/theme\("([^"]+)"/g))
+          for (const selectors of [...themeRoots(text), unthemedRoots.get(packageOf(file)) ?? ""])
             for (const [root = "", prefix = ""] of selectors.matchAll(/\.(c[a-z]+)(?:-[a-z]+)*/g)) {
               owners.set(prefix, packageOf(file));
               roots.add(root);

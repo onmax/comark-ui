@@ -299,9 +299,93 @@ for (const [name, markdown] of [
     expect(Math.abs(line.top - pre.top - 16)).toBeLessThan(1);
     await expect(page.locator(`${shown} .ck-copy`)).toBeVisible();
     expect(Math.abs(copy.top + copy.height / 2 - (header.top + header.height / 2))).toBeLessThan(1);
-    expect(header.right - copy.right).toBeLessThan(8);
+    expect(pre.right - copy.right).toBeLessThan(8);
     await expect(page.locator(`${shown} .ck-title`)).toBeHidden();
   });
+
+for (const container of ["code-group", "magic-move"])
+  for (const count of [1, 8])
+    test(`${container} keeps ${count} labeled actions outside overflowing tabs`, async ({
+      page,
+      context,
+    }) => {
+      await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+      const markdown = `::${container}\n${Array.from(
+        { length: 8 },
+        (_, i) => `\`\`\`sh [Install with package manager ${i + 1}]\n${long}\n\`\`\``,
+      ).join("\n\n")}\n::`;
+      const html = await createHtmlRenderer({
+        plugins: [
+          code({
+            actions: Array.from({ length: count }, (_, i) => ({
+              id: `run-${i}`,
+              label: `Run in terminal ${i + 1}`,
+            })),
+          }),
+          tabs(),
+          magicMove(),
+        ],
+        components: { ...tabsComponents, ...magicMoveComponents, ...components },
+      })(markdown);
+      await page.goto("/no-such-page");
+      await page.setContent(
+        `<!doctype html><html><body style="width:30rem;margin:2rem"><style>pre{margin:0;padding:1rem;overflow-x:auto}.cmv-step{min-width:0}</style>${html}</body></html>`,
+      );
+      const strip = page.getByRole("tablist");
+      const bar = page.locator(":is(.ct-panel,.cmv-step):not([data-inactive]) .ck-bar");
+      await expect(
+        bar.getByRole("button", { name: "Run in terminal 1", exact: true }),
+      ).toBeVisible();
+      await expect
+        .poll(async () => {
+          const [tabs, controls] = await Promise.all([strip.boundingBox(), bar.boundingBox()]);
+          return tabs!.x + tabs!.width - controls!.x;
+        })
+        .toBeLessThanOrEqual(0);
+      expect(await strip.evaluate((element) => element.scrollWidth > element.clientWidth)).toBe(
+        true,
+      );
+      await strip.evaluate((element) => {
+        element.scrollLeft = element.scrollWidth;
+      });
+      const last = strip.getByRole("tab").last();
+      await last.click();
+      await expect(last).toHaveAttribute("aria-selected", "true");
+      await expect
+        .poll(async () => {
+          const [tabs, controls] = await Promise.all([strip.boundingBox(), bar.boundingBox()]);
+          return tabs!.x + tabs!.width - controls!.x;
+        })
+        .toBeLessThanOrEqual(0);
+      // Both the start and end of the scroller stay independently clickable.
+      await strip.evaluate((element) => {
+        element.scrollLeft = 0;
+      });
+      await strip.getByRole("tab").first().click();
+      await expect(strip.getByRole("tab").first()).toHaveAttribute("aria-selected", "true");
+      await page.evaluate(() => {
+        document.body.style.width = "20rem";
+        document.addEventListener("comark-code-action", (event) => {
+          document.body.dataset.action = event.detail.action;
+        });
+      });
+      await expect
+        .poll(async () => {
+          const [tabs, controls] = await Promise.all([strip.boundingBox(), bar.boundingBox()]);
+          return tabs!.x + tabs!.width - controls!.x;
+        })
+        .toBeLessThanOrEqual(0);
+      await bar.getByRole("button", { name: `Run in terminal ${count}`, exact: true }).click();
+      await expect(page.locator("body")).toHaveAttribute("data-action", `run-${count - 1}`);
+      await bar.getByRole("button", { name: "Wrap lines" }).click();
+      await expect(bar.getByRole("button", { name: "Wrap lines" })).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+      await bar.getByRole("button", { name: "Copy code" }).click();
+      await expect(page.getByRole("status").filter({ hasText: "Copied" })).toBeVisible();
+      expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(long);
+    });
 
 test.describe("touch targets", () => {
   test.use({ hasTouch: true });

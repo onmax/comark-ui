@@ -40,9 +40,10 @@ export const css = `@layer comark{${[
   ".ct-caption+*{margin-top:0}",
   ".ct-panel>:last-child{margin-bottom:0}",
   // A code group is one card: the strip, or each caption without the script, is the header its code block hangs from.
-  // comark-code puts the block's buttons at the header's right end, in room the strip leaves for Copy and Wrap.
-  ".ct[data-tabs-code]{--ck-header:calc(2.5rem - 1px)}",
-  ".ct[data-tabs-code]>.ct-list{width:auto;padding:.375rem 3.75rem .375rem .375rem}",
+  // comark-code measures its buttons; their space stays outside the scrolling strip.
+  ".ct[data-tabs-code]{position:relative;--ck-header:calc(2.5rem - 1px)}",
+  "[data-tabs-ready] .ct[data-tabs-code]::before{content:'';position:absolute;inset:0 0 auto;height:calc(var(--ck-header) + 1px);border-radius:var(--_comark-radius) var(--_comark-radius) 0 0;background:var(--ct-surface,color-mix(in srgb,var(--_comark-accent) 50%,transparent));box-shadow:inset 0 0 0 1px var(--_comark-border);pointer-events:none}",
+  ".ct[data-tabs-code]>.ct-list{box-sizing:border-box;width:calc(100% - var(--ck-controls,3.75rem));padding:.375rem;background:none;box-shadow:none}",
   ".ct[data-tabs-code]>.ct-list,.ct[data-tabs-code]>.ct-panel>.ct-caption{border-radius:var(--_comark-radius) var(--_comark-radius) 0 0}",
   ".ct[data-tabs-code]>.ct-panel>.ct-caption{margin-bottom:-1px;padding:.625rem 1rem}",
   "[data-tabs-ready] .ct[data-tabs-code]>.ct-panel{margin-top:-1px}",
