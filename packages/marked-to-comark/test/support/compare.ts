@@ -84,7 +84,7 @@ function blocks(tokens: Token[]): Token[][] {
 export function compare(
   expectedHtml: string,
   actualHtml: string,
-  options: { benign?: Set<string> } = {},
+  options: { benign?: Set<string>; tokens?: boolean } = {},
 ): Comparison {
   const seen = new Set<string>();
   const expected = normalize(expectedHtml, { seen, codeNewline: true });
@@ -100,8 +100,9 @@ export function compare(
   const pathAt = paths(expected);
   // Whole blocks first, then tokens inside the runs of blocks that changed: one token-level diff over a long
   // changelog with thousands of differences takes minutes.
-  const left = blocks(expected);
-  const right = blocks(actual);
+  // `tokens` diffs the whole document token by token, for a score that block alignment can't skew.
+  const left = options.tokens ? [expected] : blocks(expected);
+  const right = options.tokens ? [actual] : blocks(actual);
   const outer = diffArrays(
     left.map((block) => block.join("\u0000")),
     right.map((block) => block.join("\u0000")),

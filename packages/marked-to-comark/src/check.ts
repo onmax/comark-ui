@@ -90,9 +90,13 @@ export async function scanProject(reader: ProjectReader): Promise<ScannedFile[]>
 /** The marked range each package declares, by the package's folder (`""` for the root); pnpm catalogs resolved. */
 export async function declaredVersions(reader: ProjectReader): Promise<Map<string, string>> {
   const versions = new Map<string, string>();
-  // `marked: catalog:` points at pnpm-workspace.yaml: `catalog:` or a named list under `catalogs:`.
+  // `marked: catalog:` points at pnpm-workspace.yaml (`catalog:` or a named list under `catalogs:`), or at Bun's
+  // `catalog` and `catalogs` in the root package.json, top level or under `workspaces`.
   const workspace = reader.read("pnpm-workspace.yaml") ?? "";
+  const bun = bunCatalogs(reader.read("package.json") ?? "");
   const catalog = (name: string) => {
+    const fromBun = bun.get(name);
+    if (fromBun) return fromBun;
     const section = name
       ? new RegExp(`^  ${name}:\\s*$([\\s\\S]*?)(?=^  \\S|^\\S|$(?![\\s\\S]))`, "m").exec(
           workspace.slice(workspace.search(/^catalogs:/m) + 1),
@@ -109,6 +113,31 @@ export async function declaredVersions(reader: ProjectReader): Promise<Map<strin
 }
 
 const isString = (value: unknown): value is string => value === String(value);
+
+/** Bun's catalogs in a root package.json: marked's range by catalog name, `""` for the default one. */
+function bunCatalogs(text: string): Map<string, string> {
+  const found = new Map<string, string>();
+  let json: unknown;
+  try {
+    json = JSON.parse(text);
+  } catch {
+    return found;
+  }
+  const workspaces: unknown = json instanceof Object ? Reflect.get(json, "workspaces") : undefined;
+  for (const owner of [json, workspaces]) {
+    if (!(owner instanceof Object)) continue;
+    const catalog: unknown = Reflect.get(owner, "catalog");
+    const range: unknown = catalog instanceof Object ? Reflect.get(catalog, "marked") : undefined;
+    if (isString(range)) found.set("", range);
+    const catalogs: unknown = Reflect.get(owner, "catalogs");
+    if (!(catalogs instanceof Object)) continue;
+    for (const [name, list] of Object.entries(catalogs)) {
+      const named: unknown = list instanceof Object ? Reflect.get(list, "marked") : undefined;
+      if (isString(named)) found.set(name, named);
+    }
+  }
+  return found;
+}
 
 /** The range a package.json's dependencies, dev dependencies, or peer dependencies give marked, if it's valid JSON. */
 function markedRange(text: string): string | undefined {

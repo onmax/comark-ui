@@ -24,7 +24,6 @@ export const BENIGN = new Set([
   ...["language", "data-language", "highlights", "filename", "meta"].map(
     (attribute) => `pre[${attribute}]`,
   ),
-  "input[class]",
 ]);
 
 export type Token = string;
@@ -130,14 +129,28 @@ const STANDARD = new Set(
 /**
  * A self-closing component or custom element (`<NavPath path="…" />`) as an empty element. A browser ignores the
  * slash and nests what follows, but an unknown element shows its children inline, so the reader sees the same text
- * either way; Comark closes it, as the MDX and Vue sites these pages come from do.
+ * either way; Comark closes it, as the MDX and Vue sites these pages come from do. Not when its attributes could hide
+ * what it holds (`style`, `class`, `hidden`), and never inside raw text such as a `<textarea>` or `<script>`.
  */
-const closeSelfClosing = (html: string) =>
-  html.replace(
-    /<([A-Za-z][\w.:-]*)((?:\s+[^\s"'>/=]+(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s"'=<>`]+))?)*)\s*\/>/g,
-    (whole, name: string, attributes: string) =>
-      STANDARD.has(name.toLowerCase()) ? whole : `<${name}${attributes}></${name}>`,
+const closeSelfClosing = (html: string) => {
+  const raw: string[] = [];
+  const masked = html.replace(
+    /<(textarea|script|style|pre|xmp)\b[\s\S]*?<\/\1\s*>/gi,
+    (block) => `\u0000${raw.push(block) - 1}\u0000`,
   );
+  return (
+    masked
+      .replace(
+        /<([A-Za-z][\w.:-]*)((?:\s+[^\s"'>/=]+(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s"'=<>`]+))?)*)\s*\/>/g,
+        (whole, name: string, attributes: string) =>
+          STANDARD.has(name.toLowerCase()) || /(?:^|\s)(?:style|class|hidden)\b/i.test(attributes)
+            ? whole
+            : `<${name}${attributes}></${name}>`,
+      )
+      // eslint-disable-next-line no-control-regex -- NUL marks a masked raw-text block; HTML can't contain one.
+      .replace(/\u0000(\d+)\u0000/g, (_, index: string) => raw[Number(index)]!)
+  );
+};
 
 export function normalize(source: string, options: NormalizeOptions = {}): Token[] {
   const tree = fromHtml(closeSelfClosing(source), { fragment: true });

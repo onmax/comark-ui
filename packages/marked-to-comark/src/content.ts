@@ -46,9 +46,10 @@ interface Edit {
 }
 
 const ALERT = /^\[!(?:note|tip|important|warning|caution)\]/i;
-// `---` YAML at the very top: projects that use marked strip it with gray-matter or front-matter first, and
+// `---` YAML or `+++` TOML at the very top: projects that use marked strip it with gray-matter or front-matter first, and
 // every other tool reads it as data, so it stays byte for byte either way.
-const FRONTMATTER = /^(?:﻿)?---[a-z]*[ \t]*\n(?:[\s\S]*?\n)?---[ \t]*(?:\n|$)/;
+const FRONTMATTER =
+  /^(?:\uFEFF)?(?:---[a-z]*[ \t]*\n(?:[\s\S]*?\n)?---|\+\+\+[ \t]*\n(?:[\s\S]*?\n)?\+\+\+)[ \t]*(?:\n|$)/;
 
 interface Context {
   /** Offset of an alert marker to leave alone. */
