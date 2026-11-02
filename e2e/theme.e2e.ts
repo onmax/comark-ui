@@ -1,9 +1,11 @@
+import { createHtmlRenderer } from "@comark/html";
 import { expect, test } from "@playwright/test";
+import comarkUi from "../packages/ui/src/html.ts";
 import { mermaidCss } from "../packages/ui/src/client.ts";
 import { theme } from "../packages/zoom/src/theme.ts";
 
 for (const mode of ["light", "dark"] as const) {
-  test(`status tokens follow a root .${mode} class over the OS color scheme`, async ({ page }) => {
+  test(`the tokens follow a root .${mode} class over the OS color scheme`, async ({ page }) => {
     await page.emulateMedia({ colorScheme: mode === "light" ? "dark" : "light" });
     await page.setContent(`<!doctype html><html class="${mode}"><head><style>
       ${mermaidCss}
@@ -11,6 +13,8 @@ for (const mode of ["light", "dark"] as const) {
       .error{color:var(--pele-error)}
       .critical{color:var(--pele-critical)}
       .status-a,.status-b{color:var(--_comark-danger);box-shadow:var(--_comark-shadow)}
+      .status-a{background-color:var(--_comark-background)}
+      .status-b{background-color:var(--_comark-foreground)}
     </style></head><body>
       <div class="pele-diagram"><span class="error">Error</span><span class="critical">Critical</span></div>
       <div class="status-a">First block</div><div class="status-b">Second block</div>
@@ -20,6 +24,13 @@ for (const mode of ["light", "dark"] as const) {
     for (const selector of [".error", ".critical", ".status-a", ".status-b"]) {
       await expect(page.locator(selector)).toHaveCSS("color", danger);
     }
+    // shadcn's neutral background and foreground, which a page with no theme of its own gets.
+    const [background, foreground] =
+      mode === "light"
+        ? ["rgb(255, 255, 255)", "rgb(10, 10, 10)"]
+        : ["rgb(10, 10, 10)", "rgb(250, 250, 250)"];
+    await expect(page.locator(".status-a")).toHaveCSS("background-color", background);
+    await expect(page.locator(".status-b")).toHaveCSS("background-color", foreground);
     await expect(page.locator(".status-a")).toHaveCSS(
       "box-shadow",
       `rgba(0, 0, 0, ${mode === "light" ? "0.12" : "0.5"}) 0px 4px 12px 0px`,
@@ -30,6 +41,17 @@ for (const mode of ["light", "dark"] as const) {
     await expect(page.locator(".status-b")).toHaveCSS("color", "rgb(1, 2, 3)");
   });
 }
+
+test("a .light class keeps the typeset's text light-mode on a dark system", async ({ page }) => {
+  const render = createHtmlRenderer(comarkUi({ icon: { fetch: false } }));
+  await page.emulateMedia({ colorScheme: "dark" });
+  await page.setContent(
+    `<!doctype html><html class="light"><body><main>${await render("Some text.")}</main></body></html>`,
+  );
+  await expect(page.locator("main")).toHaveCSS("color", "rgb(10, 10, 10)");
+  await page.evaluate(() => document.documentElement.classList.remove("light"));
+  await expect(page.locator("main")).toHaveCSS("color", "rgb(250, 250, 250)");
+});
 
 const next = (page: import("@playwright/test").Page) =>
   page.locator("main .cc").first().getByRole("button", { name: "Next slide" });

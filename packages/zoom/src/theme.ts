@@ -62,10 +62,22 @@ export function statusColor(name: keyof typeof colors): string {
 }
 
 /**
+ * `declarations` on `selector` in dark mode: the system's, unless a `.light` class sits on the element or above it, or
+ * a `.dark` class there whatever the system says. Either class pins a page's scheme.
+ */
+export function dark(selector: string, declarations: string): string {
+  return (
+    `@media (prefers-color-scheme:dark){:where(:not(.light,.light *)):is(${selector}){${declarations}}}` +
+    `:where(.dark,.dark *):is(${selector}){${declarations}}`
+  );
+}
+
+/**
  * Resolves the `--comark-*` tokens on `selector`, falling back to Nuxt UI's variables, then shadcn/ui's, then shadcn's
  * neutral theme. Nuxt UI's corners are twice its `--ui-radius`, so the radius halves shadcn's to double it back.
- * They resolve on the component rather than `:root`, so a `.dark` class anywhere above it switches the theme, and a
- * `--comark-*` set on any ancestor still inherits down. `:where()` keeps them at zero specificity.
+ * They resolve on the component rather than `:root`, so a `--comark-*` set on any ancestor still inherits down.
+ * `:where()` keeps them at zero specificity. The neutral theme follows the system's color mode, and a `.light` or
+ * `.dark` class on the component or above it pins one (see `dark()`).
  *
  * Every block gets the core tokens. Name `"status"` for `--comark-success`, `-danger`, `-warning`, and `-info`,
  * `"primary"` for `--comark-primary`, `-primary-foreground`, and `-secondary`, and `"shadow"` for `--comark-shadow`, so
@@ -73,16 +85,9 @@ export function statusColor(name: keyof typeof colors): string {
  */
 export function theme(selector: string, ...extras: Extras[]): string {
   const where = `:where(${selector})`;
-  const added = extras.flatMap((name) => groups[name]);
-  const list: Token[] = [...tokens, ...added];
-  // Few themes define dark status colors, so a `.light` or `.dark` class on the block or an ancestor picks their fallbacks too.
-  const schemed = added.filter((token) => token[3] !== token[4]);
-  const classes = schemed.length
-    ? `:where(.light,.light *)${where}{${resolve(schemed, 3)}}:where(.dark,.dark *)${where}{${resolve(schemed, 4)}}`
-    : "";
+  const list: Token[] = [...tokens, ...extras.flatMap((name) => groups[name])];
   return (
     `${where}{${resolve(list, 3)};--_comark-radius:var(--comark-radius,calc(var(--ui-radius,calc(var(--radius,.625rem)/2))*2));--_comark-font:var(--comark-font,var(--font-sans,ui-sans-serif,system-ui,sans-serif))}` +
-    `@media (prefers-color-scheme:dark){${where}{${resolve(list, 4)}}}` +
-    classes
+    dark(where, resolve(list, 4))
   );
 }

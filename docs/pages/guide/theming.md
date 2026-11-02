@@ -13,6 +13,16 @@ Every plugin reads the CSS variables of [Nuxt UI](https://ui.nuxt.com) and [shad
 
 If a site sets both, Nuxt UI's variables win.
 
+### Pin light or dark mode
+
+On a site with neither, a `light` or `dark` class on `<html>`, or on any element around the blocks, pins that mode whatever the system's is. A page that is only ever light, for example, keeps light blocks and text on a phone in dark mode:
+
+```html
+<html class="light">
+```
+
+The blocks don't read the CSS `color-scheme` property, because CSS can't tell whether a page set it, so put the class on the page too. Shiki's dual themes in the typeset follow the same classes.
+
 ### Nuxt UI
 
 The blocks follow the app's `app.config` colors, its `--ui-radius`, and its color mode. [Tokens](#tokens) lists the `--ui-*` variable behind each token, such as `--ui-bg` for surfaces and `--ui-success` for a passing test. Chart series read `--ui-chart-1` to `-6`. Focus rings use `--ui-primary`, like Nuxt UI's own components, and corners are twice `--ui-radius`.

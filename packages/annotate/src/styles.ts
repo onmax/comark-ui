@@ -1,4 +1,4 @@
-import { theme } from "comark-zoom/theme";
+import { dark, theme } from "comark-zoom/theme";
 import { caveat } from "./font.ts";
 import { BOX_PADDING } from "./place.ts";
 
@@ -28,7 +28,7 @@ export const css = `@layer comark{${[
   // zoomed screenshot sits in a copy of its `.ca`, so it keeps them too.
   ":where(.ca){--ca-note-font:comark-caveat,cursive;--ca-note-size:1.25em;--ca-label-size:1.5em;--ca-gutter:10rem;--ca-top-gutter:5rem;--ca-bottom-gutter:5rem;--ca-gap:1.25rem;--ca-red:var(--_comark-danger);--ca-amber:#f5a524;--ca-green:var(--_comark-success);--ca-blue:#0581e6;--ca-violet:#8b5cf6;--ca-gray:#71717a;--ca-red-solid:#d01d21;--ca-amber-solid:#f59e0b;--ca-green-solid:#037e3f;--ca-blue-solid:#0267c7;--ca-violet-solid:#7c3aed;--ca-gray-solid:#52525b;--ca-red-ink:#fff;--ca-amber-ink:#1c1917;--ca-green-ink:#fff;--ca-blue-ink:#fff;--ca-violet-ink:#fff;--ca-gray-ink:#fff;--ca-color:var(--ca-violet);--ca-solid:var(--ca-violet-solid);--ca-ink:var(--ca-violet-ink)}",
   ":where(.ca){margin:1.5rem 0}",
-  "@media (prefers-color-scheme:dark){:where(.ca){--ca-amber:#ffb224;--ca-blue:#67b0f9;--ca-violet:#b49cff;--ca-gray:#a1a1aa}}",
+  dark(":where(.ca)", "--ca-amber:#ffb224;--ca-blue:#67b0f9;--ca-violet:#b49cff;--ca-gray:#a1a1aa"),
   // How far above or below the image a leader leaves an offset note: at the baseline of its nearest line, so it runs
   // under a neighbouring note's words rather than through them.
   ":where(.ca){--ca-lead:calc(var(--ca-gap) + .25rem + var(--ca-note-size) * .3)}",
@@ -105,7 +105,7 @@ export const css = `@layer comark{${[
   // covers the screenshot. Hovering a mark or its note thickens it.
   ".ca-mark,.ca-arrow{--ca-stroke:var(--ca-color)}",
   // Screenshots stay light in dark mode, where the lighter dark-mode colors would wash out, so they use the deeper shade.
-  "@media (prefers-color-scheme:dark){.ca-mark,.ca-arrow{--ca-stroke:var(--ca-solid,var(--ca-color))}}",
+  dark(".ca-mark,.ca-arrow", "--ca-stroke:var(--ca-solid,var(--ca-color))"),
   ".ca-mark svg{position:absolute;left:-5px;top:-5px;width:calc(100% + 10px);height:calc(100% + 10px);overflow:visible;fill:none;stroke:currentColor;stroke:var(--ca-stroke,currentColor);stroke-width:calc(2.5px + .5px * var(--ca-on,0));stroke-linecap:round;stroke-linejoin:round;transition:stroke-width .15s ease}",
   // A box's line and number sit on its padded corner. The renderer overrides the shared default when needed.
   `.ca-mark.ca-box{box-sizing:content-box;padding:${BOX_PADDING}px;margin:${-BOX_PADDING}px}`,
