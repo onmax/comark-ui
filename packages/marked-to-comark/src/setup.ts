@@ -18,6 +18,8 @@ import {
   linkText,
   markedEmails,
   taskListClasses,
+  underscoreTagText,
+  underscoreTags,
 } from "./plugins/marked.ts";
 import {
   closeInlineHtml,
@@ -58,6 +60,8 @@ export interface SetupOptions {
   headerPrefix?: string;
   /** Tabs as marked before v14 rewrote them: `all` (before v4) or a line's `leading` ones (v4 to v13). */
   expandTabs?: "all" | "leading";
+  /** Tag names with an underscore (`<my_el>`) read as HTML, as marked from v1 to v17 read them. */
+  underscoreTags?: boolean;
   /** The class before a code block's language, `language-` unless set; marked 0.3 wrote `lang-`. */
   langPrefix?: string;
   /** Comark's own heading ids, for marked-gfm-heading-id; see Comark's `headingIds`. */
@@ -86,6 +90,7 @@ export function comarkSetup(options: SetupOptions = {}): ComarkSetup {
         ? [dropHtml()]
         : // CommonMark HTML blocks are raw until a blank line; Comark otherwise reads Markdown inside them.
           [
+            ...(options.underscoreTags ? [underscoreTags()] : []),
             emptyHeadings(),
             breakEndTags(),
             htmlIndent(),
@@ -93,6 +98,7 @@ export function comarkSetup(options: SetupOptions = {}): ComarkSetup {
             inlineHtml(),
             htmlParagraphs(),
             html({ markdown: false }),
+            ...(options.underscoreTags ? [underscoreTagText()] : []),
             htmlPre(),
             htmlEntities(),
             closeInlineHtml(),

@@ -475,3 +475,118 @@ export const expandTabs = (mode: "all" | "leading"): ComarkPlugin => ({
           );
   },
 });
+
+// A tag whose name holds an underscore, which CommonMark doesn't allow and marked from v1 to v17 read as HTML.
+const UNDERSCORE_TAG =
+  /^(?:<[A-Za-z][\w-]*_[\w-]*(?:\s+[A-Za-z_:][\w.:-]*(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s"'=<>`]+))?)*\s*\/?>|<\/[A-Za-z][\w-]*_[\w-]*\s*>)/;
+
+interface InlineState {
+  src: string;
+  pos: number;
+  push: (type: string, tag: string, nesting: number) => { content: string };
+}
+interface BlockState {
+  src: string;
+  bMarks: number[];
+  eMarks: number[];
+  tShift: number[];
+  sCount: number[];
+  blkIndent: number;
+  line: number;
+  isEmpty: (line: number) => boolean;
+  getLines: (begin: number, end: number, indent: number, keepLastLF: boolean) => string;
+  push: (
+    type: string,
+    tag: string,
+    nesting: number,
+  ) => { content: string; map: [number, number] | null };
+}
+interface Rules {
+  inline: {
+    ruler: {
+      before: (
+        name: string,
+        rule: string,
+        fn: (state: InlineState, silent: boolean) => boolean,
+      ) => void;
+    };
+  };
+  block: {
+    ruler: {
+      before: (
+        name: string,
+        rule: string,
+        fn: (state: BlockState, start: number, end: number, silent: boolean) => boolean,
+        options?: { alt: string[] },
+      ) => void;
+    };
+  };
+}
+
+/**
+ * marked from v1 to v17 reads `<GRAFANA_VERSION>` and `<my_el>` as HTML, and a browser hides them; CommonMark and
+ * Comark show them as text, since a tag name can't hold an underscore. Inline they become HTML, and one alone on a line
+ * starts an HTML block that ends at a blank line, as any other tag would.
+ */
+export const underscoreTags = (): ComarkPlugin => ({
+  name: "marked-to-comark:underscore-tags",
+  markdownItPlugins: [
+    ((md: Rules) => {
+      md.inline.ruler.before("html_inline", "marked_underscore_tag", (state, silent) => {
+        if (state.src.charCodeAt(state.pos) !== 0x3c) return false;
+        const tag = UNDERSCORE_TAG.exec(state.src.slice(state.pos));
+        if (!tag) return false;
+        if (!silent) state.push("html_inline", "", 0).content = tag[0];
+        state.pos += tag[0].length;
+        return true;
+      });
+      md.block.ruler.before(
+        "html_block",
+        "marked_underscore_block",
+        (state, start, end, silent) => {
+          if (state.sCount[start]! - state.blkIndent >= 4) return false;
+          const line = state.src.slice(
+            state.bMarks[start]! + state.tShift[start]!,
+            state.eMarks[start],
+          );
+          const tag = UNDERSCORE_TAG.exec(line);
+          // Like CommonMark's last kind of HTML block: the tag alone on its line, and it can't interrupt a paragraph.
+          if (!tag || line.slice(tag[0].length).trim() || silent) return false;
+          let next = start + 1;
+          while (next < end && !state.isEmpty(next)) next++;
+          const token = state.push("html_block", "", 0);
+          token.map = [start, next];
+          token.content = state.getLines(start, next, state.blkIndent, true);
+          state.line = next;
+          return true;
+        },
+      );
+    }) as unknown as MarkdownItHook,
+  ],
+});
+type MarkdownItHook = NonNullable<ComarkPlugin["markdownItPlugins"]>[number];
+
+/** After html(): in an HTML block's text, the underscore tags html() left as text become tags again. */
+export const underscoreTagText = (): ComarkPlugin => ({
+  name: "marked-to-comark:underscore-tag-text",
+  markdownItPost(state) {
+    const pattern = new RegExp(`(${UNDERSCORE_TAG.source.slice(1)})`, "g");
+    for (const block of state.tokens) {
+      const children = block.children;
+      if (block.type !== "inline" || !children || !fromHtmlBlock(block)) continue;
+      // SAFETY: Comark's tokens are instances of markdown-exit's Token class, which takes a type, a tag, and a nesting.
+      const Make = (children[0]?.constructor ?? block.constructor) as TokenClass;
+      block.children = children.flatMap((token) => {
+        if (token.type !== "text" || !/<\/?[A-Za-z][\w-]*_/.test(token.content)) return [token];
+        return token.content
+          .split(pattern)
+          .filter(Boolean)
+          .map((part) =>
+            Object.assign(new Make(UNDERSCORE_TAG.test(part) ? "html_inline" : "text", "", 0), {
+              content: part,
+            }),
+          );
+      });
+    }
+  },
+});

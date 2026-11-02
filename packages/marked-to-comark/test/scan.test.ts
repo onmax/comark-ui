@@ -143,14 +143,14 @@ export async function render(md: string) {
   it("gives headings ids for marked before v8, unless the setup turned them off", () => {
     const source = `import { marked } from "marked";\nexport const a = async (s: string) => marked(s);\n`;
     expect(rewriteSource(source, "a.ts", { version: "^4.2.0" }).code).toContain(
-      'comarkOptions({ headerIds: true, expandTabs: "leading" })',
+      'comarkOptions({ headerIds: true, underscoreTags: true, expandTabs: "leading" })',
     );
-    expect(rewriteSource(source, "a.ts", { version: "^15.0.0" }).code).toContain("comarkOptions()");
+    expect(rewriteSource(source, "a.ts", { version: "^18.0.0" }).code).toContain("comarkOptions()");
     expect(
       rewriteSource(source.replace("marked(s)", "marked(s, { headerIds: false })"), "a.ts", {
         version: "^4.2.0",
       }).code,
-    ).toContain('comarkOptions({ expandTabs: "leading" })');
+    ).toContain('comarkOptions({ underscoreTags: true, expandTabs: "leading" })');
   });
 
   it.each([
