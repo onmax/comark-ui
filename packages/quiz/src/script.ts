@@ -28,6 +28,8 @@ export type QuizReadyDetail = { ids: string[] };
 declare global {
   interface Window {
     __comarkQuiz?: { apply: (state: QuizState) => void; ids: () => string[] };
+    /** State a host has before the script starts, which the script applies when it does. */
+    __comarkQuizState?: QuizState;
   }
 }
 
@@ -699,4 +701,22 @@ export function script(config: ScriptConfig): void {
     apply,
     ids: () => all.flatMap((model) => (model.el.isConnected ? [model.id] : [])),
   };
+  // A host that loads before the blocks' script can't send it an event yet, so it leaves its state here.
+  if (window.__comarkQuizState) apply(window.__comarkQuizState);
+
+  // In a frame, `data-quiz-relay` on the root hands the events to the parent page and takes its state back, so the
+  // parent hosts the blocks with no script in the frame. Its value is the parent's origin, or `*` for any.
+  const origin = html.getAttribute("data-quiz-relay");
+  if (!origin || window.parent === window) return;
+  const up = (event: Event) => {
+    if (event instanceof CustomEvent)
+      window.parent.postMessage({ type: event.type, detail: event.detail }, origin);
+  };
+  document.addEventListener("comark-quiz:ready", up);
+  document.addEventListener("comark-quiz:answer", up);
+  addEventListener("message", (event) => {
+    if (event.source !== window.parent || (origin !== "*" && event.origin !== origin)) return;
+    const message = new Map(entries(event.data));
+    if (message.get("type") === "comark-quiz:state") apply(message.get("detail"));
+  });
 }

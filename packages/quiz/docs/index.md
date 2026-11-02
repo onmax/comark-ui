@@ -455,12 +455,38 @@ document.dispatchEvent(
 - **Results** show after a question's right answer or Show answer, and after a poll's vote. A poll with `multiple` counts percentages over voters, so send the number of voters as `total`.
 - **Voting** opens polls. With `open: false`, polls show their results and `notice`, and send no votes. Questions and recall cards still work.
 
+A host whose script runs before the blocks' can't send the event yet, since nothing listens. It sets `window.__comarkQuizState` instead, and the script applies that state when it starts:
+
+```html
+<script>
+  window.__comarkQuizState = { answers: { "event-loop-order": { choice: ["1x9k2ab"], correct: true } } };
+</script>
+```
+
+### In a frame
+
+When the lesson renders in an iframe and the host is the page around it, put `data-quiz-relay` on the lesson's `<html>`, with the host's origin as its value, or `*` for any. An absent or empty `data-quiz-relay` leaves the relay off. The script then posts `comark-quiz:ready` and `comark-quiz:answer` to the parent as `{ type, detail }`, and applies `{ type: "comark-quiz:state", detail }` messages from the parent:
+
+```html
+<html data-quiz-relay="https://app.example.com">
+```
+
+```ts
+addEventListener("message", (event) => {
+  if (event.origin !== lessonOrigin || event.data?.type !== "comark-quiz:ready") return;
+  event.source.postMessage({ type: "comark-quiz:state", detail: state }, lessonOrigin);
+});
+```
+
+A state the host sends before the frame's script starts is lost, so send it in reply to `comark-quiz:ready`, which the script posts once the blocks are in, and again for blocks added later. With an origin, the script posts only to a parent on it and ignores messages from any other.
+
 ### Functions
 
 | Function | Description |
 | --- | --- |
 | `window.__comarkQuiz.apply(state)` | Does what `comark-quiz:state` does, as a function call. |
 | `window.__comarkQuiz.ids()` | Lists the ids of the blocks on the page. |
+| `window.__comarkQuizState` | Not a function: state a host sets before the script starts, which it applies when it does. |
 
 ### Issues
 
