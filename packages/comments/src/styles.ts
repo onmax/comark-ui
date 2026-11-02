@@ -1,4 +1,4 @@
-import { theme } from "comark-zoom/theme";
+import { dark, theme } from "comark-zoom/theme";
 
 // A speech bubble in a grey that reads on light and dark pages. It's a background image because the bubble has to
 // stay a plain inline box: Chrome may break a line before any atomic inline, even right after a word joiner.
@@ -13,7 +13,7 @@ const pen = '.cr-sg[data-mark="pen"]';
 export const css = `@layer comark{${[
   theme(parts, "status", "shadow"),
   `:where(${parts}){--_cr-ins:var(--cr-ins,var(--_comark-success));--_cr-del:var(--cr-del,var(--_comark-danger));--_cr-comment:var(--cr-comment,#f5a524);--_cr-icon:var(--cr-icon,${icon})}`,
-  `@media (prefers-color-scheme:dark){:where(${parts}){--_cr-comment:var(--cr-comment,#fbbf24)}}`,
+  dark(`:where(${parts})`, "--_cr-comment:var(--cr-comment,#fbbf24)"),
   // What a screen reader says around a change, since <del> and <ins> alone are silent in most of them.
   ".cr-sg :is(del,ins)::before,.cr-sg :is(del,ins)::after{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}",
   '.cr-sg del::before{content:" [removed: "}.cr-sg ins::before{content:" [added: "}.cr-sg :is(del,ins)::after{content:"] "}',

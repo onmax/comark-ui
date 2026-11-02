@@ -25,9 +25,9 @@ The text reads the blocks' tokens, so it follows [Theming](/guide/theming/) with
 
 - On a [Nuxt UI](https://ui.nuxt.com) site, text, muted text, rules, and code backgrounds come from `--ui-text-highlighted`, `--ui-text-muted`, `--ui-border`, and `--ui-bg-elevated`, and a `.dark` class switches them.
 - On a [shadcn/ui](https://ui.shadcn.com) site, they come from `--foreground`, `--muted-foreground`, `--border`, and `--accent`.
-- With neither, they use shadcn's neutral theme and follow the system's light or dark mode.
+- With neither, they use shadcn's neutral theme and follow the system's light or dark mode. A `light` or `dark` class on `<html>`, or on any element around the document, pins one, as [Theming](/guide/theming/#pin-light-or-dark-mode) explains.
 
-Fonts come from Tailwind's `--font-sans` and `--font-mono`, which Nuxt UI and shadcn/ui both set. Code with a light and a dark Shiki theme switches with the page too.
+Fonts come from Tailwind's `--font-sans` and `--font-mono`, which Nuxt UI and shadcn/ui both set. On a site with neither, the text is the system's sans-serif; set `--comark-font` to use another. Code with a light and a dark Shiki theme switches with the page too.
 
 ## Change it
 
