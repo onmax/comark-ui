@@ -1,6 +1,6 @@
 {
   "name": "comark-icon",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "description": "Iconify icons in Markdown, as :icon{name=\"lucide:apple\"}, drawn as CSS in every renderer with no script. A shared resolver for other plugins' icons. A Comark plugin.",
   "keywords": [
     "comark",

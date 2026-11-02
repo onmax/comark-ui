@@ -1,6 +1,6 @@
 {
   "name": "comark-mathml",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "description": "LaTeX math typeset to MathML while parsing, so pages ship no math script, fonts, or stylesheet. A Comark plugin.",
   "keywords": [
     "comark",
