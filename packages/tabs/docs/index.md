@@ -371,7 +371,7 @@ Size icons in tabs with comark-icon's `--comark-icon-size`, as [its theming](/ic
 
 | Selector | Is |
 | --- | --- |
-| `.ct` | The block, with `data-tabs-code` when it's a code group and `data-tabs-sync` when it has a `sync` key |
+| `.ct` | The block, with `data-tabs-code` and comark-code's [`data-code-header`](/code/#your-own-header) when it's a code group, and `data-tabs-sync` when it has a `sync` key |
 | `.ct-list` | The strip |
 | `.ct-tab` | Each tab, with `aria-selected="true"` on the open one |
 | `.ct-panel` | Each panel, with `data-inactive` while it's closed |

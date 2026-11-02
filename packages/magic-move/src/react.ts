@@ -25,7 +25,7 @@ export function MagicMove({
     { value: id },
     createElement(
       "div",
-      { className: "cmv" },
+      { className: "cmv", "data-code-header": "" },
       createElement(
         "div",
         { className: "cmv-list", role: "tablist", "aria-label": title || undefined },

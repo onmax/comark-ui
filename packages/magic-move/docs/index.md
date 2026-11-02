@@ -239,7 +239,7 @@ Set these on `.cmv` or any ancestor, such as `:root`:
 
 | Selector | Is |
 | --- | --- |
-| `.cmv` | The block |
+| `.cmv` | The block, with comark-code's [`data-code-header`](/code/#your-own-header), so each step's buttons sit in the tabs' strip |
 | `.cmv-list` | The tabs, shown once the script runs |
 | `.cmv-tab` | A tab, with `aria-selected="true"` when its step is open |
 | `.cmv-stage` | The steps |

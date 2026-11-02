@@ -10,7 +10,9 @@ export const css = `@layer comark{${[
   ".cmv{margin:1.5rem 0}",
   // Without the script every step reads in turn under a caption with its label, and the tabs that couldn't switch
   // them hide.
-  ".cmv-list{display:none;gap:2px;padding:.375rem;overflow-x:auto;scrollbar-width:none;border-radius:var(--_comark-radius) var(--_comark-radius) 0 0}",
+  // comark-code puts each step's buttons at the header's right end, in room the strip leaves for Copy and Wrap.
+  ".cmv{--ck-header:calc(2.5rem - 1px)}",
+  ".cmv-list{display:none;gap:2px;padding:.375rem 3.75rem .375rem .375rem;overflow-x:auto;scrollbar-width:none;border-radius:var(--_comark-radius) var(--_comark-radius) 0 0}",
   ".cmv-list::-webkit-scrollbar{display:none}",
   ".cmv-list,.cmv-caption{background:var(--cmv-surface,color-mix(in srgb,var(--_comark-accent) 50%,transparent));box-shadow:inset 0 0 0 1px var(--_comark-border)}",
   "[data-magic-move-ready] .cmv-list{display:flex}",
@@ -26,14 +28,13 @@ export const css = `@layer comark{${[
   ".cmv-step:focus-visible{outline:2px solid var(--_comark-ring);outline-offset:2px}",
   ".cmv-stage{position:relative;display:grid;gap:var(--cmv-gap,1rem)}",
   "[data-magic-move-ready] .cmv-stage{margin-top:-1px}",
-  ".cmv-stage[data-moving]{overflow:clip}",
+  // The clip keeps the step's buttons, which sit in the header above the stage.
+  ".cmv-stage[data-moving]{clip-path:inset(calc(-1 * var(--ck-header)) 0 0)}",
   ".cmv-caption{margin-bottom:-1px;padding:.625rem 1rem;border-radius:var(--_comark-radius) var(--_comark-radius) 0 0;color:var(--_comark-muted);font:500 .8125rem/1.25rem var(--_comark-font)}",
-  // The tab already names the step, so comark-code's header leaves out the title it would repeat.
-  ".cmv .ck-title{display:none}",
   // Transforms skip inline boxes, so each piece the script cuts is an inline block.
   ".cmv-t{display:inline-block}",
   ".cmv-ghost{position:absolute;white-space:pre;pointer-events:none}",
-  "@media (pointer:coarse){.cmv-tab{padding-block:.5rem}}",
+  "@media (pointer:coarse){.cmv-tab{padding-block:.5rem}[data-magic-move-ready] .cmv{--ck-header:calc(3rem - 1px)}}",
 ].join("")}}${
   // The host styles its code blocks with plain rules, which beat any layered one. comark-code wraps each block in `.ck`.
   ".cmv-step>pre,.cmv-step>.ck,.cmv-step>.ck>pre{margin:0}.cmv-step>pre,.cmv-step>.ck>pre{border-radius:0 0 var(--_comark-radius) var(--_comark-radius)}"

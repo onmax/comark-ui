@@ -35,7 +35,7 @@ export const MagicMove = /* @__PURE__ */ defineComponent({
     onMounted(() => (stop = start(css)));
     onBeforeUnmount(() => stop?.());
     return () =>
-      h("div", { class: "cmv" }, [
+      h("div", { class: "cmv", "data-code-header": "" }, [
         h(
           "div",
           { class: "cmv-list", role: "tablist", "aria-label": props.title || undefined },

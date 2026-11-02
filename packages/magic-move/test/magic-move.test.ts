@@ -23,7 +23,7 @@ describe("comark-magic-move", () => {
     const html = await markup(steps);
     const [, id] = /id="([^"]+)-tab-1"/.exec(html) ?? [];
     expect(html).toContain(
-      '<div class="cmv"><div class="cmv-list" role="tablist" aria-label="Refactor">' +
+      '<div class="cmv" data-code-header><div class="cmv-list" role="tablist" aria-label="Refactor">' +
         `<button type="button" class="cmv-tab" role="tab" id="${id}-tab-1" aria-controls="${id}-panel-1" aria-selected="true" tabindex="0">Start</button>` +
         `<button type="button" class="cmv-tab" role="tab" id="${id}-tab-2" aria-controls="${id}-panel-2" aria-selected="false" tabindex="-1">Extract</button></div>`,
     );

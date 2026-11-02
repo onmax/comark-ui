@@ -2,6 +2,7 @@ import { createHtmlRenderer } from "@comark/html";
 import { expect, type Page, test } from "@playwright/test";
 import { onCodeAction } from "../packages/code/src/client.ts";
 import code, { components } from "../packages/code/src/html.ts";
+import magicMove, { components as magicMoveComponents } from "../packages/magic-move/src/html.ts";
 import tabs, { components as tabsComponents } from "../packages/tabs/src/html.ts";
 
 const render = createHtmlRenderer({
@@ -273,26 +274,34 @@ test("a numbered line wraps under its own code", async ({ page }) => {
   expect(padding).toBeGreaterThan(0);
 });
 
-test("a block in a code group still hangs from the group's header", async ({ page }) => {
-  const html = await createHtmlRenderer({
-    plugins: [code(), tabs()],
-    components: { ...tabsComponents, ...components },
-  })("::code-group\n```sh [pnpm]\npnpm add x\n```\n\n```sh [npm]\nnpm i x\n```\n::");
-  await page.goto("/no-such-page");
-  await page.setContent(
-    `<!doctype html><html><body style="width:30rem;margin:2rem"><style>pre{margin:1.25rem 0;padding:1rem;border-radius:8px}</style>${html}</body></html>`,
-  );
-  const [header, pre] = await Promise.all(
-    [".ct-list", ".ct-panel:not([data-inactive]) pre"].map((selector) =>
-      page.locator(selector).evaluate((element) => element.getBoundingClientRect()),
-    ),
-  );
-  expect(Math.abs(pre.top - (header.bottom - 1))).toBeLessThan(1);
-  await expect(page.locator(".ct-panel:not([data-inactive]) pre")).toHaveCSS(
-    "border-top-left-radius",
-    "0px",
-  );
-});
+for (const [name, markdown] of [
+  ["a code group", "::code-group\n```sh [pnpm]\npnpm add x\n```\n\n```sh [npm]\nnpm i x\n```\n::"],
+  ["a magic move", "::magic-move\n```sh [pnpm]\npnpm add x\n```\n\n```sh [npm]\nnpm i x\n```\n::"],
+] as const)
+  test(`in ${name}, the block hangs from the header, which holds its buttons`, async ({ page }) => {
+    const html = await createHtmlRenderer({
+      plugins: [code(), tabs(), magicMove()],
+      components: { ...tabsComponents, ...magicMoveComponents, ...components },
+    })(markdown);
+    await page.goto("/no-such-page");
+    await page.setContent(
+      `<!doctype html><html><body style="width:30rem;margin:2rem"><style>pre{margin:1.25rem 0;padding:1rem;border-radius:8px}</style>${html}</body></html>`,
+    );
+    const shown = ":is(.ct-panel,.cmv-step):not([data-inactive])";
+    const [header, pre, line, copy] = await Promise.all(
+      ["[role=tablist]", `${shown} pre`, `${shown} code`, `${shown} .ck-copy`].map((selector) =>
+        page.locator(selector).evaluate((element) => element.getBoundingClientRect()),
+      ),
+    );
+    expect(Math.abs(pre.top - (header.bottom - 1))).toBeLessThan(1);
+    await expect(page.locator(`${shown} pre`)).toHaveCSS("border-top-left-radius", "0px");
+    // The code starts at the host's own padding: the block makes no room for a header of its own.
+    expect(Math.abs(line.top - pre.top - 16)).toBeLessThan(1);
+    await expect(page.locator(`${shown} .ck-copy`)).toBeVisible();
+    expect(Math.abs(copy.top + copy.height / 2 - (header.top + header.height / 2))).toBeLessThan(1);
+    expect(header.right - copy.right).toBeLessThan(8);
+    await expect(page.locator(`${shown} .ck-title`)).toBeHidden();
+  });
 
 test.describe("touch targets", () => {
   test.use({ hasTouch: true });

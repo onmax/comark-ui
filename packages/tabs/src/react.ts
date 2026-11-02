@@ -30,6 +30,7 @@ export function Tabs({ labels = [], icons = [], sync, code, children }: TabsProp
       {
         className: "ct",
         "data-tabs-code": code ? "" : undefined,
+        "data-code-header": code ? "" : undefined,
         "data-tabs-sync": sync || undefined,
       },
       createElement(
