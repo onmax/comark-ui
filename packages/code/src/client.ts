@@ -99,6 +99,7 @@ export function start(css: string): () => void {
   }
   const observed = new Set<Element>();
   const defaults = new WeakMap<Element, boolean>();
+  const headers = new Set<HTMLElement>();
   let frame = 0;
   const refresh = () => {
     frame = 0;
@@ -130,15 +131,41 @@ export function start(css: string): () => void {
       root.toggleAttribute("data-code-wrap", enabled);
       button.setAttribute("aria-pressed", String(enabled));
     });
+    const widths = new Map<HTMLElement, number>();
+    for (const { root } of blocks) {
+      const header = root.closest<HTMLElement>("[data-code-header]");
+      const bar = root.querySelector<HTMLElement>(":scope>.ck-bar");
+      if (!header || !bar) continue;
+      // Keep feedback outside a controls scroller so it can still appear below the header.
+      const status = bar.querySelector(":scope>.ck-status");
+      if (status) root.append(status);
+      if (!observed.has(bar)) {
+        resize.observe(bar);
+        observed.add(bar);
+      }
+      // Hidden steps measure zero; the active step determines the space its controls need.
+      const width = Math.ceil(bar.getBoundingClientRect().width);
+      widths.set(header, Math.max(widths.get(header) ?? 0, width));
+    }
+    for (const header of headers)
+      if (!widths.has(header)) {
+        header.style.removeProperty("--ck-controls");
+        headers.delete(header);
+      }
+    for (const [header, width] of widths) {
+      header.style.setProperty("--ck-controls", `${width}px`);
+      headers.add(header);
+    }
   };
   const schedule = () => {
     if (!frame) frame = requestAnimationFrame(refresh);
   };
   const resize = new ResizeObserver(schedule);
   const mutations = new MutationObserver((records) => {
-    const affectsCode = records.some(({ target, addedNodes, removedNodes }) => {
+    const affectsCode = records.some(({ type, target, addedNodes, removedNodes }) => {
       const element = target instanceof Element ? target : target.parentElement;
       if (element?.closest(".ck")) return true;
+      if (type === "attributes" && element?.querySelector(".ck")) return true;
       return [...addedNodes, ...removedNodes].some(
         (node) => node instanceof Element && (node.matches(".ck") || node.querySelector(".ck")),
       );
@@ -149,6 +176,8 @@ export function start(css: string): () => void {
     childList: true,
     subtree: true,
     characterData: true,
+    attributes: true,
+    attributeFilter: ["data-inactive"],
   });
   document.fonts.addEventListener("loadingdone", schedule, { signal });
   window.addEventListener(
@@ -164,7 +193,7 @@ export function start(css: string): () => void {
 
   const say = (root: Element, message: string, state: "done" | "failed") => {
     const button = root.querySelector(":scope>.ck-bar>.ck-copy");
-    const status = root.querySelector(":scope>.ck-bar>.ck-status");
+    const status = root.querySelector(":scope>.ck-bar>.ck-status,:scope>.ck-status");
     if (!button || !status) return;
     button.setAttribute("data-state", state);
     status.textContent = message;
@@ -252,6 +281,7 @@ export function start(css: string): () => void {
       cancelAnimationFrame(frame);
       resize.disconnect();
       mutations.disconnect();
+      for (const header of headers) header.style.removeProperty("--ck-controls");
       style?.remove();
       document.documentElement.removeAttribute("data-code-ready");
       window.__comarkCode = undefined;

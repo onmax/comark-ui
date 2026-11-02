@@ -43,6 +43,7 @@ export const Tabs = /* @__PURE__ */ defineComponent({
         {
           class: "ct",
           "data-tabs-code": props.code ? "" : undefined,
+          "data-code-header": props.code ? "" : undefined,
           "data-tabs-sync": props.sync || undefined,
         },
         [

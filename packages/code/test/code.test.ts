@@ -60,7 +60,7 @@ describe("comark-code", () => {
   it("inlines styles a site can theme with --ck-* variables, with today's look as the fallback", async () => {
     const style = /<style data-comark-code>(.*?)<\/style>/s.exec(await render(sh))?.[1];
     expect(style).toContain(
-      "div.ck>pre{padding-top:calc(var(--_ck-size) + var(--_ck-inset) + .75rem)}",
+      "div.ck:not([data-code-header] .ck)>pre{padding-top:calc(var(--_ck-size) + var(--_ck-inset) + .75rem)}",
     );
     expect(style).toContain("height:var(--_ck-bar)");
     expect(style).toContain(
@@ -136,7 +136,7 @@ describe("comark-code", () => {
         plugins,
         components: { ...tabsComponents, ...components },
       })(group);
-      expect(html).toContain('<div class="ct" data-tabs-code>');
+      expect(html).toContain('<div class="ct" data-tabs-code data-code-header>');
       expect(
         html.match(/<div class="ck" data-code-frame="terminal"><pre data-language="sh">/g),
       ).toHaveLength(2);
@@ -246,7 +246,7 @@ describe("comark-code lines", () => {
   it("draws a terminal's header as a line, with no window dots", async () => {
     const style = /<style data-comark-code>(.*?)<\/style>/s.exec(await render(sh))?.[1];
     expect(style).toContain(
-      ".ck[data-code-frame=terminal]:not([data-tabs-code] .ck)>.ck-bar{border-bottom:1px solid var(--_comark-border)}",
+      ".ck:not([data-code-header] .ck)[data-code-frame=terminal]>.ck-bar{border-bottom:1px solid var(--_comark-border)}",
     );
     expect(style).not.toContain(".ck-bar::before");
     expect(style).not.toMatch(/data-code-frame=terminal[^{]*\.ck-title\{/);

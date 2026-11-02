@@ -411,6 +411,16 @@ Set these on `.ck` or any ancestor, such as `:root`:
 
 The three colors lighten in dark mode with the shared status tokens.
 
+### Your own header
+
+A block that draws a header above its code blocks, like a [code group](/tabs/#code-group) or a [magic move](/magic-move/), puts `data-code-header` on its root and sets `--ck-header` to how far its header's top sits above the code block's top. Each code block inside then makes no room for a header of its own, hides its title, and puts its buttons at the right end of your header, centered in it. The code script sets `--ck-controls` on your root to the active blocks' controls width, including configured actions. Reserve `var(--ck-controls, 3.75rem)` outside your header's scrolling content. Controls use at most 60% of the block's width and scroll independently when they need more room.
+
+```css
+.my-group {
+  --ck-header: 2.5rem;
+}
+```
+
 The block's `padding-top` is the button size, plus the inset above the buttons, plus `0.75rem`, so the code starts that far below the header. A marked line's tint runs edge to edge, past the block's padding, so the block clips its overflow. The line's sign sits in the left padding, which needs to be at least `1.5ch` wide. On a numbered block, it sits between the number and the code.
 
 ### Classes and attributes
@@ -419,7 +429,7 @@ The block's `padding-top` is the button size, plus the inset above the buttons, 
 | --- | --- |
 | `.ck` | The wrapper around each block, with `data-code-wrap` while Wrap is on |
 | `.ck-bar` | The header above the code: the title, then the buttons |
-| `.ck-title` | The file's name, or else the language; hidden inside a code group, whose tab names the block |
+| `.ck-title` | The file's name, or else the language; hidden under [your own header](#your-own-header), which names the block |
 | `.ck-action` | Each of your [actions](#run-code-from-a-button), with its id in `data-code-action`, and `aria-label` when it shows only an icon |
 | `.ck-wrap` | Wrap, with `aria-pressed="true"` while it's on |
 | `.ck-copy` | Copy, with `data-state="done"` or `data-state="failed"` for a moment after a click |
@@ -430,6 +440,7 @@ The block's `padding-top` is the button size, plus the inset above the buttons, 
 | `.ck-ins`, `.ck-del`, `.ck-mark` | Lines the fence marks with `ins`, `del`, and `mark`. A line Comark's `{2}` highlights has `.highlight`, and Shiki's transformers' `.diff.add`, `.diff.remove`, `.highlighted`, `.focused`, `.error`, and `.warning` look the same as the matching marker |
 | `.ck-fold` | A collapsed range, a `<details>` whose `<summary>` counts its lines |
 | `[data-code-ready]` | On `<html>` once the script runs; the buttons hide until then, and the title doesn't |
+| `[data-code-header]` | On a container that draws the header for the code blocks inside it |
 
 ### Example
 

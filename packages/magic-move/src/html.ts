@@ -48,7 +48,7 @@ const magicMove: NodeHandler = async ([, attrs, ...children], state) => {
     tab(id, label, at + 1),
   );
   return (
-    `<div class="cmv"><div class="cmv-list" role="tablist"${name ? ` aria-label="${attr(name)}"` : ""}>${tabs.join("")}</div>` +
+    `<div class="cmv" data-code-header><div class="cmv-list" role="tablist"${name ? ` aria-label="${attr(name)}"` : ""}>${tabs.join("")}</div>` +
     `<div class="cmv-stage">${await state.flow(["div", {}, ...children], state)}</div></div>${runtime(state)}`
   );
 };

@@ -1,13 +1,16 @@
 import { existsSync } from "node:fs";
 import comark from "comark-linter/doctor";
 import { defineDoctorConfig } from "vite-doctor/config";
+import parts from "./doctor/parts.ts";
 
 const repo = new URL("./", import.meta.url);
 
-// The packages run their own Doctor configs; this one only lints the docs pages and the agent skill with comark-linter.
+// The packages run their own Doctor configs; this one lints the docs pages and the agent skill with comark-linter, and
+// checks across packages with the repository's own Rules.
 export default defineDoctorConfig({
-  extends: ["comark/recommended"],
+  extends: ["comark/recommended", "comark-plugins/recommended"],
   extensions: [
+    parts,
     comark({
       include: "{docs/pages,packages/*/docs}/**/*.md",
       // docs/build.ts renders these itself.

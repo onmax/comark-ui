@@ -11,7 +11,7 @@
   onMount(() => start(css));
 </script>
 
-<div class="ct" data-tabs-code={code ? "" : undefined} data-tabs-sync={sync || undefined}>
+<div class="ct" data-tabs-code={code ? "" : undefined} data-code-header={code ? "" : undefined} data-tabs-sync={sync || undefined}>
   <div class="ct-list" role="tablist">
     {#each labels as label, at}
       <button

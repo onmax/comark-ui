@@ -71,7 +71,7 @@ describe("comark-tabs", () => {
 
   it("turns a code group into tabs labelled by each block's filename", async () => {
     const html = await markup(pm);
-    expect(html).toContain('<div class="ct" data-tabs-code data-tabs-sync="pm">');
+    expect(html).toContain('<div class="ct" data-tabs-code data-code-header data-tabs-sync="pm">');
     expect(html).toContain('aria-selected="true" tabindex="0">pnpm</button>');
     expect(html).toContain('aria-selected="false" tabindex="-1">npm</button>');
     expect(html).toContain('<div class="ct-caption">npm</div><pre data-language="bash">');
@@ -189,7 +189,9 @@ describe("comark-tabs", () => {
     it("turns a code block into a code group with a tab per package manager, synced with `pm`", async () => {
       const markdown = "```sh pm\nnpm i -D vitest\ncd my-npm-app && npm run dev\n```";
       const html = await markup(markdown);
-      expect(html).toContain('<div class="ct" data-tabs-code data-tabs-sync="pm">');
+      expect(html).toContain(
+        '<div class="ct" data-tabs-code data-code-header data-tabs-sync="pm">',
+      );
       expect(
         [...html.matchAll(/role="tab"[^>]*>([^<]+)<\/button>/g)].map(([, label]) => label),
       ).toEqual(["npm", "pnpm", "yarn", "bun"]);

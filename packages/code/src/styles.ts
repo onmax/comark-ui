@@ -7,14 +7,19 @@ const chevrons = `url("data:image/svg+xml,${encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg>',
 )}")`;
 const lines = ".ck[data-code-lines]";
-// In a comark-tabs code group the tab names the block, so a terminal there draws no line under its header.
-const terminal = ".ck[data-code-frame=terminal]:not([data-tabs-code] .ck)";
+// A container with `data-code-header` draws the block's header itself, as comark-tabs' code groups and magic move do.
+const own = ".ck:not([data-code-header] .ck)";
+const terminal = `${own}[data-code-frame=terminal]`;
 
 /**
  * The header's styles, on the shared `--comark-*` tokens, with `--ck-inset` and `--ck-button-size` for how far the
  * buttons sit from the block's top right corner and how big they are, and `--ck-title-font` for the title. The script adds them to the page once. The rules sit in the
  * `comark` layer, so any unlayered rule of the host's wins, except the two after it that make room for the header and
  * wrap the lines.
+ *
+ * A container that draws a header above its code blocks puts `data-code-header` on its root and sets `--ck-header` to
+ * how far the header's top sits above the block's. Its blocks then make no room of their own, and their buttons sit at
+ * the header's right end.
  */
 export const css = `${icons}@layer comark{${[
   disclosureMotion(".ck[data-code-lines] .ck-fold"),
@@ -28,6 +33,12 @@ export const css = `${icons}@layer comark{${[
   ".ck-bar{position:absolute;inset:0 0 auto;display:flex;align-items:center;justify-content:flex-end;gap:.125rem;height:var(--_ck-bar);padding:var(--_ck-inset) var(--_ck-inset) 0 .75rem;box-sizing:border-box;user-select:none}",
   // In a flex or grid item the block's margins stay inside the wrapper, so the header pins itself to the block itself.
   "@supports (anchor-scope:all){.ck{anchor-scope:--ck-pre}.ck>pre{anchor-name:--ck-pre}.ck-bar{position-anchor:--ck-pre;top:anchor(top);left:anchor(left);right:anchor(right)}}",
+  // The container's header already names the block.
+  "[data-code-header] .ck-title{display:none}",
+  // Very wide action sets scroll independently, leaving some of the header available to its tabs.
+  "[data-code-header] .ck>.ck-bar{top:auto;bottom:100%;left:auto;width:max-content;max-width:60%;height:var(--ck-header);padding-top:0;justify-content:flex-start;overflow-x:auto;scrollbar-width:none}",
+  "[data-code-header] .ck-bar>button{flex-shrink:0;white-space:nowrap}",
+  "[data-code-header] .ck-bar::-webkit-scrollbar{display:none}",
   ".ck-title{min-width:0;margin-right:auto;overflow:hidden;color:color-mix(in srgb,var(--_comark-foreground) 72%,transparent);font:.6875rem/1.5 var(--ck-title-font,ui-monospace,SFMono-Regular,Menlo,monospace);text-overflow:ellipsis;white-space:nowrap}",
   ".ck-bar>button{display:inline-flex;align-items:center;justify-content:center;gap:.25rem;min-width:var(--_ck-size);height:var(--_ck-size);margin:0;padding:0;border:1px solid transparent;border-radius:calc(var(--_comark-radius) - 2px);background:transparent;color:var(--_comark-muted);font:500 .75rem/1 var(--_comark-font);position:relative;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:background-color .15s ease,color .15s ease;visibility:hidden}",
   "[data-code-ready] .ck-bar>button{visibility:visible}",
@@ -45,6 +56,7 @@ export const css = `${icons}@layer comark{${[
   ".ck-copy[data-state=done] .ck-copy-done{display:block}",
   ".ck-status{position:absolute;top:calc(100% + .25rem);right:var(--_ck-inset);z-index:1;width:max-content;max-width:18rem;padding:.25rem .5rem;border-radius:calc(var(--_comark-radius) - 4px);background:var(--_comark-foreground);color:var(--_comark-background);font:.75rem/1.25rem var(--_comark-font);pointer-events:none}",
   ".ck-status:empty{display:none}",
+  "[data-code-header] .ck>.ck-status{top:.25rem}",
   // Expand touch targets vertically only, so adjacent buttons cannot steal each other's taps.
   "@media (pointer:coarse){.ck-bar>button::after{content:'';position:absolute;top:50%;left:50%;width:100%;height:max(100%,2.75rem);translate:-50% -50%}}",
   // A terminal block keeps a line under its header.
@@ -89,7 +101,7 @@ export const css = `${icons}@layer comark{${[
   // Pages set a code block's padding, overflow, and `white-space` with plain rules, which beat any layered one. A tinted
   // line reaches past the block, which must clip it.
   // Like T3 Code's, the header has no inset under its buttons, and the code starts a block padding below it.
-  "div.ck>pre{padding-top:calc(var(--_ck-size) + var(--_ck-inset) + .75rem)}" +
+  `div${own}>pre{padding-top:calc(var(--_ck-size) + var(--_ck-inset) + .75rem)}` +
   `div${terminal}>pre{padding-top:calc(var(--_ck-bar) + .625rem)}` +
   "div.ck[data-code-lines]>pre{overflow-x:auto}" +
   ".ck[data-code-wrap]>pre,.ck[data-code-wrap]>pre>code{white-space:pre-wrap;overflow-wrap:anywhere}"
