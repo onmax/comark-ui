@@ -189,7 +189,8 @@ export function migrateContent(original: string, options: ContentOptions = {}): 
     // `lexer()` takes the options as given, without the defaults `parse()` merges in.
     tokens = marked.lexer(body, { ...marked.defaults, ...options.options });
   } catch {
-    return { markdown: original, changes: [], skipped: [] };
+    // A syntax extension that throws leaves the whole file as written, reported like a block no edit could keep.
+    return { markdown: original, changes: [], skipped: [1] };
   }
 
   // Edits per top-level block, so one block marked reads differently after its edits can be dropped alone.

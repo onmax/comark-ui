@@ -254,13 +254,24 @@ export async function contentSetup(
   const empty = { options: {}, extensions: [], alerts: false, emoji: false, missing: [] };
   const unresolved = setups.find((setup) => setup.unresolved)?.unresolved;
   if (unresolved) return { ...empty, reason: unresolved };
+  // An extension's options change its syntax (`katex({ nonStandard: true })`), and the check can't apply them safely.
+  const configured = setups
+    .flatMap((setup) => setup.plugins)
+    .find(
+      (plugin) => plugin.type === "extension" && SYNTAX.test(plugin.name) && plugin.options?.trim(),
+    );
+  if (configured)
+    return {
+      ...empty,
+      reason: `The options for ${configured.name} (line ${configured.line}) change what it parses, and can't be applied to the content check safely. Migrate this document by hand with that extension's settings.`,
+    };
   const tokenizer = setups
     .flatMap((setup) => setup.plugins)
     .find((plugin) => plugin.type === "override" && /^(tokenizer|extensions)$/.test(plugin.name));
   if (tokenizer)
     return {
       ...empty,
-      reason: `The project's own marked ${tokenizer.name === "tokenizer" ? "tokenizer" : "extensions"} (line ${tokenizer.line}) change what marked reads as text, and the check can't run them.`,
+      reason: `The project's own marked ${tokenizer.name === "tokenizer" ? "tokenizer" : "extensions"} (line ${tokenizer.line}) ${tokenizer.name === "tokenizer" ? "changes" : "change"} what marked reads as text, and the check can't run ${tokenizer.name === "tokenizer" ? "it" : "them"}.`,
     };
   const profiles = setups.map((setup): Profile | undefined => {
     const options: MarkedOptions = {};

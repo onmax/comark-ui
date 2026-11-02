@@ -30,6 +30,33 @@ describe("comarkOptions reads Markdown like marked", () => {
   });
 });
 
+describe("version settings", () => {
+  it("splits tables as marked 0.3 did, whatever the delimiter row's width", async () => {
+    const setup = comarkSetup({ legacyTables: true });
+    for (const markdown of [
+      "a | b\n--- | --- | ---\nx | y\n",
+      "| a | b |\n| --- | --- |\n| x | p \\| q |\n",
+      "    a | b\n    - | -\n",
+    ])
+      await expect(comarkHtml(markdown, setup)).resolves.toBeTruthy();
+    expect(await comarkHtml("| a | b |\n| --- | --- |\n| x | p \\| q |\n", setup)).toContain(
+      "<td>p \\</td><td>q</td>",
+    );
+    expect(await comarkHtml("    a | b\n    - | -\n", setup)).toContain("<pre>");
+  });
+
+  it("numbers empty headings among marked's heading ids", async () => {
+    expect(
+      await comarkHtml("##\n\n## !!!\n", comarkSetup({ headerIds: true, headerPrefix: "doc-" })),
+    ).toBe('<h2 id="doc-"></h2><h2 id="doc--1">!!!</h2>');
+  });
+
+  it("links only emails written as emails", async () => {
+    const html = await comarkHtml("a&#64;b.co, a\\@b.co, and a@b.co\n", comarkSetup());
+    expect(html.match(/mailto:/g)).toHaveLength(1);
+  });
+});
+
 describe("streaming", () => {
   // A chat reply arrives a few tokens at a time. marked shows an unfinished `**bold` as asterisks until the closing
   // pair arrives; Comark with autoClose draws it bold at every step.

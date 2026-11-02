@@ -39,6 +39,31 @@ describe("migrateContent", () => {
     expect(result.markdown).toBe(markdown);
   });
 
+  it("leaves TOML frontmatter as written", async () => {
+    expect((await migrated('+++\ntitle = "{x}"\n+++\n\nText {y}\n')).markdown).toBe(
+      '+++\ntitle = "{x}"\n+++\n\nText \\{y}\n',
+    );
+  });
+
+  it("reports a file whose extension throws instead of passing it as unchanged", () => {
+    const failing = {
+      extensions: [
+        {
+          tokenizer: {
+            paragraph: () => {
+              throw new Error("boom");
+            },
+          },
+        },
+      ],
+    };
+    expect(migrateContent("{x}\n", failing)).toEqual({
+      markdown: "{x}\n",
+      changes: [],
+      skipped: [1],
+    });
+  });
+
   it("escapes text between inline tags, which both read as Markdown", async () => {
     expect((await migrated("a <b>{x}</b>\n")).markdown).toBe("a <b>\\{x}</b>\n");
   });

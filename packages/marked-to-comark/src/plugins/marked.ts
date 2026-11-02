@@ -220,6 +220,7 @@ export const langPrefix = (prefix: string): ComarkPlugin => ({
         const code = node[2];
         if (
           node[0] === "pre" &&
+          !node[1].$?.html &&
           Array.isArray(code) &&
           code[0] === "code" &&
           isString(code[1].class)
@@ -242,8 +243,21 @@ const EMAIL = /[A-Za-z0-9._+-]+@[a-zA-Z0-9-_]+(?:\.[a-zA-Z0-9-_]*[a-zA-Z0-9])+(?
  */
 export const markedEmails = (): ComarkPlugin => ({
   name: "marked-to-comark:emails",
-  markdownItPost(state) {
-    for (const block of state.tokens) {
+  // Before text_join: an entity or an escape (`a&#64;b.co`, `a\\@b.co`) is still a token of its own there, so an
+  // address written with one never matches, as in marked.
+  markdownItPlugins: [
+    ((md) => {
+      md.core.ruler.before("text_join", "marked_emails", (state) => {
+        emails(state.tokens);
+        return true;
+      });
+    }) satisfies MarkdownExitPlugin,
+  ],
+});
+
+function emails(tokens: Token[]) {
+  {
+    for (const block of tokens) {
       if (block.type !== "inline" || !block.children || fromHtmlBlock(block)) continue;
       // SAFETY: Comark's tokens are instances of markdown-exit's Token class, which takes a type, a tag, and a nesting.
       const Make = (block.children[0]?.constructor ?? block.constructor) as TokenClass;
@@ -303,8 +317,8 @@ export const markedEmails = (): ComarkPlugin => ({
       }
       block.children = out;
     }
-  },
-});
+  }
+}
 
 /**
  * An HTML block may be indented up to three spaces; Comark reads the indent as text and wraps the block in a `<p>`.
@@ -422,15 +436,29 @@ export const linkText = (): ComarkPlugin => ({
   },
 });
 
-/** A browser reads a stray `</br>` as `<br>`, as the HTML parser specifies; Comark drops it as a closing tag. */
+/**
+ * A browser reads a stray `</br>` as `<br>`, as the HTML parser specifies; Comark drops it as a closing tag. Inside
+ * raw text (`<script>`, `<style>`, `<textarea>`, `<pre>`) it's text, and stays.
+ */
 export const breakEndTags = (): ComarkPlugin => ({
   name: "marked-to-comark:break-end-tags",
   markdownItPost(state) {
+    const RAW = /(<(script|style|textarea|pre|xmp)\b[\s\S]*?<\/\2\s*>)/i;
     for (const token of state.tokens) {
-      if (token.type === "html_block") token.content = token.content.replace(/<\/br\s*>/gi, "<br>");
-      for (const child of token.children ?? [])
-        if (child.type === "html_inline" && /^<\/br\s*>$/i.test(child.content))
-          child.content = "<br>";
+      if (token.type === "html_block")
+        token.content = token.content
+          .split(RAW)
+          .map((part, index) =>
+            index % 3 === 0 ? part.replace(/<\/br\s*>/gi, "<br>") : index % 3 === 1 ? part : "",
+          )
+          .join("");
+      let raw = false;
+      for (const child of token.children ?? []) {
+        if (child.type !== "html_inline") continue;
+        if (/^<(script|style|textarea|pre|xmp)[\s>]/i.test(child.content)) raw = true;
+        else if (/^<\/(script|style|textarea|pre|xmp)\s*>/i.test(child.content)) raw = false;
+        else if (!raw && /^<\/br\s*>$/i.test(child.content)) child.content = "<br>";
+      }
     }
   },
 });
@@ -453,12 +481,24 @@ export const emptyHeadings = (): ComarkPlugin => ({
         continue;
       // SAFETY: Comark's tokens are instances of markdown-exit's Token class, which takes a type, a tag, and a nesting.
       const block = new (open.constructor as TokenClass)("html_block", "", 0);
-      block.content = `<${open.tag}></${open.tag}>\n`;
+      block.content = `<${open.tag} ${EMPTY}></${open.tag}>\n`;
       block.map = open.map;
       tokens.splice(index, 3, block);
     }
   },
+  post(state) {
+    // Back to a Markdown heading, so heading ids number it as marked did.
+    const visit = (nodes: Node[]) => {
+      for (const node of nodes) {
+        if (!Array.isArray(node) || node[0] === null) continue;
+        if (node[1][EMPTY] !== undefined) node[1] = {};
+        visit(childrenOf(node));
+      }
+    };
+    visit(state.tree.nodes);
+  },
 });
+const EMPTY = "data-marked-to-comark-empty";
 
 /**
  * marked before v14 rewrote tabs before parsing: before v4 every tab became four spaces, from v4 only a line's leading
@@ -567,6 +607,7 @@ export const legacyTables = (): ComarkPlugin => ({
       if (marker && (!fence || marker.startsWith(fence))) fence = fence ? undefined : marker;
       if (
         fence ||
+        /^ {4}/.test(line) ||
         !line.includes("|") ||
         !DELIMITER.test(lines[index + 1]!) ||
         !lines[index + 1]!.includes("-")
@@ -587,7 +628,8 @@ export const legacyTables = (): ComarkPlugin => ({
       const width = Math.max(...rows.map((row) => row.length));
       const write = (row: string[]) =>
         `| ${[...row.map((cell) => cell.replace(/\\$/, "\\\\")), ...Array<string>(width - row.length).fill(PAD)].join(" | ")} |`;
-      const delimiter = cells(lines[index + 1]!);
+      // The delimiter row follows the table's width, longer or shorter, as marked 0.3 ignores its extra cells.
+      const delimiter = cells(lines[index + 1]!).slice(0, width);
       lines[index] = write(rows[0]!);
       lines[index + 1] =
         `| ${[...delimiter, ...Array<string>(width - delimiter.length).fill("---")].join(" | ")} |`;

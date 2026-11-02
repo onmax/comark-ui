@@ -89,7 +89,8 @@ export function comarkSetup(options: SetupOptions = {}): ComarkSetup {
       ...(options.expandTabs ? [expandTabs(options.expandTabs)] : []),
       ...(options.legacyTables ? [legacyTables()] : []),
       // Before the HTML workarounds, which turn soft breaks into text.
-      ...(options.breaks ? [breaks()] : []),
+      // marked reads `breaks` only with GFM on.
+      ...(options.breaks && gfm ? [breaks()] : []),
       ...(options.html === false
         ? [dropHtml()]
         : // CommonMark HTML blocks are raw until a blank line; Comark otherwise reads Markdown inside them.
