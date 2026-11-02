@@ -157,6 +157,21 @@ describe("the CLI", () => {
     );
   });
 
+  it("writes every edit check reports, in dot folders too", async () => {
+    const root = project({
+      "package.json": "{}",
+      ".github/PULL_REQUEST_TEMPLATE.md": "Set [value] first.\n",
+    });
+    const edited = (await check(root))
+      .filter((finding) => finding.edit)
+      .map((finding) => finding.file);
+    expect(edited).toEqual([".github/PULL_REQUEST_TEMPLATE.md"]);
+    expect(cli(root, "content", "--write").status).toBe(0);
+    expect(readFileSync(join(root, ".github/PULL_REQUEST_TEMPLATE.md"), "utf8")).toBe(
+      "Set \\[value\\] first.\n",
+    );
+  });
+
   it("escapes content with the site's syntax in mind, and only with --write", () => {
     const root = fixture();
     expect(cli(root, "content", "docs/**/*.md").stdout).toContain(

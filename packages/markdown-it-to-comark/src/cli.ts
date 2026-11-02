@@ -62,6 +62,8 @@ if (command === "check") {
   const files = await glob(["**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx,vue,svelte}"], {
     cwd: root,
     ignore: [...IGNORE, "**/*.d.ts"],
+    // check() reads dot folders too (.vitepress, .github), so every edit it reports is one --write makes.
+    dot: true,
   });
   for (const path of files.sort()) {
     const file = join(root, path);
@@ -86,7 +88,11 @@ if (command === "check") {
   );
 } else if (command === "content") {
   const matched = (
-    await glob(rest.length ? rest : ["**/*.{md,markdown}"], { ignore: IGNORE, absolute: true })
+    await glob(rest.length ? rest : ["**/*.{md,markdown}"], {
+      ignore: IGNORE,
+      absolute: true,
+      dot: true,
+    })
   ).sort();
   // The project's setups decide what's text, wherever content runs from.
   const root = projectRoot(process.cwd());
