@@ -31,6 +31,8 @@ export interface Change {
   migrator: string;
   source: string;
   edit: NonNullable<Finding["edit"]>;
+  /** A setup rewrite waits for these content files to be written by the same migrator. */
+  requires?: string[];
 }
 
 export interface Plan {
@@ -78,6 +80,11 @@ export async function plan(
       (finding) =>
         finding.code.endsWith("0303") || (finding.code.endsWith("0302") && !finding.edit),
     );
+    const contentFiles = [
+      ...new Set(
+        findings?.filter((finding) => finding.code.endsWith("0302")).map((finding) => finding.file),
+      ),
+    ];
     for (const finding of findings ?? []) {
       if (!finding.edit) continue;
       if (unresolvedContent && finding.code.endsWith("0202")) continue;
@@ -94,6 +101,7 @@ export async function plan(
         migrator: detection.migrator,
         source: finding.edit.source,
         edit: finding.edit,
+        requires: finding.code.endsWith("0202") ? contentFiles : undefined,
       });
       wanted.set(finding.file, changes);
     }
@@ -130,12 +138,19 @@ const same = (a: Change["edit"], b: Change["edit"]) =>
   a.start === b.start && a.end === b.end && a.text === b.text;
 
 /**
- * Writes each change, unless its file changed since the check read it. Returns the files written and the ones skipped.
+ * Writes content before dependent setup rewrites, unless a file changed since the check read it.
+ * A setup stays unchanged unless all its required content edits were written by that migrator.
  */
 export function apply(root: string, changes: Change[]): { written: string[]; stale: string[] } {
   const written: string[] = [];
   const stale: string[] = [];
-  for (const { file, source, edit } of changes) {
+  const applied = new Map<string, Set<string>>();
+  const ordered = [
+    ...changes.filter((change) => !change.requires),
+    ...changes.filter((change) => change.requires),
+  ];
+  for (const { file, source, edit, migrator, requires } of ordered) {
+    if (requires?.some((required) => !applied.get(migrator)?.has(required))) continue;
     const path = join(root, file);
     if (readFileSync(path, "utf8") !== source) {
       stale.push(file);
@@ -143,6 +158,9 @@ export function apply(root: string, changes: Change[]): { written: string[]; sta
     }
     writeFileSync(path, source.slice(0, edit.start) + edit.text + source.slice(edit.end));
     written.push(file);
+    const files = applied.get(migrator) ?? new Set<string>();
+    files.add(file);
+    applied.set(migrator, files);
   }
   return { written, stale };
 }

@@ -138,6 +138,79 @@ describe("plan and apply", () => {
     expect(readFileSync(join(root, "docs/a.md"), "utf8")).toBe("# Edited\n");
   });
 
+  it("keeps the renderer unchanged when required content becomes stale", async () => {
+    const root = remarkProject();
+    const renderer = readFileSync(join(root, "src/render.ts"), "utf8");
+    const result = await plan(root);
+    writeFileSync(join(root, "docs/a.md"), "# Edited\n");
+    // Setup may sort before content; applying it still has to wait for the content edits.
+    expect(apply(root, [...result.changes].reverse())).toEqual({
+      written: [],
+      stale: ["docs/a.md"],
+    });
+    expect(readFileSync(join(root, "src/render.ts"), "utf8")).toBe(renderer);
+    expect(readFileSync(join(root, "docs/a.md"), "utf8")).toBe("# Edited\n");
+  });
+
+  it.each([
+    ["remark", "RTC"],
+    ["markdown-it", "MIC"],
+    ["marked", "MKC"],
+  ])(
+    "requires every %s content edit without blocking another migrator",
+    async (library, prefix) => {
+      const other = library === "remark" ? "marked" : "remark";
+      const root = project({
+        "package.json": manifest({ [library]: "*", [other]: "*" }),
+        "a-render.ts": "old",
+        "b.md": "{x}",
+        "c.md": "{x}",
+        "z-render.ts": "old",
+      });
+      const result = await plan(root, {
+        load: async (name) => ({
+          check: async () =>
+            name === `${library}-to-comark`
+              ? [
+                  {
+                    code: `${prefix}0202`,
+                    params: { at: "a-render.ts:1" },
+                    file: "a-render.ts",
+                    line: 1,
+                    edit: { start: 0, end: 3, text: "new", source: "old" },
+                  },
+                  ...["b.md", "c.md"].map((file) => ({
+                    code: `${prefix}0302`,
+                    params: { at: `${file}:1` },
+                    file,
+                    line: 1,
+                    edit: { start: 0, end: 1, text: "\\{", source: "{x}" },
+                  })),
+                ]
+              : [
+                  {
+                    code: `${other === "remark" ? "RTC" : "MKC"}0202`,
+                    params: { at: "z-render.ts:1" },
+                    file: "z-render.ts",
+                    line: 1,
+                    edit: { start: 0, end: 3, text: "new", source: "old" },
+                  },
+                ],
+          catalog: {},
+          toDiagnostic: () => ({ why: "", fix: "" }),
+        }),
+      });
+      writeFileSync(join(root, "b.md"), "Edited");
+      expect(apply(root, result.changes)).toEqual({
+        written: ["c.md", "z-render.ts"],
+        stale: ["b.md"],
+      });
+      expect(readFileSync(join(root, "a-render.ts"), "utf8")).toBe("old");
+      expect(readFileSync(join(root, "c.md"), "utf8")).toBe("\\{x}");
+      expect(readFileSync(join(root, "z-render.ts"), "utf8")).toBe("new");
+    },
+  );
+
   it("skips a file edited while its migrator is still checking", async () => {
     const root = project({
       "package.json": manifest({ remark: "^15.0.0" }),
