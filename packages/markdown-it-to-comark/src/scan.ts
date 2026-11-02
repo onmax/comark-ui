@@ -76,6 +76,11 @@ export interface Setup {
     escapes: number[];
     /** Offsets of statements that only configure the instance (`md.use(x);`), which a rewrite removes. */
     statements: { start: number; end: number }[];
+    /** Lines where the instance is configured somewhere a rewrite can't move to its creation: in a branch, a
+     * function, or an expression. */
+    scattered: number[];
+    /** Lines that read the instance's helpers (`md.utils`), which Comark's options don't have. */
+    reads: number[];
   };
 }
 
@@ -152,6 +157,8 @@ function scanScript(source: string, file: string): Setup[] {
   const lineOf = (offset: number) => source.slice(0, offset).split("\n").length;
   const text = (node: Node) => source.slice(node.start, node.end);
   const imports = new Map<string, string>();
+  // Names bound by `const x = require("y")`, which count as declarations too.
+  const required = new Set<string>();
   const parents = new Map<Node, Node>();
   const declarations = new Map<string, number>();
   walk(program, (node, parent) => {
@@ -163,7 +170,10 @@ function scanScript(source: string, file: string): Setup[] {
       const match = /^(?:require|\(?\s*await\s+import)\(\s*["'`]([^"'`]+)["'`]\s*\)/.exec(
         node.init ? text(node.init) : "",
       );
-      if (match) imports.set(node.id.name, match[1]!);
+      if (match) {
+        imports.set(node.id.name, match[1]!);
+        required.add(node.id.name);
+      }
     }
     if (
       (node.type === "FunctionDeclaration" ||
@@ -383,6 +393,13 @@ function scanScript(source: string, file: string): Setup[] {
       isMarkdownIt(node.callee)
     ) {
       const setup = empty(lineOf(node.start), fileHost ?? "markdown-it");
+      // A parameter or variable with the import's name may be another constructor altogether.
+      const callee = node.callee.type === "MemberExpression" ? node.callee.object : node.callee;
+      if (
+        callee.type === "Identifier" &&
+        (declarations.get(callee.name) ?? 0) > (required.has(callee.name) ? 1 : 0)
+      )
+        setup.unresolved = `uses \`${callee.name}\`, which is also bound locally, so it may not be markdown-it`;
       const [first, second] = node.arguments as Node[];
       if (first?.type === "Literal" && isString(first)) {
         setup.preset = first.value;
@@ -402,6 +419,8 @@ function scanScript(source: string, file: string): Setup[] {
         end: end.end,
         escapes: [],
         statements: [],
+        scattered: [],
+        reads: [],
       };
       const declarator =
         parent?.type === "VariableDeclarator" && parent.init === end ? parent : undefined;
@@ -433,13 +452,21 @@ function scanScript(source: string, file: string): Setup[] {
             creation.escapes.push(lineOf(reference.start));
             return;
           }
-          // `md.use(x);` alone is a statement a rewrite can drop once the plugins move to Comark's options.
+          if (last.type === "MemberExpression" && HARMLESS.has(methodOf(last) ?? "")) {
+            creation.reads.push(lineOf(reference.start));
+            return;
+          }
+          if (last.type !== "CallExpression" || RENDER.has(methodOf(last.callee) ?? "")) return;
+          // `md.use(x);` beside the declaration runs once, right after it, so the plugins can move into Comark's
+          // options; anywhere else it may run later, or not at all.
           if (
             holder?.type === "ExpressionStatement" &&
-            last.type === "CallExpression" &&
-            !RENDER.has(methodOf(last.callee) ?? "")
+            statement &&
+            parents.get(holder) === parents.get(statement) &&
+            holder.start > statement.end
           )
             creation.statements.push({ start: holder.start, end: holder.end });
+          else creation.scattered.push(lineOf(reference.start));
         });
       } else if (
         parent?.type === "AssignmentExpression" ||
@@ -485,6 +512,13 @@ function scanScript(source: string, file: string): Setup[] {
         (key ? HOOKS.get(key) : undefined) ??
         (inMarkdown ? "vitepress" : amend ? "eleventy" : undefined);
       const setup = empty(lineOf(node.start), host ?? "function");
+      // VitePress reads the options beside its hook: `markdown: { html: false, config(md) {} }`.
+      if (inMarkdown && grand?.type === "ObjectExpression")
+        for (const property of grand.properties)
+          if (property.type === "Property" && !property.computed && property.value !== node) {
+            const name = keyName(property.key);
+            if (name && name !== "config") setup.options[name] = text(property.value);
+          }
       let uses = false;
       walk(node.body, (reference, holder) => {
         if (reference.type !== "Identifier" || reference.name !== param.name) return;

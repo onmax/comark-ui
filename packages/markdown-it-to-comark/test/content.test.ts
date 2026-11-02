@@ -79,6 +79,18 @@ describe("migrateContent", () => {
     );
   });
 
+  it("checks edits against the whole file too, since a site may render its frontmatter", () => {
+    const markdown = "---\n[ref]: /url\n---\n\n[ref]\n";
+    const result = migrateContent(markdown);
+    expect(new MarkdownIt().render(result.markdown)).toBe(new MarkdownIt().render(markdown));
+  });
+
+  it("finds each table cell left to right", () => {
+    expect(migrateContent("| [x] | [x]\n| --- | ---\n").markdown).toBe(
+      "| \\[x\\] | \\[x\\]\n| --- | ---\n",
+    );
+  });
+
   it("lists every change by line", () => {
     const result = migrateContent("a\n\nb {x} [y]\n");
     expect(result.changes.map((change) => [change.line, change.text])).toEqual([

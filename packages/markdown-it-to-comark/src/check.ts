@@ -5,6 +5,7 @@ import { pathToFileURL } from "node:url";
 import { glob as globFiles } from "tinyglobby";
 import { migrateContent, type ContentOptions, type PluginUse } from "./content.ts";
 import { literal, type Literal } from "./literal.ts";
+import type { RuleChange } from "./plugins/options.ts";
 import type { Code } from "./diagnostics.ts";
 import { rewriteSource } from "./rewrite.ts";
 import { mentions, scanSource, type Host, type Setup } from "./scan.ts";
@@ -236,6 +237,7 @@ async function profile(
   comark: ContentSetup["comark"];
   plugins: PluginUse[];
   missing: string[];
+  unknown: string[];
 }> {
   const host = HOSTS[setup.host];
   const options: Record<string, Literal> = { ...host?.options };
@@ -264,21 +266,27 @@ async function profile(
     setup.plugins.some((plugin) => plugin.name === "markdown-it-front-matter");
   const preset =
     setup.preset === "commonmark" || setup.preset === "zero" ? setup.preset : undefined;
-  const rules = (method: "enable" | "disable") =>
-    setup.rules
-      .filter((rule) => rule.method === method)
-      .flatMap((rule) => {
-        const found = literal(`[${rule.args}]`);
-        return Array.isArray(found) ? found.flat().filter((item) => typeof item === "string") : [];
-      });
+  // In the order the project made them: disabling a rule and enabling it again isn't the same as the reverse.
+  const rules: RuleChange[] = setup.rules.map((rule) => {
+    const found = literal(`[${rule.args}]`);
+    return [
+      rule.method,
+      Array.isArray(found) ? found.flat().filter((item) => typeof item === "string") : [],
+    ];
+  });
+  // `html` and `linkify` decide what markdown-it reads as text; when the scan can't read one, both values are tried.
+  const unknown = ["html", "linkify"].filter((name) =>
+    setup.options[name] === undefined
+      ? Boolean(setup.unresolved)
+      : literal(setup.options[name]) === undefined,
+  );
   const read = (key: string) =>
     typeof options[key] === "boolean" ? (options[key] as boolean) : undefined;
   return {
     content: {
       ...(preset ? { preset } : {}),
       options: options as ContentOptions["options"],
-      enable: rules("enable"),
-      disable: rules("disable"),
+      rules,
       plugins,
       emoji: names.some((name) => /emoji/.test(name)),
       attrs: names.some((name) => /markdown-it-attrs/.test(name)),
@@ -290,12 +298,12 @@ async function profile(
       linkify: read("linkify"),
       typographer: read("typographer"),
       breaks: read("breaks"),
-      enable: rules("enable"),
-      disable: rules("disable"),
+      rules,
       frontmatter,
     },
     plugins,
     missing,
+    unknown,
   };
 }
 
@@ -320,11 +328,20 @@ export async function contentSetup(
   if (!primary) return { content: {}, alternatives: [], comark: {}, plugins: [], missing: [] };
   const seen = new Set([JSON.stringify(primary.content, keyOf)]);
   const alternatives: ContentOptions[] = [];
-  for (const other of profiles.slice(1)) {
-    const key = JSON.stringify(other.content, keyOf);
-    if (seen.has(key)) continue;
+  const add = (content: ContentOptions) => {
+    const key = JSON.stringify(content, keyOf);
+    if (seen.has(key)) return;
     seen.add(key);
-    alternatives.push(other.content);
+    alternatives.push(content);
+  };
+  for (const [index, item] of profiles.entries()) {
+    if (index) add(item.content);
+    // An option the scan couldn't read could be either value.
+    for (const name of item.unknown)
+      add({
+        ...item.content,
+        options: { ...item.content.options, [name]: !item.content.options?.[name as "html"] },
+      });
   }
   return {
     content: primary.content,

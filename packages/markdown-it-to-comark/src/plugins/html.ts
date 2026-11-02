@@ -168,9 +168,36 @@ export const closeInlineHtml = (): ComarkPlugin => ({
   },
 });
 
-/** Markdown images keep an empty `alt`, which marks them decorative; Comark drops the attribute when it's empty. */
+/** An image's alt text as markdown-it writes it: the text of what its label parsed to, without the markup. */
+function altText(tokens: Token[]): string {
+  return tokens
+    .map((token) =>
+      token.type === "image"
+        ? altText(token.children ?? [])
+        : token.type === "softbreak" || token.type === "hardbreak"
+          ? "\n"
+          : ["text", "html_inline", "html_block"].includes(token.type)
+            ? token.content
+            : "",
+    )
+    .join("");
+}
+
+/**
+ * Images get markdown-it's alt text: Comark writes the label as typed (`**hi**`), markdown-it the text it parses to
+ * (`hi`). An empty `alt` stays, since it marks the image decorative and Comark drops it.
+ */
 export const imageAlt = (): ComarkPlugin => ({
   name: "markdown-it-to-comark:image-alt",
+  markdownItPost(state) {
+    const visit = (tokens: Token[]) => {
+      for (const token of tokens) {
+        if (token.type === "image" && token.children) token.content = altText(token.children);
+        if (token.children) visit(token.children);
+      }
+    };
+    visit(state.tokens);
+  },
   post(state) {
     const visit = (nodes: Node[], start: number) => {
       for (let index = start; index < nodes.length; index++) {

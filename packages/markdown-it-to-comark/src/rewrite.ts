@@ -68,8 +68,16 @@ function renderBlocker(render: Setup["renders"][number], info: Index): string | 
   if (!call) return "couldn't be located in the file";
   const fn = enclosingFunction(call, info);
   // SAFETY: every function node type in FUNCTIONS has an `async` flag.
-  if (!fn || !(fn as unknown as { async: boolean }).async)
-    return `renders on line ${render.line} outside an async function; Comark's \`renderHtml\` returns a promise, so the call needs an \`await\` the function can't give`;
+  // SAFETY: every function node type in FUNCTIONS has a body; `await` is only allowed inside it, not in a default value.
+  const body = fn && (fn as unknown as { body: Node | null }).body;
+  if (
+    !fn ||
+    !(fn as unknown as { async: boolean }).async ||
+    !body ||
+    call.start < body.start ||
+    call.end > body.end
+  )
+    return `renders on line ${render.line} outside an async function's body; Comark's \`renderHtml\` returns a promise, so the call needs an \`await\` that can't go there`;
   return undefined;
 }
 
@@ -82,6 +90,10 @@ function blocker(setup: Setup, file: string, isModule: boolean, info: Index): st
     return `changes the instance by hand (\`${setup.customized[0]!.what}\`); wrap that code in a plugin and pass it to \`markdownItPlugin()\``;
   if (creation.escapes.length)
     return `the instance leaves this file on line ${creation.escapes[0]} (returned, passed on, exported, or stored), so every caller would change`;
+  if (creation.reads.length)
+    return `reads the instance's helpers on line ${creation.reads[0]} (\`md.utils\`, \`md.options\`), which Comark's options don't have`;
+  if (creation.scattered.length)
+    return `configures the instance on line ${creation.scattered[0]} inside a branch, a function, or an expression, which may run later or not at all; move it beside the declaration`;
   if (!setup.renders.length) return "has no `render` call in this file";
   if (!creation.binding && setup.renders.length !== 1) return "isn't bound to a name";
   if (/\.c[jt]s$/.test(file) || !isModule) return "is CommonJS; the rewrite emits ES imports";
@@ -173,15 +185,16 @@ function rewriteScript(source: string, file: string): RewriteResult {
     if (setup.preset && setup.preset !== "default")
       settings.push(`preset: ${JSON.stringify(setup.preset)}`);
     for (const [name, text] of Object.entries(setup.options)) settings.push(`${name}: ${text}`);
-    const rules = (method: "enable" | "disable") =>
-      setup.rules
-        .filter((rule) => rule.method === method)
-        .flatMap((rule) => {
-          const found = literal(`[${rule.args}]`);
-          return Array.isArray(found) ? found.flat() : [];
-        });
-    for (const method of ["enable", "disable"] as const)
-      if (rules(method).length) settings.push(`${method}: ${JSON.stringify(rules(method))}`);
+    const rules = setup.rules.map((rule) => {
+      const found = literal(`[${rule.args}]`);
+      return [rule.method, Array.isArray(found) ? found.flat() : []] as const;
+    });
+    // One kind of change keeps its plain option; both kinds keep the order they ran in.
+    const methods = new Set(rules.map(([method]) => method));
+    if (methods.size > 1) settings.push(`rules: ${JSON.stringify(rules)}`);
+    else
+      for (const method of methods)
+        settings.push(`${method}: ${JSON.stringify(rules.flatMap(([, names]) => names))}`);
     if (setup.plugins.length) {
       bridge ??= fresh("markdownItPlugin");
       want(

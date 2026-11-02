@@ -75,6 +75,64 @@ describe("markdownItPlugin", () => {
     }
   });
 
+  type Md = {
+    renderer: { rules: Record<string, unknown> };
+    core: {
+      ruler: { push: (name: string, fn: (state: { env: Record<string, string> }) => void) => void };
+    };
+    set: (options: object) => void;
+  };
+  it.each<[string, (md: Md) => void, string]>([
+    [
+      "a renderer that reads what a core rule left in the environment",
+      (md) => {
+        md.core.ruler.push("label", (state) => {
+          state.env.label = "saved";
+        });
+        md.renderer.rules.code_inline = (
+          _: unknown,
+          __: number,
+          ___: unknown,
+          env: Record<string, string>,
+        ) => `<code>${env.label}</code>`;
+      },
+      "Press `x`.\n",
+    ],
+    [
+      "a closing rule alone",
+      (md) => void (md.renderer.rules.paragraph_close = () => "</p><hr>\n"),
+      "a\n\nb\n",
+    ],
+    [
+      "inline output alone in its paragraph",
+      (md) => void (md.renderer.rules.code_inline = () => "<kbd>foo</kbd>"),
+      "`foo`\n",
+    ],
+    [
+      "a highlight function a plugin sets",
+      (md) => md.set({ highlight: () => "<b>lit</b>" }),
+      "```js\nx\n```\n",
+    ],
+    [
+      "a strikethrough drawn its own way",
+      (md) => {
+        md.renderer.rules.s_open = () => "<mark>";
+        md.renderer.rules.s_close = () => "</mark>";
+      },
+      "~~a~~\n",
+    ],
+    [
+      "code whose text is only newlines",
+      (md) => void (md.renderer.rules.fence = () => "<pre><code>\n\n</code></pre>\n"),
+      "```\nx\n```\n",
+    ],
+  ])("draws %s like markdown-it", async (_, plugin, markdown) => {
+    for (const html of [true, false]) {
+      const { markdownIt, comark } = both({ html, plugins: [[plugin]] });
+      expect(compare(markdownIt(markdown), await comark(markdown)).differences).toEqual([]);
+    }
+  });
+
   it("runs the project's own plugin, renderer rule included", async () => {
     const shout = (md: { renderer: { rules: Record<string, unknown> } }) => {
       md.renderer.rules.code_inline = (tokens: { content: string }[], index: number) =>

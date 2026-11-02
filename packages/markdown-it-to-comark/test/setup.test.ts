@@ -1,4 +1,6 @@
 import { renderHtml } from "@comark/html";
+import MarkdownIt from "markdown-it";
+import footnote from "markdown-it-footnote";
 import { describe, expect, it } from "vite-plus/test";
 import { comarkOptions } from "../src/setup.ts";
 import { both, compare } from "./support/index.ts";
@@ -46,6 +48,32 @@ describe("comarkSetup", () => {
     const { markdownIt, comark } = both({ syntax: "plain", ...options });
     const comparison = compare(markdownIt(DOCUMENT), await comark(DOCUMENT));
     expect(comparison.differences).toEqual([]);
+  });
+
+  it("applies rule changes in order, after the plugins", async () => {
+    const markdown = "*hi* and a^[note]\n";
+    for (const rules of [
+      [
+        ["disable", ["emphasis"]],
+        ["enable", ["emphasis"]],
+      ],
+      [
+        ["enable", ["emphasis"]],
+        ["disable", ["emphasis"]],
+      ],
+      [["disable", ["footnote_inline"]]],
+    ] as ["enable" | "disable", string[]][][]) {
+      const md = new MarkdownIt().use(footnote as never);
+      for (const [method, names] of rules) md[method](names);
+      const { comark } = both({ syntax: "plain", rules, plugins: [[footnote]] });
+      expect(compare(md.render(markdown), await comark(markdown)).differences).toEqual([]);
+    }
+  });
+
+  it("writes an image's alt text without its markup", async () => {
+    const { markdownIt, comark } = both({ syntax: "plain" });
+    const markdown = "![**hi** `c` ![x](y.png)](a.png)\n";
+    expect(compare(markdownIt(markdown), await comark(markdown)).differences).toEqual([]);
   });
 
   it("shows a comment as text when HTML is off, as markdown-it does", async () => {

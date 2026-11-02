@@ -91,6 +91,26 @@ describe("rewriteSource", () => {
       /options/,
     ],
     [
+      "is configured in a branch",
+      "const md = new MarkdownIt();\nexport const render = async (s: string, flag: boolean) => {\n  if (flag) md.set({ breaks: true });\n  return md.render(s);\n};",
+      /branch/,
+    ],
+    [
+      "renders in a parameter's default value",
+      "const md = new MarkdownIt();\nexport async function render(s = md.render('hi')) { return s; }",
+      /outside an async function/,
+    ],
+    [
+      "reads its helpers",
+      "const md = new MarkdownIt();\nexport const render = async (s: string) => md.utils.escapeHtml(s) + md.render(s);",
+      /helpers/,
+    ],
+    [
+      "comes from a constructor that shadows the import",
+      "export async function render(MarkdownIt: any, s: string) { const md = new MarkdownIt(); return md.render(s); }",
+      /bound locally/,
+    ],
+    [
       "uses the project's own plugin",
       'import mine from "./mine.js";\nconst md = new MarkdownIt().use(mine);\nexport const render = async (s: string) => md.render(s);',
       /compared/,
@@ -101,6 +121,15 @@ describe("rewriteSource", () => {
     expect(result.code).toBe(code);
     expect(result.rewrites[0]?.rewritten).toBe(false);
     expect(result.rewrites[0]?.reason).toMatch(reason);
+  });
+
+  it("keeps the order of rule changes when both kinds are made", () => {
+    const result = rewrite(
+      'import MarkdownIt from "markdown-it";\nconst md = new MarkdownIt().disable("emphasis").enable(["emphasis"]);\nexport const render = async (s: string) => md.render(s);\n',
+    );
+    expect(result.code).toContain(
+      'comarkOptions({ rules: [["disable",["emphasis"]],["enable",["emphasis"]]] })',
+    );
   });
 
   it("leaves CommonJS alone", () => {

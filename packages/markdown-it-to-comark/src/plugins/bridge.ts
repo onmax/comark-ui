@@ -76,53 +76,15 @@ const TAG =
 
 const VOID = new Set("area base br col embed hr img input link meta source track wbr".split(" "));
 
-interface Opened {
-  /** Void tags before the wrappers, such as markdown-it-footnote's `<hr>`. */
-  before: string;
-  tags: { tag: string; attrs: [string, string][] }[];
-}
-
-/**
- * HTML that only opens elements, such as `<div class="tip">\n` or `<hr>\n<section>\n<ol>\n`: the void tags it starts
- * with, then each opening tag in order. Anything else (text, a closed element) isn't a wrapper.
- */
-function openTags(html: string): Opened | undefined {
-  const opened: Opened = { before: "", tags: [] };
-  let cursor = 0;
-  for (const match of html.matchAll(TAG)) {
-    if (html.slice(cursor, match.index).trim()) return undefined;
-    cursor = match.index + match[0].length;
-    const tag = OPEN_TAG.exec(match[0]);
-    if (!tag) return undefined;
-    const name = tag[1]!.toLowerCase();
-    if (VOID.has(name) || match[0].endsWith("/>")) {
-      if (opened.tags.length) return undefined;
-      opened.before += match[0];
-      continue;
-    }
-    const attrs: [string, string][] = [];
-    for (const attribute of tag[2]!.matchAll(ATTRIBUTE))
-      attrs.push([attribute[1]!, decodeHTML(attribute[2] ?? attribute[3] ?? attribute[4] ?? "")]);
-    opened.tags.push({ tag: name, attrs });
-  }
-  if (html.slice(cursor).trim() || !opened.tags.length) return undefined;
-  return opened;
-}
-
-/** Whether `html` closes exactly `tags`, innermost first. */
-const closes = (html: string, tags: Opened["tags"]) =>
-  html.replace(/\s+/g, "") ===
-  tags
-    .map(({ tag }) => `</${tag}>`)
-    .reverse()
-    .join("");
+// Whitespace inside these is content; elsewhere a newline between tags is the renderer's formatting.
+const VERBATIM = new Set(["pre", "textarea", "script", "style"]);
 
 /** HTML a renderer rule wrote, as the inline tokens Comark reads raw HTML from: tags, and decoded text between them. */
 function htmlTokens(html: string, make: TokenClass): Token[] {
   const tokens: Token[] = [];
+  let verbatim = 0;
   const text = (content: string) => {
-    // Newlines between block tags are the renderer's formatting, not content.
-    if (!content || (/^\s*$/.test(content) && content.includes("\n"))) return;
+    if (!content || (!verbatim && /^\s*$/.test(content) && content.includes("\n"))) return;
     const token = new make("text", "", 0);
     token.content = decodeHTML(content);
     tokens.push(token);
@@ -133,7 +95,65 @@ function htmlTokens(html: string, make: TokenClass): Token[] {
     const token = new make("html_inline", "", 0);
     token.content = match[0];
     tokens.push(token);
+    const name = /^<(\/?)([A-Za-z][\w-]*)/.exec(match[0]);
+    if (name && VERBATIM.has(name[2]!.toLowerCase())) verbatim += name[1] ? -1 : 1;
     cursor = match.index + match[0].length;
+  }
+  text(html.slice(cursor));
+  return tokens;
+}
+
+/**
+ * HTML a renderer rule wrote, as Comark element tokens: elements keep the paragraph around them and their children,
+ * where raw HTML would lose both (UPSTREAM.md). `open` holds the tags left open, so an opening rule's `<div>` can be
+ * closed by its closing rule; `undefined` when a closing tag doesn't match.
+ */
+function elementTokens(html: string, make: TokenClass, open: string[]): Token[] | undefined {
+  const tokens: Token[] = [];
+  const text = (content: string) => {
+    const verbatim = open.some((tag) => VERBATIM.has(tag));
+    if (!content || (!verbatim && /^\s*$/.test(content) && content.includes("\n"))) return;
+    const token = new make("text", "", 0);
+    token.content = decodeHTML(content);
+    tokens.push(token);
+  };
+  let cursor = 0;
+  for (const match of html.matchAll(TAG)) {
+    text(html.slice(cursor, match.index));
+    cursor = match.index + match[0].length;
+    if (match[0].startsWith("<!--")) {
+      const comment = new make("html_inline", "", 0);
+      comment.content = match[0];
+      tokens.push(comment);
+      continue;
+    }
+    const close = /^<\/([A-Za-z][\w-]*)\s*>$/.exec(match[0]);
+    if (close) {
+      const name = close[1]!.toLowerCase();
+      if (open.at(-1) !== name) return undefined;
+      open.pop();
+      // markdown-it ends a code block's text with a newline, which Comark's own code blocks leave out.
+      const last = tokens.at(-1);
+      if (name === "code" && open.at(-1) === "pre" && last?.type === "text")
+        last.content = last.content.replace(/\n$/, "");
+      tokens.push(new make("mdc_inline_span_close", name, -1));
+      continue;
+    }
+    const tag = OPEN_TAG.exec(match[0]);
+    if (!tag) return undefined;
+    const name = tag[1]!.toLowerCase();
+    const attrs: [string, string][] = [];
+    for (const attribute of tag[2]!.matchAll(ATTRIBUTE))
+      attrs.push([attribute[1]!, decodeHTML(attribute[2] ?? attribute[3] ?? attribute[4] ?? "")]);
+    const single = VOID.has(name) || match[0].endsWith("/>");
+    const token = new make(
+      single ? "mdc_inline_component" : "mdc_inline_span_open",
+      name,
+      single ? 0 : 1,
+    );
+    token.attrs = attrs;
+    tokens.push(token);
+    if (!single) open.push(name);
   }
   text(html.slice(cursor));
   return tokens;
@@ -153,8 +173,9 @@ function closing(tokens: Token[], start: number): number {
  * Runs a markdown-it plugin in Comark, renderer and all. Comark parses with markdown-exit, a port of markdown-it, so a
  * plugin's parsing rules run as they are; but Comark builds its tree from tokens instead of calling markdown-it's
  * renderer, so a token type it doesn't know is dropped and a renderer rule the plugin sets is ignored. Each such token
- * is drawn with the plugin's own renderer rule here: a lone opening tag becomes an element whose children Comark
- * still parses, and anything else becomes the HTML the rule writes.
+ * is drawn with markdown-it's renderer here, with the plugin's rules and the parse's environment. The HTML becomes
+ * Comark elements, so what an opening rule opens holds the Markdown up to its closing rule, and only HTML whose tags
+ * don't balance stays raw.
  */
 let bridges = 0;
 
@@ -168,6 +189,8 @@ interface RulerHost {
     __cache__: unknown;
   };
 }
+// The environment each parse ran with, by its token list, for renderer rules that read it.
+const environments = new WeakMap<Token[], object>();
 // The rules bridged plugins added, by parser, for `precedence()`.
 const bridgedRules = new WeakMap<
   object,
@@ -248,9 +271,20 @@ export function markdownItPlugin(plugin: unknown, ...options: unknown[]): Comark
         const inlineBefore = rules(host.inline);
         const coreBefore = rules(host.core);
         // SAFETY: a markdown-it plugin takes the instance and its options; markdown-exit keeps markdown-it's `use`.
+        const highlight = instance.options.highlight;
         instance.use(plugin as never, ...(options as []));
         for (const [type, rule] of Object.entries(renderer.rules))
           if (rule !== before[type]) changed.add(type);
+        // markdown-it's own fence renderer reads `highlight`, so a plugin that sets it changes how fences draw.
+        if (instance.options.highlight !== highlight) changed.add("fence");
+        if (!host.core.ruler.__rules__.some((rule) => rule.name === "markdown-it-to-comark-env"))
+          (
+            instance.core.ruler as unknown as {
+              push: (name: string, fn: (state: { tokens: Token[]; env: object }) => void) => void;
+            }
+          ).push("markdown-it-to-comark-env", (core) => {
+            environments.set(core.tokens, core.env);
+          });
         const added = bridgedRules.get(instance) ?? {
           block: new Set<string>(),
           inline: new Set<string>(),
@@ -265,7 +299,8 @@ export function markdownItPlugin(plugin: unknown, ...options: unknown[]): Comark
     markdownItPost(state) {
       if (!md) return;
       const renderer = md.renderer as unknown as Renderer;
-      const env = {};
+      // The environment the parse ran with: renderer rules read what core rules left there.
+      const env = environments.get(state.tokens) ?? {};
       const render = (tokens: Token[], index: number): string | undefined => {
         const rule = renderer.rules[tokens[index]!.type];
         const html = rule
@@ -280,53 +315,42 @@ export function markdownItPlugin(plugin: unknown, ...options: unknown[]): Comark
         for (let index = 0; index < tokens.length; index++) {
           const token = tokens[index]!;
           if (token.children) token.children = bridge(token.children, false);
-          if (replace.has(index) || !wanted(token)) continue;
+          if (replace.has(index) || token.nesting === -1) continue;
+          const end = token.nesting === 1 ? closing(tokens, index) : -1;
+          // A pair is drawn by its rules when either end's rule changed, such as a `paragraph_close` that adds an `<hr>`.
+          if (!wanted(token) && !(end > 0 && wanted(tokens[end]!))) continue;
           const make = tokenClass(token);
           if (token.nesting === 1) {
-            const end = closing(tokens, index);
             const open = render(tokens, index);
             const close = end > 0 ? render(tokens, end) : undefined;
             if (open === undefined || close === undefined) continue;
-            const opened = openTags(open);
-            if (opened && closes(close, opened.tags)) {
-              // Elements, not raw HTML: Comark nests what follows an open HTML tag inside it, and inside a component
-              // it drops the text of inline HTML (UPSTREAM.md).
-              const kind = block ? "mdc_block_shorthand" : "mdc_inline_span";
-              const element = (tag: Opened["tags"][number], nesting: 1 | -1) => {
-                const made = new make(
-                  `${kind}_${nesting === 1 ? "open" : "close"}`,
-                  tag.tag,
-                  nesting,
-                );
-                if (nesting === 1) made.attrs = tag.attrs;
-                made.map = token.map;
-                return made;
-              };
-              replace.set(index, [
-                ...wrap(htmlTokens(opened.before, make), block, make, token),
-                ...opened.tags.map((tag) => element(tag, 1)),
-              ]);
-              replace.set(
-                end,
-                [...opened.tags].reverse().map((tag) => element(tag, -1)),
-              );
+            // Elements, not raw HTML: Comark nests what follows an open HTML tag inside it, and inside a component
+            // it drops the text of inline HTML (UPSTREAM.md).
+            const stack: string[] = [];
+            const opening = elementTokens(open, make, stack);
+            const closingTokens = opening && elementTokens(close, make, stack);
+            if (opening && closingTokens && !stack.length) {
+              replace.set(index, opening);
+              replace.set(end, closingTokens);
               continue;
             }
             replace.set(index, wrap(htmlTokens(open, make), block, make, token));
             replace.set(end, wrap(htmlTokens(close, make), block, make, tokens[end]!));
             continue;
           }
-          if (token.nesting === -1) continue;
           const html = render(tokens, index);
           if (html === undefined) continue;
+          const stack: string[] = [];
+          const converted = elementTokens(html, make, stack);
+          const elements = stack.length ? undefined : converted;
           // A block token inside a paragraph (markdown-it-footnote's back links) renders at the end of its text.
           let previous = index - 1;
           while (previous >= 0 && replace.get(previous)?.length === 0) previous--;
           const inline = tokens[previous];
           if (block && inline?.type === "inline" && inline.children) {
-            inline.children.push(...htmlTokens(html, make));
+            inline.children.push(...(elements ?? htmlTokens(html, make)));
             replace.set(index, []);
-          } else replace.set(index, wrap(htmlTokens(html, make), block, make, token));
+          } else replace.set(index, elements ?? wrap(htmlTokens(html, make), block, make, token));
         }
         for (let index = 0; index < tokens.length; index++) {
           const replaced = replace.get(index);

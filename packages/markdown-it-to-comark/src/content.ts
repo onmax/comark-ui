@@ -2,6 +2,7 @@ import MarkdownIt from "markdown-it";
 import type { Options, PresetName } from "markdown-it";
 import type StateInline from "markdown-it/lib/rules_inline/state_inline.mjs";
 import type Token from "markdown-it/lib/token.mjs";
+import { ruleChanges, type RuleChange } from "./plugins/options.ts";
 
 /** A markdown-it plugin and the options it is registered with, as `md.use(plugin, ...options)` takes them. */
 export type PluginUse = [plugin: unknown, ...options: unknown[]];
@@ -12,9 +13,10 @@ export interface ContentOptions {
   preset?: PresetName;
   /** markdown-it's options, which decide what it reads as text (`html`, `linkify`). */
   options?: Options;
-  /** Rules turned on or off after the preset. */
+  /** Rules turned on or off after the preset and the plugins: `enable`, then `disable`, or `rules` in order. */
   enable?: string[];
   disable?: string[];
+  rules?: RuleChange[];
   /**
    * The project's syntax plugins. What they parse (`::: tip`, `$x$`, `[^1]`) isn't text, so it's left for the same
    * plugin on the Comark side instead of being escaped.
@@ -74,10 +76,9 @@ function instrumented(options: ContentOptions): Instrumented {
   const cached = instances.get(options);
   if (cached) return cached;
   const md = new MarkdownIt(options.preset ?? "default", options.options ?? {});
-  if (options.enable?.length) md.enable(options.enable, true);
-  if (options.disable?.length) md.disable(options.disable, true);
   // SAFETY: a markdown-it plugin takes the instance and its options.
   for (const [plugin, ...rest] of options.plugins ?? []) md.use(plugin as never, ...(rest as []));
+  for (const [method, names] of ruleChanges(options)) md[method](names, true);
   const traces = new WeakMap<Token[], Trace>();
   const stack: Trace[] = [];
   const ruler = md.inline.ruler as unknown as {
@@ -184,6 +185,7 @@ function locate(
   map: [number, number],
   source: Line[],
   cursors: Map<number, number>,
+  cell: boolean,
 ): number[] | undefined {
   const offsets: number[] = [];
   const parts = content.split("\n");
@@ -206,12 +208,14 @@ function locate(
     };
     const trimmed = line.text.trimEnd();
     const wanted = part.trimEnd();
+    // A table cell is found left to right: the end of its line is the last cell's.
     let found =
-      trimmed.endsWith(wanted) && trimmed.length - wanted.length >= cursor
+      !cell && trimmed.endsWith(wanted) && trimmed.length - wanted.length >= cursor
         ? match(trimmed.length - wanted.length)
         : undefined;
     for (let at = cursor; !found && at <= line.text.length - part.length; at++)
-      if (line.text[at] === part[0] || (part[0] === "|" && line.text[at] === "\\")) found = match(at);
+      if (line.text[at] === part[0] || (part[0] === "|" && line.text[at] === "\\"))
+        found = match(at);
     if (!found) {
       // A line that can't be found would let the next cell on it match inside this one.
       cursors.set(number, Number.POSITIVE_INFINITY);
@@ -334,7 +338,7 @@ export function migrateContent(source: string, options: ContentOptions = {}): Co
     const shortcuts = trace.spans.filter(
       (span) => span.name === "link" && isShortcut(trace.src.slice(span.start, span.end)),
     );
-    const positions = locate(trace.src, map, source_, cursors);
+    const positions = locate(trace.src, map, source_, cursors, !token.map);
     if (!found.length && !shortcuts.length) continue;
     if (!positions) {
       unmapped.push(lineOf(source_, source_[map[0]]?.start ?? 0));
@@ -362,14 +366,23 @@ export function migrateContent(source: string, options: ContentOptions = {}): Co
   if (!blocks.length) return { markdown: source, changes: [], skipped: unmapped };
   // Every kept edit is proven: markdown-it renders the edited document exactly as the original. When the whole set
   // doesn't, the blocks are split in halves until the ones that change the output are found and left as written.
+  // With and without the frontmatter: a site may strip it before rendering or not, and a link definition in it
+  // still counts when it doesn't.
   const renderers = [md, ...(options.alternatives ?? []).map((other) => instrumented(other).md)];
-  const expected = renderers.map((renderer) => renderer.render(body, {}));
+  const versions = (text: string) => (bodyStart ? [text, text.slice(bodyStart)] : [text]);
+  const expected = renderers.map((renderer) =>
+    versions(source).map((version) => renderer.render(version, {})),
+  );
   const renders = (kept: typeof blocks) => {
-    const edited = apply(
-      source,
-      kept.flatMap((block) => block.edits),
-    ).slice(bodyStart);
-    return renderers.every((renderer, index) => renderer.render(edited, {}) === expected[index]);
+    const edited = versions(
+      apply(
+        source,
+        kept.flatMap((block) => block.edits),
+      ),
+    );
+    return renderers.every((renderer, index) =>
+      edited.every((version, at) => renderer.render(version, {}) === expected[index]![at]),
+    );
   };
   const kept: typeof blocks = [];
   const skipped: number[] = [...unmapped];

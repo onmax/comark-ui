@@ -12,7 +12,7 @@ import {
   tightLists,
 } from "./plugins/html.ts";
 import { precedence } from "./plugins/bridge.ts";
-import { markdownItOptions, type MarkdownItOptions } from "./plugins/options.ts";
+import { markdownItOptions, markdownItTokens, type MarkdownItOptions } from "./plugins/options.ts";
 
 /** Comark's plugins and parser options, as `comarkSetup()` returns them. */
 export interface ComarkSetup {
@@ -59,6 +59,7 @@ export function comarkSetup(options: SetupOptions = {}): ComarkSetup {
         : []),
       // Before components, so a block rule they share a trigger with (`::: tip`) is the project's.
       ...(options.plugins ?? []),
+      markdownItTokens({ ...options, html: keepHtml }),
       ...(syntax === "comark" ? [components(), attributes(), precedence()] : []),
       tightLists(),
       imageAlt(),

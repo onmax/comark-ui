@@ -67,6 +67,18 @@ describe("check", () => {
     expect(codes.some((code) => code.includes("docs/b.md"))).toBe(false);
   });
 
+  it("tries both values of an option it can't read before escaping", async () => {
+    const root = project({
+      "render.ts":
+        'import MarkdownIt from "markdown-it";\nconst rawHtml = true;\nexport const md = new MarkdownIt({ html: rawHtml });\n',
+      "a.md": "<div>{x}</div>\n\nText {y}\n",
+    });
+    const content = (await check(root)).filter((finding) => finding.code === "MIC0302");
+    expect(content).toHaveLength(1);
+    expect(content[0]!.edit?.text).toBe("\\");
+    expect(content[0]!.line).toBe(3);
+  });
+
   it("prints the same JSON shape as remark-to-comark", async () => {
     const [finding] = JSON.parse(formatFindings(await check(fixture()), { json: true })) as Record<
       string,

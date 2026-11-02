@@ -115,6 +115,25 @@ describe("scanSource", () => {
     expect(summary(scanSource(code, file)).map((setup) => setup.host)).toContain(host);
   });
 
+  it("doesn't trust a constructor that shadows the import", () => {
+    const [setup] = scanSource(
+      'import MarkdownIt from "markdown-it";\nexport async function render(MarkdownIt, s) { const md = new MarkdownIt(); return md.render(s); }\n',
+      "a.ts",
+    );
+    expect(setup?.unresolved).toMatch(/bound locally/);
+  });
+
+  it("reads VitePress options beside its hook", () => {
+    const [setup] = scanSource(
+      "export default { markdown: { html: false, linkify: false, config(md) { md.use(x) } } };",
+      ".vitepress/config.ts",
+    );
+    expect(setup).toMatchObject({
+      host: "vitepress",
+      options: { html: "false", linkify: "false" },
+    });
+  });
+
   it("ignores a function whose parameter isn't given markdown-it plugins", () => {
     expect(scanSource("export function f(app) { app.use(router) }", "a.ts")).toEqual([]);
   });
