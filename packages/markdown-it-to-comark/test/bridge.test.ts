@@ -56,6 +56,11 @@ const cases: [string, [unknown, ...unknown[]][], string][] = [
     [[anchor, { permalink: anchor.permalink.headerLink() }]],
     "# Hello World\n\n## Hello World\n",
   ],
+  [
+    "markdown-it-anchor's legacy permalink",
+    [[anchor, { permalink: true, permalinkSymbol: "#", permalinkClass: "direct-link" }]],
+    "# Hello\n",
+  ],
   ["markdown-it-attrs", [[attrs]], "# Title {#id .big}\n\nA paragraph {.lead data-x=1}\n"],
   ["markdown-it-task-lists", [[taskLists]], "- [ ] todo\n- [x] done\n"],
   ["markdown-it-emoji", [[emoji]], "Ship it :rocket: :) and :not_an_emoji:\n"],

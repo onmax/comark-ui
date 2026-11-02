@@ -1,4 +1,5 @@
 import type { ComarkParseTokensState, ComarkPlugin, MarkdownExitPlugin } from "comark";
+import { drawHtml } from "./bridge.ts";
 
 type Token = ComarkParseTokensState["tokens"][number];
 type MarkdownExit = Parameters<MarkdownExitPlugin>[0];
@@ -79,6 +80,15 @@ export const markdownItTokens = (options: MarkdownItOptions): ComarkPlugin => ({
       for (let index = 0; index < tokens.length; index++) {
         const token = tokens[index]!;
         if (token.children) fix(token.children);
+        // markdown-it-anchor's permalink symbol is an `html_block` inside a heading's text, which Comark only reads
+        // between blocks.
+        if (token.type === "html_block" && tokens !== state.tokens) {
+          // SAFETY: Comark's tokens are instances of markdown-exit's Token class.
+          const drawn = drawHtml(token.content, token.constructor as TokenClass);
+          tokens.splice(index, 1, ...drawn);
+          index += drawn.length - 1;
+          continue;
+        }
         // Comark reads any text that starts with `<!--` as a comment, even text markdown-it shows (HTML off, a
         // comment inside code a renderer rule drew), and drops what follows.
         if (token.type === "text" && token.content.startsWith("<!--")) {

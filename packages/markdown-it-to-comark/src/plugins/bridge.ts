@@ -159,6 +159,13 @@ function elementTokens(html: string, make: TokenClass, open: string[]): Token[] 
   return tokens;
 }
 
+/** HTML as the tokens Comark draws it with: elements when its tags balance, else raw HTML tokens. */
+export function drawHtml(html: string, make: TokenClass): Token[] {
+  const open: string[] = [];
+  const elements = elementTokens(html, make, open);
+  return elements && !open.length ? elements : htmlTokens(html, make);
+}
+
 /** The index of the token that closes `tokens[start]`, at the same nesting level. */
 function closing(tokens: Token[], start: number): number {
   let depth = 0;
