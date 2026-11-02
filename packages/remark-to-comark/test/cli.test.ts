@@ -63,7 +63,54 @@ describe("cli", () => {
     expect(result.stdout).toContain("Not migrated:");
     expect(result.stdout).toContain("unified chains can't be rewritten as they are (RTC0201)");
     expect(result.stdout).toContain(
-      "Migrated: 1 Markdown file escaped, 1 unified chain rewritten. Install what the rewritten code imports",
+      "Migrated: 1 Markdown file escaped, 1 unified chain rewritten. Install every package imported by the rewritten code",
+    );
+  });
+
+  it("keeps every renderer unchanged when Markdown setups disagree", () => {
+    const gfm = files["src/render.ts"]
+      .replace("import html", 'import gfm from "remark-gfm";\nimport html')
+      .replace("remark().use(html)", "remark().use(gfm).use(html)");
+    const root = project({ ...files, "src/gfm.ts": gfm });
+    const result = run(root, "migrate");
+    expect(result.stderr).toContain("RTC0303");
+    expect(result.status).toBe(1);
+    expect(readFileSync(join(root, "docs/a.md"), "utf8")).toBe(files["docs/a.md"]);
+    expect(readFileSync(join(root, "src/render.ts"), "utf8")).toBe(files["src/render.ts"]);
+    expect(readFileSync(join(root, "src/gfm.ts"), "utf8")).toBe(gfm);
+    expect(result.stdout).not.toContain("Migrated:");
+  });
+
+  it("keeps renderers unchanged when content migration skips an unsafe block", () => {
+    const markdown = "~a~~b~~a~\n";
+    const renderer = files["src/render.ts"]
+      .replace("import html", 'import gfm from "remark-gfm";\nimport html')
+      .replace("remark().use(html)", "remark().use(gfm).use(html)");
+    const root = project({
+      "package.json": "{}",
+      "src/render.ts": renderer,
+      "docs/a.md": markdown,
+    });
+    const result = run(root, "migrate", "--force");
+    expect(result.stdout).toContain("RTC0303");
+    expect(result.status).toBe(1);
+    expect(readFileSync(join(root, "docs/a.md"), "utf8")).toBe(markdown);
+    expect(readFileSync(join(root, "src/render.ts"), "utf8")).toBe(renderer);
+    expect(result.stdout).not.toContain("Migrated:");
+  });
+
+  it("directs users to install all rewritten imports, including plugin packages", () => {
+    const renderer = files["src/render.ts"]
+      .replace("import html", 'import github from "remark-github";\nimport html')
+      .replace("remark().use(html)", "remark().use(github).use(html)");
+    const root = project({ "package.json": "{}", "src/render.ts": renderer });
+    const result = run(root, "migrate");
+    expect(result.status).toBe(0);
+    expect(readFileSync(join(root, "src/render.ts"), "utf8")).toContain(
+      'import { references } from "comark-github"',
+    );
+    expect(result.stdout).toContain(
+      "Install every package imported by the rewritten code, including plugins.",
     );
   });
 

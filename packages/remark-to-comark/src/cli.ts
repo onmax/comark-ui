@@ -52,10 +52,16 @@ if (values.help || command === undefined || command === "help") {
     process.exit(1);
   }
   const content = await escapeContent(["**/*.{md,mdx}"], root, true);
+  if (!content.safe) {
+    console.error(
+      "Content migration needs manual fixes (RTC0303); no unified chains were rewritten. Review the diagnostics and `git diff` before continuing.",
+    );
+    process.exit(1);
+  }
   const chains = await rewriteChains(root, true);
   const findings = await check(root, nodeReader(root), { display: root });
   console.log(
-    `\n${formatFindings(findings, { color: process.stdout.isTTY, root })}\n\nMigrated: ${content.changed} Markdown ${content.changed === 1 ? "file" : "files"} escaped, ${chains.rewritten} unified ${chains.rewritten === 1 ? "chain" : "chains"} rewritten.${chains.rewritten ? " Install what the rewritten code imports: comark, @comark/html, and remark-to-comark." : ""} Review it with \`git diff\`.`,
+    `\n${formatFindings(findings, { color: process.stdout.isTTY, root })}\n\nMigrated: ${content.changed} Markdown ${content.changed === 1 ? "file" : "files"} escaped, ${chains.rewritten} unified ${chains.rewritten === 1 ? "chain" : "chains"} rewritten.${chains.rewritten ? " Install every package imported by the rewritten code, including plugins." : ""} Review it with \`git diff\`.`,
   );
 } else if (command === "check") {
   const root = directory(rest[0] ?? ".");
@@ -167,10 +173,12 @@ async function escapeContent(patterns: string[], cwd: string, write: boolean) {
     );
   }
   let changed = 0;
+  let safe = true;
   for (const file of matched) {
     if (split.mdx.has(relative(root, file))) continue;
     const setup = await setupFor(relative(root, file));
     if (setup.reason || (setup.missing.length && write)) {
+      safe = false;
       console.error(
         `${relative(process.cwd(), file)}: left as written (RTC0303): ${setup.reason ?? `${setup.missing.join(", ")} couldn't be loaded. Install this site's dependencies, then run this again.`}`,
       );
@@ -179,10 +187,12 @@ async function escapeContent(patterns: string[], cwd: string, write: boolean) {
     }
     const source = readFileSync(file, "utf8");
     const result = migrateContent(source, { ...setup, syntax });
-    if (result.skipped.length)
+    if (result.skipped.length) {
+      safe = false;
       console.log(
         `${relative(process.cwd(), file)}: left ${result.skipped.length} ${result.skipped.length === 1 ? "block" : "blocks"} as written on lines ${result.skipped.slice(0, 8).join(", ")} (RTC0303: a URL after an unclosed \`[\`; check them by hand)`,
       );
+    }
     if (!result.changes.length) continue;
     changed++;
     const lines = [...new Set(result.changes.map((change) => change.line))];
@@ -191,7 +201,7 @@ async function escapeContent(patterns: string[], cwd: string, write: boolean) {
     );
     if (write) writeFileSync(file, result.markdown);
   }
-  return { changed, total: matched.length - mdx.length, mdx: mdx.length };
+  return { changed, total: matched.length - mdx.length, mdx: mdx.length, safe };
 }
 
 /** Why `migrate` shouldn't write under `root` yet, or nothing when git has every file committed. */
