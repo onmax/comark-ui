@@ -12,6 +12,7 @@ npx migrate-to-comark --yes --only marked   # one library at a time
 
 - It reads every package.json for remark, markdown-it, and marked, and the frameworks built on them: Astro, Docusaurus, and react-markdown for remark; VitePress, VuePress, and Eleventy for markdown-it; svelte-markdown and ngx-markdown for marked.
 - It writes only what each migrator's `rewrite --write` and `content --write` would. A file two migrators want goes to the library its nearest package.json declares. When that doesn't settle it, `conflicts` in the JSON names the file and both migrators, and the file stays as it is.
+- Code that renders Markdown switches last. While a Markdown file its migrator handles needs a hand fix or is in `conflicts`, `held` in the JSON names the code file and the Markdown files it waits on. Fix those, then run it again.
 - In an agent's shell it can't ask, so without `--yes` it reports and writes nothing.
 
 ## What it leaves to you

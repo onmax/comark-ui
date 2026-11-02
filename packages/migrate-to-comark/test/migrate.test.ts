@@ -78,6 +78,7 @@ describe("plan and apply", () => {
     expect(apply(root, result.changes)).toEqual({
       written: ["docs/a.md", "src/render.ts"],
       stale: [],
+      held: [],
     });
     expect(readFileSync(join(root, "docs/a.md"), "utf8")).toBe("# A\n\nSet \\{value} first.\n");
     expect(readFileSync(join(root, "docs/b.md"), "utf8")).toBe("# B\n\nPlain.\n");
@@ -147,6 +148,7 @@ describe("plan and apply", () => {
     expect(apply(root, [...result.changes].reverse())).toEqual({
       written: [],
       stale: ["docs/a.md"],
+      held: [{ file: "src/render.ts", migrator: "remark-to-comark", waiting: ["docs/a.md"] }],
     });
     expect(readFileSync(join(root, "src/render.ts"), "utf8")).toBe(renderer);
     expect(readFileSync(join(root, "docs/a.md"), "utf8")).toBe("# Edited\n");
@@ -204,6 +206,7 @@ describe("plan and apply", () => {
       expect(apply(root, result.changes)).toEqual({
         written: ["c.md", "z-render.ts"],
         stale: ["b.md"],
+        held: [{ file: "a-render.ts", migrator: `${library}-to-comark`, waiting: ["b.md"] }],
       });
       expect(readFileSync(join(root, "a-render.ts"), "utf8")).toBe("old");
       expect(readFileSync(join(root, "c.md"), "utf8")).toBe("\\{x}");
@@ -235,7 +238,11 @@ describe("plan and apply", () => {
         toDiagnostic: () => ({ why: "", fix: "" }),
       }),
     });
-    expect(apply(root, result.changes)).toEqual({ written: [], stale: ["README.md"] });
+    expect(apply(root, result.changes)).toEqual({
+      written: [],
+      stale: ["README.md"],
+      held: [],
+    });
     expect(readFileSync(join(root, "README.md"), "utf8")).toBe("Prepended\nHello {name}\n");
   });
 
@@ -272,8 +279,84 @@ describe("plan and apply", () => {
         toDiagnostic: () => ({ why: "", fix: "" }),
       }),
     });
-    expect(apply(root, result.changes)).toEqual({ written: ["a.md"], stale: [] });
+    expect(result.held).toEqual([
+      { file: "render.ts", migrator: `${library}-to-comark`, waiting: ["b.md"] },
+    ]);
+    expect(apply(root, result.changes)).toEqual({ written: ["a.md"], stale: [], held: [] });
     expect(readFileSync(join(root, "render.ts"), "utf8")).toBe("old");
+  });
+
+  it("names every migrator that holds back the same setup file", async () => {
+    const root = project({
+      "package.json": manifest({ remark: "*", marked: "*" }),
+      "render.ts": "old",
+    });
+    const result = await plan(root, {
+      load: async (name) => {
+        const prefix = name === "remark-to-comark" ? "RTC" : "MKC";
+        return {
+          check: async () => [
+            {
+              code: `${prefix}0202`,
+              params: { at: "render.ts:1" },
+              file: "render.ts",
+              line: 1,
+              edit: { start: 0, end: 3, text: "new", source: "old" },
+            },
+            { code: `${prefix}0303`, params: { at: "a.md:1" }, file: "a.md", line: 1 },
+          ],
+          catalog: {},
+          toDiagnostic: () => ({ why: "", fix: "" }),
+        };
+      },
+    });
+    expect(result.held).toEqual([
+      { file: "render.ts", migrator: "remark-to-comark", waiting: ["a.md"] },
+      { file: "render.ts", migrator: "marked-to-comark", waiting: ["a.md"] },
+    ]);
+  });
+
+  it("keeps a setup unchanged while another migrator also wants its content", async () => {
+    const root = project({
+      "package.json": manifest({ remark: "*", marked: "*" }),
+      "render.ts": "old",
+      "README.md": "{x}",
+    });
+    const result = await plan(root, {
+      load: async (name) => ({
+        check: async () => [
+          ...(name === "remark-to-comark"
+            ? [
+                {
+                  code: "RTC0202",
+                  params: { at: "render.ts:1" },
+                  file: "render.ts",
+                  line: 1,
+                  edit: { start: 0, end: 3, text: "new", source: "old" },
+                },
+              ]
+            : []),
+          {
+            code: name === "remark-to-comark" ? "RTC0302" : "MKC0302",
+            params: { at: "README.md:1" },
+            file: "README.md",
+            line: 1,
+            edit: {
+              start: 0,
+              end: 1,
+              text: name === "remark-to-comark" ? "\\{" : "&#123;",
+              source: "{x}",
+            },
+          },
+        ],
+        catalog: {},
+        toDiagnostic: () => ({ why: "", fix: "" }),
+      }),
+    });
+    expect(result.changes).toEqual([]);
+    expect(result.held).toEqual([
+      { file: "render.ts", migrator: "remark-to-comark", waiting: ["README.md"] },
+    ]);
   });
 
   it("reports a migrator that can't be loaded instead of throwing", async () => {
@@ -295,6 +378,23 @@ describe("cli", () => {
     expect(output.stdout).toContain("1 Markdown file and 1 code file to change");
     expect(output.stdout).toContain("Run again with --yes to write 2 files.");
     expect(readFileSync(join(root, "docs/a.md"), "utf8")).toBe("# A\n\nSet {value} first.\n");
+  });
+
+  it("says which setup it leaves while Markdown still needs a hand fix", () => {
+    const root = project({
+      "package.json": manifest({
+        remark: "^15.0.0",
+        "remark-gfm": "^4.0.0",
+        "remark-html": "^16.0.0",
+      }),
+      "src/render.ts": `import { remark } from "remark";\nimport gfm from "remark-gfm";\nimport html from "remark-html";\nexport const render = async (md: string) => String(await remark().use(gfm).use(html).process(md));\n`,
+      "docs/a.md": "~a~~b~~a~\n",
+    });
+    const output = run(root, "--yes");
+    expect(output.stdout).toContain(
+      `src/render.ts still renders with remark: switching it now would change how docs/a.md renders. Migrate it first (\`npx remark-to-comark check "${root}" --verbose\` says how), then run the wizard again.`,
+    );
+    expect(readFileSync(join(root, "src/render.ts"), "utf8")).not.toContain("renderHtml(");
   });
 
   it("writes every change with --yes", () => {

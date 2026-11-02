@@ -41,6 +41,14 @@ export interface Plan {
   changes: Change[];
   /** Files more than one migrator wants to change, left as they are. */
   conflicts: { file: string; migrators: string[] }[];
+  /** Setup files left on their library, because switching them would change how these Markdown files render. */
+  held: Held[];
+}
+
+export interface Held {
+  file: string;
+  migrator: string;
+  waiting: string[];
 }
 
 export type Load = (migrator: string) => Promise<Migrator>;
@@ -74,12 +82,19 @@ export async function plan(
     }
   }
   const wanted = new Map<string, Change[]>();
+  const held: Held[] = [];
   for (const { detection, findings } of reports) {
     // Safe content edits can still be written, but switching parsers must wait for every unresolved document.
-    const unresolvedContent = findings?.some(
-      (finding) =>
-        finding.code.endsWith("0303") || (finding.code.endsWith("0302") && !finding.edit),
-    );
+    const unresolved = [
+      ...new Set(
+        findings
+          ?.filter(
+            (finding) =>
+              finding.code.endsWith("0303") || (finding.code.endsWith("0302") && !finding.edit),
+          )
+          .map((finding) => finding.file),
+      ),
+    ];
     const contentFiles = [
       ...new Set(
         findings?.filter((finding) => finding.code.endsWith("0302")).map((finding) => finding.file),
@@ -87,7 +102,15 @@ export async function plan(
     ];
     for (const finding of findings ?? []) {
       if (!finding.edit) continue;
-      if (unresolvedContent && finding.code.endsWith("0202")) continue;
+      if (unresolved.length && finding.code.endsWith("0202")) {
+        if (
+          !held.some(
+            (entry) => entry.file === finding.file && entry.migrator === detection.migrator,
+          )
+        )
+          held.push({ file: finding.file, migrator: detection.migrator, waiting: unresolved });
+        continue;
+      }
       const changes = wanted.get(finding.file) ?? [];
       // A migrator puts the same edit on every finding in a file, such as each rewritten chain in it.
       if (
@@ -113,7 +136,16 @@ export async function plan(
     if (owned) changes.push(owned);
     else conflicts.push({ file, migrators: [...new Set(list.map((change) => change.migrator))] });
   }
-  return { detected, reports, changes, conflicts };
+  // A content file another migrator owns, or no one does, stays unescaped, so its setup can't switch either.
+  for (const change of changes.filter((change) => change.requires)) {
+    const waiting = change.requires!.filter(
+      (file) => !changes.some((other) => other.file === file && other.migrator === change.migrator),
+    );
+    if (!waiting.length) continue;
+    changes.splice(changes.indexOf(change), 1);
+    held.push({ file: change.file, migrator: change.migrator, waiting });
+  }
+  return { detected, reports, changes, conflicts, held };
 }
 
 /**
@@ -141,16 +173,24 @@ const same = (a: Change["edit"], b: Change["edit"]) =>
  * Writes content before dependent setup rewrites, unless a file changed since the check read it.
  * A setup stays unchanged unless all its required content edits were written by that migrator.
  */
-export function apply(root: string, changes: Change[]): { written: string[]; stale: string[] } {
+export function apply(
+  root: string,
+  changes: Change[],
+): { written: string[]; stale: string[]; held: Held[] } {
   const written: string[] = [];
   const stale: string[] = [];
+  const held: Held[] = [];
   const applied = new Map<string, Set<string>>();
   const ordered = [
     ...changes.filter((change) => !change.requires),
     ...changes.filter((change) => change.requires),
   ];
   for (const { file, source, edit, migrator, requires } of ordered) {
-    if (requires?.some((required) => !applied.get(migrator)?.has(required))) continue;
+    const waiting = requires?.filter((required) => !applied.get(migrator)?.has(required));
+    if (waiting?.length) {
+      held.push({ file, migrator, waiting });
+      continue;
+    }
     const path = join(root, file);
     if (readFileSync(path, "utf8") !== source) {
       stale.push(file);
@@ -162,5 +202,5 @@ export function apply(root: string, changes: Change[]): { written: string[]; sta
     files.add(file);
     applied.set(migrator, files);
   }
-  return { written, stale };
+  return { written, stale, held };
 }
