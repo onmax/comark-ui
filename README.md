@@ -136,6 +136,15 @@ pnpm add -D markdown-it-to-comark
 pnpm markdown-it-to-comark check .
 ```
 
+## Moving from marked
+
+Install [`marked-to-comark`](./packages/marked-to-comark) to move a project from marked to Comark. It reports each marked setup and what its options and extensions become, rewrites marked calls to Comark's `renderHtml`, and escapes the Markdown Comark would read differently:
+
+```sh
+pnpm add -D marked-to-comark
+pnpm marked-to-comark check .
+```
+
 ## Agents
 
 [`skills/comark-ui`](./skills/comark-ui) teaches an agent every package, with a reference per package. Install it with `vp dlx skills add onmax/comark-ui`, or bundle it in an app from `comark-ui/skills/comark-ui/`. `vp` comes with [Vite+](https://viteplus.dev/guide/global-cli); without it, `pnpm dlx` takes the same arguments.

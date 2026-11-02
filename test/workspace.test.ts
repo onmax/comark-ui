@@ -100,7 +100,16 @@ describe.each(withRenderer)("the renderer of packages/%s", (folder) => {
 });
 
 const inPreset = folders.filter(
-  (folder) => !["ui", "lint", "chat", "remark-to-comark", "markdown-it-to-comark"].includes(folder),
+  (folder) =>
+    ![
+      "ui",
+      "lint",
+      "chat",
+      "migrate-to-comark",
+      "remark-to-comark",
+      "markdown-it-to-comark",
+      "marked-to-comark",
+    ].includes(folder),
 );
 describe.each(inPreset)("packages/%s", (folder) => {
   const pkg = manifest(folder);

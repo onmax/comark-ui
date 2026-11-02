@@ -22,7 +22,7 @@ npx migrate-to-comark
 | --- | --- | --- |
 | remark | unified, remark and rehype plugins, react-markdown, streamdown, MDX, Astro, Docusaurus, Gatsby, Nextra, Fumadocs, Nuxt Content, Contentlayer, Velite | [remark-to-comark](/remark-to-comark/) |
 | markdown-it | markdown-it and its plugins, VitePress, VuePress, Slidev, Eleventy, Hexo, Marp | [markdown-it-to-comark](/markdown-it-to-comark/) |
-| marked | marked and its extensions, svelte-markdown, ngx-markdown | marked-to-comark |
+| marked | marked and its extensions, svelte-markdown, ngx-markdown | [marked-to-comark](/marked-to-comark/) |
 
 showdown, Markdoc, markdown-to-jsx, commonmark.js, snarkdown, and markdown-wasm have no migrator yet. The wizard names them and leaves them alone.
 

@@ -14,6 +14,7 @@ import { css as criticCss } from "../packages/critic/src/index.ts";
 import { createIcons, css as iconCss, iconHtml } from "../packages/icon/src/html.ts";
 import include from "../packages/include/src/index.ts";
 import { lint, type Diagnostic } from "../packages/lint/src/index.ts";
+import { catalog as markedCatalog } from "../packages/marked-to-comark/src/diagnostics.ts";
 import { catalog as markdownItCatalog } from "../packages/markdown-it-to-comark/src/diagnostics.ts";
 import { catalog as remarkCatalog } from "../packages/remark-to-comark/src/diagnostics.ts";
 import { defaultConfig } from "./config.ts";
@@ -140,6 +141,7 @@ const packageOrder = [
   "migrate-to-comark",
   "remark-to-comark",
   "markdown-it-to-comark",
+  "marked-to-comark",
 ];
 const repo = new URL("../", root);
 // The agent skills that write a whole document, in the order the Skills section lists them. Each has a folder in
@@ -327,6 +329,7 @@ const packagePages = (slug: string) =>
 const migrators = [
   { slug: "remark-to-comark", title: "From remark", catalog: remarkCatalog },
   { slug: "markdown-it-to-comark", title: "From markdown-it", catalog: markdownItCatalog },
+  { slug: "marked-to-comark", title: "From marked", catalog: markedCatalog },
 ];
 // The rail, as on ui.nuxt.com: a few kinds of page, each a column of its pages. Blocks are documented for comark-ui,
 // and each page ends with its own package for anyone who installs fewer.
