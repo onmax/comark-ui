@@ -16,9 +16,9 @@ npx migrate-to-comark --json     # for agents
 | Library | Migrator |
 | --- | --- |
 | remark, unified, react-markdown, MDX, Astro, Docusaurus | [remark-to-comark](https://comark-ui.onmax.me/remark-to-comark/) |
-| markdown-it, VitePress, VuePress, Eleventy | markdown-it-to-comark |
+| markdown-it, VitePress, VuePress, Eleventy | [markdown-it-to-comark](https://comark-ui.onmax.me/markdown-it-to-comark/) |
 | marked | marked-to-comark |
 
-If two migrators would change the same file, the wizard leaves that file alone. It also skips any file that changed after the check read it. Each migrator's `check --verbose` lists what's left to do, with a fix for each finding.
+A file two migrators both want goes to the library its nearest package.json declares; if that doesn't settle it, the wizard leaves the file alone. It also skips any file that changed after the check read it. Each migrator's `check --verbose` lists what's left to do, with a fix for each finding.
 
 See the [docs](https://comark-ui.onmax.me/migrate-to-comark/).

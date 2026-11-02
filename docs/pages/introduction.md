@@ -53,7 +53,7 @@ Each package is a parse plugin and a set of components.
 | Page behavior | Zoom, carousels, tabs, code buttons, heading links, and a table of contents. |
 | Typography | Markdown syntax: footnotes, definition lists, highlights, keys, figures, CriticMarkup, and CJK emphasis. |
 | Linter | comark-linter checks documents from a script, the command line, ESLint, or Vite Doctor. |
-| Migrate | migrate-to-comark finds remark, markdown-it, or marked in a project and moves it to Comark; remark-to-comark does the remark part and reports what it leaves to you. |
+| Migrate | migrate-to-comark finds remark, markdown-it, or marked in a project and moves it to Comark with each library's migrator, which reports what it leaves to you. |
 
 Each block's page starts with demos you can open in the [playground](/play/) and edit live.
 

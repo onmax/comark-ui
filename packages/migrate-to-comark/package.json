@@ -45,6 +45,7 @@
   },
   "dependencies": {
     "@clack/prompts": "^1.8.1",
+    "markdown-it-to-comark": "workspace:*",
     "remark-to-comark": "workspace:*",
     "tinyglobby": "^0.2.17"
   },

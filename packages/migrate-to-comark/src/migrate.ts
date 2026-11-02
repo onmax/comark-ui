@@ -1,5 +1,5 @@
 import { readFileSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { detect, type Detected, type Detection } from "./detect.ts";
 
 /** What every migrator's check reports, the shape remark-to-comark set. */
@@ -95,10 +95,29 @@ export async function plan(
   const changes: Change[] = [];
   const conflicts: Plan["conflicts"] = [];
   for (const [file, list] of [...wanted].sort(([a], [b]) => a.localeCompare(b))) {
-    if (list.length === 1) changes.push(list[0]!);
+    const owned = list.length === 1 ? list[0] : owner(file, list, detected);
+    if (owned) changes.push(owned);
     else conflicts.push({ file, migrators: [...new Set(list.map((change) => change.migrator))] });
   }
   return { detected, reports, changes, conflicts };
+}
+
+/**
+ * In a monorepo every migrator wants every Markdown file, so a file goes to the library its nearest declaring
+ * package.json uses, such as a VitePress site's own package. A package.json that declares several of them decides
+ * nothing.
+ */
+function owner(file: string, list: Change[], detected: Detected): Change | undefined {
+  const declared = new Map<string, Set<string>>();
+  for (const { migrator, uses } of detected.libraries)
+    for (const { manifest } of uses)
+      declared.set(manifest, new Set([...(declared.get(manifest) ?? []), migrator]));
+  for (let dir = dirname(file); ; dir = dirname(dir)) {
+    const manifest = dir === "." ? "package.json" : `${dir}/package.json`;
+    const competing = list.filter((change) => declared.get(manifest)?.has(change.migrator));
+    if (competing.length) return competing.length === 1 ? competing[0] : undefined;
+    if (dir === "." || dir === dirname(dir)) return undefined;
+  }
 }
 
 const same = (a: Change["edit"], b: Change["edit"]) =>

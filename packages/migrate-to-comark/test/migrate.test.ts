@@ -85,6 +85,25 @@ describe("plan and apply", () => {
     expect((await plan(root)).changes).toEqual([]);
   });
 
+  it("gives a file both migrators want to the library its nearest package.json declares", async () => {
+    const root = project({
+      "package.json": manifest({}),
+      "apps/web/package.json": manifest({ remark: "^15.0.0" }),
+      "apps/web/posts/a.md": "Set [value] first.\n",
+      "docs/package.json": manifest({ "markdown-it": "^14.0.0" }),
+      "docs/guide/a.md": "Set [value] first.\n",
+      "README.md": "Set [value] first.\n",
+    });
+    const result = await plan(root);
+    expect(result.changes.map(({ file, migrator }) => ({ file, migrator }))).toEqual([
+      { file: "apps/web/posts/a.md", migrator: "remark-to-comark" },
+      { file: "docs/guide/a.md", migrator: "markdown-it-to-comark" },
+    ]);
+    expect(result.conflicts).toEqual([
+      { file: "README.md", migrators: ["remark-to-comark", "markdown-it-to-comark"] },
+    ]);
+  });
+
   it("leaves a file two migrators would change, and says which", async () => {
     const root = project({
       "package.json": manifest({ remark: "^15.0.0", marked: "^15.0.0" }),

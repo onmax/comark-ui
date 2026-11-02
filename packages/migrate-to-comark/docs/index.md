@@ -21,14 +21,14 @@ npx migrate-to-comark
 | Library | Found through | Migrator |
 | --- | --- | --- |
 | remark | unified, remark and rehype plugins, react-markdown, streamdown, MDX, Astro, Docusaurus, Gatsby, Nextra, Fumadocs, Nuxt Content, Contentlayer, Velite | [remark-to-comark](/remark-to-comark/) |
-| markdown-it | markdown-it and its plugins, VitePress, VuePress, Slidev, Eleventy, Hexo, Marp | markdown-it-to-comark |
+| markdown-it | markdown-it and its plugins, VitePress, VuePress, Slidev, Eleventy, Hexo, Marp | [markdown-it-to-comark](/markdown-it-to-comark/) |
 | marked | marked and its extensions, svelte-markdown, ngx-markdown | marked-to-comark |
 
 showdown, Markdoc, markdown-to-jsx, commonmark.js, snarkdown, and markdown-wasm have no migrator yet. The wizard names them and leaves them alone.
 
 ## What it writes
 
-The wizard writes only what each migrator's own `rewrite --write` and `content --write` would. Before writing a file, it checks the file hasn't changed since the check read it. If two migrators would change the same file, it leaves that file alone and names both.
+The wizard writes only what each migrator's own `rewrite --write` and `content --write` would. Before writing a file, it checks the file hasn't changed since the check read it. Each migrator checks every Markdown file, so in a project with two libraries both want the same files. A file goes to the library that its nearest package.json declares, such as a VitePress site's own package. When that package.json declares both libraries, or none above the file declares either, the wizard leaves the file alone and names both migrators.
 
 On the 100 projects remark-to-comark was [tested on](/remark-to-comark/testing/), `npx migrate-to-comark --yes` writes the same files, byte for byte, as running remark-to-comark's `content` and `rewrite` by hand.
 
