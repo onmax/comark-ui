@@ -24,7 +24,7 @@ export const c = (md) => marked.parseInline(md);`),
       {
         host: "marked",
         plugins: [
-          "marked-highlight:plugin",
+          "marked-highlight:port",
           "marked-alert:plugin",
           "breaks:setup",
           "pedantic:unsupported",
@@ -173,7 +173,7 @@ export async function render(md: string) {
     ],
     [
       "extension options",
-      `import { markedHighlight } from "marked-highlight";\nmarked.use(markedHighlight({ highlight: (c) => c }));\nexport async function a(s: string) { return marked.parse(s); }`,
+      `import markedAlert from "marked-alert";\nmarked.use(markedAlert({ variants: [] }));\nexport async function a(s: string) { return marked.parse(s); }`,
       "doesn't take",
     ],
   ])("leaves a call in %s", (_, body, reason) => {
@@ -188,6 +188,15 @@ export async function render(md: string) {
     const { code } = rewriteSource(source, "a.ts", { callers: ["b.ts"] });
     expect(code).toContain("marked.use({ breaks: true });");
     expect(code).toContain("await renderHtml(s, comarkOptions({ breaks: true }))");
+  });
+
+  it("carries marked-highlight's options over to its port, and returns the promise of an async highlighter", () => {
+    const source = `import { Marked } from "marked";\nimport { markedHighlight } from "marked-highlight";\nimport hljs from "highlight.js";\nconst md = new Marked(markedHighlight({ async: true, highlight: (code, lang) => hljs.highlight(code, { language: lang }).value }));\nexport const render = (s: string) => md.parse(s);\n`;
+    const { code } = rewriteSource(source, "a.ts");
+    expect(code).toBe(
+      `import hljs from "highlight.js";\nimport { markedHighlight as markedHighlightFromComark } from "marked-to-comark/plugins";\nimport { renderHtml } from "@comark/html";\nimport { comarkOptions } from "marked-to-comark/setup";\nexport const render = (s: string) => renderHtml(s, comarkOptions({ plugins: [markedHighlightFromComark({ async: true, highlight: (code, lang) => hljs.highlight(code, { language: lang }).value })] }));\n`,
+    );
+    expect(parses(code)).toBe(true);
   });
 
   it("leaves the shared marked when other files configure it", () => {

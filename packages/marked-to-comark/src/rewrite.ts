@@ -38,7 +38,7 @@ export interface RewriteContext {
   callers?: string[];
 }
 
-const REWRITABLE = new Set(["pipeline", "setup", "builtin", "plugin"]);
+const REWRITABLE = new Set(["pipeline", "setup", "builtin", "plugin", "port"]);
 /** What the rewrite needs to know about a script's bindings, from one parse: no regexes over source. */
 interface Facts {
   /** Every identifier name in the file, bound or not (`Math`, a parameter), so a new import never shadows one. */
@@ -310,8 +310,15 @@ function blocker(
   return undefined;
 }
 
-/** Whether marked already returns a promise here: `async: true`, set anywhere in the setup or on the call. */
-const isAsync = (setup: Setup, plugins: FoundPlugin[]) => setting(plugins, "async") === "true";
+/**
+ * Whether marked already returns a promise here: `async: true`, set anywhere in the setup or on the call, or an async
+ * extension such as `markedHighlight({ async: true })`.
+ */
+const isAsync = (setup: Setup, plugins: FoundPlugin[]) =>
+  setting(plugins, "async") === "true" ||
+  plugins.some(
+    (plugin) => plugin.type === "extension" && /\basync\s*:\s*true\b/.test(plugin.options ?? ""),
+  );
 
 function enclosingFunction(node: Node, parent: WeakMap<Node, Node>): Node | undefined {
   for (let up = parent.get(node); up; up = parent.get(up)) if (isFunction(up)) return up;

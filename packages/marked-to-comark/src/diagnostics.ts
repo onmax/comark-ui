@@ -31,14 +31,28 @@ export const catalog = {
     severity: "info",
     why: (p: Plugin & { ui: string }) =>
       `${p.plugin} (${p.at}) has a comark-ui counterpart: ${p.ui} (${uiDocs(p.ui)}).`,
-    fix: (p: Plugin & { ui: string; comark?: string }) =>
-      `Install ${p.ui} and register it as its docs say; its markup differs from ${p.plugin}'s, so check pages that style it.${p.comark ? ` Comark's own ${p.comark} also does the job.` : ""} ${SKILL}`,
+    fix: (p: Plugin & { ui: string; comark?: string; port?: string }) =>
+      `Install ${p.ui} and register it as its docs say; its markup differs from ${p.plugin}'s, so check pages that style it.${
+        p.port
+          ? ` For output identical to ${p.plugin}, use ${p.port} from marked-to-comark/plugins instead, tested against it; the rewrite does.`
+          : p.comark
+            ? ` Comark's own ${p.comark} also does the job.`
+            : ""
+      } ${SKILL}`,
   },
   MKC0103: {
     ruleId: "marked-to-comark/extension",
     severity: "info",
     why: (p: Plugin & { how: string }) => `${p.plugin} (${p.at}) is covered: ${p.how}`,
     fix: () => "Nothing to do; the rewrite carries it over.",
+  },
+  MKC0104: {
+    ruleId: "marked-to-comark/extension",
+    severity: "info",
+    why: (p: Plugin & { port: string }) =>
+      `${p.plugin} (${p.at}) becomes ${p.port} from marked-to-comark/plugins, tested against the original extension.`,
+    fix: (p: Plugin & { port: string }) =>
+      `Register \`${p.port}\` where ${p.plugin} was; options carry over.`,
   },
   MKC0105: {
     ruleId: "marked-to-comark/custom-code",

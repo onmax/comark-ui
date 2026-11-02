@@ -424,7 +424,16 @@ export async function check(
             : undefined;
         const finding = (code: Code, params: Record<string, unknown> = {}) =>
           findings.push({ code, params: { ...where, ...params }, file, line: plugin.line });
-        if (ui) finding("MKC0102", { ui, ...(kind === "plugin" ? { comark: call } : {}) });
+        if (ui)
+          finding("MKC0102", {
+            ui,
+            ...(kind === "port" && use
+              ? { port: `\`${use.name}()\`` }
+              : kind === "plugin"
+                ? { comark: call }
+                : {}),
+          });
+        else if (kind === "port" && use) finding("MKC0104", { port: `${use.name}()` });
         else if (kind === "custom") finding("MKC0105", { note: note ?? "" });
         else if (kind === "unsupported") finding("MKC0106", { note: note ?? "" });
         else if (kind !== "pipeline")

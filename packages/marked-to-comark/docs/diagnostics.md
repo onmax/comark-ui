@@ -27,6 +27,10 @@ To teach an agent Comark's blocks and plugins, run `npx skills add onmax/comark-
 
 **Covered.** Comark or `comarkOptions()` already does what the option or extension did: `gfm`, `breaks`, `headerIds` and `headerPrefix`, `langPrefix`, marked-gfm-heading-id, marked-smartypants, and others. The finding names the `comarkOptions()` setting when there is one. Nothing to do; `rewrite` carries it over.
 
+## mkc0104
+
+**A port in `marked-to-comark/plugins` replaces the extension**, with the same options and output: `markedHighlight()` for marked-highlight, which runs your own highlighter (highlight.js, Prism). Its tests compare its HTML with the original's. `rewrite` registers it for you.
+
 ## mkc0105
 
 **Your own code for marked**: a `renderer`, `tokenizer`, `walkTokens`, `hooks`, or an extension you wrote. The finding says what it becomes. A renderer that changes how one element looks, such as links that open in a new tab, becomes a component for that element (`components: { a }` in @comark/html, or your framework's renderer). Anything that changes what's parsed becomes a Comark plugin. Then compare the HTML of a few of your documents rendered both ways.

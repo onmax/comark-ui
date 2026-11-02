@@ -5,10 +5,18 @@
  * - `setup`: covered by `comarkSetup()`; `setting` is what to pass it, if anything.
  * - `builtin`: Comark does it without a plugin.
  * - `plugin`: a Comark plugin does the same job; `use` is the import and `call` the expression.
+ * - `port`: this package ships a Comark version with the same options and output; `use` points at it.
  * - `custom`: the project's own code (a renderer, a tokenizer, an extension it wrote); it needs porting by hand.
  * - `unsupported`: no counterpart yet; the note says what to do.
  */
-export type MappingKind = "pipeline" | "setup" | "builtin" | "plugin" | "custom" | "unsupported";
+export type MappingKind =
+  | "pipeline"
+  | "setup"
+  | "builtin"
+  | "plugin"
+  | "port"
+  | "custom"
+  | "unsupported";
 
 export interface Mapping {
   kind: MappingKind;
@@ -65,7 +73,13 @@ const math = {
 };
 
 const EXTENSIONS: Record<string, Mapping> = {
-  "marked-highlight": highlight,
+  "marked-highlight": {
+    kind: "port",
+    use: { name: "markedHighlight", from: "marked-to-comark/plugins", named: true },
+    call: "markedHighlight($options)",
+    note: "`markedHighlight()` from marked-to-comark/plugins takes the same options and runs your highlighter, so the markup stays as it was.",
+    ui: "comark-code",
+  },
   "marked-shiki": highlight,
   "marked-gfm-heading-id": setup(
     "Comark gives headings ids with `headingIds: true`; its slugs keep Unicode letters like marked-gfm-heading-id's, but differ on some punctuation.",
