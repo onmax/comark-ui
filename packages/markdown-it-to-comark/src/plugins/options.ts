@@ -75,18 +75,18 @@ export const markdownItTokens = (options: MarkdownItOptions): ComarkPlugin => ({
     },
   ],
   markdownItPost(state) {
-    for (const block of state.tokens) {
-      const children = block.children;
-      if (block.type !== "inline" || !children) continue;
-      for (let index = 0; index < children.length; index++) {
-        const token = children[index]!;
-        // Comark reads any text that starts with `<!--` as a comment, even with HTML off, where markdown-it shows it.
-        if (!options.html && token.type === "text" && token.content.startsWith("<!--")) {
+    const fix = (tokens: Token[]) => {
+      for (let index = 0; index < tokens.length; index++) {
+        const token = tokens[index]!;
+        if (token.children) fix(token.children);
+        // Comark reads any text that starts with `<!--` as a comment, even text markdown-it shows (HTML off, a
+        // comment inside code a renderer rule drew), and drops what follows.
+        if (token.type === "text" && token.content.startsWith("<!--")) {
           // SAFETY: Comark's tokens are instances of markdown-exit's Token class.
           const rest = new (token.constructor as TokenClass)("text", "", 0);
           rest.content = token.content.slice(1);
           token.content = "<";
-          children.splice(index + 1, 0, rest);
+          tokens.splice(index + 1, 0, rest);
           index++;
           continue;
         }
@@ -94,7 +94,8 @@ export const markdownItTokens = (options: MarkdownItOptions): ComarkPlugin => ({
         if (token.type === "s_open") rename(token, "mdc_inline_span_open", "s");
         else if (token.type === "s_close") rename(token, "mdc_inline_span_close", "s");
       }
-    }
+    };
+    fix(state.tokens);
   },
 });
 

@@ -213,6 +213,8 @@ function locate(
       !cell && trimmed.endsWith(wanted) && trimmed.length - wanted.length >= cursor
         ? match(trimmed.length - wanted.length)
         : undefined;
+    // An empty cell is empty wherever the search stands.
+    if (!part) found = match(Math.min(cursor, line.text.length));
     for (let at = cursor; !found && at <= line.text.length - part.length; at++)
       if (line.text[at] === part[0] || (part[0] === "|" && line.text[at] === "\\"))
         found = match(at);

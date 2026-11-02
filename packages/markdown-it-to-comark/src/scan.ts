@@ -65,6 +65,10 @@ export interface Setup {
   renders: Render[];
   /** Why part of the setup can't be read (options in a variable, an instance passed on). */
   unresolved?: string;
+  /** A function that configures an instance it's given: its name, so a hook elsewhere that names it finds it. */
+  name?: string;
+  /** A hook written as a name (`markdownItSetup: configureMarkdown`): the function it names, and where it's from. */
+  delegate?: { name: string; from?: string };
   /** For an instance the project creates: where the creating expression is, and its binding. */
   creation?: {
     start: number;
@@ -483,6 +487,30 @@ function scanScript(source: string, file: string): Setup[] {
       setups.push(setup);
       return;
     }
+    // A framework hook that names a function written elsewhere: `markdownItSetup: configureMarkdown`.
+    if (node.type === "Property" && node.value.type === "Identifier") {
+      const key = keyName(node.key);
+      const holder = up(node);
+      const markdown = holder && up(holder);
+      const inMarkdown =
+        key === "config" &&
+        markdown?.type === "Property" &&
+        keyName((markdown as Extract<Node, { type: "Property" }>).key) === "markdown";
+      const host = (key ? HOOKS.get(key) : undefined) ?? (inMarkdown ? "vitepress" : undefined);
+      if (!host || holder?.type !== "ObjectExpression") return;
+      const setup = empty(lineOf(node.start), host);
+      setup.delegate = { name: node.value.name, from: imports.get(node.value.name) };
+      // The options beside it: VitePress' `markdown: { html }`, vite-plugin-md's `markdownItOptions: { html }`.
+      for (const property of holder.properties) {
+        if (property.type !== "Property" || property.computed || property === node) continue;
+        const name = keyName(property.key);
+        if (name === "markdownItOptions" && property.value.type === "ObjectExpression")
+          readOptions(setup, property.value);
+        else if (inMarkdown && name) setup.options[name] = text(property.value);
+      }
+      setups.push(setup);
+      return;
+    }
     // A function that configures an instance it's given: a framework hook, or the project's own helper.
     if (
       node.type === "FunctionExpression" ||
@@ -539,6 +567,13 @@ function scanScript(source: string, file: string): Setup[] {
       host ??= fileHost && fileHost !== "eleventy" ? fileHost : "function";
       setup.host = host;
       setup.renders = [];
+      const declarator = owner?.type === "VariableDeclarator" ? owner : undefined;
+      setup.name =
+        node.type === "FunctionDeclaration"
+          ? node.id?.name
+          : declarator?.id.type === "Identifier"
+            ? declarator.id.name
+            : undefined;
       setups.push(setup);
     }
   });

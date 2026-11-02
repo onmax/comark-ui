@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join, posix, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { glob as globFiles } from "tinyglobby";
 import { migrateContent, type ContentOptions, type PluginUse } from "./content.ts";
@@ -317,11 +317,12 @@ export async function contentSetup(
   options: { load?: Loader } = {},
 ): Promise<ContentSetup> {
   const load = options.load ?? defaultLoader;
+  // A `zero` instance renders a fragment (a title, a commit message), rarely a whole document.
+  const rank = (setup: Setup) =>
+    (setup.host !== "markdown-it" && setup.host !== "function" ? 2 : 0) +
+    (setup.preset === "zero" ? 0 : 1);
   const ordered = [...setups].sort(
-    (a, b) =>
-      Number(b.host !== "markdown-it" && b.host !== "function") -
-        Number(a.host !== "markdown-it" && a.host !== "function") ||
-      b.plugins.length - a.plugins.length,
+    (a, b) => rank(b) - rank(a) || b.plugins.length - a.plugins.length,
   );
   const profiles = await Promise.all(ordered.map((setup) => profile(root, setup, load)));
   const [primary] = profiles;
@@ -358,6 +359,46 @@ const keyOf = (_key: string, item: unknown) =>
 
 const SITE = /(^|\/)(\.vitepress|\.vuepress)\/config\.[cm]?[jt]s$/;
 
+/**
+ * Each hook that names a function written elsewhere (`markdownItSetup: configureMarkdown`) gets that function's
+ * plugins and changes, and the function stops counting as a setup of its own: it's the hook's.
+ */
+function withDelegates(scanned: ScannedFile[]): ScannedFile[] {
+  const used = new Set<Setup>();
+  const stem = (file: string) => file.replace(/\.[cm]?[jt]sx?$/, "").replace(/\/index$/, "");
+  const merged = scanned.map((entry) => ({
+    ...entry,
+    setups: entry.setups.map((setup) => {
+      const delegate = setup.delegate;
+      if (!delegate) return setup;
+      const from = delegate.from;
+      const target = from?.startsWith(".")
+        ? stem(posix.join(posix.dirname(entry.file), from))
+        : from === undefined
+          ? stem(entry.file)
+          : undefined;
+      const found = scanned
+        .filter((other) => stem(other.file) === target)
+        .flatMap((other) => other.setups)
+        .find((other) => other.host === "function" && other.name === delegate.name);
+      if (!found) return setup;
+      used.add(found);
+      return {
+        ...setup,
+        options: { ...found.options, ...setup.options },
+        plugins: found.plugins,
+        rules: found.rules,
+        customized: found.customized,
+        unresolved: setup.unresolved ?? found.unresolved,
+      };
+    }),
+  }));
+  return merged.map((entry) => ({
+    ...entry,
+    setups: entry.setups.filter((setup) => !used.has(setup)),
+  }));
+}
+
 /** Resolve content by its nearest package or framework site, keeping sibling sites apart. */
 export async function contentSetups(
   root: string,
@@ -384,7 +425,7 @@ export async function contentSetups(
     return site ?? boundaries.find((dir) => file.startsWith(dir))!;
   };
   const byScope = new Map<string, Setup[]>();
-  for (const entry of scanned)
+  for (const entry of withDelegates(scanned))
     for (const setup of entry.setups) {
       const scope = owner(entry.file);
       byScope.set(scope, [...(byScope.get(scope) ?? []), setup]);

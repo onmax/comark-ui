@@ -308,7 +308,12 @@ export function markdownItPlugin(plugin: unknown, ...options: unknown[]): Comark
           : renderer.renderToken(tokens, index, md!.options);
         return typeof html === "string" ? html : undefined;
       };
-      const wanted = (token: Token) => changed.has(token.type) || !KNOWN.has(token.type);
+      // Comark's tree builder reads a code block's language from its info string and drops attributes a plugin set on
+      // it (markdown-it-attrs' `{data-x}`), so such a block is drawn by markdown-it too.
+      const wanted = (token: Token) =>
+        changed.has(token.type) ||
+        !KNOWN.has(token.type) ||
+        ((token.type === "fence" || token.type === "code_block") && Boolean(token.attrs?.length));
       const bridge = (tokens: Token[], block: boolean): Token[] => {
         const out: Token[] = [];
         const replace = new Map<number, Token[]>();

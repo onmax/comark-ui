@@ -79,6 +79,20 @@ describe("check", () => {
     expect(content[0]!.line).toBe(3);
   });
 
+  it("reads a framework hook's plugins from the function it names", async () => {
+    const root = project({
+      "package.json": "{}",
+      "vite.config.ts":
+        'import Markdown from "unplugin-vue-markdown/vite";\nimport { setup } from "./md";\nexport default { plugins: [Markdown({ markdownItSetup: setup })] };\n',
+      "md.ts":
+        'import container from "markdown-it-container";\nexport function setup(md) { md.use(container, "tip") }\n',
+      "a.md": "::: tip\nKept [x]\n:::\n",
+    });
+    const [content] = (await check(root)).filter((finding) => finding.code === "MIC0302");
+    expect(content?.params.count).toBe(2);
+    expect(content?.line).toBe(2);
+  });
+
   it("prints the same JSON shape as remark-to-comark", async () => {
     const [finding] = JSON.parse(formatFindings(await check(fixture()), { json: true })) as Record<
       string,

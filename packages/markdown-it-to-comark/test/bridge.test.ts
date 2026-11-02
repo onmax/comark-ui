@@ -122,6 +122,12 @@ describe("markdownItPlugin", () => {
       "~~a~~\n",
     ],
     [
+      "code that shows an HTML comment",
+      (md) =>
+        void (md.renderer.rules.fence = () => "<pre><code>&lt;!-- a --&gt;\nb\n</code></pre>\n"),
+      "```\nx\n```\n",
+    ],
+    [
       "code whose text is only newlines",
       (md) => void (md.renderer.rules.fence = () => "<pre><code>\n\n</code></pre>\n"),
       "```\nx\n```\n",

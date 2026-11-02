@@ -119,8 +119,16 @@ function walk(node: Nodes, tokens: Token[], verbatim: boolean, options: Normaliz
 const tagOf = (token: Token) => /^<\/?([\w-]+)/.exec(token)?.[1];
 
 /** HTML as a list of tokens that compare equal when the two documents render the same. */
+// A self-closing tag that isn't void, such as a Vue component's `<Badge />`. A browser reads it as open; Vue, which
+// compiles these sites' Markdown, and Comark read it as closed.
+const SELF_CLOSING =
+  /<([A-Za-z][\w-]*)((?:\s+[^\s"'>/=]+(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s"'=<>`]+))?)*)\s*\/>/g;
+
 export function normalize(source: string, options: NormalizeOptions = {}): Token[] {
-  const tree = fromHtml(source, { fragment: true });
+  const closed = source.replace(SELF_CLOSING, (tag, name: string, attributes: string) =>
+    VOID.has(name.toLowerCase()) ? tag : `<${name}${attributes}></${name}>`,
+  );
+  const tree = fromHtml(closed, { fragment: true });
   const raw: Token[] = [];
   walk(tree, raw, false, options);
   // Text split by a comment or by the parser is one run of text.
