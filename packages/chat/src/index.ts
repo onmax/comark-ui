@@ -104,9 +104,10 @@ function toolStep<Part extends MessagePart>(part: Part, index: number): Step<Par
   const data = fields(part);
   // Tool titles are often phrases already, such as "Run focused tests", so the state goes beside the title, not in it.
   const title =
-    part.type === "dynamic-tool"
-      ? (string(data.title) ?? string(data.toolName) ?? "Tool")
-      : part.type.slice("tool-".length).replaceAll(/[-_]/g, " ");
+    string(data.title) ??
+    (part.type === "dynamic-tool"
+      ? (string(data.toolName) ?? "Tool")
+      : part.type.slice("tool-".length).replaceAll(/[-_]/g, " "));
   const [status, state] = toolStates.get(string(data.state) ?? "") ?? ["done", ""];
   const values: ToolValue[] = [];
   if ("input" in data && data.input !== undefined)

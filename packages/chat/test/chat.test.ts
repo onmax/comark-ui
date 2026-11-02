@@ -135,6 +135,49 @@ describe("read()", () => {
     ]);
   });
 
+  it("titles a tool with the part's title, else its name", () => {
+    const [trace] = read([
+      {
+        type: "tool-exec_command",
+        toolCallId: "c1",
+        state: "output-available",
+        title: 'rg -n "Node" pages/docs/install.md',
+        input: {},
+        output: "",
+      },
+      {
+        type: "tool-exec_command",
+        toolCallId: "c2",
+        state: "output-available",
+        input: {},
+        output: "",
+      },
+      {
+        type: "dynamic-tool",
+        toolName: "deploy",
+        title: "Deploy the docs",
+        toolCallId: "c3",
+        state: "output-available",
+        input: {},
+        output: "",
+      },
+      {
+        type: "dynamic-tool",
+        toolName: "deploy",
+        toolCallId: "c4",
+        state: "output-available",
+        input: {},
+        output: "",
+      },
+    ]);
+    expect(trace?.kind === "trace" && trace.steps.map((step) => step.title)).toEqual([
+      'rg -n "Node" pages/docs/install.md',
+      "exec command",
+      "Deploy the docs",
+      "deploy",
+    ]);
+  });
+
   it("never throws on values it can't show, and never links unsafe URLs", () => {
     const cyclic: Record<string, unknown> = { big: 1n };
     cyclic.self = cyclic;

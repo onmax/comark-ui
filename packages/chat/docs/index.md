@@ -93,7 +93,7 @@ Use `read()` from `comark-chat` to build your own renderer. It returns the block
 | `file` | `name`, `mediaType`, `href` for a link the browser may open, `download`, and `image` for an image the page may load. |
 | `step-start`, `other` | The part, for the `step` and `fallback` slots. |
 
-A tool's `status` is `running`, `waiting` for the user's approval, `error`, or `done`. Its title is the tool's name with dashes and underscores as spaces, or a dynamic tool's `title`. Values show as JSON. A cyclic one shows `[Circular]`, and one that throws shows `[Value cannot be shown]`. Only http and https URLs, and a named file's data URL, get a link. Images load only from http and https, data image, and blob URLs.
+A tool's `status` is `running`, `waiting` for the user's approval, `error`, or `done`. Its title is the part's `title` when it has one. Otherwise it's the tool's name with dashes and underscores as spaces, or a dynamic tool's `toolName`. Values show as JSON. A cyclic one shows `[Circular]`, and one that throws shows `[Value cannot be shown]`. Only http and https URLs, and a named file's data URL, get a link. Images load only from http and https, data image, and blob URLs.
 
 ### Package
 
