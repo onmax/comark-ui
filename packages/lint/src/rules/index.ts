@@ -27,6 +27,7 @@ import mermaid from "./mermaid.ts";
 import media from "./media.ts";
 import outline from "./outline.ts";
 import qr from "./qr.ts";
+import shiki from "./shiki.ts";
 import quiz from "./quiz.ts";
 import properties from "./properties.ts";
 import sources from "./sources.ts";
@@ -80,4 +81,5 @@ export const catalog = {
   ...magicMove,
   ...comments,
   ...mermaid,
+  ...shiki,
 } satisfies Record<string, RuleInfo>;

@@ -265,7 +265,9 @@ function checkDocument({ source, found, parsed }: Document, options: LintOptions
     check("comark/duplicate-id", () => duplicateIds(document.nodes, source, options.headingIds));
     check("comark/missing-alt", () => missingAlts(document.nodes, source));
     check("comark/empty-link", () => emptyLinks(document.nodes, source));
-    check("comark/plugin-issue", () => pluginIssues(document.meta, source, blocks()));
+    check("comark/plugin-issue", () =>
+      pluginIssues(document.meta, source, [...blocks(), ...codeBlocks(tokens, offset, source)]),
+    );
   }
 }
 
@@ -461,6 +463,16 @@ function blockComponents(tokens: Token[], offset: number, source: Source): Block
     if (!opens || !token.map) return [];
     const line = token.map[0] + offset + 1;
     return [{ name: token.tag, line, column: (source.lines[line - 1]?.indexOf(":") ?? 0) + 1 }];
+  });
+}
+
+function codeBlocks(tokens: Token[], offset: number, source: Source): Block[] {
+  return tokens.flatMap((token) => {
+    if (!["code_block", "fenced_code_block", "fence"].includes(token.type) || !token.map) return [];
+    const line = token.map[0] + offset + 1;
+    const text = source.lines[line - 1] ?? "";
+    const column = token.type === "code_block" ? text.search(/\S/) : text.search(/`{3,}|~{3,}/);
+    return [{ name: "Code block", line, column: Math.max(0, column) + 1 }];
   });
 }
 
@@ -934,7 +946,7 @@ function place(
   blocks: Block[],
   locate: ReturnType<typeof locator>,
 ): { line: number; column?: number } {
-  const numbered = /^`?(?:::)?([a-z][\w-]*)`? (\d+)\b/.exec(issue);
+  const numbered = /^`?(?:::)?(Code block|[a-z][\w-]*)`? (\d+)\b/.exec(issue);
   const block =
     numbered &&
     blocks.filter((candidate) => candidate.name === numbered[1])[Number(numbered[2]) - 1];
