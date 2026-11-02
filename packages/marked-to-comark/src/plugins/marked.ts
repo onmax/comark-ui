@@ -1,5 +1,6 @@
 import type { ComarkParseTokensState, ComarkPlugin, Node } from "comark";
 import { decodeHTML } from "entities";
+import { fromHtmlBlock } from "./gfm.ts";
 
 type Token = ComarkParseTokensState["tokens"][number];
 type TokenClass = new (type: string, tag: string, nesting: Token["nesting"]) => Token;
@@ -268,7 +269,7 @@ export const markedEmails = (): ComarkPlugin => ({
   name: "marked-to-comark:emails",
   markdownItPost(state) {
     for (const block of state.tokens) {
-      if (block.type !== "inline" || !block.children) continue;
+      if (block.type !== "inline" || !block.children || fromHtmlBlock(block)) continue;
       // SAFETY: Comark's tokens are instances of markdown-exit's Token class, which takes a type, a tag, and a nesting.
       const Make = (block.children[0]?.constructor ?? block.constructor) as TokenClass;
       const text = (content: string) => Object.assign(new Make("text", "", 0), { content });

@@ -398,6 +398,7 @@ function scanScript(source: string, file: string, shared?: Map<string, string>):
       if (binding?.kind === "export") return { setup: global, method: binding.name };
       const instance = instances.get(node.name);
       if (instance) return { setup: instance };
+      if (tokenizers.has(node.name)) return { setup: global, method: tokenizers.get(node.name) };
       return undefined;
     }
     const bound = markedModule(node);
@@ -438,8 +439,20 @@ function scanScript(source: string, file: string, shared?: Map<string, string>):
     return setup;
   };
 
-  // Instances bound to a name or a member, so later `x.parse()` and `x.use()` reach them.
+  // Instances bound to a name or a member, so later `x.parse()` and `x.use()` reach them; a `new Lexer()` or
+  // `new Parser()` bound to a name works on tokens.
+  const tokenizers = new Map<string, string>();
   walk(program, (node) => {
+    if (
+      node.type === "VariableDeclarator" &&
+      node.id.type === "Identifier" &&
+      node.init?.type === "NewExpression"
+    ) {
+      const callee = node.init.callee;
+      const made = callee.type === "Identifier" ? marked.get(callee.name) : markedModule(callee);
+      if (made?.kind === "export" && /^(Lexer|Parser)$/.test(made.name))
+        tokenizers.set(node.id.name, made.name);
+    }
     if (
       node.type === "AssignmentExpression" &&
       node.left.type === "MemberExpression" &&

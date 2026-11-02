@@ -119,6 +119,8 @@ const RAW_TAGS = /<(pre|script|style|textarea)\b[\s\S]*?(?:<\/\1\s*>|$)/gi;
 // html() turns each HTML block into an inline token that shares the block's `map` array, which is how
 // htmlEntities() finds them.
 const htmlBlockMaps = new WeakSet<object>();
+/** Whether an inline token was built from an HTML block, whose text marked never reads as Markdown. */
+export const fromHtmlBlock = (token: Token) => Boolean(token.map && htmlBlockMaps.has(token.map));
 const tagAt = (text: string) => /^<\/?([A-Za-z][\w-]*)/.exec(text)?.[1]?.toLowerCase();
 const inlineName = (name: string | undefined) =>
   name === "#text" || (name !== undefined && INLINE_TAGS.has(name));
