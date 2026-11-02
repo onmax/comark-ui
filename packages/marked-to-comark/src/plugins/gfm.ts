@@ -381,9 +381,16 @@ export const htmlEntities = (): ComarkPlugin => ({
   markdownItPost(state) {
     for (const token of state.tokens) {
       if (token.type !== "inline" || !token.map || !htmlBlockMaps.has(token.map)) continue;
-      for (const child of token.children ?? [])
-        if (child.type === "text" && child.content.includes("&"))
+      // A script's or style's text is raw: the browser decodes no entities in it.
+      let raw = false;
+      for (const child of token.children ?? []) {
+        if (child.type === "html_inline")
+          raw =
+            /^<(script|style)[\s>]/i.test(child.content) ||
+            (raw && !/^<\/(script|style)\s*>/i.test(child.content));
+        if (!raw && child.type === "text" && child.content.includes("&"))
           child.content = decodeHTML(child.content);
+      }
     }
   },
 });

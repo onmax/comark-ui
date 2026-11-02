@@ -8,6 +8,7 @@ import {
   breakEndTags,
   breaks,
   emptyHeadings,
+  expandTabs,
   headerIds,
   htmlBlocks,
   htmlIndent,
@@ -55,6 +56,8 @@ export interface SetupOptions {
   headerIds?: boolean | "legacy";
   /** What marked's `headerPrefix` put before each of those ids. */
   headerPrefix?: string;
+  /** Tabs as marked before v14 rewrote them: `all` (before v4) or a line's `leading` ones (v4 to v13). */
+  expandTabs?: "all" | "leading";
   /** The class before a code block's language, `language-` unless set; marked 0.3 wrote `lang-`. */
   langPrefix?: string;
   /** Comark's own heading ids, for marked-gfm-heading-id; see Comark's `headingIds`. */
@@ -76,6 +79,7 @@ export function comarkSetup(options: SetupOptions = {}): ComarkSetup {
   return {
     plugins: [
       ...(options.frontmatter ? [frontmatter()] : []),
+      ...(options.expandTabs ? [expandTabs(options.expandTabs)] : []),
       // Before the HTML workarounds, which turn soft breaks into text.
       ...(options.breaks ? [breaks()] : []),
       ...(options.html === false

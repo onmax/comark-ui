@@ -458,3 +458,20 @@ export const emptyHeadings = (): ComarkPlugin => ({
     }
   },
 });
+
+/**
+ * marked before v14 rewrote tabs before parsing: before v4 every tab became four spaces, from v4 only a line's leading
+ * tabs did. Code blocks show it, so the same happens before Comark parses.
+ */
+export const expandTabs = (mode: "all" | "leading"): ComarkPlugin => ({
+  name: "marked-to-comark:expand-tabs",
+  pre(state) {
+    state.markdown =
+      mode === "all"
+        ? state.markdown.replace(/\t/g, "    ")
+        : state.markdown.replace(
+            /^( *)(\t+)/gm,
+            (_, spaces: string, tabs: string) => spaces + "    ".repeat(tabs.length),
+          );
+  },
+});
