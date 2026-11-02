@@ -31,6 +31,7 @@ It lists the Markdown libraries it found and the package.json files that declare
 | `--dry-run` | Reports what would change and writes nothing. |
 | `--yes` | Writes every change without asking. |
 | `--json` | Prints the report as JSON for agents. With `--yes`, it also writes the changes and lists the files under `written`. |
+| `--only <library>` | Moves only `remark`, `markdown-it`, or `marked`, and skips the question. Repeat it for more than one. |
 
 When it can't ask, as in CI or an agent's shell, it reports and writes nothing unless you pass `--yes`.
 

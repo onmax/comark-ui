@@ -185,6 +185,21 @@ describe("cli", () => {
     expect(output.stdout).toContain("declares remark, markdown-it, or marked");
   });
 
+  it("moves only the libraries --only names", () => {
+    const root = project({
+      "package.json": manifest({ remark: "^15.0.0", "markdown-it": "^14.0.0" }),
+      "docs/a.md": "Set [value] first.\n",
+    });
+    const report = JSON.parse(run(root, "--json", "--only", "markdown-it").stdout);
+    expect(report.reports.map((entry: { library: string }) => entry.library)).toEqual([
+      "markdown-it",
+    ]);
+    expect(report.changes).toEqual([{ file: "docs/a.md", migrator: "markdown-it-to-comark" }]);
+    expect(run(root, "--only", "showdown").stderr).toContain(
+      "Cannot move `showdown`: --only takes remark, markdown-it, marked.",
+    );
+  });
+
   it("refuses a path that isn't a directory", () => {
     const output = run("/no/such/dir");
     expect(output.status).toBe(1);

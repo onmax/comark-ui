@@ -10,7 +10,8 @@ const USAGE = `Usage:
   migrate-to-comark [dir]             find the project's Markdown libraries and move it to Comark, asking first
   migrate-to-comark [dir] --dry-run   report what would change, and write nothing
   migrate-to-comark [dir] --yes       write every change without asking
-  migrate-to-comark [dir] --json      the report as JSON, for agents (add --yes to write)`;
+  migrate-to-comark [dir] --json      the report as JSON, for agents (add --yes to write)
+  migrate-to-comark [dir] --only markdown-it   move only this library (remark, markdown-it, or marked; repeatable)`;
 
 const { positionals, values } = parseArgs({
   allowPositionals: true,
@@ -18,6 +19,7 @@ const { positionals, values } = parseArgs({
     yes: { type: "boolean", default: false },
     "dry-run": { type: "boolean", default: false },
     json: { type: "boolean", default: false },
+    only: { type: "string", multiple: true },
     help: { type: "boolean", short: "h", default: false },
   },
 });
@@ -32,6 +34,13 @@ if (!existsSync(root) || !statSync(root).isDirectory()) {
   process.exit(1);
 }
 
+const LIBRARIES = ["remark", "markdown-it", "marked"];
+const unknown = values.only?.find((library) => !LIBRARIES.includes(library));
+if (unknown) {
+  console.error(`Cannot move \`${unknown}\`: --only takes ${LIBRARIES.join(", ")}.`);
+  process.exit(1);
+}
+const only = values.only?.length ? values.only : undefined;
 const interactive =
   process.stdin.isTTY && process.stdout.isTTY && !values.yes && !values["dry-run"] && !values.json;
 
@@ -48,19 +57,21 @@ async function wizard() {
   }
   for (const detection of first.detected.libraries)
     prompts.log.info(`Found ${detection.library}, moved by ${detection.migrator}.`);
-  let only = first.detected.libraries.map((detection) => detection.library);
-  if (only.length > 1) {
-    const picked = await prompts.multiselect({
+  let picked: string[] = first.detected.libraries
+    .map((detection) => detection.library)
+    .filter((library) => !only || only.includes(library));
+  if (!only && picked.length > 1) {
+    const chosen = await prompts.multiselect({
       message: "Which libraries do you want to move to Comark?",
-      options: only.map((library) => ({ value: library, label: library })),
-      initialValues: only,
+      options: picked.map((library) => ({ value: library, label: library })),
+      initialValues: picked,
     });
-    if (prompts.isCancel(picked)) return prompts.cancel("Nothing written.");
-    only = picked;
+    if (prompts.isCancel(chosen)) return prompts.cancel("Nothing written.");
+    picked = chosen;
   }
   const spinner = prompts.spinner();
   spinner.start("Checking the project");
-  const result = await plan(root, { only, load });
+  const result = await plan(root, { only: picked, load });
   spinner.stop("Checked the project");
   prompts.note((await describe(result, load)).join("\n"), "What each migrator found");
   for (const conflict of result.conflicts)
@@ -85,7 +96,7 @@ async function wizard() {
 }
 
 async function report() {
-  const result = await plan(root, { load });
+  const result = await plan(root, { only, load });
   if (!found(result.detected, (line) => console.log(line))) return;
   console.log((await describe(result, load)).join("\n"));
   for (const conflict of result.conflicts)
@@ -105,7 +116,7 @@ async function report() {
 }
 
 async function json() {
-  const result = await plan(root, { load });
+  const result = await plan(root, { only, load });
   const written = values.yes ? apply(root, result.changes) : undefined;
   console.log(
     JSON.stringify(
