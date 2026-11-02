@@ -8,6 +8,7 @@ import {
   breaks,
   codeNewline,
   headerIds,
+  htmlIndent,
   inlineHtml,
   langPrefix,
   markedEmails,
@@ -77,6 +78,7 @@ export function comarkSetup(options: SetupOptions = {}): ComarkSetup {
         ? [dropHtml()]
         : // CommonMark HTML blocks are raw until a blank line; Comark otherwise reads Markdown inside them.
           [
+            htmlIndent(),
             htmlWhitespace(),
             inlineHtml(),
             htmlParagraphs(),

@@ -330,3 +330,15 @@ export const markedEmails = (): ComarkPlugin => ({
     }
   },
 });
+
+/**
+ * An HTML block may be indented up to three spaces; Comark reads the indent as text and wraps the block in a `<p>`.
+ * Its first line loses the indent, which HTML doesn't render.
+ */
+export const htmlIndent = (): ComarkPlugin => ({
+  name: "marked-to-comark:html-indent",
+  markdownItPost(state) {
+    for (const token of state.tokens)
+      if (token.type === "html_block") token.content = token.content.replace(/^[ \t]+/, "");
+  },
+});
