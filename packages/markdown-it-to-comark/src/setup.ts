@@ -5,6 +5,7 @@ import attributes from "comark/plugins/attributes";
 import { frontmatter } from "./plugins/frontmatter.ts";
 import {
   closeInlineHtml,
+  htmlBlocks,
   htmlEntities,
   htmlParagraphs,
   htmlWhitespace,
@@ -53,6 +54,7 @@ export function comarkSetup(options: SetupOptions = {}): ComarkSetup {
             htmlWhitespace(),
             htmlParagraphs(),
             html({ markdown: false }),
+            htmlBlocks(),
             htmlEntities(),
             closeInlineHtml(),
           ]

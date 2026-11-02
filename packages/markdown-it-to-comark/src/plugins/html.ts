@@ -168,6 +168,48 @@ export const closeInlineHtml = (): ComarkPlugin => ({
   },
 });
 
+/**
+ * An HTML block stays out of a paragraph, as markdown-it writes it. Comark's html plugin wraps each one in a paragraph
+ * and unwraps it again only when everything in it is an element, so a block with a comment or a space between
+ * elements (`<h3>…</h3>\n<p>…</p>`) keeps a `<p>` around it. Registered after html(): a block whose tags balance loses
+ * the paragraph; one that leaves a tag open keeps it, since Comark nests the following blocks through it.
+ */
+export const htmlBlocks = (): ComarkPlugin => ({
+  name: "markdown-it-to-comark:html-blocks",
+  markdownItPost(state) {
+    const tokens = state.tokens;
+    const drop = new Set<number>();
+    for (let index = 1; index + 1 < tokens.length; index++) {
+      const inline = tokens[index]!;
+      if (
+        inline.type !== "inline" ||
+        !inline.map ||
+        !htmlBlockMaps.has(inline.map) ||
+        tokens[index - 1]!.type !== "paragraph_open" ||
+        tokens[index + 1]!.type !== "paragraph_close"
+      )
+        continue;
+      const open: string[] = [];
+      let balanced = true;
+      for (const child of inline.children ?? []) {
+        if (child.type !== "html_inline") continue;
+        if (child.content.startsWith("<!--")) continue;
+        const tag = /^<(\/?)([A-Za-z][\w-]*)[^>]*?(\/?)>$/.exec(child.content.trim());
+        if (!tag) continue;
+        const name = tag[2]!.toLowerCase();
+        if (VOID.has(name) || tag[3]) continue;
+        if (!tag[1]) open.push(name);
+        else if (open.at(-1) === name) open.pop();
+        else balanced = false;
+      }
+      if (!balanced || open.length) continue;
+      drop.add(index - 1);
+      drop.add(index + 1);
+    }
+    if (drop.size) state.tokens = tokens.filter((_, index) => !drop.has(index));
+  },
+});
+
 /** An image's alt text as markdown-it writes it: the text of what its label parsed to, without the markup. */
 function altText(tokens: Token[]): string {
   return tokens

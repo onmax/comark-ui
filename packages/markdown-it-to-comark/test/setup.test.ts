@@ -70,6 +70,15 @@ describe("comarkSetup", () => {
     }
   });
 
+  it.each([
+    ["only a comment", "<!-- a -->\n\ntext\n"],
+    ["elements and a comment", '<p><a href="#">x</a></p>\n<!-- end -->\n'],
+    ["elements with loose text between them", "<h3>Title</h3>\nLoose text.\n<p><a>b</a></p>\n"],
+  ])("leaves an HTML block of %s out of a paragraph", async (_, markdown) => {
+    const { markdownIt, comark } = both({ syntax: "plain", html: true });
+    expect(compare(markdownIt(markdown), await comark(markdown)).differences).toEqual([]);
+  });
+
   it("writes an image's alt text without its markup", async () => {
     const { markdownIt, comark } = both({ syntax: "plain" });
     const markdown = "![**hi** `c` ![x](y.png)](a.png)\n";
