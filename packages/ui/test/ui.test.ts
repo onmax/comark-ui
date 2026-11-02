@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import { createHtmlRenderer } from "@comark/html";
 import { MarkdownDocument as ReactDocument } from "@comark/react";
 import { MarkdownDocument as VueDocument } from "@comark/vue";
@@ -9,6 +10,7 @@ import { createHighlighterCore } from "shiki/core";
 import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
 import dark from "shiki/themes/github-dark.mjs";
 import light from "shiki/themes/github-light.mjs";
+import { build, type Rolldown } from "vite";
 import { describe, expect, it } from "vite-plus/test";
 import { createSSRApp, h } from "vue";
 import { renderToString as renderVue } from "vue/server-renderer";
@@ -348,5 +350,32 @@ describe("comark-ui", () => {
       expect(out, name).toContain("@scope{:where(:scope){");
       expect(out, name).toContain(":scope>:where(:first-child)");
     }
+  });
+
+  it("loads Pele in Vue only when a document has a diagram", async () => {
+    const result = await build({
+      configFile: false,
+      logLevel: "error",
+      build: {
+        write: false,
+        minify: false,
+        lib: { entry: fileURLToPath(new URL("../src/vue.ts", import.meta.url)), formats: ["es"] },
+        rollupOptions: { external: ["vue"] },
+      },
+    });
+    // SAFETY: `write: false` gives the output, in an array of one for the one format.
+    const [{ output }] = result as Rolldown.RolldownOutput[];
+    const chunks = output.filter((file) => file.type === "chunk");
+    const loaded = new Set<string>();
+    const load = (name: string) => {
+      if (loaded.has(name)) return;
+      loaded.add(name);
+      // `vue` is external, so it has no chunk.
+      chunks.find((chunk) => chunk.fileName === name)?.imports.forEach(load);
+    };
+    for (const chunk of chunks) if (chunk.isEntry) load(chunk.fileName);
+    const pele = chunks.filter((chunk) => chunk.moduleIds.some((id) => id.includes("/pele/dist/")));
+    expect(pele.length).toBeGreaterThan(0);
+    for (const chunk of pele) expect(loaded).not.toContain(chunk.fileName);
   });
 });
