@@ -5,10 +5,16 @@ remark-to-comark moves a project that renders Markdown with remark, rehype, unif
 ## Run it
 
 ```sh
-vp exec remark-to-comark check . --json
+vp exec remark-to-comark migrate
+```
+
+`migrate` runs `content --write`, then `rewrite --write`, then `check`, on a clean git tree (`--force` skips that check). To review each step first, run them yourself:
+
+```sh
+vp exec remark-to-comark check --json
 vp exec remark-to-comark content "**/*.{md,mdx}" --write
-vp exec remark-to-comark rewrite . --write
-vp exec remark-to-comark check . --json
+vp exec remark-to-comark rewrite --write
+vp exec remark-to-comark check --json
 ```
 
 - `check` lists the remark setups it finds and what each plugin becomes, the unified chains `rewrite` can replace and why the others stay, the Markdown files `content` would change, and the MDX it leaves alone. `--json` prints each finding with its code, file, line, fix, and docs link.

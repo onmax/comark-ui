@@ -14,6 +14,7 @@ remark-to-comark moves a Markdown project from remark to Comark. It changes only
 
 ## Features
 
+- `migrate` does the whole move in one command, then lists what's left for you.
 - `check` lists every remark setup it finds, with a [fix](/remark-to-comark/diagnostics/) for each problem.
 - `rewrite` swaps a unified chain for Comark's `renderHtml` when every plugin carries over.
 - `content` escapes the Markdown Comark would read differently.
@@ -28,20 +29,13 @@ Comark renders components written in plain-text Markdown to Vue, React, Svelte, 
 
 ## Usage
 
-Try the check without installing anything. It only reads the project:
+Migrate the project in the current directory:
 
 ```sh
-pnpm dlx remark-to-comark check .
+pnpm dlx remark-to-comark migrate
 ```
 
-The whole migration is four commands. [Getting started](/remark-to-comark/getting-started/) explains each one.
-
-```sh
-pnpm remark-to-comark check .
-pnpm remark-to-comark content "**/*.{md,mdx}" --write
-pnpm remark-to-comark rewrite . --write
-pnpm remark-to-comark check .
-```
+It escapes the Markdown, rewrites the unified chains, and ends with what's left for you. It only runs on a clean git tree, so `git diff` shows every change and `git checkout .` undoes them. To see the findings first without changing anything, run `pnpm dlx remark-to-comark check`. [Getting started](/remark-to-comark/getting-started/) explains each step.
 
 ## Limits
 

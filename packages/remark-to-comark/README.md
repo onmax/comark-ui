@@ -13,9 +13,9 @@ Moves a project from [remark](https://github.com/remarkjs/remark) to [Comark](ht
 Run the check without installing anything. It only reads the project:
 
 ```sh
-pnpm dlx remark-to-comark check .
+pnpm dlx remark-to-comark check
 # or
-npx remark-to-comark check .
+npx remark-to-comark check
 ```
 
 ```txt
@@ -49,11 +49,17 @@ The cost is size in the browser. Minified, the Comark setup is 118 KiB gzipped a
 ## The migration
 
 ```sh
+pnpm dlx remark-to-comark migrate
+```
+
+`migrate` escapes the Markdown, rewrites the unified chains, and ends with the check of what's left. It runs only on a clean git tree, so `git diff` shows every change (`--force` skips that). The same steps, one at a time:
+
+```sh
 pnpm add -D remark-to-comark
-pnpm remark-to-comark check .                           # what's there and what each plugin becomes
+pnpm remark-to-comark check                             # what's there and what each plugin becomes
 pnpm remark-to-comark content "**/*.{md,mdx}" --write   # escape Markdown Comark reads differently
-pnpm remark-to-comark rewrite . --write                 # unified chains to renderHtml
-pnpm remark-to-comark check .                           # what's left for you
+pnpm remark-to-comark rewrite --write                   # unified chains to renderHtml
+pnpm remark-to-comark check                             # what's left for you
 ```
 
 Without `--write`, `content` and `rewrite` print the change and touch nothing. remark still renders every escaped file byte for byte as before, so you can migrate the Markdown first and switch the renderer later.
