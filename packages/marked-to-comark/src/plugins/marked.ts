@@ -131,7 +131,7 @@ export const inlineHtml = (): ComarkPlugin => ({
       for (const node of nodes) {
         if (!Array.isArray(node) || node[0] === null) continue;
         const held: unknown = node[1][MARK];
-        if (held instanceof Object) node[1] = { $: { html: 1, block: 0 }, ...held };
+        if (held instanceof Object) node[1] = Object.assign({ $: { html: 1, block: 0 } }, held);
         visit(childrenOf(node));
       }
     };
