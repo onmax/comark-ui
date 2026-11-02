@@ -72,84 +72,86 @@ const math = {
   component: "Math",
 };
 
-const EXTENSIONS: Record<string, Mapping> = {
-  "marked-highlight": {
-    kind: "port",
-    use: { name: "markedHighlight", from: "marked-to-comark/plugins", named: true },
-    call: "markedHighlight($options)",
-    note: "`markedHighlight()` from marked-to-comark/plugins takes the same options and runs your highlighter, so the markup stays as it was.",
-    ui: "comark-code",
-  },
-  "marked-shiki": highlight,
-  "marked-gfm-heading-id": setup(
-    "Comark gives headings ids with `headingIds: true`; its slugs keep Unicode letters like marked-gfm-heading-id's, but differ on some punctuation.",
-    "headingIds: true",
-  ),
-  "marked-custom-heading-id": builtin("`# Title {#id}` is Comark attribute syntax."),
-  "marked-footnote": plugin(
-    "footnotes",
-    "comark/plugins/footnotes",
-    "footnotes()",
-    "Comark's footnotes markup differs from marked-footnote's; check styles.",
-    "comark-footnotes",
-  ),
-  "marked-katex-extension": math,
-  "marked-extended-latex": math,
-  "marked-alert": plugin("alert", "comark/plugins/alert", "alert()", undefined, "comark-github"),
-  "marked-emoji": plugin(
-    "emoji",
-    "comark/plugins/emoji",
-    "emoji()",
-    "Comark's emoji plugin has its own shortcode list; marked-emoji's `emojis` map doesn't carry over.",
-  ),
-  "marked-smartypants": plugin("punctuation", "comark/plugins/punctuation", "punctuation()"),
-  "marked-smartypants-lite": plugin("punctuation", "comark/plugins/punctuation", "punctuation()"),
-  "marked-linkify-it": builtin(
-    "Comark links URLs itself, like GFM; it doesn't link bare domains such as `example.com` the way linkify-it's fuzzy mode does.",
-  ),
-  "marked-mangle": setup(
-    "Comark writes email links as plain text; marked-mangle only hid them behind entities.",
-  ),
-  "marked-xhtml": builtin("Comark writes HTML; `<br>` and `<br/>` read the same in a browser."),
-  "marked-directive": builtin(
-    "Directives become Comark components (`:::name`); check their markup.",
-  ),
-  "marked-admonition-extension": plugin(
-    "alert",
-    "comark/plugins/alert",
-    "alert()",
-    "Admonitions become GitHub alerts or Comark components.",
-  ),
-  "marked-mermaid": {
-    ...plugin("mermaid", "@comark/html/plugins/mermaid", "mermaid()"),
-    component: "Mermaid",
-    ui: "comark-diagrams",
-  },
-  "marked-base-url": unsupported(
-    "Resolve relative links before parsing, or after with a Comark `post` hook over `state.tree`.",
-  ),
-  "marked-extended-tables": unsupported(
-    "Comark tables have no colspan or rowspan syntax; write those tables as HTML.",
-  ),
-  "marked-terminal": unsupported(
-    "Comark renders to the terminal with its own ANSI renderer; marked-terminal's options don't carry over.",
-  ),
-  "marked-man": unsupported("Man pages are outside Comark."),
-  "marked-plaintify": unsupported(
-    "Strip Markdown to text with `renderMarkdown` or by walking Comark's tree.",
-  ),
-  "marked-react": unsupported("Render with @comark/react's `<Markdown>` instead."),
-  "marked-sanitizer-github": {
-    kind: "plugin",
-    use: { name: "html", from: "comark-github", named: true },
-    call: "html()",
-    note: "comark-github's `html()` prunes raw HTML to GitHub's allowlist.",
-  },
-};
+const EXTENSIONS = new Map<string, Mapping>(
+  Object.entries({
+    "marked-highlight": {
+      kind: "port",
+      use: { name: "markedHighlight", from: "marked-to-comark/plugins", named: true },
+      call: "markedHighlight($options)",
+      note: "`markedHighlight()` from marked-to-comark/plugins takes the same options and runs your highlighter, so the markup stays as it was.",
+      ui: "comark-code",
+    },
+    "marked-shiki": highlight,
+    "marked-gfm-heading-id": setup(
+      "Comark gives headings ids with `headingIds: true`; its slugs keep Unicode letters like marked-gfm-heading-id's, but differ on some punctuation.",
+      "headingIds: true",
+    ),
+    "marked-custom-heading-id": builtin("`# Title {#id}` is Comark attribute syntax."),
+    "marked-footnote": plugin(
+      "footnotes",
+      "comark/plugins/footnotes",
+      "footnotes()",
+      "Comark's footnotes markup differs from marked-footnote's; check styles.",
+      "comark-footnotes",
+    ),
+    "marked-katex-extension": math,
+    "marked-extended-latex": math,
+    "marked-alert": plugin("alert", "comark/plugins/alert", "alert()", undefined, "comark-github"),
+    "marked-emoji": plugin(
+      "emoji",
+      "comark/plugins/emoji",
+      "emoji()",
+      "Comark's emoji plugin has its own shortcode list; marked-emoji's `emojis` map doesn't carry over.",
+    ),
+    "marked-smartypants": plugin("punctuation", "comark/plugins/punctuation", "punctuation()"),
+    "marked-smartypants-lite": plugin("punctuation", "comark/plugins/punctuation", "punctuation()"),
+    "marked-linkify-it": builtin(
+      "Comark links URLs itself, like GFM; it doesn't link bare domains such as `example.com` the way linkify-it's fuzzy mode does.",
+    ),
+    "marked-mangle": setup(
+      "Comark writes email links as plain text; marked-mangle only hid them behind entities.",
+    ),
+    "marked-xhtml": builtin("Comark writes HTML; `<br>` and `<br/>` read the same in a browser."),
+    "marked-directive": builtin(
+      "Directives become Comark components (`:::name`); check their markup.",
+    ),
+    "marked-admonition-extension": plugin(
+      "alert",
+      "comark/plugins/alert",
+      "alert()",
+      "Admonitions become GitHub alerts or Comark components.",
+    ),
+    "marked-mermaid": {
+      ...plugin("mermaid", "@comark/html/plugins/mermaid", "mermaid()"),
+      component: "Mermaid",
+      ui: "comark-diagrams",
+    },
+    "marked-base-url": unsupported(
+      "Resolve relative links before parsing, or after with a Comark `post` hook over `state.tree`.",
+    ),
+    "marked-extended-tables": unsupported(
+      "Comark tables have no colspan or rowspan syntax; write those tables as HTML.",
+    ),
+    "marked-terminal": unsupported(
+      "Comark renders to the terminal with its own ANSI renderer; marked-terminal's options don't carry over.",
+    ),
+    "marked-man": unsupported("Man pages are outside Comark."),
+    "marked-plaintify": unsupported(
+      "Strip Markdown to text with `renderMarkdown` or by walking Comark's tree.",
+    ),
+    "marked-react": unsupported("Render with @comark/react's `<Markdown>` instead."),
+    "marked-sanitizer-github": {
+      kind: "plugin",
+      use: { name: "html", from: "comark-github", named: true },
+      call: "html()",
+      note: "comark-github's `html()` prunes raw HTML to GitHub's allowlist.",
+    },
+  }),
+);
 
 /** The Comark counterpart of a marked extension by its package name; anything else is the project's own code. */
 export function mapExtension(name: string, imported = true): Mapping & { known: boolean } {
-  const mapping = EXTENSIONS[name.replace(/\/(lib|dist)(\/.*)?$/, "")];
+  const mapping = EXTENSIONS.get(name.replace(/\/(lib|dist)(\/.*)?$/, ""));
   if (mapping) return { ...mapping, known: true };
   if (
     !imported ||
@@ -277,43 +279,48 @@ export function mapOption(name: string, value: string | undefined): Mapping & { 
 }
 
 // The Comark element each renderer method draws, for overrides that only change how one element looks.
-const ELEMENTS: Record<string, string> = {
-  link: "a",
-  image: "img",
-  heading: "h1`–`h6",
-  code: "pre",
-  codespan: "code",
-  paragraph: "p",
-  blockquote: "blockquote",
-  list: "ul`/`ol",
-  listitem: "li",
-  table: "table",
-  tablerow: "tr",
-  tablecell: "td`/`th",
-  strong: "strong",
-  em: "em",
-  del: "del",
-  br: "br",
-  hr: "hr",
-  checkbox: "input",
-};
+const ELEMENTS = new Map(
+  Object.entries({
+    link: "a",
+    image: "img",
+    heading: "h1`–`h6",
+    code: "pre",
+    codespan: "code",
+    paragraph: "p",
+    blockquote: "blockquote",
+    list: "ul`/`ol",
+    listitem: "li",
+    table: "table",
+    tablerow: "tr",
+    tablecell: "td`/`th",
+    strong: "strong",
+    em: "em",
+    del: "del",
+    br: "br",
+    hr: "hr",
+    checkbox: "input",
+  }),
+);
 
 /** What overriding a part of marked becomes: the project's own code, ported by hand. */
 export function mapOverride(name: string, methods?: string[]): Mapping & { known: boolean } {
-  const drawn = (methods ?? []).filter((method) => ELEMENTS[method]);
-  const rest = (methods ?? []).filter((method) => !ELEMENTS[method]);
-  const notes: Record<string, string> = {
-    renderer: drawn.length
-      ? `Custom renderer methods (${methods!.join(", ")}). Draw ${drawn.map((method) => `\`${ELEMENTS[method]}\``).join(", ")} with Comark components (\`components\` in @comark/html, or your framework's renderer)${rest.length ? `, and do what ${rest.join(", ")} did in a \`post\` hook over \`state.tree\`` : ""}.`
-      : "Custom renderer methods. Draw those elements with Comark components (`components: { a: … }` in @comark/html) or a `post` hook over `state.tree`.",
-    tokenizer: `Custom tokenizer methods${methods?.length ? ` (${methods.join(", ")})` : ""} change what marked parses. Port them to a markdown-it plugin through Comark's plugin API.`,
-    walkTokens:
-      "A `walkTokens` callback. Do the same in a Comark plugin's `post` hook, walking `state.tree.nodes`.",
-    hooks:
-      "marked hooks. Use a Comark plugin's `pre` hook for `preprocess` and edit the HTML `renderHtml` returns for `postprocess`.",
-    extensions:
-      "The project's own marked extensions. Port each to a Comark plugin (a markdown-it rule plus a component).",
-    options: "Options held in code the scan can't follow.",
-  };
-  return { ...custom(notes[name] ?? notes.options!), known: true };
+  const drawn = (methods ?? []).filter((method) => ELEMENTS.has(method));
+  const rest = (methods ?? []).filter((method) => !ELEMENTS.has(method));
+  const notes = new Map(
+    Object.entries({
+      renderer: drawn.length
+        ? `Custom renderer methods (${methods!.join(", ")}). Draw ${drawn.map((method) => `\`${ELEMENTS.get(method)}\``).join(", ")} with Comark components (\`components\` in @comark/html, or your framework's renderer)${rest.length ? `, and do what ${rest.join(", ")} did in a \`post\` hook over \`state.tree\`` : ""}.`
+        : "Custom renderer methods. Draw those elements with Comark components (`components: { a: … }` in @comark/html) or a `post` hook over `state.tree`.",
+      tokenizer: `Custom tokenizer methods${methods?.length ? ` (${methods.join(", ")})` : ""} change what marked parses. Port them to a markdown-it plugin through Comark's plugin API.`,
+      walkTokens:
+        "A `walkTokens` callback. Do the same in a Comark plugin's `post` hook, walking `state.tree.nodes`.",
+      hooks:
+        "marked hooks. Use a Comark plugin's `pre` hook for `preprocess` and edit the HTML `renderHtml` returns for `postprocess`.",
+      extensions:
+        "The project's own marked extensions. Port each to a Comark plugin (a markdown-it rule plus a component).",
+      options: "Options held in code the scan can't follow.",
+    }),
+  );
+
+  return { ...custom(notes.get(name) ?? notes.get("options")!), known: true };
 }

@@ -3,7 +3,15 @@ import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { glob } from "tinyglobby";
-import { check, contentSetups, IGNORE, nodeReader, scanProject, sharedElsewhere } from "./check.ts";
+import {
+  check,
+  contentSetups,
+  declaredVersions,
+  nodeReader,
+  scanProject,
+  sharedElsewhere,
+  versionOf,
+} from "./check.ts";
 import { migrateContent } from "./content.ts";
 import { formatFindings } from "./report.ts";
 import { rewriteSource } from "./rewrite.ts";
@@ -61,24 +69,11 @@ if (command === "check") {
   let left = 0;
   const reader = nodeReader(root);
   const scanned = await scanProject(reader);
-  const versions = new Map<string, string>();
-  for (const manifest of await glob(["**/package.json"], { cwd: root, ignore: IGNORE })) {
-    try {
-      const json = JSON.parse(readFileSync(join(root, manifest), "utf8")) as Record<
-        string,
-        Record<string, string> | undefined
-      >;
-      const range =
-        json.dependencies?.marked ?? json.devDependencies?.marked ?? json.peerDependencies?.marked;
-      if (range) versions.set(dirname(manifest) === "." ? "" : `${dirname(manifest)}/`, range);
-    } catch {}
-  }
+  const versions = await declaredVersions(reader);
   for (const { file: path } of scanned) {
     const file = join(root, path);
     const source = readFileSync(file, "utf8");
-    const version = [...versions]
-      .filter(([dir]) => path.startsWith(dir))
-      .sort((a, b) => b[0].length - a[0].length)[0]?.[1];
+    const version = versionOf(versions, path);
     const result = rewriteSource(source, path, { version, ...sharedElsewhere(scanned, path) });
     for (const rewrite of result.rewrites) {
       console.log(

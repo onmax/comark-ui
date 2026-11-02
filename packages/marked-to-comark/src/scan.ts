@@ -542,9 +542,11 @@ function scanScript(source: string, file: string, shared?: Map<string, string>):
     }
   });
 
-  return [global, ...anonymous]
-    .filter((setup) => setup.calls.length || setup.plugins.length)
-    .map((setup) => ({ ...setup, plugins: dedupe(setup.plugins) }));
+  return [global, ...anonymous].flatMap((setup) =>
+    setup.calls.length || setup.plugins.length
+      ? [{ ...setup, plugins: dedupe(setup.plugins) }]
+      : [],
+  );
 }
 
 // An option set twice (`setOptions` then `parse(md, { … })`) is listed once per place it's written.

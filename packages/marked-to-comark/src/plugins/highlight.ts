@@ -12,21 +12,23 @@ export interface MarkedHighlightOptions {
   async?: boolean;
 }
 
+const isString = (value: unknown): value is string => value === String(value);
+const childrenOf = ([, , ...children]: ElementNode): Node[] => children;
+
 /** The highlighter's HTML as Comark nodes: its tags (spans, mostly) with their attributes, and decoded text. */
 function toNodes(html: string): Node[] {
   const root: Node[] = [];
-  const stack: Node[][] = [root];
-  const open: string[] = [];
+  // Where the next node goes: the root, or the innermost tag still open.
+  const open: { name: string; into: Node[] }[] = [{ name: "", into: root }];
   for (const part of html.split(/(<\/?[A-Za-z][\w-]*(?:\s+[^<>]*?)?\/?>)/)) {
     if (!part) continue;
     const close = /^<\/([A-Za-z][\w-]*)\s*>$/.exec(part);
     const start = /^<([A-Za-z][\w-]*)((?:\s+[^<>]*?)?)(\/?)>$/.exec(part);
     if (close) {
-      const at = open.lastIndexOf(close[1]!.toLowerCase());
-      if (at !== -1) {
-        open.length = at;
-        stack.length = at + 1;
-      }
+      const at = open.findLastIndex(
+        (item, index) => index > 0 && item.name === close[1]!.toLowerCase(),
+      );
+      if (at > 0) open.length = at;
     } else if (start) {
       const attributes: Record<string, string | true> = {};
       for (const match of start[2]!.matchAll(
@@ -35,13 +37,14 @@ function toNodes(html: string): Node[] {
         const value = match[2] ?? match[3] ?? match[4];
         attributes[match[1]!.toLowerCase()] = value === undefined ? true : decodeHTML(value);
       }
-      const element = [start[1]!.toLowerCase(), attributes] as unknown as Node[];
-      stack.at(-1)!.push(element as unknown as Node);
+      const element: ElementNode = [start[1]!.toLowerCase(), attributes];
+      open.at(-1)!.into.push(element);
       if (!start[3]) {
-        open.push(start[1]!.toLowerCase());
-        stack.push(element);
+        // SAFETY: an element's children follow its tag and attributes, so pushing onto its own array adds children.
+        const into = element as Node[];
+        open.push({ name: element[0], into });
       }
-    } else stack.at(-1)!.push(decodeHTML(part));
+    } else open.at(-1)!.into.push(decodeHTML(part));
   }
   return root;
 }
@@ -53,7 +56,7 @@ function toNodes(html: string): Node[] {
 export const markedHighlight = (
   options: MarkedHighlightOptions | MarkedHighlightOptions["highlight"],
 ): ComarkPlugin => {
-  const settings = typeof options === "function" ? { highlight: options } : options;
+  const settings = options instanceof Function ? { highlight: options } : options;
   const prefix = settings.langPrefix ?? "language-";
   const empty = settings.emptyLangClass ?? "";
   return {
@@ -66,18 +69,15 @@ export const markedHighlight = (
           const code = node[2];
           if (node[0] === "pre" && !node[1].$?.html && Array.isArray(code) && code[0] === "code")
             blocks.push({ pre: node, code });
-          else visit(node.slice(2) as Node[]);
+          else visit(childrenOf(node));
         }
       };
       visit(state.tree.nodes);
       for (const { pre, code } of blocks) {
         const attributes = pre[1];
-        const text = code
-          .slice(2)
-          .filter((child): child is string => typeof child === "string")
-          .join("");
+        const text = code.slice(2).filter(isString).join("");
         const info = [attributes.language, attributes.meta]
-          .filter((part) => typeof part === "string" && part)
+          .filter((part) => isString(part) && part)
           .join(" ");
         const lang = /\S*/.exec(info)![0];
         const html = await settings.highlight(text, lang, info);
@@ -86,9 +86,8 @@ export const markedHighlight = (
         else delete code[1].class;
         code.length = 2;
         // A highlighter that returns the code unchanged leaves it as text, as marked-highlight leaves it unescaped.
-        (code as Node[]).push(
-          ...(typeof html === "string" && html !== text ? toNodes(html) : [text]),
-        );
+        // SAFETY: from index 2 on an element holds its children, and `code.length = 2` kept only the tag and attributes.
+        (code as Node[]).push(...(isString(html) && html !== text ? toNodes(html) : [text]));
       }
     },
   };

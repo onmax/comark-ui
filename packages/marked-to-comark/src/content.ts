@@ -245,6 +245,7 @@ export function migrateContent(original: string, options: ContentOptions = {}): 
       case "link": {
         // An autolink's text is its URL: `<https://a/{x}>` and bare URLs stay as written.
         if (source[start] !== "[") return;
+        // SAFETY: marked gives a token of this `type` the fields of its Tokens interface.
         const link = token as Tokens.Link;
         const close = source.lastIndexOf("]", end);
         const shortcut = close === end - 1 && !/\]\s*\[[^\]]*\]$/.test(source.slice(start, end));
@@ -291,6 +292,7 @@ export function migrateContent(original: string, options: ContentOptions = {}): 
         });
       }
       case "del": {
+        // SAFETY: marked gives a token of this `type` the fields of its Tokens interface.
         const del = token as Tokens.Del;
         if (source[start + 1] === "~") return inline(del.tokens, start, end, context);
         // marked reads `~a~` as strikethrough; markdown-exit needs `~~a~~`. One nested in another is left to a person.
@@ -327,13 +329,16 @@ export function migrateContent(original: string, options: ContentOptions = {}): 
             insert: " ",
             change: { line: 0, kind: "space", text: " " },
           });
+        // SAFETY: marked gives a token of this `type` the fields of its Tokens interface.
         return inline((token as Tokens.Heading).tokens, start, end, context);
       }
       case "paragraph":
       case "strong":
       case "em":
+        // SAFETY: marked gives a token of this `type` the fields of its Tokens interface.
         return inline((token as Tokens.Paragraph).tokens, start, end, context);
       case "blockquote": {
+        // SAFETY: marked gives a token of this `type` the fields of its Tokens interface.
         const quote = token as Tokens.Blockquote;
         // An alert marker opens the first paragraph of a blockquote; marked may split it over several tokens.
         const marker = /^[ \t]*>[ \t]?/.exec(source.slice(start, end));
@@ -344,10 +349,13 @@ export function migrateContent(original: string, options: ContentOptions = {}): 
         return block(quote.tokens, start, end, { ...context, alertAt });
       }
       case "list":
+        // SAFETY: marked gives a token of this `type` the fields of its Tokens interface.
         return block((token as Tokens.List).items, start, end, context);
       case "list_item":
+        // SAFETY: marked gives a token of this `type` the fields of its Tokens interface.
         return block((token as Tokens.ListItem).tokens, start, end, context);
       case "table": {
+        // SAFETY: marked gives a token of this `type` the fields of its Tokens interface.
         const table = token as Tokens.Table;
         let cursor = start;
         for (const cell of [...table.header, ...table.rows.flat()]) {

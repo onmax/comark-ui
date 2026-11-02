@@ -259,14 +259,14 @@ function blocker(
   if (setup.unresolved) return setup.unresolved.replace(/^\S+ /, "");
   const blocked = plugins.filter((plugin) => !REWRITABLE.has(plugin.mapping.kind));
   if (blocked.length) {
-    const own = blocked
-      .filter((plugin) => plugin.mapping.kind === "custom")
-      .map((plugin) => `\`${plugin.name}\``);
-    const missing = blocked
-      .filter((plugin) => plugin.mapping.kind !== "custom")
-      .map((plugin) =>
-        plugin.type === "option" ? `\`${plugin.name}: ${plugin.options ?? ""}\`` : plugin.name,
-      );
+    const own = blocked.flatMap((plugin) =>
+      plugin.mapping.kind === "custom" ? [`\`${plugin.name}\``] : [],
+    );
+    const missing = blocked.flatMap((plugin) =>
+      plugin.mapping.kind === "custom"
+        ? []
+        : [plugin.type === "option" ? `\`${plugin.name}: ${plugin.options ?? ""}\`` : plugin.name],
+    );
     return [
       own.length && `uses the project's own code (${own.join(", ")})`,
       missing.length &&
@@ -292,9 +292,7 @@ function blocker(
   if (call.args > 2) return "passes a callback; `renderHtml` returns a promise";
   if (!call.input) return "passes no Markdown";
   if (!node) return "couldn't be located in the file";
-  const names = plugins
-    .filter((plugin) => plugin.type === "extension")
-    .map((plugin) => plugin.name);
+  const names = plugins.flatMap((plugin) => (plugin.type === "extension" ? [plugin.name] : []));
   const repeated = names.find((name, index) => names.indexOf(name) !== index);
   if (repeated) return `registers ${repeated} more than once; which options win can't be read`;
   const shadowed = plugins.find((plugin) => plugin.local && info.shadowed.has(plugin.local));

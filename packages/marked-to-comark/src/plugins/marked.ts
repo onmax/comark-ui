@@ -1,6 +1,16 @@
-import type { ComarkParseTokensState, ComarkPlugin, Node } from "comark";
+import type {
+  ComarkParseTokensState,
+  ComarkPlugin,
+  ElementNode,
+  MarkdownExitPlugin,
+  Node,
+} from "comark";
 import { decodeHTML } from "entities";
 import { fromHtmlBlock } from "./gfm.ts";
+
+/** An element's children: everything after its tag and attributes. */
+const childrenOf = ([, , ...children]: ElementNode): Node[] => children;
+const isString = (value: unknown): value is string => value === String(value);
 
 type Token = ComarkParseTokensState["tokens"][number];
 type TokenClass = new (type: string, tag: string, nesting: Token["nesting"]) => Token;
@@ -36,14 +46,14 @@ export const taskListClasses = (): ComarkPlugin => ({
       for (const node of nodes) {
         if (!Array.isArray(node) || node[0] === null) continue;
         const attributes = node[1];
-        if (/^(ul|ol|li|input)$/.test(node[0]) && typeof attributes.class === "string") {
+        if (/^(ul|ol|li|input)$/.test(node[0]) && isString(attributes.class)) {
           const kept = attributes.class
             .split(/\s+/)
             .filter((name) => name && !TASK_CLASSES.has(name));
           if (kept.length) attributes.class = kept.join(" ");
           else delete attributes.class;
         }
-        visit(node.slice(2) as Node[]);
+        visit(childrenOf(node));
       }
     };
     visit(state.tree.nodes);
@@ -52,7 +62,6 @@ export const taskListClasses = (): ComarkPlugin => ({
 
 const MARK = "data-marked-to-comark-html";
 const SPANS = /^(strong|em|link|s|sup|sub|mdc_inline_span)_(open|close)$/;
-let parses = 0;
 
 /** An inline tag's attributes as Comark reads them from HTML: lowercased names, decoded values, `true` when bare. */
 function attributes(text: string): Record<string, string | true> {
@@ -74,8 +83,6 @@ function attributes(text: string): Record<string, string | true> {
 export const inlineHtml = (): ComarkPlugin => ({
   name: "marked-to-comark:inline-html",
   markdownItPost(state) {
-    const parse = String(++parses);
-    const held: Record<string, string | true>[] = [];
     for (const block of state.tokens) {
       const children = block.children;
       if (block.type !== "inline" || !children) continue;
@@ -112,30 +119,20 @@ export const inlineHtml = (): ComarkPlugin => ({
         // SAFETY: Comark's tokens are instances of markdown-exit's Token class, which takes a type, a tag, and a nesting.
         const Make = token.constructor as TokenClass;
         const start = new Make("mdc_inline_span_open", name, 1);
-        start.attrs = [[MARK, `${parse}:${held.length}`]];
-        held.push(attributes(open[2] ?? ""));
+        // Comark parses an attribute that holds a JSON object, so the tag's own attributes ride in the marker.
+        start.attrs = [[MARK, JSON.stringify(attributes(open[2] ?? ""))]];
         children[index] = start;
         children[close] = new Make("mdc_inline_span_close", name, -1);
       }
     }
-    (state as { inlineHtml?: unknown }).inlineHtml = { parse, held };
   },
   post(state) {
-    const found = (
-      state as { inlineHtml?: { parse: string; held: Record<string, string | true>[] } }
-    ).inlineHtml;
-    if (!found?.held.length) return;
     const visit = (nodes: Node[]) => {
       for (const node of nodes) {
         if (!Array.isArray(node) || node[0] === null) continue;
-        const mark = node[1][MARK];
-        if (typeof mark === "string" && mark.startsWith(`${found.parse}:`)) {
-          node[1] = {
-            $: { html: 1, block: 0 },
-            ...found.held[Number(mark.slice(found.parse.length + 1))],
-          };
-        }
-        visit(node.slice(2) as Node[]);
+        const held: unknown = node[1][MARK];
+        if (held instanceof Object) node[1] = { $: { html: 1, block: 0 }, ...held };
+        visit(childrenOf(node));
       }
     };
     visit(state.tree.nodes);
@@ -151,12 +148,12 @@ const VOID_TAGS = /^(area|base|br|col|embed|hr|img|input|link|meta|source|track|
 const plainText = (nodes: Node[]): string =>
   nodes
     .map((node) => {
-      if (typeof node === "string") return node;
+      if (isString(node)) return node;
       if (!Array.isArray(node) || node[0] === null) return "";
       const [tag, attributes] = node;
       if (tag === "img" && !attributes.$?.html)
-        return typeof attributes.alt === "string" ? attributes.alt : "";
-      const inner = plainText(node.slice(2) as Node[]);
+        return isString(attributes.alt) ? attributes.alt : "";
+      const inner = plainText(childrenOf(node));
       if (!attributes.$?.html) return inner;
       const written = Object.entries(attributes)
         .filter(([name]) => name !== "$")
@@ -198,11 +195,10 @@ export const headerIds = (mode: true | "legacy" = true, prefix = ""): ComarkPlug
       for (const node of nodes) {
         if (!Array.isArray(node) || node[0] === null) continue;
         if (/^h[1-6]$/.test(node[0]) && !node[1].$?.html) {
-          if (node[1].id === undefined)
-            node[1].id = prefix + slug(plainText(node.slice(2) as Node[]));
+          if (node[1].id === undefined) node[1].id = prefix + slug(plainText(childrenOf(node)));
           continue;
         }
-        visit(node.slice(2) as Node[]);
+        visit(childrenOf(node));
       }
     };
     visit(state.tree.nodes);
@@ -221,10 +217,10 @@ export const langPrefix = (prefix: string): ComarkPlugin => ({
           node[0] === "pre" &&
           Array.isArray(code) &&
           code[0] === "code" &&
-          typeof code[1].class === "string"
+          isString(code[1].class)
         )
           code[1].class = code[1].class.replace(/^language-/, prefix);
-        visit(node.slice(2) as Node[]);
+        visit(childrenOf(node));
       }
     };
     visit(state.tree.nodes);
@@ -480,49 +476,6 @@ export const expandTabs = (mode: "all" | "leading"): ComarkPlugin => ({
 const UNDERSCORE_TAG =
   /^(?:<[A-Za-z][\w-]*_[\w-]*(?:\s+[A-Za-z_:][\w.:-]*(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s"'=<>`]+))?)*\s*\/?>|<\/[A-Za-z][\w-]*_[\w-]*\s*>)/;
 
-interface InlineState {
-  src: string;
-  pos: number;
-  push: (type: string, tag: string, nesting: number) => { content: string };
-}
-interface BlockState {
-  src: string;
-  bMarks: number[];
-  eMarks: number[];
-  tShift: number[];
-  sCount: number[];
-  blkIndent: number;
-  line: number;
-  isEmpty: (line: number) => boolean;
-  getLines: (begin: number, end: number, indent: number, keepLastLF: boolean) => string;
-  push: (
-    type: string,
-    tag: string,
-    nesting: number,
-  ) => { content: string; map: [number, number] | null };
-}
-interface Rules {
-  inline: {
-    ruler: {
-      before: (
-        name: string,
-        rule: string,
-        fn: (state: InlineState, silent: boolean) => boolean,
-      ) => void;
-    };
-  };
-  block: {
-    ruler: {
-      before: (
-        name: string,
-        rule: string,
-        fn: (state: BlockState, start: number, end: number, silent: boolean) => boolean,
-        options?: { alt: string[] },
-      ) => void;
-    };
-  };
-}
-
 /**
  * marked from v1 to v17 reads `<GRAFANA_VERSION>` and `<my_el>` as HTML, and a browser hides them; CommonMark and
  * Comark show them as text, since a tag name can't hold an underscore. Inline they become HTML, and one alone on a line
@@ -531,7 +484,7 @@ interface Rules {
 export const underscoreTags = (): ComarkPlugin => ({
   name: "marked-to-comark:underscore-tags",
   markdownItPlugins: [
-    ((md: Rules) => {
+    ((md) => {
       md.inline.ruler.before("html_inline", "marked_underscore_tag", (state, silent) => {
         if (state.src.charCodeAt(state.pos) !== 0x3c) return false;
         const tag = UNDERSCORE_TAG.exec(state.src.slice(state.pos));
@@ -561,10 +514,9 @@ export const underscoreTags = (): ComarkPlugin => ({
           return true;
         },
       );
-    }) as unknown as MarkdownItHook,
+    }) satisfies MarkdownExitPlugin,
   ],
 });
-type MarkdownItHook = NonNullable<ComarkPlugin["markdownItPlugins"]>[number];
 
 /** After html(): in an HTML block's text, the underscore tags html() left as text become tags again. */
 export const underscoreTagText = (): ComarkPlugin => ({
@@ -648,7 +600,7 @@ export const legacyTables = (): ComarkPlugin => ({
             const cell = node[index];
             if (Array.isArray(cell) && cell.length === 3 && cell[2] === PAD) node.splice(index, 1);
           }
-        visit(node.slice(2) as Node[]);
+        visit(childrenOf(node));
       }
     };
     visit(state.tree.nodes);

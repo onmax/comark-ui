@@ -101,23 +101,35 @@ export async function declaredVersions(reader: ProjectReader): Promise<Map<strin
     return /^\s+["']?marked["']?:\s*["']?([^"'\s#]+)/m.exec(section ?? "")?.[1];
   };
   for (const file of await reader.glob("**/package.json")) {
-    try {
-      const json = JSON.parse(reader.read(file) ?? "{}") as Record<
-        string,
-        Record<string, string> | undefined
-      >;
-      let range = ["dependencies", "devDependencies", "peerDependencies"]
-        .map((key) => json[key]?.marked)
-        .find(Boolean);
-      if (range?.startsWith("catalog:")) range = catalog(range.slice(8).trim()) ?? range;
-      if (range) versions.set(dirname(file) === "." ? "" : `${dirname(file)}/`, range);
-    } catch {}
+    let range = markedRange(reader.read(file) ?? "");
+    if (range?.startsWith("catalog:")) range = catalog(range.slice(8).trim()) ?? range;
+    if (range) versions.set(dirname(file) === "." ? "" : `${dirname(file)}/`, range);
   }
   return versions;
 }
 
+const isString = (value: unknown): value is string => value === String(value);
+
+/** The range a package.json's dependencies, dev dependencies, or peer dependencies give marked, if it's valid JSON. */
+function markedRange(text: string): string | undefined {
+  let json: unknown;
+  try {
+    json = JSON.parse(text);
+  } catch {
+    return undefined;
+  }
+  if (!(json instanceof Object)) return undefined;
+  for (const key of ["dependencies", "devDependencies", "peerDependencies"]) {
+    const dependencies: unknown = Reflect.get(json, key);
+    const range: unknown =
+      dependencies instanceof Object ? Reflect.get(dependencies, "marked") : undefined;
+    if (isString(range)) return range;
+  }
+  return undefined;
+}
+
 /** The marked range that governs a file: its nearest package that declares marked. */
-const versionOf = (versions: Map<string, string>, file: string) =>
+export const versionOf = (versions: Map<string, string>, file: string) =>
   [...versions]
     .filter(([dir]) => file.startsWith(dir))
     .sort((a, b) => b[0].length - a[0].length)[0]?.[1];
@@ -181,15 +193,22 @@ export interface ContentSetup {
   reason?: string;
 }
 
-type MarkedModule = ((markdown: string, options?: object) => string) & {
-  marked?: (markdown: string, options?: object) => string;
+/** What any marked version's parse function takes: its options, each version with its own. */
+type RenderOptions = Record<string, unknown>;
+type MarkedModule = ((markdown: string, options?: RenderOptions) => string) & {
+  marked?: (markdown: string, options?: RenderOptions) => string;
   Marked?: new (...extensions: unknown[]) => {
-    parse: (markdown: string, options?: object) => string;
+    parse: (markdown: string, options?: RenderOptions) => string;
   };
 };
 
+interface Profile {
+  options: MarkedOptions;
+  syntax: string[];
+}
+
 /** A value written in source, when it is a literal the content setup can apply. */
-const literal = (text: string | undefined): unknown => {
+const literal = (text: string | undefined): boolean | undefined => {
   const value = text?.trim();
   return value === "true" ? true : value === "false" ? false : undefined;
 };
@@ -214,41 +233,35 @@ export async function contentSetup(
       ...empty,
       reason: `The project's own marked ${tokenizer.name === "tokenizer" ? "tokenizer" : "extensions"} (line ${tokenizer.line}) change what marked reads as text, and the check can't run them.`,
     };
-  const profiles = setups.map((setup) => {
-    const options: Record<string, unknown> = {};
+  const profiles = setups.map((setup): Profile | undefined => {
+    const options: MarkedOptions = {};
     for (const plugin of setup.plugins)
       // `breaks` only turns newlines into `<br>`; what's text stays text.
-      if (plugin.type === "option" && /^(gfm|pedantic)$/.test(plugin.name)) {
+      if (plugin.type === "option" && (plugin.name === "gfm" || plugin.name === "pedantic")) {
         const value = literal(plugin.options);
         if (value === undefined) return undefined;
         options[plugin.name] = value;
       }
-    const syntax = [
-      ...new Set(
-        setup.plugins
-          .filter((plugin) => plugin.type === "extension" && SYNTAX.test(plugin.name))
-          .map((plugin) => plugin.name),
-      ),
-    ].sort();
-    return { options, syntax };
+    const syntax = setup.plugins.flatMap((plugin) =>
+      plugin.type === "extension" && SYNTAX.test(plugin.name) ? [plugin.name] : [],
+    );
+    return { options, syntax: [...new Set(syntax)].sort() };
   });
-  if (profiles.some((profile) => !profile))
+  const known = profiles.filter((profile): profile is Profile => profile !== undefined);
+  if (known.length < profiles.length)
     return {
       ...empty,
       reason:
         "`gfm` or `pedantic` is set in code, so how marked reads this Markdown can't be known.",
     };
-  const unique = [...new Set(profiles.map((profile) => JSON.stringify(profile)))];
+  const unique = [...new Set(known.map((profile) => JSON.stringify(profile)))];
   if (unique.length > 1)
     return {
       ...empty,
       reason:
         "The marked setups in this package disagree about syntax, and which one renders this document can't be told.",
     };
-  const profile = (profiles[0] ?? { options: {}, syntax: [] }) as {
-    options: MarkedOptions;
-    syntax: string[];
-  };
+  const profile: Profile = known[0] ?? { options: {}, syntax: [] };
   const require = createRequire(resolve(root, "package.json"));
   const load = async (name: string): Promise<unknown> => {
     try {
@@ -268,8 +281,8 @@ export async function contentSetup(
       | undefined;
     const factory =
       module &&
-      (module.default ?? Object.values(module).find((value) => typeof value === "function"));
-    if (typeof factory === "function") extensions.push(factory());
+      (module.default ?? Object.values(module).find((value) => value instanceof Function));
+    if (factory instanceof Function) extensions.push(factory());
     else missing.push(name);
   }
   // The project's own marked judges the edits, at its own version; the bundled one when it isn't installed.
@@ -279,7 +292,7 @@ export async function contentSetup(
   const module = own?.Marked ? own : (own?.default ?? own);
   if (module) {
     // mangle hides emails behind random entities, so two renders only compare equal without it.
-    const options = { ...profile.options, mangle: false } as object;
+    const options: RenderOptions = { ...profile.options, mangle: false };
     if (module.Marked) {
       const instance = new module.Marked(...extensions);
       render = (markdown) => quiet(() => instance.parse(markdown, { ...options, async: false }));
@@ -371,14 +384,14 @@ export function sharedElsewhere(
   const others = scanned.filter((entry) => entry.file !== file);
   const global = (entry: ScannedFile) => entry.setups.filter((setup) => setup.host === "marked");
   return {
-    shared: others
-      .filter((entry) =>
-        global(entry).some((setup) => setup.plugins.some((plugin) => plugin.call === undefined)),
-      )
-      .map((entry) => entry.file),
-    callers: others
-      .filter((entry) => global(entry).some((setup) => setup.calls.length))
-      .map((entry) => entry.file),
+    shared: others.flatMap((entry) =>
+      global(entry).some((setup) => setup.plugins.some((plugin) => plugin.call === undefined))
+        ? [entry.file]
+        : [],
+    ),
+    callers: others.flatMap((entry) =>
+      global(entry).some((setup) => setup.calls.length) ? [entry.file] : [],
+    ),
   };
 }
 
