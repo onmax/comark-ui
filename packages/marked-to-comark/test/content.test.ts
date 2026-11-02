@@ -53,6 +53,12 @@ describe("migrateContent", () => {
     expect((await same(result.markdown)).differences).toEqual([]);
   });
 
+  it("finds text in a table cell with an escaped pipe", async () => {
+    const result = await migrated("| a | b |\n| --- | --- |\n| x | [n \\| s] |\n");
+    expect(result.markdown).toBe("| a | b |\n| --- | --- |\n| x | \\[n \\| s\\] |\n");
+    expect((await same(result.markdown)).differences).toEqual([]);
+  });
+
   it("keeps task list markers", async () => {
     const result = await migrated("- [ ] todo {x}\n- [x] done\n");
     expect(result.markdown).toBe("- [ ] todo \\{x}\n- [x] done\n");

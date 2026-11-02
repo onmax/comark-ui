@@ -63,6 +63,8 @@ interface Context {
   plain?: boolean;
   /** The unit of the strikethrough being widened, which its `~` escapes belong to. */
   strikeUnit?: number;
+  /** Inside a table cell, whose tokens marked gives with `\|` unescaped. */
+  inCell?: boolean;
 }
 
 /**
@@ -201,7 +203,11 @@ export function migrateContent(original: string, options: ContentOptions = {}): 
   const inline = (list: Token[], from: number, limit: number, context: Partial<Context>) => {
     let cursor = from;
     for (const token of list) {
-      const spans = locate(source, token.raw, cursor, limit);
+      const spans =
+        locate(source, token.raw, cursor, limit) ??
+        (context.inCell
+          ? locate(source, token.raw.replace(/\|/g, "\\|"), cursor, limit)
+          : undefined);
       if (!spans?.length) continue;
       const start = spans[0]![0];
       const end = spans.at(-1)![1];
@@ -345,12 +351,15 @@ export function migrateContent(original: string, options: ContentOptions = {}): 
         const table = token as Tokens.Table;
         let cursor = start;
         for (const cell of [...table.header, ...table.rows.flat()]) {
-          const spans = locate(source, cell.text, cursor, end);
+          // marked unescapes `\|` in a cell's text; the source still has the backslash.
+          const spans =
+            locate(source, cell.text, cursor, end) ??
+            locate(source, cell.text.replace(/\|/g, "\\|"), cursor, end);
           if (!spans?.length) continue;
           const [from] = spans[0]!;
           const to = spans.at(-1)![1];
           cursor = to;
-          inline(cell.tokens, from, to, context);
+          inline(cell.tokens, from, to, { ...context, inCell: true });
         }
         return;
       }
