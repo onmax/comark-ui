@@ -19,7 +19,7 @@ flowchart LR
 \`\`\``;
 const small = "```mermaid\nflowchart TD\n  A --> B\n```";
 const compare =
-  "::compare\n![Before](https://example.com/a.png)\n![After](https://example.com/b.png)\n::";
+  "## Checkout\n\n::compare\n![Before](https://example.com/a.png)\n![After](https://example.com/b.png)\n::";
 
 // A 46rem column in a 1440px window, the way a docs page or a review doc lays out its text.
 async function column(page: Page, room?: { start: string; end: string }) {
@@ -48,6 +48,10 @@ const widths = (page: Page) =>
       shortSvg: short!.querySelector("svg")!.getBoundingClientRect().width,
       shortNatural: Number(short!.querySelector("svg")!.getAttribute("width")),
       compare: box(document.querySelector(".ca-compare")!).width,
+      // comark-links wraps the heading with its anchor.
+      heading: box(document.querySelector(".cl-heading")!),
+      title: box(document.querySelector("h2")!).left,
+      compareLeft: box(document.querySelector(".ca-compare")!).left,
     };
   });
 
@@ -56,6 +60,7 @@ test("wide blocks keep to the column until the page gives them room", async ({ p
   const narrow = await widths(page);
   expect(narrow.long.width).toBe(narrow.main);
   expect(narrow.compare).toBe(narrow.main);
+  expect(narrow.heading.width).toBe(narrow.main);
   // A small diagram keeps its own size instead of growing to the scroll threshold.
   expect(narrow.shortSvg).toBeCloseTo(narrow.shortNatural, 0);
 });
@@ -70,6 +75,11 @@ test("a wide diagram grows to its own width, centered on the column, and a compa
   expect(wide.long.width).toBeGreaterThan(wide.main);
   expect(wide.long.left + wide.long.width / 2).toBeCloseTo(wide.center, 0);
   expect(wide.compare).toBe(72 * 16);
+  expect(wide.compareLeft + wide.compare / 2).toBeCloseTo(wide.center, 0);
+  // The heading above the compare is its title, so it spans the same width from the same edge.
+  expect(wide.heading.width).toBe(wide.compare);
+  expect(wide.heading.left).toBe(wide.compareLeft);
+  expect(wide.title).toBe(wide.compareLeft);
   expect(wide.short).toBe(wide.main);
 });
 
