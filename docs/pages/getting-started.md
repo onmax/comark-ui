@@ -188,7 +188,7 @@ comarkUi({ mermaid: { maxDiagrams: 4, maxSource: 8000 } });
 ```
 
 > [!NOTE]
-> Pele adds about 260 KB gzipped to a bundle. Turn it off if a size limit matters more than diagrams.
+> Pele adds about 260 KB gzipped to a bundle. `comark-ui/vue` loads it only when a document has a diagram, and Vue's server renderer waits for it. The other entries load it with the rest, so turn it off there if a size limit matters more than diagrams.
 
 If you use Comark's built-in `mermaid` plugin instead, pass `mermaid: false`, since both read `mermaid` fences. [Mermaid](/mermaid/) covers syntax and theming.
 
