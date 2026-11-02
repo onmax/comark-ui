@@ -145,6 +145,9 @@ export async function render(md: string) {
     expect(rewriteSource(source, "a.ts", { version: "^4.2.0" }).code).toContain(
       'comarkOptions({ headerIds: true, underscoreTags: true, expandTabs: "leading" })',
     );
+    expect(rewriteSource(source, "a.ts", { version: "^7.0.0" }).code).toContain(
+      'comarkOptions({ underscoreTags: true, expandTabs: "leading" })',
+    );
     expect(rewriteSource(source, "a.ts", { version: "^18.0.0" }).code).toContain("comarkOptions()");
     expect(
       rewriteSource(source.replace("marked(s)", "marked(s, { headerIds: false })"), "a.ts", {
@@ -204,6 +207,60 @@ export async function render(md: string) {
     const result = rewriteSource(source, "a.ts", { shared: ["setup.ts"] });
     expect(result.code).toBe(source);
     expect(result.rewrites[0]?.reason).toContain("setup.ts");
+  });
+
+  it.each([
+    [
+      "a class field",
+      `export async function f() { class C { html = marked("x"); } return C; }`,
+      "class field",
+    ],
+    [
+      "a parameter default",
+      `export async function f(s = marked("x")) { return s; }`,
+      "parameter's default",
+    ],
+    [
+      "a shadowed marked",
+      `export async function f(marked) { return marked("x"); }`,
+      "bound locally",
+    ],
+  ])("never awaits where it can't, or calls what isn't marked: %s", (_, body, reason) => {
+    const source = `import { marked } from "marked";\n${body}\n`;
+    expect(rewriteSource(source, "a.ts").rewrites[0]?.reason).toContain(reason);
+  });
+
+  it("keeps marked's configuration for an alias that escapes, and imports the copied options use", () => {
+    const alias = `import { marked } from "marked";\nmarked.setOptions({ breaks: true });\nexport const other = marked;\nexport async function r(s: string) { return marked(s); }\n`;
+    expect(rewriteSource(alias, "a.ts").code).toContain("marked.setOptions({ breaks: true });");
+    const copied = `import { Marked, Renderer } from "marked";\nimport { markedHighlight } from "marked-highlight";\nconst md = new Marked(markedHighlight({ highlight: (code) => new Renderer().text({ text: code }) }));\nexport async function r(s: string) { return md.parse(s); }\n`;
+    expect(rewriteSource(copied, "a.ts").code).toContain(
+      `import { Marked, Renderer } from "marked";`,
+    );
+  });
+
+  it("sees through TypeScript wrappers, namespace constructors, and class fields", () => {
+    expect(
+      names(`import { marked } from "marked";\n(marked as any).setOptions({ breaks: true });`)[0]
+        ?.plugins,
+    ).toEqual(["breaks:setup"]);
+    expect(
+      names(
+        `import * as M from "marked";\nconst md = new M.Marked();\nexport async function r(s) { return md.parse(s); }`,
+      ),
+    ).toEqual([{ host: "instance", plugins: [], calls: ["parse"] }]);
+    expect(
+      names(
+        `import { Marked } from "marked";\nexport class A { md = new Marked(); async r(s) { return this.md.parse(s); } }`,
+      ),
+    ).toEqual([{ host: "instance", plugins: [], calls: ["parse"] }]);
+  });
+
+  it("gives each call its own options, after the setup's", () => {
+    const source = `import { marked } from "marked";\nexport async function f(s: string) { return [marked(s, { breaks: true }), marked(s, { breaks: true })]; }\nmarked.setOptions({ breaks: false });\n`;
+    expect(
+      rewriteSource(source, "a.ts", { version: "^18.0.0" }).code.match(/breaks: true/g),
+    ).toHaveLength(2);
   });
 
   it("leaves CommonJS", () => {

@@ -82,6 +82,17 @@ describe("check", () => {
     expect(readFileSync(join(root, "doc.md"), "utf8")).toBe("{x}\n");
   });
 
+  it("migrates a document the marked code reads by name", async () => {
+    const root = project({
+      "render.ts": `import { marked } from "marked";\nimport { readFileSync } from "node:fs";\nexport async function about() { return marked.parse(readFileSync("ABOUT.md", "utf8")); }\n`,
+      "ABOUT.md": "Set {x}.\n",
+      "OTHER.md": "Set {y}.\n",
+    });
+    const codes = (await check(root)).map((finding) => `${finding.code} ${finding.file}`);
+    expect(codes).toContain("MKC0302 ABOUT.md");
+    expect(codes).not.toContain("MKC0302 OTHER.md");
+  });
+
   it("rewrites a call on the shared marked that other files only call", async () => {
     const root = project({
       "a.ts": `import { marked } from "marked";\nexport async function a(s: string) { return marked.parse(s); }\n`,

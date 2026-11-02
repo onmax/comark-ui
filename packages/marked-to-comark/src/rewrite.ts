@@ -8,7 +8,7 @@ import type {
   ParamPattern,
   Program,
 } from "oxc-parser";
-import { visitorKeys } from "oxc-parser";
+import { parseSync, visitorKeys } from "oxc-parser";
 import { parseScript, scanSource, type Call, type FoundPlugin, type Setup } from "./scan.ts";
 import { lineOffset, scriptBlocks } from "./sfc.ts";
 
@@ -27,7 +27,7 @@ export interface RewriteResult {
 
 /** What the rewrite knows about the rest of the project, which one file can't tell it. */
 export interface RewriteContext {
-  /** The marked range the file's package declares; before v8, marked gave headings ids by default. */
+  /** The marked range the file's package declares, which decides the settings that copy how that version read Markdown. */
   version?: string;
   /**
    * Files elsewhere in the project that configure the shared `marked` (`marked.use()`, `marked.setOptions()`). Its
@@ -45,6 +45,8 @@ interface Facts {
   names: Set<string>;
   /** Names bound by something other than an import: parameters, variables, functions, classes. */
   shadowed: Set<string>;
+  /** How many times each name is bound other than by an import. */
+  declared: Map<string, number>;
   imports: {
     node: ImportDeclaration;
     source: string;
@@ -97,6 +99,7 @@ function facts(program: Program): Facts {
   const result: Facts = {
     names: new Set(),
     shadowed: new Set(),
+    declared: new Map(),
     imports: [],
     references: new Map(),
     parent: new WeakMap(),
@@ -138,6 +141,7 @@ function facts(program: Program): Facts {
     for (const binding of declared) {
       bindings.add(binding);
       result.shadowed.add(binding.name);
+      result.declared.set(binding.name, (result.declared.get(binding.name) ?? 0) + 1);
     }
     if (node.type === "Identifier" || node.type === "JSXIdentifier") {
       const name = node.name;
@@ -175,7 +179,11 @@ function setting(plugins: FoundPlugin[], name: string): string | undefined {
 
 /** The plugins a call renders with: its setup's, plus the options written on the call itself. */
 function pluginsFor(setup: Setup, call: Call): FoundPlugin[] {
-  return setup.plugins.filter((plugin) => plugin.call === undefined || plugin.call === call.start);
+  // The call's own options override the setup's, whatever their order in the file.
+  return [
+    ...setup.plugins.filter((plugin) => plugin.call === undefined),
+    ...setup.plugins.filter((plugin) => plugin.call === call.start),
+  ];
 }
 
 /**
@@ -186,6 +194,7 @@ function configuration(
   program: Program,
   setup: Setup,
   info: Facts,
+  outside: Set<string>,
 ): [number, number][] | undefined {
   const ranges: [number, number][] = [];
   const markedNames = info.imports
@@ -234,14 +243,27 @@ function configuration(
     )
       ranges.push([statement.start, statement.end]);
   }
+  // Every read of the instance, or of the shared `marked`, must be one of the setup's calls or the statements removed
+  // with it: an alias, an export, or a template that reads it still needs its configuration.
+  const accounted = (node: Node) =>
+    ranges.some(([start, end]) => node.start >= start && node.end <= end) ||
+    setup.calls.some((call) => node.start >= call.start && node.end <= call.end);
   if (setup.host === "instance") {
-    if (!setup.binding || ranges.length === 0) return undefined;
-    // Every read of the instance must be one of its calls or the statements removed with it.
-    const reads = info.references.get(setup.binding) ?? [];
-    const accounted = (node: Node) =>
-      ranges.some(([start, end]) => node.start >= start && node.end <= end) ||
-      setup.calls.some((call) => node.start >= call.start && node.end <= call.end);
-    if (!reads.every(accounted)) return undefined;
+    if (!setup.binding || ranges.length === 0 || outside.has(setup.binding.replace(/^this\./, "")))
+      return undefined;
+    if (!(info.references.get(setup.binding) ?? []).every(accounted)) return undefined;
+  } else {
+    const shared = markedNames.filter((specifier) =>
+      /^(marked|default|\*)$/.test(specifier.imported),
+    );
+    if (
+      shared.some(
+        (specifier) =>
+          outside.has(specifier.local) ||
+          !(info.references.get(specifier.local) ?? []).every(accounted),
+      )
+    )
+      return undefined;
   }
   return ranges;
 }
@@ -295,6 +317,14 @@ function blocker(
   const names = plugins.flatMap((plugin) => (plugin.type === "extension" ? [plugin.name] : []));
   const repeated = names.find((name, index) => names.indexOf(name) !== index);
   if (repeated) return `registers ${repeated} more than once; which options win can't be read`;
+  // A local `marked` (a parameter, say) may not be the import at all, and a second `md` may not be the instance.
+  if (
+    call.callee &&
+    (setup.host === "marked"
+      ? info.shadowed.has(call.callee)
+      : (info.declared.get(call.callee) ?? 0) > 1)
+  )
+    return `calls \`${call.callee}\`, which is also bound locally, so whether it's marked can't be known`;
   const shadowed = plugins.find((plugin) => plugin.local && info.shadowed.has(plugin.local));
   if (shadowed)
     return `\`${shadowed.local}\` is also bound locally (a parameter or variable), so which extension it is can't be known`;
@@ -305,6 +335,17 @@ function blocker(
     return fn
       ? "runs in a function that isn't async; `renderHtml` returns a promise, so the function and its callers would change. Make it async, then run the rewrite again"
       : "runs at the top of the module; `renderHtml` returns a promise, so await it in an async function, then run the rewrite again";
+  // An async function's parameter defaults, and a class field or static block inside it, can't `await`.
+  const params = fn.params;
+  if (params.length && node.start >= params[0]!.start && node.end <= params.at(-1)!.end)
+    return "runs in a parameter's default value, where `await` isn't allowed; move it into the function body";
+  for (let up = info.parent.get(node); up && up !== fn; up = info.parent.get(up))
+    if (
+      up.type === "PropertyDefinition" ||
+      up.type === "AccessorProperty" ||
+      up.type === "StaticBlock"
+    )
+      return "runs in a class field or static block, where `await` isn't allowed; move it into an async method";
   return undefined;
 }
 
@@ -314,9 +355,27 @@ function blocker(
  */
 const isAsync = (setup: Setup, plugins: FoundPlugin[]) =>
   setting(plugins, "async") === "true" ||
-  plugins.some(
-    (plugin) => plugin.type === "extension" && /\basync\s*:\s*true\b/.test(plugin.options ?? ""),
+  plugins.some((plugin) => plugin.type === "extension" && topLevelTrue(plugin.options, "async"));
+
+/** Whether an options object literal sets `name: true` at its top level, not in a nested object or function. */
+function topLevelTrue(options: string | undefined, name: string): boolean {
+  if (!options) return false;
+  const statement = parseSync("options.ts", `(${options})`).program.body[0];
+  let object = statement?.type === "ExpressionStatement" ? statement.expression : undefined;
+  while (object?.type === "ParenthesizedExpression") object = object.expression;
+  return (
+    object?.type === "ObjectExpression" &&
+    object.properties.some(
+      (property) =>
+        property.type === "Property" &&
+        !property.computed &&
+        property.key.type === "Identifier" &&
+        property.key.name === name &&
+        property.value.type === "Literal" &&
+        property.value.value === true,
+    )
   );
+}
 
 function enclosingFunction(node: Node, parent: WeakMap<Node, Node>): Node | undefined {
   for (let up = parent.get(node); up; up = parent.get(up)) if (isFunction(up)) return up;
@@ -332,12 +391,12 @@ function comarkSettings(plugins: FoundPlugin[], context: RewriteContext) {
     last.set(plugin.type === "option" ? plugin.name : `${plugin.type}:${plugin.name}`, plugin);
   for (const plugin of last.values())
     if (plugin.mapping.setting) settings.add(plugin.mapping.setting);
-  // marked before v8 gave every heading an id unless `headerIds: false`.
   const version = lowest(context.version);
   const ids =
     version && version[0] === 0 && version[1] < 6 ? `headerIds: "legacy"` : "headerIds: true";
   settings.delete("headerIds: true");
-  if (version && version[0] < 8 && setting(plugins, "headerIds") !== "false") settings.add(ids);
+  // marked gave headings ids by default until v7.
+  if (version && version[0] < 7 && setting(plugins, "headerIds") !== "false") settings.add(ids);
   else if (setting(plugins, "headerIds") === "true") settings.add(ids);
   if (version && version[0] >= 1 && version[0] < 18) settings.add("underscoreTags: true");
   if (version && version[0] < 4) settings.add(`expandTabs: "all"`);
@@ -445,6 +504,8 @@ function rewriteScript(
     imports.set(from, entry);
   };
   const done: [number, number][] = [];
+  // The replacements copy extension options (`highlight: (code) => hljs…`), whose names must keep their imports.
+  const written: string[] = [];
   const removable = new Set<string>(["marked"]);
   for (const setup of setups) {
     for (const call of setup.calls) {
@@ -508,6 +569,7 @@ function rewriteScript(
         replacement = needsParens ? `(await ${replacement})` : `await ${replacement}`;
       }
       code.overwrite(call.start, call.end, replacement);
+      written.push(replacement);
       done.push([call.start, call.end]);
       rewrites.push({ file, line: call.line, rewritten: true });
     }
@@ -527,7 +589,7 @@ function rewriteScript(
     )
       continue;
     if (setup.host === "marked" && (context.shared?.length || context.callers?.length)) continue;
-    const statements = configuration(program, setup, info);
+    const statements = configuration(program, setup, info, outsideWords);
     if (!statements) continue;
     removed.push(...statements);
   }
@@ -547,7 +609,10 @@ function rewriteScript(
     const used = declaration.specifiers.some(
       (specifier) =>
         (info.references.get(specifier.local) ?? []).some(outsideCalls) ||
-        outsideWords.has(specifier.local),
+        outsideWords.has(specifier.local) ||
+        written.some((text) =>
+          new RegExp(`(?<![\\w$])${specifier.local.replace(/\$/g, "\\$")}(?![\\w$])`).test(text),
+        ),
     );
     if (used) continue;
     let end = declaration.node.end;

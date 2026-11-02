@@ -172,17 +172,27 @@ export function markedFolders(scanned: ScannedFile[], documents: string[]): stri
   return [...readers(scanned, documents).keys()].sort();
 }
 
-/** Each folder the project's marked code names, with the files that name it. */
+/** Each folder (ending in `/`) or document the project's marked code names, with the files that name it. */
 function readers(scanned: ScannedFile[], documents: string[]): Map<string, string[]> {
   const folders = new Set<string>();
   for (const path of documents)
     for (let dir = dirname(path); dir !== "."; dir = dirname(dir)) folders.add(`${dir}/`);
   const found = new Map<string, string[]>();
+  const add = (key: string, file: string) => {
+    const files = found.get(key) ?? [];
+    if (!files.includes(file)) files.push(file);
+    found.set(key, files);
+  };
+  const named = new Set(documents);
   for (const { file, source } of scanned) {
     // A whole literal (`"posts"`), or the folder a template starts with (`` `posts/${slug}.md` ``).
     for (const match of source.matchAll(
       /["'`]((?:\.{0,2}\/)?[\w@.-]+(?:\/[\w@.*-]+)*\/?)(?:["'`]|\/\$\{)/g,
     )) {
+      // A document named by its path (`readFileSync("README.md")`) is read too, by itself.
+      for (const path of [normalize(match[1]!), normalize(join(dirname(file), match[1]!))])
+        if (/\.(md|markdown)$/.test(path) && named.has(path.replace(/^\.\//, "")))
+          add(path.replace(/^\.\//, ""), file);
       const literal = match[1]!.replace(
         /\/?\*\*.*$|\/\*\.[\w{},]+$|\/[\w*-]*\.(?:md|markdown)$/,
         "",
@@ -195,10 +205,7 @@ function readers(scanned: ScannedFile[], documents: string[]): Map<string, strin
         continue;
       for (const base of [normalize(literal), normalize(join(dirname(file), literal))]) {
         const dir = `${base.replace(/^\.\/|\/$/g, "")}/`;
-        if (dir.startsWith("..") || !folders.has(dir)) continue;
-        const files = found.get(dir) ?? [];
-        if (!files.includes(file)) files.push(file);
-        found.set(dir, files);
+        if (!dir.startsWith("..") && folders.has(dir)) add(dir, file);
       }
     }
   }
@@ -391,7 +398,7 @@ export async function contentSetups(
   const cache = new Map<string, Promise<ContentSetup>>();
   return (file) => {
     const folder = [...named.keys()]
-      .filter((dir) => file.startsWith(dir))
+      .filter((key) => (key.endsWith("/") ? file.startsWith(key) : file === key))
       .sort((a, b) => b.length - a.length)[0];
     const scope = owner(file);
     const key = folder ? `folder:${folder}` : `scope:${scope}`;
@@ -521,7 +528,9 @@ export async function check(
 
   const documents = (await reader.glob(MARKDOWN)).sort();
   const folders = markedFolders(scanned, documents);
-  const read = documents.filter((path) => folders.some((dir) => path.startsWith(dir)));
+  const read = documents.filter((path) =>
+    folders.some((key) => (key.endsWith("/") ? path.startsWith(key) : path === key)),
+  );
   const setupFor = await contentSetups(root, reader, scanned);
   for (const path of read) {
     const source = reader.read(path);

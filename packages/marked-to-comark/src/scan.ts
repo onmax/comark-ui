@@ -44,6 +44,8 @@ export interface Call {
   method: "parse" | "parseInline" | "tokens";
   /** Source text of the Markdown argument. */
   input?: string;
+  /** The name the call goes through (`marked`, `md`), which the rewrite checks isn't bound again locally. */
+  callee?: string;
   /** Source text of options passed to this call alone. */
   options?: string;
   args: number;
@@ -398,7 +400,15 @@ function scanScript(source: string, file: string, shared?: Map<string, string>):
 
   // What a callee or object is: the shared marked, a named export, or an instance.
   const target = (node: Node): { setup: Setup; method?: string } | undefined => {
-    if (node.type === "ParenthesizedExpression") return target(node.expression);
+    // `(marked as any).setOptions(…)` and `marked!.parse(…)` are calls on marked all the same.
+    if (
+      node.type === "ParenthesizedExpression" ||
+      node.type === "TSAsExpression" ||
+      node.type === "TSNonNullExpression" ||
+      node.type === "TSSatisfiesExpression" ||
+      node.type === "TSTypeAssertion"
+    )
+      return target(node.expression);
     if (node.type === "Identifier") {
       const binding = marked.get(node.name);
       if (binding?.kind === "module") return { setup: global };
@@ -430,8 +440,16 @@ function scanScript(source: string, file: string, shared?: Map<string, string>):
   const newInstance = (node: Extract<Node, { type: "NewExpression" }>): Setup | undefined => {
     if (created.has(node)) return created.get(node);
     const callee = node.callee;
+    // `new Marked()`, or `new marked.Marked()` through the module.
+    const module =
+      callee.type === "MemberExpression" &&
+      !callee.computed &&
+      callee.property.type === "Identifier" &&
+      callee.property.name === "Marked" &&
+      callee.object.type === "Identifier" &&
+      marked.get(callee.object.name)?.kind === "module";
     const name = callee.type === "Identifier" ? marked.get(callee.name) : markedModule(callee);
-    if (!name || name.kind !== "export" || name.name !== "Marked") return undefined;
+    if (!module && (!name || name.kind !== "export" || name.name !== "Marked")) return undefined;
     const setup: Setup = {
       file,
       line: lineOf(node.start),
@@ -471,6 +489,19 @@ function scanScript(source: string, file: string, shared?: Map<string, string>):
         instances.set(text(node.left), setup);
       }
     }
+    // A class field, `md = new Marked()`, is read as `this.md`.
+    if (
+      node.type === "PropertyDefinition" &&
+      node.value?.type === "NewExpression" &&
+      !node.computed &&
+      node.key.type === "Identifier"
+    ) {
+      const setup = newInstance(node.value);
+      if (setup) {
+        setup.binding = `this.${node.key.name}`;
+        instances.set(`this.${node.key.name}`, setup);
+      }
+    }
     if (
       node.type === "VariableDeclarator" &&
       node.id.type === "Identifier" &&
@@ -501,6 +532,15 @@ function scanScript(source: string, file: string, shared?: Map<string, string>):
         found = { setup: owner.setup, method: "tokens" };
     } else found = target(callee);
     if (!found) return;
+    let root: Node = callee;
+    while (
+      root.type === "MemberExpression" ||
+      root.type === "ParenthesizedExpression" ||
+      root.type === "TSAsExpression" ||
+      root.type === "TSNonNullExpression"
+    )
+      root = root.type === "MemberExpression" ? root.object : root.expression;
+    const through = root.type === "Identifier" ? root.name : undefined;
     // `marked(md)` and `marked.marked(md)` are parse.
     const method = found.method ?? "parse";
     const { setup } = found;
@@ -520,6 +560,7 @@ function scanScript(source: string, file: string, shared?: Map<string, string>):
         end: node.end,
         method: "tokens",
         args: node.arguments.length,
+        callee: through,
       };
       if (input) call.input = text(input);
       setup.calls.push(call);
@@ -531,6 +572,7 @@ function scanScript(source: string, file: string, shared?: Map<string, string>):
         end: node.end,
         method: method === "parseInline" ? "parseInline" : "parse",
         args: node.arguments.length,
+        callee: through,
       };
       if (input) call.input = text(input);
       if (options) {
@@ -557,7 +599,8 @@ const dedupe = (plugins: FoundPlugin[]) =>
         (other) =>
           other.name === plugin.name &&
           other.line === plugin.line &&
-          other.options === plugin.options,
+          other.options === plugin.options &&
+          other.call === plugin.call,
       ) === index,
   );
 

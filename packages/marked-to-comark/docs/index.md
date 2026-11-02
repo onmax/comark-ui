@@ -18,7 +18,7 @@ marked-to-comark moves a project from marked to Comark. It changes only what mar
 - `rewrite` swaps `marked.parse(md)` for Comark's `renderHtml` when every option and extension carries over.
 - `content` escapes the Markdown Comark would read differently.
 - It finds the shared `marked`, `new Marked()` instances, `marked.use()` and `setOptions()`, and the calls in JavaScript, TypeScript, Vue, Svelte, and Astro files.
-- It reads the marked version each package declares, so heading ids and code classes from marked before v8 carry over.
+- It reads the marked version each package declares, so heading ids, tabs, and tables from older versions carry over.
 - It also runs in [Vite Doctor](/marked-to-comark/vite-doctor/).
 
 Tested on [100 projects](/marked-to-comark/testing/).

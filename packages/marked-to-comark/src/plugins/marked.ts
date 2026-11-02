@@ -173,7 +173,7 @@ const plainText = (nodes: Node[]): string =>
     .join("");
 
 /**
- * Heading ids as marked before v8 wrote them by default (`headerIds`), with its slugger: lowercased, punctuation
+ * Heading ids as marked before v7 wrote them by default (`headerIds`), with its slugger: lowercased, punctuation
  * dropped, each whitespace character a hyphen, and `-1`, `-2` after repeats. `legacy` is marked before 0.6: every run
  * of other characters a hyphen, and no suffix for repeats. An id the author wrote stays.
  */

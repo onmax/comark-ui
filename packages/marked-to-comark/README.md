@@ -49,7 +49,7 @@ pnpm marked-to-comark check .                           # what's left for you
 
 Without `--write`, `content` and `rewrite` print the change and touch nothing. marked still renders every escaped file byte for byte as before, so you can migrate the Markdown first and switch the renderer later.
 
-Rewritten code imports `comarkOptions` from `marked-to-comark/setup`, the Comark setup that reads Markdown like marked, without the rest of the package. It takes marked's own settings: `gfm`, `breaks`, `headerIds` and `headerPrefix` for marked before v8, and `langPrefix`. For extensions, [MKC0102](https://comark-ui.onmax.me/marked-to-comark/diagnostics#mkc0102) names the Comark plugin or [comark-ui](https://comark-ui.onmax.me) package that does the same job.
+Rewritten code imports `comarkOptions` from `marked-to-comark/setup`, the Comark setup that reads Markdown like marked, without the rest of the package. It takes marked's own settings: `gfm`, `breaks`, `headerIds` and `headerPrefix` for marked before v7, `langPrefix`, and the settings that copy how older versions read tabs, tags, and tables. For extensions, [MKC0102](https://comark-ui.onmax.me/marked-to-comark/diagnostics#mkc0102) names the Comark plugin or [comark-ui](https://comark-ui.onmax.me) package that does the same job.
 
 The same findings run as a [Vite Doctor](https://comark-ui.onmax.me/marked-to-comark/vite-doctor/) extension, next to comark-linter.
 

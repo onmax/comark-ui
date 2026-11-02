@@ -25,7 +25,7 @@ To teach an agent Comark's blocks and plugins, run `npx skills add onmax/comark-
 
 ## mkc0103
 
-**Covered.** Comark or `comarkOptions()` already does what the option or extension did: `gfm`, `breaks`, `headerIds` and `headerPrefix`, `langPrefix`, marked-gfm-heading-id, marked-smartypants, and others. For marked before v18, `rewrite` also passes the settings that copy that version's reading: heading ids before v8, tabs before v14, tag names with underscores from v1 to v17, and marked 0.3's tables and code classes. The finding names the `comarkOptions()` setting when there is one. Nothing to do; `rewrite` carries it over.
+**Covered.** Comark or `comarkOptions()` already does what the option or extension did: `gfm`, `breaks`, `headerIds` and `headerPrefix`, `langPrefix`, marked-gfm-heading-id, marked-smartypants, and others. For marked before v18, `rewrite` also passes the settings that copy that version's reading: heading ids before v7, tabs before v14, tag names with underscores from v1 to v17, and marked 0.3's tables and code classes. The finding names the `comarkOptions()` setting when there is one. Nothing to do; `rewrite` carries it over.
 
 ## mkc0104
 

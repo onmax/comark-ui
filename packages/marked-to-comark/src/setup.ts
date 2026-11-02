@@ -55,7 +55,7 @@ export interface SetupOptions {
   breaks?: boolean;
   /** `true` reads a leading `---` block as frontmatter, for a project that strips it before marked (gray-matter, front-matter). */
   frontmatter?: boolean;
-  /** Heading ids as marked before v8 wrote them by default (`headerIds`), with its slugger; `legacy` for marked before 0.6. */
+  /** Heading ids as marked before v7 wrote them by default (`headerIds`), with its slugger; `legacy` for marked before 0.6. */
   headerIds?: boolean | "legacy";
   /** What marked's `headerPrefix` put before each of those ids. */
   headerPrefix?: string;

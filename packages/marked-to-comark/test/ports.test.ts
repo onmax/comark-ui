@@ -53,6 +53,22 @@ describe("markedHighlight", () => {
     ).toBe(true);
   });
 
+  it("keeps a highlighter's line breaks and quoted attributes, and hands it the fence's whole info", async () => {
+    const options = {
+      highlight: (code: string, lang: string, info: string) =>
+        `<span title="a>b">x</span><br>y ${info}`,
+    };
+    for (const markdown of ["```js {1} [a.ts] title=x\ncode\n```\n", "```\nz\n```\n"]) {
+      const expected = await new (await import("marked")).Marked(original(options)).parse(markdown);
+      expect(
+        compare(
+          expected,
+          await comarkHtml(markdown, comarkSetup({ plugins: [markedHighlight(options)] })),
+        ).differences,
+      ).toEqual([]);
+    }
+  });
+
   it("draws through the real renderer", async () => {
     expect(
       await renderHtml(documents[0]!, {

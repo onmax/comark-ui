@@ -61,6 +61,12 @@ const highlight = {
     "comark-code",
   ),
 };
+// smartypants only curls quotes and writes dashes and ellipses; punctuation()'s symbols and `!!!!` folding are off.
+const smartypants = plugin(
+  "punctuation",
+  "comark/plugins/punctuation",
+  "punctuation({ symbols: false, normalize: false })",
+);
 const math = {
   ...plugin(
     "math",
@@ -219,11 +225,11 @@ export function mapOption(name: string, value: string | undefined): Mapping & { 
     case "headerIds":
       if (v === "false")
         return known(
-          setup("Comark writes no heading ids with `comarkOptions()`, like marked 8 and later."),
+          setup("Comark writes no heading ids with `comarkOptions()`, like marked 7 and later."),
         );
       return known(
         setup(
-          "marked before v8 gave every heading an id; `headerIds: true` writes the same ids with marked's slugger.",
+          "marked before v7 gave every heading an id; `headerIds: true` writes the same ids with marked's slugger.",
           "headerIds: true",
         ),
       );
@@ -250,7 +256,7 @@ export function mapOption(name: string, value: string | undefined): Mapping & { 
       );
     case "smartypants":
       if (v === "false") return known(setup("marked's default."));
-      return known(plugin("punctuation", "comark/plugins/punctuation", "punctuation()"));
+      return known(smartypants);
     case "smartLists":
     case "tables":
       return known(setup("Comark reads lists and tables as marked's defaults do."));
