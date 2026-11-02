@@ -107,6 +107,7 @@ export function comarkSetup(options: SetupOptions = {}): ComarkSetup {
             htmlPre(),
             htmlEntities(),
             closeInlineHtml(),
+            inlineHtml("headings"),
             htmlBlocks(),
           ]),
       ...(gfm ? [taskList(), taskListClasses()] : [commonmark()]),

@@ -77,17 +77,21 @@ function attributes(text: string): Record<string, string | true> {
 }
 
 /**
- * Inside emphasis or link text, Comark gives an inline tag no children: `**a <b>c</b>**` renders `<strong>a c<b></b>
- * </strong>`, because those spans collect their children without the open tag seeing them. Each matched tag pair in a
+ * Inside emphasis, link text, or a heading, Comark gives an inline tag no children: `**a <b>c</b>**` renders
+ * `<strong>a c<b></b></strong>`, because those collect their children without the open tag seeing them. Headings run
+ * after closeInlineHtml(), so a tag left open in one is closed first. Each matched tag pair in a
  * span becomes a pair of span tokens the tree builder nests, marked so their attributes come back as HTML's.
  */
-export const inlineHtml = (): ComarkPlugin => ({
-  name: "marked-to-comark:inline-html",
+export const inlineHtml = (scope: "spans" | "headings" = "spans"): ComarkPlugin => ({
+  name: `marked-to-comark:inline-html-${scope}`,
   markdownItPost(state) {
-    for (const block of state.tokens) {
+    for (const [at, block] of state.tokens.entries()) {
       const children = block.children;
       if (block.type !== "inline" || !children) continue;
-      let depth = 0;
+      // A heading collects its children the way spans do, so its own tags count as nested.
+      const heading = state.tokens[at - 1]?.type === "heading_open";
+      if (scope === "headings" && !heading) continue;
+      let depth = scope === "headings" ? 1 : 0;
       for (let index = 0; index < children.length; index++) {
         const token = children[index]!;
         const span = SPANS.exec(token.type);
