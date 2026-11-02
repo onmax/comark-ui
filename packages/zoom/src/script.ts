@@ -17,6 +17,11 @@ export interface ZoomDetail {
   copyOf: (node: Element) => Element | null;
   /** The element on the page that a node of the zoomed copy or the aside copies, or null when it isn't one of them. */
   originalOf: (node: Element) => Element | null;
+  /**
+   * How much the zoomed copy, and `layer` with it, is scaled. It changes when the window resizes or a larger image
+   * loads, so read it when drawing rather than keeping it. Divide a size by it to draw at the same size on screen.
+   */
+  readonly scale: number;
 }
 
 declare global {
@@ -270,6 +275,9 @@ export function script(css: string): () => void {
       items: current.items,
       copyOf: (node) => across(current.pairs, node, 0),
       originalOf: (node) => across(current.pairs, node, 1),
+      get scale() {
+        return current.scale;
+      },
     };
   }
 

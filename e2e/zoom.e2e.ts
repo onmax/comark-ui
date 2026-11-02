@@ -313,3 +313,38 @@ test("start() from the client entry adds its own styles", async ({ page }) => {
   await page.locator("main img").click();
   await expect(page.locator(".cz-dialog")).toHaveCSS("position", "fixed");
 });
+
+test("the events carry the zoomed copy's scale, which follows a resize", async ({ page }) => {
+  await page.setViewportSize({ width: 1200, height: 800 });
+  await page.route("**/wide.svg", (route) =>
+    route.fulfill({
+      contentType: "image/svg+xml",
+      body: '<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1200"><rect width="2400" height="1200"/></svg>',
+    }),
+  );
+  await fixture(page, await render('![Wide](/wide.svg){width="300"}'));
+  await page.evaluate(() =>
+    document.addEventListener("comark-zoom:open", ({ detail }) =>
+      Object.assign(window, { detail }),
+    ),
+  );
+  await page.locator("main img").click();
+  await expect(page.locator(".cz-dialog")).toBeVisible();
+  await expect.poll(() => page.evaluate(() => document.getAnimations().length)).toBe(0);
+  // What the layer's box on screen says it's scaled by, against what the event says.
+  const scales = () =>
+    page.evaluate(() => {
+      const { detail } = window as unknown as { detail: { layer: HTMLElement; scale: number } };
+      return {
+        shown: detail.layer.getBoundingClientRect().width / detail.layer.offsetWidth,
+        said: detail.scale,
+      };
+    });
+  const before = await scales();
+  expect(before.said).toBeGreaterThan(1);
+  expect(before.said).toBeCloseTo(before.shown, 2);
+  await page.setViewportSize({ width: 800, height: 600 });
+  await expect.poll(async () => (await scales()).said).toBeLessThan(before.said);
+  const after = await scales();
+  expect(after.said).toBeCloseTo(after.shown, 2);
+});
