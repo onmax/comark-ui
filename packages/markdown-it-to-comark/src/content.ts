@@ -198,7 +198,9 @@ function locate(
     const match = (at: number): number[] | undefined => {
       const found: number[] = [];
       let column = at;
-      for (const char of part) {
+      // By UTF-16 unit, as the offsets are: an emoji is two.
+      for (let unit = 0; unit < part.length; unit++) {
+        const char = part[unit]!;
         if (line.text[column] === "\\" && line.text[column + 1] === "|" && char === "|") column++;
         if (line.text[column] !== char) return undefined;
         found.push(line.start + column++);
