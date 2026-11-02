@@ -274,6 +274,12 @@ Set these on `.cr` or any ancestor, such as `:root`:
 | `--cr-comment` | amber | A comment's highlight |
 | `--cr-icon` | a grey speech bubble | The bubble's icon, as a CSS image |
 
+An avatar without an image is the author's initial on a tint. The renderer sets `--cr-hue` on each one, a hue from 0 to 360 picked from the name, and the styles mix it into the page's colors. A host that draws its own avatars, such as for a comment it adds live, sets `--cr-hue` on each `.cr-av` too. Without it, the circle has no background and the letter takes the text color:
+
+```html
+<span class="cr-av" style="--cr-hue: 145" aria-hidden="true">M</span>
+```
+
 ### Classes and attributes
 
 | Selector | Is |
@@ -284,7 +290,7 @@ Set these on `.cr` or any ancestor, such as `:root`:
 | `.cr-bub` | The bubble, a `<label>` for the hidden `.cr-tg` checkbox |
 | `.cr-card` | The card |
 | `.cr-entry` | One message in a card: the note, then each reply |
-| `.cr-av` | An avatar |
+| `.cr-av` | An avatar: an `<img>`, or a `<span>` with the author's initial on a tint of its `--cr-hue` |
 
 ### Example
 
