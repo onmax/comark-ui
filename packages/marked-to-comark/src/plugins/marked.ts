@@ -589,7 +589,6 @@ export const underscoreTagText = (): ComarkPlugin => ({
 });
 
 const PAD = "marked-to-comark-pad";
-const DELIMITER = /^ *\|? *:?-+:? *(?:\| *:?-+:? *)*\|? *$/;
 
 /**
  * Tables as marked 0.3 split them: every `|` ends a cell, escaped or in a code span, and each row keeps the cells it
@@ -605,35 +604,42 @@ export const legacyTables = (): ComarkPlugin => ({
       const line = lines[index]!;
       const marker = /^ {0,3}(`{3,}|~{3,})/.exec(line)?.[1];
       if (marker && (!fence || marker.startsWith(fence))) fence = fence ? undefined : marker;
-      if (
-        fence ||
-        /^ {4}/.test(line) ||
-        !line.includes("|") ||
-        !DELIMITER.test(lines[index + 1]!) ||
-        !lines[index + 1]!.includes("-")
-      )
-        continue;
-      const piped = /^ *\|/.test(line);
+      if (fence || /^ {4}/.test(line)) continue;
+      // marked 0.3's two table rules, read as it reads them: with a leading pipe, or without one.
+      const piped = /^ *\|(.+)$/.exec(line);
+      const delimiter = lines[index + 1]!;
+      const isTable = piped
+        ? /^ *\|( *[-:]+[-| :]*)$/.test(delimiter)
+        : /^ *(\S.*\|.*)$/.test(line) && /^ *([-:]+ *\|[-| :]*)$/.test(delimiter);
+      if (!isTable) continue;
       let end = index + 2;
-      while (
-        end < lines.length &&
-        lines[end]!.includes("|") &&
-        lines[end]!.trim() &&
-        (!piped || /^ *\|/.test(lines[end]!))
-      )
+      while (end < lines.length && (piped ? /^ *\|/.test(lines[end]!) : lines[end]!.includes("|")))
         end++;
-      // marked 0.3's own splitting: trim the outer pipes, then every pipe divides.
-      const cells = (row: string) => row.replace(/^ *\| *| *\| *$/g, "").split(/ *\| */);
-      const rows = [line, ...lines.slice(index + 2, end)].map(cells);
-      const width = Math.max(...rows.map((row) => row.length));
+      const header = (piped ? piped[1]! : line).replace(/^ *| *\| *$/g, "").split(/ *\| */);
+      const body = lines.slice(index + 2, end).join("\n") + (end < lines.length ? "\n" : "");
+      const rows = piped
+        ? // The last row loses its final pipe twice: once with the block's newline, once on its own.
+          body
+            .replace(/(?: *\| *)?\n$/, "")
+            .split("\n")
+            .map((row) => row.replace(/^ *\| *| *\| *$/g, "").split(/ *\| */))
+        : body
+            .replace(/\n$/, "")
+            .split("\n")
+            .map((row) => row.split(/ *\| */));
+      const all = end > index + 2 ? [header, ...rows] : [header];
+      const width = Math.max(...all.map((row) => row.length));
       const write = (row: string[]) =>
         `| ${[...row.map((cell) => cell.replace(/\\$/, "\\\\")), ...Array<string>(width - row.length).fill(PAD)].join(" | ")} |`;
-      // The delimiter row follows the table's width, longer or shorter, as marked 0.3 ignores its extra cells.
-      const delimiter = cells(lines[index + 1]!).slice(0, width);
-      lines[index] = write(rows[0]!);
+      // The delimiter row follows the table's width, as marked 0.3 ignores its extra cells.
+      const align = delimiter
+        .replace(/^ *\|?|\| *$/g, "")
+        .split(/ *\| */)
+        .slice(0, width);
+      lines[index] = write(header);
       lines[index + 1] =
-        `| ${[...delimiter, ...Array<string>(width - delimiter.length).fill("---")].join(" | ")} |`;
-      for (let row = 1; row < rows.length; row++) lines[index + 1 + row] = write(rows[row]!);
+        `| ${[...align, ...Array<string>(width - align.length).fill("---")].join(" | ")} |`;
+      for (let row = 2; row < end - index; row++) lines[index + row] = write(rows[row - 2]!);
       index = end - 1;
     }
     state.markdown = lines.join("\n");
