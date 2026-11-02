@@ -67,7 +67,7 @@ The same findings run as a [Vite Doctor](https://comark-ui.onmax.me/markdown-it-
 
 ## How close it gets
 
-RESULTS
+On 10,749 Markdown files from the 100 most-starred repositories that declare markdown-it, 97.7% parse to the same HTML in Comark as in markdown-it after migration, once whitespace is normalized, against 35.6% with Comark's defaults. Each of the 16 setups `rewrite` replaced renders those projects' documents the same. [How it was tested](https://comark-ui.onmax.me/markdown-it-to-comark/testing/) has the method, the groups of what still differs, and the Comark bugs found on the way.
 
 It leaves some work to you, and reports each piece:
 

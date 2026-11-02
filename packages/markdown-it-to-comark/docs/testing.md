@@ -17,14 +17,13 @@ On every project, the run checks that:
 
 ## Results
 
-Of 10,749 sampled documents, RESULT_SAME render the same in Comark and in markdown-it after migration. On the 71 projects whose plugins the test could load, it's RESULT_REPRODUCED. Comark with its own defaults gets 35.6% of them right: its defaults are the opposite of markdown-it's for raw HTML and links, and it reads `{`, `[`, and `:name` as syntax.
+Of 10,749 sampled documents, 10,506 (97.7%) parse to the same HTML in Comark and in markdown-it after migration. On the 71 projects whose plugins the test could load, it's 6,762 of 6,889 (98.2%). Comark with its own defaults gets 35.6% of them right: its defaults are the opposite of markdown-it's for raw HTML and links, and it reads `{`, `[`, and `:name` as syntax. Through the `@comark/html` renderer, which has bugs of its own in how it writes HTML, 9,278 (86.3%) come out the same.
 
-`rewrite` replaced 16 of the 205 markdown-it setups it found. The rest stay for a reason it reports, most often a `render` call outside an async function, since Comark renders asynchronously. Each rewritten setup was run as written against the original on that project's documents, and every one renders them the same.
+`rewrite` replaced 16 of the 205 markdown-it setups it found. The rest stay for a reason it reports, most often a `render` call outside an async function, since Comark renders asynchronously. Each rewritten setup was run as written against the original on up to 20 of that project's documents, and all 16 render every one of them the same.
 
-Most of what still differs falls into a few groups:
+Most of the 243 documents that still differ come from five projects the test can't render the way they render themselves, such as Renovate, whose setups disagree, and Vuetify, whose renderer lives in a build folder the test didn't fetch. The rest fall into a few groups:
 
 - HTML Comark builds differently from a browser: content inside `<template>`, whitespace between top-level HTML elements, `<![CDATA[`, and a `<p>` around HTML a tag left open.
-- Projects whose own setup the test couldn't load, such as Vuetify's, whose renderer lives in a build folder, or setups that disagree about raw HTML, so blocks stay as written.
 - Vue component markup (`@click`, `:prop`) on sites that compile their Markdown as Vue.
 - Edge cases from parser test suites, such as nested link brackets.
 
