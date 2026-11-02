@@ -33,7 +33,8 @@ const fixture = () =>
   project({
     "package.json": "{}",
     "src/render.ts": RENDER,
-    "docs/.vitepress/config.ts": 'import mark from "markdown-it-mark";\nexport default { markdown: { config: (md) => md.use(mark) } };\n',
+    "docs/.vitepress/config.ts":
+      'import mark from "markdown-it-mark";\nexport default { markdown: { config: (md) => md.use(mark) } };\n',
     "docs/a.md": "# A\n\nSet [value] first.\n\n::: tip\nKept for VitePress.\n:::\n",
     "docs/b.md": "# B\n\nPlain.\n",
   });
@@ -46,7 +47,9 @@ const cli = (root: string, ...args: string[]) =>
 
 describe("check", () => {
   it("reports every kind of finding with its code", async () => {
-    const codes = (await check(fixture())).map((finding) => `${finding.code} ${finding.file}:${finding.line}`);
+    const codes = (await check(fixture())).map(
+      (finding) => `${finding.code} ${finding.file}:${finding.line}`,
+    );
     expect(codes).toEqual(
       expect.arrayContaining([
         "MIC0101 docs/.vitepress/config.ts:2",
@@ -65,9 +68,23 @@ describe("check", () => {
   });
 
   it("prints the same JSON shape as remark-to-comark", async () => {
-    const [finding] = JSON.parse(formatFindings(await check(fixture()), { json: true })) as Record<string, unknown>[];
-    expect(Object.keys(finding!).sort()).toEqual(["code", "docs", "file", "fix", "line", "rule", "severity", "why"]);
-    expect(finding!.docs).toEqual(expect.stringContaining("/markdown-it-to-comark/diagnostics#mic"));
+    const [finding] = JSON.parse(formatFindings(await check(fixture()), { json: true })) as Record<
+      string,
+      unknown
+    >[];
+    expect(Object.keys(finding!).sort()).toEqual([
+      "code",
+      "docs",
+      "file",
+      "fix",
+      "line",
+      "rule",
+      "severity",
+      "why",
+    ]);
+    expect(finding!.docs).toEqual(
+      expect.stringContaining("/markdown-it-to-comark/diagnostics#mic"),
+    );
   });
 
   it("ends with what wasn't migrated and what to run next", async () => {
@@ -95,7 +112,9 @@ describe("the CLI", () => {
 
   it("escapes content with the site's syntax in mind, and only with --write", () => {
     const root = fixture();
-    expect(cli(root, "content", "docs/**/*.md").stdout).toContain("1 of 2 Markdown files would change");
+    expect(cli(root, "content", "docs/**/*.md").stdout).toContain(
+      "1 of 2 Markdown files would change",
+    );
     expect(cli(root, "content", "docs/**/*.md", "--write").status).toBe(0);
     expect(readFileSync(join(root, "docs/a.md"), "utf8")).toBe(
       "# A\n\nSet \\[value\\] first.\n\n::: tip\nKept for VitePress.\n:::\n",

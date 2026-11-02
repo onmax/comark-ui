@@ -137,7 +137,8 @@ function rewriteScript(source: string, file: string): RewriteResult {
   const { program } = parseSync(file, source);
   const info = index(program);
   const imports = program.body.filter((node) => node.type === "ImportDeclaration");
-  const isModule = imports.length > 0 || program.body.some((node) => node.type.startsWith("Export"));
+  const isModule =
+    imports.length > 0 || program.body.some((node) => node.type.startsWith("Export"));
   const code = new MagicString(source);
   const rewrites: Rewrite[] = [];
   const taken = new Set(info.names);

@@ -50,15 +50,51 @@ describe("rewriteSource", () => {
   });
 
   it.each([
-    ["renders outside an async function", "const md = new MarkdownIt();\nexport const render = (s: string) => md.render(s);", /outside an async function/],
-    ["is exported", "export const md = new MarkdownIt();\nexport const render = async (s: string) => md.render(s);", /leaves this file/],
-    ["is passed on", "const md = new MarkdownIt();\nsetup(md);\nexport const render = async (s: string) => md.render(s);", /leaves this file/],
-    ["changes a renderer rule", "const md = new MarkdownIt();\nmd.renderer.rules.fence = () => '';\nexport const render = async (s: string) => md.render(s);", /by hand/],
-    ["renders inline", "const md = new MarkdownIt();\nexport const render = async (s: string) => md.renderInline(s);", /renderInline/],
-    ["passes an env", "const md = new MarkdownIt();\nexport const render = async (s: string) => md.render(s, {});", /env/],
-    ["takes a highlight function", "const md = new MarkdownIt({ highlight });\nexport const render = async (s: string) => md.render(s);", /highlight/],
-    ["takes options in a variable", "const md = new MarkdownIt(options);\nexport const render = async (s: string) => md.render(s);", /options/],
-    ["uses the project's own plugin", 'import mine from "./mine.js";\nconst md = new MarkdownIt().use(mine);\nexport const render = async (s: string) => md.render(s);', /compared/],
+    [
+      "renders outside an async function",
+      "const md = new MarkdownIt();\nexport const render = (s: string) => md.render(s);",
+      /outside an async function/,
+    ],
+    [
+      "is exported",
+      "export const md = new MarkdownIt();\nexport const render = async (s: string) => md.render(s);",
+      /leaves this file/,
+    ],
+    [
+      "is passed on",
+      "const md = new MarkdownIt();\nsetup(md);\nexport const render = async (s: string) => md.render(s);",
+      /leaves this file/,
+    ],
+    [
+      "changes a renderer rule",
+      "const md = new MarkdownIt();\nmd.renderer.rules.fence = () => '';\nexport const render = async (s: string) => md.render(s);",
+      /by hand/,
+    ],
+    [
+      "renders inline",
+      "const md = new MarkdownIt();\nexport const render = async (s: string) => md.renderInline(s);",
+      /renderInline/,
+    ],
+    [
+      "passes an env",
+      "const md = new MarkdownIt();\nexport const render = async (s: string) => md.render(s, {});",
+      /env/,
+    ],
+    [
+      "takes a highlight function",
+      "const md = new MarkdownIt({ highlight });\nexport const render = async (s: string) => md.render(s);",
+      /highlight/,
+    ],
+    [
+      "takes options in a variable",
+      "const md = new MarkdownIt(options);\nexport const render = async (s: string) => md.render(s);",
+      /options/,
+    ],
+    [
+      "uses the project's own plugin",
+      'import mine from "./mine.js";\nconst md = new MarkdownIt().use(mine);\nexport const render = async (s: string) => md.render(s);',
+      /compared/,
+    ],
   ])("leaves an instance that %s, with the reason", (_, body, reason) => {
     const code = `import MarkdownIt from "markdown-it";\n${body}\n`;
     const result = rewrite(code);
@@ -68,7 +104,8 @@ describe("rewriteSource", () => {
   });
 
   it("leaves CommonJS alone", () => {
-    const code = 'const MarkdownIt = require("markdown-it");\nconst md = new MarkdownIt();\nexports.render = async (s) => md.render(s);\n';
+    const code =
+      'const MarkdownIt = require("markdown-it");\nconst md = new MarkdownIt();\nexports.render = async (s) => md.render(s);\n';
     expect(rewrite(code, "render.cjs").rewrites[0]?.reason).toMatch(/CommonJS/);
   });
 

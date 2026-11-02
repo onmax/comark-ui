@@ -211,7 +211,8 @@ export const precedence = (): ComarkPlugin => ({
         }
       }
       // markdown-it-attrs reads `{.class}` after parsing too; it takes the place of Comark's attribute syntax.
-      if (added.core.has("curly_attributes")) host.inline.ruler.disable?.("comark_inline_props", true);
+      if (added.core.has("curly_attributes"))
+        host.inline.ruler.disable?.("comark_inline_props", true);
       if (added.core.has("emoji")) {
         const rule = host.inline.ruler.__rules__.find(
           (item) => item.name === "comark_inline_component",

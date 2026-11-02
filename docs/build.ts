@@ -14,6 +14,7 @@ import { css as criticCss } from "../packages/critic/src/index.ts";
 import { createIcons, css as iconCss, iconHtml } from "../packages/icon/src/html.ts";
 import include from "../packages/include/src/index.ts";
 import { lint, type Diagnostic } from "../packages/lint/src/index.ts";
+import { catalog as markdownItCatalog } from "../packages/markdown-it-to-comark/src/diagnostics.ts";
 import { catalog as migrationCatalog } from "../packages/remark-to-comark/src/diagnostics.ts";
 import { defaultConfig } from "./config.ts";
 import { highlighted, sitePlugins as examplePlugins, withoutFor } from "./example-plugins.ts";
@@ -137,6 +138,7 @@ const packageOrder = [
   "chat",
   "lint",
   "remark-to-comark",
+  "markdown-it-to-comark",
 ];
 const repo = new URL("../", root);
 // The agent skills that write a whole document, in the order the Skills section lists them. Each has a folder in
@@ -190,7 +192,7 @@ function subPages(slug: string) {
   return [...new Set(linked)];
 }
 // A package's group picks its section and its heading there: blocks under Components, syntax under Typography, the
-// authoring tools under the docs' Utilities, and the linter and the remark migration each in its own. comark-ui has no page: Getting started is it.
+// authoring tools under the docs' Utilities, and the linter and each migration in its own. comark-ui has no page: Getting started is it.
 const groups = [
   "Review blocks",
   "Charts and diagrams",
@@ -201,6 +203,7 @@ const groups = [
   "Chat",
   "Linter",
   "Migration",
+  "Migration from markdown-it",
 ];
 for (const folder of await readdir(new URL("packages/", repo))) {
   // A branch from before the move would add its pages where nothing reads them.
@@ -411,6 +414,28 @@ const sections: Section[] = [
           .map(([code, entry]) => ({
             label: entry.ruleId.replace("remark-to-comark/", ""),
             href: `/remark-to-comark/diagnostics/#${code.toLowerCase()}`,
+          })),
+      },
+    ],
+  },
+  {
+    slug: "markdown-it-to-comark",
+    label: "From markdown-it",
+    icon: "arrow-right-left",
+    lists: [
+      { slugs: inGroup("Migration from markdown-it") },
+      {
+        title: "Rules",
+        fold: true,
+        slugs: [],
+        anchors: Object.entries(markdownItCatalog)
+          .filter(
+            ([, entry], i, all) =>
+              all.findIndex(([, first]) => first.ruleId === entry.ruleId) === i,
+          )
+          .map(([code, entry]) => ({
+            label: entry.ruleId.replace("markdown-it-to-comark/", ""),
+            href: `/markdown-it-to-comark/diagnostics/#${code.toLowerCase()}`,
           })),
       },
     ],
@@ -634,8 +659,8 @@ async function parsePage(slug: string, section: Section) {
     "label",
   ].map((key) => rawText(document.frontmatter[key]));
   const pkg = packageOf(slug);
-  // The linter and the remark migration install on their own, outside comark-ui.
-  if (pkg && pkg.slug !== "lint" && pkg.slug !== "remark-to-comark" && install)
+  // The linter and the migrations install on their own, outside comark-ui.
+  if (pkg && !["lint", "remark-to-comark", "markdown-it-to-comark"].includes(pkg.slug) && install)
     throw new Error(
       `${file}: a block's page has no installer; Getting started installs comark-ui, and the page's Package section installs it alone.`,
     );

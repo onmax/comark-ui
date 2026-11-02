@@ -11,7 +11,10 @@ const run = (files: Record<string, string>, options: { fix?: boolean; unsafeFix?
 const applied = (text: string, edits: { range: { start: number; end: number }; text: string }[]) =>
   [...edits]
     .sort((a, b) => b.range.start - a.range.start)
-    .reduce((out, edit) => out.slice(0, edit.range.start) + edit.text + out.slice(edit.range.end), text);
+    .reduce(
+      (out, edit) => out.slice(0, edit.range.start) + edit.text + out.slice(edit.range.end),
+      text,
+    );
 
 describe("markdown-it-to-comark/doctor", () => {
   it("offers the content escapes as a safe fix and the setup rewrite as an unsafe one", async () => {

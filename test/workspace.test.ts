@@ -100,13 +100,13 @@ describe.each(withRenderer)("the renderer of packages/%s", (folder) => {
 });
 
 const inPreset = folders.filter(
-  (folder) => !["ui", "lint", "chat", "remark-to-comark"].includes(folder),
+  (folder) => !["ui", "lint", "chat", "remark-to-comark", "markdown-it-to-comark"].includes(folder),
 );
 describe.each(inPreset)("packages/%s", (folder) => {
   const pkg = manifest(folder);
 
   // A package with no renderer runs from the preset's core, so it works in every renderer.
-  // comark-chat renders AI SDK messages, not documents, and remark-to-comark is a migration tool, so the preset leaves them out.
+  // comark-chat renders AI SDK messages, not documents, and the migrations are tools, so the preset leaves them out.
   it("comes with the preset", () => {
     expect(manifest("ui").dependencies?.[pkg.name]).toBe("workspace:^");
     if (!withRenderer.includes(folder))

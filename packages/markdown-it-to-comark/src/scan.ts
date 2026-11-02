@@ -352,7 +352,11 @@ function scanScript(source: string, file: string): Setup[] {
       }
       // The whole path that's changed: `md.renderer.rules.fence`, not just `md.renderer`.
       let path: Node = member;
-      for (let outer = up(path); outer?.type === "MemberExpression" && outer.object === path; outer = up(path))
+      for (
+        let outer = up(path);
+        outer?.type === "MemberExpression" && outer.object === path;
+        outer = up(path)
+      )
         path = outer;
       setup.customized.push({ what: text(path).slice(0, 60), line: lineOf(member.start) });
       return member;
