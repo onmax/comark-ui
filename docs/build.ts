@@ -136,6 +136,7 @@ const packageOrder = [
   "reading-time",
   "chat",
   "lint",
+  "migrate-to-comark",
   "remark-to-comark",
 ];
 const repo = new URL("../", root);
@@ -391,16 +392,17 @@ const sections: Section[] = [
       })),
     ],
   },
-  // remark-to-comark moves a project off remark, which isn't linting, so it has its own column. Its rules check a
-  // project's code, not a document, so each links its first code on the Diagnostics page instead of a page of examples.
+  // Moving a project to Comark isn't linting, so the wizard and the migrators have their own column. The migrators'
+  // rules check a project's code, not a document, so each links its first code on the Diagnostics page instead of a
+  // page of examples.
   {
-    slug: "remark-to-comark",
-    label: "From remark",
+    slug: "migrate-to-comark",
+    label: "Migrate",
     icon: "arrow-right-left",
     lists: [
       { slugs: inGroup("Migration") },
       {
-        title: "Rules",
+        title: "remark-to-comark rules",
         fold: true,
         slugs: [],
         anchors: Object.entries(migrationCatalog)

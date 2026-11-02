@@ -112,9 +112,15 @@ pnpm add -D comark-linter
 
 It detects your installed `comark-ui` and checks documents with its plugins. Use it from the [CLI, a script, ESLint, or Vite Doctor](https://comark-ui.onmax.me/lint/).
 
-## Moving from remark
+## Moving to Comark
 
-Install [`remark-to-comark`](./packages/remark-to-comark) to move a project from remark to Comark. It reports each remark setup and what its plugins become, rewrites unified chains to Comark's `renderHtml`, and escapes the Markdown Comark would read differently:
+Run [`migrate-to-comark`](./packages/migrate-to-comark) in a project. It finds remark, markdown-it, or marked in every package.json, runs the migrator for each, and asks before writing:
+
+```sh
+npx migrate-to-comark
+```
+
+Or install [`remark-to-comark`](./packages/remark-to-comark) to move a project from remark to Comark. It reports each remark setup and what its plugins become, rewrites unified chains to Comark's `renderHtml`, and escapes the Markdown Comark would read differently:
 
 ```sh
 pnpm add -D remark-to-comark
