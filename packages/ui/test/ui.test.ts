@@ -4,6 +4,11 @@ import { MarkdownDocument as VueDocument } from "@comark/vue";
 import { parseMarkdown } from "comark";
 import { createElement } from "react";
 import { renderToString as renderReact } from "react-dom/server";
+import type { LanguageRegistration } from "shiki";
+import { createHighlighterCore } from "shiki/core";
+import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
+import dark from "shiki/themes/github-dark.mjs";
+import light from "shiki/themes/github-light.mjs";
 import { describe, expect, it } from "vite-plus/test";
 import { createSSRApp, h } from "vue";
 import { renderToString as renderVue } from "vue/server-renderer";
@@ -148,6 +153,69 @@ describe("comark-ui", () => {
       [short.meta.issues[0]]: "comark/mermaid/source-too-long",
     });
     expect(JSON.stringify(short.nodes)).toContain('["pele",');
+  });
+
+  it("highlights code with the host's Shiki, within a document's limits", async () => {
+    // The host's own Shiki, as on a Worker: no WebAssembly, each grammar loaded the first time a fence asks for it.
+    const shiki = await createHighlighterCore({
+      themes: [light, dark],
+      langs: [],
+      engine: createJavaScriptRegexEngine(),
+    });
+    const grammars: Record<string, () => Promise<{ default: LanguageRegistration[] }>> = {
+      ts: () => import("shiki/langs/typescript.mjs"),
+      json: () => import("shiki/langs/json.mjs"),
+    };
+    const asked: string[] = [];
+    const highlighter = async (language: string) => {
+      asked.push(language);
+      const grammar = grammars[language];
+      if (!grammar) return undefined;
+      await shiki.loadLanguage(...(await grammar()).default);
+      return shiki;
+    };
+    const themes = { light: "github-light", dark: "github-dark" };
+    const fence = (language: string, body: string) => `\`\`\`${language}\n${body}\n\`\`\``;
+    const markdown = [
+      fence("ts {2}", "const a = 1\nconst b = 2"),
+      fence("txt", "plain"),
+      fence("json", '{ "c": 3 }'),
+      fence("ts", "const d = 4"),
+    ].join("\n\n");
+
+    const preset = html({ ...offline, shiki: { highlighter, themes, maxBlocks: 2 } });
+    const tree = await parseMarkdown(markdown, { plugins: preset.plugins });
+    expect(tree.meta.issues).toEqual([
+      "Code block 4 shows without colors, because a document highlights at most 2 code blocks. Move it to another document.",
+    ]);
+    expect(tree.meta.issueRules).toEqual({
+      [tree.meta.issues[0]]: "comark/shiki/too-many-blocks",
+    });
+    expect(asked).toEqual(["ts", "txt", "json", "ts"]);
+    const out = await createHtmlRenderer(preset)(markdown);
+    expect(out.match(/<pre[^>]*class="shiki"/g)).toHaveLength(2);
+    expect(out).toContain("--shiki-dark:");
+    // comark-code still marks the line `{2}` asks for, in the colored block.
+    expect(out).toMatch(/<span class="line highlight[^"]*"[^>]*><span style="[^"]+">const/);
+    expect(out).toContain("const d = 4");
+    expect(out).toContain('class="ck"');
+
+    const short = await parseMarkdown(`${fence("ts", "x".repeat(40))}\n\n${fence("ts", "y")}`, {
+      plugins: html({ ...offline, shiki: { highlighter, themes, maxSource: 20 } }).plugins,
+    });
+    expect(short.meta.issues).toEqual([
+      "Code block 1 shows without colors, because a document highlights at most 20 characters of code. Shorten it or move it to another document.",
+    ]);
+    expect(JSON.stringify(short.nodes)).toContain('"shiki"');
+
+    const failing = await parseMarkdown(fence("ts", "const e = 5"), {
+      plugins: html({
+        ...offline,
+        shiki: { highlighter: () => Promise.reject(new Error("no grammar")), themes },
+      }).plugins,
+    });
+    expect(failing.meta.issues ?? []).toEqual([]);
+    expect(JSON.stringify(failing.nodes)).toContain("const e = 5");
   });
 
   it("keeps the source of a Mermaid diagram that fails, with nothing to zoom", async () => {

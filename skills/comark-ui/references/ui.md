@@ -4,7 +4,7 @@ comark-ui registers every comark-ui package for one renderer, in the order they 
 
 ## Options
 
-`comarkUi(options)` returns `{ plugins, components }`. Each key is a package's name without `comark-`, in camelCase, such as `fileTree`, `codeNotes`, or `readingTime`. The exceptions are `math` for comark-mathml, `outline` for comark-outline, and `mermaid` and `typeset`, which are not packages. `false` turns a plugin off along with its components, and an object turns it on with those options. `true` turns on `include` and leaves the others as they are:
+`comarkUi(options)` returns `{ plugins, components }`. Each key is a package's name without `comark-`, in camelCase, such as `fileTree`, `codeNotes`, or `readingTime`. The exceptions are `math` for comark-mathml, `outline` for comark-outline, and `mermaid`, `shiki`, and `typeset`, which are not packages. `false` turns a plugin off along with its components, and an object turns it on with those options. `true` turns on `include` and leaves the others as they are:
 
 ```ts
 comarkUi({
@@ -26,6 +26,7 @@ comarkUi({
 - Media sizing reads only data URIs by default. `zoom: { size: true }` and `media: { size: true }` also fetch remote files while parsing, and `annotate: { size: true }` does so at HTML render time. Enable these only for trusted documents, because the requests follow redirects and can reach private networks. `{ size: false }` turns measurement off for that plugin; authored dimensions and screenshot viewports still work.
 - `icon`'s options apply to every icon the preset draws, in cards, details, file trees, tabs, and code actions too.
 - `mermaid` draws `mermaid` fences with comark-pele, on the server and offline. In the HTML entry the diagram zooms with comark-zoom unless `zoom` is `false`. `mermaid: false` turns it off.
+- `shiki` highlights fenced code with your own Shiki, before comark-code: `{ highlighter: (language) => shiki | undefined, themes: { light, dark } }`. It is off until you pass it, so the preset bundles no grammars. `maxBlocks` and `maxSource` cap how many blocks, and how many characters of code, a document highlights; the blocks past them show plain, each with an issue.
 - comark-critic has no component to add its styles, so put `criticCss`, which every entry exports, in the page.
 - The preset styles the text around the blocks, scoped to the element the document renders into, on the same `--comark-*` tokens. Pass `typeset: false` when the site already styles Markdown, such as with Tailwind Typography's `prose`.
 

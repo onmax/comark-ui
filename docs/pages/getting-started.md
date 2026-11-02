@@ -192,6 +192,29 @@ comarkUi({ mermaid: { maxDiagrams: 4, maxSource: 8000 } });
 
 If you use Comark's built-in `mermaid` plugin instead, pass `mermaid: false`, since both read `mermaid` fences. [Mermaid](/mermaid/) covers syntax and theming.
 
+## Code highlighting
+
+comark-ui highlights code only with a Shiki you pass, so the preset bundles no grammars or themes. `highlighter` gets each fence's language and returns your Shiki, so it can load the grammar first, or `undefined` to leave the block plain. A language Shiki doesn't know stays plain too. comark-code reads the colored lines after, so line markers and numbers still work:
+
+```ts
+import { createHighlighterCore } from "shiki/core";
+import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
+
+const shiki = await createHighlighterCore({
+  themes: [import("@shikijs/themes/github-light"), import("@shikijs/themes/github-dark")],
+  langs: [import("@shikijs/langs/typescript")],
+  engine: createJavaScriptRegexEngine(),
+});
+comarkUi({
+  shiki: {
+    highlighter: () => shiki,
+    themes: { light: "github-light", dark: "github-dark" },
+  },
+});
+```
+
+The JavaScript regex engine needs no WebAssembly, so it runs on Workers. A site that renders documents other people write can also pass `maxBlocks` and `maxSource`, the characters of code over the whole document. A block past either shows without colors, and `meta.issues` says which one and why.
+
 ## One block alone
 
 Every block is its own package, and comark-ui only registers them. To install fewer, each block's page ends with how to install and register it alone. [Renderers](/guide/renderers/) shows several in one renderer.

@@ -9,7 +9,7 @@ const repo = new URL("../", import.meta.url);
 // shows a plugin of your own; downloads, dead URLs, and diagrams depend on the network; a label used twice is an id
 // used twice, which comark/duplicate-id reports too; and a bad `repo`, a value too long for a QR code, the order of
 // Shiki against comark-code and comark-code-notes, a bad critic `mode`, a bad table `base`, math's `output` without
-// KaTeX, a bad properties `locale`, Mermaid limits, and a `read` that fails are plugin options, not Markdown.
+// KaTeX, a bad properties `locale`, Mermaid and Shiki limits, and a `read` that fails are plugin options, not Markdown.
 const withoutExamples = new Set([
   "comark/plugin-issue",
   "comark/dead-url",
@@ -31,6 +31,8 @@ const withoutExamples = new Set([
   "comark/properties/invalid-locale",
   "comark/mermaid/too-many-diagrams",
   "comark/mermaid/source-too-long",
+  "comark/shiki/too-many-blocks",
+  "comark/shiki/source-too-long",
 ]);
 
 describe("Doctor pages", () => {

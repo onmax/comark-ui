@@ -32,6 +32,7 @@ import type { TestsOptions } from "comark-tests";
 import xref, { type XrefOptions } from "comark-xref";
 import type { ZoomOptions } from "comark-zoom";
 import mermaidLimits, { type MermaidOptions } from "./mermaid-limits.ts";
+import shiki, { type ShikiOptions } from "./shiki.ts";
 import { typeset, TYPESET_TAG } from "./typeset.ts";
 
 /**
@@ -42,6 +43,7 @@ export { css as commentsCss } from "comark-comments";
 /** comark-critic's styles. It has no component to add them, so put them in the page yourself. */
 export { css as criticCss } from "comark-critic";
 export type { MermaidOptions } from "./mermaid-limits.ts";
+export type { ShikiHighlighter, ShikiOptions } from "./shiki.ts";
 export { typeset, typesetCss, typesetStylesheet, TYPESET_TAG } from "./typeset.ts";
 
 /**
@@ -118,6 +120,12 @@ export type PresetOptions = {
   /** Reads no JUnit reports unless you pass `{ root }` or `{ read }`; inline reports render either way. */
   tests?: TestsOptions | boolean;
   zoom?: ZoomOptions | boolean;
+  /**
+   * Highlights fenced code with your own Shiki, before comark-code. Off unless you pass one, so the preset bundles no
+   * grammars. A host that renders documents it didn't write can pass `{ maxBlocks, maxSource }`: the blocks past either
+   * limit show without colors, each with an issue.
+   */
+  shiki?: ShikiOptions | false;
   code?: CodeOptions | boolean;
   codeNotes?: boolean;
   /**
@@ -328,6 +336,8 @@ export function preset<C>(renderer: Renderer<C>, options: PresetOptions = {}): P
   parse(xref, options.xref);
   add(renderer.tests, options.tests, optionsOf(options.tests) ?? noFiles);
   add(renderer.zoom, options.zoom);
+  // After every plugin that writes code blocks, and before code, which reads the lines it draws.
+  if (options.shiki) plugins.push(shiki(options.shiki));
   add(renderer.code, options.code, { iconResolver: icons, ...optionsOf(options.code) });
   add(renderer.codeNotes, options.codeNotes);
   // Last of the plugins that draw, since it wraps the document's blocks in one root when a card needs the margin.
