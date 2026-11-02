@@ -119,7 +119,7 @@ A [before/after comparison](/annotate/components/compare/) and a Mermaid diagram
 | `--comark-wide-max` | `72rem` | The widest a wide block grows, however much room there is. |
 | `--comark-wide-width` | Set by the block | A block's own width, which a diagram never grows past. Your own blocks can set it too. |
 
-A wide block stays centered on the column. When one side has less room, such as beside a panel, it shifts toward the side with more, so a diagram keeps its size. The [side outline](/outline/#side-outline) tells the page when it needs a column beside wide blocks. Only top-level blocks grow, so a diagram inside tabs or a list keeps to its parent. To make your own block wide, put `data-wide` on its outer element.
+A wide block stays centered on the column. When one side has less room, such as beside a panel, it shifts toward the side with more, so a diagram keeps its size. The [side outline](/outline/#side-outline) tells the page when it needs a column beside wide blocks. Only top-level blocks grow, so a diagram inside tabs or a list keeps to its parent. A `##`, `###`, or `####` heading right above a comparison grows with it, so it starts where Before does and reads as the comparison's title. To make your own block wide, put `data-wide` on its outer element.
 
 ## Turn it off
 

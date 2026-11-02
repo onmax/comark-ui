@@ -285,7 +285,7 @@ describe("comark-ui", () => {
     expect(css).not.toContain("/*");
     // Wide blocks grow only into the room the page gives them.
     expect(css).toContain(
-      ":scope>[data-wide]{--_ty-start:max(0px,var(--comark-wide-start,0px));--_ty-end:max(0px,var(--comark-wide-end,0px));",
+      ":scope>[data-wide],:scope>:is(h2,h3,h4,.cl-heading:has(>:is(h2,h3,h4))):has(+ .ca-compare,+ style + .ca-compare){--_ty-start:max(0px,var(--comark-wide-start,0px));--_ty-end:max(0px,var(--comark-wide-end,0px));",
     );
     const off = await renderHtml(markdown, { typeset: false });
     expect(off).not.toContain("data-comark-typeset");

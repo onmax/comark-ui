@@ -27,7 +27,8 @@ export const css = `@layer comark{${[
   // Declared on `.ca` alone and at zero specificity, so a host's plain `.ca { --ca-color: … }` reaches every mark. A
   // zoomed screenshot sits in a copy of its `.ca`, so it keeps them too.
   ":where(.ca){--ca-note-font:comark-caveat,cursive;--ca-note-size:1.25em;--ca-label-size:1.5em;--ca-gutter:10rem;--ca-top-gutter:5rem;--ca-bottom-gutter:5rem;--ca-gap:1.25rem;--ca-red:var(--_comark-danger);--ca-amber:#f5a524;--ca-green:var(--_comark-success);--ca-blue:#0581e6;--ca-violet:#8b5cf6;--ca-gray:#71717a;--ca-red-solid:#d01d21;--ca-amber-solid:#f59e0b;--ca-green-solid:#037e3f;--ca-blue-solid:#0267c7;--ca-violet-solid:#7c3aed;--ca-gray-solid:#52525b;--ca-red-ink:#fff;--ca-amber-ink:#1c1917;--ca-green-ink:#fff;--ca-blue-ink:#fff;--ca-violet-ink:#fff;--ca-gray-ink:#fff;--ca-color:var(--ca-violet);--ca-solid:var(--ca-violet-solid);--ca-ink:var(--ca-violet-ink)}",
-  ":where(.ca){margin:1.5rem 0}",
+  // Block margins only: the typeset widens and centers a compare with inline margins, which this rule would win over.
+  ":where(.ca){margin-block:1.5rem}",
   dark(":where(.ca)", "--ca-amber:#ffb224;--ca-blue:#67b0f9;--ca-violet:#b49cff;--ca-gray:#a1a1aa"),
   // How far above or below the image a leader leaves an offset note: at the baseline of its nearest line, so it runs
   // under a neighbouring note's words rather than through them.
