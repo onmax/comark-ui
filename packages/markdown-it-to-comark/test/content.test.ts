@@ -92,6 +92,10 @@ describe("migrateContent", () => {
     );
   });
 
+  it("maps a very long line", () => {
+    expect(migrateContent(`${"a".repeat(150_000)} [x]`).changes).toHaveLength(2);
+  });
+
   it("lists every change by line", () => {
     const result = migrateContent("a\n\nb {x} [y]\n");
     expect(result.changes.map((change) => [change.line, change.text])).toEqual([

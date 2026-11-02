@@ -111,6 +111,26 @@ describe("rewriteSource", () => {
       /bound locally/,
     ],
     [
+      "comes from a constructor a default parameter shadows",
+      "export async function f(MarkdownIt = class { render() { return 'custom' } }) { const md = new MarkdownIt(); return md.render('*x*'); }",
+      /bound locally/,
+    ],
+    [
+      "renders in a class field",
+      "const md = new MarkdownIt();\nexport async function f() { class View { html = md.render('*x*'); } return new View().html; }",
+      /outside an async function/,
+    ],
+    [
+      "is configured after it rendered",
+      "export async function f() {\n  const md = new MarkdownIt();\n  const before = md.render('*x*');\n  md.disable('emphasis');\n  return [before, md.render('*x*')];\n}",
+      /branch, a function/,
+    ],
+    [
+      "resets to a preset after its plugins",
+      'import mark from "markdown-it-mark";\nconst md = new MarkdownIt().use(mark).configure("zero");\nexport const render = async (s: string) => md.render(s);',
+      /resets/,
+    ],
+    [
       "uses the project's own plugin",
       'import mine from "./mine.js";\nconst md = new MarkdownIt().use(mine);\nexport const render = async (s: string) => md.render(s);',
       /compared/,

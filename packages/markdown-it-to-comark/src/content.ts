@@ -227,7 +227,8 @@ function locate(
     }
     cursors.set(number, found.at(-1)! - line.start);
     // One past a line's end is where the newline after it sits in the text.
-    offsets.push(...found);
+    // A loop, not a spread: a line can hold more characters than a call takes arguments.
+    for (const offset of found) offsets.push(offset);
   }
   return offsets;
 }

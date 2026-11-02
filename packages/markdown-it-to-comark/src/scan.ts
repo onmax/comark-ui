@@ -165,12 +165,28 @@ function scanScript(source: string, file: string): Setup[] {
   const required = new Set<string>();
   const parents = new Map<Node, Node>();
   const declarations = new Map<string, number>();
+  const declare = (name: string) => declarations.set(name, (declarations.get(name) ?? 0) + 1);
+  // The name each import binding has in its module.
+  const exported = new Map<string, string>();
   walk(program, (node, parent) => {
     if (parent) parents.set(node, parent);
     if (node.type === "ImportDeclaration")
-      for (const specifier of node.specifiers) imports.set(specifier.local.name, node.source.value);
+      for (const specifier of node.specifiers) {
+        imports.set(specifier.local.name, node.source.value);
+        // `import { correct as configure }` names `correct` in the module it comes from.
+        exported.set(
+          specifier.local.name,
+          specifier.type === "ImportDefaultSpecifier"
+            ? "default"
+            : specifier.type === "ImportSpecifier"
+              ? specifier.imported.type === "Identifier"
+                ? specifier.imported.name
+                : String(specifier.imported.value)
+              : "*",
+        );
+      }
+    if (node.type === "VariableDeclarator") for (const name of patternNames(node.id)) declare(name);
     if (node.type === "VariableDeclarator" && node.id.type === "Identifier") {
-      declarations.set(node.id.name, (declarations.get(node.id.name) ?? 0) + 1);
       const match = /^(?:require|\(?\s*await\s+import)\(\s*["'`]([^"'`]+)["'`]\s*\)/.exec(
         node.init ? text(node.init) : "",
       );
@@ -179,15 +195,18 @@ function scanScript(source: string, file: string): Setup[] {
         required.add(node.id.name);
       }
     }
+    // Every name a parameter binds, with defaults and destructuring: `(MarkdownIt = Custom)` shadows the import too.
     if (
       (node.type === "FunctionDeclaration" ||
         node.type === "FunctionExpression" ||
         node.type === "ArrowFunctionExpression") &&
       node.params
     )
-      for (const param of node.params)
-        if (param.type === "Identifier")
-          declarations.set(param.name, (declarations.get(param.name) ?? 0) + 1);
+      for (const param of node.params) for (const name of patternNames(param)) declare(name);
+    if ((node.type === "ClassDeclaration" || node.type === "FunctionDeclaration") && node.id)
+      declare(node.id.name);
+    if (node.type === "CatchClause" && node.param)
+      for (const name of patternNames(node.param)) declare(name);
   });
   const up = (node: Node): Node | undefined => {
     let parent = parents.get(node);
@@ -296,6 +315,10 @@ function scanScript(source: string, file: string): Setup[] {
     else if (method === "set") readOptions(setup, args[0]);
     else if (method === "configure") {
       const [preset] = args;
+      // A preset resets the rules, so plugins registered before it lose theirs; Comark's options apply it first.
+      if (setup.plugins.length || setup.rules.length)
+        setup.unresolved ??=
+          "calls `configure()` after registering plugins or rules, which resets them";
       if (preset?.type === "Literal" && isString(preset)) setup.preset = preset.value;
       else setup.unresolved ??= "it calls `configure()` with a preset the scan can't read";
     } else
@@ -463,11 +486,13 @@ function scanScript(source: string, file: string): Setup[] {
           if (last.type !== "CallExpression" || RENDER.has(methodOf(last.callee) ?? "")) return;
           // `md.use(x);` beside the declaration runs once, right after it, so the plugins can move into Comark's
           // options; anywhere else it may run later, or not at all.
+          // A change after a render would reach that render too once it moves to the options.
           if (
             holder?.type === "ExpressionStatement" &&
             statement &&
             parents.get(holder) === parents.get(statement) &&
-            holder.start > statement.end
+            holder.start > statement.end &&
+            !setup.renders.some((render) => render.start < holder.start)
           )
             creation.statements.push({ start: holder.start, end: holder.end });
           else creation.scattered.push(lineOf(reference.start));
@@ -499,7 +524,10 @@ function scanScript(source: string, file: string): Setup[] {
       const host = (key ? HOOKS.get(key) : undefined) ?? (inMarkdown ? "vitepress" : undefined);
       if (!host || holder?.type !== "ObjectExpression") return;
       const setup = empty(lineOf(node.start), host);
-      setup.delegate = { name: node.value.name, from: imports.get(node.value.name) };
+      setup.delegate = {
+        name: exported.get(node.value.name) ?? node.value.name,
+        from: imports.get(node.value.name),
+      };
       // The options beside it: VitePress' `markdown: { html }`, vite-plugin-md's `markdownItOptions: { html }`.
       for (const property of holder.properties) {
         if (property.type !== "Property" || property.computed || property === node) continue;
@@ -569,11 +597,13 @@ function scanScript(source: string, file: string): Setup[] {
       setup.renders = [];
       const declarator = owner?.type === "VariableDeclarator" ? owner : undefined;
       setup.name =
-        node.type === "FunctionDeclaration"
-          ? node.id?.name
-          : declarator?.id.type === "Identifier"
-            ? declarator.id.name
-            : undefined;
+        owner?.type === "ExportDefaultDeclaration"
+          ? "default"
+          : node.type === "FunctionDeclaration"
+            ? node.id?.name
+            : declarator?.id.type === "Identifier"
+              ? declarator.id.name
+              : undefined;
       setups.push(setup);
     }
   });
@@ -639,3 +669,25 @@ export const mentions = (source: string, file: string) =>
   /markdown-?it|MarkdownIt|extendMarkdown|extendsMarkdown|markdownItSetup|amendLibrary|setLibrary/i.test(
     source,
   ) || hostOfFile(file) !== undefined;
+
+/** Every name a binding pattern declares: `a`, `{ a, b: c }`, `[a = 1, ...d]`. */
+function patternNames(pattern: Node | null | undefined): string[] {
+  if (!pattern) return [];
+  switch (pattern.type) {
+    case "Identifier":
+      return [pattern.name];
+    case "AssignmentPattern":
+      return patternNames(pattern.left);
+    case "RestElement":
+      return patternNames(pattern.argument);
+    case "TSParameterProperty":
+      return patternNames(pattern.parameter);
+    case "ArrayPattern":
+      return pattern.elements.flatMap((item) => patternNames(item));
+    case "ObjectPattern":
+      return pattern.properties.flatMap((item) =>
+        patternNames(item.type === "RestElement" ? item.argument : item.value),
+      );
+  }
+  return [];
+}

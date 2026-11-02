@@ -141,6 +141,9 @@ describe("markdownItPlugin", () => {
     for (const html of [true, false]) {
       const { markdownIt, comark } = both({ html, plugins: [[plugin]] });
       expect(compare(markdownIt(markdown), await comark(markdown)).differences).toEqual([]);
+      // An HTML block before it makes Comark replace the token list, which the environment must survive.
+      const after = `<div>Hi</div>\n\n${markdown}`;
+      expect(compare(markdownIt(after), await comark(after)).differences).toEqual([]);
     }
   });
 

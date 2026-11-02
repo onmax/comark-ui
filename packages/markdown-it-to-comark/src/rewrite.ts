@@ -52,8 +52,11 @@ type Index = ReturnType<typeof index>;
 
 /** The nearest function around a node, or undefined at the top level. */
 function enclosingFunction(node: Node, info: Index): Node | undefined {
-  for (let up = info.parent.get(node); up; up = info.parent.get(up))
+  for (let up = info.parent.get(node); up; up = info.parent.get(up)) {
     if (FUNCTIONS.has(up.type)) return up;
+    // A class field's initializer and a static block are their own scope, where `await` isn't allowed.
+    if (/^(PropertyDefinition|AccessorProperty|StaticBlock)$/.test(up.type)) return undefined;
+  }
   return undefined;
 }
 

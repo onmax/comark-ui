@@ -93,6 +93,18 @@ describe("check", () => {
     expect(content?.line).toBe(2);
   });
 
+  it("follows an aliased import to the function it names", async () => {
+    const root = project({
+      "package.json": "{}",
+      "docs/.vitepress/config.ts":
+        'import { correct as configure } from "../../md";\nexport default { markdown: { config: configure } };\n',
+      "md.ts":
+        'import container from "markdown-it-container";\nexport function configure(md) { md.use(container, "wrong") }\nexport function correct(md) { md.use(container, "demo") }\n',
+      "docs/a.md": "::: demo\nHello\n:::\n",
+    });
+    expect((await check(root)).filter((finding) => finding.code === "MIC0302")).toEqual([]);
+  });
+
   it("prints the same JSON shape as remark-to-comark", async () => {
     const [finding] = JSON.parse(formatFindings(await check(fixture()), { json: true })) as Record<
       string,

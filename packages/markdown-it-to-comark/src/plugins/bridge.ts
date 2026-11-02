@@ -197,7 +197,7 @@ interface RulerHost {
   };
 }
 // The environment each parse ran with, by its token list, for renderer rules that read it.
-const environments = new WeakMap<Token[], object>();
+const environments = new WeakMap<Token, object>();
 // The rules bridged plugins added, by parser, for `precedence()`.
 const bridgedRules = new WeakMap<
   object,
@@ -290,7 +290,7 @@ export function markdownItPlugin(plugin: unknown, ...options: unknown[]): Comark
               push: (name: string, fn: (state: { tokens: Token[]; env: object }) => void) => void;
             }
           ).push("markdown-it-to-comark-env", (core) => {
-            environments.set(core.tokens, core.env);
+            for (const token of core.tokens) environments.set(token, core.env);
           });
         const added = bridgedRules.get(instance) ?? {
           block: new Set<string>(),
@@ -307,7 +307,8 @@ export function markdownItPlugin(plugin: unknown, ...options: unknown[]): Comark
       if (!md) return;
       const renderer = md.renderer as unknown as Renderer;
       // The environment the parse ran with: renderer rules read what core rules left there.
-      const env = environments.get(state.tokens) ?? {};
+      // Found by a token, since other plugins may replace the token list itself.
+      const env = state.tokens.map((token) => environments.get(token)).find(Boolean) ?? {};
       const render = (tokens: Token[], index: number): string | undefined => {
         const rule = renderer.rules[tokens[index]!.type];
         const html = rule
