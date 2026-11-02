@@ -202,8 +202,10 @@ const rules = `
    into the room the page gives it on each side, --comark-wide-start and --comark-wide-end, up to its own width
    (--comark-wide-width) and --comark-wide-max. It stays centered on the column while both sides have room, and moves
    toward the side that has more when one doesn't. Without room set, it keeps to the column. Only the document's own
-   blocks grow, not one inside a list or tabs. */
-:scope > [data-wide] {
+   blocks grow, not one inside a list or tabs. A heading right above a comparison grows with it, so it starts where
+   Before does and reads as its title. comark-links may wrap the heading, and the comparison's styles may sit between them. */
+:scope > [data-wide],
+:scope > :is(h2, h3, h4, .cl-heading:has(> :is(h2, h3, h4))):has(+ .ca-compare, + style + .ca-compare) {
   /* Room a page works out from the window can come out negative on a phone, where the column fills it: none, then. */
   --_ty-start: max(0px, var(--comark-wide-start, 0px));
   --_ty-end: max(0px, var(--comark-wide-end, 0px));
