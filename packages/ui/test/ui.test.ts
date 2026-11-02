@@ -191,7 +191,7 @@ describe("comark-ui", () => {
     expect(tree.meta.issueRules).toEqual({
       [tree.meta.issues[0]]: "comark/shiki/too-many-blocks",
     });
-    expect(asked).toEqual(["ts", "txt", "json", "ts"]);
+    expect(asked).toEqual(["ts", "txt", "json"]);
     const out = await createHtmlRenderer(preset)(markdown);
     expect(out.match(/<pre[^>]*class="shiki"/g)).toHaveLength(2);
     expect(out).toContain("--shiki-dark:");
@@ -200,6 +200,7 @@ describe("comark-ui", () => {
     expect(out).toContain("const d = 4");
     expect(out).toContain('class="ck"');
 
+    asked.length = 0;
     const short = await parseMarkdown(`${fence("ts", "x".repeat(40))}\n\n${fence("ts", "y")}`, {
       plugins: html({ ...offline, shiki: { highlighter, themes, maxSource: 20 } }).plugins,
     });
@@ -207,6 +208,7 @@ describe("comark-ui", () => {
       "Code block 1 shows without colors, because a document highlights at most 20 characters of code. Shorten it or move it to another document.",
     ]);
     expect(JSON.stringify(short.nodes)).toContain('"shiki"');
+    expect(asked).toEqual(["ts"]);
 
     const failing = await parseMarkdown(fence("ts", "const e = 5"), {
       plugins: html({
@@ -216,6 +218,41 @@ describe("comark-ui", () => {
     });
     expect(failing.meta.issues ?? []).toEqual([]);
     expect(JSON.stringify(failing.nodes)).toContain("const e = 5");
+  });
+
+  it("skips grammar loading after exhausting either Shiki budget", async () => {
+    for (const limits of [{ maxBlocks: 1 }, { maxSource: 1 }, { maxBlocks: 0 }, { maxSource: 0 }]) {
+      const asked: string[] = [];
+      const out = await renderHtml("```ts\nx\n```\n\n```json\ny\n```", {
+        shiki: {
+          ...limits,
+          themes: { light: "light" },
+          highlighter(language) {
+            asked.push(language);
+            return { codeToTokens: (code) => ({ tokens: [[{ content: code, color: "#000" }]] }) };
+          },
+        },
+      });
+      expect(asked).toEqual(Object.values(limits)[0] === 0 ? [] : ["ts"]);
+      expect(out.match(/<pre[^>]*class="shiki"/g) ?? []).toHaveLength(asked.length);
+    }
+  });
+
+  it("renders a Shiki fence with many short lines within its source budget", async () => {
+    const source = Array.from({ length: 70_000 }, () => "x").join("\n");
+    const out = await renderHtml(`\`\`\`ts\n${source}\n\`\`\``, {
+      shiki: {
+        maxSource: 200_000,
+        themes: { light: "light" },
+        highlighter: () => ({
+          codeToTokens: (code) => ({
+            tokens: code.split("\n").map((content) => [{ content, color: "#000" }]),
+          }),
+        }),
+      },
+    });
+    expect(out).toContain('class="shiki"');
+    expect(out.match(/class="line"/g)).toHaveLength(70_000);
   });
 
   it("keeps the source of a Mermaid diagram that fails, with nothing to zoom", async () => {

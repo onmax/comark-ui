@@ -14,8 +14,9 @@ export type ShikiHighlighter = {
 
 export type ShikiOptions = {
   /**
-   * Your Shiki, with the fence's language loaded, or `undefined` to leave the block plain. It's called for every fenced
-   * block with a language, so load each grammar once.
+   * Your Shiki, with the fence's language loaded, or `undefined` to leave the block plain. It's called for each fenced
+   * block with a language that fits the remaining budget, so load each grammar once. Blocks past the limits skip it
+   * and report a limit issue without checking whether the language is supported.
    */
   highlighter: (
     language: string,
@@ -69,18 +70,13 @@ export default defineComarkPlugin<ShikiOptions, Meta>((options) => ({
       const [text, ...rest] = childrenOf(code);
       if (text === undefined || Array.isArray(text) || rest.length) continue;
 
-      let shiki: ShikiHighlighter | undefined;
-      try {
-        shiki = await highlighter(language);
-      } catch {}
-      if (!shiki) continue;
       const why =
         drawn >= maxBlocks
           ? [
               "comark/shiki/too-many-blocks",
               `a document highlights at most ${maxBlocks} code blocks. Move it to another document`,
             ]
-          : source + text.length > maxSource
+          : source >= maxSource || source + text.length > maxSource
             ? [
                 "comark/shiki/source-too-long",
                 `a document highlights at most ${maxSource} characters of code. Shorten it or move it to another document`,
@@ -90,6 +86,12 @@ export default defineComarkPlugin<ShikiOptions, Meta>((options) => ({
         issues.push([why[0], `Code block ${n + 1} shows without colors, because ${why[1]}.`]);
         continue;
       }
+
+      let shiki: ShikiHighlighter | undefined;
+      try {
+        shiki = await highlighter(language);
+      } catch {}
+      if (!shiki) continue;
 
       let tokens: Token[][];
       try {
@@ -103,7 +105,8 @@ export default defineComarkPlugin<ShikiOptions, Meta>((options) => ({
         ...(index ? ["\n"] : []),
         ["span", { class: "line" }, ...line.map(spanOf)],
       ]);
-      code.splice(2, code.length - 2, ...lines);
+      code.length = 2;
+      for (const line of lines) code.push(line);
       // SAFETY: Comark writes a fence's class as a string.
       pre[1].class = ["shiki", pre[1].class as string | undefined].filter(Boolean).join(" ");
     }

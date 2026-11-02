@@ -18,6 +18,49 @@ const cases = [
 ] as const;
 
 describe("Shiki limit diagnostics", () => {
+  for (const limits of [{ maxBlocks: 1 }, { maxSource: 11 }]) {
+    it(`locates a later rejected fence with ${Object.keys(limits)[0]}`, async () => {
+      const markdown = [
+        "---",
+        "title: Code",
+        "---",
+        "",
+        "Intro",
+        "",
+        "```txt",
+        "plain",
+        "```",
+        "",
+        "```ts",
+        "const a = 1",
+        "```",
+        "",
+        "  ~~~ts",
+        "const b = 2",
+        "  ~~~",
+      ].join("\n");
+      const preset = html({
+        shiki: {
+          ...shiki,
+          ...limits,
+          highlighter: (language) => (language === "ts" ? shiki.highlighter() : undefined),
+        },
+        icon: { fetch: false },
+        chips: { download: false },
+        badge: { download: false },
+        diagrams: { draw: false },
+      });
+      expect(await lint(markdown, preset)).toEqual([
+        expect.objectContaining({
+          rule:
+            "maxBlocks" in limits ? "comark/shiki/too-many-blocks" : "comark/shiki/source-too-long",
+          line: 15,
+          column: 3,
+        }),
+      ]);
+    });
+  }
+
   for (const { options, rule, code } of cases) {
     it(`reports ${rule} through the limited preset and Doctor`, async () => {
       const preset = html({

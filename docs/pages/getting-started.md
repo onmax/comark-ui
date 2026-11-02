@@ -213,7 +213,7 @@ comarkUi({
 });
 ```
 
-The JavaScript regex engine needs no WebAssembly, so it runs on Workers. A site that renders documents other people write can also pass `maxBlocks` and `maxSource`, the characters of code over the whole document. A block past either shows without colors, and `meta.issues` says which one and why.
+The JavaScript regex engine needs no WebAssembly, so it runs on Workers. A site that renders documents other people write can also pass `maxBlocks` and `maxSource`, the characters of code over the whole document. A block past either shows without colors, and `meta.issues` says which one and why. Limits are checked before calling `highlighter`, so rejected blocks load no grammars, even to check language support. Unsupported languages within the remaining budget stay plain and use no budget; after an oversized block, a later, shorter block can still fit.
 
 ## One block alone
 
