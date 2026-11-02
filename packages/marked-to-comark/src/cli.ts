@@ -79,7 +79,7 @@ if (command === "check") {
     const version = [...versions]
       .filter(([dir]) => path.startsWith(dir))
       .sort((a, b) => b[0].length - a[0].length)[0]?.[1];
-    const result = rewriteSource(source, path, { version, shared: sharedElsewhere(scanned, path) });
+    const result = rewriteSource(source, path, { version, ...sharedElsewhere(scanned, path) });
     for (const rewrite of result.rewrites) {
       console.log(
         `${join(root, rewrite.file)}:${rewrite.line} ${rewrite.rewritten ? (values.write ? "rewritten" : "can be rewritten") : `left: it ${rewrite.reason}`}`,

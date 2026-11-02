@@ -81,7 +81,28 @@ describe("check", () => {
     expect(result.stderr).toContain("MKC0303");
     expect(readFileSync(join(root, "doc.md"), "utf8")).toBe("{x}\n");
   });
+
+  it("rewrites a call on the shared marked that other files only call", async () => {
+    const root = project({
+      "a.ts": `import { marked } from "marked";\nexport async function a(s: string) { return marked.parse(s); }\n`,
+      "b.ts": `import { marked } from "marked";\nexport async function b(s: string) { return marked(s, { breaks: true }); }\n`,
+      "c.ts": `import { marked } from "marked";\nmarked.setOptions({ gfm: false });\nexport function c(s: string) { return marked(s); }\n`,
+    });
+    const codes = (await check(root))
+      .filter((finding) => finding.code.startsWith("MKC02"))
+      .map((finding) => `${finding.code} ${finding.file}`);
+    expect(codes).toEqual(["MKC0201 a.ts", "MKC0201 b.ts", "MKC0201 c.ts"]);
+    const alone = project({ "a.ts": codesFile("a"), "b.ts": codesFile("b") });
+    expect(
+      (await check(alone))
+        .filter((finding) => finding.code === "MKC0202")
+        .map((finding) => finding.file),
+    ).toEqual(["a.ts", "b.ts"]);
+  });
 });
+
+const codesFile = (name: string) =>
+  `import { marked } from "marked";\nexport async function ${name}(s: string) { return marked(s, { breaks: true }); }\n`;
 
 describe("CLI", () => {
   it("rewrites calls and content with --write, and a second check finds less", async () => {

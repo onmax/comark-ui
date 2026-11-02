@@ -29,6 +29,8 @@ export interface FoundPlugin {
   local?: string;
   /** For a `renderer` or `tokenizer` override: the methods it replaces, when the scan can list them. */
   methods?: string[];
+  /** For an option written on one call (`marked.parse(md, { breaks: true })`): that call's `start`, the only call it reaches. */
+  call?: number;
   mapping: Mapping & { known: boolean };
 }
 
@@ -307,7 +309,12 @@ function scanScript(source: string, file: string, shared?: Map<string, string>):
   };
 
   // The settings of an options object: each key an option, or an override of marked's own code.
-  const settings = (object: Node, into: Setup) => {
+  const settings = (object: Node, into: Setup, call?: number) => {
+    const before = into.plugins.length;
+    settingsOf(object, into);
+    if (call !== undefined) for (const plugin of into.plugins.slice(before)) plugin.call = call;
+  };
+  const settingsOf = (object: Node, into: Setup) => {
     if (object.type !== "ObjectExpression") {
       into.unresolved ??= `${file}:${lineOf(object.start)} passes marked options held in \`${text(object).slice(0, 40)}\`, which the scan can't read; write them as an object literal.`;
       into.plugins.push(
@@ -529,7 +536,7 @@ function scanScript(source: string, file: string, shared?: Map<string, string>):
       if (options) {
         call.options = text(options);
         // An options object on one call applies to that call alone; it's listed with the setup all the same.
-        settings(options, setup);
+        settings(options, setup, node.start);
       }
       setup.calls.push(call);
     }

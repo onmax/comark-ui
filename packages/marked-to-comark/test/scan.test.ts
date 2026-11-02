@@ -183,7 +183,14 @@ export async function render(md: string) {
     expect(result.rewrites[0]?.reason).toContain(reason);
   });
 
-  it("leaves the shared marked when other files configure or call it", () => {
+  it("keeps marked.use() for other files that still call the shared marked", () => {
+    const source = `import { marked } from "marked";\nmarked.use({ breaks: true });\nexport async function a(s: string) { return marked.parse(s); }\n`;
+    const { code } = rewriteSource(source, "a.ts", { callers: ["b.ts"] });
+    expect(code).toContain("marked.use({ breaks: true });");
+    expect(code).toContain("await renderHtml(s, comarkOptions({ breaks: true }))");
+  });
+
+  it("leaves the shared marked when other files configure it", () => {
     const source = `import { marked } from "marked";\nexport async function a(s: string) { return marked.parse(s); }\n`;
     const result = rewriteSource(source, "a.ts", { shared: ["setup.ts"] });
     expect(result.code).toBe(source);

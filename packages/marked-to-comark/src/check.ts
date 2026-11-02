@@ -360,11 +360,26 @@ export async function contentSetups(
   };
 }
 
-/** The files besides `file` that configure or call the shared `marked`, which a rewrite of `file` must account for. */
-export function sharedElsewhere(scanned: ScannedFile[], file: string): string[] {
-  return scanned
-    .filter((entry) => entry.file !== file && entry.setups.some((setup) => setup.host === "marked"))
-    .map((entry) => entry.file);
+/**
+ * What a rewrite of `file` must know about the shared `marked` elsewhere: the files that configure it (`use`,
+ * `setOptions`), whose settings reach this file's calls, and the files that call it, which still need this file's.
+ */
+export function sharedElsewhere(
+  scanned: ScannedFile[],
+  file: string,
+): { shared: string[]; callers: string[] } {
+  const others = scanned.filter((entry) => entry.file !== file);
+  const global = (entry: ScannedFile) => entry.setups.filter((setup) => setup.host === "marked");
+  return {
+    shared: others
+      .filter((entry) =>
+        global(entry).some((setup) => setup.plugins.some((plugin) => plugin.call === undefined)),
+      )
+      .map((entry) => entry.file),
+    callers: others
+      .filter((entry) => global(entry).some((setup) => setup.calls.length))
+      .map((entry) => entry.file),
+  };
 }
 
 /**
@@ -424,7 +439,7 @@ export async function check(
     }
     const result = rewriteSource(source, path, {
       version: versionOf(versions, path),
-      shared: sharedElsewhere(scanned, path),
+      ...sharedElsewhere(scanned, path),
     });
     const rewritten = result.code === source ? undefined : edit(source, result.code);
     for (const rewrite of result.rewrites) {

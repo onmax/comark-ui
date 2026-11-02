@@ -30,10 +30,12 @@ export interface RewriteContext {
   /** The marked range the file's package declares; before v8, marked gave headings ids by default. */
   version?: string;
   /**
-   * Files elsewhere in the project that configure or call the shared `marked` (`marked.use()`, `marked.setOptions()`,
-   * `marked.parse()`). Its settings reach every call, so a call on it is rewritten only when this is empty.
+   * Files elsewhere in the project that configure the shared `marked` (`marked.use()`, `marked.setOptions()`). Its
+   * settings reach every call, so a call on it is rewritten only when this is empty.
    */
   shared?: string[];
+  /** Files elsewhere that call the shared `marked`, which still need this file's `marked.use()` once its calls are rewritten. */
+  callers?: string[];
 }
 
 const REWRITABLE = new Set(["pipeline", "setup", "builtin", "plugin"]);
@@ -173,20 +175,7 @@ function setting(plugins: FoundPlugin[], name: string): string | undefined {
 
 /** The plugins a call renders with: its setup's, plus the options written on the call itself. */
 function pluginsFor(setup: Setup, call: Call): FoundPlugin[] {
-  const own = new Set(
-    setup.calls.filter((other) => other !== call && other.options).map((other) => other.options),
-  );
-  // Options on another call apply to that call only; the scan lists them with the setup, by line.
-  const otherLines = new Set(
-    setup.calls
-      .filter((other) => other !== call && other.options && other.line !== call.line)
-      .map((other) => other.line),
-  );
-  void own;
-  return setup.plugins.filter(
-    (plugin) =>
-      !(plugin.type === "option" && otherLines.has(plugin.line) && plugin.line !== call.line),
-  );
+  return setup.plugins.filter((plugin) => plugin.call === undefined || plugin.call === call.start);
 }
 
 /**
@@ -293,7 +282,7 @@ function blocker(
   if (dropped)
     return `passes options to ${dropped.name} that Comark's counterpart doesn't take; port them by hand`;
   if (setup.host === "marked" && context.shared?.length)
-    return `calls the shared \`marked\`, which ${context.shared.slice(0, 2).join(", ")}${context.shared.length > 2 ? ", and others" : ""} also configure or call; its settings reach every call, so move them together by hand`;
+    return `calls the shared \`marked\`, which ${context.shared.slice(0, 2).join(", ")}${context.shared.length > 2 ? ", and others" : ""} also configure; their settings reach every call, so move them together by hand`;
   if (setup.commonjs || file.endsWith(".cjs") || !info.imports.length)
     return "is CommonJS; the rewrite emits ES imports";
   if (call.method === "tokens")
@@ -523,7 +512,7 @@ function rewriteScript(
       )
     )
       continue;
-    if (setup.host === "marked" && context.shared?.length) continue;
+    if (setup.host === "marked" && (context.shared?.length || context.callers?.length)) continue;
     const statements = configuration(program, setup, info);
     if (!statements) continue;
     removed.push(...statements);
