@@ -160,6 +160,7 @@ let bridges = 0;
 
 interface RulerHost {
   ruler: {
+    disable?: (names: string, ignoreInvalid: boolean) => void;
     __rules__: {
       name: string;
       fn: (state: { pos: number; src: string }, silent: boolean) => boolean;
@@ -209,6 +210,8 @@ export const precedence = (): ComarkPlugin => ({
           host.inline.ruler.__cache__ = null;
         }
       }
+      // markdown-it-attrs reads `{.class}` after parsing too; it takes the place of Comark's attribute syntax.
+      if (added.core.has("curly_attributes")) host.inline.ruler.disable?.("comark_inline_props", true);
       if (added.core.has("emoji")) {
         const rule = host.inline.ruler.__rules__.find(
           (item) => item.name === "comark_inline_component",

@@ -372,7 +372,18 @@ export function migrateContent(source: string, options: ContentOptions = {}): Co
       return;
     }
     if (group.length === 1) {
-      skipped.push(group[0]!.line);
+      // A plugin that reads text after parsing (markdown-it-attrs' `{.x}`, markdown-it-emoji's `:name:`) breaks when
+      // one kind of character is escaped; the block keeps its other edits.
+      const block = group[0]!;
+      for (const kind of [["{"], [":"], ["[", "]", "[]"]]) {
+        const edits = block.edits.filter((edit) => !kind.includes(edit.change.text));
+        if (edits.length === block.edits.length || !edits.length) continue;
+        if (renders([...kept, { ...block, edits }])) {
+          kept.push({ ...block, edits });
+          return;
+        }
+      }
+      skipped.push(block.line);
       return;
     }
     const half = Math.ceil(group.length / 2);
