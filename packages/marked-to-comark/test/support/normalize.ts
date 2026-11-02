@@ -120,8 +120,27 @@ function walk(node: Nodes, tokens: Token[], verbatim: boolean, options: Normaliz
 const tagOf = (token: Token) => /^<\/?([\w-]+)/.exec(token)?.[1];
 
 /** HTML as a list of tokens that compare equal when the two documents render the same. */
+// Every element HTML defines; a name outside it is a component or custom element (`<NavPath … />`).
+const STANDARD = new Set(
+  "a abbr address area article aside audio b base bdi bdo blockquote body br button canvas caption cite code col colgroup data datalist dd del details dfn dialog div dl dt em embed fieldset figcaption figure footer form h1 h2 h3 h4 h5 h6 head header hgroup hr html i iframe img input ins kbd label legend li link main map mark menu meta meter nav noscript object ol optgroup option output p picture pre progress q rp rt ruby s samp script search section select slot small source span strong style sub summary sup table tbody td template textarea tfoot th thead time title tr track u ul var video wbr center font big tt strike svg math".split(
+    " ",
+  ),
+);
+
+/**
+ * A self-closing component or custom element (`<NavPath path="…" />`) as an empty element. A browser ignores the
+ * slash and nests what follows, but an unknown element shows its children inline, so the reader sees the same text
+ * either way; Comark closes it, as the MDX and Vue sites these pages come from do.
+ */
+const closeSelfClosing = (html: string) =>
+  html.replace(
+    /<([A-Za-z][\w.:-]*)((?:\s+[^\s"'>/=]+(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s"'=<>`]+))?)*)\s*\/>/g,
+    (whole, name: string, attributes: string) =>
+      STANDARD.has(name.toLowerCase()) ? whole : `<${name}${attributes}></${name}>`,
+  );
+
 export function normalize(source: string, options: NormalizeOptions = {}): Token[] {
-  const tree = fromHtml(source, { fragment: true });
+  const tree = fromHtml(closeSelfClosing(source), { fragment: true });
   canonicalize(tree);
   const raw: Token[] = [];
   walk(tree, raw, false, options);

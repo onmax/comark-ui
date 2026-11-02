@@ -65,6 +65,42 @@ module.exports = (s) => md.parse(s) + parse(s);`),
     ).toEqual([{ host: "marked", plugins: [], calls: ["parse"] }]);
   });
 
+  it("finds code that works on marked's tokens, and leaves it", () => {
+    const source = `import { marked, Lexer } from "marked";\nexport async function a(s: string) { return [marked.lexer(s), new Lexer().lex(s), Lexer.lex(s)]; }\n`;
+    expect(names(source)).toEqual([
+      { host: "marked", plugins: [], calls: ["tokens", "tokens", "tokens"] },
+    ]);
+    expect(rewriteSource(source, "a.ts").rewrites.map((rewrite) => rewrite.reason)).toEqual(
+      Array(3).fill(expect.stringContaining("works on marked's tokens")),
+    );
+  });
+
+  it("follows an instance kept on a member", () => {
+    expect(
+      names(
+        `import { Marked } from "marked";\nexport class A { md = null; constructor() { this.md = new Marked({ breaks: true }); } async render(s) { return this.md.parse(s); } }`,
+      ),
+    ).toEqual([{ host: "instance", plugins: ["breaks:setup"], calls: ["parse"] }]);
+  });
+
+  it("reads JSX in a .js file", () => {
+    expect(
+      names(
+        `import { marked } from "marked";\nexport const C = (p) => <div dangerouslySetInnerHTML={{ __html: marked(p.text) }} />;`,
+        "c.js",
+      ),
+    ).toEqual([{ host: "marked", plugins: [], calls: ["parse"] }]);
+  });
+
+  it("names the renderer methods an override replaces", () => {
+    const [setup] = scanSource(
+      `import { marked } from "marked";\nconst renderer = new marked.Renderer();\nrenderer.link = (href) => href;\nmarked.use({ renderer });\nmarked("x");`,
+      "a.ts",
+    );
+    expect(setup?.plugins[0]).toMatchObject({ name: "renderer", methods: ["link"] });
+    expect(setup?.plugins[0]?.mapping.note).toContain("Draw `a` with Comark components");
+  });
+
   it("ignores files that don't use marked", () => {
     expect(scanSource(`import { parse } from "other"; parse("x");`, "a.ts")).toEqual([]);
   });
