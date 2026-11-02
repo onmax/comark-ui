@@ -1,0 +1,62 @@
+{
+  "name": "migrate-to-comark",
+  "version": "0.8.2",
+  "description": "A wizard that finds the Markdown libraries a project uses (remark, markdown-it, marked) and moves it to Comark with each library's migrator.",
+  "keywords": [
+    "codemod",
+    "comark",
+    "markdown",
+    "markdown-it",
+    "marked",
+    "migration",
+    "remark",
+    "wizard"
+  ],
+  "homepage": "https://comark-ui.onmax.me/migrate-to-comark",
+  "bugs": "https://github.com/onmax/comark-ui/issues",
+  "license": "MIT",
+  "author": "onmax",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/onmax/comark-ui.git",
+    "directory": "packages/migrate-to-comark"
+  },
+  "bin": {
+    "migrate-to-comark": "./dist/cli.mjs"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "doctor": "vite-doctor . --no-cache --max-warnings 0 --format text",
+    "prepack": "pnpm --filter migrate-to-comark... build"
+  },
+  "dependencies": {
+    "@clack/prompts": "^1.8.1",
+    "markdown-it-to-comark": "workspace:*",
+    "marked-to-comark": "workspace:*",
+    "remark-to-comark": "workspace:*",
+    "tinyglobby": "^0.2.17"
+  },
+  "devDependencies": {
+    "comark": "catalog:"
+  },
+  "peerDependencies": {
+    "comark": "^0.8.0"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}

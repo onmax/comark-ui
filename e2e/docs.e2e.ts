@@ -242,7 +242,9 @@ test("the rule groups stay shut, but the one holding the current rule is open", 
   await expect(core.getByRole("link", { name: "unclosed-block" })).toBeVisible();
 
   await page.goto("/remark-to-comark/");
-  const migration = column.locator(".nav-fold").filter({ hasText: "Rules" });
+  const migration = column.locator(".nav-fold").filter({
+    has: page.getByText("From remark rules", { exact: true }),
+  });
   await migration.locator("summary").click();
   await migration.getByRole("link", { name: "framework" }).click();
   await expect(page).toHaveURL(/\/remark-to-comark\/diagnostics\/#rtc0101$/);
