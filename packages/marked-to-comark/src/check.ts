@@ -87,18 +87,29 @@ export async function scanProject(reader: ProjectReader): Promise<ScannedFile[]>
   return files;
 }
 
-/** The marked range each package declares, by the package's folder (`""` for the root). */
-async function declaredVersions(reader: ProjectReader): Promise<Map<string, string>> {
+/** The marked range each package declares, by the package's folder (`""` for the root); pnpm catalogs resolved. */
+export async function declaredVersions(reader: ProjectReader): Promise<Map<string, string>> {
   const versions = new Map<string, string>();
+  // `marked: catalog:` points at pnpm-workspace.yaml: `catalog:` or a named list under `catalogs:`.
+  const workspace = reader.read("pnpm-workspace.yaml") ?? "";
+  const catalog = (name: string) => {
+    const section = name
+      ? new RegExp(`^  ${name}:\\s*$([\\s\\S]*?)(?=^  \\S|^\\S|$(?![\\s\\S]))`, "m").exec(
+          workspace.slice(workspace.search(/^catalogs:/m) + 1),
+        )?.[1]
+      : /^catalog:\s*$([\s\S]*?)(?=^\S|$(?![\s\S]))/m.exec(workspace)?.[1];
+    return /^\s+["']?marked["']?:\s*["']?([^"'\s#]+)/m.exec(section ?? "")?.[1];
+  };
   for (const file of await reader.glob("**/package.json")) {
     try {
       const json = JSON.parse(reader.read(file) ?? "{}") as Record<
         string,
         Record<string, string> | undefined
       >;
-      const range = ["dependencies", "devDependencies", "peerDependencies"]
+      let range = ["dependencies", "devDependencies", "peerDependencies"]
         .map((key) => json[key]?.marked)
         .find(Boolean);
+      if (range?.startsWith("catalog:")) range = catalog(range.slice(8).trim()) ?? range;
       if (range) versions.set(dirname(file) === "." ? "" : `${dirname(file)}/`, range);
     } catch {}
   }

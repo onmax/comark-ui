@@ -8,8 +8,8 @@ import type {
   ParamPattern,
   Program,
 } from "oxc-parser";
-import { parseSync, visitorKeys } from "oxc-parser";
-import { scanSource, type Call, type FoundPlugin, type Setup } from "./scan.ts";
+import { visitorKeys } from "oxc-parser";
+import { parseScript, scanSource, type Call, type FoundPlugin, type Setup } from "./scan.ts";
 import { lineOffset, scriptBlocks } from "./sfc.ts";
 
 export interface Rewrite {
@@ -296,6 +296,8 @@ function blocker(
     return `calls the shared \`marked\`, which ${context.shared.slice(0, 2).join(", ")}${context.shared.length > 2 ? ", and others" : ""} also configure or call; its settings reach every call, so move them together by hand`;
   if (setup.commonjs || file.endsWith(".cjs") || !info.imports.length)
     return "is CommonJS; the rewrite emits ES imports";
+  if (call.method === "tokens")
+    return "works on marked's tokens (`lexer`, `parser`); Comark's tree replaces them, so port that code to the nodes `parseMarkdown()` from comark returns";
   if (call.method === "parseInline")
     return "renders inline Markdown only (`parseInline`); `renderHtml` reads blocks too and wraps text in `<p>`";
   if (call.args > 2) return "passes a callback; `renderHtml` returns a promise";
@@ -400,7 +402,7 @@ function rewriteScript(
 ): RewriteResult {
   const setups = scanSource(source, file).filter((setup) => setup.calls.length);
   if (!setups.length) return { code: source, rewrites: [] };
-  const { program } = parseSync(file, source);
+  const { program } = parseScript(file, source);
   const info = facts(program);
   const nodes = new Map<number, Node>();
   const find = (node: Node) => {

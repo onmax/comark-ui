@@ -73,6 +73,15 @@ describe("migrateContent", () => {
     expect(result.skipped).toEqual([3]);
   });
 
+  it("keeps the edits in a block that still render the same when another one doesn't", () => {
+    // marked 0.3 has no single-tilde strikethrough, so widening `~a~` would change it; the escape still holds.
+    const result = migrateContent("~a~ and {x}.\n", {
+      render: (markdown) => (markdown.includes("~~") ? "changed" : markdown.replace(/\\/g, "")),
+    });
+    expect(result.markdown).toBe("~a~ and \\{x}.\n");
+    expect(result.skipped).toEqual([1]);
+  });
+
   it("widens single tildes in plain mode and escapes nothing else", async () => {
     const result = await migrated("a ~b {c}~ d", { syntax: "plain" });
     expect(result.markdown).toBe("a ~~b {c}~~ d");

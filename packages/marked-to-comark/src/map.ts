@@ -262,13 +262,37 @@ export function mapOption(name: string, value: string | undefined): Mapping & { 
   return { ...unsupported("it isn't a marked option the map knows."), known: false };
 }
 
+// The Comark element each renderer method draws, for overrides that only change how one element looks.
+const ELEMENTS: Record<string, string> = {
+  link: "a",
+  image: "img",
+  heading: "h1`–`h6",
+  code: "pre",
+  codespan: "code",
+  paragraph: "p",
+  blockquote: "blockquote",
+  list: "ul`/`ol",
+  listitem: "li",
+  table: "table",
+  tablerow: "tr",
+  tablecell: "td`/`th",
+  strong: "strong",
+  em: "em",
+  del: "del",
+  br: "br",
+  hr: "hr",
+  checkbox: "input",
+};
+
 /** What overriding a part of marked becomes: the project's own code, ported by hand. */
-export function mapOverride(name: string): Mapping & { known: boolean } {
+export function mapOverride(name: string, methods?: string[]): Mapping & { known: boolean } {
+  const drawn = (methods ?? []).filter((method) => ELEMENTS[method]);
+  const rest = (methods ?? []).filter((method) => !ELEMENTS[method]);
   const notes: Record<string, string> = {
-    renderer:
-      "Custom renderer methods. Draw those elements with Comark components (`components: { a: … }` in @comark/html) or a `post` hook over `state.tree`.",
-    tokenizer:
-      "Custom tokenizer methods change what marked parses. Port them to a markdown-it plugin through Comark's plugin API.",
+    renderer: drawn.length
+      ? `Custom renderer methods (${methods!.join(", ")}). Draw ${drawn.map((method) => `\`${ELEMENTS[method]}\``).join(", ")} with Comark components (\`components\` in @comark/html, or your framework's renderer)${rest.length ? `, and do what ${rest.join(", ")} did in a \`post\` hook over \`state.tree\`` : ""}.`
+      : "Custom renderer methods. Draw those elements with Comark components (`components: { a: … }` in @comark/html) or a `post` hook over `state.tree`.",
+    tokenizer: `Custom tokenizer methods${methods?.length ? ` (${methods.join(", ")})` : ""} change what marked parses. Port them to a markdown-it plugin through Comark's plugin API.`,
     walkTokens:
       "A `walkTokens` callback. Do the same in a Comark plugin's `post` hook, walking `state.tree.nodes`.",
     hooks:

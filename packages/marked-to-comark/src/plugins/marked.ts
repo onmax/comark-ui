@@ -179,7 +179,8 @@ const plainText = (nodes: Node[]): string =>
       if (typeof node === "string") return node;
       if (!Array.isArray(node) || node[0] === null) return "";
       const [tag, attributes] = node;
-      if (tag === "img" && !attributes.$?.html) return typeof attributes.alt === "string" ? attributes.alt : "";
+      if (tag === "img" && !attributes.$?.html)
+        return typeof attributes.alt === "string" ? attributes.alt : "";
       const inner = plainText(node.slice(2) as Node[]);
       if (!attributes.$?.html) return inner;
       const written = Object.entries(attributes)

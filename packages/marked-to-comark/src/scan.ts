@@ -27,6 +27,8 @@ export interface FoundPlugin {
   options?: string;
   /** The identifier the extension is written as in the file, when it is one. */
   local?: string;
+  /** For a `renderer` or `tokenizer` override: the methods it replaces, when the scan can list them. */
+  methods?: string[];
   mapping: Mapping & { known: boolean };
 }
 
@@ -36,7 +38,8 @@ export interface Call {
   /** Offsets of the call expression, which the rewrite replaces. */
   start: number;
   end: number;
-  method: "parse" | "parseInline";
+  /** `tokens` reads or renders marked's tokens (`lexer`, `parser`, `new Lexer()`), which Comark's tree replaces. */
+  method: "parse" | "parseInline" | "tokens";
   /** Source text of the Markdown argument. */
   input?: string;
   /** Source text of options passed to this call alone. */
@@ -125,8 +128,18 @@ export function importsOf(source: string, file: string): Map<string, string> {
   return imports;
 }
 
+/** A script's AST; a `.js` file that only parses as JSX, as React projects write them, is read as JSX. */
+export function parseScript(file: string, source: string) {
+  const parsed = parseSync(file, source);
+  if (parsed.errors.length && /\.[cm]?js$/.test(file)) {
+    const jsx = parseSync(file, source, { lang: "jsx" });
+    if (!jsx.errors.length) return jsx;
+  }
+  return parsed;
+}
+
 function scanScript(source: string, file: string, shared?: Map<string, string>): Setup[] {
-  const { program } = parseSync(file, source);
+  const { program } = parseScript(file, source);
   const lineOf = (offset: number) => source.slice(0, offset).split("\n").length;
   const text = (node: Node) => source.slice(node.start, node.end);
   // Every imported name and the module it's from, and the names bound to marked itself.
@@ -262,6 +275,37 @@ function scanScript(source: string, file: string, shared?: Map<string, string>):
     return found;
   };
 
+  // The methods a renderer or tokenizer override replaces: an object's keys, or `renderer.link = …` assignments to a name.
+  const methodsOf = (value: Node): string[] | undefined => {
+    if (value.type === "ObjectExpression")
+      return value.properties.flatMap((property) =>
+        property.type === "Property" && keyName(property.key) ? [keyName(property.key)!] : [],
+      );
+    if (value.type !== "Identifier") return undefined;
+    const names = new Set<string>();
+    walk(program, (node) => {
+      if (
+        node.type === "AssignmentExpression" &&
+        node.left.type === "MemberExpression" &&
+        !node.left.computed &&
+        node.left.object.type === "Identifier" &&
+        node.left.object.name === value.name &&
+        node.left.property.type === "Identifier"
+      )
+        names.add(node.left.property.name);
+      if (
+        node.type === "VariableDeclarator" &&
+        node.id.type === "Identifier" &&
+        node.id.name === value.name &&
+        node.init?.type === "ObjectExpression"
+      )
+        for (const property of node.init.properties)
+          if (property.type === "Property" && keyName(property.key))
+            names.add(keyName(property.key)!);
+    });
+    return names.size ? [...names] : undefined;
+  };
+
   // The settings of an options object: each key an option, or an override of marked's own code.
   const settings = (object: Node, into: Setup) => {
     if (object.type !== "ObjectExpression") {
@@ -293,9 +337,19 @@ function scanScript(source: string, file: string, shared?: Map<string, string>):
       }
       const name = keyName(property.key);
       if (!name) continue;
-      if (OVERRIDES.has(name))
-        into.plugins.push(plugin("override", name, property, property.value, mapOverride(name)));
-      else into.plugins.push(plugin("option", name, property, property.value));
+      if (OVERRIDES.has(name)) {
+        const methods =
+          name === "renderer" || name === "tokenizer" ? methodsOf(property.value) : undefined;
+        const found = plugin(
+          "override",
+          name,
+          property,
+          property.value,
+          mapOverride(name, methods),
+        );
+        if (methods?.length) found.methods = methods;
+        into.plugins.push(found);
+      } else into.plugins.push(plugin("option", name, property, property.value));
     }
   };
 
@@ -348,8 +402,19 @@ function scanScript(source: string, file: string, shared?: Map<string, string>):
     }
     const bound = markedModule(node);
     if (bound) return { setup: global, method: bound.kind === "export" ? bound.name : undefined };
-    if (node.type === "NewExpression")
+    if (node.type === "NewExpression") {
+      // `new Lexer(options).lex(md)` and `new Parser().parse(tokens)` work on tokens.
+      const callee = node.callee;
+      const made = callee.type === "Identifier" ? marked.get(callee.name) : markedModule(callee);
+      if (made?.kind === "export" && /^(Lexer|Parser)$/.test(made.name))
+        return { setup: global, method: made.name };
       return newInstance(node) ? { setup: newInstance(node)! } : undefined;
+    }
+    // `this.md = new Marked()`, then `this.md.parse(text)`.
+    if (node.type === "MemberExpression") {
+      const instance = instances.get(text(node));
+      if (instance) return { setup: instance };
+    }
     return undefined;
   };
 
@@ -373,8 +438,19 @@ function scanScript(source: string, file: string, shared?: Map<string, string>):
     return setup;
   };
 
-  // Instances bound to a name, so later `x.parse()` and `x.use()` reach them.
+  // Instances bound to a name or a member, so later `x.parse()` and `x.use()` reach them.
   walk(program, (node) => {
+    if (
+      node.type === "AssignmentExpression" &&
+      node.left.type === "MemberExpression" &&
+      node.right.type === "NewExpression"
+    ) {
+      const setup = newInstance(node.right);
+      if (setup) {
+        setup.binding = text(node.left);
+        instances.set(text(node.left), setup);
+      }
+    }
     if (
       node.type === "VariableDeclarator" &&
       node.id.type === "Identifier" &&
@@ -400,6 +476,9 @@ function scanScript(source: string, file: string, shared?: Map<string, string>):
     ) {
       const owner = target(callee.object);
       if (owner && !owner.method) found = { setup: owner.setup, method: callee.property.name };
+      // `Lexer.lex(md)`, `new Lexer().lex(md)`, `new Parser().parse(tokens)`.
+      else if (owner && /^(Lexer|Parser)$/.test(owner.method ?? ""))
+        found = { setup: owner.setup, method: "tokens" };
     } else found = target(callee);
     if (!found) return;
     // `marked(md)` and `marked.marked(md)` are parse.
@@ -413,6 +492,17 @@ function scanScript(source: string, file: string, shared?: Map<string, string>):
       setup.plugins.push(
         plugin("override", "walkTokens", node, undefined, mapOverride("walkTokens")),
       );
+    } else if (/^(lexer|parser|lexInline|tokens)$/.test(method)) {
+      const [input] = node.arguments;
+      const call: Call = {
+        line: lineOf(node.start),
+        start: node.start,
+        end: node.end,
+        method: "tokens",
+        args: node.arguments.length,
+      };
+      if (input) call.input = text(input);
+      setup.calls.push(call);
     } else if (method === "parse" || method === "parseInline" || method === "marked") {
       const [input, options] = node.arguments;
       const call: Call = {

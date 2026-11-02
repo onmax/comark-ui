@@ -39,6 +39,8 @@ interface Edit {
   offset: number;
   /** Characters replaced at `offset`; most edits only insert. */
   remove?: number;
+  /** Edits that only work together (a reference and the escapes in its text) share one; they're kept or dropped as one. */
+  unit?: number;
   insert: string;
   change: ContentChange;
 }
@@ -59,6 +61,8 @@ interface Context {
   emoji: boolean;
   /** Comark's syntax is off: only a `~` that would close a widened strikethrough needs escaping. */
   plain?: boolean;
+  /** The unit of the strikethrough being widened, which its `~` escapes belong to. */
+  strikeUnit?: number;
 }
 
 /**
@@ -186,9 +190,13 @@ export function migrateContent(original: string, options: ContentOptions = {}): 
   }
 
   // Edits per top-level block, so one block marked reads differently after its edits can be dropped alone.
-  const groups: Edit[][] = [];
+  const groups: { edits: Edit[]; start: number; end: number }[] = [];
   const skipped = new Set<number>();
   let group: Edit[] = [];
+  let units = 0;
+  // While set, every edit joins this unit: the escapes in a reference's text only work with the reference.
+  let pin: number | undefined;
+  const add = (edit: Edit, unit = pin ?? ++units) => group.push({ ...edit, unit });
 
   const inline = (list: Token[], from: number, limit: number, context: Partial<Context>) => {
     let cursor = from;
@@ -215,15 +223,17 @@ export function migrateContent(original: string, options: ContentOptions = {}): 
         // Plain mode keeps Comark's syntax off, so only a literal `~` inside a widened strikethrough needs escaping.
         if (syntax !== "comark" && !context.inStrike) return;
         for (const [from, to] of spans)
-          group.push(
-            ...escapes(source, from, to, {
-              alertAt: context.alertAt ?? -1,
-              inLabel: Boolean(context.inLabel),
-              inStrike: Boolean(context.inStrike),
-              emoji: Boolean(options.emoji),
-              plain: syntax !== "comark",
-            }),
-          );
+          for (const edit of escapes(source, from, to, {
+            alertAt: context.alertAt ?? -1,
+            inLabel: Boolean(context.inLabel),
+            inStrike: Boolean(context.inStrike),
+            emoji: Boolean(options.emoji),
+            plain: syntax !== "comark",
+          }))
+            add(
+              edit,
+              edit.change.text === "~" && context.strikeUnit ? context.strikeUnit : undefined,
+            );
         return;
       }
       case "link": {
@@ -242,10 +252,12 @@ export function migrateContent(original: string, options: ContentOptions = {}): 
             : source.lastIndexOf("]", source.lastIndexOf("[", end - 1));
           const label = source.slice(start + 1, labelEnd);
           const before = group.length;
+          const outer = pin;
+          pin ??= ++units;
           inline(link.tokens ?? [], start + 1, labelEnd, { ...context, inLabel: true });
           const line = 0;
           if (group.length > before)
-            group.push(
+            add(
               shortcut
                 ? {
                     offset: end,
@@ -259,11 +271,12 @@ export function migrateContent(original: string, options: ContentOptions = {}): 
                   },
             );
           else if (shortcut)
-            group.push({
+            add({
               offset: end,
               insert: "[]",
               change: { line, kind: "reference", text: "[]" },
             });
+          pin = outer;
           return;
         }
         return inline(link.tokens ?? [], start + 1, close === -1 ? end : close, {
@@ -283,23 +296,26 @@ export function migrateContent(original: string, options: ContentOptions = {}): 
           skipped.add(start);
           return;
         }
-        group.push({
-          offset: start,
-          insert: "~",
-          change: { line: 0, kind: "strikethrough", text: "~" },
+        const unit = pin ?? ++units;
+        add(
+          { offset: start, insert: "~", change: { line: 0, kind: "strikethrough", text: "~" } },
+          unit,
+        );
+        add(
+          { offset: end - 1, insert: "~", change: { line: 0, kind: "strikethrough", text: "~" } },
+          unit,
+        );
+        return inline(del.tokens, start + 1, end - 1, {
+          ...context,
+          inStrike: true,
+          strikeUnit: unit,
         });
-        group.push({
-          offset: end - 1,
-          insert: "~",
-          change: { line: 0, kind: "strikethrough", text: "~" },
-        });
-        return inline(del.tokens, start + 1, end - 1, { ...context, inStrike: true });
       }
       case "heading": {
         // marked takes any whitespace after the `#`s (a no-break space, say); CommonMark and Comark need a space or tab.
         const marks = /^( {0,3}#{1,6})([^\S \t\n])/.exec(source.slice(start, end));
         if (marks)
-          group.push({
+          add({
             offset: start + marks[1]!.length,
             remove: 1,
             insert: " ",
@@ -361,43 +377,70 @@ export function migrateContent(original: string, options: ContentOptions = {}): 
     cursor = spans.at(-1)![1];
     group = [];
     visit(token, spans, spans[0]![0], cursor, {});
-    if (group.length) groups.push(group);
+    if (group.length) groups.push({ edits: group, start: spans[0]![0], end: cursor });
   }
 
   const starts = [0];
   for (let index = source.indexOf("\n"); index !== -1; index = source.indexOf("\n", index + 1))
     starts.push(index + 1);
-  const apply = (edits: Edit[]) => {
+  /** The source between `from` and `to` with the edits applied. */
+  const apply = (edits: Edit[], from = 0, to = source.length) => {
     // In source order, later edits at the same offset first; one pass, since a changelog can need thousands.
     const ordered = edits
       .map((edit, index) => ({ edit, index }))
       .sort((a, b) => a.edit.offset - b.edit.offset || b.index - a.index);
     const parts: string[] = [];
-    let at = 0;
+    let at = from;
     for (const { edit } of ordered) {
       parts.push(source.slice(at, edit.offset), edit.insert);
       at = edit.offset + (edit.remove ?? 0);
     }
-    parts.push(source.slice(at));
+    parts.push(source.slice(at, to));
     return { text: parts.join(""), ordered: ordered.map(({ edit }) => edit) };
   };
 
-  // marked must render the result byte for byte as before. A block whose edits change that is left as written.
+  // marked must render the result byte for byte as before. Each block is tried on its own first (with the document's
+  // reference definitions, which reach every block), and a block that fails keeps the units of edits that pass. The
+  // whole document is checked last; if blocks interact, every edit is tried in turn against the whole document.
   const render = options.render ?? bundled(options);
   const reference = render(source);
-  let kept = groups;
-  if (groups.length && render(apply(groups.flat()).text) !== reference) {
-    kept = groups.filter((edits) => {
-      if (render(apply(edits).text) === reference) return true;
-      skipped.add(edits[0]!.offset);
-      return false;
-    });
-    if (kept.length && render(apply(kept.flat()).text) !== reference) {
-      for (const edits of kept) skipped.add(edits[0]!.offset);
-      kept = [];
+  const definitions = tokens
+    .filter((token) => token.type === "def")
+    .map((token) => token.raw.trim())
+    .join("\n");
+  const unitsOf = (edits: Edit[]) => {
+    const byUnit = new Map<number, Edit[]>();
+    for (const edit of edits)
+      byUnit.set(edit.unit ?? 0, [...(byUnit.get(edit.unit ?? 0) ?? []), edit]);
+    return [...byUnit.values()];
+  };
+  let kept: Edit[] = groups.flatMap((item) => item.edits);
+  if (kept.length && render(apply(kept).text) !== reference) {
+    kept = [];
+    for (const { edits, start, end } of groups) {
+      const alone = (list: Edit[]) => render(`${apply(list, start, end).text}\n\n${definitions}\n`);
+      const expected = alone([]);
+      if (alone(edits) === expected) {
+        kept.push(...edits);
+        continue;
+      }
+      const accepted: Edit[] = [];
+      for (const unit of unitsOf(edits)) {
+        if (alone([...accepted, ...unit]) === expected) accepted.push(...unit);
+        else skipped.add(unit[0]!.offset);
+      }
+      kept.push(...accepted);
+    }
+    if (kept.length && render(apply(kept).text) !== reference) {
+      const accepted: Edit[] = [];
+      for (const unit of unitsOf(kept)) {
+        if (render(apply([...accepted, ...unit]).text) === reference) accepted.push(...unit);
+        else skipped.add(unit[0]!.offset);
+      }
+      kept = accepted;
     }
   }
-  const result = apply(kept.flat());
+  const result = apply(kept);
   // Offsets into the normalized text map back to the original; an edit before a `\r\n` goes before its `\r`.
   let markdown = result.text;
   if (crlf) {
