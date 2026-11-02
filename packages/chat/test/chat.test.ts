@@ -1,5 +1,6 @@
 import type { UIMessage } from "ai";
 import { describe, expect, it } from "vite-plus/test";
+import { css } from "../src/client.ts";
 import { read } from "../src/index.ts";
 
 // Typed as the AI SDK's own message, so a change to its parts that this package can't read fails the typecheck.
@@ -216,5 +217,14 @@ describe("read()", () => {
     expect(unnamed).toMatchObject({ href: undefined });
     expect(named).toMatchObject({ href: "data:text/plain,hi", download: "hi.txt" });
     expect(blocks).toHaveLength(4);
+  });
+});
+
+describe("css", () => {
+  it("marks a step under way without motion", () => {
+    expect(css).not.toMatch(/animation|@keyframes/);
+    expect(css).toContain(
+      ".cht-step:is([data-status=running],[data-status=waiting]) .cht-dot{box-sizing:border-box;border:1px solid currentColor;background:none",
+    );
   });
 });
