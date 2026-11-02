@@ -136,7 +136,9 @@ function joinLines(html: string): string {
       before === ">" ? tagAt(content.slice(content.lastIndexOf("<", offset - 1))) : "#text";
     const right =
       content[offset + gap.length] === "<" ? tagAt(content.slice(offset + gap.length)) : "#text";
-    return inlineName(left) && inlineName(right) ? " " : gap;
+    // A space next to a line break never shows, and a text space would make Comark wrap the block in `<p>`.
+    const breaks = left === "br" || left === "wbr" || right === "br" || right === "wbr";
+    return inlineName(left) && inlineName(right) && !breaks ? " " : gap;
   });
   // eslint-disable-next-line no-control-regex -- NUL marks a kept raw-tag run; Markdown can't contain one.
   return joined.replace(/\u0000(\d+)\u0000/g, (_, index: string) => kept[Number(index)]!);
