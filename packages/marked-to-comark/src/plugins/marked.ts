@@ -663,3 +663,35 @@ export const legacyTables = (): ComarkPlugin => ({
     visit(state.tree.nodes);
   },
 });
+
+/** An inline token's text as plain text: what CommonMark puts in an image's `alt`. */
+const tokenText = (tokens: Token[]): string =>
+  tokens
+    .map((token) =>
+      token.type === "text" || token.type === "code_inline"
+        ? token.content
+        : token.type === "softbreak" || token.type === "hardbreak"
+          ? "\n"
+          : token.type === "image"
+            ? tokenText(token.children ?? [])
+            : "",
+    )
+    .join("");
+
+/**
+ * An image's alt is the plain text of its description in CommonMark and marked: `![[x](u) *y*](a.png)` has alt `x y`.
+ * Comark keeps the description as written, Markdown and all.
+ */
+export const imageAltText = (): ComarkPlugin => ({
+  name: "marked-to-comark:image-alt-text",
+  markdownItPost(state) {
+    const visit = (tokens: Token[]) => {
+      for (const token of tokens) {
+        if (token.type === "image" && token.children?.length)
+          token.content = tokenText(token.children);
+        if (token.children) visit(token.children);
+      }
+    };
+    visit(state.tokens);
+  },
+});

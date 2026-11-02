@@ -11,6 +11,7 @@ import {
   expandTabs,
   headerIds,
   htmlBlocks,
+  imageAltText,
   htmlIndent,
   htmlPre,
   inlineHtml,
@@ -115,6 +116,7 @@ export function comarkSetup(options: SetupOptions = {}): ComarkSetup {
       ...(gfm ? [gfmLinks(), markedEmails()] : []),
       linkText(),
       tightLists(),
+      imageAltText(),
       imageAlt(),
       ...(options.headerIds ? [headerIds(options.headerIds, options.headerPrefix)] : []),
       ...(options.langPrefix !== undefined && options.langPrefix !== "language-"

@@ -129,7 +129,13 @@ function joinLines(html: string): string {
   if (!html.includes("\n")) return html;
   const kept: string[] = [];
   const content = html.replace(RAW_TAGS, (raw) => `\u0000${kept.push(raw) - 1}\u0000`);
+  // A line break inside a tag (in an attribute's value) is the attribute's, not text between tags.
+  const tags = [...content.matchAll(/<[A-Za-z/!][^>]*>/g)].map((tag) => [
+    tag.index,
+    tag.index + tag[0].length,
+  ]);
   const joined = content.replace(/[ \t]*\n[ \t]*(?=\S)/g, (gap, offset: number) => {
+    if (tags.some(([start, end]) => offset > start! && offset < end!)) return gap;
     const before = content[offset - 1];
     if (before === undefined || before === "\n") return gap;
     const left =
