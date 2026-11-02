@@ -117,8 +117,7 @@ It detects your installed `comark-ui` and checks documents with its plugins. Use
 Install [`remark-to-comark`](./packages/remark-to-comark) to move a project from remark to Comark. It reports each remark setup and what its plugins become, rewrites unified chains to Comark's `renderHtml`, and escapes the Markdown Comark would read differently:
 
 ```sh
-pnpm add -D remark-to-comark
-pnpm remark-to-comark check .
+pnpm dlx remark-to-comark migrate
 ```
 
 ## Agents
