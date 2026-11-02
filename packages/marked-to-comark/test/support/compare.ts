@@ -88,7 +88,12 @@ export function compare(
 ): Comparison {
   const seen = new Set<string>();
   const expected = normalize(expectedHtml, { seen, codeNewline: true });
-  const actual = normalize(actualHtml, { benign: options.benign ?? BENIGN, keep: seen });
+  // A trailing newline in `<pre><code>` never shows; marked writes one after every code block, Comark doesn't.
+  const actual = normalize(actualHtml, {
+    benign: options.benign ?? BENIGN,
+    keep: seen,
+    codeNewline: true,
+  });
   const differences: Difference[] = [];
   let kept = 0;
   let position = 0;

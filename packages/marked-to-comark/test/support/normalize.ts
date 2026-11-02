@@ -36,7 +36,7 @@ export interface NormalizeOptions {
   keep?: Set<string>;
   /** Collects every `tag[attr]=value` pair seen, to build `keep` for the other side. */
   seen?: Set<string>;
-  /** remark's side: mdast-util-to-hast ends every code block with a newline that Comark doesn't add. */
+  /** Drop one trailing newline from `<pre><code>` text, which never shows: marked ends every code block with one. */
   codeNewline?: boolean;
 }
 

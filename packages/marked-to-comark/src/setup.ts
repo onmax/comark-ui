@@ -6,11 +6,13 @@ import taskList from "comark/plugins/task-list";
 import { frontmatter } from "./plugins/frontmatter.ts";
 import {
   breaks,
-  codeNewline,
   headerIds,
+  htmlBlocks,
   htmlIndent,
+  htmlPre,
   inlineHtml,
   langPrefix,
+  linkText,
   markedEmails,
   taskListClasses,
 } from "./plugins/marked.ts";
@@ -83,15 +85,17 @@ export function comarkSetup(options: SetupOptions = {}): ComarkSetup {
             inlineHtml(),
             htmlParagraphs(),
             html({ markdown: false }),
+            htmlPre(),
             htmlEntities(),
             closeInlineHtml(),
+            htmlBlocks(),
           ]),
       ...(gfm ? [taskList(), taskListClasses()] : [commonmark()]),
       ...(syntax === "comark" ? [components(), attributes()] : []),
       ...(gfm ? [gfmLinks(), markedEmails()] : []),
+      linkText(),
       tightLists(),
       imageAlt(),
-      codeNewline(),
       ...(options.headerIds ? [headerIds(options.headerIds, options.headerPrefix)] : []),
       ...(options.langPrefix !== undefined && options.langPrefix !== "language-"
         ? [langPrefix(options.langPrefix)]

@@ -50,32 +50,6 @@ export const taskListClasses = (): ComarkPlugin => ({
   },
 });
 
-/**
- * marked drops one trailing blank line from a fenced code block (`a`, blank, closing fence renders as `a`); CommonMark
- * and Comark keep it. Copied so the code reads as it did.
- */
-export const codeNewline = (): ComarkPlugin => ({
-  name: "marked-to-comark:code-newline",
-  post(state) {
-    const visit = (nodes: Node[]) => {
-      for (const node of nodes) {
-        if (!Array.isArray(node) || node[0] === null) continue;
-        if (node[0] === "pre" && !node[1].$?.html) {
-          const code = node[2];
-          if (Array.isArray(code) && code[0] === "code") {
-            const last = code.length - 1;
-            if (last >= 2 && typeof code[last] === "string")
-              code[last] = (code[last] as string).replace(/\n$/, "");
-          }
-          continue;
-        }
-        visit(node.slice(2) as Node[]);
-      }
-    };
-    visit(state.tree.nodes);
-  },
-});
-
 const MARK = "data-marked-to-comark-html";
 const SPANS = /^(strong|em|link|s|sup|sub|mdc_inline_span)_(open|close)$/;
 let parses = 0;
@@ -340,5 +314,109 @@ export const htmlIndent = (): ComarkPlugin => ({
   markdownItPost(state) {
     for (const token of state.tokens)
       if (token.type === "html_block") token.content = token.content.replace(/^[ \t]+/, "");
+  },
+});
+
+/**
+ * Comark's html plugin turns each HTML block into a paragraph around its content, and drops that paragraph only when
+ * the content starts with a tag and holds no text of its own; `<div></div>{% x %}` keeps a `<p>` a browser never
+ * draws. Runs after html(): the wrapper of an HTML block whose tags all close inside it goes. A block that leaves a tag
+ * open (`<details>`) keeps it, since the tree builder reads the wrapper as the sign that what follows nests inside.
+ */
+function balanced(children: Token[]): boolean {
+  const open: string[] = [];
+  for (const child of children) {
+    if (child.type !== "html_inline") continue;
+    const tag = /^<(\/?)([A-Za-z][\w-]*)[^>]*?(\/?)>$/.exec(child.content.trim());
+    if (!tag || tag[3] || VOID_TAGS.test(tag[2]!.toLowerCase())) continue;
+    if (!tag[1]) open.push(tag[2]!.toLowerCase());
+    else if (open.at(-1) === tag[2]!.toLowerCase()) open.pop();
+    else return false;
+  }
+  return open.length === 0;
+}
+
+export const htmlBlocks = (): ComarkPlugin => ({
+  name: "marked-to-comark:html-blocks",
+  markdownItPost(state) {
+    const tokens = state.tokens;
+    for (let index = tokens.length - 3; index >= 0; index--)
+      if (
+        tokens[index]!.type === "paragraph_open" &&
+        tokens[index + 1]!.type === "inline" &&
+        fromHtmlBlock(tokens[index + 1]!) &&
+        tokens[index + 2]!.type === "paragraph_close" &&
+        balanced(tokens[index + 1]!.children ?? [])
+      ) {
+        tokens.splice(index + 2, 1);
+        tokens.splice(index, 1);
+      }
+  },
+});
+
+/**
+ * Inside an HTML block, Comark keeps everything between `<pre>` and `</pre>` as text, so `<pre><code>…</code></pre>`
+ * shows its `<code>` tags. A browser parses them. Runs after html() and before the entity decoding: the text between
+ * the tags becomes tag and text tokens again.
+ */
+export const htmlPre = (): ComarkPlugin => ({
+  name: "marked-to-comark:html-pre",
+  markdownItPost(state) {
+    for (const block of state.tokens) {
+      const children = block.children;
+      if (block.type !== "inline" || !children || !fromHtmlBlock(block)) continue;
+      // SAFETY: Comark's tokens are instances of markdown-exit's Token class, which takes a type, a tag, and a nesting.
+      const Make = (children[0]?.constructor ?? block.constructor) as TokenClass;
+      const out: Token[] = [];
+      let inPre = false;
+      for (const token of children) {
+        if (token.type === "html_inline" && /^<pre[\s>]/i.test(token.content)) inPre = true;
+        else if (token.type === "html_inline" && /^<\/pre\s*>/i.test(token.content)) inPre = false;
+        if (!inPre || token.type !== "text" || !/<\/?[A-Za-z]/.test(token.content)) {
+          out.push(token);
+          continue;
+        }
+        for (const part of token.content.split(/(<\/?[A-Za-z][\w-]*(?:\s+[^<>]*?)?\/?>)/)) {
+          if (!part) continue;
+          const piece = new Make(/^<\/?[A-Za-z]/.test(part) ? "html_inline" : "text", "", 0);
+          piece.content = part;
+          out.push(piece);
+        }
+      }
+      block.children = out;
+    }
+  },
+});
+
+/**
+ * markdown-exit shows an autolink's text percent-decoded (`a%20b` reads `a b`); marked shows the URL as written.
+ * When the paragraph's source holds the URL as the href spells it, that's the text.
+ */
+export const linkText = (): ComarkPlugin => ({
+  name: "marked-to-comark:link-text",
+  markdownItPost(state) {
+    for (const block of state.tokens) {
+      const children = block.children;
+      if (block.type !== "inline" || !children) continue;
+      for (let index = 0; index + 1 < children.length; index++) {
+        const open = children[index]!;
+        const text = children[index + 1]!;
+        if (
+          open.type !== "link_open" ||
+          !/^(linkify|autolink)$/.test(open.markup) ||
+          text.type !== "text"
+        )
+          continue;
+        const href = open.attrs?.find(([name]) => name === "href")?.[1] ?? "";
+        if (href.startsWith("mailto:")) continue;
+        const written = /^https?:\/\//i.test(text.content) ? href : href.replace(/^http:\/\//i, "");
+        if (
+          written !== text.content &&
+          block.content.includes(written) &&
+          !block.content.includes(text.content)
+        )
+          text.content = written;
+      }
+    }
   },
 });

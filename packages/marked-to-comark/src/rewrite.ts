@@ -328,7 +328,12 @@ function enclosingFunction(node: Node, parent: WeakMap<Node, Node>): Node | unde
 /** What `comarkOptions()` needs for the call: the settings its options map to, and the plugins its extensions become. */
 function comarkSettings(plugins: FoundPlugin[], context: RewriteContext) {
   const settings = new Set<string>();
-  for (const plugin of plugins) if (plugin.mapping.setting) settings.add(plugin.mapping.setting);
+  // An option set twice (`setOptions({ breaks: true })`, then `{ breaks: false }`) takes its last value, as in marked.
+  const last = new Map<string, FoundPlugin>();
+  for (const plugin of plugins)
+    last.set(plugin.type === "option" ? plugin.name : `${plugin.type}:${plugin.name}`, plugin);
+  for (const plugin of last.values())
+    if (plugin.mapping.setting) settings.add(plugin.mapping.setting);
   // marked before v8 gave every heading an id unless `headerIds: false`.
   const version = lowest(context.version);
   const ids =
