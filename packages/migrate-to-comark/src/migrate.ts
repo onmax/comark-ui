@@ -103,7 +103,11 @@ export async function plan(
     for (const finding of findings ?? []) {
       if (!finding.edit) continue;
       if (unresolved.length && finding.code.endsWith("0202")) {
-        if (!held.some((entry) => entry.file === finding.file))
+        if (
+          !held.some(
+            (entry) => entry.file === finding.file && entry.migrator === detection.migrator,
+          )
+        )
           held.push({ file: finding.file, migrator: detection.migrator, waiting: unresolved });
         continue;
       }

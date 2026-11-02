@@ -286,6 +286,36 @@ describe("plan and apply", () => {
     expect(readFileSync(join(root, "render.ts"), "utf8")).toBe("old");
   });
 
+  it("names every migrator that holds back the same setup file", async () => {
+    const root = project({
+      "package.json": manifest({ remark: "*", marked: "*" }),
+      "render.ts": "old",
+    });
+    const result = await plan(root, {
+      load: async (name) => {
+        const prefix = name === "remark-to-comark" ? "RTC" : "MKC";
+        return {
+          check: async () => [
+            {
+              code: `${prefix}0202`,
+              params: { at: "render.ts:1" },
+              file: "render.ts",
+              line: 1,
+              edit: { start: 0, end: 3, text: "new", source: "old" },
+            },
+            { code: `${prefix}0303`, params: { at: "a.md:1" }, file: "a.md", line: 1 },
+          ],
+          catalog: {},
+          toDiagnostic: () => ({ why: "", fix: "" }),
+        };
+      },
+    });
+    expect(result.held).toEqual([
+      { file: "render.ts", migrator: "remark-to-comark", waiting: ["a.md"] },
+      { file: "render.ts", migrator: "marked-to-comark", waiting: ["a.md"] },
+    ]);
+  });
+
   it("keeps a setup unchanged while another migrator also wants its content", async () => {
     const root = project({
       "package.json": manifest({ remark: "*", marked: "*" }),
