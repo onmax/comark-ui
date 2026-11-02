@@ -152,6 +152,8 @@ document.addEventListener("comark-zoom:open", (event) => {
 });
 ```
 
+The layer scales with the copy, so a pin drawn in it grows too. To keep a pin at its size on screen, divide its size by `event.detail.scale`.
+
 In an open or change listener, `event.detail.copyOf(element)` finds a page element's copy in the zoomed view, and `event.detail.originalOf(element)` goes back, so a pin can follow what it points at.
 
 ## Accessibility
@@ -221,6 +223,7 @@ On the open and change events, `event.detail` is a `ZoomDetail` with these field
 | `item` | `HTMLElement` | The original item on the page. |
 | `index` | `number` | The zero-based position of the current item in `items`. |
 | `items` | `HTMLElement[]` | The items in the current group. |
+| `scale` | `number` | How much the zoomed copy and `layer` are scaled now. It changes when the window resizes or a larger image loads, so read it when you draw. |
 
 | Method | Returns | Description |
 | --- | --- | --- |
