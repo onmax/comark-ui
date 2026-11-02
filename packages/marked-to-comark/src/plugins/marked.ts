@@ -590,3 +590,67 @@ export const underscoreTagText = (): ComarkPlugin => ({
     }
   },
 });
+
+const PAD = "marked-to-comark-pad";
+const DELIMITER = /^ *\|? *:?-+:? *(?:\| *:?-+:? *)*\|? *$/;
+
+/**
+ * Tables as marked 0.3 split them: every `|` ends a cell, escaped or in a code span, and each row keeps the cells it
+ * has, more or fewer than the header; GFM pads or trims rows to the header. Each table is rewritten with the cells
+ * marked found, padded to its widest row with marker cells that come out again after parsing.
+ */
+export const legacyTables = (): ComarkPlugin => ({
+  name: "marked-to-comark:legacy-tables",
+  pre(state) {
+    const lines = state.markdown.split("\n");
+    let fence: string | undefined;
+    for (let index = 0; index + 1 < lines.length; index++) {
+      const line = lines[index]!;
+      const marker = /^ {0,3}(`{3,}|~{3,})/.exec(line)?.[1];
+      if (marker && (!fence || marker.startsWith(fence))) fence = fence ? undefined : marker;
+      if (
+        fence ||
+        !line.includes("|") ||
+        !DELIMITER.test(lines[index + 1]!) ||
+        !lines[index + 1]!.includes("-")
+      )
+        continue;
+      const piped = /^ *\|/.test(line);
+      let end = index + 2;
+      while (
+        end < lines.length &&
+        lines[end]!.includes("|") &&
+        lines[end]!.trim() &&
+        (!piped || /^ *\|/.test(lines[end]!))
+      )
+        end++;
+      // marked 0.3's own splitting: trim the outer pipes, then every pipe divides.
+      const cells = (row: string) => row.replace(/^ *\| *| *\| *$/g, "").split(/ *\| */);
+      const rows = [line, ...lines.slice(index + 2, end)].map(cells);
+      const width = Math.max(...rows.map((row) => row.length));
+      const write = (row: string[]) =>
+        `| ${[...row.map((cell) => cell.replace(/\\$/, "\\\\")), ...Array<string>(width - row.length).fill(PAD)].join(" | ")} |`;
+      const delimiter = cells(lines[index + 1]!);
+      lines[index] = write(rows[0]!);
+      lines[index + 1] =
+        `| ${[...delimiter, ...Array<string>(width - delimiter.length).fill("---")].join(" | ")} |`;
+      for (let row = 1; row < rows.length; row++) lines[index + 1 + row] = write(rows[row]!);
+      index = end - 1;
+    }
+    state.markdown = lines.join("\n");
+  },
+  post(state) {
+    const visit = (nodes: Node[]) => {
+      for (const node of nodes) {
+        if (!Array.isArray(node) || node[0] === null) continue;
+        if (node[0] === "tr")
+          for (let index = node.length - 1; index >= 2; index--) {
+            const cell = node[index];
+            if (Array.isArray(cell) && cell.length === 3 && cell[2] === PAD) node.splice(index, 1);
+          }
+        visit(node.slice(2) as Node[]);
+      }
+    };
+    visit(state.tree.nodes);
+  },
+});

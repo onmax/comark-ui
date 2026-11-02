@@ -15,6 +15,7 @@ import {
   htmlPre,
   inlineHtml,
   langPrefix,
+  legacyTables,
   linkText,
   markedEmails,
   taskListClasses,
@@ -60,6 +61,8 @@ export interface SetupOptions {
   headerPrefix?: string;
   /** Tabs as marked before v14 rewrote them: `all` (before v4) or a line's `leading` ones (v4 to v13). */
   expandTabs?: "all" | "leading";
+  /** Tables as marked 0.3 split them, on every `|`, with each row's own cells. */
+  legacyTables?: boolean;
   /** Tag names with an underscore (`<my_el>`) read as HTML, as marked from v1 to v17 read them. */
   underscoreTags?: boolean;
   /** The class before a code block's language, `language-` unless set; marked 0.3 wrote `lang-`. */
@@ -84,6 +87,7 @@ export function comarkSetup(options: SetupOptions = {}): ComarkSetup {
     plugins: [
       ...(options.frontmatter ? [frontmatter()] : []),
       ...(options.expandTabs ? [expandTabs(options.expandTabs)] : []),
+      ...(options.legacyTables ? [legacyTables()] : []),
       // Before the HTML workarounds, which turn soft breaks into text.
       ...(options.breaks ? [breaks()] : []),
       ...(options.html === false

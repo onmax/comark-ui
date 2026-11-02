@@ -344,6 +344,7 @@ function comarkSettings(plugins: FoundPlugin[], context: RewriteContext) {
   if (version && version[0] >= 1 && version[0] < 18) settings.add("underscoreTags: true");
   if (version && version[0] < 4) settings.add(`expandTabs: "all"`);
   else if (version && version[0] < 14) settings.add(`expandTabs: "leading"`);
+  if (version && version[0] === 0 && version[1] < 4) settings.add("legacyTables: true");
   if (version && version[0] === 0 && version[1] < 4 && !setting(plugins, "langPrefix"))
     settings.add(`langPrefix: "lang-"`);
   // A prefix only matters with ids.
