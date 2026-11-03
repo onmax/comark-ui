@@ -181,11 +181,13 @@ npm install comark-tabs
 
 ### Magic code transitions
 
-Add `magic` to a code group to move the tokens its snippets share into place when you switch tabs. Leave it off for unrelated examples. It uses the same token matching as [Magic Move](/magic-move/), and keeps Shiki's highlighting and comark-code's line marks and buttons.
+When you switch tabs in a code group, the tokens the two snippets share move into place, and the rest fade in and out. It uses the same token matching as [Magic Move](/magic-move/), and keeps Shiki's highlighting and comark-code's line marks and buttons.
+
+The group only moves when the snippets are mostly alike: the two tabs must share at least half the tokens of the longer one. Snippets with little in common, such as the same task in two languages, switch at once, as plain tabs do. The check runs on every switch, so in one group a move between two similar tabs can animate while a move to an unlike one doesn't.
 
 ::example
 ````md
-::code-group{magic}
+::code-group
 ```ts [tinyaml]
 import yaml from "tinyaml/js-yaml";
 ```
@@ -201,7 +203,7 @@ import ini from "tinyini/ini";
 ````
 ::
 
-The default is off. Set `magic="false"` to turn it off explicitly, or bind a boolean with `:magic="frontmatter.animate"`. Keyboard navigation, saved selections, and readers who prefer reduced motion switch the code immediately. Without a script, every snippet still reads under its label. `magic` belongs to `::code-group`; ordinary `::tabs` keep their current behavior.
+Set `magic` to animate every switch however different the snippets are, or `magic="false"` to never animate. You can also bind a boolean, as in `:magic="frontmatter.animate"`. Keyboard navigation, saved selections, and readers who prefer reduced motion always switch the code at once. Without a script, every snippet still reads under its label. `magic` belongs to `::code-group`; ordinary `::tabs` never move their content.
 
 ### Package managers
 
@@ -307,7 +309,7 @@ On a right-to-left page, the arrow keys follow the reading direction. The keys d
 | Prop | Default | Description |
 | --- | --- | --- |
 | `sync` | — | As on `::tabs`. A code group and tabs with the same key switch together. |
-| `magic` | `false` | Move shared code tokens between tabs. Respects reduced motion. |
+| `magic` | auto | Move shared code tokens between tabs. Without it, a switch animates when the two snippets share at least half their tokens. `magic` always animates and `magic="false"` never does. Respects reduced motion. |
 
 Each code block in a code group takes its label in brackets after its language, such as `[pnpm]`, and an icon after it, as `icon=logos:pnpm`.
 

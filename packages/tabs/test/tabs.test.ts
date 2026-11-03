@@ -71,7 +71,9 @@ describe("comark-tabs", () => {
 
   it("turns a code group into tabs labelled by each block's filename", async () => {
     const html = await markup(pm);
-    expect(html).toContain('<div class="ct" data-tabs-code data-code-header data-tabs-sync="pm">');
+    expect(html).toContain(
+      '<div class="ct" data-tabs-code data-code-header data-tabs-magic="auto" data-tabs-sync="pm">',
+    );
     expect(html).toContain('aria-selected="true" tabindex="0">pnpm</button>');
     expect(html).toContain('aria-selected="false" tabindex="-1">npm</button>');
     expect(html).toContain('<div class="ct-caption">npm</div><pre data-language="bash">');
@@ -79,23 +81,23 @@ describe("comark-tabs", () => {
     expect(html).not.toContain("filename");
   });
 
-  it("opts code groups into magic movement, including bound booleans", async () => {
-    for (const flag of ["magic", 'magic="true"', ':magic="frontmatter.enabled"']) {
-      const source = `---
+  it("moves code groups whose snippets match by default, and lets `magic` force it either way", async () => {
+    const modes = {
+      auto: ["", ':magic="frontmatter.missing"'],
+      always: ["magic", 'magic="true"', ':magic="frontmatter.enabled"'],
+      never: ['magic="false"', ':magic="frontmatter.disabled"'],
+    };
+    for (const [mode, flags] of Object.entries(modes))
+      for (const flag of flags) {
+        const source = `---
 enabled: true
----
-${pm.replace('sync="pm"', flag)}`;
-      expect(await markup(source)).toContain("data-tabs-magic");
-      expect(await issues(source)).toEqual([]);
-    }
-    for (const flag of ["", 'magic="false"', ':magic="frontmatter.disabled"']) {
-      const source = `---
 disabled: false
 ---
 ${pm.replace('sync="pm"', flag)}`;
-      expect(await markup(source)).not.toContain("data-tabs-magic");
-      expect(await issues(source)).toEqual([]);
-    }
+        expect(await markup(source), flag).toContain(`data-tabs-magic="${mode}"`);
+        expect(await issues(source)).toEqual([]);
+      }
+    expect(await markup(os)).not.toContain("data-tabs-magic");
     expect(await issues(os.replace('sync="os"', "magic"))).toEqual([
       "`::tabs` 1: `magic` isn't a prop of `::tabs`, so it's ignored. Use `sync`.",
     ]);
@@ -212,7 +214,7 @@ ${pm.replace('sync="pm"', flag)}`;
       const markdown = "```sh pm\nnpm i -D vitest\ncd my-npm-app && npm run dev\n```";
       const html = await markup(markdown);
       expect(html).toContain(
-        '<div class="ct" data-tabs-code data-code-header data-tabs-sync="pm">',
+        '<div class="ct" data-tabs-code data-code-header data-tabs-magic="auto" data-tabs-sync="pm">',
       );
       expect(
         [...html.matchAll(/role="tab"[^>]*>([^<]+)<\/button>/g)].map(([, label]) => label),

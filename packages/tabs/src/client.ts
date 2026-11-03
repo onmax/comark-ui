@@ -69,14 +69,22 @@ export function start(css: string, createMotion = createCodeMotion): () => void 
     const panels = panelsOf(root);
     const previous = panels.find((panel) => !panel.hasAttribute("data-inactive"));
     const target = panels[index];
+    const magic = root.getAttribute("data-tabs-magic");
     if (
       root instanceof HTMLElement &&
-      root.hasAttribute("data-tabs-magic") &&
+      magic &&
+      magic !== "never" &&
       previous &&
       target &&
       previous !== target
     )
-      codeMotion.show(root, previous, target, move);
+      codeMotion.show(
+        root,
+        previous,
+        target,
+        // Snippets with little in common would scatter their pieces, so they swap as plain tabs do.
+        move && (magic !== "auto" || codeMotion.likeness(previous, target) >= 0.5),
+      );
     for (const [at, tab] of tabs.entries()) {
       tab.setAttribute("aria-selected", String(at === index));
       tab.tabIndex = at === index ? 0 : -1;
