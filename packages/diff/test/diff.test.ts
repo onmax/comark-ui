@@ -40,11 +40,13 @@ describe("::diff", () => {
     for (const highlight of [false, true]) {
       const { issues, html } = await run(suggestion, highlight);
       expect(issues).toEqual([]);
-      expect(html).toContain('<figure class="cd"><figcaption><svg class="cd-icon"');
       expect(html).toContain(
-        '<span class="cd-label">Suggested change</span><span class="cd-file">src/a.ts</span><span class="cd-counts"><span class="cd-added">+1</span> <span class="cd-removed">−1</span></span></figcaption>',
+        '<figure class="cd" data-not-typeset><figcaption><svg class="cd-icon"',
       );
-      expect(html).toContain('<div class="cd-scroll" tabindex="0"><table');
+      expect(html).toContain(
+        '<span class="cd-heading"><span class="cd-label">Suggested change</span><span class="cd-file">src/a.ts</span></span><span class="cd-counts"><span class="cd-added">+1</span> <span class="cd-removed">−1</span></span></figcaption>',
+      );
+      expect(html).toContain('role="region" aria-label="Code changes in src/a.ts"><table');
       expect(rows(html)).toEqual([
         "same 12 12 const gap = 8",
         "same 13 13 ",
