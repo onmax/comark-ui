@@ -1,8 +1,8 @@
 ---
 title: Before/after evidence
-description: Two comparable screenshots with measured marks, for any change people can see.
+description: Two comparable screenshots with measured marks for a change people can see, or a short clip for a change in motion.
 icon: git-compare
-keywords: PR evidence, screenshots, visual review, visual diff, UI change
+keywords: PR evidence, screenshots, screen recording, animation, visual review, visual diff, UI change
 tagline: Your agent captures both states the same way, measures each mark from the page or the pixels, and checks the render before a reviewer opens it.
 ---
 
@@ -11,7 +11,9 @@ tagline: Your agent captures both states the same way, measures each mark from t
 
 ## What it does
 
-The skill turns a visible change into a `::compare` of two screenshots, so a reviewer can check it without running the branch. It sends both sides or neither. If it can't capture the old state the same way as the new one, it stops and tells you what blocked it.
+The skill turns a visible change into a `::compare` of two screenshots, so a reviewer can check it without running the branch. A pair has both sides or none. If it can't capture the old state the same way as the new one, it stops and tells you what blocked it.
+
+When the change is motion, such as an animation or a transition, the skill records a few seconds of it instead, since a still caught partway through looks broken. A new animation gets the after clip alone, and the first sentence says what happened before.
 
 ## When to use it
 
@@ -26,6 +28,7 @@ Choose by what you want:
 ## What your agent needs
 
 - **A browser it can drive**, such as Playwright, to capture both states and read each mark's box from the page. With only a screen recording or a design export, it measures marks in pixels.
+- **ffmpeg**, for a change in motion, to turn the recorded frames into an mp4.
 - **Both states of the change**, as deployments or commits it can run, or comparable images from a recording or design export.
 
 ## It's working if
@@ -35,3 +38,4 @@ Choose by what you want:
 - Each note uses words visible on its side.
 - The document is one sentence, one line of steps to reach the screen, and the compare. Test runs and retries go in the agent's report to you, not in the evidence.
 - The report names any mark the agent couldn't check in the render.
+- A clip starts and ends at rest, plays by itself in a loop, and shows the motion the first sentence describes.
