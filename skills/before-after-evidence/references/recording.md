@@ -17,14 +17,20 @@ Chrome's screencast sends a lossless PNG each time the page paints. Playwright's
 
 Both capture CSS pixels, whatever `deviceScaleFactor` says. For sharp text, lay the page out at double size: double the viewport, the root `font-size`, and any font sizes set in `px`. Keep CSS `zoom` and `transform` off the page. Motion code often measures boxes with `getBoundingClientRect`, and under either one it draws its moving parts in the wrong place. On a tab transition recorded with `zoom: 2`, the leaving tokens appeared below the code block.
 
+Save this as `record.mjs` in a workspace with `@playwright/test` and its Chromium browser installed, with ffmpeg on `PATH`. Adjust the viewport and tab names for the page, then run `node record.mjs <url>` with the page's URL.
+
 ```js
 import { chromium } from "@playwright/test";
 import { execFileSync } from "node:child_process";
-import { writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
+
+const url = process.argv[2];
+if (!url) throw new Error("Usage: node record.mjs <url>");
 
 const width = 1456,
   height = 340,
   dir = "clip"; // twice the component's CSS size
+mkdirSync(dir, { recursive: true });
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width, height } });
 await page.goto(url);
