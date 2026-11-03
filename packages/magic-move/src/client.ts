@@ -1,3 +1,5 @@
+import { createCodeMotion } from "../../../shared/code-motion.ts";
+
 declare global {
   interface Window {
     __comarkMagicMove?: { users: number; stop: () => void };
@@ -6,10 +8,10 @@ declare global {
 
 /**
  * Starts the tabs and keys of every `.cmv` block on the page and returns a function that stops them. Every caller
- * shares one set of listeners, which stop with the last caller. The function is self-contained: the HTML renderer
- * inlines its source as a script, so it must not use anything from outside its body.
+ * shares one set of listeners, which stop with the last caller. The HTML renderer inlines it with the token mover,
+ * so every other dependency must stay inside its body.
  */
-export function start(css: string): () => void {
+export function start(css: string, createMotion = createCodeMotion): () => void {
   const running = window.__comarkMagicMove;
   if (running) {
     running.users++;
@@ -28,8 +30,6 @@ export function start(css: string): () => void {
   }
   document.documentElement.setAttribute("data-magic-move-ready", "");
 
-  const duration = 500;
-  const easing = "cubic-bezier(.22,1,.36,1)";
   const stepsOf = (root: Element) => [
     ...root.querySelectorAll<HTMLElement>(":scope>.cmv-stage>.cmv-step"),
   ];
@@ -39,160 +39,22 @@ export function start(css: string): () => void {
       steps.findIndex((step) => !step.hasAttribute("data-inactive")),
     );
 
-  // A word, or one mark of punctuation: the pieces that move on their own. Shiki's spans hold several, with the spaces
-  // around them, so the script cuts its own whatever highlighted the code.
-  const piece = /[\p{L}\p{N}_$]+|\S/gu;
-  const split = new WeakMap<Element, HTMLElement[]>();
-  // Wraps each piece of the step's code in a span once, on the first move, so a page that never moves keeps its markup.
-  function tokensOf(step: HTMLElement) {
-    const known = split.get(step);
-    if (known) return known;
-    const tokens: HTMLElement[] = [];
-    const code = step.querySelector("pre");
-    const walker = code && document.createTreeWalker(code, NodeFilter.SHOW_TEXT);
-    const texts: Text[] = [];
-    while (walker?.nextNode())
-      if (walker.currentNode instanceof Text) texts.push(walker.currentNode);
-    for (const node of texts) {
-      const value = node.data;
-      if (!value.trim()) continue;
-      const parts = document.createDocumentFragment();
-      let at = 0;
-      for (const match of value.matchAll(piece)) {
-        if (match.index > at) parts.append(value.slice(at, match.index));
-        const token = document.createElement("span");
-        token.className = "cmv-t";
-        token.textContent = match[0];
-        parts.append(token);
-        tokens.push(token);
-        at = match.index + match[0].length;
-      }
-      if (at < value.length) parts.append(value.slice(at));
-      node.replaceWith(parts);
-    }
-    split.set(step, tokens);
-    return tokens;
-  }
-
-  // The pieces two steps share, in order: a longest common subsequence of their text. Past the budget, nothing pairs and
-  // the steps cross-fade.
-  function pairs(a: string[], b: string[]) {
-    const width = b.length + 1;
-    if (a.length * b.length > 1_000_000) return [];
-    const table = new Uint16Array((a.length + 1) * width);
-    for (let i = a.length - 1; i >= 0; i--)
-      for (let j = b.length - 1; j >= 0; j--)
-        table[i * width + j] =
-          a[i] === b[j]
-            ? table[(i + 1) * width + j + 1]! + 1
-            : Math.max(table[(i + 1) * width + j]!, table[i * width + j + 1]!);
-    const result: [number, number][] = [];
-    let i = 0;
-    let j = 0;
-    while (i < a.length && j < b.length) {
-      if (a[i] === b[j]) result.push([i++, j++]);
-      else if (table[(i + 1) * width + j]! >= table[i * width + j + 1]!) i++;
-      else j++;
-    }
-    return result;
-  }
-
   const tabsOf = (root: Element) => [
     ...root.querySelectorAll<HTMLElement>(":scope>.cmv-list>[role=tab]"),
   ];
 
-  const playing = new WeakMap<Element, Animation[]>();
+  const codeMotion = createMotion("cmv");
 
-  // FLIP: measure every piece, switch steps, measure again, then play each shared piece from where it was. Pieces only
-  // in the new step fade in, and those only in the old one fade out where they stood, as copies over the stage.
   function show(root: Element, to: number) {
     const stage = root.querySelector<HTMLElement>(":scope>.cmv-stage");
     const steps = stepsOf(root);
     const from = steps[currentOf(steps)];
     const target = steps[to];
     if (!stage || !from || !target || from === target) return;
-    // Only this script's own animations settle: the code's or the page's may run forever, and finishing one throws.
-    for (const animation of playing.get(stage) ?? []) animation.finish();
-    // A finished animation's callbacks run later, so the old move's cleanup can't be left to undo this one's.
-    stage.removeAttribute("data-moving");
-    const owned: Animation[] = [];
-    playing.set(stage, owned);
-    for (const ghost of stage.querySelectorAll(":scope>.cmv-ghost")) ghost.remove();
-    const moving = !matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const before = moving ? tokensOf(from) : [];
-    const after = moving ? tokensOf(target) : [];
-    const box = stage.getBoundingClientRect();
-    const first = before.map((token) => token.getBoundingClientRect());
-    const looks = before.map((token) => {
-      const { color, fontFamily, fontSize, fontStyle, fontWeight } = getComputedStyle(token);
-      return { color, fontFamily, fontSize, fontStyle, fontWeight };
-    });
-    from.setAttribute("data-inactive", "");
-    target.removeAttribute("data-inactive");
+    codeMotion.show(stage, from, target);
     for (const [at, tab] of tabsOf(root).entries()) {
       tab.setAttribute("aria-selected", String(at === to));
       tab.tabIndex = at === to ? 0 : -1;
-    }
-    if (!moving) return;
-
-    const matched = pairs(
-      before.map((token) => token.textContent ?? ""),
-      after.map((token) => token.textContent ?? ""),
-    );
-    const kept = new Set(matched.map(([i]) => i));
-    const placed = new Set(matched.map(([, j]) => j));
-    for (const [i, j] of matched) {
-      const token = after[j]!;
-      const last = token.getBoundingClientRect();
-      const dx = first[i]!.left - last.left;
-      const dy = first[i]!.top - last.top;
-      const { color } = getComputedStyle(token);
-      if (dx || dy || looks[i]!.color !== color)
-        owned.push(
-          token.animate(
-            { transform: [`translate(${dx}px,${dy}px)`, "none"], color: [looks[i]!.color, color] },
-            { duration, easing },
-          ),
-        );
-    }
-    for (const [j, token] of after.entries())
-      if (!placed.has(j))
-        owned.push(
-          token.animate(
-            { opacity: [0, 1] },
-            { duration: duration / 2, delay: duration / 2, easing: "ease-out", fill: "backwards" },
-          ),
-        );
-    for (const [i, token] of before.entries()) {
-      if (kept.has(i)) continue;
-      const ghost = document.createElement("span");
-      ghost.className = "cmv-ghost";
-      ghost.textContent = token.textContent;
-      Object.assign(ghost.style, looks[i], {
-        left: `${first[i]!.left - box.left}px`,
-        top: `${first[i]!.top - box.top}px`,
-      });
-      stage.append(ghost);
-      const remove = () => ghost.remove();
-      const fade = ghost.animate(
-        { opacity: [1, 0] },
-        { duration: duration / 2, easing: "ease-in", fill: "forwards" },
-      );
-      owned.push(fade);
-      fade.finished.then(remove, remove);
-    }
-    const height = stage.getBoundingClientRect().height;
-    if (height !== box.height) {
-      stage.setAttribute("data-moving", "");
-      const done = () => {
-        if (playing.get(stage) === owned) stage.removeAttribute("data-moving");
-      };
-      const grow = stage.animate(
-        { height: [`${box.height}px`, `${height}px`] },
-        { duration, easing },
-      );
-      owned.push(grow);
-      grow.finished.then(done, done);
     }
   }
 
@@ -247,6 +109,7 @@ export function start(css: string): () => void {
     stop: () => {
       if (--state.users > 0) return;
       listeners.abort();
+      codeMotion.stop();
       style?.remove();
       document.documentElement.removeAttribute("data-magic-move-ready");
       window.__comarkMagicMove = undefined;

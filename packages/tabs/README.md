@@ -62,3 +62,5 @@ The plugin adds every problem to `meta.issues`, so a host can reject a document 
 Each entry exports the parse plugin as `default` and the renderer's `components`.
 
 The tab strip is a segmented control in the style of shadcn/ui, and in a code group it's the header of one card with the code block. The styles read shadcn's CSS variables, such as `--background` and `--border`, when the page has them, and use its neutral theme otherwise. Set the `--comark-*` tokens to theme every comark plugin at once. The rules sit in a `comark` CSS layer, so any plain rule of your own wins, except the one that joins a code group's block to its header. `--ct-surface`, `--ct-active`, `--ct-active-text`, `--ct-gap`, and `--ct-font-size` change the strip, the open tab, and the labels; see the tabs' [Theming page](https://comark-ui.onmax.me/tabs/#theme).
+
+Add `magic` to a `::code-group{magic}` to animate shared tokens when switching tabs. It is off by default, skips movement for keyboard navigation and reduced motion, and works with `sync` and comark-code.

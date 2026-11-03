@@ -1,3 +1,4 @@
+import { createCodeMotion } from "../../../shared/code-motion.ts";
 import type { NodeHandler, State } from "comark";
 import { resolveAttributes } from "comark/render";
 import { escapeHtml } from "comark/utils";
@@ -17,7 +18,7 @@ export function runtime(state: State): string {
   if (started.has(state.context)) return "";
   started.add(state.context);
   // The styles come inline before the script, so the script has nothing to add.
-  return `<style data-comark-magic-move>${css}</style><script>(${start.toString()})("")</script>`;
+  return `<style data-comark-magic-move>${css}</style><script>(${start.toString()})("", ${createCodeMotion.toString()})</script>`;
 }
 
 // `:bound` props resolve the way Comark's Vue, React, and Svelte renderers resolve them, so all four agree.

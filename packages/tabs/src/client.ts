@@ -1,3 +1,5 @@
+import { createCodeMotion } from "../../../shared/code-motion.ts";
+
 declare global {
   interface Window {
     __comarkTabs?: { users: number; stop: () => void; restore: () => void };
@@ -6,10 +8,10 @@ declare global {
 
 /**
  * Starts every `.ct` tab strip on the page and returns a function that stops it. Every caller shares one set of
- * listeners, which stop with the last caller. The function is self-contained: the HTML renderer inlines its source as
- * a script, so it must not use anything from outside its body.
+ * listeners, which stop with the last caller. The HTML renderer inlines it with the token mover,
+ * so every other dependency must stay inside its body.
  */
-export function start(css: string): () => void {
+export function start(css: string, createMotion = createCodeMotion): () => void {
   const running = window.__comarkTabs;
   if (running) {
     running.users++;
@@ -33,7 +35,7 @@ export function start(css: string): () => void {
   const tabsOf = (root: Element) => [
     ...root.querySelectorAll<HTMLElement>(":scope>.ct-list>[role=tab]"),
   ];
-  const panelsOf = (root: Element) => [...root.querySelectorAll(":scope>.ct-panel")];
+  const panelsOf = (root: Element) => [...root.querySelectorAll<HTMLElement>(":scope>.ct-panel")];
   const label = (tab: Element) => tab.textContent?.trim() ?? "";
 
   const motion = matchMedia("(prefers-reduced-motion: reduce)");
@@ -59,21 +61,34 @@ export function start(css: string): () => void {
     );
   }
 
-  function select(root: Element, index: number, animate = false) {
+  const codeMotion = createMotion("ct", 280);
+
+  function select(root: Element, index: number, animate = false, move = animate) {
     const tabs = tabsOf(root);
     const from = tabs.find((tab) => tab.getAttribute("aria-selected") === "true");
+    const panels = panelsOf(root);
+    const previous = panels.find((panel) => !panel.hasAttribute("data-inactive"));
+    const target = panels[index];
+    if (
+      root instanceof HTMLElement &&
+      root.hasAttribute("data-tabs-magic") &&
+      previous &&
+      target &&
+      previous !== target
+    )
+      codeMotion.show(root, previous, target, move);
     for (const [at, tab] of tabs.entries()) {
       tab.setAttribute("aria-selected", String(at === index));
       tab.tabIndex = at === index ? 0 : -1;
     }
-    for (const [at, panel] of panelsOf(root).entries())
+    for (const [at, panel] of panels.entries())
       panel.toggleAttribute("data-inactive", at !== index);
     const to = tabs[index];
     if (animate && from && to && from !== to) slide(from, to);
   }
-  const selectLabel = (root: Element, name: string, animate = false) => {
+  const selectLabel = (root: Element, name: string, animate = false, move = animate) => {
     const index = tabsOf(root).findIndex((tab) => label(tab) === name);
-    if (index >= 0) select(root, index, animate);
+    if (index >= 0) select(root, index, animate, move);
   };
 
   // Storage can throw, in a sandboxed frame or with cookies blocked; the tabs still switch without it.
@@ -107,22 +122,22 @@ export function start(css: string): () => void {
   });
   added.observe(document.documentElement, { childList: true, subtree: true });
 
-  function activate(tab: HTMLElement, focus: boolean) {
+  function activate(tab: HTMLElement, focus: boolean, animate = !focus) {
     const root = tab.parentElement?.parentElement;
     if (!root?.matches(".ct")) return;
     const sync = root.getAttribute("data-tabs-sync");
     if (sync) {
       // Switching tabs above the reader changes their height, so the page scrolls by as much to keep this tab still.
       const before = tab.getBoundingClientRect().top;
-      for (const other of synced(sync)) selectLabel(other, label(tab), true);
-      select(root, tabsOf(root).indexOf(tab), true);
+      for (const other of synced(sync)) selectLabel(other, label(tab), true, animate);
+      select(root, tabsOf(root).indexOf(tab), true, animate);
       window.scrollBy({ top: tab.getBoundingClientRect().top - before, behavior: "instant" });
       const selected = label(tab);
       current.set(sync, selected);
       try {
         localStorage.setItem(key(sync), selected);
       } catch {}
-    } else select(root, tabsOf(root).indexOf(tab), true);
+    } else select(root, tabsOf(root).indexOf(tab), true, animate);
     if (focus) tab.focus();
   }
 
@@ -135,7 +150,7 @@ export function start(css: string): () => void {
     "click",
     (event) => {
       const tab = tabOf(event);
-      if (tab) activate(tab, false);
+      if (tab) activate(tab, false, event.detail > 0);
     },
     { signal },
   );
@@ -174,6 +189,7 @@ export function start(css: string): () => void {
     stop: () => {
       if (--state.users > 0) return;
       listeners.abort();
+      codeMotion.stop();
       added.disconnect();
       style?.remove();
       document.documentElement.removeAttribute("data-tabs-ready");

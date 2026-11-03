@@ -1,3 +1,4 @@
+import { createCodeMotion } from "../../../shared/code-motion.ts";
 import type { ElementNode, Node, NodeHandler, State } from "comark";
 import { escapeHtml } from "comark/utils";
 import { start } from "./client.ts";
@@ -17,7 +18,7 @@ export function runtime(state: State): string {
   if (started.has(state.context)) return "";
   started.add(state.context);
   // The styles come inline before the script, so the script has nothing to add.
-  return `<style data-comark-tabs>${css}</style><script>(${start.toString()})("")</script>`;
+  return `<style data-comark-tabs>${css}</style><script>(${start.toString()})("", ${createCodeMotion.toString()})</script>`;
 }
 
 const isItem = (node: Node): node is ElementNode => Array.isArray(node) && node[0] === "tabs-item";
@@ -43,7 +44,7 @@ const tabs: NodeHandler = async ([, attrs, ...children], state) => {
     }),
   );
   return (
-    `<div class="ct"${attrs.code ? " data-tabs-code data-code-header" : ""}${attrs.sync ? ` data-tabs-sync="${attr(attrs.sync)}"` : ""}>` +
+    `<div class="ct"${attrs.code ? " data-tabs-code data-code-header" : ""}${attrs.magic ? " data-tabs-magic" : ""}${attrs.sync ? ` data-tabs-sync="${attr(attrs.sync)}"` : ""}>` +
     `<div class="ct-list" role="tablist">${labels.map((label, at) => tabHtml(id, label, at + 1, icons[at])).join("")}</div>` +
     `${panels.join("")}</div>${runtime(state)}${icons.some(Boolean) ? iconStyles(state) : ""}`
   );

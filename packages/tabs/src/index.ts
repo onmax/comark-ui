@@ -132,7 +132,12 @@ function codeGroup(node: ElementNode, name: string, walk: Walk) {
 
 // A misspelled `sync` or `icon` is dropped without a trace, so each prop that isn't one is named.
 function unknownProps(node: ElementNode, name: string, block: string, walk: Walk) {
-  const props = block === ":::tabs-item" ? ["label", "icon"] : ["sync"];
+  const props =
+    block === ":::tabs-item"
+      ? ["label", "icon"]
+      : block === "::code-group"
+        ? ["sync", "magic"]
+        : ["sync"];
   const list = props.map((prop) => `\`${prop}\``).join(" or ");
   for (const key of Object.keys(node[1])) {
     const prop = key.replace(/^:/, "");
@@ -193,6 +198,8 @@ function tabs(node: ElementNode, walk: Walk, name?: string) {
   node[1] = { uid: `${walk.prefix}-${++walk.blocks}`, count: String(items.length), labels };
   if (sync) node[1].sync = sync;
   if (code) node[1].code = "true";
+  if (group && (attrs.magic === "" || attrs.magic === true || attrs.magic === "true"))
+    node[1].magic = "true";
   node.splice(2, node.length - 2, ...items);
 }
 

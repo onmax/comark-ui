@@ -54,6 +54,18 @@ describe("comark-tabs renderers", () => {
     }
   });
 
+  it("renders opted-in code groups with the same magic flag in every renderer", async () => {
+    const value = await parseMarkdown(
+      '::code-group{magic sync="imports"}\n```ts [YAML]\nimport yaml from "tinyaml/js-yaml";\n```\n\n```ts [INI]\nimport ini from "tinyini/ini";\n```\n::',
+      { plugins: [tabs()] },
+    );
+    for (const [name, render] of Object.entries(renderers)) {
+      const html = normalize(await render(value));
+      expect(html, name).toContain('data-code-header data-tabs-magic data-tabs-sync="imports"');
+      expect(html.replace(/&quot;/g, '"'), name).toContain('import ini from "tinyini/ini";');
+    }
+  });
+
   it("draws icons the same in every renderer", async () => {
     const logos: IconCollection = {
       prefix: "logos",
