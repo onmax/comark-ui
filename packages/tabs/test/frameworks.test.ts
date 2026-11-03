@@ -5,8 +5,9 @@ import { MarkdownDocument as VueDocument } from "@comark/vue";
 import { type MarkdownDocument, parseMarkdown } from "comark";
 import { createElement } from "react";
 import { renderToString as renderReact } from "react-dom/server";
+import type { ComponentProps } from "svelte";
 import { compile } from "svelte/compiler";
-import { describe, expect, it } from "vite-plus/test";
+import { describe, expect, expectTypeOf, it } from "vite-plus/test";
 import { createSSRApp, h } from "vue";
 import { renderToString as renderVue } from "vue/server-renderer";
 import tabs from "../src/index.ts";
@@ -14,6 +15,7 @@ import { createIcons, type IconCollection } from "comark-icon";
 import { components as htmlComponents } from "../src/html.ts";
 import { components as reactComponents } from "../src/react.ts";
 import { components as vueComponents } from "../src/vue.ts";
+import type { Tabs as SvelteTabs } from "../src/svelte/index.js";
 
 const renderers = {
   html: (value: MarkdownDocument) => renderHtmlFromDocument(value, { components: htmlComponents }),
@@ -35,6 +37,43 @@ const normalize = (html: string) =>
     .trim();
 
 describe("comark-tabs renderers", () => {
+  it("accepts boolean magic props and preserves normalized modes in direct components", async () => {
+    expectTypeOf<ComponentProps<typeof SvelteTabs>["magic"]>().toEqualTypeOf<
+      string | boolean | undefined
+    >();
+    for (const [magic, mode] of [
+      [true, "always"],
+      [false, "never"],
+      ["auto", "auto"],
+      ["always", "always"],
+      ["never", "never"],
+      [undefined, undefined],
+    ] as const) {
+      for (const code of [true, false]) {
+        const props = { code, magic };
+        const results = {
+          react: renderReact(createElement(reactComponents.Tabs, props)),
+          vue: await renderVue(createSSRApp({ render: () => h(vueComponents.Tabs, props) })),
+        };
+        for (const [name, html] of Object.entries(results)) {
+          if (code && mode) expect(html, name).toContain(`data-tabs-magic="${mode}"`);
+          else expect(html, name).not.toContain("data-tabs-magic");
+        }
+      }
+    }
+  });
+
+  it("treats a bare Vue magic prop as true and leaves an omitted prop unset", async () => {
+    const html = await renderVue(
+      createSSRApp({
+        components: { Tabs: vueComponents.Tabs },
+        template: '<Tabs :code="true" magic /><Tabs :code="true" />',
+      }),
+    );
+    expect(html.match(/data-tabs-magic="always"/g)).toHaveLength(1);
+    expect(html.match(/data-tabs-magic/g)).toHaveLength(1);
+  });
+
   it("renders the same tabs and code group in every renderer", async () => {
     const value = await parseMarkdown(
       '::tabs{sync="os" #setup .wide}\n:::tabs-item{label="macOS"}\nPress **⌘K**.\n:::\n\n:::tabs-item{label="Windows"}\nPress Ctrl+K.\n:::\n::\n\n::code-group\n```bash [pnpm]\npnpm add x\n```\n\n```bash [npm]\nnpm i x\n```\n::',
