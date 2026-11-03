@@ -11,7 +11,7 @@ import { theme } from "comark-zoom/theme";
 export const css = `@layer comark{${[
   theme(".cp"),
   ":where(.cp){--_cp-tint:var(--cp-background,color-mix(in oklab,var(--_comark-foreground) 3.5%,transparent));--_cp-hover:var(--cp-hover,color-mix(in oklab,var(--_comark-foreground) 7%,transparent));--_cp-ring:var(--cp-ring,color-mix(in oklab,var(--_comark-foreground) 8%,transparent))}",
-  ".cp{padding:.0625em .375em .0625em .1875em;border-radius:var(--cp-radius,calc(var(--_comark-radius) - 4px));background:var(--_cp-tint);box-shadow:inset 0 0 0 1px var(--_cp-ring);color:var(--cp-color,currentColor);font-weight:var(--cp-font-weight,500);text-decoration:none;white-space:nowrap;-webkit-box-decoration-break:clone;box-decoration-break:clone;transition:background-color .15s ease-out,box-shadow .15s ease-out}",
+  ".cp{padding:.0625em .375em .0625em .1875em;border-radius:var(--cp-radius,calc(var(--_comark-radius) - 4px));background:var(--_cp-tint);box-shadow:inset 0 0 0 1px var(--_cp-ring);color:var(--cp-color,currentColor);font-weight:var(--cp-font-weight,500);text-decoration:none;white-space:normal;overflow-wrap:anywhere;-webkit-box-decoration-break:clone;box-decoration-break:clone;transition:background-color .15s ease-out,box-shadow .15s ease-out}",
   ".cp:not(:has(.cp-img)){padding-left:.375em}",
   ".cp:hover{background:var(--_cp-hover)}",
   ".cp:focus-visible{outline:2px solid var(--_comark-ring);outline-offset:2px}",
