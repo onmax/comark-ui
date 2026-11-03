@@ -4,14 +4,14 @@
   import { css, start } from "comark-tabs/client";
   import { Icon } from "comark-icon/svelte";
 
-  let { labels = [], icons = [], sync = undefined, code = undefined, children } = $props();
+  let { labels = [], icons = [], sync = undefined, code = undefined, magic = undefined, children } = $props();
   const id = $props.id();
   setContext("comark-tabs", id);
 
   onMount(() => start(css));
 </script>
 
-<div class="ct" data-tabs-code={code ? "" : undefined} data-code-header={code ? "" : undefined} data-tabs-sync={sync || undefined}>
+<div class="ct" data-tabs-code={code ? "" : undefined} data-code-header={code ? "" : undefined} data-tabs-magic={code && magic ? "" : undefined} data-tabs-sync={sync || undefined}>
   <div class="ct-list" role="tablist">
     {#each labels as label, at}
       <button

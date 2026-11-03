@@ -79,6 +79,28 @@ describe("comark-tabs", () => {
     expect(html).not.toContain("filename");
   });
 
+  it("opts code groups into magic movement, including bound booleans", async () => {
+    for (const flag of ["magic", 'magic="true"', ':magic="frontmatter.enabled"']) {
+      const source = `---
+enabled: true
+---
+${pm.replace('sync="pm"', flag)}`;
+      expect(await markup(source)).toContain("data-tabs-magic");
+      expect(await issues(source)).toEqual([]);
+    }
+    for (const flag of ["", 'magic="false"', ':magic="frontmatter.disabled"']) {
+      const source = `---
+disabled: false
+---
+${pm.replace('sync="pm"', flag)}`;
+      expect(await markup(source)).not.toContain("data-tabs-magic");
+      expect(await issues(source)).toEqual([]);
+    }
+    expect(await issues(os.replace('sync="os"', "magic"))).toEqual([
+      "`::tabs` 1: `magic` isn't a prop of `::tabs`, so it's ignored. Use `sync`.",
+    ]);
+  });
+
   it("keeps tabs inside a tab apart", async () => {
     const html = await markup(
       '::tabs\n:::tabs-item{label="Outer"}\n::::tabs\n:::::tabs-item{label="Inner"}\nIn\n:::::\n::::\n:::\n::',

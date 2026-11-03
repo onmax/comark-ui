@@ -33,6 +33,9 @@ export const css = `@layer comark{${[
   ".ct-tab:focus-visible,.ct-panel:focus-visible{outline:2px solid var(--_comark-ring);outline-offset:4px}",
   // The strip scrolls, so it clips whatever reaches past its padding: a tab's ring stays inside the tab.
   ".ct-tab:focus-visible{outline-offset:-2px}",
+  ".ct-t{display:inline-block}",
+  ".ct-ghost{position:absolute;white-space:pre;pointer-events:none}",
+  ".ct[data-tabs-magic][data-moving]{clip-path:inset(0)}",
   ".ct-panel{border-radius:var(--_comark-radius)}",
   "[data-tabs-ready] .ct-panel{margin-top:var(--ct-gap,.75rem)}",
   ".ct-caption{display:flex;align-items:center;gap:.375rem;margin:1.5rem 0 .5rem;color:var(--_comark-muted);font:500 var(--ct-font-size,.8125rem)/1.25rem var(--_comark-font)}",

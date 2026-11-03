@@ -179,6 +179,30 @@ npm install comark-tabs
 > [!NOTE]
 > A code group holds only code blocks, each with a label. The plugin reports anything else.
 
+### Magic code transitions
+
+Add `magic` to a code group to move the tokens its snippets share into place when you switch tabs. Leave it off for unrelated examples. It uses the same token matching as [Magic Move](/magic-move/), and keeps Shiki's highlighting and comark-code's line marks and buttons.
+
+::example
+````md
+::code-group{magic}
+```ts [tinyaml]
+import yaml from "tinyaml/js-yaml";
+```
+
+```ts [tinyjson5]
+import JSON5 from "tinyjson5/json5";
+```
+
+```ts [tinyini]
+import ini from "tinyini/ini";
+```
+::
+````
+::
+
+The default is off. Set `magic="false"` to turn it off explicitly, or bind a boolean with `:magic="frontmatter.animate"`. Keyboard navigation, saved selections, and readers who prefer reduced motion switch the code immediately. Without a script, every snippet still reads under its label. `magic` belongs to `::code-group`; ordinary `::tabs` keep their current behavior.
+
 ### Package managers
 
 Use the `pm` word after a code block's language to turn it into a code group with a tab each for npm, pnpm, yarn, and bun. Write the commands for npm, pnpm, yarn, bun, or deno, and that manager's tab keeps them as written. The group has `sync="pm"`, so it switches with your own `sync="pm"` groups.
@@ -283,6 +307,7 @@ On a right-to-left page, the arrow keys follow the reading direction. The keys d
 | Prop | Default | Description |
 | --- | --- | --- |
 | `sync` | — | As on `::tabs`. A code group and tabs with the same key switch together. |
+| `magic` | `false` | Move shared code tokens between tabs. Respects reduced motion. |
 
 Each code block in a code group takes its label in brackets after its language, such as `[pnpm]`, and an icon after it, as `icon=logos:pnpm`.
 

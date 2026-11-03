@@ -13,11 +13,12 @@ type TabsProps = {
   icons?: (IconData | null)[];
   sync?: string;
   code?: string | boolean;
+  magic?: string | boolean;
   children?: ReactNode;
 };
 
 /** `::tabs` and `::code-group` for `@comark/react`. */
-export function Tabs({ labels = [], icons = [], sync, code, children }: TabsProps) {
+export function Tabs({ labels = [], icons = [], sync, code, magic, children }: TabsProps) {
   const id = useId();
   useEffect(() => {
     return start(css);
@@ -31,6 +32,7 @@ export function Tabs({ labels = [], icons = [], sync, code, children }: TabsProp
         className: "ct",
         "data-tabs-code": code ? "" : undefined,
         "data-code-header": code ? "" : undefined,
+        "data-tabs-magic": code && magic ? "" : undefined,
         "data-tabs-sync": sync || undefined,
       },
       createElement(
