@@ -152,8 +152,18 @@ export function createCodeMotion(prefix: string, duration = 500) {
     Promise.all(owned.map((animation) => animation.finished)).then(done, done);
   }
 
+  // The share of the longer snippet's pieces that the other one keeps, read from the text so nothing is wrapped yet.
+  function likeness(from: HTMLElement, target: HTMLElement) {
+    const words = (step: HTMLElement) => step.querySelector("pre")?.textContent?.match(piece) ?? [];
+    const a = words(from);
+    const b = words(target);
+    const longest = Math.max(a.length, b.length);
+    return longest ? pairs(a, b).length / longest : 0;
+  }
+
   return {
     show,
+    likeness,
     stop() {
       for (const [stage, animations] of playing) {
         for (const animation of animations) animation.cancel();

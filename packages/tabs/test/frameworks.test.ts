@@ -45,7 +45,7 @@ describe("comark-tabs renderers", () => {
       '<div class="ct-panel" role="tabpanel" id="panel-2" aria-labelledby="tab-2" tabindex="0" data-inactive><div class="ct-caption">Windows</div>',
     );
     expect(expected).toContain(
-      '<div class="ct" data-tabs-code data-code-header><div class="ct-list" role="tablist">',
+      '<div class="ct" data-tabs-code data-code-header data-tabs-magic="auto"><div class="ct-list" role="tablist">',
     );
     for (const name of ["vue", "react"] as const) {
       const html = normalize(await renderers[name](value));
@@ -54,14 +54,16 @@ describe("comark-tabs renderers", () => {
     }
   });
 
-  it("renders opted-in code groups with the same magic flag in every renderer", async () => {
+  it("renders a code group's magic mode the same in every renderer", async () => {
     const value = await parseMarkdown(
       '::code-group{magic sync="imports"}\n```ts [YAML]\nimport yaml from "tinyaml/js-yaml";\n```\n\n```ts [INI]\nimport ini from "tinyini/ini";\n```\n::',
       { plugins: [tabs()] },
     );
     for (const [name, render] of Object.entries(renderers)) {
       const html = normalize(await render(value));
-      expect(html, name).toContain('data-code-header data-tabs-magic data-tabs-sync="imports"');
+      expect(html, name).toContain(
+        'data-code-header data-tabs-magic="always" data-tabs-sync="imports"',
+      );
       expect(html.replace(/&quot;/g, '"'), name).toContain('import ini from "tinyini/ini";');
     }
   });

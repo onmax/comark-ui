@@ -13,7 +13,7 @@ type TabsProps = {
   icons?: (IconData | null)[];
   sync?: string;
   code?: string | boolean;
-  magic?: string | boolean;
+  magic?: string;
   children?: ReactNode;
 };
 
@@ -32,7 +32,7 @@ export function Tabs({ labels = [], icons = [], sync, code, magic, children }: T
         className: "ct",
         "data-tabs-code": code ? "" : undefined,
         "data-code-header": code ? "" : undefined,
-        "data-tabs-magic": code && magic ? "" : undefined,
+        "data-tabs-magic": code ? magic : undefined,
         "data-tabs-sync": sync || undefined,
       },
       createElement(

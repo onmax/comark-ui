@@ -9,7 +9,7 @@ export declare const Tabs: Component<{
   icons?: (IconData | null)[];
   sync?: string;
   code?: string | boolean;
-  magic?: string | boolean;
+  magic?: string;
   children?: Snippet;
 }>;
 export declare const TabsItem: Component<{

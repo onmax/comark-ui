@@ -198,9 +198,14 @@ function tabs(node: ElementNode, walk: Walk, name?: string) {
   node[1] = { uid: `${walk.prefix}-${++walk.blocks}`, count: String(items.length), labels };
   if (sync) node[1].sync = sync;
   if (code) node[1].code = "true";
-  if (group && (attrs.magic === "" || attrs.magic === true || attrs.magic === "true"))
-    node[1].magic = "true";
+  // A code group moves its shared tokens when the two snippets are mostly alike, unless `magic` says otherwise.
+  if (code) node[1].magic = magicMode(attrs.magic);
   node.splice(2, node.length - 2, ...items);
+}
+
+function magicMode(value: unknown) {
+  if (value === undefined || value === null) return "auto";
+  return value === false || value === "false" ? "never" : "always";
 }
 
 // A `pm` code block of package manager commands becomes a code group with a tab per package manager, synced with the
