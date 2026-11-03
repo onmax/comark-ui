@@ -44,7 +44,7 @@ const tabs: NodeHandler = async ([, attrs, ...children], state) => {
     }),
   );
   return (
-    `<div class="ct"${attrs.code ? " data-tabs-code data-code-header" : ""}${attrs.magic ? " data-tabs-magic" : ""}${attrs.sync ? ` data-tabs-sync="${attr(attrs.sync)}"` : ""}>` +
+    `<div class="ct"${attrs.code ? " data-tabs-code data-code-header" : ""}${attrs.code && attrs.magic ? ` data-tabs-magic="${attr(attrs.magic)}"` : ""}${attrs.sync ? ` data-tabs-sync="${attr(attrs.sync)}"` : ""}>` +
     `<div class="ct-list" role="tablist">${labels.map((label, at) => tabHtml(id, label, at + 1, icons[at])).join("")}</div>` +
     `${panels.join("")}</div>${runtime(state)}${icons.some(Boolean) ? iconStyles(state) : ""}`
   );

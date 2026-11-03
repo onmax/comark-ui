@@ -44,7 +44,7 @@ export const MAX_FILTERS = 3;
 ## Features
 
 - Two ordinary fenced blocks, before and after, become a suggested change like a review's.
-- The header shows the file and the counts of added and removed lines.
+- The header groups the label and file path, with added and removed counts alongside.
 - Removed lines are red and added lines green, with the changed words a shade deeper.
 - The line numbers and the `+` and `−` come from CSS, so copying a selection copies only the code.
 - To mark changes inside one block, such as pasted `git diff` output, use a `diff` fence with [Code](/code/#diffs).
@@ -162,7 +162,7 @@ function close() {
 
 ## Accessibility
 
-The header, with the label, file, and counts, is the figure's caption. The code scrolls in its own box, a tab stop, so a keyboard reaches a long line.
+The header, with the label, file, and counts, is the figure's caption. The code scrolls in its own named region, a tab stop, so a keyboard reaches a long line. The figure opts out of prose typography with `data-not-typeset`, keeping the header and code layout intact in a document.
 
 ### Keyboard interactions
 
@@ -179,7 +179,7 @@ The header, with the label, file, and counts, is the figure's caption. The code 
 | --- | --- | --- |
 | `file` | The name on the first block | The file's path. A diff needs it here or on the first block. |
 | `line` | — | The file's line number for the first line of both blocks, a whole number from 1. Without it, the diff has no line numbers. |
-| `label` | — | A heading before the file name, such as "Suggested change". |
+| `label` | — | A heading above the file name, such as "Suggested change". |
 
 ### Options
 
@@ -256,6 +256,7 @@ Lines take a tint of each color, and the changed words a deeper tint. Both follo
 | `figure.cd` | The card |
 | `.cd > figcaption` | The header: the icon, the label, the file, and the counts |
 | `.cd-icon` | The file icon |
+| `.cd-heading` | The label and file path, stacked together |
 | `.cd-label` | The `label`, such as "Suggested change" |
 | `.cd-file` | The file's path |
 | `.cd-counts` | The counts, `.cd-added` and `.cd-removed` |

@@ -41,16 +41,20 @@ const diff: NodeHandler = async (node, state) => {
   );
   const header = [
     FILE_DIFF,
-    label && `<span class="cd-label">${escapeHtml(label)}</span>`,
-    file && `<span class="cd-file">${escapeHtml(file)}</span>`,
+    `<span class="cd-heading">${[
+      label && `<span class="cd-label">${escapeHtml(label)}</span>`,
+      file && `<span class="cd-file">${escapeHtml(file)}</span>`,
+    ]
+      .filter(Boolean)
+      .join("")}</span>`,
     `<span class="cd-counts"><span class="cd-added">+${count("add")}</span> <span class="cd-removed">−${count("del")}</span></span>`,
   ]
     .filter(Boolean)
     .join("");
   const classes = ["cd-code", code.class].filter(Boolean).join(" ");
   return (
-    `${styles(state)}<figure class="cd"><figcaption>${header}</figcaption>` +
-    `<div class="cd-scroll" tabindex="0"><table class="${attr(classes)}"${code.style ? ` style="${attr(code.style)}"` : ""}><tbody>${body}</tbody></table></div></figure>`
+    `${styles(state)}<figure class="cd" data-not-typeset><figcaption>${header}</figcaption>` +
+    `<div class="cd-scroll" tabindex="0" role="region" aria-label="${attr(file ? `Code changes in ${file}` : "Code changes")}"><table class="${attr(classes)}"${code.style ? ` style="${attr(code.style)}"` : ""}><tbody>${body}</tbody></table></div></figure>`
   );
 };
 

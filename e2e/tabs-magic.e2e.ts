@@ -35,7 +35,7 @@ const animations = (page: Page) =>
       }),
     );
 
-test("opted-in code groups move shared highlighted tokens and preserve diff lines and copy text", async ({
+test("magic code groups move shared highlighted tokens and preserve diff lines and copy text", async ({
   page,
   context,
 }) => {
@@ -71,14 +71,39 @@ test("opted-in code groups move shared highlighted tokens and preserve diff line
   await expect(page.locator(".ct-t")).toHaveCount(0);
 });
 
-test("code movement is off by default and skips keyboard navigation and reduced motion", async ({
+const unlike =
+  '::code-group\n```ts [Node]\nimport { readFile } from "node:fs/promises";\nconst text = await readFile(path, "utf8");\n```\n\n```py [Python]\nwith open(path) as file:\n    text = file.read()\n```\n::';
+const click = (page: Page, name: string) =>
+  page.getByRole("tab", { name }).evaluate((tab) => {
+    tab.dispatchEvent(new MouseEvent("click", { bubbles: true, detail: 1 }));
+    for (const animation of document.getAnimations()) animation.pause();
+  });
+
+test("code groups move matching snippets by default, swap unlike ones, and obey magic=false", async ({
   page,
 }) => {
   await open(page, group(""));
-  await page.getByRole("tab", { name: "tinyini" }).click();
-  await expect(page.getByRole("tabpanel")).toContainText('import ini from "tinyini/ini";');
+  await click(page, "tinyini");
+  expect(await animations(page)).toEqual(expect.arrayContaining([{ text: "from", moves: true }]));
+
+  await open(page, unlike);
+  await click(page, "Python");
+  await expect(page.getByRole("tabpanel")).toContainText("text = file.read()");
+  expect(await animations(page)).toEqual([]);
   await expect(page.locator(".ct-t")).toHaveCount(0);
 
+  await open(page, group('magic="false"'));
+  await click(page, "tinyini");
+  await expect(page.getByRole("tabpanel")).toContainText('import ini from "tinyini/ini";');
+  expect(await animations(page)).toEqual([]);
+  await expect(page.locator(".ct-t")).toHaveCount(0);
+
+  await open(page, unlike.replace("::code-group", "::code-group{magic}"));
+  await click(page, "Python");
+  expect((await animations(page)).length).toBeGreaterThan(0);
+});
+
+test("code movement skips keyboard navigation and reduced motion", async ({ page }) => {
   await open(page);
   await page.getByRole("tab", { name: "tinyini" }).evaluate((tab) => {
     tab.dispatchEvent(new MouseEvent("click", { bubbles: true, detail: 1 }));

@@ -1,6 +1,6 @@
 ---
 name: before-after-evidence
-description: Shows a visible change as two comparable screenshots, before and after, with marks measured from the source and checked in the rendered page. Use when a pull request, bug fix, or design change alters what people see, or when someone asks for before/after screenshots or visual evidence.
+description: Shows a visible change as two comparable screenshots, before and after, with marks measured from the source and checked in the rendered page, and a change in motion as a short recording. Use when a pull request, bug fix, or design change alters what people see or how it moves, or when someone asks for before/after screenshots, a recording, or visual evidence.
 license: MIT
 ---
 
@@ -9,6 +9,13 @@ license: MIT
 A before/after is evidence when a reviewer can check every claim against the two images and nothing else. The reader can't repair a bad pair, so get three things right: two captures of the same view, marks on what changed, and notes in the words the screen shows.
 
 This skill writes the document. Your host decides where it's published and who can open it.
+
+## When the change is motion
+
+An animation, a transition, a loading sequence, or feedback while dragging happens between frames, so record it. A still taken partway through a motion looks like a broken layout, and two of them can't show that anything moves. Follow [references/recording.md](references/recording.md) in place of steps 1 and 2, then write and check the document with steps 3 and 4, with the clip where the `::compare` goes.
+
+- When the old behavior jumped straight to its end state, the after clip alone is the evidence, and the document's first sentence says what happened before.
+- When the change retimes motion that already existed, such as its easing, its duration, or a stutter, record both sides with the same script.
 
 ## 1. Capture a comparable pair
 
@@ -65,6 +72,7 @@ Image `src` must be a URL the renderer can reach: a path next to the document, o
    ```
 
    Without Vite+, use `pnpm exec` with the same arguments. Open `evidence-screenshots.html` and take a screenshot of it. This CLI renders annotate, carousel, and zoom only; check any `::diff` or other blocks in the host's full Comark UI preview.
-3. Check that each mark sits on its target and each note matches what its side shows. Measure a mark that misses again from the source; a box moved by eye stays a guess.
+
+3. Check that each mark sits on its target and each note matches what its side shows. A clip should start by itself and loop in the page. Measure a mark that misses again from the source; a box moved by eye stays a guess.
 
 Done when you've looked at the rendered page and every mark lands. Name any mark or block you couldn't check in your report.

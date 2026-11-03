@@ -8,12 +8,12 @@ export const css = `@layer comark{${[
   // deeper. Tints are translucent and text colors are mixed with the foreground, so wherever the `--comark-*` tokens
   // turn dark, a `.dark` class included, the diff turns with them.
   ".cd{overflow:hidden;border:1px solid var(--_comark-border);border-radius:var(--_comark-radius);background:var(--_comark-background);color:var(--_comark-foreground)}",
-  // On a narrow page the file drops under the label and wraps, rather than lose the end of its name.
-  ".cd>figcaption{display:flex;flex-wrap:wrap;gap:.125rem .5rem;align-items:flex-start;margin:0;padding:.5rem .75rem;border-bottom:1px solid var(--_comark-border);background:color-mix(in srgb,var(--_comark-accent) 50%,var(--_comark-background));font:.8125rem/1.25rem var(--_comark-font)}",
+  ".cd>figcaption{display:flex;gap:.625rem;align-items:flex-start;margin:0;padding:.625rem .875rem;border-bottom:1px solid var(--_comark-border);background:color-mix(in srgb,var(--_comark-accent) 50%,var(--_comark-background));text-align:start;font:.8125rem/1.25rem var(--_comark-font)}",
   ".cd-icon{flex:none;width:1rem;height:1rem;margin:.125rem 0;color:var(--_comark-muted);fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}",
   ".cd-label{font-weight:500}",
+  ".cd-heading{display:flex;flex:1;flex-direction:column;min-width:0;overflow-wrap:anywhere}",
   ".cd-file,.cd-counts{font:.75rem/1.25rem var(--cd-font,ui-monospace,SFMono-Regular,Menlo,Consolas,monospace)}",
-  ".cd-file{flex:1 1 12rem;min-width:0;color:var(--_comark-muted);overflow-wrap:anywhere}",
+  ".cd-file{color:var(--_comark-muted)}",
   ".cd-counts{display:flex;flex:none;gap:.375rem;margin-left:auto;font-weight:500;font-variant-numeric:tabular-nums}",
   // As much of each color as keeps 4.5:1 on the header, light or dark, whichever of its two shades the system picked.
   ".cd-added,.cd-add .cd-line::before{color:color-mix(in oklab,var(--cd-green) 60%,var(--_comark-foreground))}",

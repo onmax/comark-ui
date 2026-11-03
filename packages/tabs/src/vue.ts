@@ -30,7 +30,7 @@ export const Tabs = /* @__PURE__ */ defineComponent({
     icons: { type: Array as PropType<(IconData | null)[]>, default: () => [] },
     sync: String,
     code: [String, Boolean],
-    magic: [String, Boolean],
+    magic: { type: [Boolean, String], default: undefined },
   },
   setup(props, { slots }) {
     const id = useId();
@@ -45,7 +45,13 @@ export const Tabs = /* @__PURE__ */ defineComponent({
           class: "ct",
           "data-tabs-code": props.code ? "" : undefined,
           "data-code-header": props.code ? "" : undefined,
-          "data-tabs-magic": props.code && props.magic ? "" : undefined,
+          "data-tabs-magic": props.code
+            ? props.magic === true
+              ? "always"
+              : props.magic === false
+                ? "never"
+                : props.magic
+            : undefined,
           "data-tabs-sync": props.sync || undefined,
         },
         [

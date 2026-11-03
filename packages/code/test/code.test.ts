@@ -136,7 +136,9 @@ describe("comark-code", () => {
         plugins,
         components: { ...tabsComponents, ...components },
       })(group);
-      expect(html).toContain('<div class="ct" data-tabs-code data-code-header>');
+      expect(html).toContain(
+        '<div class="ct" data-tabs-code data-code-header data-tabs-magic="auto">',
+      );
       expect(
         html.match(/<div class="ck" data-code-frame="terminal"><pre data-language="sh">/g),
       ).toHaveLength(2);
