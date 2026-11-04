@@ -1,5 +1,6 @@
 // Checks every internal link in the built docs the way the deployed site answers it: the Worker's redirects first, then
-// the prerendered files. A link that redirects, has no page, or names a heading that isn't there fails the build.
+// the dynamic badge endpoint or prerendered files. A link that redirects, has no target, or names a heading that
+// isn't there fails the build.
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { redirectTarget, SITE } from "./server/utils/site.ts";
@@ -56,6 +57,8 @@ for (const file of files) {
       );
       continue;
     }
+    // Nitro serves this endpoint even when no badge image was downloaded at build time.
+    if (url.pathname === "/badge.svg") continue;
     const target = fileOf(url.pathname);
     if (!target) {
       problems.add(
