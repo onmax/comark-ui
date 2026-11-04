@@ -21,7 +21,10 @@ export type TimeOptions = {
   threshold?: string;
   /** A BCP 47 tag for the words and the date format. Defaults to the runtime's locale. */
   locale?: string;
-  /** An IANA zone for the time of day and for which day is today. Defaults to the runtime's zone. */
+  /**
+   * An IANA zone for the time of day and for which day is today. Defaults to the runtime's zone.
+   * Local times in a clock gap are invalid; repeated times use the earlier instant.
+   */
   timeZone?: string;
 };
 
@@ -56,7 +59,7 @@ const UNITS = {
 } as const;
 const THRESHOLD = /^(\d+(?:\.\d+)?)\s*(s|m|h|d|w|mo|y)$/i;
 const DATE =
-  /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?\s*(Z|[+-]\d{2}:?\d{2})?)?$/i;
+  /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,3}))?)?\s*(Z|[+-]\d{2}:?\d{2})?)?$/i;
 const PROPS = ["threshold"];
 
 /** `3w` or `12h` in milliseconds, `Infinity` for `none`, and `undefined` for anything else. */
@@ -107,7 +110,8 @@ function moment(value: string, zone: string): Moment | undefined {
     field(5),
     field(6),
   ];
-  const stamp = Date.UTC(year, month - 1, day, hour, minute, second);
+  const millisecond = Number((match[7] ?? "").padEnd(3, "0"));
+  const stamp = Date.UTC(year, month - 1, day, hour, minute, second, millisecond);
   const check = new Date(stamp);
   // Date.UTC rolls 31 February into March, so a date that doesn't come back as written isn't one.
   if (
@@ -120,20 +124,30 @@ function moment(value: string, zone: string): Moment | undefined {
   )
     return undefined;
   if (match[4] === undefined) return { at: Math.floor(stamp / DAY) * DAY, wall: true };
-  const offset = match[7];
+  const offset = match[8];
   if (offset?.toUpperCase() === "Z") return { at: stamp, wall: false };
   if (offset) {
     const digits = offset.replace(/\D/g, "");
-    const minutes = Number(digits.slice(0, 2)) * 60 + Number(digits.slice(2));
+    const hours = Number(digits.slice(0, 2));
+    const part = Number(digits.slice(2));
+    if (hours > 23 || part > 59) return undefined;
+    const minutes = hours * 60 + part;
     return { at: stamp - (offset.startsWith("-") ? -1 : 1) * minutes * 6e4, wall: false };
   }
-  return { at: stamp - offsetAt(zone, stamp - offsetAt(zone, stamp)), wall: false };
+  // Check both sides of a transition: gaps have no match, and folds use the earlier instant.
+  const candidates = new Set(
+    [stamp - DAY, stamp, stamp + DAY].map((at) => stamp - offsetAt(zone, at)),
+  );
+  const at = [...candidates]
+    .filter((at) => at + offsetAt(zone, at) === stamp)
+    .sort((a, b) => a - b)[0];
+  return at === undefined ? undefined : { at, wall: false };
 }
 
 const iso = (when: Moment) =>
   when.wall
     ? new Date(when.at).toISOString().slice(0, 10)
-    : new Date(when.at).toISOString().replace(/\.\d{3}Z$/, "Z");
+    : new Date(when.at).toISOString().replace(/\.000Z$/, "Z");
 
 /**
  * Every formatter, built once when the plugin is created: a bad `locale` or `timeZone` throws there, where the
@@ -212,13 +226,18 @@ export default defineComarkPlugin<TimeOptions, TimeMeta>((settings = {}) => {
     throw new RangeError(
       `comark-time: threshold "${settings.threshold}" isn't a duration. Write a number and a unit, such as "3w", or "none".`,
     );
+  const configuredNow = settings.now === undefined ? undefined : new Date(settings.now).getTime();
+  if (configuredNow !== undefined && !Number.isFinite(configuredNow))
+    throw new RangeError(
+      "comark-time: now isn't a valid date. Use a date, an ISO string, or milliseconds.",
+    );
 
   return {
     name: "comark-time",
     post(state) {
       const { tree } = state;
       const data: Data = { frontmatter: tree.frontmatter, meta: tree.meta, data: {}, props: {} };
-      const now = settings.now === undefined ? Date.now() : new Date(settings.now).getTime();
+      const now = configuredNow ?? Date.now();
       const today = Math.floor((now + offsetAt(zone, now)) / DAY);
       const year = parts(zone, now).year;
       const issues: Issue[] = [];

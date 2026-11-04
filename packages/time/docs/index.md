@@ -60,6 +60,8 @@ The review opened :time[2026-11-02].
 
 Write an ISO date, such as `2026-11-04`, or an ISO date and time, such as `2026-11-04T09:30:00Z`. A date alone counts whole days from today, so it never reads "5 hours ago". A time with no offset is in the `timeZone` option's zone.
 
+Fractional seconds use one to three digits, such as `2026-11-04T09:30:00.250Z`; finer precision is reported as invalid. A local time skipped when the clocks move forward is also invalid. When the clocks move back and a local time occurs twice, the earlier instant is used. Give an explicit offset to choose the other instant.
+
 ::example
 ```md
 :time[2026-11-04], :time[2026-11-03], :time[2026-11-02T09:30:00Z], :time[2026-11-04T11:59:56Z], :time[2026-11-05]
@@ -158,7 +160,7 @@ The date is the content in brackets. It isn't a prop.
 | `locale` | The runtime's | A BCP 47 tag, such as `es`, for the words and the date format. |
 | `timeZone` | The runtime's | An IANA zone, such as `Europe/Madrid`, for which day is today and for the time shown. |
 
-A `threshold`, `locale`, or `timeZone` the runtime can't read throws when the plugin is created, not while a document renders.
+A `now`, `threshold`, `locale`, or `timeZone` the runtime can't read throws when the plugin is created, not while a document renders. A configured `now` is captured then, so changing a passed `Date` later doesn't change the clock.
 
 ### Issues
 

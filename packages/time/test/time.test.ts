@@ -83,6 +83,40 @@ describe("comark-time", () => {
     expect(await label("2026-11-05", "", { ...madrid, now: "2026-11-04T23:30:00Z" })).toBe("today");
   });
 
+  it.each(["+24:00", "+99:99", "-01:60", "+0260"])(
+    "reports an invalid numeric offset %s and keeps the authored text",
+    async (offset) => {
+      const date = `2026-11-04T12:00:00${offset}`;
+      expect(await render(`:time[${date}]`)).toBe(`<span>${date}</span>`);
+      expect(Object.values((await issues(`:time[${date}]`)).issueRules ?? {})).toEqual([
+        "comark/time/invalid-date",
+      ]);
+    },
+  );
+
+  it.each([
+    ["America/New_York", "2024-03-10T02:30"],
+    ["Australia/Lord_Howe", "2024-10-06T02:15"],
+  ])("reports nonexistent local times in %s", async (timeZone, date) => {
+    const options = { ...settings, timeZone };
+    expect(await render(`:time[${date}]`, options)).toBe(`<span>${date}</span>`);
+    expect(Object.values((await issues(`:time[${date}]`, options)).issueRules ?? {})).toEqual([
+      "comark/time/invalid-date",
+    ]);
+  });
+
+  it.each([
+    ["America/New_York", "2024-11-03T01:30", "2024-11-03T05:30:00Z", "1:30 AM EDT"],
+    ["Australia/Lord_Howe", "2024-04-07T01:45", "2024-04-06T14:45:00Z", "1:45 AM GMT+11"],
+  ])(
+    "chooses the earlier instant for repeated local times in %s",
+    async (timeZone, date, iso, clock) => {
+      const html = flat(await render(`:time[${date}]`, { timeZone, now: iso }));
+      expect(html).toContain(`datetime="${iso}"`);
+      expect(html).toContain(clock);
+    },
+  );
+
   it("writes the words in the locale", async () => {
     expect(await label("2026-11-03", "", { locale: "es" })).toBe("ayer");
     expect(await label("2026-11-01", "", { locale: "es" })).toBe("hace 3 días");
@@ -117,8 +151,26 @@ describe("comark-time", () => {
   it("writes the ISO value of the date and of the instant", async () => {
     expect(await render(":time[2026-11-02]")).toContain('datetime="2026-11-02"');
     expect(await render(":time[2026-11-02T09:30:00.250+02:00]")).toContain(
-      'datetime="2026-11-02T07:30:00Z"',
+      'datetime="2026-11-02T07:30:00.250Z"',
     );
+  });
+
+  it.each([
+    ["2026-11-04T11:59:58.900Z", "2026-11-04T11:59:58.900Z"],
+    ["2026-11-04T13:59:58.90+0200", "2026-11-04T11:59:58.900Z"],
+    ["2026-11-04T11:59:58.9", "2026-11-04T11:59:58.900Z"],
+    ["2026-11-04T11:59:58.001Z", "2026-11-04T11:59:58.001Z"],
+  ])("preserves fractional seconds in %s and uses them for the label", async (date, iso) => {
+    expect(await render(`:time[${date}]`)).toContain(`datetime="${iso}"`);
+    expect(await label(date)).toBe("1 second ago");
+  });
+
+  it("reports finer than millisecond precision rather than silently truncating it", async () => {
+    const date = "2026-11-04T11:59:58.9001Z";
+    expect(await render(`:time[${date}]`)).toBe(`<span>${date}</span>`);
+    expect(Object.values((await issues(`:time[${date}]`)).issueRules ?? {})).toEqual([
+      "comark/time/invalid-date",
+    ]);
   });
 
   it("renders the same words every time with the same now", async () => {
@@ -178,5 +230,20 @@ describe("comark-time", () => {
   it("refuses a threshold or zone it can't read when the plugin is created, not mid-document", () => {
     expect(() => time({ threshold: "soon" })).toThrow(/threshold "soon"/);
     expect(() => time({ timeZone: "Mars/Olympus" })).toThrow();
+  });
+
+  it.each(["not a date", Number.NaN, Number.POSITIVE_INFINITY, new Date(Number.NaN)])(
+    "refuses an invalid now %s when the plugin is created",
+    (now) => {
+      expect(() => time({ now })).toThrow(/comark-time: now/);
+    },
+  );
+
+  it("captures a configured Date when the plugin is created", async () => {
+    const now = new Date(settings.now!);
+    const plugin = time({ ...settings, now });
+    now.setTime(Number.NaN);
+    const html = await createHtmlRenderer({ plugins: [plugin], components })(":time[2026-11-02]");
+    expect(html).toContain(">2 days ago<");
   });
 });
