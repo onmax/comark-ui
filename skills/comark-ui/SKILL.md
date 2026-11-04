@@ -17,6 +17,8 @@ pnpm add comark @comark/html comark-ui
 
 Run the comark CLIs with the [global Vite+ CLI](https://viteplus.dev/guide/global-cli): `vp dlx` for a package the project doesn't install, `vp exec` for one it does. Without Vite+, `pnpm dlx` and `pnpm exec` take the same arguments.
 
+If pnpm reports `ERR_PNPM_TRUST_DOWNGRADE`, read [pnpm trust errors](https://comark-ui.onmax.me/getting-started/#pnpm-trust-errors) for the publishing history and exact-version exceptions. Apply an exception only when the user's instructions authorize the policy change.
+
 ```ts
 import { createHtmlRenderer } from "@comark/html";
 import comarkUi from "comark-ui/html";

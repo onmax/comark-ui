@@ -223,6 +223,39 @@ Every block is its own package, and comark-ui only registers them. To install fe
 
 `comark-ui@X` holds every block at version `X`. [comark-linter](/lint/) finds an installed comark-ui and checks documents with its plugins.
 
+## pnpm trust errors
+
+With `trustPolicy: no-downgrade`, pnpm can reject these packages with `ERR_PNPM_TRUST_DOWNGRADE`: "Earlier versions had staged publish, but this version has trusted publisher."
+
+Releases before `0.4.1` used staged publishing with npm approval. Since `0.4.1`, GitHub Actions publishes directly through OIDC trusted publishing with provenance. pnpm ranks staged publishing higher, so the older releases still cause this error. Publishing a new version does not reset that history.
+
+Check the exact version's publisher and provenance before adding an exception:
+
+```sh
+npm view comark-annotate@0.9.1 _npmUser dist.attestations --json
+```
+
+The metadata should name `GitHub Actions`, have `_npmUser.trustedPublisher.id` set to `github`, and include `dist.attestations.provenance`. Check its [provenance on npm](https://www.npmjs.com/package/comark-annotate/v/0.9.1) against this repository's `release.yaml` workflow too.
+
+If you accept that publishing change, add only the reviewed packages and exact versions to your existing `pnpm-workspace.yaml`. For `comark-annotate@0.9.1`, its carousel and zoom dependencies need exceptions too:
+
+```yaml
+trustPolicy: no-downgrade
+trustPolicyExclude:
+  - comark-annotate@0.9.1
+  - comark-carousel@0.9.1
+  - comark-zoom@0.9.1
+```
+
+Check carousel and zoom's metadata the same way, then install locally and run the CLI:
+
+```sh
+pnpm add -D comark-annotate@0.9.1
+pnpm exec comark-annotate check report.md
+```
+
+The policy still checks every other package and version. A later upgrade needs its own review and exact-version exception. When installing the full preset, review each package pnpm names in the error rather than excluding `comark-*` or disabling the policy.
+
 ## Next steps
 
 [Editor](/guide/editor/) adds a Tiptap editor to your app, with Vue bindings, file uploads, and Markdown conversion.
