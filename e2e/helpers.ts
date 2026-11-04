@@ -1,13 +1,16 @@
 import type { Page } from "@playwright/test";
 
-// The generated HTML is usable before Nuxt has attached its client router.
-export async function gotoHydrated(page: Page, path: string) {
-  await page.goto(path);
-  await page.waitForFunction(() => {
-    if (!("useNuxtApp" in window) || typeof window.useNuxtApp !== "function") return false;
-    const app: unknown = window.useNuxtApp();
-    return (
-      typeof app === "object" && app !== null && "isHydrating" in app && app.isHydrating === false
-    );
-  });
+// A page of the plugins' HTML, served at a path of the test server so the images in docs/public load.
+export async function fixture(
+  page: Page,
+  body: string,
+  style = "main{width:600px;margin:auto}img{max-width:100%}",
+) {
+  await page.route("**/fixture/", (route) =>
+    route.fulfill({
+      contentType: "text/html",
+      body: `<!doctype html><meta charset="utf-8"><style>${style}</style><main>${body}</main>`,
+    }),
+  );
+  await page.goto("/fixture/");
 }

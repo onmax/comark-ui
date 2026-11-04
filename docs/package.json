@@ -8,8 +8,7 @@
     "generate": "node content.ts && NODE_OPTIONS=--max-old-space-size=7168 nuxi build",
     "preview": "E2E_PORT=${PORT:-4391} node ../e2e/serve.ts",
     "prepare": "node content.ts && nuxi prepare",
-    "typecheck": "vue-tsc -b --noEmit",
-    "test:e2e": "playwright test --config e2e/playwright.config.ts"
+    "typecheck": "vue-tsc -b --noEmit"
   },
   "dependencies": {
     "@better-auth/oauth-provider": "catalog:",
