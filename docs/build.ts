@@ -732,13 +732,15 @@ const sized = (html: string) =>
 const eagerFirst = (html: string) =>
   html.replace(/(<img\b[^>]*?) loading="lazy"/, '$1 fetchpriority="high"');
 // A still of a rendered document: no scripts, its plugins' styles collected into `styles` to go in the page once,
-// no ids, since a page holds many, and a chart without its data table, so the still is all plot. Nothing in it zooms
-// or takes focus, so the page's zoom never adds a still to a gallery or a group.
+// no ids, since a page holds many, and so no link to one, and a chart without its data table, so the still is all
+// plot. Nothing in it zooms or takes focus, so the page's zoom never adds a still to a gallery or a group.
 const stillOf = (html: string, styles: Set<string>) =>
   sized(html)
     .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, (style) => (styles.add(style), ""))
     .replace(/<script>[\s\S]*?<\/script>/g, "")
     .replace(/<details class="cch-data">[\s\S]*?<\/details>/g, "")
+    .replace(/<a class="cl-anchor"[^>]*>[\s\S]*?<\/a>/g, "")
+    .replace(/(<a\b[^>]*?)\shref="#[^"]*"/g, "$1")
     .replace(/\s(id|for|aria-controls|aria-labelledby|tabindex|data-zoom[\w-]*)="[^"]*"/g, "")
     .replace(/(<[a-z][^>]*?)\sdata-zoom(?=[\s>])/g, "$1")
     .replace(/<img\b/g, '<img loading="lazy" draggable="false"');
