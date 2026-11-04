@@ -14578,6 +14578,14 @@ snapshots:
     transitivePeerDependencies:
       - rangi
 
+  '@comark/html@0.8.1(shiki@4.5.0)':
+    dependencies:
+      comark: 0.8.1(patch_hash=6c9890f7570c7aaaa79d238b0ee935d63ab2b09f0198153109f29d1b7310433f)(shiki@4.5.0)
+    optionalDependencies:
+      shiki: 4.5.0
+    transitivePeerDependencies:
+      - rangi
+
   '@comark/react@0.8.1(katex@0.17.0)(react@19.3.1)(shiki@4.5.0)':
     dependencies:
       comark: 0.8.1(patch_hash=6c9890f7570c7aaaa79d238b0ee935d63ab2b09f0198153109f29d1b7310433f)(katex@0.17.0)(shiki@4.5.0)
@@ -14605,6 +14613,15 @@ snapshots:
       react: 19.3.1
     optionalDependencies:
       katex: 0.19.1
+      shiki: 4.5.0
+    transitivePeerDependencies:
+      - rangi
+
+  '@comark/react@0.8.1(react@19.3.1)(shiki@4.5.0)':
+    dependencies:
+      comark: 0.8.1(patch_hash=6c9890f7570c7aaaa79d238b0ee935d63ab2b09f0198153109f29d1b7310433f)(shiki@4.5.0)
+      react: 19.3.1
+    optionalDependencies:
       shiki: 4.5.0
     transitivePeerDependencies:
       - rangi
@@ -14656,6 +14673,15 @@ snapshots:
       vue: 3.5.44(typescript@6.0.3)
     optionalDependencies:
       katex: 0.19.1
+      shiki: 4.5.0
+    transitivePeerDependencies:
+      - rangi
+
+  '@comark/vue@0.8.1(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))':
+    dependencies:
+      comark: 0.8.1(patch_hash=6c9890f7570c7aaaa79d238b0ee935d63ab2b09f0198153109f29d1b7310433f)(shiki@4.5.0)
+      vue: 3.5.44(typescript@6.0.3)
+    optionalDependencies:
       shiki: 4.5.0
     transitivePeerDependencies:
       - rangi
@@ -23333,6 +23359,14 @@ snapshots:
       markdown-exit: 1.3.0
     optionalDependencies:
       katex: 0.19.1
+      shiki: 4.5.0
+
+  comark@0.8.1(patch_hash=6c9890f7570c7aaaa79d238b0ee935d63ab2b09f0198153109f29d1b7310433f)(shiki@4.5.0):
+    dependencies:
+      entities: 8.1.0
+      js-yaml: 5.4.3
+      markdown-exit: 1.3.0
+    optionalDependencies:
       shiki: 4.5.0
 
   comma-separated-tokens@2.0.3: {}
