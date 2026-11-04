@@ -15,6 +15,8 @@ const types: Record<string, string> = {
   ".js": "text/javascript",
   ".css": "text/css",
   ".json": "application/json",
+  ".md": "text/markdown; charset=utf-8",
+  ".txt": "text/plain; charset=utf-8",
   ".png": "image/png",
   ".svg": "image/svg+xml",
   ".woff2": "font/woff2",

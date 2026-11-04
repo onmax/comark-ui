@@ -13,7 +13,7 @@ export default defineDoctorConfig({
     parts,
     comark({
       include: "{docs/pages,packages/*/docs}/**/*.md",
-      // docs/build.ts renders these itself.
+      // The docs app's own blocks, in docs/app/components/content, and the old site's that it doesn't draw yet.
       components: [
         "badge-builder",
         "correct",
@@ -31,12 +31,12 @@ export default defineDoctorConfig({
         "usage",
       ],
       links: {
-        // fileOf in docs/build.ts: a package's pages come from its docs/, the rest from docs/pages, and files from
-        // docs/public. The playground is built by docs/play.ts and has no page.
+        // As docs/content.ts copies them: a package's pages come from its docs/, the rest from docs/pages, and files
+        // from docs/public.
         routes(path) {
-          // docs/build.ts also writes llms.txt and each page's Markdown copy, at its path plus `.md`.
+          // @vite-hub/docs also serves llms.txt and each page's Markdown copy.
           if (path === "/llms.txt" || path === "/index.md") return true;
-          const markdown = /^(\/.+)\.md$/.exec(path)?.[1];
+          const markdown = /^(?:\/raw)?(\/.+)\.md$/.exec(path)?.[1];
           if (markdown) path = `${markdown}/`;
           const [first = "", ...rest] = path.split("/").filter(Boolean);
           if (first === "play" || path === "/badge.svg") return true;

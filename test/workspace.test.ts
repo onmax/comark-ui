@@ -66,7 +66,7 @@ describe.each(folders)("packages/%s", (folder) => {
     expect(read("README.md")).toContain(`[\`${pkg.name}\`](./packages/${folder})`);
     if (folder === "ui") return;
     expect(existsSync(new URL(`packages/${folder}/docs/index.md`, repo))).toBe(true);
-    expect(read("docs/build.ts")).toContain(`"${folder}",`);
+    expect(read("docs/sections.ts")).toContain(`"${folder}",`);
   });
 
   // Agents write most documents, and they learn a package from the skill rather than the site. Hosts whose agents only

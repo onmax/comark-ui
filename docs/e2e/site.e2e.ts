@@ -1,8 +1,8 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 
 // Every console error and page error, so each test can assert there were none.
-function watchErrors(page) {
-  const errors = [];
+function watchErrors(page: Page) {
+  const errors: string[] = [];
   page.on("console", (message) => message.type() === "error" && errors.push(message.text()));
   page.on("pageerror", (error) => errors.push(error.message));
   return errors;
@@ -28,7 +28,7 @@ for (const { path, selector } of pages)
     expect(errors).toEqual([]);
   });
 
-async function zoomOpens(page) {
+async function zoomOpens(page: Page) {
   await page.waitForLoadState("networkidle");
   await page.locator(".docs-example-preview img[data-zoom]").first().click();
   await expect(page.locator(".cz-dialog")).toBeVisible();
@@ -36,7 +36,7 @@ async function zoomOpens(page) {
   await expect(page.locator(".cz-dialog")).toHaveCount(0);
 }
 
-async function tabSwitches(page) {
+async function tabSwitches(page: Page) {
   await page.waitForLoadState("networkidle");
   const tabs = page.locator(".docs-example-preview .ct").first().locator(".ct-tab");
   await tabs.nth(1).click();
@@ -93,7 +93,7 @@ test("scripts keep working across client-side navigation", async ({ page }) => {
   await page.goto("/zoom");
   await page.waitForLoadState("networkidle");
   // A full page load would drop this marker.
-  await page.evaluate(() => (window.__spa = true));
+  await page.evaluate(() => ((window as { __spa?: boolean }).__spa = true));
   await page.locator("a[href='/tabs']").first().click();
   await expect(page).toHaveURL(/\/tabs$/);
   await expect(page.locator(".docs-example-preview .ct").first()).toBeVisible();
@@ -101,7 +101,7 @@ test("scripts keep working across client-side navigation", async ({ page }) => {
   await page.locator("a[href='/zoom']").first().click();
   await expect(page).toHaveURL(/\/zoom$/);
   await zoomOpens(page);
-  expect(await page.evaluate(() => window.__spa)).toBe(true);
+  expect(await page.evaluate(() => (window as { __spa?: boolean }).__spa)).toBe(true);
   expect(errors).toEqual([]);
 });
 

@@ -1,5 +1,5 @@
 import { defineContent, documents } from "vite-hub/content";
-import cms from "vite-hub/content/presets/cms";
+import cms from "vite-hub/cms";
 import * as v from "valibot";
 import { inTeam } from "./utils/team.ts";
 
@@ -46,11 +46,6 @@ export const content = defineContent({
     }),
   },
   authorize: ({ user }) => inTeam(user),
-  // Keep the sitemap off until the GitHub store can load pages without one blob request per file.
-  // robots.txt keeps crawlers out of the Console, the API, and sign-in.
-  seo: {
-    site: "https://comark-ui.onmax.me",
-    sitemap: false,
-    robots: { disallow: ["/_vitehub", "/api", "/sign-in"] },
-  },
+  // @vite-hub/docs serves the sitemap and robots.txt (nuxt.config.ts).
+  seo: { site: "https://comark-ui.onmax.me", sitemap: false },
 });

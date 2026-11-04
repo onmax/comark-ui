@@ -25,7 +25,7 @@ For a whole document, such as before/after evidence, a review, or a lesson, add 
 
 ## Markdown pages
 
-Every page has a Markdown copy at its path plus `.md`, such as [`/zoom.md`](/zoom.md) for [`/zoom/`](/zoom/). A request with `Accept: text/markdown` gets the copy too. The **Copy page** button at the top copies it for a chat, and its menu opens the copy or asks ChatGPT or Claude to read it.
+Every page has a Markdown copy under `/raw/`, such as [`/raw/zoom.md`](/raw/zoom.md) for [`/zoom`](/zoom). The **Copy page** button at the top copies it for a chat, and its menu opens the copy or asks ChatGPT or Claude to read it.
 
 [`/llms.txt`](/llms.txt) lists every page's copy by section, and says how an agent reads the site.
 
