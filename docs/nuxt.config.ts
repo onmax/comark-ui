@@ -85,6 +85,7 @@ export default defineNuxtConfig({
   },
   modules: [
     "vite-hub/nuxt",
+    "~~/modules/wrangler-output",
     "nuxt-agent-discovery",
     async (_, nuxt) => {
       await writeAssets();
