@@ -1,5 +1,6 @@
 import { createHtmlRenderer } from "@comark/html";
 import { expect, type Page, test } from "@playwright/test";
+import { gotoHydrated } from "./helpers.ts";
 import annotate, { components as annotateComponents } from "../packages/annotate/src/html.ts";
 import carousel, { components as carouselComponents } from "../packages/carousel/src/html.ts";
 import zoom, { components as zoomComponents } from "../packages/zoom/src/html.ts";
@@ -24,7 +25,7 @@ const rect = (page: Page, selector: string) =>
   page.locator(selector).evaluate((node) => node.getBoundingClientRect().toJSON() as DOMRect);
 
 test("an image zooms, and Escape, Back, and a click around it close it", async ({ page }) => {
-  await page.goto("/zoom/");
+  await gotoHydrated(page, "/zoom");
   const image = page.locator("main img[data-zoom]").first();
   const dialog = page.locator(".cz-dialog");
 
@@ -39,7 +40,7 @@ test("an image zooms, and Escape, Back, and a click around it close it", async (
   await expect(dialog).toBeVisible();
   await page.goBack();
   await expect(dialog).toHaveCount(0);
-  await expect(page).toHaveURL(/\/zoom\/$/);
+  await expect(page).toHaveURL(/\/zoom$/);
 
   await image.click();
   await expect(dialog).toBeVisible();
@@ -48,7 +49,7 @@ test("an image zooms, and Escape, Back, and a click around it close it", async (
 });
 
 test("opening and closing the zoom doesn't shift the page sideways", async ({ page }) => {
-  await page.goto("/carousel/");
+  await gotoHydrated(page, "/carousel");
   await page.evaluate(() => {
     const shifts: number[] = [];
     Object.assign(window, { shifts });
@@ -70,9 +71,10 @@ test("opening and closing the zoom doesn't shift the page sideways", async ({ pa
 });
 
 test("a zoomed table keeps its header row", async ({ page }) => {
-  await page.goto("/zoom/");
+  await gotoHydrated(page, "/zoom");
+  await page.getByRole("tab", { name: "Any block", exact: true }).click();
   const block = page
-    .locator("main .example-preview .cz")
+    .locator("main .docs-example-preview .cz")
     .filter({ has: page.locator("table") })
     .last();
   await block.scrollIntoViewIfNeeded();
@@ -83,9 +85,10 @@ test("a zoomed table keeps its header row", async ({ page }) => {
 test("a zoomed block keeps its text styles, so it closes onto the original without a jump", async ({
   page,
 }) => {
-  await page.goto("/zoom/");
+  await gotoHydrated(page, "/zoom");
+  await page.getByRole("tab", { name: "Any block", exact: true }).click();
   const block = page
-    .locator("main .example-preview .cz")
+    .locator("main .docs-example-preview .cz")
     .filter({ has: page.locator("table") })
     .last();
   await block.scrollIntoViewIfNeeded();
@@ -99,7 +102,7 @@ test("a zoom opened as another closes keeps scroll restoration off until it clos
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("/zoom/");
+  await gotoHydrated(page, "/zoom");
   const image = page.locator("main img[data-zoom]").first();
   await image.click();
   await image.evaluate((node) =>

@@ -2,12 +2,18 @@ import { readFile } from "node:fs/promises";
 import { createHtmlRenderer } from "@comark/html";
 import { expect, test } from "@playwright/test";
 import annotate, { components } from "../packages/annotate/src/html.ts";
+import { gotoHydrated } from "./helpers.ts";
 
 test("a comparison lines up its screenshots and zooms them with their marks and colors, and their notes beside them", async ({
   page,
 }) => {
-  await page.goto("/annotate/");
+  await gotoHydrated(page, "/annotate");
   const compare = page.locator("main .ca-compare").first();
+  await compare
+    .locator(".ca-frame img")
+    .evaluateAll((images) =>
+      Promise.all(images.map((image) => (image as HTMLImageElement).decode())),
+    );
   const tops = await compare
     .locator(".ca-frame img")
     .evaluateAll((images) => images.map((image) => Math.round(image.getBoundingClientRect().top)));
@@ -45,7 +51,7 @@ test("a comparison lines up its screenshots and zooms them with their marks and 
 });
 
 test("the zoom maps its copies to the page and back", async ({ page }) => {
-  await page.goto("/annotate/");
+  await gotoHydrated(page, "/annotate");
   await page.evaluate(() => {
     document.addEventListener("comark-zoom:open", (event) => {
       const { content, aside, copyOf, originalOf } = event.detail;
@@ -77,7 +83,7 @@ test("the zoom maps its copies to the page and back", async ({ page }) => {
 test("a host's `.ca` rule sets the default mark color, on the page and zoomed", async ({
   page,
 }) => {
-  await page.goto("/annotate/components/screenshot/");
+  await gotoHydrated(page, "/annotate/components/screenshot");
   await page.addStyleTag({ content: ".ca{--ca-color:rgb(1, 2, 3)}" });
   const plain = ".ca-mark:not([style*='--ca-color'])";
   const mark = page.locator(`main ${plain}:visible`).first();
@@ -89,7 +95,7 @@ test("a host's `.ca` rule sets the default mark color, on the page and zoomed", 
 test("a side note lines up with its arrow when the screenshot also has a note above it", async ({
   page,
 }) => {
-  await page.goto("/annotate/");
+  await gotoHydrated(page, "/annotate");
   await page.getByRole("tab", { name: "Arrows only" }).click();
   const figure = page.locator("main .ca-screenshot.ca-top.ca-left:visible").first();
   await figure.locator(".ca-frame > img").evaluate((image) => (image as HTMLImageElement).decode());
@@ -105,8 +111,8 @@ test("a side note lines up with its arrow when the screenshot also has a note ab
 test("a slider moves its divider by drag and by key, and a click without a drag zooms it", async ({
   page,
 }) => {
-  await page.goto("/annotate/");
-  await page.getByRole("tab", { name: "Slider" }).click();
+  await gotoHydrated(page, "/annotate");
+  await page.getByRole("tab", { name: "Before / after slider" }).click();
   const swipe = page.locator("main .ca-swipe:visible").first();
   const handle = swipe.locator(".ca-handle");
   await expect(handle).toHaveAttribute("aria-valuenow", "50");
@@ -149,7 +155,7 @@ test("Copy puts a screenshot on the clipboard with its marks, and a right-click 
   context,
 }) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
-  await page.goto("/annotate/");
+  await gotoHydrated(page, "/annotate");
   const figure = page
     .locator("main .ca-screenshot:visible")
     .filter({ has: page.locator(".ca-mark .ca-stamp") })
