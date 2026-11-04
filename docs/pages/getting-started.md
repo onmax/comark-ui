@@ -232,7 +232,7 @@ Releases before `0.4.1` used staged publishing with npm approval. Since `0.4.1`,
 Check the exact version's publisher and provenance before adding an exception:
 
 ```sh
-npm view comark-annotate@0.9.1 _npmUser dist.attestations --json
+npm view comark-annotate@0.9.1 _npmUser _npmUser.trustedPublisher.id dist.attestations --json
 ```
 
 The metadata should name `GitHub Actions`, have `_npmUser.trustedPublisher.id` set to `github`, and include `dist.attestations.provenance`. Check its [provenance on npm](https://www.npmjs.com/package/comark-annotate/v/0.9.1) against this repository's `release.yaml` workflow too.
