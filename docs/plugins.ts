@@ -30,6 +30,7 @@ export const browserPlugins = (
     comments: { avatars },
     github: config["comark-github"],
     links: config["comark-links"],
+    time: config["comark-time"],
     zoom: config["comark-zoom"],
   }).plugins;
 

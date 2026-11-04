@@ -29,6 +29,7 @@ import readingTime, { type ReadingTimeOptions } from "comark-reading-time";
 import type { TableOptions } from "comark-table";
 import type { TabsOptions } from "comark-tabs";
 import type { TestsOptions } from "comark-tests";
+import type { TimeOptions } from "comark-time";
 import xref, { type XrefOptions } from "comark-xref";
 import type { ZoomOptions } from "comark-zoom";
 import mermaidLimits, { type MermaidOptions } from "./mermaid-limits.ts";
@@ -119,6 +120,8 @@ export type PresetOptions = {
   xref?: XrefOptions | boolean;
   /** Reads no JUnit reports unless you pass `{ root }` or `{ read }`; inline reports render either way. */
   tests?: TestsOptions | boolean;
+  /** `:time[2026-10-12]` as relative time: "3 days ago", a date past `threshold`, and the full date in a tooltip. */
+  time?: TimeOptions | boolean;
   zoom?: ZoomOptions | boolean;
   /**
    * Highlights fenced code with your own Shiki, before comark-code. Off unless you pass one, so the preset bundles no
@@ -184,6 +187,7 @@ export type Renderer<C> = {
   tabs: Part<C, TabsOptions>;
   outline: Part<C, OutlineOptions>;
   tests: Part<C, TestsOptions>;
+  time: Part<C, TimeOptions>;
   zoom: Part<C, ZoomOptions>;
   code: Part<C, CodeOptions>;
   codeNotes: Part<C>;
@@ -243,6 +247,7 @@ const BLOCKS: [keyof PresetOptions, string[]][] = [
   ["metrics", words("progress stats")],
   ["table", words("table")],
   ["tabs", words("code-group tabs-item")],
+  ["time", words("time")],
   ["xref", words("ref")],
 ];
 
@@ -335,6 +340,7 @@ export function preset<C>(renderer: Renderer<C>, options: PresetOptions = {}): P
   add(renderer.outline, options.outline);
   parse(xref, options.xref);
   add(renderer.tests, options.tests, optionsOf(options.tests) ?? noFiles);
+  add(renderer.time, options.time);
   add(renderer.zoom, options.zoom);
   // After every plugin that writes code blocks, and before code, which reads the lines it draws.
   if (options.shiki) plugins.push(shiki(options.shiki));

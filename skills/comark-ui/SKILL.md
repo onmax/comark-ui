@@ -77,6 +77,7 @@ Read the reference for each block you use before you write it. Mix the blocks fr
 | A test run's passed, failed, and skipped counts and its failures, from a JUnit report | `::tests` | [tests](references/tests.md) |
 | A note, tip, or warning box, or long output folded away, as on GitHub | `> [!NOTE]`, `<details>` | [github](references/github.md) |
 | The review's status, pull request, author, date, and tags in a box | frontmatter, `::properties` | [properties](references/properties.md) |
+| When something happened or is due, as "2 days ago" or a date, with the full date on hover | `:time[2026-11-02]` | [time](references/time.md) |
 | Claims backed by links, with numbered citations | `:cite`, `::sources` | [sources](references/sources.md) |
 | An icon in a sentence or a table cell, such as a logo or a status | `:icon` | [icon](references/icon.md) |
 | A preview link a reviewer can scan with a phone | `:qr` | [qr](references/qr.md) |

@@ -31,6 +31,7 @@ import * as steps from "comark-steps/svelte";
 import * as table from "comark-table/svelte";
 import * as tabs from "comark-tabs/svelte";
 import * as tests from "comark-tests/svelte";
+import * as time from "comark-time/svelte";
 import * as zoom from "comark-zoom/svelte";
 import Mermaid from "./Mermaid.svelte";
 import typeset from "./Typeset.svelte";
@@ -73,6 +74,7 @@ export default (options) =>
       table,
       tabs,
       tests,
+      time,
       typeset,
       zoom,
     },

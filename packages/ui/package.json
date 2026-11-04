@@ -100,6 +100,7 @@
     "comark-table": "workspace:^",
     "comark-tabs": "workspace:^",
     "comark-tests": "workspace:^",
+    "comark-time": "workspace:^",
     "comark-xref": "workspace:^",
     "comark-zoom": "workspace:^"
   },
