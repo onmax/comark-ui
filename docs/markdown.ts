@@ -33,7 +33,13 @@ const bridge = defineComarkPlugin(() => {
   return { name: "docs-html-only", post: (state) => visit(state.tree.nodes) };
 });
 
-const blocks = () => [...browserPlugins(), bridge()];
+// The pages measure `:time` from one moment, in English and UTC, so their examples read the same wherever the site is built.
+const blocks = () => [
+  ...browserPlugins({
+    "comark-time": { now: "2026-11-04T12:00:00Z", timeZone: "UTC", locale: "en" },
+  }),
+  bridge(),
+];
 
 // `:::example` shows its fenced Markdown twice, rendered and as code. The rendered copy is parsed here so the page
 // reaches the browser as nodes.
