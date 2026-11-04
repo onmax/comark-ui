@@ -35,9 +35,11 @@ const bridge = defineComarkPlugin(() => {
 
 // The pages measure `:time` from one moment, in English and UTC, so their examples read the same wherever the site is built.
 const blocks = () => [
-  ...browserPlugins({
-    "comark-time": { now: "2026-11-04T12:00:00Z", timeZone: "UTC", locale: "en" },
-  }),
+  // The docs shell styles prose. Scoped preset styles are lost when zoom copies a block into its dialog.
+  ...browserPlugins(
+    { "comark-time": { now: "2026-11-04T12:00:00Z", timeZone: "UTC", locale: "en" } },
+    { typeset: false },
+  ),
   bridge(),
 ];
 
