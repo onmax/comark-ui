@@ -61,8 +61,7 @@ catalog:
   nuxt-agent-discovery: ^0.8.0
   valibot: ^1.4.2
   better-auth: 1.7.10
-  # The combined Content/Comments preview includes PR publishing, multi-path collections, and the upstream blob cache.
-  vite-hub: https://pkg.pr.new/vite-hub/vitehub/vite-hub@2862ffe428dde04c5d64d76b7b26e5224a170e17
+  vite-hub: 0.1.0
   drizzle-kit: ^0.31.10
   drizzle-orm: 0.45.4
   wrangler: ^4.152.0
@@ -72,34 +71,6 @@ catalog:
 
 overrides:
   vite: "catalog:"
-  # Keep every ViteHub package on the same preview build.
-  "@vite-hub/agent": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/agent@2862ffe428dde04c5d64d76b7b26e5224a170e17
-  "@vite-hub/auth": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/auth@2862ffe428dde04c5d64d76b7b26e5224a170e17
-  "@vite-hub/blob": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/blob@2862ffe428dde04c5d64d76b7b26e5224a170e17
-  "@vite-hub/browser": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/browser@2862ffe428dde04c5d64d76b7b26e5224a170e17
-  "@vite-hub/channels": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/channels@2862ffe428dde04c5d64d76b7b26e5224a170e17
-  "@vite-hub/cli": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/cli@2862ffe428dde04c5d64d76b7b26e5224a170e17
-  "@vite-hub/comments": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/comments@2862ffe428dde04c5d64d76b7b26e5224a170e17
-  "@vite-hub/connections": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/connections@2862ffe428dde04c5d64d76b7b26e5224a170e17
-  "@vite-hub/content": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/content@2862ffe428dde04c5d64d76b7b26e5224a170e17
-  "@vite-hub/database": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/database@2862ffe428dde04c5d64d76b7b26e5224a170e17
-  "@vite-hub/email": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/email@2862ffe428dde04c5d64d76b7b26e5224a170e17
-  "@vite-hub/env": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/env@2862ffe428dde04c5d64d76b7b26e5224a170e17
-  "@vite-hub/kv": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/kv@2862ffe428dde04c5d64d76b7b26e5224a170e17
-  "@vite-hub/markdown-template": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/markdown-template@2862ffe428dde04c5d64d76b7b26e5224a170e17
-  "@vite-hub/presets": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/presets@2862ffe428dde04c5d64d76b7b26e5224a170e17
-  "@vite-hub/queue": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/queue@2862ffe428dde04c5d64d76b7b26e5224a170e17
-  "@vite-hub/rate-limit": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/rate-limit@2862ffe428dde04c5d64d76b7b26e5224a170e17
-  "@vite-hub/realtime": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/realtime@2862ffe428dde04c5d64d76b7b26e5224a170e17
-  "@vite-hub/runtime": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/runtime@2862ffe428dde04c5d64d76b7b26e5224a170e17
-  "@vite-hub/sandbox": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/sandbox@2862ffe428dde04c5d64d76b7b26e5224a170e17
-  "@vite-hub/sandbox-task": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/sandbox-task@2862ffe428dde04c5d64d76b7b26e5224a170e17
-  "@vite-hub/schedule": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/schedule@2862ffe428dde04c5d64d76b7b26e5224a170e17
-  "@vite-hub/shell": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/shell@2862ffe428dde04c5d64d76b7b26e5224a170e17
-  "@vite-hub/source": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/source@2862ffe428dde04c5d64d76b7b26e5224a170e17
-  "@vite-hub/ui": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/ui@2862ffe428dde04c5d64d76b7b26e5224a170e17
-  "@vite-hub/workflow": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/workflow@2862ffe428dde04c5d64d76b7b26e5224a170e17
-  "@vite-hub/workspace": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/workspace@2862ffe428dde04c5d64d76b7b26e5224a170e17
 
 minimumReleaseAgeExclude:
   - vite-doctor@0.1.0

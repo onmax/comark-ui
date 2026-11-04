@@ -140,10 +140,6 @@ export default defineNuxtConfig({
     skills: { dir: "../skills" },
   },
   nitro: {
-    // The Console imports its unused Teams connector, whose optional KV drivers cannot run in this worker.
-    virtual: {
-      "@vite-hub/kv": `export const kv = new Proxy({}, { get() { throw new Error("This documentation site does not configure ViteHub KV.") } })`,
-    },
     // The root wrangler.jsonc holds what ViteHub doesn't generate (name, routes, previews). Nitro merges it with ViteHub's
     // bindings into docs/dist/server/wrangler.json, which the local Wrangler module selects for commands run from the repository's root.
     cloudflare: {
