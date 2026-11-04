@@ -19,13 +19,13 @@ const view = ref<"preview" | "code">("preview");
         Code
       </button>
     </div>
-    <div class="p-4"><slot /></div>
+    <div class="docs-example-content p-4"><slot /></div>
   </div>
 </template>
 
 <style scoped>
-.docs-example[data-view="preview"] > div > :deep(:not(.docs-example-preview)),
-.docs-example[data-view="code"] > div > :deep(.docs-example-preview) {
+.docs-example[data-view="preview"] > .docs-example-content > :deep(:not(.docs-example-preview)),
+.docs-example[data-view="code"] > .docs-example-content > :deep(.docs-example-preview) {
   display: none;
 }
 </style>

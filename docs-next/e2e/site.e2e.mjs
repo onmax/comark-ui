@@ -29,6 +29,7 @@ for (const { path, selector } of pages)
   });
 
 async function zoomOpens(page) {
+  await page.waitForLoadState("networkidle");
   await page.locator(".docs-example-preview img[data-zoom]").first().click();
   await expect(page.locator(".cz-dialog")).toBeVisible();
   await page.keyboard.press("Escape");
@@ -36,11 +37,36 @@ async function zoomOpens(page) {
 }
 
 async function tabSwitches(page) {
+  await page.waitForLoadState("networkidle");
   const tabs = page.locator(".docs-example-preview .ct").first().locator(".ct-tab");
   await tabs.nth(1).click();
   await expect(tabs.nth(1)).toHaveAttribute("aria-selected", "true");
   await expect(tabs.nth(0)).toHaveAttribute("aria-selected", "false");
 }
+
+test("an example switches between its preview and Markdown source", async ({ page }) => {
+  await page.goto("/zoom");
+  await page.waitForLoadState("networkidle");
+  const example = page.locator(".docs-example").first();
+  const preview = example.locator(".docs-example-preview");
+  const source = example.locator("pre");
+  const previewButton = example.getByRole("button", { name: "Preview", exact: true });
+  const codeButton = example.getByRole("button", { name: "Code", exact: true });
+
+  await expect(previewButton).toBeVisible();
+  await expect(codeButton).toBeVisible();
+  await expect(preview).toBeVisible();
+  await expect(source).toBeHidden();
+  await codeButton.click();
+  await expect(source).toBeVisible();
+  await expect(source).toContainText("![Office correlations dashboard]");
+  await expect(preview).toBeHidden();
+  await expect(codeButton).toHaveAttribute("aria-pressed", "true");
+  await previewButton.click();
+  await expect(preview).toBeVisible();
+  await expect(source).toBeHidden();
+  await expect(previewButton).toHaveAttribute("aria-pressed", "true");
+});
 
 test("a click on an image opens the zoom dialog", async ({ page }) => {
   const errors = watchErrors(page);
@@ -65,6 +91,7 @@ test("the carousel steps to the next slide", async ({ page }) => {
 test("scripts keep working across client-side navigation", async ({ page }) => {
   const errors = watchErrors(page);
   await page.goto("/zoom");
+  await page.waitForLoadState("networkidle");
   // A full page load would drop this marker.
   await page.evaluate(() => (window.__spa = true));
   await page.locator("a[href='/tabs']").first().click();
