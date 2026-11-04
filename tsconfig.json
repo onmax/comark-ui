@@ -15,6 +15,7 @@
     "docs/nuxt.config.ts",
     "docs/.nuxt",
     "docs/.output",
-    "docs/.generated"
+    "docs/.generated",
+    "docs-next"
   ]
 }

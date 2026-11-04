@@ -1,0 +1,90 @@
+diff --git a/dist/nuxt-B6C1Dlkr.d.ts b/dist/nuxt-B6C1Dlkr.d.ts
+index 9e940308af14352640bab7b7398251c7ab0d89ad..918ec4fdfdef8fd6effcaf8760e5122d71d30421 100644
+--- a/dist/nuxt-B6C1Dlkr.d.ts
++++ b/dist/nuxt-B6C1Dlkr.d.ts
+@@ -72,6 +72,11 @@ interface DocsModuleOptions {
+    * a component into plain Markdown. The built-in rewrites run after it. Runs at build time.
+    */
+   rawMarkdown?: (markdown: string, page: DocsPage) => string | Promise<string>;
++  /**
++   * Path of a module, relative to the app root, whose default export is the parser options, such as
++   * `{ plugins: [tabs()] }`. The page route, search, and Console drafts parse with it.
++   */
++  parser?: string;
+ }
+ /** Options as the client and the server read them from `runtimeConfig.public.docs`. */
+ interface DocsPublicConfig {
+diff --git a/dist/nuxt.js b/dist/nuxt.js
+index 274a29f97d9937299bec470e15d7cff6bb163197..0f337566fd57f762ec6ffaad1ec3fe94623352b5 100644
+--- a/dist/nuxt.js
++++ b/dist/nuxt.js
+@@ -222,6 +222,12 @@ const docsNuxtModule = defineNuxtModule({
+ 			write: true,
+ 			getContents: () => contentEntry ? `export { content } from ${JSON.stringify(contentEntry)}\n` : "export const content = undefined\n"
+ 		}).dst;
++		const parserEntry = options.parser ? resolve(nuxt.options.rootDir, options.parser) : null;
++		const parserFile = addTemplate({
++			filename: "docs/parser.mjs",
++			write: true,
++			getContents: () => parserEntry ? `export { default } from ${JSON.stringify(parserEntry)}\n` : "export default {}\n"
++		}).dst;
+ 		if (nuxt.options.dev) {
+ 			let watchDir = contentDir;
+ 			while (!existsSync(watchDir) && dirname(watchDir) !== watchDir) watchDir = dirname(watchDir);
+@@ -390,7 +396,8 @@ const docsNuxtModule = defineNuxtModule({
+ 			nitro.alias = {
+ 				...nitro.alias,
+ 				"#docs/manifest": manifestFile,
+-				"#docs/content": contentFile
++				"#docs/content": contentFile,
++				"#docs/parser": parserFile
+ 			};
+ 			const inline = nitro.externals?.inline;
+ 			if (inline !== true) nitro.externals = {
+diff --git a/dist/runtime/app/assistant/DocsAssistantOff.vue b/dist/runtime/app/assistant/DocsAssistantOff.vue
+index 65da59ffc600e0e00601219fb2d496ef9c751688..3268907570a62397e83158778cbb888a38fd1670 100644
+--- a/dist/runtime/app/assistant/DocsAssistantOff.vue
++++ b/dist/runtime/app/assistant/DocsAssistantOff.vue
+@@ -1,4 +1,8 @@
+ <!-- `DocsAssistant` when `docs.assistant` is off: the shell renders it unconditionally, and it renders nothing. -->
+-<template>
+-  <!-- Off -->
+-</template>
++<script lang="ts">
++import { defineComponent } from "vue"
++
++// Not a template with only a comment: production builds drop the comment, so the server renders nothing while the
++// browser renders an empty placeholder, and every page fails hydration. A render function gives both the placeholder.
++export default defineComponent({ name: "DocsAssistantOff", render: () => null })
++</script>
+diff --git a/dist/runtime/server/page.js b/dist/runtime/server/page.js
+index b676373ca6a7a9a66ee0b4acbe7122ca1757ae1f..fa5ee14f79f68afb3977b8d6ce5a1ff7116f3dcd 100644
+--- a/dist/runtime/server/page.js
++++ b/dist/runtime/server/page.js
+@@ -3,9 +3,10 @@ import { i as docsPageResponse } from "../../page-B9yFkRP1.js";
+ import { t as createDocsParser } from "../../markdown-B678mI1Z.js";
+ import { createError, defineEventHandler, getRouterParam, setHeader, useStorage } from "#imports";
+ import manifest from "#docs/manifest";
++import parser from "#docs/parser";
+ import { content } from "#docs/content";
+ //#region src/runtime/server/page.ts
+-const parse = createDocsParser();
++const parse = createDocsParser(parser);
+ const parsed = /* @__PURE__ */ new Map();
+ /** `/api/_docs/page/docs/kv.json` is the page at `/docs/kv`. The `.json` suffix lets static hosts store every page beside its folder. */
+ const handler = defineEventHandler(async (event) => {
+diff --git a/dist/runtime/server/search.js b/dist/runtime/server/search.js
+index d2d9834e786f8f8eda13d030fbcb4db8e5169eaa..5f96a6b0c229e139f1c8e3aa4fa217b65a00c653 100644
+--- a/dist/runtime/server/search.js
++++ b/dist/runtime/server/search.js
+@@ -2,8 +2,9 @@ import { docsManifestPages } from "../../navigation.js";
+ import { n as docsSearchSections, t as createDocsParser } from "../../markdown-B678mI1Z.js";
+ import { defineEventHandler, useStorage } from "#imports";
+ import manifest from "#docs/manifest";
++import parser from "#docs/parser";
+ //#region src/runtime/server/search.ts
+-const parse = createDocsParser();
++const parse = createDocsParser(parser);
+ /** Every page split by heading, for the search dialog. The build prerenders it. */
+ const handler = defineEventHandler(async () => {
+ 	const storage = useStorage("assets:docs");

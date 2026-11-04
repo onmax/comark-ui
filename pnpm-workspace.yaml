@@ -1,6 +1,7 @@
 packages:
   - "packages/*"
   - "docs"
+  - "docs-next"
 
 catalogMode: prefer
 
@@ -89,8 +90,11 @@ allowBuilds:
   msgpackr-extract: true
   node-liblzma: false
   ssh2: false
+  # @vite-hub/docs pulls it through @vueuse; its postinstall only picks the Vue 2 or 3 build, and Vue 3 is its default.
+  vue-demi: false
   workerd: true
 
 # Temporary dependency backports. See patches/README.md for upstream PRs and removal conditions.
 patchedDependencies:
+  "@vite-hub/docs@0.0.0-preview-7aeda8a": patches/@vite-hub__docs@0.0.0-preview-7aeda8a.patch
   comark@0.8.1: patches/comark.patch

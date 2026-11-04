@@ -1,0 +1,7 @@
+.nuxt
+.output
+.data
+/content
+/public
+*.log
+test-results
