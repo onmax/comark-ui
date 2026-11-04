@@ -34,6 +34,7 @@ import * as steps from "comark-steps/html";
 import * as table from "comark-table/html";
 import * as tabs from "comark-tabs/html";
 import * as tests from "comark-tests/html";
+import * as time from "comark-time/html";
 import * as zoom from "comark-zoom/html";
 import { mermaidBar, mermaidCss } from "./client.ts";
 import { type Preset, type PresetOptions, preset } from "./index.ts";
@@ -123,6 +124,7 @@ export default (options?: PresetOptions): Preset<NodeHandler> =>
       table,
       tabs,
       tests,
+      time,
       typeset,
       zoom,
     },

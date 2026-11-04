@@ -3,6 +3,7 @@
 import type { CodeOptions } from "../packages/code/src/index.ts";
 import type { CalloutsOptions, ReferencesOptions } from "../packages/github/src/index.ts";
 import type { AnchorsOptions, ExternalOptions } from "../packages/links/src/index.ts";
+import type { TimeOptions } from "../packages/time/src/index.ts";
 import type { ZoomOptions } from "../packages/zoom/src/index.ts";
 import { errorText } from "../shared/text.ts";
 
@@ -10,6 +11,7 @@ export interface PlayConfig {
   "comark-code"?: CodeOptions;
   "comark-github"?: { callouts?: CalloutsOptions; references?: ReferencesOptions };
   "comark-links"?: { external?: ExternalOptions; anchors?: AnchorsOptions };
+  "comark-time"?: TimeOptions;
   "comark-zoom"?: ZoomOptions;
 }
 
@@ -31,6 +33,7 @@ const defaults: Required<PlayConfig> = {
     external: { target: false, rel: [], hosts: [] },
     anchors: { levels: [2, 3, 4] },
   },
+  "comark-time": { threshold: "4w" },
   "comark-zoom": { images: true },
 };
 const names = Object.keys(defaults);
