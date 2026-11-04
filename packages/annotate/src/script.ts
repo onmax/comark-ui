@@ -3,7 +3,7 @@ declare global {
     __comarkAnnotate?: {
       users: number;
       stop: () => void;
-      /** The figure as a PNG, with its marks, as its Copy button copies it. */
+      /** A fresh PNG of the figure, with its current paint, marks and notes. */
       capture: (figure: HTMLElement) => Promise<Blob>;
     };
   }
@@ -739,7 +739,8 @@ export function start(): () => void {
 
   const state = {
     users: 1,
-    capture: (figure: HTMLElement) => prepare(figure).then((ready) => ready.blob),
+    // The hover cache only tracks layout and text color; chart paint and content can change independently.
+    capture: compose,
     stop: () => {
       if (--state.users > 0) return;
       listeners.abort();
