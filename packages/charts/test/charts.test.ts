@@ -295,12 +295,11 @@ Cache on.
     expect(html).toContain("The slow month.");
     // The data stays the table, marks or not.
     expect(html).toContain('<details class="cch-data"><summary>Data</summary><table>');
-    // An image of the SVG would leave the marks out, so Copy takes the data and the menu offers no image.
-    expect(html).toContain('data-chart-copy="table" aria-label="Copy the chart\'s data"');
-    expect(html).not.toContain('data-chart-copy="image"');
+    // Copy takes the image, marks and notes included, as on any chart; the menu offers the data.
+    expect(html).toContain('data-chart-copy="image" aria-label="Copy the chart as an image"');
     expect(
       [...html.matchAll(/role="menuitem"[^>]*data-chart-copy="(\w+)"/g)].map((match) => match[1]),
-    ).toEqual(["markdown"]);
+    ).toEqual(["table", "markdown"]);
   });
 
   it("draws a bar worth zero as a faded stroke at its base", async () => {
