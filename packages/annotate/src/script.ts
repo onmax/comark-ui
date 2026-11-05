@@ -286,7 +286,7 @@ export function start(): () => void {
     const body = figure.querySelector<SVGSVGElement>(".ca-frame>svg");
     const shown = body ?? figure.querySelector<HTMLImageElement>(".ca-frame>img:not(.ca-overlay)");
     if (!shown) throw new Error("The screenshot has no image.");
-    const image = body ? await raster(body) : (shown as HTMLImageElement);
+    const image = shown instanceof SVGSVGElement ? await raster(shown) : shown;
     image.loading = "eager";
     if (!image.complete || !image.naturalWidth) await image.decode();
     await document.fonts.ready;
