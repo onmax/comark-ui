@@ -5,6 +5,7 @@ import { globSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:f
 import { dirname } from "node:path";
 import { parse, stringify } from "yaml";
 import { catalog, type RuleInfo } from "../packages/lint/src/rules/index.ts";
+import { site } from "./paths.ts";
 import { packageOrder, siteSections } from "./sections.ts";
 
 const repo = new URL("../", import.meta.url);
@@ -42,14 +43,6 @@ function split(source: string) {
   };
 }
 
-// The old site's links end in a slash, `/zoom/#theme`; the docs shell's paths don't. The playground isn't part of the
-// docs app yet, so its links go to the live site.
-const site = (path: string) => {
-  if (/^\/play(\/|#|$)/.test(path)) return `https://comark-ui.onmax.me${path}`;
-  const [, pathname = "", rest = ""] = /^([^#?]*)(.*)$/.exec(path) ?? [];
-  if (/\.\w+$/.test(pathname) || pathname === "/") return path;
-  return `${pathname.replace(/\/$/, "")}${rest}`;
-};
 const links = (body: string) =>
   body
     .replace(/\]\((\/[^)\s]*)\)/g, (_, path: string) => `](${site(path)})`)
