@@ -5,7 +5,7 @@
   --bg: var(--ui-bg);
   --fg: var(--ui-text-highlighted);
   --muted: var(--ui-text-muted);
-  --faint: var(--ui-text-dimmed);
+  --faint: var(--ui-text-muted);
   --line: var(--ui-border);
   --soft: var(--ui-bg-muted);
   --sans: var(--font-sans);
