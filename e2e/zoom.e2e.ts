@@ -350,3 +350,34 @@ test("the events carry the zoomed copy's scale, which follows a resize", async (
   const after = await scales();
   expect(after.said).toBeCloseTo(after.shown, 2);
 });
+
+test("an item taller than the stage fills its width and scrolls instead of shrinking", async ({
+  page,
+}) => {
+  await page.route("**/tall.svg", (route) =>
+    route.fulfill({
+      contentType: "image/svg+xml",
+      body: '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="4800"><rect width="1200" height="4800" fill="#ddd"/><rect y="4700" width="1200" height="100" fill="#c00"/></svg>',
+    }),
+  );
+  await fixture(page, await render("![Full page](/tall.svg)"));
+  const picture = page.locator("main img");
+  const before = await rect(page, "main img");
+  await picture.click();
+  await expect.poll(() => page.evaluate(() => document.getAnimations().length)).toBe(0);
+
+  const stage = await rect(page, ".cz-stage");
+  const copy = await rect(page, ".cz-item");
+  expect(copy.width).toBeGreaterThan(before.width);
+  expect(copy.top).toBeGreaterThanOrEqual(stage.top);
+  expect(copy.top).toBeLessThan(stage.top + stage.height / 2);
+
+  // Scrolled to the end, the copy's bottom shows on the stage.
+  await page.locator(".cz-stage").evaluate((node) => (node.scrollTop = node.scrollHeight));
+  const end = await rect(page, ".cz-item");
+  expect(end.bottom).toBeLessThanOrEqual(stage.bottom);
+  expect(end.bottom).toBeGreaterThan(stage.bottom - stage.height * 0.1);
+
+  await page.keyboard.press("Escape");
+  await expect(page.locator(".cz-dialog")).toHaveCount(0);
+});

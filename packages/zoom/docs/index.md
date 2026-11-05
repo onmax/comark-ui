@@ -47,6 +47,7 @@ credits: 'Modeled on <a href="https://github.com/francoischalifour/medium-zoom">
 - `::zoom` zooms any block, such as a table, a code block, or a diagram.
 - Items in one group page through one view, with a strip of thumbnails.
 - An image never grows past its natural size, so it stays sharp.
+- An item taller than the screen fills its width and scrolls, so the view never shows it smaller than the page does.
 - Escape, Back, or a click around the item closes the view.
 
 ## Usage
