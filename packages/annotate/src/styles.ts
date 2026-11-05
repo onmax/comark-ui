@@ -79,7 +79,7 @@ export const css = `@layer comark{${[
   "[data-annotate-copy] .ca-copy{position:absolute;top:.5rem;right:.5rem;display:grid;place-items:center;width:1.75rem;height:1.75rem;padding:0;border:1px solid var(--_comark-border);border-radius:calc(var(--_comark-radius) - 4px);background:var(--_comark-background);color:var(--_comark-foreground);cursor:pointer;opacity:0;transition:opacity .15s ease,background .15s ease}",
   ".ca-copy:hover{background:var(--_comark-accent)}",
   ".ca-copy:focus-visible{outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--_comark-ring) 50%,transparent)}",
-  ".ca-screenshot:is(:hover,:focus-visible) .ca-copy,.ca-copy:focus-visible,.ca-copy[data-state],.cz-dialog .ca-copy{opacity:1}",
+  ".ca-screenshot:is(:hover,:focus-visible,:has(:focus-visible)) .ca-copy,.ca-copy:focus-visible,.ca-copy[data-state],.cz-dialog .ca-copy{opacity:1}",
   "@media (hover:none){[data-annotate-copy] .ca-copy{opacity:1}}",
   ".ca-copy svg{width:.875rem;height:.875rem;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}",
   ".ca-copy-done,.ca-copy[data-state=done] .ca-copy-idle{display:none}",
