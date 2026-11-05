@@ -122,6 +122,7 @@ describe("docs and playground registration", () => {
       '::tests\n```xml\n<testsuite><testcase name="one"/></testsuite>\n```\n::',
       'class="ctr-count" data-kind="passed">1 passed</span>',
     ],
+    ["time", ':time[2020-01-01]{threshold="none"}', 'class="ctm" datetime="2020-01-01"'],
     ["zoom", "![Photo](a.png)", 'data-zoom="" tabindex="0"'],
   ])("renders %s through the docs configuration", async (_name, markdown, expected) => {
     vi.stubGlobal("fetch", async (input: string | URL | Request) => {

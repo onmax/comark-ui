@@ -6,6 +6,10 @@ import dark from "shiki/themes/github-dark-default.mjs";
 import light from "shiki/themes/github-light-high-contrast.mjs";
 import { browserPlugins } from "./plugins.ts";
 
+// The pages measure `:time` from one moment, in English and UTC, so their examples read the same wherever the site is built. The playground
+// uses the clock.
+export const timeNow = { now: "2026-11-04T12:00:00Z", timeZone: "UTC", locale: "en" };
+
 // `#123` on the site links to this repository's issues. The site styles its own text in style.css, so its pages leave
 // typeset off; the playground keeps it, to show what a document gets.
 export const sitePlugins = (
@@ -13,7 +17,10 @@ export const sitePlugins = (
   { download = true, icon }: { download?: boolean; icon?: IconOptions } = {},
 ) =>
   browserPlugins(
-    { "comark-github": { references: { repo: "onmax/comark-ui" } } },
+    {
+      "comark-github": { references: { repo: "onmax/comark-ui" } },
+      "comark-time": timeNow,
+    },
     { download, icon, typeset },
   );
 

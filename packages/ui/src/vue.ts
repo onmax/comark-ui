@@ -37,6 +37,7 @@ import * as steps from "comark-steps/vue";
 import * as table from "comark-table/vue";
 import * as tabs from "comark-tabs/vue";
 import * as tests from "comark-tests/vue";
+import * as time from "comark-time/vue";
 import * as zoom from "comark-zoom/vue";
 import { addMermaidStyles, mermaidBar, startMermaid } from "./client.ts";
 import { type Preset, type PresetOptions, preset } from "./index.ts";
@@ -114,6 +115,7 @@ export default (options?: PresetOptions): Preset<Component> =>
       table,
       tabs,
       tests,
+      time,
       typeset,
       zoom,
     },
