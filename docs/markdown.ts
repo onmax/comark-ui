@@ -5,6 +5,7 @@ import { textContent } from "comark/utils";
 import comarkUi from "comark-ui/vue";
 import { createDocsParser, type DocsParserOptions } from "@vite-hub/docs/server";
 import { browserPlugins, components as html } from "./plugins.ts";
+import { studioPlugin } from "./studio.ts";
 
 const isElement = (node: Node): node is ElementNode =>
   Array.isArray(node) && typeof node[0] === "string";
@@ -34,14 +35,9 @@ const bridge = defineComarkPlugin(() => {
 });
 
 // The pages measure `:time` from one moment, in English and UTC, so their examples read the same wherever the site is built.
-const blocks = () => [
-  // The docs shell styles prose. Scoped preset styles are lost when zoom copies a block into its dialog.
-  ...browserPlugins(
-    { "comark-time": { now: "2026-11-04T12:00:00Z", timeZone: "UTC", locale: "en" } },
-    { typeset: false },
-  ),
-  bridge(),
-];
+const timeNow = { now: "2026-11-04T12:00:00Z", timeZone: "UTC", locale: "en" };
+// The docs shell styles prose. Scoped preset styles are lost when zoom copies a block into its dialog.
+const blocks = () => [...browserPlugins({ "comark-time": timeNow }, { typeset: false }), bridge()];
 
 // `:::example` shows its fenced Markdown twice, rendered and as code. The rendered copy is parsed here so the page
 // reaches the browser as nodes.
@@ -67,4 +63,13 @@ const examples = defineComarkPlugin(() => {
   return { name: "docs-examples", post: (state) => visit(state.tree.nodes) };
 });
 
-export default { plugins: [...blocks(), examples()] } satisfies DocsParserOptions;
+// `#51` in the landing's studio links to this repository's issues.
+const studio = studioPlugin(() => [
+  ...browserPlugins(
+    { "comark-time": timeNow, "comark-github": { references: { repo: "onmax/comark-ui" } } },
+    { typeset: false },
+  ),
+  bridge(),
+]);
+
+export default { plugins: [...blocks(), examples(), studio] } satisfies DocsParserOptions;

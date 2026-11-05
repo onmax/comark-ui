@@ -3,11 +3,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "content": "node content.ts",
-    "dev": "node content.ts && nuxi dev --port 4317",
-    "generate": "node content.ts && NODE_OPTIONS=--max-old-space-size=7168 nuxi build",
+    "content": "node content.ts && node landing.ts",
+    "dev": "node content.ts && node landing.ts && nuxi dev --port 4317",
+    "generate": "node content.ts && node landing.ts && NODE_OPTIONS=--max-old-space-size=7168 nuxi build",
     "preview": "E2E_PORT=${PORT:-4391} node ../e2e/serve.ts",
-    "prepare": "node content.ts && nuxi prepare",
+    "prepare": "node content.ts && node landing.ts && nuxi prepare",
     "typecheck": "vue-tsc -b --noEmit"
   },
   "dependencies": {
