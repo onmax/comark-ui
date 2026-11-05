@@ -48,11 +48,6 @@ describe("redirects", () => {
       "https://comark-ui.onmax.me/charts/?x=1#vega-lite",
     );
   });
-  it.each(["/badges", "/badges/"])("redirects the retired builder at %s to badge docs", (path) => {
-    expect(target(`https://comark-ui.onmax.me${path}?preset=npmx`)).toBe(
-      "https://comark-ui.onmax.me/badge/?preset=npmx",
-    );
-  });
   it.each(["SKILL.md", "agents/openai.yaml", "references/example.md"])(
     "redirects the old installable lesson's %s, keeping the query and fragment",
     (file) => {

@@ -14,7 +14,6 @@ const KEEP = /^\/(\.well-known\/|fonts\/)|\.(png|svg|woff2)$/;
 const MERGED =
   /^\/(?!lint\/|guide\/|[\w-]+-to-comark\/)([\w-]+)\/(?:getting-started|syntax|components|guides|theming)\/?$/;
 const RENAMED: Record<string, string | undefined> = {
-  "/badges/": "/badge/",
   "/skills/concept-lesson/": "/skills/teach-lesson/",
   "/skills/concept-lesson.md/": "/skills/teach-lesson.md",
   "/preset/": "/getting-started/",
