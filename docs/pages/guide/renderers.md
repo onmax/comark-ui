@@ -56,6 +56,7 @@ Every plugin is on except `include`, which reads from disk. cast, table, and tes
 | [table](/table/) | `comark-table/html` | `comark-table/vue` | `comark-table/react` | `comark-table/svelte` |
 | [tabs](/tabs/) | `comark-tabs/html` | `comark-tabs/vue` | `comark-tabs/react` | `comark-tabs/svelte` |
 | [tests](/tests/) | `comark-tests/html` | `comark-tests/vue` | `comark-tests/react` | `comark-tests/svelte` |
+| [time](/time/) | `comark-time/html` | `comark-time/vue` | `comark-time/react` | `comark-time/svelte` |
 | [zoom](/zoom/) | `comark-zoom/html` | `comark-zoom/vue` | `comark-zoom/react` | `comark-zoom/svelte` |
 
 Each entry exports the parse plugin as `default` and the renderer's `components`. [github](/github/) and [links](/links/) have several plugins, so they export them by name.

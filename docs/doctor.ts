@@ -50,7 +50,7 @@ const plugins = () => [
   ...browserPlugins({}, { download: false }).map((plugin) => offline[plugin.name] ?? plugin),
   include({ root: files }),
 ];
-// comark-tabs turns `::code-group` into `::tabs`, comark-metrics `::stats` into a table, comark-include and comark-xref
+// comark-tabs turns `::code-group` into `::tabs`, comark-metrics `::stats` into a table, comark-time `:time` into `relative-time`, comark-include and comark-xref
 // replace `:include` and `:ref`, and comark-details turns its items and collapsibles into `disclosure` while parsing,
 // so no renderer has them.
 const known = [
@@ -60,6 +60,7 @@ const known = [
   "include",
   "ref",
   "stats",
+  "time",
   "accordion-item",
   "collapsible",
 ];
