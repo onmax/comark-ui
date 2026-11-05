@@ -239,6 +239,7 @@ How most packages work, so the bullets below don't repeat it:
   - `docs/app/components/DocsMarkdown.vue` replaces the module's to add comark-ui's Vue components. `docs/app/components/content/` draws the site's own blocks: `::examples`, `::example`, `::correct`, and `::incorrect`.
   - Every `@vite-hub/*` package comes from pkg.pr.new at one vite-hub/vitehub commit, in the catalog. When the module lacks something, fix it in vitehub and pin the PR's or `main`'s pkg.pr.new build, not a patch.
   - Its Nitro output in `docs/dist` is a Cloudflare Worker (`wrangler.jsonc` at the root) that runs before the static assets.
+  - `docs/links.ts` (`pnpm docs:links`, run by CI after the build) follows internal links and fragments in `docs/dist/public` through the Worker's redirects in `docs/server/utils/site.ts`, so a page that a redirect shadows or a heading that is missing fails.
   - `docs/server/middleware/site.ts` redirects the old hosts and paths and serves the prerendered file. `docs/server/utils/site.ts` redirects the old per-topic pages to each package's page. `docs/server/routes/badge.svg.ts` is the badge.
   - ViteHub adds the team's tools, all limited to the logins in `docs/server/utils/team.ts`: GitHub sign-in (`docs/server/auth.ts`), comments (`docs/server/comments.ts`), and the Console's Markdown editor (`docs/server/content.ts`), which edits the sources in the repository.
 - Pages:

@@ -62,12 +62,16 @@ describe("redirects", () => {
         ).toBe(`https://comark-ui.onmax.me/.well-known/skills/teach-lesson/${file}?raw=1#the-idea`);
     },
   );
-  it("leaves current pages, the linter, the guides, and the badge alone", () => {
+  it("leaves current pages, the linter, the guides, the migrators, and the badge alone", () => {
     for (const path of [
       "/",
       "/zoom/",
       "/lint/getting-started/",
       "/guide/theming/",
+      "/migrate-to-comark/getting-started/",
+      "/remark-to-comark/getting-started/",
+      "/markdown-it-to-comark/getting-started/",
+      "/marked-to-comark/getting-started/",
       "/badge.svg",
       "/.well-known/skills/teach-lesson/SKILL.md",
       "/.well-known/skills/concept-lesson-extra/SKILL.md",

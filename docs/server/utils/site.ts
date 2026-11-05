@@ -8,11 +8,11 @@ const MOVED: Record<string, string | undefined> = {
 };
 const KEEP = /^\/(\.well-known\/|fonts\/)|\.(png|svg|woff2)$/;
 // Each package had a page per topic until its pages merged into one; the linter keeps its own, and the guides are
-// their own section with a Theming page. The preset's page is Getting started now that it's comark-ui, and the
+// their own section with a Theming page, and each migrator and the wizard keep a Getting started page. The preset's page is Getting started now that it's comark-ui, and the
 // charts' sub-pages left components/, where the annotation page became Notes, and gantt and Vega-Lite joined the
 // Charts page.
 const MERGED =
-  /^\/(?!lint\/|guide\/)([\w-]+)\/(?:getting-started|syntax|components|guides|theming)\/?$/;
+  /^\/(?!lint\/|guide\/|[\w-]+-to-comark\/)([\w-]+)\/(?:getting-started|syntax|components|guides|theming)\/?$/;
 const RENAMED: Record<string, string | undefined> = {
   "/badges/": "/badge/",
   "/skills/concept-lesson/": "/skills/teach-lesson/",

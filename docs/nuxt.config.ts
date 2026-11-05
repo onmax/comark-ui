@@ -1,20 +1,8 @@
 import { fileURLToPath } from "node:url";
 import { defineNuxtConfig } from "nuxt/config";
 import { env } from "vite-hub/env";
+import { excludedLinks } from "./link-excludes.ts";
 import { categories } from "./sections.ts";
-
-// Doctor rule examples link to made-up files and a javascript: URL on purpose, so neither the link checker nor the
-// prerenderer follows them.
-const madeUp = [
-  /^\/census$/,
-  /^\/ducks\//,
-  /^\/ponds\/?/,
-  /^\/doctor\/ducks?\.md$/,
-  /^\/(pond-tour|spinner)\.mp4$/,
-  /^\/roof\.mp3$/,
-  /pond\.example\//,
-  /^javascript:/,
-];
 
 export default defineNuxtConfig({
   compatibilityDate: "2026-10-01",
@@ -36,7 +24,7 @@ export default defineNuxtConfig({
     // Comark plugins are functions, so they reach the server through a file.
     parser: "./markdown.ts",
   },
-  linkChecker: { excludeLinks: madeUp },
+  linkChecker: { excludeLinks: excludedLinks },
   vitehub: {
     name: "comark-ui",
     preset: "cloudflare",
@@ -85,7 +73,7 @@ export default defineNuxtConfig({
     // bindings into docs/dist/server/wrangler.json, which the local Wrangler module selects for commands run from the repository's root.
     cloudflare: { deployConfig: true, nodeCompat: true },
     output: { dir: fileURLToPath(new URL("dist/", import.meta.url)) },
-    prerender: { ignore: madeUp },
+    prerender: { ignore: excludedLinks },
     // @vite-hub/agent pulls in @webcontainer/env, which requires StackBlitz's @blitz/internal/env inside a try. A Worker
     // bundle can't leave it external, so it gets an empty module. Drop this when vitehub keeps web-container out of
     // Worker builds.
