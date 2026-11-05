@@ -49,9 +49,11 @@ describe("built docs links", () => {
       <a href="/package.json">Package</a>
       <img src="/doctor/xref/missing.png">
       <img src="/guide/pond.png">
+      <img src="/pond-typo.png">
+      <img src="/pond.png/missing">
     `);
     expect(result.status).toBe(1);
-    expect(result.stderr).toContain("7 broken links");
+    expect(result.stderr).toContain("9 broken links");
     for (const path of [
       "/missing/",
       "/missing.svg",
@@ -60,6 +62,8 @@ describe("built docs links", () => {
       "/package.json",
       "/doctor/xref/missing.png",
       "/guide/pond.png",
+      "/pond-typo.png",
+      "/pond.png/missing",
     ])
       expect(result.stderr).toContain(`links to ${path}, which has no page or file.`);
   });
@@ -92,6 +96,17 @@ describe("built docs links", () => {
       "doctor/xref/missing-id.html": '<img src="ducks.png">',
       "doctor/xref/ref-content.html": '<img src="pond.png">',
       "doctor/xref/unknown-label.html": '<img src="pigeon.png">',
+    });
+    expect(result.stderr).toBe("");
+    expect(result.status).toBe(0);
+  });
+
+  it("excludes the fictional screenshot in Doctor's annotate examples", () => {
+    const result = check("", {
+      "doctor/annotate/undefined-binding.html": '<img src="/pond.png">',
+      "doctor/annotate/unknown-mark.html": '<img src="/pond.png">',
+      "doctor/annotate/unknown-prop.html": '<img src="/pond.png">',
+      "doctor/annotate/unsafe-bound-url.html": '<img src="/pond.png">',
     });
     expect(result.stderr).toBe("");
     expect(result.status).toBe(0);

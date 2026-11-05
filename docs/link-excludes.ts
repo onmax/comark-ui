@@ -8,6 +8,7 @@ export const excludedLinks = [
   /^\/doctor\/broken-anchor#methods$/,
   /^\/doctor\/chips\/octocat$/,
   /^\/doctor\/xref\/(pond|pigeon|roof|ducks)\.png$/,
+  /^\/pond\.png$/,
   /^\/(pond-tour|spinner)\.mp4$/,
   /^\/roof\.mp3$/,
   /pond\.example\//,
