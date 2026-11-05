@@ -176,7 +176,7 @@ async function studio(node: ElementNode, plugins: () => ComarkPlugin[]) {
 }
 
 /** Turns the landing's `::hero` into a `studio` node with what Studio.vue animates. */
-export const studioPlugin = defineComarkPlugin((plugins: () => ComarkPlugin[]) => ({
+export const studioPlugin = defineComarkPlugin((plugins: () => ComarkPlugin[] = () => []) => ({
   name: "docs-studio",
   post: async (state) => {
     const nodes: Node[] = state.tree.nodes;

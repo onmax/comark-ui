@@ -4,7 +4,7 @@
 // so they're a file it fetches.
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { renderHtmlFromDocument } from "@comark/html";
-import { parseMarkdown } from "comark";
+import { parseMarkdown, type Node } from "comark";
 import { escapeHtml, textContent } from "comark/utils";
 import { icons as lucide } from "@iconify-json/lucide";
 import { parse } from "yaml";
@@ -199,20 +199,23 @@ function deal(demos: Demo[]) {
 // A `:::demo` in the landing's `::packages` adds a card for a package with no examples, such as lint's report.
 const landing = await parseMarkdown(readFileSync(new URL("docs/pages/index.md", repo), "utf8"));
 const block = landing.nodes.find((node) => isElement(node) && node[0] === "packages");
-const extra: Demo[] = (isElement(block) ? block.slice(2) : []).filter(isElement).map((node) => {
-  const [, attrs, ...content] = node;
-  const pkg = packages.find((pkg) => pkg.slug === rawText(attrs.package));
-  if (!pkg) throw new Error(`A demo names no package: "${rawText(attrs.package)}".`);
-  const pre = content.find((child) => isElement(child) && child[0] === "pre");
-  if (!pre) throw new Error(`The ${pkg.slug} demo needs a fenced code block.`);
-  return {
-    id: pkg.slug,
-    pkg,
-    page: pkg.slug,
-    label: rawText(attrs.label),
-    source: textContent(pre),
-  };
-});
+// SAFETY: an element node is [tag, attributes, ...children].
+const extra: Demo[] = (isElement(block) ? (block.slice(2) as Node[]) : [])
+  .filter(isElement)
+  .map((node) => {
+    const [, attrs, ...content] = node;
+    const pkg = packages.find((pkg) => pkg.slug === rawText(attrs.package));
+    if (!pkg) throw new Error(`A demo names no package: "${rawText(attrs.package)}".`);
+    const pre = content.find((child) => isElement(child) && child[0] === "pre");
+    if (!pre) throw new Error(`The ${pkg.slug} demo needs a fenced code block.`);
+    return {
+      id: pkg.slug,
+      pkg,
+      page: pkg.slug,
+      label: rawText(attrs.label),
+      source: textContent(pre),
+    };
+  });
 
 const recipeInstall = (page: string) =>
   rawText(frontmatter(new URL(`docs/pages/${page}.md`, repo)).install).replace(/^pnpm add /, "");
