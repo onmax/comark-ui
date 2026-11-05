@@ -6,7 +6,7 @@ tagline: Suggested edits and comments written in the text, rendered with the cha
 group: Markdown syntax
 icon: file-pen-line
 blurb: Suggested edits and comments
-credits: 'Syntax from <a href="https://criticmarkup.com">CriticMarkup</a>, and the modes from <a href="https://facelessuser.github.io/pymdown-extensions/extensions/critic/">pymdownx.critic</a>.'
+credits: 'Syntax from <a href="https://criticmarkup.com">CriticMarkup</a>, and the modes from <a href="https://facelessuser.github.io/pymdown-extensions/extensions/critic/">pymdownx.critic</a>. The comment icon from <a href="https://lucide.dev">Lucide</a>.'
 ---
 
 ::examples
@@ -211,7 +211,7 @@ const document = await parseMarkdown(markdown, {
 
 ### Styles
 
-The package's styles tint insertions green with an underline, strike deletions in red, highlight in amber, and draw comments as muted chips. Without them, the browser underlines `<ins>`, strikes `<del>`, and paints `<mark>` yellow, and comments are plain text. Import them with yours:
+The package's styles tint insertions green with an underline, strike deletions in red, highlight in amber, and draw comments as muted notes with a speech bubble. Without them, the browser underlines `<ins>`, strikes `<del>`, and paints `<mark>` yellow, and comments are plain text. Import them with yours:
 
 ```ts
 import "comark-critic/style.css";
@@ -231,8 +231,7 @@ The marks read these [shared tokens](/guide/theming/):
 
 | Token | Used for |
 | --- | --- |
-| `--comark-accent` | The comment's chip |
-| `--comark-border` | The chip's edge |
+| `--comark-accent` | The comment's tint |
 | `--comark-foreground` | A deletion's text, mixed with its red |
 | `--comark-muted` | The comment's text |
 | `--comark-radius` | Corners |

@@ -298,17 +298,8 @@ The toolbar wraps.
     await expect(figure.locator(".ca-stage")).toBeFocused();
     await page.evaluate(() => navigator.clipboard.writeText("before copying"));
     await page.keyboard.press(`${modifier}+c`);
-    // Chromium's idle PNG encoding can take about seven seconds before the clipboard write completes.
-    await expect
-      .poll(
-        () =>
-          page.evaluate(async () => {
-            const [item] = await navigator.clipboard.read();
-            return item?.types;
-          }),
-        { timeout: 15_000 },
-      )
-      .toContain("image/png");
+    // Chromium can defer PNG encoding under load; wait for the completed write before reading it.
+    await expect(figure.locator(".ca-copy-status")).toHaveText("Copied", { timeout: 15_000 });
     const copiedHeight = await page.evaluate(async () => {
       const [item] = await navigator.clipboard.read();
       const bitmap = await createImageBitmap(await item!.getType("image/png"));
