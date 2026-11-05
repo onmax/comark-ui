@@ -293,7 +293,9 @@ describe("comark-annotate", () => {
     expect(html.match(/<script>\(function start\(\) \{/g)).toHaveLength(1);
     expect(styles(html)).toContain(".ca-copy{display:none}");
     expect(styles(html)).toContain("[data-annotate-copy] .ca-copy{");
-    expect(styles(html)).toContain(".ca-screenshot:is(:hover,:focus-visible,:has(:focus-visible)) .ca-copy");
+    expect(styles(html)).toContain(
+      ".ca-screenshot:is(:hover,:focus-visible,:has(:focus-visible)) .ca-copy",
+    );
 
     const slider = await run(compare.replace("::compare", '::compare{mode="slider"}'));
     expect(slider.html).not.toContain('class="ca-copy"');
