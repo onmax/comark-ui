@@ -86,9 +86,5 @@ export default defineNuxtConfig({
     cloudflare: { deployConfig: true, nodeCompat: true },
     output: { dir: fileURLToPath(new URL("dist/", import.meta.url)) },
     prerender: { ignore: madeUp },
-    // @vite-hub/agent pulls in @webcontainer/env, which requires StackBlitz's @blitz/internal/env inside a try. A Worker
-    // bundle can't leave it external, so it gets an empty module. Drop this when vitehub keeps web-container out of
-    // Worker builds.
-    alias: { "@blitz/internal/env": fileURLToPath(new URL("stubs/empty.mjs", import.meta.url)) },
   },
 });

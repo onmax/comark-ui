@@ -1,0 +1,467 @@
+diff --git a/dist/draft-k-B2ca0k.js b/dist/draft-kHySoLw1.js
+similarity index 99%
+rename from dist/draft-k-B2ca0k.js
+rename to dist/draft-kHySoLw1.js
+index 1db480c075c1b02b6ababdc80109058192ec32db..33dcded469926450ec15354568667b85eb802d65 100644
+--- a/dist/draft-k-B2ca0k.js
++++ b/dist/draft-kHySoLw1.js
+@@ -1,5 +1,5 @@
+ import { docsSectionForPath, findDocsPage, normalizeDocsPath } from "./navigation.js";
+-import { i as docsPageSchema, t as docsFrontmatter } from "./schema-D7yXFi4A.js";
++import { i as docsPageSchema, t as docsFrontmatter } from "./schema-PRYjzCAC.js";
+ import { i as docsPageResponse, n as docsPageOf } from "./page-B9yFkRP1.js";
+ //#region src/draft.ts
+ /**
+diff --git a/dist/index.d.ts b/dist/index.d.ts
+index 8c1c6f0cbeec2fac0ac52815e4ce91f6da9f4438..5835e78cec06828979937d137da8d7bf47691e65 100644
+--- a/dist/index.d.ts
++++ b/dist/index.d.ts
+@@ -1,6 +1,6 @@
+-import { a as DocsTocLink, c as DocsPageFrontmatter, d as docsLayouts, f as docsPageFields, h as expandDottedKeys, i as DocsSection, l as DocsPageNavigation, m as docsSectionSchema, n as DocsPage, o as DocsLayout, p as docsPageSchema, r as DocsSearchSection, s as DocsPageFile, t as DocsManifest, u as DocsSectionFile } from "./types-CeQKlDf2.js";
+-import { i as DocsDocument, n as DocsPageResponse, t as DocsPageLink } from "./page-BT6Ao5Vz.js";
+-import { a as DocsStartOptions, i as DocsSiteOptions, r as DocsPublicConfig, t as DocsModuleOptions } from "./nuxt-C3apXz2n.js";
++import { a as DocsTocLink, c as DocsPageFrontmatter, d as docsLayouts, f as docsPageFields, h as expandDottedKeys, i as DocsSection, l as DocsPageNavigation, m as docsSectionSchema, n as DocsPage, o as DocsLayout, p as docsPageSchema, r as DocsSearchSection, s as DocsPageFile, t as DocsManifest, u as DocsSectionFile } from "./types-C8-TmiDn.js";
++import { i as DocsDocument, n as DocsPageResponse, t as DocsPageLink } from "./page-wIrmxTfS.js";
++import { a as DocsStartOptions, i as DocsSiteOptions, r as DocsPublicConfig, t as DocsModuleOptions } from "./nuxt-1Go0BTqc.js";
+ import { DocsCatalogGroup, DocsIcons, DocsLink, DocsMarkdownLinks, DocsSidebarGroup, docsCatalog, docsManifestPages, docsMarkdownLinks, docsMcpInstallLinks, docsPageIcon, docsRailGroups, docsRailIcon, docsRawPath, docsRelatedSections, docsSectionForPath, docsSectionIcon, docsSidebarGroups, docsTutorialNavigationCookie, findDocsPage, normalizeDocsBase, normalizeDocsPath } from "./navigation.js";
+ import { ContentLabel, DocumentsDefinition } from "@vite-hub/content";
+ //#region src/collection.d.ts
+diff --git a/dist/index.js b/dist/index.js
+index e63e205a2f73364fb60c9fc323e6d9e7380fe597..db1a55472eee0eb05d351dcf2062fa4961a48746 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -1,5 +1,5 @@
+ import { docsCatalog, docsManifestPages, docsMarkdownLinks, docsMcpInstallLinks, docsPageIcon, docsRailGroups, docsRailIcon, docsRawPath, docsRelatedSections, docsSectionForPath, docsSectionIcon, docsSidebarGroups, docsTutorialNavigationCookie, findDocsPage, normalizeDocsBase, normalizeDocsPath } from "./navigation.js";
+-import { a as docsSectionSchema, i as docsPageSchema, n as docsLayouts, o as expandDottedKeys, r as docsPageFields } from "./schema-D7yXFi4A.js";
++import { a as docsSectionSchema, i as docsPageSchema, n as docsLayouts, o as expandDottedKeys, r as docsPageFields } from "./schema-PRYjzCAC.js";
+ import { r as docsPagePath } from "./page-B9yFkRP1.js";
+ import { documents } from "@vite-hub/content/collections";
+ //#region src/collection.ts
+diff --git a/dist/navigation.d.ts b/dist/navigation.d.ts
+index 375f3273d584107a56e8a04c5594795529d953ef..cbc53ffd044d3deb272036e87bf72e1f4499256f 100644
+--- a/dist/navigation.d.ts
++++ b/dist/navigation.d.ts
+@@ -1,4 +1,4 @@
+-import { i as DocsSection, n as DocsPage, r as DocsSearchSection, t as DocsManifest } from "./types-CeQKlDf2.js";
++import { i as DocsSection, n as DocsPage, r as DocsSearchSection, t as DocsManifest } from "./types-C8-TmiDn.js";
+ //#region src/navigation.d.ts
+ /** A link that the site options add to the shell, such as a tutorials page or a community chat. */
+ export interface DocsLink {
+diff --git a/dist/nuxt-C3apXz2n.d.ts b/dist/nuxt-1Go0BTqc.d.ts
+similarity index 91%
+rename from dist/nuxt-C3apXz2n.d.ts
+rename to dist/nuxt-1Go0BTqc.d.ts
+index 4473e4c08ae31d04c71b98920b0e0c526c1f867e..a72658685d24cc31092d17d0588d8e6d2ba2f56d 100644
+--- a/dist/nuxt-C3apXz2n.d.ts
++++ b/dist/nuxt-1Go0BTqc.d.ts
+@@ -1,4 +1,4 @@
+-import { n as DocsPage } from "./types-CeQKlDf2.js";
++import { n as DocsPage } from "./types-C8-TmiDn.js";
+ import { DocsIcons, DocsLink } from "./navigation.js";
+ //#region src/comments-nuxt.d.ts
+ /** Comments on a docs site: the `comments` option of `vite-hub/nuxt`, which these pass to. */
+@@ -99,6 +99,15 @@ interface DocsModuleOptions {
+    * a component into plain Markdown. The built-in rewrites run after it. Runs at build time.
+    */
+   rawMarkdown?: (markdown: string, page: DocsPage) => string | Promise<string>;
++  /**
++   * The share image of every page, rendered by `nuxt-og-image` while the build prerenders. By default it shows the
++   * site, the page title and description, and the section. `component` names the app's own template in
++   * `components/OgImage/`, such as `Docs` for `OgImage/Docs.takumi.vue`; it gets the same props. A page sets
++   * `seo.image` to use a file of its own, or `false` for none. `false` here turns the images off.
++   */
++  ogImage?: false | {
++    component?: string;
++  };
+   /**
+    * Path of a module, relative to the app root, whose default export is the parser options, such as
+    * `{ plugins: [tabs()] }`. Comark plugins are functions, so they reach the server through a file and not through
+@@ -145,6 +154,9 @@ interface DocsPublicConfig {
+   assistant: {
+     agent: string;
+   } | false;
++  ogImage: {
++    component: string;
++  } | false;
+ }
+ interface DocsNuxtModule {
+   (inlineOptions: DocsModuleOptions, nuxt: never): unknown;
+diff --git a/dist/nuxt.d.ts b/dist/nuxt.d.ts
+index f9a216450ef3ee1d3b94a9384749769ceddc85b7..6ec1665e97748f0bf9712cb7de052a5c1f45694e 100644
+--- a/dist/nuxt.d.ts
++++ b/dist/nuxt.d.ts
+@@ -1,2 +1,2 @@
+-import { a as DocsStartOptions, c as DocsCommentsOptions, i as DocsSiteOptions, l as DocsCommentsSetupError, n as DocsNuxtModule, o as docsNuxtModule, r as DocsPublicConfig, s as DocsAssistantSetupError, t as DocsModuleOptions } from "./nuxt-C3apXz2n.js";
++import { a as DocsStartOptions, c as DocsCommentsOptions, i as DocsSiteOptions, l as DocsCommentsSetupError, n as DocsNuxtModule, o as docsNuxtModule, r as DocsPublicConfig, s as DocsAssistantSetupError, t as DocsModuleOptions } from "./nuxt-1Go0BTqc.js";
+ export { DocsAssistantSetupError, type DocsCommentsOptions, DocsCommentsSetupError, DocsModuleOptions, DocsNuxtModule, DocsPublicConfig, DocsSiteOptions, DocsStartOptions, docsNuxtModule as default };
+\ No newline at end of file
+diff --git a/dist/nuxt.js b/dist/nuxt.js
+index b08f5ad2ba7d44513dcaea34777343529538bb72..f967980e514f0928e04bce7e1bcde664b50a629f 100644
+--- a/dist/nuxt.js
++++ b/dist/nuxt.js
+@@ -1,6 +1,6 @@
+ import { docsAppPath, docsManifestPages, docsPageIcon, docsRailIcon, docsRawFile, docsRawPath, docsSectionIcon, normalizeDocsBase } from "./navigation.js";
+ import { t as coversDocsPages } from "./page-B9yFkRP1.js";
+-import { r as createDocsManifest, t as toRawMarkdown } from "./raw-DAVjDoXI.js";
++import { r as createDocsManifest, t as toRawMarkdown } from "./raw-D37BO3tx.js";
+ import { docsAppConfigUi, vercelTheme } from "./theme.js";
+ import { createRequire } from "node:module";
+ import { existsSync, mkdirSync, readFileSync, rmSync, watch, writeFileSync } from "node:fs";
+@@ -139,6 +139,20 @@ const docsNuxtModule = defineNuxtModule({
+ 			[dependency("@vite-hub/ui/nuxt")]: {},
+ 			[dependency("nuxt-llms")]: {},
+ 			[dependency("nuxt-agent-discovery")]: {},
++			[dependency("nuxt-site-config")]: { defaults: {
++				name: docs.site?.name ?? "Docs",
++				url: docs.site?.url,
++				description: docs.site?.description,
++				defaultLocale: "en"
++			} },
++			...docs.ogImage === false ? {} : { [dependency("nuxt-og-image")]: { defaults: {
++				zeroRuntime: true,
++				defaults: {
++					width: 1200,
++					height: 630
++				}
++			} } },
++			[dependency("nuxt-schema-org")]: {},
+ 			...docs.linkChecker === false ? {} : { [dependency("nuxt-link-checker")]: { defaults: {
+ 				failOnError: true,
+ 				fetchRemoteUrls: false,
+@@ -193,6 +207,10 @@ const docsNuxtModule = defineNuxtModule({
+ 			}
+ 		}
+ 		nuxt.hook("build:before", writeRaw);
++		if (options.linkChecker !== false) {
++			const linkChecker = moduleOptions.linkChecker ??= {};
++			linkChecker.excludeLinks = [...linkChecker.excludeLinks ?? [], ...docsManifestPages(manifest).map((page) => docsAppPath(docsRawPath(page.path), config.appBase))];
++		}
+ 		moduleOptions.runtimeConfig.public.mdc ??= { headings: { anchorLinks: {
+ 			h1: false,
+ 			h2: true,
+@@ -432,9 +450,9 @@ const docsNuxtModule = defineNuxtModule({
+ 			route: "/sitemap.xml",
+ 			handler: resolver.resolve("./runtime/server/sitemap.js")
+ 		});
+-		addServerHandler({
++		for (const method of ["get", "head"]) addServerHandler({
+ 			route: "/raw/**",
+-			method: "get",
++			method,
+ 			handler: resolver.resolve("./runtime/server/raw.js")
+ 		});
+ 		/**
+@@ -584,7 +602,8 @@ function publicConfig(options, appBase) {
+ 			url: `${url}${docsAppPath("/mcp", appBase)}`,
+ 			guide: options.mcp?.guide ?? null
+ 		},
+-		assistant: options.assistant ? { agent: options.assistant === true ? "docs" : options.assistant.agent ?? "docs" } : false
++		assistant: options.assistant ? { agent: options.assistant === true ? "docs" : options.assistant.agent ?? "docs" } : false,
++		ogImage: options.ogImage === false ? false : { component: options.ogImage?.component ?? "DocsPage" }
+ 	};
+ }
+ //#endregion
+diff --git a/dist/page-BT6Ao5Vz.d.ts b/dist/page-wIrmxTfS.d.ts
+similarity index 96%
+rename from dist/page-BT6Ao5Vz.d.ts
+rename to dist/page-wIrmxTfS.d.ts
+index 6f5421a97a02d5b9935fa2ade3ff256d2f945cdd..4721f991f98cddcfcb34b8e5ec6c318b16712594 100644
+--- a/dist/page-BT6Ao5Vz.d.ts
++++ b/dist/page-wIrmxTfS.d.ts
+@@ -1,4 +1,4 @@
+-import { a as DocsTocLink, i as DocsSection, n as DocsPage, r as DocsSearchSection, t as DocsManifest } from "./types-CeQKlDf2.js";
++import { a as DocsTocLink, i as DocsSection, n as DocsPage, r as DocsSearchSection, t as DocsManifest } from "./types-C8-TmiDn.js";
+ import { ComarkPlugin, Node } from "comark";
+ //#region src/markdown.d.ts
+ /** A page parsed on the server. The client renders `nodes` and never parses Markdown itself. */
+diff --git a/dist/raw-DAVjDoXI.js b/dist/raw-D37BO3tx.js
+similarity index 99%
+rename from dist/raw-DAVjDoXI.js
+rename to dist/raw-D37BO3tx.js
+index 8fc02a635e7765cd62956eaa917ca6ca8b0e6dd2..a8f0de9851a6fcc259155b980bf68c8b69408b82 100644
+--- a/dist/raw-DAVjDoXI.js
++++ b/dist/raw-D37BO3tx.js
+@@ -1,5 +1,5 @@
+ import { docsManifestPages, normalizeDocsBase } from "./navigation.js";
+-import { a as docsSectionSchema, i as docsPageSchema, t as docsFrontmatter } from "./schema-D7yXFi4A.js";
++import { a as docsSectionSchema, i as docsPageSchema, t as docsFrontmatter } from "./schema-PRYjzCAC.js";
+ import { n as docsPageOf, r as docsPagePath } from "./page-B9yFkRP1.js";
+ import { z } from "zod";
+ import { existsSync, readFileSync, readdirSync } from "node:fs";
+diff --git a/dist/runtime/app/components/DocsPage.vue b/dist/runtime/app/components/DocsPage.vue
+index 31ab4afa88f7d12c59313a7c8da59b5db30c7303..6181b60496dd0bc5d02765abde5ad7dc96b99191 100644
+--- a/dist/runtime/app/components/DocsPage.vue
++++ b/dist/runtime/app/components/DocsPage.vue
+@@ -19,11 +19,13 @@ const isStandalone = !response.section && !isRoot
+ 
+ // Agents can fetch the Markdown twin of the page instead of the HTML.
+ useHead({ link: [{ rel: "alternate", type: "text/markdown", href: `${site.url}${docsAppPath(docsRawPath(page.path), appBase)}` }] })
+-useSeoMeta({
++const section = manifest.sections.find(candidate => candidate.id === response.section)
++useDocsSeo({
+   title: page.seo?.title ?? page.sourceTitle,
+-  ogTitle: page.seo?.title ?? page.sourceTitle,
+-  description: page.seo?.description ?? page.description ?? undefined,
+-  ogDescription: page.seo?.description ?? page.description ?? undefined,
++  description: page.seo?.description ?? page.description,
++  section: section && { title: section.title, path: docsAppPath(section.path, appBase) },
++  image: page.seo?.image,
++  type: isRoot || page.layout === "landing" ? "page" : "article",
+ })
+ </script>
+ 
+diff --git a/dist/runtime/app/components/OgImage/DocsPage.takumi.vue b/dist/runtime/app/components/OgImage/DocsPage.takumi.vue
+new file mode 100644
+index 0000000000000000000000000000000000000000..bb8fef2b735847daf3d52bba3ca8a4d3596592bc
+--- /dev/null
++++ b/dist/runtime/app/components/OgImage/DocsPage.takumi.vue
+@@ -0,0 +1,33 @@
++<script setup lang="ts">
++// The share image of every docs page, in the `vercel` theme: the site, the page title and description, and the section.
++// The build renders it once per page while prerendering, so the Worker carries no renderer.
++withDefaults(defineProps<{
++  title?: string
++  description?: string
++  site?: string
++  section?: string
++  logo?: string
++  host?: string
++}>(), { title: "", description: "", site: "", section: "", logo: "", host: "" })
++</script>
++
++<template>
++  <div class="w-full h-full flex flex-col justify-between bg-white text-black p-[72px]" style="font-family: Geist">
++    <div class="flex items-center gap-4">
++      <img v-if="logo" :src="logo" alt="" class="w-12 h-12">
++      <span class="text-[36px] font-semibold" style="letter-spacing: -0.02em">{{ site }}</span>
++      <span v-if="section" class="text-[36px] text-neutral-400">/</span>
++      <span v-if="section" class="text-[36px] text-neutral-500">{{ section }}</span>
++    </div>
++
++    <div class="flex flex-col gap-6">
++      <span class="text-[76px] font-semibold" style="line-height: 1.05; letter-spacing: -0.045em; text-wrap: balance">{{ title }}</span>
++      <span v-if="description" class="text-[34px] text-neutral-500" style="line-height: 1.35; line-clamp: 2; text-overflow: ellipsis; overflow: hidden">{{ description }}</span>
++    </div>
++
++    <div class="flex items-center justify-between border-t border-neutral-200 pt-8">
++      <span class="text-[26px] text-neutral-500" style="font-family: 'Geist Mono'">{{ host }}</span>
++      <div class="flex w-[56px] h-[8px] bg-black" />
++    </div>
++  </div>
++</template>
+diff --git a/dist/runtime/app/composables/seo.ts b/dist/runtime/app/composables/seo.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..d5ffa31f295e33c080a89fdf5b9208384f218687
+--- /dev/null
++++ b/dist/runtime/app/composables/seo.ts
+@@ -0,0 +1,54 @@
++import { defineArticle, defineBreadcrumb, defineOgImage, defineWebPage, useRoute, useSchemaOrg, useSeoMeta } from "#imports"
++import { docsAppPath, normalizeDocsPath } from "#docs/navigation"
++
++import { useDocsConfig } from "./docs"
++
++export interface DocsSeoInput {
++  title: string
++  description?: string | null
++  /** Section label in the share image and the breadcrumb, such as `KV`. */
++  section?: { title: string, path: string } | null
++  /** A path in `public/` or a URL for the share image, or `false` for none. Without it the build renders one. */
++  image?: string | false
++  /** `article` marks the page a TechArticle in Schema.org. */
++  type?: "article" | "page"
++}
++
++/**
++ * Title, description, share image, and Schema.org of a page. Docs pages call it with their frontmatter; an app page,
++ * such as a playground, calls it to look the same when shared.
++ */
++export function useDocsSeo(input: DocsSeoInput): void {
++  const { site, appBase, ogImage } = useDocsConfig()
++  const route = useRoute()
++  const path = docsAppPath(normalizeDocsPath(route.path), appBase)
++  // A section's own Overview names the section already.
++  const section = input.section && input.section.path !== path ? input.section : null
++  const description = input.description ?? site.description ?? undefined
++  useSeoMeta({ title: input.title, ogTitle: input.title, description, ogDescription: description })
++
++  if (input.image) {
++    const image = /^https?:\/\//.test(input.image) ? input.image : `${site.url}${docsAppPath(input.image, appBase)}`
++    useSeoMeta({ ogImage: image, twitterImage: image })
++  }
++  else if (input.image !== false && ogImage) {
++    // SAFETY: `ogImage.component` is an OgImage component; the default ships with this package, and an app names its own.
++    defineOgImage(ogImage.component as "DocsPage", {
++      title: input.title,
++      description: description ?? "",
++      site: site.name,
++      section: section?.title ?? "",
++      // A path, so the prerender reads the file from the build instead of fetching the site before it is deployed.
++      logo: site.logo ?? "",
++      host: site.url.replace(/^https?:\/\//, ""),
++    })
++  }
++
++  useSchemaOrg([
++    defineWebPage({ name: input.title, description }),
++    ...input.type === "article" ? [defineArticle({ "@type": "TechArticle", "headline": input.title, description })] : [],
++    ...section
++      ? [defineBreadcrumb({ itemListElement: [{ name: site.name, item: docsAppPath("/", appBase) }, { name: section.title, item: section.path }, { name: input.title }] })]
++      : [],
++  ])
++}
+diff --git a/dist/runtime/server/page.d.ts b/dist/runtime/server/page.d.ts
+index 5d9176db1f0853b17e424744d64ea30400206b11..c9fa9f679c98ca7a5bdb37167a6fff25400bc797 100644
+--- a/dist/runtime/server/page.d.ts
++++ b/dist/runtime/server/page.d.ts
+@@ -1,4 +1,4 @@
+-import { n as DocsPageResponse } from "../../page-BT6Ao5Vz.js";
++import { n as DocsPageResponse } from "../../page-wIrmxTfS.js";
+ import { EventHandler, EventHandlerRequest } from "h3";
+ //#region src/runtime/server/page.d.ts
+ /** `/api/_docs/page/docs/kv.json` is the page at `/docs/kv`. The `.json` suffix lets static hosts store every page beside its folder. */
+diff --git a/dist/runtime/server/page.js b/dist/runtime/server/page.js
+index d6bac45656c32eb7b7ccbc75633b834bc69ef04b..1cd7c1f6300ef5739212e9adeca3d12d91572614 100644
+--- a/dist/runtime/server/page.js
++++ b/dist/runtime/server/page.js
+@@ -12,7 +12,7 @@ const parsed = /* @__PURE__ */ new Map();
+ const handler = defineEventHandler(async (event) => {
+ 	const path = `/${(getRouterParam(event, "_") ?? "").replace(/\.json$/, "")}`;
+ 	if (content && (content.preview.active() || content.preview.frame())) {
+-		const { docsDraftResponse } = await import("../../draft-k-B2ca0k.js");
++		const { docsDraftResponse } = await import("../../draft-kHySoLw1.js");
+ 		const draft = await docsDraftResponse(content, manifest, path, parse);
+ 		if (draft) {
+ 			setHeader(event, "cache-control", "private, no-store");
+diff --git a/dist/runtime/server/search.d.ts b/dist/runtime/server/search.d.ts
+index 767b59f2d3a6aa98ad9dc543fb5d5da3b15f7738..23849ac60aaf7982b7ff00d789187f77cb0b0e7c 100644
+--- a/dist/runtime/server/search.d.ts
++++ b/dist/runtime/server/search.d.ts
+@@ -1,4 +1,4 @@
+-import { r as DocsSearchSection } from "../../types-CeQKlDf2.js";
++import { r as DocsSearchSection } from "../../types-C8-TmiDn.js";
+ import { EventHandler, EventHandlerRequest } from "h3";
+ //#region src/runtime/server/search.d.ts
+ /** Every page split by heading, for the search dialog. The build prerenders it. */
+diff --git a/dist/schema-D7yXFi4A.js b/dist/schema-PRYjzCAC.js
+similarity index 94%
+rename from dist/schema-D7yXFi4A.js
+rename to dist/schema-PRYjzCAC.js
+index ccc1ddca494084067377582a58346e530f1f9478..f4d23bda9e1b76056df0bce24a1c094c779f205a 100644
+--- a/dist/schema-D7yXFi4A.js
++++ b/dist/schema-PRYjzCAC.js
+@@ -14,7 +14,8 @@ const navigationFields = {
+ };
+ const seoFields = {
+ 	title: z.string().optional(),
+-	description: z.string().optional()
++	description: z.string().optional(),
++	image: z.union([z.string(), z.literal(false)]).optional()
+ };
+ const pageFields = {
+ 	title: z.string(),
+@@ -40,7 +41,8 @@ const docsPageFields = {
+ 	"navigation.group": navigationFields.group,
+ 	"navigation.kind": navigationFields.kind,
+ 	"seo.title": seoFields.title,
+-	"seo.description": seoFields.description
++	"seo.description": seoFields.description,
++	"seo.image": seoFields.image
+ };
+ /** The build validates frontmatter with this schema after `docsFrontmatter()` expanded its dotted keys. */
+ const docsPageSchema = z.strictObject(pageFields);
+diff --git a/dist/server.d.ts b/dist/server.d.ts
+index caf2ad64edd81c490fde31d594e915cb592ea2f7..7dafc032fff8590b8596e602d0633df05d485fe8 100644
+--- a/dist/server.d.ts
++++ b/dist/server.d.ts
+@@ -1,5 +1,5 @@
+-import { t as DocsManifest } from "./types-CeQKlDf2.js";
+-import { a as DocsParserOptions, i as DocsDocument, n as DocsPageResponse, o as createDocsParser, r as docsPageResponse, s as docsSearchSections, t as DocsPageLink } from "./page-BT6Ao5Vz.js";
++import { t as DocsManifest } from "./types-C8-TmiDn.js";
++import { a as DocsParserOptions, i as DocsDocument, n as DocsPageResponse, o as createDocsParser, r as docsPageResponse, s as docsSearchSections, t as DocsPageLink } from "./page-wIrmxTfS.js";
+ //#region src/manifest.d.ts
+ interface DocsManifestOptions {
+   /** Absolute path of the content directory. */
+diff --git a/dist/server.js b/dist/server.js
+index 6c69a5fc0fec9f7a3d1b6186cc51365ed7fa30ef..d8823fbad482f84880409df0f2a01f30e0053b00 100644
+--- a/dist/server.js
++++ b/dist/server.js
+@@ -1,4 +1,4 @@
+ import { i as docsPageResponse } from "./page-B9yFkRP1.js";
+-import { n as DocsContentError, r as createDocsManifest, t as toRawMarkdown } from "./raw-DAVjDoXI.js";
++import { n as DocsContentError, r as createDocsManifest, t as toRawMarkdown } from "./raw-D37BO3tx.js";
+ import { n as docsSearchSections, t as createDocsParser } from "./markdown-B678mI1Z.js";
+ export { DocsContentError, createDocsManifest, createDocsParser, docsPageResponse, docsSearchSections, toRawMarkdown };
+diff --git a/dist/types-CeQKlDf2.d.ts b/dist/types-C8-TmiDn.d.ts
+similarity index 94%
+rename from dist/types-CeQKlDf2.d.ts
+rename to dist/types-C8-TmiDn.d.ts
+index 8a9289fc7ce3501a92ae5f2585562c1d438b9763..d03bacf9ff54ff7016f4b54f4d7ece6cf79f8b88 100644
+--- a/dist/types-CeQKlDf2.d.ts
++++ b/dist/types-C8-TmiDn.d.ts
+@@ -29,9 +29,14 @@ interface DocsPageFrontmatter {
+   /** `false` hides the "On this page" outline. */
+   toc?: boolean;
+   navigation?: DocsPageNavigation;
++  /**
++   * Search and share fields, when they differ from the page's own. `image` is the share image: a path in `public/` or a
++   * URL, or `false` for none. Without it the build renders one from the title and description.
++   */
+   seo?: {
+     title?: string;
+     description?: string;
++    image?: string | false;
+   };
+ }
+ /**
+@@ -45,6 +50,7 @@ interface DocsPageFile extends DocsPageFrontmatter {
+   "navigation.kind"?: string;
+   "seo.title"?: string;
+   "seo.description"?: string;
++  "seo.image"?: string | false;
+ }
+ /** `.navigation.yml` of a section folder. */
+ interface DocsSectionFile {
+@@ -91,6 +97,7 @@ interface DocsPage {
+   seo?: {
+     title?: string;
+     description?: string;
++    image?: string | false;
+   };
+   /** Whether the navigation sidebar shows on this page. */
+   sidebar: boolean;
+diff --git a/package.json b/package.json
+index c501e4a430e3663af431821070890a0d37c2d2cb..3baaae8ea288c4a9149992a6b3d109b076c0c0f6 100644
+--- a/package.json
++++ b/package.json
+@@ -61,6 +61,7 @@
+     "@comark/vue": "0.8.1",
+     "@nuxt/kit": "4.6.2",
+     "@nuxtjs/mcp-toolkit": "^0.22.0",
++    "@takumi-rs/core": "2.19.0",
+     "@vite-hub/content": "https://pkg.pr.new/vite-hub/vitehub/@vite-hub/content@4a7b4197d45a6ece97e4b0b7e29b7dd4bff11b92",
+     "@vite-hub/rate-limit": "https://pkg.pr.new/vite-hub/vitehub/@vite-hub/rate-limit@4a7b4197d45a6ece97e4b0b7e29b7dd4bff11b92",
+     "@vite-hub/source": "https://pkg.pr.new/vite-hub/vitehub/@vite-hub/source@4a7b4197d45a6ece97e4b0b7e29b7dd4bff11b92",
+@@ -69,9 +70,12 @@
+     "@vueuse/core": "^14.4.0",
+     "comark": "0.8.1",
+     "defu": "^6.1.7",
+-    "nuxt-agent-discovery": "^0.7.0",
+-    "nuxt-link-checker": "^5.3.0",
++    "nuxt-agent-discovery": "^0.8.1",
++    "nuxt-link-checker": "^6.0.1",
+     "nuxt-llms": "^0.2.0",
++    "nuxt-og-image": "^7.0.7",
++    "nuxt-schema-org": "catalog:nuxt",
++    "nuxt-site-config": "^5.0.3",
+     "shiki": "^4.5.0",
+     "yaml": "^2.9.1",
+     "zod": "^4.6.7"
+@@ -96,7 +100,7 @@
+     "@nuxt/ui": "^4.11.0",
+     "@vite-hub/agent": "0.1.0 || 0.0.0-preview-4a7b419",
+     "@vite-hub/gateways": "0.1.0 || 0.0.0-preview-4a7b419",
+-    "nuxt": "^4.5.2 || >=5.0.0-0",
++    "nuxt": "^4.6.1 || >=5.0.0-0",
+     "vue": "3.5.44"
+   },
+   "peerDependenciesMeta": {

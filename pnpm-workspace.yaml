@@ -94,6 +94,8 @@ catalog:
   tsrs: 0.20.1-ts7.1.0-beta
 
 overrides:
+  # With the @vite-hub/docs patch: 0.8's optional peers don't install the @nuxtjs/sitemap 8 that nuxt-link-checker 6 rejects.
+  "@vite-hub/docs>nuxt-agent-discovery": ^0.8.1
   vite: "catalog:"
   # The preview packages take each other as peers at "0.1.0 || 0.0.0-preview-…", and pnpm fills a missing peer from
   # npm's 0.1.0. Every @vite-hub/* package comes from the same commit as the catalog's instead.
@@ -154,4 +156,16 @@ allowBuilds:
 
 # Temporary dependency backports. See patches/README.md for upstream PRs and removal conditions.
 patchedDependencies:
+  '@vite-hub/docs@0.0.0-preview-4a7b419': patches/@vite-hub__docs@0.0.0-preview-4a7b419.patch
+  '@vite-hub/web-container@0.0.0-preview-4a7b419': patches/@vite-hub__web-container@0.0.0-preview-4a7b419.patch
   comark@0.8.1: patches/comark.patch
+
+# The dependencies that the @vite-hub/docs patch adds, Nuxt SEO. Remove with the patch.
+packageExtensions:
+  "@vite-hub/docs":
+    dependencies:
+      "@takumi-rs/core": 2.19.0
+      nuxt-link-checker: ^6.0.1
+      nuxt-og-image: ^7.0.7
+      nuxt-schema-org: ^7.0.1
+      nuxt-site-config: ^5.0.3
