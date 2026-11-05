@@ -105,6 +105,40 @@ test("scripts keep working across client-side navigation", async ({ page }) => {
   expect(errors).toEqual([]);
 });
 
+test("HTML-only runtimes start on first client navigation and after returning", async ({
+  page,
+}) => {
+  const errors = watchErrors(page);
+  await page.goto("/zoom");
+  await page.waitForLoadState("networkidle");
+  await page.evaluate(() => ((window as { __spa?: boolean }).__spa = true));
+
+  await page.locator("a[href='/quiz']").first().click();
+  await expect(page).toHaveURL(/\/quiz$/);
+  const question = page.locator(".docs-example-preview .cqz[data-quiz-kind='question']").first();
+  await expect(question).toHaveAttribute("data-upgraded", "");
+  await question.locator(".cqz-option[data-correct] .cqz-choice").click();
+  await question.getByRole("button", { name: "Check", exact: true }).click();
+  await expect(question).toHaveAttribute("data-state", "correct");
+
+  await page.locator("a[href='/annotate']").first().click();
+  await expect(page).toHaveURL(/\/annotate$/);
+  await page.getByRole("tab", { name: "Before / after slider", exact: true }).click();
+  const handle = page.locator(".docs-example-preview .ca-swipe:visible .ca-handle").first();
+  await expect(page.locator("html")).toHaveAttribute("data-annotate-ready", "");
+  await expect(handle).toHaveAttribute("aria-valuenow", "50");
+  await handle.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(handle).toHaveAttribute("aria-valuenow", "55");
+
+  await page.locator("a[href='/quiz']").first().click();
+  await expect(page).toHaveURL(/\/quiz$/);
+  await expect(question).toHaveAttribute("data-upgraded", "");
+  await expect(question).toHaveAttribute("data-state", "correct");
+  expect(await page.evaluate(() => (window as { __spa?: boolean }).__spa)).toBe(true);
+  expect(errors).toEqual([]);
+});
+
 test("search finds a page", async ({ page }) => {
   await page.goto("/zoom");
   await page.waitForLoadState("networkidle");

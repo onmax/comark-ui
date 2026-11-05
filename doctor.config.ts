@@ -15,7 +15,6 @@ export default defineDoctorConfig({
       include: "{docs/pages,packages/*/docs}/**/*.md",
       // The docs app's own blocks, in docs/app/components/content, and the old site's that it doesn't draw yet.
       components: [
-        "badge-builder",
         "correct",
         "demo",
         "drop",
