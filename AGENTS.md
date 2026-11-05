@@ -23,7 +23,6 @@ How most packages work, so the bullets below don't repeat it:
 - `packages/badge` is `comark-badge`.
   - Prose badges normalize to `color` plus inline content. Image badges normalize to `src` and `label`: a local SVG data URI, drawn from the live npm or GitHub Actions data the parse fetched, or a hosted URL when that data is unavailable or `download` is `false`.
   - `src/svg.ts` owns the options and the SVG drawing. `src/live.ts` fetches the data for both the plugin and `src/server.ts`, which exports the bounded, cached public-data handler that `docs/server/routes/badge.svg.ts` serves at `/badge.svg`. On Cloudflare that route gives it the Cache API, so instances share data, and a `GITHUB_TOKEN` secret.
-  - The builder in `docs/badges/` uses the same options. `docs/build.ts` renders it in the docs shell at `/badges/`, with an inline script that initializes again after island navigation.
 - `packages/cards` is `comark-cards`.
   - Its parse plugin replaces each `::card`'s attributes with the ones it renders from, puts its title (`title` or a `#title` slot) in a `card-title` node, and resolves its `icon` through comark-icon's `Icons`. A card with `to` is covered by one stretched link.
   - `::columns` wraps each child that isn't a `:::column` in one.
@@ -54,7 +53,7 @@ How most packages work, so the bullets below don't repeat it:
 - `packages/code-notes` is `comark-code-notes`.
   - Its `markdownItPost` strips `<1>` markers in a line-end comment from every fence an ordered list follows, so Shiki highlights clean code in any order.
   - Its `post` draws the markers as `a.cn-marker` nodes into Shiki's line spans (or its own) and turns the list into a `code-notes` node.
-  - Drawing needs Shiki's lines, so it goes after `shiki` in `plugins`, and it reports the other order. `highlighted()` in `docs/build.ts` places Shiki before comark-code and it.
+  - Drawing needs Shiki's lines, so it goes after `shiki` in `plugins`, and it reports the other order. comark-ui's preset places Shiki before comark-code and it.
   - The number is CSS content, so comark-code's Copy never takes it.
 - `packages/colors` is `comark-colors`.
   - Its parse plugin turns inline code that holds a hex, rgb(), hsl(), hwb(), lab(), lch(), oklab(), or oklch() color into a `color` node with `value`, and a `::palette` list of `name: color` lines into `color` nodes with `name` too.
@@ -115,7 +114,7 @@ How most packages work, so the bullets below don't repeat it:
   - `src/doctor.ts` is `comark-linter/doctor`. Vite Doctor has no Markdown visitor, so its Rules are manifest Rules that glob the Markdown in `onProjectEnd`. The root `doctor.config.ts` lints `docs/pages` and every package's `docs/` with it as part of `pnpm run doctor`.
 - `packages/links` is `comark-links`: two named plugins and no default export.
   - `external()` in `src/external.ts` writes `target` and `rel` on external `a` nodes and appends the new-tab warning's spans while parsing, keeping an author's own `{target}` and `{rel}`. It adds one `links-styles` node for the styles.
-  - `anchors()` in `src/anchors.ts` only writes an `anchor` attribute on headings with an id. The components replace `h1` to `h6` and draw the link after the heading in a `.cl-heading` wrapper, so the tree keeps its headings for `docs/build.ts`'s sidebar and search.
+  - `anchors()` in `src/anchors.ts` only writes an `anchor` attribute on headings with an id. The components replace `h1` to `h6` and draw the link after the heading in a `.cl-heading` wrapper, so the tree keeps its headings for the docs site's outline and search.
   - The HTML renderer also replaces `span` for the warning's `.cl-icon`, because Comark writes `aria-hidden="true"` as a bare `aria-hidden`, which screen readers ignore.
 - `packages/magic-move` is `comark-magic-move`.
   - Its parse plugin turns the code blocks in `::magic-move` into `magic-move-step` nodes with their `index` and the fence's `[label]`, and gives the block every label and a `uid` from a hash of its text. The steps are tabs over one code block, like a code group.
@@ -229,40 +228,36 @@ How most packages work, so the bullets below don't repeat it:
 - `skills/before-after-evidence`, `review-document`, `visual-explanation`, and `teach-lesson` are the skills for a whole document: what goes in it and in what order.
   - `vp dlx skills add onmax/comark-ui` lists them beside comark-ui and installs the ones picked.
   - Each installs alone, so it carries the syntax of the blocks it uses in `references/blocks.md` and links nothing outside its folder. Its `references/example.md` is a finished document.
-  - Each has a page in `docs/pages/skills/`, listed by `skillOrder` in `docs/build.ts`, that leads with that example rendered. The build fails on a skill without one.
+  - Each has a page in `docs/pages/skills/` that leads with that example rendered.
 
 ### Docs site
 
-- `docs/` builds the docs site with the plugins themselves, as a Nuxt app that prerenders every page.
+- `docs/` is the docs site: a Nuxt app on `@vite-hub/docs`, which draws the shell (rail, sidebar, search, page actions, `llms.txt`, raw Markdown, MCP) and prerenders every page.
+  - `docs/content.ts` writes `docs/content/`, the folder the module reads: `docs/pages` as it is, and each package's `docs/` as a section under its name. The module's frontmatter schema is strict, so the copy keeps only the fields it knows. Edit the sources, never `docs/content/`.
+  - `docs/sections.ts` orders the packages in the rail (`packageOrder`), lists the rail's categories, and names the site's own sections. A package's `group` frontmatter picks its category.
+  - `docs/markdown.ts` is the parser the module runs on the server, with the plugins in `docs/plugins.ts`. annotate, diff, quiz, and comments have only an HTML renderer, so it renders their blocks to HTML there, and `ComarkHtml.vue` shows it.
+  - `docs/app/components/DocsMarkdown.vue` replaces the module's to add comark-ui's Vue components. `docs/app/components/content/` draws the site's own blocks: `::examples`, `::example`, `::correct`, and `::incorrect`.
+  - The landing is `docs/pages/index.md`, in `@vite-hub/docs`'s `home` layout, with its styles in `docs/app/assets/landing.css`. Its blocks are content components too: `::landing-hero`, `::packages` (the canvas of cards), `::hero` (the studio), and `::drop`, then `::landing-footer`. `docs/studio.ts` turns `::hero` into the `studio` node while the page parses, and `docs/landing.ts`, run before Nuxt, writes the package list and stars to `docs/.generated/landing.json` and renders a card per example into `docs/public/canvas-cards.json`.
+  - `docs/paths.ts` maps the old site's paths, which end in a slash, to the app's.
+  - Every `@vite-hub/*` package comes from pkg.pr.new at one vite-hub/vitehub commit, in the catalog. When the module lacks something, fix it in vitehub and pin the PR's or `main`'s pkg.pr.new build, not a patch.
   - Its Nitro output in `docs/dist` is a Cloudflare Worker (`wrangler.jsonc` at the root) that runs before the static assets.
-  - `docs/server/middleware/site.ts` redirects the old hosts and paths and serves the prerendered file or a page's Markdown copy. `docs/server/utils/site.ts` redirects the old per-topic pages to each package's page. `docs/server/routes/badge.svg.ts` is the badge.
-  - ViteHub adds the team's tools, all limited to the logins in `docs/server/utils/team.ts`: GitHub sign-in (`docs/server/auth.ts`), Figma-style comments (`docs/server/comments.ts`), which the Worker adds to a page only for a team member who opened the Console, and the Console's Markdown editor (`docs/server/content.ts`). Anonymous visitors get only prerendered files.
-  - `docs/build.ts` renders every page and writes each one's body to `docs/.generated/pages/`. The Nuxt app in `docs/app` only serves those bodies as server islands, for client-side navigation. Change a page's markup in `build.ts`, never in the app.
+  - `docs/links.ts` (`pnpm docs:links`, run by CI after the build) follows internal links and fragments in `docs/dist/public` through the Worker's redirects in `docs/server/utils/site.ts`, so a page that a redirect shadows or a heading that is missing fails.
+  - `docs/server/middleware/site.ts` redirects the old hosts and paths and serves the prerendered file. `docs/server/utils/site.ts` redirects the old per-topic pages to each package's page. `docs/server/routes/badge.svg.ts` is the badge.
+  - ViteHub adds the team's tools, all limited to the logins in `docs/server/utils/team.ts`: GitHub sign-in (`docs/server/auth.ts`), comments (`docs/server/comments.ts`), and the Console's Markdown editor (`docs/server/content.ts`), which edits the sources in the repository.
 - Pages:
   - Each package has one page, `packages/<name>/docs/index.md`, which `files` keeps out of npm. It is written for comark-ui users in the shape `docs/WRITING.md` gives; read that before you write or restructure any page.
   - A page's API section ends with `### Package`, which installs and registers the package alone. A block's page has no installer, because Getting started installs comark-ui.
   - A package with several rich components gets a page each in its `docs/components/` (annotate), or beside its page in its `docs/` (comark-charts' `notes.md`). Every chart type, gantt and Vega-Lite included, is on the Charts page, since they're one block. comark-linter keeps several pages.
-  - Sub-pages sit under the package's page in the rail, in the order that page links them. The build fails on one it doesn't link. A sub-page's `title` is the rail's label, so give a chart's sub-page a readable one, such as Notes and targets.
   - `docs/pages/` holds the rest of the site: the landing page, guides, recipes, and comparisons.
-  - `docs/pages/doctor/` is the linter's rules, under Linter in the rail: an overview and one page per rule, at `doctor/<rule without comark/>.md`, with no frontmatter, since `docs/doctor.ts` takes the title from the catalog. Each page has an `::incorrect` and a `::correct` block around one fenced example. `test/doctor.test.ts` checks that every rule has a page, that the incorrect example reports its rule alone, and that the correct one reports nothing. Vite Doctor links each code to its page.
-- Rail and search:
-  - The site is laid out like ui.nuxt.com: a rail of a few sections (Docs, Components, Typography, Linter, Playground), each with a column of its pages.
-  - A package page's frontmatter gives the block's name as `title`, and its group, icon, blurb, and credits. The group picks the section: Review blocks, Charts and diagrams, Docs blocks, and Page behavior are Components; Markdown syntax is Typography; Authoring tools are the docs' Utilities; Linter is the linter's. A section lists its packages by name.
-  - `packageOrder` in `docs/build.ts` orders the packages in the rail, on the landing page, and in the playground.
-  - Search reads every page's title, headings, and text. A page's `keywords` frontmatter lists only the words people search for that the page doesn't say, such as other tools' names for its blocks.
-- Playground:
-  - `docs/plugins.ts` is the one list of plugins the pages and the playground render with. `docs/links.ts` (`pnpm docs:links`, run by CI after the build) follows every internal link and fragment in `docs/dist/public` through the Worker's redirects in `docs/server/utils/site.ts`, so a page that a redirect shadows or a heading that isn't there fails. `docs/play.ts` is the playground, bundled with Vite. Its presets are the examples at the top of each page.
-  - `/play/gallery/` is the component gallery, for looking over every block at once: each example in `docs/examples.ts` in a frame on a canvas that pans and zooms, a row per package, in light, dark, or both, with a filter. A frame can't be told its color scheme, so `docs/gallery.ts` rewrites each frame's `prefers-color-scheme` queries to force one.
-  - Its inspector edits a cell's props, copies the cell, or spreads one prop into a copy per value. `docs/gallery-render.ts` renders the change in the browser with the plugins the page used, from `docs/example-plugins.ts`. The changes ride in the URL's `edit` parameter.
-  - A prop's values come from the `| Prop |` tables in its package's docs, read by `docs/props.ts`, so a description that lists them as "`a`, `b`, or `c`" gives the prop a select.
-  - `pnpm gallery` builds the packages and the site and serves it at http://127.0.0.1:4173/play/gallery/ (`E2E_PORT` picks the port). `pnpm gallery:shots` screenshots it, one PNG per package, with its row wrapped to the window.
+  - `docs/pages/doctor/` is the linter's rules: an overview and one page per rule, at `doctor/<rule without comark/>.md`, with no frontmatter, since `docs/content.ts` takes the title from the catalog. Each page has an `::incorrect` and a `::correct` block around one fenced example. `test/doctor.test.ts` checks that every rule has a page, that the incorrect example reports its rule alone, and that the correct one reports nothing. Vite Doctor links each code to its page.
+  - Search reads every page's title, headings, and text.
 - A reference table, `| Prop | Default | Description |` (or Option or Attribute), is drawn with comark-fields, while the Markdown copy keeps the table.
-- `docs/style.css` lists every class that draws its own frame, in the `.example-preview` rules and the `.demo-page` card rule, so an example or a landing card doesn't frame it again. A new package with a bordered block adds its class to both.
 
 ## Rules
 
 - Follow the 90/10 rule. If a feature would take most of the code for a small share of users, leave it out.
 - Test through the public interface: parse plus render. Don't test internals.
+  - The Playwright tests in `e2e/` (`pnpm test:e2e`, after `pnpm build`) test the components, not the docs site: each renders its Markdown into a page with `setContent` or `fixture()` from `e2e/helpers.ts`, and the server only answers with the images in `docs/public`.
 - Rendering never throws. Problems go in `meta.issues`, one sentence each that names the block and the fix. Every plugin appends to the list and never replaces it, since several run on one document.
 - Each issue also names its rule, `comark/<package>/<kind>`, in `meta.issueRules`, keyed by the sentence. Plugins merge into it the same way. A new kind of issue needs its rule in `packages/lint/src/rules/<package>.ts` and a page in `docs/pages/doctor/<package>/`.
 - Comments are rare and explain why, never what.
@@ -272,9 +267,7 @@ How most packages work, so the bullets below don't repeat it:
 - `pnpm ready` formats, lints, typechecks, builds, tests, and runs Vite Doctor with the strict TypeScript preset (each package's `doctor.config.json`). Run it before opening a PR; CI runs the same steps.
 - Use conventional commit titles. uppt builds the release from them (see Releasing below).
 - A pull request that changes how a block looks shows the change, before and after.
-  - After `pnpm build && node docs/build.ts`, run `pnpm gallery:shots --out test-results/after <package>…` for each package it touches.
-  - Run the same with `--site https://comark-ui.onmax.me --out test-results/before` for the live site, which is `main`.
-  - Each screenshot shows every frame in light and in dark. `--edit` takes a gallery link's `edit` parameter, to show changed props or copies.
+  - After `pnpm docs:build`, screenshot each touched package's page from `pnpm --filter comark-ui-docs preview`, in light and in dark, and the same page on https://comark-ui.onmax.me, which is `main`.
   - Publish a Comark document with one `::compare` per package, before then after, to Drop. Link it from the PR description and give the maintainer the link.
   - A new block has no before, so show its after alone.
 - Never comment on issues or pull requests without explicit consent.

@@ -9,7 +9,9 @@ import {
   type BadgeSpec,
 } from "../../packages/badge/src/svg.ts";
 
-function start(root: HTMLElement) {
+// docs/app/pages/badges.vue starts the builder on mount and calls what this returns on unmount, since the docs app
+// navigates without loading pages.
+export function startBadgeBuilder(root: HTMLElement): () => void {
   const form = root.querySelector<HTMLFormElement>("#badge-form")!;
   const preview = root.querySelector<HTMLImageElement>("#badge-preview")!;
   const previewDark = root.querySelector<HTMLImageElement>("#badge-preview-dark")!;
@@ -261,22 +263,16 @@ function start(root: HTMLElement) {
     controller?.abort();
     clearTimeout(timer);
     if (objectUrl) URL.revokeObjectURL(objectUrl);
-    observer.disconnect();
     window.removeEventListener("popstate", restore);
   }
-  const observer = new MutationObserver(() => {
-    if (!root.isConnected) stop();
-  });
-  observer.observe(document.body, { childList: true, subtree: true });
   window.addEventListener("popstate", restore);
   restore();
   if (document.readyState !== "loading") {
-    const heading = root.closest(".page")?.querySelector("h1");
+    const heading = root.closest(".badges-page")?.querySelector("h1");
     if (heading) {
       heading.tabIndex = -1;
       heading.focus({ preventScroll: true });
     }
   }
+  return stop;
 }
-const root = document.currentScript?.previousElementSibling;
-if (root instanceof HTMLElement && root.matches("[data-badge-builder]")) start(root);

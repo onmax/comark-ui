@@ -17,11 +17,11 @@ To teach an agent Comark's blocks and plugins, run `npx skills add onmax/comark-
 
 | marked | comark-ui |
 | --- | --- |
-| marked-highlight (`markedHighlight()` keeps its markup, MKC0104), marked-shiki, the `highlight` option | [comark-code](https://comark-ui.onmax.me/code/) |
-| marked-katex-extension | [comark-mathml](https://comark-ui.onmax.me/math/) |
-| marked-footnote | [comark-footnotes](https://comark-ui.onmax.me/footnotes/) |
-| marked-alert | [comark-github](https://comark-ui.onmax.me/github/) |
-| marked-mermaid | [comark-diagrams](https://comark-ui.onmax.me/diagrams/) |
+| marked-highlight (`markedHighlight()` keeps its markup, MKC0104), marked-shiki, the `highlight` option | [comark-code](/code) |
+| marked-katex-extension | [comark-mathml](/math) |
+| marked-footnote | [comark-footnotes](/footnotes) |
+| marked-alert | [comark-github](/github) |
+| marked-mermaid | [comark-diagrams](/diagrams) |
 
 ## mkc0103
 

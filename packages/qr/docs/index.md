@@ -12,9 +12,9 @@ credits: 'Encoded with <a href="https://antfu.me">Anthony Fu</a>''s <a href="htt
 ::examples
 :::example{label="Preview link"}
 ```md
-Open [comark-ui.onmax.me/qr](https://comark-ui.onmax.me/qr/), or scan it on your phone:
+Open [comark-ui.onmax.me/qr](/qr), or scan it on your phone:
 
-:qr{value="https://comark-ui.onmax.me/qr/"}
+:qr{value="https://comark-ui.onmax.me/qr"}
 ```
 :::
 ::

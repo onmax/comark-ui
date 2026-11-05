@@ -1,19 +1,47 @@
 import { readFile } from "node:fs/promises";
 import { createHtmlRenderer } from "@comark/html";
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 import annotate, { components } from "../packages/annotate/src/html.ts";
+import { fixture } from "./helpers.ts";
+
+const render = createHtmlRenderer({ plugins: [annotate()], components });
+// The annotate docs' examples, on a page as wide as the docs' column.
+const open = async (page: Page, markdown: string) =>
+  fixture(page, await render(markdown), "main{width:46rem;margin:2rem auto}");
+
+const compare = `::compare
+:::screenshot{src="/before.png" alt="Filter toolbar wrapping onto a second row" viewport="640x250"}
+::::annotation{x=4.5 y=28.7 w=90.9 h=44.4 color="red"}
+Moon phase and vibes don't fit, so the toolbar wraps and pushes the table down.
+::::
+
+::::annotation{x=22.4 y=50.4 w=13.3 h=20.6 mark="circle" color="red"}
+**Apply** sits 6px lower than the chips.
+::::
+:::
+
+:::screenshot{src="/after.png" alt="Filter toolbar on one row" viewport="640x250"}
+::::annotation{x=68 y=33.1 w=13.3 h=16 mark="highlight" color="blue"}
+Moon phase and vibes collapse into **+2 filters**.
+::::
+
+::::annotation{x=82.5 y=33.1 w=10.9 h=16 mark="check" color="green"}
+**Apply** lines up with the chips.
+::::
+:::
+::`;
 
 test("a comparison lines up its screenshots and zooms them with their marks and colors, and their notes beside them", async ({
   page,
 }) => {
-  await page.goto("/annotate/");
-  const compare = page.locator("main .ca-compare").first();
-  const tops = await compare
+  await open(page, compare);
+  const figure = page.locator("main .ca-compare").first();
+  const tops = await figure
     .locator(".ca-frame img")
     .evaluateAll((images) => images.map((image) => Math.round(image.getBoundingClientRect().top)));
   expect(new Set(tops).size).toBe(1);
 
-  const mark = compare.locator(".ca-mark").first();
+  const mark = figure.locator(".ca-mark").first();
   const color = await mark.evaluate((node) => getComputedStyle(node).color);
   await mark.click({ force: true });
   const zoomed = page.locator(".cz-item .ca-mark").first();
@@ -45,7 +73,7 @@ test("a comparison lines up its screenshots and zooms them with their marks and 
 });
 
 test("the zoom maps its copies to the page and back", async ({ page }) => {
-  await page.goto("/annotate/");
+  await open(page, compare);
   await page.evaluate(() => {
     document.addEventListener("comark-zoom:open", (event) => {
       const { content, aside, copyOf, originalOf } = event.detail;
@@ -77,7 +105,14 @@ test("the zoom maps its copies to the page and back", async ({ page }) => {
 test("a host's `.ca` rule sets the default mark color, on the page and zoomed", async ({
   page,
 }) => {
-  await page.goto("/annotate/components/screenshot/");
+  await open(
+    page,
+    `::screenshot{src="/after.png" alt="Filter toolbar on one row" title="After" href="https://pr42.preview.example.com/plan"}
+:::annotation{x=67.9 y=34.8 w=13 h=14.2}
+Extra filters collapse into **+2 filters**.
+:::
+::`,
+  );
   await page.addStyleTag({ content: ".ca{--ca-color:rgb(1, 2, 3)}" });
   const plain = ".ca-mark:not([style*='--ca-color'])";
   const mark = page.locator(`main ${plain}:visible`).first();
@@ -89,8 +124,22 @@ test("a host's `.ca` rule sets the default mark color, on the page and zoomed", 
 test("a side note lines up with its arrow when the screenshot also has a note above it", async ({
   page,
 }) => {
-  await page.goto("/annotate/");
-  await page.getByRole("tab", { name: "Arrows only" }).click();
+  await open(
+    page,
+    `::screenshot{src="/dashboard.png" alt="Office correlations dashboard"}
+:::annotation{x=37 y=33.1 w=16.4 h=5.2 mark="none" side="top"}
+Bugs fixed fell with the duck supply.
+:::
+
+:::annotation{x=66.1 y=17 w=30.5 h=24.6 mark="none" side="top"}
+r now counts the office cat.
+:::
+
+:::annotation{x=4 y=77.3 w=92 h=8.2 mark="none" side="left"}
+The pigeons ate week 15.
+:::
+::`,
+  );
   const figure = page.locator("main .ca-screenshot.ca-top.ca-left:visible").first();
   await figure.locator(".ca-frame > img").evaluate((image) => (image as HTMLImageElement).decode());
   const middle = (selector: string) =>
@@ -105,8 +154,22 @@ test("a side note lines up with its arrow when the screenshot also has a note ab
 test("a slider moves its divider by drag and by key, and a click without a drag zooms it", async ({
   page,
 }) => {
-  await page.goto("/annotate/");
-  await page.getByRole("tab", { name: "Slider" }).click();
+  await open(
+    page,
+    `::compare{mode="slider"}
+:::screenshot{src="/before.png" alt="Filter toolbar wrapping onto a second row" viewport="640x250"}
+::::annotation{x=22.4 y=50.4 w=13.3 h=20.6 mark="circle" color="red"}
+**Apply** sits 6px lower than the chips.
+::::
+:::
+
+:::screenshot{src="/after.png" alt="Filter toolbar on one row" viewport="640x250"}
+::::annotation{x=82.5 y=33.1 w=10.9 h=16 mark="check" color="green"}
+**Apply** lines up with the chips.
+::::
+:::
+::`,
+  );
   const swipe = page.locator("main .ca-swipe:visible").first();
   const handle = swipe.locator(".ca-handle");
   await expect(handle).toHaveAttribute("aria-valuenow", "50");
@@ -149,7 +212,7 @@ test("Copy puts a screenshot on the clipboard with its marks, and a right-click 
   context,
 }) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
-  await page.goto("/annotate/");
+  await open(page, compare);
   const figure = page
     .locator("main .ca-screenshot:visible")
     .filter({ has: page.locator(".ca-mark .ca-stamp") })
@@ -221,7 +284,6 @@ test("a zoomed screenshot's Copy sits in the header before Close, clear of the i
   context,
 }) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
-  const render = createHtmlRenderer({ plugins: [annotate()], components });
   const body =
     await render(`::screenshot{src="/fixture/shot.png" alt="Dashboard" viewport="1280x800"}
 :::annotation{x=80 y=2 w=18 h=8 mark="box" color="red"}
@@ -286,7 +348,6 @@ for (const viewport of [
         });
       }
       const src = failure === "CORS" ? "https://screenshots.example/shot.png" : "/fixture/shot.png";
-      const render = createHtmlRenderer({ plugins: [annotate()], components });
       const body = await render(`::screenshot{src="${src}" alt="Dashboard" viewport="1280x800"}
 :::annotation{x=80 y=2 w=18 h=8 mark="box" color="red"}
 The top right corner.
@@ -341,7 +402,6 @@ test("Copy keeps a circle's whole loop, where it reaches past its area", async (
   context,
 }) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
-  const render = createHtmlRenderer({ plugins: [annotate()], components });
   // A wide, short area, which the loop overshoots most.
   const body =
     await render(`::screenshot{src="/fixture/shot.png" alt="Dashboard" viewport="1280x800"}

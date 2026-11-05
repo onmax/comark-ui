@@ -3,10 +3,12 @@ import { defineConfig, devices } from "@playwright/test";
 // Agents share the machine, so each one can test its own build on its own port.
 const port = Number(process.env.E2E_PORT ?? 4173);
 
-// A few end-to-end checks of the built docs site in Chromium, so CI proves the demos work without slowing it down.
+// End-to-end checks of the components in Chromium. Each test renders its Markdown into a page of its own; the server
+// only answers with the images in docs/public, so nothing needs the docs built.
 export default defineConfig({
-  testDir: "e2e",
-  testMatch: "*.e2e.ts",
+  // Run the docs migration checks in CI alongside the component contracts.
+  testDir: ".",
+  testMatch: ["e2e/*.e2e.ts", "docs/e2e/*.e2e.ts"],
   fullyParallel: true,
   reporter: process.env.CI ? "github" : "list",
   use: {
@@ -16,8 +18,8 @@ export default defineConfig({
     launchOptions: { ignoreDefaultArgs: ["--hide-scrollbars"] },
   },
   webServer: {
-    command: "node e2e/serve.ts",
-    url: `http://127.0.0.1:${port}`,
+    command: "node e2e/serve.ts docs/public",
+    url: `http://127.0.0.1:${port}/favicon.svg`,
     reuseExistingServer: !process.env.CI,
   },
 });

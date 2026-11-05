@@ -35,9 +35,9 @@ export interface Mapping {
 
 const UI_DOCS = "https://comark-ui.onmax.me";
 
-/** The comark-ui docs page for a package, such as `comark-links` → https://comark-ui.onmax.me/links/. */
+/** The comark-ui docs page for a package, such as `comark-links` → https://comark-ui.onmax.me/links. */
 export const uiDocs = (name: string) =>
-  `${UI_DOCS}/${name === "comark-mathml" ? "math" : name.replace(/^comark-/, "")}/`;
+  `${UI_DOCS}/${name === "comark-mathml" ? "math" : name.replace(/^comark-/, "")}`;
 
 const pipeline = (note?: string): Mapping => ({ kind: "pipeline", note });
 const setup = (note: string, setting?: string): Mapping => ({ kind: "setup", note, setting });

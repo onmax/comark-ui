@@ -1,8 +1,9 @@
 // Checks every internal link in the built docs the way the deployed site answers it: the Worker's redirects first, then
 // the dynamic badge endpoint or prerendered files. A link that redirects, has no target, or names a heading that
 // isn't there fails the build.
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
+import { excludedLinks } from "./link-excludes.ts";
 import { redirectTarget, SITE } from "./server/utils/site.ts";
 
 const root = new URL("./dist/public/", import.meta.url).pathname;
@@ -23,17 +24,35 @@ const attributes = (html: string, names: string) =>
   [...html.matchAll(new RegExp(`\\s(?:${names})=(?:"([^"]*)"|'([^']*)')`, "g"))].map(([, a, b]) =>
     decode(a ?? b ?? ""),
   );
+// An unhandled Comark component such as <include src="tour.md"> doesn't load its src in the browser.
+// Read attributes from elements, and only treat src as a URL on HTML elements that load it.
+const linksOf = (html: string) =>
+  [...html.matchAll(/<([a-z][\w:-]*)\b[^>]*>/gi)].flatMap(([element, tag]) =>
+    attributes(
+      element,
+      /^(audio|embed|iframe|img|input|script|source|track|video)$/i.test(tag!)
+        ? "href|src"
+        : "href",
+    ),
+  );
 
 const urlOf = (file: string) => {
   const path = `/${relative(root, file)}`;
-  return path.endsWith("/index.html") ? path.slice(0, -"index.html".length) : path;
+  return path.endsWith("/index.html")
+    ? path.slice(0, -"index.html".length)
+    : path.replace(/\.html$/, "");
 };
 const fileOf = (path: string) => {
-  const file = join(root, path.endsWith("/") ? `${path}index.html` : path);
-  return existsSync(file) ? file : undefined;
+  const page = path.replace(/\/$/, "");
+  return [path, `${page}.html`, `${page}/index.html`]
+    .map((candidate) => join(root, candidate))
+    .find((file) => existsSync(file) && statSync(file).isFile());
 };
 
-const files = pages(root);
+// The playground's preset column and the gallery's cells are pieces that the tool pages load, not pages.
+const files = pages(root).filter(
+  (file) => !/^play\/(presets\.html$|gallery\/)/.test(relative(root, file)),
+);
 const idCache = new Map<string, Set<string>>();
 const idsOf = (file: string) => {
   const cached = idCache.get(file);
@@ -47,9 +66,16 @@ const problems = new Set<string>();
 for (const file of files) {
   const page = urlOf(file);
   const html = readFileSync(file, "utf8");
-  for (const link of attributes(html, "href|src")) {
+  for (const link of linksOf(html)) {
     const url = new URL(link, `${SITE}${page}`);
     if (url.origin !== SITE) continue;
+    if (
+      excludedLinks.some(
+        (pattern) =>
+          pattern.test(link) || pattern.test(url.pathname) || pattern.test(url.pathname + url.hash),
+      )
+    )
+      continue;
     const moved = redirectTarget(url);
     if (moved) {
       problems.add(
@@ -67,7 +93,7 @@ for (const file of files) {
       continue;
     }
     // The playground reads its fragment as state, not as a heading.
-    if (url.hash.length > 1 && target.endsWith(".html") && !url.pathname.startsWith("/play/")) {
+    if (url.hash.length > 1 && target.endsWith(".html") && !/^\/play\/?$/.test(url.pathname)) {
       const id = decodeURIComponent(url.hash.slice(1));
       if (!idsOf(target).has(id))
         problems.add(

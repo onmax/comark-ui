@@ -1,20 +1,21 @@
-// Serves docs/dist for the end-to-end checks, like the Cloudflare site: a directory answers with its index.html.
+// Serves a directory the way the Cloudflare site does: a directory answers with its index.html. The end-to-end checks
+// pass docs/public for the images their fixtures show; with no argument it serves the built docs in docs/dist.
 import { readFile } from "node:fs/promises";
 import { createServer } from "node:http";
-import { extname, join, normalize } from "node:path";
+import { extname, join, normalize, resolve } from "node:path";
 
 const output = new URL("../docs/dist/", import.meta.url).pathname;
-// Nitro writes static assets below `public/`; older Nuxt output placed them
-// directly in the configured directory. Supporting both keeps the test server
-// aligned with the generated output used by each supported Nuxt version.
-// Nitro has used both `dist/public` and `dist/.output/public` for generated
-// static files, while older Nuxt versions wrote directly to `dist`.
-const roots = [join(output, "public"), join(output, ".output", "public"), output];
+// Nitro has written its static files to `dist/public`, `dist/.output/public`, and `dist` itself.
+const roots = process.argv[2]
+  ? [resolve(process.argv[2])]
+  : [join(output, "public"), join(output, ".output", "public"), output];
 const types: Record<string, string> = {
   ".html": "text/html",
   ".js": "text/javascript",
   ".css": "text/css",
   ".json": "application/json",
+  ".md": "text/markdown; charset=utf-8",
+  ".txt": "text/plain; charset=utf-8",
   ".png": "image/png",
   ".svg": "image/svg+xml",
   ".woff2": "font/woff2",
@@ -51,5 +52,5 @@ createServer(async (request, response) => {
   }
   response.writeHead(404).end("Not found");
 }).listen(Number(process.env.E2E_PORT ?? 4173), "127.0.0.1", () =>
-  console.log(`docs/dist at http://127.0.0.1:${process.env.E2E_PORT ?? 4173}/`),
+  console.log(`${roots.at(-1)} at http://127.0.0.1:${process.env.E2E_PORT ?? 4173}/`),
 );

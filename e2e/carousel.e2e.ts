@@ -2,6 +2,7 @@ import { createHtmlRenderer } from "@comark/html";
 import { expect, type Page, test } from "@playwright/test";
 import carousel, { components } from "../packages/carousel/src/html.ts";
 import zoom, { components as zoomComponents } from "../packages/zoom/src/html.ts";
+import { fixture } from "./helpers.ts";
 
 const render = createHtmlRenderer({
   plugins: [carousel(), zoom()],
@@ -35,7 +36,12 @@ const parts = (page: Page, title = "Tour") => {
 test("a carousel pages with its arrows, and its zoomed view keeps the carousel in step", async ({
   page,
 }) => {
-  await page.goto("/carousel/");
+  await fixture(
+    page,
+    await render(
+      '::carousel{title="Filters"}\n![Filter toolbar wrapping](/before.png)\n\n![Filter toolbar on one row](/after.png)\n\n![Office correlations dashboard](/dashboard.png)\n::',
+    ),
+  );
   const carousel = page.locator("main .cc").first();
   const current = carousel.locator(".cc-count");
 

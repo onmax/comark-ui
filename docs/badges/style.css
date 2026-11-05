@@ -1,6 +1,3 @@
-.page.page-badges {
-  grid-template-columns: minmax(0, 62rem);
-}
 .badge-builder {
   /* Edges are the text color at low alpha, so they follow the page into dark mode instead of being a gray picked per theme. */
   --edge: color-mix(in oklab, var(--fg) 14%, transparent);
