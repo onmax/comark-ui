@@ -9,6 +9,7 @@ export default defineNuxtConfig({
   devtools: { enabled: false },
   telemetry: false,
   // vite-hub/nuxt first: @vite-hub/docs turns its Comments on.
+  css: ["~/assets/landing.css"],
   modules: ["vite-hub/nuxt", "@vite-hub/docs/nuxt", "~~/modules/wrangler-output"],
   // docs/content.ts writes content/ from docs/pages and each package's docs/.
   docs: {

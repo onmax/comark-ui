@@ -1,62 +1,66 @@
-diff --git a/dist/draft-k-B2ca0k.js b/dist/draft-kHySoLw1.js
-similarity index 99%
+diff --git a/dist/draft-k-B2ca0k.js b/dist/draft-BB6f7xQj.js
+similarity index 95%
 rename from dist/draft-k-B2ca0k.js
-rename to dist/draft-kHySoLw1.js
-index 1db480c075c1b02b6ababdc80109058192ec32db..33dcded469926450ec15354568667b85eb802d65 100644
+rename to dist/draft-BB6f7xQj.js
+index 1db480c075c1b02b6ababdc80109058192ec32db..d57e9a3bc0815ef3be903e9a2d8429bb15af9165 100644
 --- a/dist/draft-k-B2ca0k.js
-+++ b/dist/draft-kHySoLw1.js
-@@ -1,5 +1,5 @@
++++ b/dist/draft-BB6f7xQj.js
+@@ -1,6 +1,6 @@
  import { docsSectionForPath, findDocsPage, normalizeDocsPath } from "./navigation.js";
 -import { i as docsPageSchema, t as docsFrontmatter } from "./schema-D7yXFi4A.js";
-+import { i as docsPageSchema, t as docsFrontmatter } from "./schema-PRYjzCAC.js";
- import { i as docsPageResponse, n as docsPageOf } from "./page-B9yFkRP1.js";
+-import { i as docsPageResponse, n as docsPageOf } from "./page-B9yFkRP1.js";
++import { i as docsPageSchema, t as docsFrontmatter } from "./schema-CwnWWMf4.js";
++import { i as docsPageResponse, n as docsPageOf } from "./page-Cr0APDsu.js";
  //#region src/draft.ts
  /**
+ * The draft of the page at `path`, parsed like a published page, or null when the request shows the published file.
 diff --git a/dist/index.d.ts b/dist/index.d.ts
-index 8c1c6f0cbeec2fac0ac52815e4ce91f6da9f4438..5835e78cec06828979937d137da8d7bf47691e65 100644
+index 8c1c6f0cbeec2fac0ac52815e4ce91f6da9f4438..cc309f32ace3bbe719d883046f0cbf0404a9b208 100644
 --- a/dist/index.d.ts
 +++ b/dist/index.d.ts
 @@ -1,6 +1,6 @@
 -import { a as DocsTocLink, c as DocsPageFrontmatter, d as docsLayouts, f as docsPageFields, h as expandDottedKeys, i as DocsSection, l as DocsPageNavigation, m as docsSectionSchema, n as DocsPage, o as DocsLayout, p as docsPageSchema, r as DocsSearchSection, s as DocsPageFile, t as DocsManifest, u as DocsSectionFile } from "./types-CeQKlDf2.js";
 -import { i as DocsDocument, n as DocsPageResponse, t as DocsPageLink } from "./page-BT6Ao5Vz.js";
 -import { a as DocsStartOptions, i as DocsSiteOptions, r as DocsPublicConfig, t as DocsModuleOptions } from "./nuxt-C3apXz2n.js";
-+import { a as DocsTocLink, c as DocsPageFrontmatter, d as docsLayouts, f as docsPageFields, h as expandDottedKeys, i as DocsSection, l as DocsPageNavigation, m as docsSectionSchema, n as DocsPage, o as DocsLayout, p as docsPageSchema, r as DocsSearchSection, s as DocsPageFile, t as DocsManifest, u as DocsSectionFile } from "./types-C8-TmiDn.js";
-+import { i as DocsDocument, n as DocsPageResponse, t as DocsPageLink } from "./page-wIrmxTfS.js";
-+import { a as DocsStartOptions, i as DocsSiteOptions, r as DocsPublicConfig, t as DocsModuleOptions } from "./nuxt-1Go0BTqc.js";
++import { a as DocsTocLink, c as DocsPageFrontmatter, d as docsLayouts, f as docsPageFields, h as expandDottedKeys, i as DocsSection, l as DocsPageNavigation, m as docsSectionSchema, n as DocsPage, o as DocsLayout, p as docsPageSchema, r as DocsSearchSection, s as DocsPageFile, t as DocsManifest, u as DocsSectionFile } from "./types-C3FDBCHZ.js";
++import { i as DocsDocument, n as DocsPageResponse, t as DocsPageLink } from "./page-BWRKxiIN.js";
++import { a as DocsStartOptions, i as DocsSiteOptions, r as DocsPublicConfig, t as DocsModuleOptions } from "./nuxt-OmH7mxCp.js";
  import { DocsCatalogGroup, DocsIcons, DocsLink, DocsMarkdownLinks, DocsSidebarGroup, docsCatalog, docsManifestPages, docsMarkdownLinks, docsMcpInstallLinks, docsPageIcon, docsRailGroups, docsRailIcon, docsRawPath, docsRelatedSections, docsSectionForPath, docsSectionIcon, docsSidebarGroups, docsTutorialNavigationCookie, findDocsPage, normalizeDocsBase, normalizeDocsPath } from "./navigation.js";
  import { ContentLabel, DocumentsDefinition } from "@vite-hub/content";
  //#region src/collection.d.ts
 diff --git a/dist/index.js b/dist/index.js
-index e63e205a2f73364fb60c9fc323e6d9e7380fe597..db1a55472eee0eb05d351dcf2062fa4961a48746 100644
+index e63e205a2f73364fb60c9fc323e6d9e7380fe597..07cb5fffe3ffd7ca61669db2ca6ec40d0a568395 100644
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -1,5 +1,5 @@
+@@ -1,6 +1,6 @@
  import { docsCatalog, docsManifestPages, docsMarkdownLinks, docsMcpInstallLinks, docsPageIcon, docsRailGroups, docsRailIcon, docsRawPath, docsRelatedSections, docsSectionForPath, docsSectionIcon, docsSidebarGroups, docsTutorialNavigationCookie, findDocsPage, normalizeDocsBase, normalizeDocsPath } from "./navigation.js";
 -import { a as docsSectionSchema, i as docsPageSchema, n as docsLayouts, o as expandDottedKeys, r as docsPageFields } from "./schema-D7yXFi4A.js";
-+import { a as docsSectionSchema, i as docsPageSchema, n as docsLayouts, o as expandDottedKeys, r as docsPageFields } from "./schema-PRYjzCAC.js";
- import { r as docsPagePath } from "./page-B9yFkRP1.js";
+-import { r as docsPagePath } from "./page-B9yFkRP1.js";
++import { a as docsSectionSchema, i as docsPageSchema, n as docsLayouts, o as expandDottedKeys, r as docsPageFields } from "./schema-CwnWWMf4.js";
++import { r as docsPagePath } from "./page-Cr0APDsu.js";
  import { documents } from "@vite-hub/content/collections";
  //#region src/collection.ts
+ /**
 diff --git a/dist/navigation.d.ts b/dist/navigation.d.ts
-index 375f3273d584107a56e8a04c5594795529d953ef..cbc53ffd044d3deb272036e87bf72e1f4499256f 100644
+index 375f3273d584107a56e8a04c5594795529d953ef..734606440564268bbd2f1261e95cf0b4e745ca7b 100644
 --- a/dist/navigation.d.ts
 +++ b/dist/navigation.d.ts
 @@ -1,4 +1,4 @@
 -import { i as DocsSection, n as DocsPage, r as DocsSearchSection, t as DocsManifest } from "./types-CeQKlDf2.js";
-+import { i as DocsSection, n as DocsPage, r as DocsSearchSection, t as DocsManifest } from "./types-C8-TmiDn.js";
++import { i as DocsSection, n as DocsPage, r as DocsSearchSection, t as DocsManifest } from "./types-C3FDBCHZ.js";
  //#region src/navigation.d.ts
  /** A link that the site options add to the shell, such as a tutorials page or a community chat. */
  export interface DocsLink {
-diff --git a/dist/nuxt-C3apXz2n.d.ts b/dist/nuxt-1Go0BTqc.d.ts
+diff --git a/dist/nuxt-C3apXz2n.d.ts b/dist/nuxt-OmH7mxCp.d.ts
 similarity index 91%
 rename from dist/nuxt-C3apXz2n.d.ts
-rename to dist/nuxt-1Go0BTqc.d.ts
-index 4473e4c08ae31d04c71b98920b0e0c526c1f867e..a72658685d24cc31092d17d0588d8e6d2ba2f56d 100644
+rename to dist/nuxt-OmH7mxCp.d.ts
+index 4473e4c08ae31d04c71b98920b0e0c526c1f867e..af872e262207a50467c6807ff633a20d7b55a839 100644
 --- a/dist/nuxt-C3apXz2n.d.ts
-+++ b/dist/nuxt-1Go0BTqc.d.ts
++++ b/dist/nuxt-OmH7mxCp.d.ts
 @@ -1,4 +1,4 @@
 -import { n as DocsPage } from "./types-CeQKlDf2.js";
-+import { n as DocsPage } from "./types-C8-TmiDn.js";
++import { n as DocsPage } from "./types-C3FDBCHZ.js";
  import { DocsIcons, DocsLink } from "./navigation.js";
  //#region src/comments-nuxt.d.ts
  /** Comments on a docs site: the `comments` option of `vite-hub/nuxt`, which these pass to. */
@@ -87,27 +91,28 @@ index 4473e4c08ae31d04c71b98920b0e0c526c1f867e..a72658685d24cc31092d17d0588d8e6d
  interface DocsNuxtModule {
    (inlineOptions: DocsModuleOptions, nuxt: never): unknown;
 diff --git a/dist/nuxt.d.ts b/dist/nuxt.d.ts
-index f9a216450ef3ee1d3b94a9384749769ceddc85b7..6ec1665e97748f0bf9712cb7de052a5c1f45694e 100644
+index f9a216450ef3ee1d3b94a9384749769ceddc85b7..cc42cfb74c2f51ced197bcb08faeb5c008b4f151 100644
 --- a/dist/nuxt.d.ts
 +++ b/dist/nuxt.d.ts
 @@ -1,2 +1,2 @@
 -import { a as DocsStartOptions, c as DocsCommentsOptions, i as DocsSiteOptions, l as DocsCommentsSetupError, n as DocsNuxtModule, o as docsNuxtModule, r as DocsPublicConfig, s as DocsAssistantSetupError, t as DocsModuleOptions } from "./nuxt-C3apXz2n.js";
-+import { a as DocsStartOptions, c as DocsCommentsOptions, i as DocsSiteOptions, l as DocsCommentsSetupError, n as DocsNuxtModule, o as docsNuxtModule, r as DocsPublicConfig, s as DocsAssistantSetupError, t as DocsModuleOptions } from "./nuxt-1Go0BTqc.js";
++import { a as DocsStartOptions, c as DocsCommentsOptions, i as DocsSiteOptions, l as DocsCommentsSetupError, n as DocsNuxtModule, o as docsNuxtModule, r as DocsPublicConfig, s as DocsAssistantSetupError, t as DocsModuleOptions } from "./nuxt-OmH7mxCp.js";
  export { DocsAssistantSetupError, type DocsCommentsOptions, DocsCommentsSetupError, DocsModuleOptions, DocsNuxtModule, DocsPublicConfig, DocsSiteOptions, DocsStartOptions, docsNuxtModule as default };
 \ No newline at end of file
 diff --git a/dist/nuxt.js b/dist/nuxt.js
-index b08f5ad2ba7d44513dcaea34777343529538bb72..f967980e514f0928e04bce7e1bcde664b50a629f 100644
+index b08f5ad2ba7d44513dcaea34777343529538bb72..236535773134c2b980a659257e5cfc1a00b0c704 100644
 --- a/dist/nuxt.js
 +++ b/dist/nuxt.js
 @@ -1,6 +1,6 @@
  import { docsAppPath, docsManifestPages, docsPageIcon, docsRailIcon, docsRawFile, docsRawPath, docsSectionIcon, normalizeDocsBase } from "./navigation.js";
- import { t as coversDocsPages } from "./page-B9yFkRP1.js";
+-import { t as coversDocsPages } from "./page-B9yFkRP1.js";
 -import { r as createDocsManifest, t as toRawMarkdown } from "./raw-DAVjDoXI.js";
-+import { r as createDocsManifest, t as toRawMarkdown } from "./raw-D37BO3tx.js";
++import { t as coversDocsPages } from "./page-Cr0APDsu.js";
++import { r as createDocsManifest, t as toRawMarkdown } from "./raw-CKzTq6vZ.js";
  import { docsAppConfigUi, vercelTheme } from "./theme.js";
  import { createRequire } from "node:module";
  import { existsSync, mkdirSync, readFileSync, rmSync, watch, writeFileSync } from "node:fs";
-@@ -139,6 +139,20 @@ const docsNuxtModule = defineNuxtModule({
+@@ -139,6 +139,21 @@ const docsNuxtModule = defineNuxtModule({
  			[dependency("@vite-hub/ui/nuxt")]: {},
  			[dependency("nuxt-llms")]: {},
  			[dependency("nuxt-agent-discovery")]: {},
@@ -117,18 +122,19 @@ index b08f5ad2ba7d44513dcaea34777343529538bb72..f967980e514f0928e04bce7e1bcde664
 +				description: docs.site?.description,
 +				defaultLocale: "en"
 +			} },
-+			...docs.ogImage === false ? {} : { [dependency("nuxt-og-image")]: { defaults: {
++			[dependency("nuxt-og-image")]: { defaults: {
++				enabled: docs.ogImage !== false,
 +				zeroRuntime: true,
 +				defaults: {
 +					width: 1200,
 +					height: 630
 +				}
-+			} } },
++			} },
 +			[dependency("nuxt-schema-org")]: {},
  			...docs.linkChecker === false ? {} : { [dependency("nuxt-link-checker")]: { defaults: {
  				failOnError: true,
  				fetchRemoteUrls: false,
-@@ -193,6 +207,10 @@ const docsNuxtModule = defineNuxtModule({
+@@ -193,6 +208,10 @@ const docsNuxtModule = defineNuxtModule({
  			}
  		}
  		nuxt.hook("build:before", writeRaw);
@@ -139,7 +145,7 @@ index b08f5ad2ba7d44513dcaea34777343529538bb72..f967980e514f0928e04bce7e1bcde664
  		moduleOptions.runtimeConfig.public.mdc ??= { headings: { anchorLinks: {
  			h1: false,
  			h2: true,
-@@ -432,9 +450,9 @@ const docsNuxtModule = defineNuxtModule({
+@@ -432,9 +451,9 @@ const docsNuxtModule = defineNuxtModule({
  			route: "/sitemap.xml",
  			handler: resolver.resolve("./runtime/server/sitemap.js")
  		});
@@ -151,7 +157,7 @@ index b08f5ad2ba7d44513dcaea34777343529538bb72..f967980e514f0928e04bce7e1bcde664
  			handler: resolver.resolve("./runtime/server/raw.js")
  		});
  		/**
-@@ -584,7 +602,8 @@ function publicConfig(options, appBase) {
+@@ -584,7 +603,8 @@ function publicConfig(options, appBase) {
  			url: `${url}${docsAppPath("/mcp", appBase)}`,
  			guide: options.mcp?.guide ?? null
  		},
@@ -161,38 +167,80 @@ index b08f5ad2ba7d44513dcaea34777343529538bb72..f967980e514f0928e04bce7e1bcde664
  	};
  }
  //#endregion
-diff --git a/dist/page-BT6Ao5Vz.d.ts b/dist/page-wIrmxTfS.d.ts
+diff --git a/dist/page-BT6Ao5Vz.d.ts b/dist/page-BWRKxiIN.d.ts
 similarity index 96%
 rename from dist/page-BT6Ao5Vz.d.ts
-rename to dist/page-wIrmxTfS.d.ts
-index 6f5421a97a02d5b9935fa2ade3ff256d2f945cdd..4721f991f98cddcfcb34b8e5ec6c318b16712594 100644
+rename to dist/page-BWRKxiIN.d.ts
+index 6f5421a97a02d5b9935fa2ade3ff256d2f945cdd..8ed1c36d23eadcee675298c1e30e9146df1cf25e 100644
 --- a/dist/page-BT6Ao5Vz.d.ts
-+++ b/dist/page-wIrmxTfS.d.ts
++++ b/dist/page-BWRKxiIN.d.ts
 @@ -1,4 +1,4 @@
 -import { a as DocsTocLink, i as DocsSection, n as DocsPage, r as DocsSearchSection, t as DocsManifest } from "./types-CeQKlDf2.js";
-+import { a as DocsTocLink, i as DocsSection, n as DocsPage, r as DocsSearchSection, t as DocsManifest } from "./types-C8-TmiDn.js";
++import { a as DocsTocLink, i as DocsSection, n as DocsPage, r as DocsSearchSection, t as DocsManifest } from "./types-C3FDBCHZ.js";
  import { ComarkPlugin, Node } from "comark";
  //#region src/markdown.d.ts
  /** A page parsed on the server. The client renders `nodes` and never parses Markdown itself. */
-diff --git a/dist/raw-DAVjDoXI.js b/dist/raw-D37BO3tx.js
+diff --git a/dist/page-B9yFkRP1.js b/dist/page-Cr0APDsu.js
+similarity index 97%
+rename from dist/page-B9yFkRP1.js
+rename to dist/page-Cr0APDsu.js
+index 9dc90837a5ca86f2c3d8fcd9966883e7d5b476ee..e23781b875a73673e70f11df29d8bfa8921ffb56 100644
+--- a/dist/page-B9yFkRP1.js
++++ b/dist/page-Cr0APDsu.js
+@@ -33,7 +33,7 @@ function docsPageOf(frontmatter, at) {
+ 		...frontmatter.codePanel ? { codePanel: true } : {},
+ 		...frontmatter.seo ? { seo: frontmatter.seo } : {},
+ 		sidebar: frontmatter.sidebar ?? true,
+-		toc: frontmatter.toc ?? layout !== "landing",
++		toc: frontmatter.toc ?? (layout !== "landing" && layout !== "home"),
+ 		kind: navigation?.kind ?? null,
+ 		group: navigation?.group ?? null,
+ 		navigation: frontmatter.navigation !== false,
+diff --git a/dist/raw-DAVjDoXI.js b/dist/raw-CKzTq6vZ.js
 similarity index 99%
 rename from dist/raw-DAVjDoXI.js
-rename to dist/raw-D37BO3tx.js
-index 8fc02a635e7765cd62956eaa917ca6ca8b0e6dd2..a8f0de9851a6fcc259155b980bf68c8b69408b82 100644
+rename to dist/raw-CKzTq6vZ.js
+index 8fc02a635e7765cd62956eaa917ca6ca8b0e6dd2..6864a4edd1c05f8a2e45b3a91071b2d53d2b3b72 100644
 --- a/dist/raw-DAVjDoXI.js
-+++ b/dist/raw-D37BO3tx.js
-@@ -1,5 +1,5 @@
++++ b/dist/raw-CKzTq6vZ.js
+@@ -1,6 +1,6 @@
  import { docsManifestPages, normalizeDocsBase } from "./navigation.js";
 -import { a as docsSectionSchema, i as docsPageSchema, t as docsFrontmatter } from "./schema-D7yXFi4A.js";
-+import { a as docsSectionSchema, i as docsPageSchema, t as docsFrontmatter } from "./schema-PRYjzCAC.js";
- import { n as docsPageOf, r as docsPagePath } from "./page-B9yFkRP1.js";
+-import { n as docsPageOf, r as docsPagePath } from "./page-B9yFkRP1.js";
++import { a as docsSectionSchema, i as docsPageSchema, t as docsFrontmatter } from "./schema-CwnWWMf4.js";
++import { n as docsPageOf, r as docsPagePath } from "./page-Cr0APDsu.js";
  import { z } from "zod";
  import { existsSync, readFileSync, readdirSync } from "node:fs";
+ import { dirname, join, relative } from "node:path";
+diff --git a/dist/runtime/app/app.vue b/dist/runtime/app/app.vue
+index 8c80e9bc42cc3bbc13884499ad849f3e8ff4d2d6..349eed43645f4e6a766c3a0b96216584dae6c718 100644
+--- a/dist/runtime/app/app.vue
++++ b/dist/runtime/app/app.vue
+@@ -2,11 +2,13 @@
+ import { docsAppPath, normalizeDocsPath } from "#docs/navigation"
+ 
+ const route = useRoute()
++const loose = (text: string) => text.toLowerCase().replace(/[^\p{L}\p{N}]/gu, "")
+ const { site, appBase } = useDocsConfig()
+ 
+ useHead({
+   // One title pattern for every page: "KV configuration · ViteHub". A title that already names the site stays as written.
+-  titleTemplate: title => !title ? site.name : title.includes(site.name) ? title : `${title} · ${site.name}`,
++  // The check ignores case and punctuation, so "Comark UI" counts as naming `comark-ui`.
++  titleTemplate: title => !title ? site.name : loose(title).includes(loose(site.name)) ? title : `${title} · ${site.name}`,
+   // One canonical URL per page: the configured origin, no trailing slash, and no query.
+   link: site.url ? [{ rel: "canonical", href: () => `${site.url}${docsAppPath(normalizeDocsPath(route.path), appBase).replace(/\/+$/, "")}` }] : [],
+ })
 diff --git a/dist/runtime/app/components/DocsPage.vue b/dist/runtime/app/components/DocsPage.vue
-index 31ab4afa88f7d12c59313a7c8da59b5db30c7303..6181b60496dd0bc5d02765abde5ad7dc96b99191 100644
+index 31ab4afa88f7d12c59313a7c8da59b5db30c7303..e845542268a593b005e1815d99eb67671991aa79 100644
 --- a/dist/runtime/app/components/DocsPage.vue
 +++ b/dist/runtime/app/components/DocsPage.vue
-@@ -19,11 +19,13 @@ const isStandalone = !response.section && !isRoot
+@@ -15,15 +15,17 @@ const { page } = response
+ 
+ const isRoot = page.path === manifest.root?.path
+ // A page outside the docs base has no section. It reads as a plain article under the site header.
+-const isStandalone = !response.section && !isRoot
++const isStandalone = !response.section && !isRoot && page.layout !== "home"
  
  // Agents can fetch the Markdown twin of the page instead of the HTML.
  useHead({ link: [{ rel: "alternate", type: "text/markdown", href: `${site.url}${docsAppPath(docsRawPath(page.path), appBase)}` }] })
@@ -206,10 +254,21 @@ index 31ab4afa88f7d12c59313a7c8da59b5db30c7303..6181b60496dd0bc5d02765abde5ad7dc
 +  description: page.seo?.description ?? page.description,
 +  section: section && { title: section.title, path: docsAppPath(section.path, appBase) },
 +  image: page.seo?.image,
-+  type: isRoot || page.layout === "landing" ? "page" : "article",
++  type: isRoot || page.layout === "landing" || page.layout === "home" ? "page" : "article",
  })
  </script>
  
+@@ -45,6 +47,10 @@ useSeoMeta({
+     </UPageBody>
+   </div>
+ 
++  <div v-else-if="page.layout === 'home'" :data-path="page.path">
++    <DocsMarkdown :document="response.document" />
++  </div>
++
+   <div v-else-if="page.layout === 'landing'" class="vh-docs-landing">
+     <DocsLanding :response="response" :header="isRoot" />
+   </div>
 diff --git a/dist/runtime/app/components/OgImage/DocsPage.takumi.vue b/dist/runtime/app/components/OgImage/DocsPage.takumi.vue
 new file mode 100644
 index 0000000000000000000000000000000000000000..bb8fef2b735847daf3d52bba3ca8a4d3596592bc
@@ -249,13 +308,45 @@ index 0000000000000000000000000000000000000000..bb8fef2b735847daf3d52bba3ca8a4d3
 +    </div>
 +  </div>
 +</template>
+diff --git a/dist/runtime/app/composables/docs.ts b/dist/runtime/app/composables/docs.ts
+index be05168eb5549bd3abfb7f73766f907ba2e8d65d..f476cf84baa3a70c1730ed4c023a1b09756ab6f1 100644
+--- a/dist/runtime/app/composables/docs.ts
++++ b/dist/runtime/app/composables/docs.ts
+@@ -1,7 +1,7 @@
+ import { computed, type ComputedRef } from "vue"
+ import { useRoute, useRuntimeConfig } from "#imports"
+ import manifest from "#docs/manifest"
+-import { docsSectionForPath, findDocsPage, isDocsPath, normalizeDocsPath } from "#docs/navigation"
++import { docsSectionForPath, findDocsPage, normalizeDocsPath } from "#docs/navigation"
+ 
+ import type { DocsManifest, DocsPage, DocsPublicConfig, DocsSection } from "@vite-hub/docs"
+ 
+@@ -39,12 +39,12 @@ export function useDocsSection(): ComputedRef<DocsSection | null> {
+   })
+ }
+ 
+-/** Whether the current route renders in the docs shell: a page under the base, or an app page with the `docs` layout. */
++/**
++ * Whether the current route renders in the docs shell, whose sidebar carries the site navigation on wide screens. That
++ * is the `docs` layout: docs pages get it from the module's middleware, and an app page sets it itself. Any other
++ * page, such as a `home` page or an app page under a base of `/`, keeps the site header.
++ */
+ export function useDocsShell(): ComputedRef<boolean> {
+   const route = useRoute()
+-  const config = useDocsConfig()
+-  return computed(() => {
+-    const path = normalizeDocsPath(route.path)
+-    return route.meta.layout === "docs" || isDocsPath(path, config.base)
+-  })
++  return computed(() => route.meta.layout === "docs")
+ }
 diff --git a/dist/runtime/app/composables/seo.ts b/dist/runtime/app/composables/seo.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..d5ffa31f295e33c080a89fdf5b9208384f218687
+index 0000000000000000000000000000000000000000..37252d57742e0a1252635de8f54fbc2041d43c25
 --- /dev/null
 +++ b/dist/runtime/app/composables/seo.ts
-@@ -0,0 +1,54 @@
-+import { defineArticle, defineBreadcrumb, defineOgImage, defineWebPage, useRoute, useSchemaOrg, useSeoMeta } from "#imports"
+@@ -0,0 +1,59 @@
++import { defineArticle, defineBreadcrumb, defineOgImage, defineWebPage, defineWebSite, useRoute, useSchemaOrg, useSeoMeta } from "#imports"
 +import { docsAppPath, normalizeDocsPath } from "#docs/navigation"
 +
 +import { useDocsConfig } from "./docs"
@@ -284,11 +375,15 @@ index 0000000000000000000000000000000000000000..d5ffa31f295e33c080a89fdf5b920838
 +  const description = input.description ?? site.description ?? undefined
 +  useSeoMeta({ title: input.title, ogTitle: input.title, description, ogDescription: description })
 +
-+  if (input.image) {
++  if (input.image === false) {
++    // Null overrides inherited head tags before Unhead removes them from the rendered page.
++    useSeoMeta({ ogImage: null, ogImageUrl: null, ogImageSecureUrl: null, ogImageType: null, ogImageWidth: null, ogImageHeight: null, ogImageAlt: null, twitterImage: null, twitterImageAlt: null })
++  }
++  else if (input.image) {
 +    const image = /^https?:\/\//.test(input.image) ? input.image : `${site.url}${docsAppPath(input.image, appBase)}`
 +    useSeoMeta({ ogImage: image, twitterImage: image })
 +  }
-+  else if (input.image !== false && ogImage) {
++  else if (ogImage) {
 +    // SAFETY: `ogImage.component` is an OgImage component; the default ships with this package, and an app names its own.
 +    defineOgImage(ogImage.component as "DocsPage", {
 +      title: input.title,
@@ -302,6 +397,7 @@ index 0000000000000000000000000000000000000000..d5ffa31f295e33c080a89fdf5b920838
 +  }
 +
 +  useSchemaOrg([
++    defineWebSite({ name: site.name, description: site.description ?? undefined }),
 +    defineWebPage({ name: input.title, description }),
 +    ...input.type === "article" ? [defineArticle({ "@type": "TechArticle", "headline": input.title, description })] : [],
 +    ...section
@@ -309,47 +405,89 @@ index 0000000000000000000000000000000000000000..d5ffa31f295e33c080a89fdf5b920838
 +      : [],
 +  ])
 +}
+diff --git a/dist/runtime/app/middleware/docs-layout.ts b/dist/runtime/app/middleware/docs-layout.ts
+index b65978a17a748880448be0cc05779a7ad6c25a7c..ce4fff4e7650718aa7e02d09507bda6f73fec4f0 100644
+--- a/dist/runtime/app/middleware/docs-layout.ts
++++ b/dist/runtime/app/middleware/docs-layout.ts
+@@ -3,10 +3,10 @@ import manifest from "#docs/manifest"
+ import { docsSectionForPath, findDocsPage } from "#docs/navigation"
+ 
+ // A docs page renders in the docs shell whichever app page serves its path. A page outside the docs base, such as
+-// `/about`, is a plain article under the site header.
++// `/about`, is a plain article under the site header, and a `home` page is its own blocks under it.
+ export default defineNuxtRouteMiddleware((to) => {
+   const found = findDocsPage(manifest, to.path)
+-  if (found) to.meta.layout = found.section || found.page.path === manifest.root?.path ? "docs" : "default"
++  if (found) to.meta.layout = found.page.layout !== "home" && (found.section || found.page.path === manifest.root?.path) ? "docs" : "default"
+   // A new page that exists only as a Content draft renders in the shell of its section.
+   else if (docsSectionForPath(manifest, to.path)) to.meta.layout = "docs"
+ })
 diff --git a/dist/runtime/server/page.d.ts b/dist/runtime/server/page.d.ts
-index 5d9176db1f0853b17e424744d64ea30400206b11..c9fa9f679c98ca7a5bdb37167a6fff25400bc797 100644
+index 5d9176db1f0853b17e424744d64ea30400206b11..e18472e9d6d30cfc6abee576e25ee22f88e37b50 100644
 --- a/dist/runtime/server/page.d.ts
 +++ b/dist/runtime/server/page.d.ts
 @@ -1,4 +1,4 @@
 -import { n as DocsPageResponse } from "../../page-BT6Ao5Vz.js";
-+import { n as DocsPageResponse } from "../../page-wIrmxTfS.js";
++import { n as DocsPageResponse } from "../../page-BWRKxiIN.js";
  import { EventHandler, EventHandlerRequest } from "h3";
  //#region src/runtime/server/page.d.ts
  /** `/api/_docs/page/docs/kv.json` is the page at `/docs/kv`. The `.json` suffix lets static hosts store every page beside its folder. */
 diff --git a/dist/runtime/server/page.js b/dist/runtime/server/page.js
-index d6bac45656c32eb7b7ccbc75633b834bc69ef04b..1cd7c1f6300ef5739212e9adeca3d12d91572614 100644
+index d6bac45656c32eb7b7ccbc75633b834bc69ef04b..ac09f806ed6d40257e0d8f87bd8f28c6c8874ca1 100644
 --- a/dist/runtime/server/page.js
 +++ b/dist/runtime/server/page.js
+@@ -1,5 +1,5 @@
+ import { findDocsPage } from "../../navigation.js";
+-import { i as docsPageResponse } from "../../page-B9yFkRP1.js";
++import { i as docsPageResponse } from "../../page-Cr0APDsu.js";
+ import { t as createDocsParser } from "../../markdown-B678mI1Z.js";
+ import { createError, defineEventHandler, getRouterParam, setHeader, useStorage } from "#imports";
+ import manifest from "#docs/manifest";
 @@ -12,7 +12,7 @@ const parsed = /* @__PURE__ */ new Map();
  const handler = defineEventHandler(async (event) => {
  	const path = `/${(getRouterParam(event, "_") ?? "").replace(/\.json$/, "")}`;
  	if (content && (content.preview.active() || content.preview.frame())) {
 -		const { docsDraftResponse } = await import("../../draft-k-B2ca0k.js");
-+		const { docsDraftResponse } = await import("../../draft-kHySoLw1.js");
++		const { docsDraftResponse } = await import("../../draft-BB6f7xQj.js");
  		const draft = await docsDraftResponse(content, manifest, path, parse);
  		if (draft) {
  			setHeader(event, "cache-control", "private, no-store");
 diff --git a/dist/runtime/server/search.d.ts b/dist/runtime/server/search.d.ts
-index 767b59f2d3a6aa98ad9dc543fb5d5da3b15f7738..23849ac60aaf7982b7ff00d789187f77cb0b0e7c 100644
+index 767b59f2d3a6aa98ad9dc543fb5d5da3b15f7738..8a87406502f69b1dc697e6ad90d43b39d6c70e34 100644
 --- a/dist/runtime/server/search.d.ts
 +++ b/dist/runtime/server/search.d.ts
 @@ -1,4 +1,4 @@
 -import { r as DocsSearchSection } from "../../types-CeQKlDf2.js";
-+import { r as DocsSearchSection } from "../../types-C8-TmiDn.js";
++import { r as DocsSearchSection } from "../../types-C3FDBCHZ.js";
  import { EventHandler, EventHandlerRequest } from "h3";
  //#region src/runtime/server/search.d.ts
  /** Every page split by heading, for the search dialog. The build prerenders it. */
-diff --git a/dist/schema-D7yXFi4A.js b/dist/schema-PRYjzCAC.js
-similarity index 94%
+diff --git a/dist/schema-D7yXFi4A.js b/dist/schema-CwnWWMf4.js
+similarity index 85%
 rename from dist/schema-D7yXFi4A.js
-rename to dist/schema-PRYjzCAC.js
-index ccc1ddca494084067377582a58346e530f1f9478..f4d23bda9e1b76056df0bce24a1c094c779f205a 100644
+rename to dist/schema-CwnWWMf4.js
+index ccc1ddca494084067377582a58346e530f1f9478..7411b4dd3a4b21149928938af0f439d3cd8fedbe 100644
 --- a/dist/schema-D7yXFi4A.js
-+++ b/dist/schema-PRYjzCAC.js
-@@ -14,7 +14,8 @@ const navigationFields = {
++++ b/dist/schema-CwnWWMf4.js
+@@ -1,10 +1,15 @@
+ import { z } from "zod";
+ //#region src/schema.ts
+-/** How a page renders. `article` is prose with an outline, `tutorial` numbers its steps, `landing` is a wide Overview. */
++/**
++* How a page renders. `article` is prose with an outline, `tutorial` numbers its steps, `landing` is a wide Overview,
++* and `home` is the page's own blocks at full width under the site header, without the docs sidebar, such as a
++* product home page.
++*/
+ const docsLayouts = [
+ 	"article",
+ 	"tutorial",
+-	"landing"
++	"landing",
++	"home"
+ ];
+ const navigationFields = {
+ 	title: z.string().optional(),
+@@ -14,7 +19,8 @@ const navigationFields = {
  };
  const seoFields = {
  	title: z.string().optional(),
@@ -359,7 +497,7 @@ index ccc1ddca494084067377582a58346e530f1f9478..f4d23bda9e1b76056df0bce24a1c094c
  };
  const pageFields = {
  	title: z.string(),
-@@ -40,7 +41,8 @@ const docsPageFields = {
+@@ -40,7 +46,8 @@ const docsPageFields = {
  	"navigation.group": navigationFields.group,
  	"navigation.kind": navigationFields.kind,
  	"seo.title": seoFields.title,
@@ -370,35 +508,50 @@ index ccc1ddca494084067377582a58346e530f1f9478..f4d23bda9e1b76056df0bce24a1c094c
  /** The build validates frontmatter with this schema after `docsFrontmatter()` expanded its dotted keys. */
  const docsPageSchema = z.strictObject(pageFields);
 diff --git a/dist/server.d.ts b/dist/server.d.ts
-index caf2ad64edd81c490fde31d594e915cb592ea2f7..7dafc032fff8590b8596e602d0633df05d485fe8 100644
+index caf2ad64edd81c490fde31d594e915cb592ea2f7..9b785d13af7111e3c84065fedd7f311877f03966 100644
 --- a/dist/server.d.ts
 +++ b/dist/server.d.ts
 @@ -1,5 +1,5 @@
 -import { t as DocsManifest } from "./types-CeQKlDf2.js";
 -import { a as DocsParserOptions, i as DocsDocument, n as DocsPageResponse, o as createDocsParser, r as docsPageResponse, s as docsSearchSections, t as DocsPageLink } from "./page-BT6Ao5Vz.js";
-+import { t as DocsManifest } from "./types-C8-TmiDn.js";
-+import { a as DocsParserOptions, i as DocsDocument, n as DocsPageResponse, o as createDocsParser, r as docsPageResponse, s as docsSearchSections, t as DocsPageLink } from "./page-wIrmxTfS.js";
++import { t as DocsManifest } from "./types-C3FDBCHZ.js";
++import { a as DocsParserOptions, i as DocsDocument, n as DocsPageResponse, o as createDocsParser, r as docsPageResponse, s as docsSearchSections, t as DocsPageLink } from "./page-BWRKxiIN.js";
  //#region src/manifest.d.ts
  interface DocsManifestOptions {
    /** Absolute path of the content directory. */
 diff --git a/dist/server.js b/dist/server.js
-index 6c69a5fc0fec9f7a3d1b6186cc51365ed7fa30ef..d8823fbad482f84880409df0f2a01f30e0053b00 100644
+index 6c69a5fc0fec9f7a3d1b6186cc51365ed7fa30ef..eb11172fa76bc31d4cd1c70786310dbb1247076d 100644
 --- a/dist/server.js
 +++ b/dist/server.js
 @@ -1,4 +1,4 @@
- import { i as docsPageResponse } from "./page-B9yFkRP1.js";
+-import { i as docsPageResponse } from "./page-B9yFkRP1.js";
 -import { n as DocsContentError, r as createDocsManifest, t as toRawMarkdown } from "./raw-DAVjDoXI.js";
-+import { n as DocsContentError, r as createDocsManifest, t as toRawMarkdown } from "./raw-D37BO3tx.js";
++import { i as docsPageResponse } from "./page-Cr0APDsu.js";
++import { n as DocsContentError, r as createDocsManifest, t as toRawMarkdown } from "./raw-CKzTq6vZ.js";
  import { n as docsSearchSections, t as createDocsParser } from "./markdown-B678mI1Z.js";
  export { DocsContentError, createDocsManifest, createDocsParser, docsPageResponse, docsSearchSections, toRawMarkdown };
-diff --git a/dist/types-CeQKlDf2.d.ts b/dist/types-C8-TmiDn.d.ts
-similarity index 94%
+diff --git a/dist/types-CeQKlDf2.d.ts b/dist/types-C3FDBCHZ.d.ts
+similarity index 90%
 rename from dist/types-CeQKlDf2.d.ts
-rename to dist/types-C8-TmiDn.d.ts
-index 8a9289fc7ce3501a92ae5f2585562c1d438b9763..d03bacf9ff54ff7016f4b54f4d7ece6cf79f8b88 100644
+rename to dist/types-C3FDBCHZ.d.ts
+index 8a9289fc7ce3501a92ae5f2585562c1d438b9763..e24b202a2d010c3670f92a046c365a459a6f1e36 100644
 --- a/dist/types-CeQKlDf2.d.ts
-+++ b/dist/types-C8-TmiDn.d.ts
-@@ -29,9 +29,14 @@ interface DocsPageFrontmatter {
++++ b/dist/types-C3FDBCHZ.d.ts
+@@ -1,7 +1,11 @@
+ import { z } from "zod";
+ //#region src/schema.d.ts
+-/** How a page renders. `article` is prose with an outline, `tutorial` numbers its steps, `landing` is a wide Overview. */
+-declare const docsLayouts: readonly ["article", "tutorial", "landing"];
++/**
++ * How a page renders. `article` is prose with an outline, `tutorial` numbers its steps, `landing` is a wide Overview,
++ * and `home` is the page's own blocks at full width under the site header, without the docs sidebar, such as a
++ * product home page.
++ */
++declare const docsLayouts: readonly ["article", "tutorial", "landing", "home"];
+ type DocsLayout = (typeof docsLayouts)[number];
+ /** Navigation fields of a page. `false` keeps the page out of the sidebar. */
+ type DocsPageNavigation = false | {
+@@ -29,9 +33,14 @@ interface DocsPageFrontmatter {
    /** `false` hides the "On this page" outline. */
    toc?: boolean;
    navigation?: DocsPageNavigation;
@@ -413,7 +566,7 @@ index 8a9289fc7ce3501a92ae5f2585562c1d438b9763..d03bacf9ff54ff7016f4b54f4d7ece6c
    };
  }
  /**
-@@ -45,6 +50,7 @@ interface DocsPageFile extends DocsPageFrontmatter {
+@@ -45,6 +54,7 @@ interface DocsPageFile extends DocsPageFrontmatter {
    "navigation.kind"?: string;
    "seo.title"?: string;
    "seo.description"?: string;
@@ -421,7 +574,7 @@ index 8a9289fc7ce3501a92ae5f2585562c1d438b9763..d03bacf9ff54ff7016f4b54f4d7ece6c
  }
  /** `.navigation.yml` of a section folder. */
  interface DocsSectionFile {
-@@ -91,6 +97,7 @@ interface DocsPage {
+@@ -91,6 +101,7 @@ interface DocsPage {
    seo?: {
      title?: string;
      description?: string;

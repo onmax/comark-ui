@@ -30,6 +30,7 @@ useHead({
         'try{document.documentElement.dataset.comarkView=localStorage.getItem("comark-view")==="list"?"list":"canvas"}catch{document.documentElement.dataset.comarkView="canvas"}',
     },
   ],
+  link: [{ rel: "preload", href: "/canvas-cards.json", as: "fetch", crossorigin: "" }],
 });
 
 declare global {
