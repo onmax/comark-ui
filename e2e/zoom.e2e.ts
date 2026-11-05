@@ -1,55 +1,58 @@
 import { createHtmlRenderer } from "@comark/html";
 import { expect, type Page, test } from "@playwright/test";
-import { gotoHydrated } from "./helpers.ts";
 import annotate, { components as annotateComponents } from "../packages/annotate/src/html.ts";
 import carousel, { components as carouselComponents } from "../packages/carousel/src/html.ts";
 import zoom, { components as zoomComponents } from "../packages/zoom/src/html.ts";
+import { fixture } from "./helpers.ts";
 
 const render = createHtmlRenderer({
   plugins: [annotate(), carousel(), zoom()],
   components: { ...annotateComponents, ...carouselComponents, ...zoomComponents },
 });
 
-// A page of the plugins' HTML, served at a path of the docs site so its images load.
-async function fixture(page: Page, body: string) {
-  await page.route("**/fixture/", (route) =>
-    route.fulfill({
-      contentType: "text/html",
-      body: `<!doctype html><meta charset="utf-8"><style>main{width:600px;margin:auto}img{max-width:100%}</style><main>${body}</main>`,
-    }),
-  );
-  await page.goto("/fixture/");
-}
+const image = "![Office correlations dashboard](/dashboard.png)";
+const block = `::zoom{title="Deploy retry policy"}
+| Attempt | Wait |
+| --- | --- |
+| 1 | 1 s |
+| 2 | 4 s |
+| 3 | Until the pigeons leave |
+::`;
 
 const rect = (page: Page, selector: string) =>
   page.locator(selector).evaluate((node) => node.getBoundingClientRect().toJSON() as DOMRect);
 
 test("an image zooms, and Escape, Back, and a click around it close it", async ({ page }) => {
-  await gotoHydrated(page, "/zoom");
-  const image = page.locator("main img[data-zoom]").first();
+  await fixture(page, await render(image));
+  const picture = page.locator("main img[data-zoom]").first();
   const dialog = page.locator(".cz-dialog");
 
-  await image.click();
+  await picture.click();
   await expect(dialog).toBeVisible();
   await expect(dialog).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(dialog).toHaveCount(0);
-  await expect(image).toBeFocused();
+  await expect(picture).toBeFocused();
 
-  await image.click();
+  await picture.click();
   await expect(dialog).toBeVisible();
   await page.goBack();
   await expect(dialog).toHaveCount(0);
-  await expect(page).toHaveURL(/\/zoom$/);
+  await expect(page).toHaveURL(/\/fixture\/$/);
 
-  await image.click();
+  await picture.click();
   await expect(dialog).toBeVisible();
   await page.mouse.click(8, 400);
   await expect(dialog).toHaveCount(0);
 });
 
 test("opening and closing the zoom doesn't shift the page sideways", async ({ page }) => {
-  await gotoHydrated(page, "/carousel");
+  await fixture(
+    page,
+    await render(
+      `# Carousel\n\n::carousel{title="Filters"}\n![Filter toolbar wrapping](/before.png)\n\n![Filter toolbar on one row](/after.png)\n\n![Office correlations dashboard](/dashboard.png)\n::\n\n${"Pigeons home from far away. ".repeat(400)}`,
+    ),
+  );
   await page.evaluate(() => {
     const shifts: number[] = [];
     Object.assign(window, { shifts });
@@ -71,29 +74,25 @@ test("opening and closing the zoom doesn't shift the page sideways", async ({ pa
 });
 
 test("a zoomed table keeps its header row", async ({ page }) => {
-  await gotoHydrated(page, "/zoom");
-  await page.getByRole("tab", { name: "Any block", exact: true }).click();
-  const block = page
-    .locator("main .docs-example-preview .cz")
+  await fixture(page, await render(block));
+  await page
+    .locator("main .cz")
     .filter({ has: page.locator("table") })
-    .last();
-  await block.scrollIntoViewIfNeeded();
-  await block.click();
+    .click();
   await expect(page.locator(".cz-dialog th").first()).toHaveText("Attempt");
 });
 
 test("a zoomed block keeps its text styles, so it closes onto the original without a jump", async ({
   page,
 }) => {
-  await gotoHydrated(page, "/zoom");
-  await page.getByRole("tab", { name: "Any block", exact: true }).click();
-  const block = page
-    .locator("main .docs-example-preview .cz")
-    .filter({ has: page.locator("table") })
-    .last();
-  await block.scrollIntoViewIfNeeded();
-  const height = await block.evaluate((node) => (node as HTMLElement).offsetHeight);
-  await block.click();
+  await fixture(
+    page,
+    await render(block),
+    "main{width:600px;margin:auto;font:20px/1.7 Georgia,serif;letter-spacing:.03em}",
+  );
+  const zoomable = page.locator("main .cz").filter({ has: page.locator("table") });
+  const height = await zoomable.evaluate((node) => (node as HTMLElement).offsetHeight);
+  await zoomable.click();
   const copy = page.locator(".cz-item > .cz");
   expect(await copy.evaluate((node) => (node as HTMLElement).offsetHeight)).toBe(height);
 });
@@ -102,10 +101,10 @@ test("a zoom opened as another closes keeps scroll restoration off until it clos
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await gotoHydrated(page, "/zoom");
-  const image = page.locator("main img[data-zoom]").first();
-  await image.click();
-  await image.evaluate((node) =>
+  await fixture(page, await render(image));
+  const picture = page.locator("main img[data-zoom]").first();
+  await picture.click();
+  await picture.evaluate((node) =>
     node.addEventListener("comark-zoom:close", () => (node as HTMLElement).click(), { once: true }),
   );
   await page.goBack();

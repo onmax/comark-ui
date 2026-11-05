@@ -3,7 +3,6 @@ import { createHtmlRenderer } from "@comark/html";
 import { anchors, components as linksComponents } from "../packages/links/src/html.ts";
 import stepsPlugin, { components as stepsComponents } from "../packages/steps/src/html.ts";
 import { typesetCss } from "../packages/ui/src/typeset-css.ts";
-import { gotoHydrated } from "./helpers.ts";
 
 for (const width of [360, 1280]) {
   for (const linked of [false, true]) {
@@ -62,7 +61,11 @@ for (const width of [360, 1280]) {
 test("the line reaches the next number although the page's headings have a top margin", async ({
   page,
 }) => {
-  await gotoHydrated(page, "/steps/");
+  const render = createHtmlRenderer({ plugins: [stepsPlugin()], components: stepsComponents });
+  const html = await render(
+    "::steps\n### Install the plugin\n```sh\npnpm add comark-steps\n```\n\n### Register it\nPass `steps()` to the parser and `components` to the renderer.\n\n### Write the steps\nWrap the headings of a tutorial in `::steps`.\n::",
+  );
+  await page.setContent(`<main><style>${typesetCss}</style>${html}</main>`);
   const steps = page.locator(".cs").first().locator(".cs-step");
   await expect(steps.first().locator("h3")).toHaveCSS("margin-top", "0px");
   const boxes = await steps.evaluateAll((items) =>

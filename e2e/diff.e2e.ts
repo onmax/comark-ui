@@ -82,6 +82,26 @@ test("the diff groups its label and path and scrolls long code with the keyboard
 test("a diff's counts stay readable when the page's theme and the system's disagree", async ({
   page,
 }) => {
+  const suggested = await renderHtmlFromDocument(
+    await parseMarkdown(
+      `::diff{line=212 label="Suggested change"}
+\`\`\`ts [packages/zoom/src/client.ts]
+function close() {
+  dialog.close();
+  history.back();
+}
+\`\`\`
+\`\`\`ts
+function close() {
+  dialog.close();
+  if (opened) history.back();
+}
+\`\`\`
+::`,
+      { plugins: [diffPlugin()] },
+    ),
+    { components },
+  );
   // shadcn's neutral theme, set by class while the system says the opposite.
   const themes = {
     dark: "--background:#0a0a0a;--foreground:#fafafa;--accent:#262626",
@@ -92,10 +112,7 @@ test("a diff's counts stay readable when the page's theme and the system's disag
     ["dark", themes.light],
   ] as const) {
     await page.emulateMedia({ colorScheme: system });
-    const parsed = await parseMarkdown(change(), { plugins: [diffPlugin()] });
-    const html = await renderHtmlFromDocument(parsed, { components });
-    await page.setContent(`${prose}<main class="prose">${html}</main>`);
-    await page.addStyleTag({ content: `main{${theme}}` });
+    await page.setContent(`<style>main{${theme}}</style><main>${suggested}</main>`);
     const ratios = await page
       .locator(".cd")
       .first()

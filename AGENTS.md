@@ -255,6 +255,7 @@ How most packages work, so the bullets below don't repeat it:
 
 - Follow the 90/10 rule. If a feature would take most of the code for a small share of users, leave it out.
 - Test through the public interface: parse plus render. Don't test internals.
+  - The Playwright tests in `e2e/` (`pnpm test:e2e`, after `pnpm build`) test the components, not the docs site: each renders its Markdown into a page with `setContent` or `fixture()` from `e2e/helpers.ts`, and the server only answers with the images in `docs/public`.
 - Rendering never throws. Problems go in `meta.issues`, one sentence each that names the block and the fix. Every plugin appends to the list and never replaces it, since several run on one document.
 - Each issue also names its rule, `comark/<package>/<kind>`, in `meta.issueRules`, keyed by the sentence. Plugins merge into it the same way. A new kind of issue needs its rule in `packages/lint/src/rules/<package>.ts` and a page in `docs/pages/doctor/<package>/`.
 - Comments are rare and explain why, never what.
