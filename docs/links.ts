@@ -3,11 +3,7 @@
 // isn't there fails the build.
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
-import { parseMarkdown } from "comark";
-import { defaultConfig, readConfig } from "./config.ts";
 import { excludedLinks } from "./link-excludes.ts";
-import { playable, unpack } from "./play-link.ts";
-import { browserPlugins } from "./plugins.ts";
 import { redirectTarget, SITE } from "./server/utils/site.ts";
 
 const root = new URL("./dist/public/", import.meta.url).pathname;
@@ -66,45 +62,13 @@ const idsOf = (file: string) => {
   return ids;
 };
 
-// A playground link carries its state in the fragment: a preset by id, or Markdown packed by play-link.ts. Each one
-// must open: the preset exists, or the Markdown unpacks and the playground's plugins parse it without issues.
-const presets = new Set(
-  (JSON.parse(readFileSync(join(root, "play/presets.json"), "utf8")) as { id: string }[]).map(
-    (preset) => preset.id,
-  ),
-);
-const { config } = readConfig(defaultConfig);
-const playChecks = new Map<string, Promise<string | undefined>>();
-async function playProblem(hash: string) {
-  const state = new URLSearchParams(hash.slice(1));
-  const preset = state.get("preset");
-  if (preset) return presets.has(preset) ? undefined : `the preset "${preset}" doesn't exist`;
-  const packed = state.get("md");
-  if (!packed) return;
-  const source = await unpack(packed).catch(() => undefined);
-  if (!source) return "its Markdown doesn't unpack";
-  if (!playable(source)) return "its Markdown includes files, which the playground can't read";
-  const { meta } = await parseMarkdown(source, {
-    plugins: browserPlugins(config, { download: false }),
-  });
-  return meta.issues?.length ? `the playground reports: ${meta.issues.join(" ")}` : undefined;
-}
-
 const problems = new Set<string>();
-let playLinks = 0;
 for (const file of files) {
   const page = urlOf(file);
   const html = readFileSync(file, "utf8");
   for (const link of linksOf(html)) {
     const url = new URL(link, `${SITE}${page}`);
     if (url.origin !== SITE) continue;
-    if (/^\/play\/?$/.test(url.pathname) && url.hash.length > 1) {
-      if (!playChecks.has(url.hash)) playChecks.set(url.hash, playProblem(url.hash));
-      const problem = await playChecks.get(url.hash);
-      playLinks++;
-      if (problem) problems.add(`${page} links to the playground, but ${problem}. Fix the link.`);
-      continue;
-    }
     if (
       excludedLinks.some(
         (pattern) =>
@@ -144,6 +108,4 @@ if (problems.size) {
   for (const problem of [...problems].toSorted()) console.error(`- ${problem}`);
   process.exit(1);
 }
-console.log(
-  `Checked the links of ${files.length} pages, ${playChecks.size} playground states among ${playLinks} playground links.`,
-);
+console.log(`Checked the links of ${files.length} pages.`);

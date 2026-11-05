@@ -259,7 +259,7 @@ describe("check", () => {
 
   it("points comark-ui counterparts at their docs and the skill", async () => {
     const text = formatFindings(await check(fixture), { verbose: true });
-    expect(text).toContain("comark-outline (https://comark-ui.onmax.me/outline/)");
+    expect(text).toContain("comark-outline (https://comark-ui.onmax.me/outline)");
     expect(text).toContain("npx skills add onmax/comark-ui");
   });
 

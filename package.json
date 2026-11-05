@@ -13,7 +13,7 @@
     "build": "vp run packages:build",
     "docs:build": "pnpm build && pnpm docs:generate",
     "docs:generate": "pnpm --filter comark-ui-docs generate",
-    "docs:links": "node docs/links.ts",
+    "docs:links": "node docs/links.ts && node docs/play-links.ts",
     "docs:images": "node docs/images.ts",
     "lint": "vp lint",
     "typecheck": "tsrs --noEmit",
