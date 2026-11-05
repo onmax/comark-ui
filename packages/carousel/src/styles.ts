@@ -26,7 +26,7 @@ export const css = `@layer comark{${[
   ".cc-track>.cc-slide:has(>:is(pre,.ck):nth-child(1 of :not(style,script)):nth-last-child(1 of :not(style,script))){padding:0;background:none}",
   // A slide that is one image has no title to keep in place, so a shorter image sits in the middle of the panel
   // instead of over a band of empty surface.
-  ".cc-track>.cc-slide:has(>:is(img,a:has(>img:only-child)):nth-child(1 of :not(style,script)):nth-last-child(1 of :not(style,script))){align-content:center}",
+  ".cc-track>.cc-slide:has(>:is(img,a):nth-child(1 of :not(style,script)):nth-last-child(1 of :not(style,script))):has(>img,>a>img:only-child){align-content:center}",
   ".cc-slide img{max-width:100%;height:auto}",
   // The parse plugin lifts an image, or a link around one, out of a paragraph of its own, so only an image that stands
   // alone is centered.

@@ -50,7 +50,7 @@ describe("comark-carousel", () => {
     const html = await render("::carousel\n![Short](a.png)\n\n![Tall](b.png)\n::");
     expect(html).toContain('data-zoom tabindex="0"><img src="a.png" alt="Short"></div>');
     expect(html).toMatch(
-      /\.cc-track>\.cc-slide:has\(>:is\(img,a:has\(>img:only-child\)\)[^{]*\)\{align-content:center\}/,
+      /\.cc-track>\.cc-slide:has\(>:is\(img,a\)[^{]*\):has\(>img,>a>img:only-child\)\{align-content:center\}/,
     );
   });
 
