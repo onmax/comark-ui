@@ -677,9 +677,9 @@ export function start(): () => void {
       if (event.key.toLowerCase() !== "c" || !(event.ctrlKey || event.metaKey)) return;
       if (event.altKey || event.shiftKey || !copying || !getSelection()?.isCollapsed) return;
       const target = event.target instanceof HTMLElement ? event.target : null;
-      const own = target?.matches(".ca-screenshot") && !target.closest(".cz-dialog");
+      const own = target?.matches(".ca-stage") && !target.closest(".cz-dialog");
       const figure = own
-        ? target
+        ? figureOf(target)
         : target?.matches(".cz-dialog")
           ? figureOf(target.querySelector(".ca-screenshot, .ca-swipe"))
           : null;
