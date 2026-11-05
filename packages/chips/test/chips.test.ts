@@ -8,14 +8,15 @@ import chips, { type ChipsOptions, components } from "../src/html.ts";
 const PNG = new Uint8Array([137, 80, 78, 71]);
 const requests: string[] = [];
 
-// A web with a favicon for every site, an avatar for `onmax`, no account `ghost`, no network for `offline.dev`, and an
-// unavatar.io that has had enough of `busy`.
+// A web with a favicon for every site but `bare.dev`, an avatar for `onmax`, no account `ghost`, no network for
+// `offline.dev`, and an unavatar.io that has had enough of `busy`.
 beforeEach(() => {
   requests.length = 0;
   vi.stubGlobal("fetch", async (input: string) => {
     requests.push(input);
     if (input.includes("offline.dev")) throw new TypeError("fetch failed");
-    if (input.includes("/ghost")) return new Response("Not Found", { status: 404 });
+    if (input.includes("/ghost") || input.includes("bare.dev"))
+      return new Response("Not Found", { status: 404 });
     if (input.includes("/busy")) return new Response("Too Many Requests", { status: 429 });
     return new Response(PNG, { headers: { "content-type": "image/png" } });
   });
@@ -133,6 +134,17 @@ describe("comark-chips", () => {
     expect(await issues("@ghost")).toEqual([
       "`@ghost`: there's no avatar at https://github.com/ghost.png?size=64 (HTTP 404). Check the GitHub login, or set `avatar` to an image URL.",
     ]);
+  });
+
+  it("draws a globe for a site with no favicon, so its chip still reads as a link", async () => {
+    const html = await render("See [the spec](https://bare.dev/spec).");
+    expect(html).toContain(
+      '<a class="cp" href="https://bare.dev/spec" data-kind="favicon">the spec</a>',
+    );
+    expect(html).toMatch(
+      /\.cp\[data-kind="favicon"\]:not\(:has\(\.cp-img\)\)::before\{[^}]*mask:url\("data:image\/svg\+xml,/,
+    );
+    expect(await issues("See [the spec](https://bare.dev/spec).")).toEqual([]);
   });
 
   it("takes other image sources, and keeps URLs without downloading", async () => {
