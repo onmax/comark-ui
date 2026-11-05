@@ -63,7 +63,7 @@ Vue, React, and Svelte leave out annotate and diff, which render only to HTML.
 | `ComarkKit` | The schema: StarterKit, task lists, inline images (drawn as players for video and audio), tables, footnotes, definition lists, CriticMarkup, and Comark's components, slots, and comments, each keeping the attributes it has no field for. |
 | `fromMarkdown`, `toMarkdown` | Convert between Markdown and the editor's JSON with Comark's own parser and writer. Front matter stays beside the document. |
 | `checkMarkdown(markdown, { plugins })` | Whether the editor can save the document without changing what readers see, judged with the plugins the page renders with. A document it can't keep opens read-only. |
-| `Upload` | Uploads pasted and dropped files. Each shows a placeholder with its progress until `upload(file, progress)` returns its URL. |
+| `Upload` | Uploads pasted and dropped files, and the files the `chooseFiles` command picks. Each shows a placeholder with its progress until `upload(file, progress)` returns its URL. |
 | `createEditorCodec({ plugins })` | `{ extensions, split, join, fromMarkdown, toMarkdown, verify }` for a collaborative room, such as ViteHub Realtime's `editor` option. A room keeps the body as the editor's document and the frontmatter as its fields, so a text edit never overwrites the metadata. |
 
 `comark-ui/editor/vue` binds the editor to a Markdown string with `useComarkEditor(markdown)` or `<ComarkEditor v-model="markdown" />`. Run `pnpm playground` in this package to try it.

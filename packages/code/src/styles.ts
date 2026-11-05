@@ -87,7 +87,7 @@ export const css = `${icons}@layer comark{${[
   `${lines} .ck-fold{margin:0!important;padding:0!important;border:0!important}`,
   `${lines} .ck-fold>summary{margin:0!important;padding:0!important;border-block:0!important;border-inline:0!important}`,
   `${lines}[data-code-numbers] .ck-fold>summary{padding-left:calc(var(--_ck-digits) * 1ch + 2ch)!important}`,
-  `${lines} .ck-fold>summary{display:block;color:var(--_comark-muted);cursor:pointer;list-style:none;border-image:conic-gradient(color-mix(in srgb,var(--_comark-foreground) 5%,transparent) 0 0) fill 0//0 100vw}`,
+  `${lines} .ck-fold>summary{display:block;color:var(--_comark-foreground);cursor:pointer;list-style:none;border-image:conic-gradient(color-mix(in srgb,var(--_comark-foreground) 5%,transparent) 0 0) fill 0//0 100vw}`,
   `${lines} .ck-fold>summary::-webkit-details-marker{display:none}`,
   `${lines} .ck-fold>summary::before{content:'';display:inline-block;width:1em;height:1em;margin-right:.75ch;background:currentColor;vertical-align:-.15em;mask:${chevrons} center/contain no-repeat}`,
   `@media (hover:hover){${lines} .ck-fold>summary:hover{color:var(--_comark-foreground)}}`,
