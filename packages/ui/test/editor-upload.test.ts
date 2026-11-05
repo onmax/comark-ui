@@ -1,7 +1,7 @@
 import { getSchema } from "@tiptap/core";
 import { Node } from "@tiptap/pm/model";
 import { EditorState, TextSelection, type Transaction } from "@tiptap/pm/state";
-import { describe, expect, it, vi } from "vite-plus/test";
+import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 import {
   chooseFiles,
   ComarkKit,
@@ -144,24 +144,35 @@ describe("uploads", () => {
 });
 
 describe("chooseFiles", () => {
-  /** A file input whose click picks `files`, as the browser's picker would. */
+  afterEach(() => vi.unstubAllGlobals());
+
+  /** The picker stays open until the test dispatches change or cancel. */
   function picker(files: File[]) {
-    const input = {
+    const input = Object.assign(new EventTarget(), {
       type: "",
       multiple: false,
       accept: "",
       files,
       clicked: false,
-      listeners: [] as Array<() => void>,
-      addEventListener(_type: string, listener: () => void) {
-        this.listeners.push(listener);
-      },
+      isConnected: false,
+      style: { cssText: "" },
+      tabIndex: 0,
       click() {
         this.clicked = true;
-        for (const listener of this.listeners) listener();
+        expect(this.isConnected).toBe(true);
       },
-    };
-    vi.stubGlobal("document", { createElement: () => input });
+      remove() {
+        this.isConnected = false;
+      },
+    });
+    vi.stubGlobal("document", {
+      createElement: () => input,
+      body: {
+        append(element: typeof input) {
+          element.isConnected = true;
+        },
+      },
+    });
     return input;
   }
 
@@ -177,13 +188,31 @@ describe("chooseFiles", () => {
     expect(chooseFiles(view, options)).toBe(true);
     expect(input).toMatchObject({
       clicked: true,
+      isConnected: true,
       multiple: true,
       accept: "image/*,video/*,audio/*",
     });
+    await Promise.resolve();
+    expect(input.isConnected).toBe(true);
+    input.dispatchEvent(new Event("change"));
+    expect(input.isConnected).toBe(false);
     await done;
     await Promise.resolve();
     expect(await toMarkdown(view.state.doc.toJSON())).toBe("Text![shot.png](/f/shot.png)\n");
-    vi.unstubAllGlobals();
+  });
+
+  it("removes the input on cancellation without uploading", async () => {
+    const input = picker([]);
+    const upload = vi.fn();
+    const options: UploadOptions = { accept: media, upload, pick: "image/*" };
+    const view = await editorOf("Text\n", options);
+    expect(chooseFiles(view, options)).toBe(true);
+    expect(input.isConnected).toBe(true);
+    expect(input.accept).toBe("image/*");
+    input.dispatchEvent(new Event("cancel"));
+    expect(input.isConnected).toBe(false);
+    expect(upload).not.toHaveBeenCalled();
+    expect(uploadKey.getState(view.state)?.find()).toHaveLength(0);
   });
 
   it("opens no picker without an upload callback", async () => {
@@ -191,6 +220,6 @@ describe("chooseFiles", () => {
     const view = await editorOf("Text\n", { accept: media });
     expect(chooseFiles(view, { accept: media, pick: "image/*" })).toBe(false);
     expect(input.clicked).toBe(false);
-    vi.unstubAllGlobals();
+    expect(input.isConnected).toBe(false);
   });
 });

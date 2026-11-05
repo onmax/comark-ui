@@ -49,14 +49,15 @@ export function findUpload(state: EditorState, id: number) {
 }
 
 /** The placeholder's styles, which the editor adds to the page with the first one. */
-export const uploadCss =
-  theme(".cue-upload", "primary") +
-  `.cue-upload{display:inline-grid;position:relative;min-width:12rem;max-width:15rem;overflow:hidden;vertical-align:middle;border:1px solid var(--_comark-border);border-radius:var(--_comark-radius);background:var(--_comark-accent);color:var(--_comark-foreground);font:500 .75rem/1.4 var(--_comark-font)}` +
-  `.cue-upload>img,.cue-upload>video{grid-area:1/1;width:100%;max-height:10rem;object-fit:cover;opacity:.55}` +
-  `.cue-upload-label{grid-area:1/1;align-self:end;padding:.375rem .5rem .5rem;font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}` +
-  `.cue-upload>img~.cue-upload-label,.cue-upload>video~.cue-upload-label{background:color-mix(in srgb,var(--_comark-background) 80%,transparent)}` +
-  `.cue-upload::after{content:"";position:absolute;inset:auto 0 0;height:2px;width:var(--cue-upload);background:var(--_comark-primary);transition:width .2s ease-out}` +
-  `@media (prefers-reduced-motion:reduce){.cue-upload::after{transition:none}}`;
+export const uploadCss = `@layer comark{${[
+  theme(".cue-upload", "primary"),
+  `.cue-upload{display:inline-grid;position:relative;min-width:12rem;max-width:15rem;overflow:hidden;vertical-align:middle;border:1px solid var(--_comark-border);border-radius:var(--_comark-radius);background:var(--_comark-accent);color:var(--_comark-foreground);font:500 .75rem/1.4 var(--_comark-font)}`,
+  `.cue-upload>img,.cue-upload>video{grid-area:1/1;width:100%;max-height:10rem;object-fit:cover;opacity:.55}`,
+  `.cue-upload-label{grid-area:1/1;align-self:end;padding:.375rem .5rem .5rem;font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}`,
+  `.cue-upload>img~.cue-upload-label,.cue-upload>video~.cue-upload-label{background:color-mix(in srgb,var(--_comark-background) 80%,transparent)}`,
+  `.cue-upload::after{content:"";position:absolute;inset:auto 0 0;height:2px;width:var(--cue-upload);background:var(--_comark-primary);transition:width .2s ease-out}`,
+  `@media (prefers-reduced-motion:reduce){.cue-upload::after{transition:none}}`,
+].join("")}}`;
 
 // A placeholder's element lives as long as its widget, and progress reports update it in place rather than through a
 // transaction per percent.
@@ -162,16 +163,22 @@ export function chooseFiles(view: View, options: UploadOptions): boolean {
   input.type = "file";
   input.multiple = true;
   input.accept = options.pick ?? "image/*,video/*,audio/*";
+  input.style.cssText = "position:fixed;left:-9999px";
+  input.tabIndex = -1;
   input.addEventListener(
     "change",
     () => {
       const files = Array.from(input.files ?? []);
+      input.remove();
       // The cursor, after any edits while the picker was open.
       if (files.length)
         void Promise.all(startUploads(view, files, view.state.selection.from, options));
     },
     { once: true },
   );
+  input.addEventListener("cancel", () => input.remove(), { once: true });
+  // WebKit needs the input to remain attached while the native picker is open.
+  document.body.append(input);
   input.click();
   return true;
 }
