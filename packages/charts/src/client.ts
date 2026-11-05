@@ -35,23 +35,21 @@ const formats = [
 ] as const;
 
 /**
- * The bar of a chart: its Copy button, a menu of the other formats, and a status line for screen readers. Copy takes the image, or
- * the data when `image` is false: a chart with marks, which a copy of its SVG would leave out. Every renderer inlines
- * this string.
+ * The bar of a chart: its Copy button, which takes the image, a menu of the other formats, and a status line for
+ * screen readers. Every renderer inlines this string.
  */
-export function bar(image = true): string {
-  const shown = image ? formats : formats.slice(1);
-  const items = shown
-    .filter(([format]) => format !== (image ? "image" : "table"))
+export function bar(): string {
+  const items = formats
+    .slice(1)
     .map(
       ([format, name, hint, path]) =>
         `<button type="button" role="menuitem" tabindex="-1" data-chart-copy="${format}">${icon(path)}<span><b>${name}</b><small>${hint}</small></span></button>`,
     )
     .join("");
-  const label = image ? "Copy the chart as an image" : "Copy the chart's data";
+  const label = "Copy the chart as an image";
   return (
     `<span class="cch-status" role="status"></span><div class="cch-copy">` +
-    `<button type="button" class="cch-copy-main" data-chart-copy="${image ? "image" : "table"}" aria-label="${label}" title="${label}">${copyIcon}${doneIcon}</button>` +
+    `<button type="button" class="cch-copy-main" data-chart-copy="image" aria-label="${label}" title="${label}">${copyIcon}${doneIcon}</button>` +
     `<button type="button" class="cch-copy-more" aria-label="More ways to copy" title="More ways to copy" aria-haspopup="menu" aria-expanded="false">${icon('<path d="m6 9 6 6 6-6"/>')}</button>` +
     `<div class="cch-menu" role="menu" aria-label="Copy as" hidden>${items}</div></div>`
   );
@@ -105,6 +103,13 @@ export function start(css: string): () => void {
   const PAINT = ["fill", "stroke", "stroke-width", "opacity", "fill-opacity", "stroke-opacity"];
   const TEXT = ["font-family", "font-size", "font-weight"];
   async function png(figure: Element): Promise<Blob> {
+    // A chart with marks is a comark-annotate screenshot of its SVG, whose copy paints the marks and notes too.
+    const marked = figure.querySelector<HTMLElement>(".cch-marked .ca-screenshot");
+    if (marked) {
+      const capture = window.__comarkAnnotate?.capture;
+      if (!capture) throw new Error("no marks");
+      return capture(marked);
+    }
     const svg = figure.querySelector<SVGSVGElement>(".cch-plot>svg");
     if (!svg) throw new Error("no chart");
     const { width, height } = svg.getBoundingClientRect();

@@ -39,7 +39,7 @@ const chart: NodeHandler = async (node, state) => {
     ? `<div class="cch-plot cch-marked">${await annotateHtml(svg, marks, label ?? "", state, ".cch-plot", aspect, 0)}</div>`
     : `<div class="cch-plot">${svg}</div>`;
   return (
-    `${styles}<figure class="cch" data-type="${type}">${caption}${plot}<div class="cch-bar">${bar(!marks?.length)}</div>` +
+    `${styles}<figure class="cch" data-type="${type}">${caption}${plot}<div class="cch-bar">${bar()}</div>` +
     `<details class="cch-data"><summary>Data</summary>${data}</details></figure>`
   );
 };
