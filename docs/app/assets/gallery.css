@@ -27,7 +27,7 @@
   color-scheme: dark;
   --fg: oklch(0.96 0 0);
   --muted: oklch(0.7 0 0);
-  --faint: oklch(0.56 0 0);
+  --faint: oklch(0.6 0 0);
   --line: oklch(0.26 0 0);
   --soft: oklch(0.185 0 0);
   --bg: oklch(0.145 0 0);
