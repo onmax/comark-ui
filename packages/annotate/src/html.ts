@@ -9,6 +9,7 @@ import { BOX_PADDING, pixels, place } from "./place.ts";
 import {
   type Annotation,
   type Compare,
+  bracketEdge,
   noteAt,
   PALETTE,
   readCompare,
@@ -135,7 +136,13 @@ function seed({ n, x, y, w, h, mark }: Annotation) {
 
 function markSvg(annotation: Annotation, aspect?: number) {
   const { w, h } = pixels(annotation, aspect);
-  const { viewBox, paths } = draw(annotation.mark, w, h, seed(annotation), annotation.side);
+  const { viewBox, paths } = draw(
+    annotation.mark,
+    w,
+    h,
+    seed(annotation),
+    annotation.mark === "bracket" ? bracketEdge(annotation, aspect) : annotation.side,
+  );
   const keep = annotation.mark === "check" || annotation.mark === "cross";
   return `<svg viewBox="${viewBox}"${keep ? "" : ' preserveAspectRatio="none"'} aria-hidden="true">${paths.map((d) => `<path d="${d}" vector-effect="non-scaling-stroke"/>`).join("")}</svg>`;
 }
@@ -192,14 +199,14 @@ async function parts(
   const sided = shot.annotations.filter((annotation) => annotation.side);
   // Whether a note sits off to one side of its point, and which way its leader runs from it.
   const offset = (annotation: Annotation) => {
-    const along = noteAt(annotation);
-    const point = target(annotation);
+    const along = noteAt(annotation, shot.aspect);
+    const point = target(annotation, shot.aspect);
     const level = annotation.side === "left" || annotation.side === "right" ? point.y : point.x;
     return Math.abs(along - level) < LEVEL ? undefined : along > level ? "back" : "on";
   };
   const arrows = sided.map((annotation) => {
-    const { x, y } = target(annotation);
-    const along = noteAt(annotation);
+    const { x, y } = target(annotation, shot.aspect);
+    const along = noteAt(annotation, shot.aspect);
     const way = offset(annotation);
     const side = annotation.side!;
     let place: string;
@@ -256,7 +263,7 @@ async function parts(
   // Side notes live outside the frame so the frame, and every percentage inside it, stays the size of the image.
   // A note's x or y is a share of the frame, which sits between the gutters for notes beside, above, and below it.
   const callouts = await each(sided, async (annotation) => {
-    const along = noteAt(annotation);
+    const along = noteAt(annotation, shot.aspect);
     const way = offset(annotation);
     const across = annotation.side === "top" || annotation.side === "bottom";
     const place = across

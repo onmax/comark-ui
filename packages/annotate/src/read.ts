@@ -2,7 +2,7 @@ import type { ElementNode, Node } from "comark";
 import { resolveAttributes } from "comark/render";
 import { textContent } from "comark/utils";
 import { type Mark, marks } from "./marks.ts";
-import { place } from "./place.ts";
+import { pixels, place } from "./place.ts";
 import { childrenOf, isElement } from "../../../shared/nodes.ts";
 import { text } from "../../../shared/text.ts";
 import { isWebUrl } from "../../../shared/url.ts";
@@ -263,6 +263,7 @@ export function readScreenshot(
       rule: "comark/annotate/invalid-viewport",
       message: `\`viewport\` must be the capture size in pixels, like 1440x900 (got ${quote(viewport)}).`,
     });
+  const aspect = size ? Number(size[2]) / Number(size[1]) : undefined;
   const own = readInk(attrs, problems);
   const ink = own ?? start.ink;
   issues.push(...within(where, problems));
@@ -298,7 +299,7 @@ export function readScreenshot(
           ? [
               {
                 index: index + 1,
-                at: noteAt(annotation),
+                at: noteAt(annotation, aspect),
               },
             ]
           : [],
@@ -311,7 +312,6 @@ export function readScreenshot(
           message: `${where}: the ${side} notes for annotations ${centers[i - 1]!.index} and ${centers[i]!.index} would overlap. Move one along with \`at\`, to another side, or under the image.`,
         });
   }
-  const aspect = size ? Number(size[2]) / Number(size[1]) : undefined;
   for (const [a, b] of place(annotations, aspect).clashes)
     issues.push({
       rule: "comark/annotate/numbers-overlap",
@@ -453,19 +453,51 @@ function readInk(attrs: Record<string, unknown>, problems: Issue[]) {
   return undefined;
 }
 
-/** Where the arrow of a side note lands: its \`to\` point, or else the middle of the mark's edge that faces the note. */
-export function target(annotation: Pick<Annotation, "x" | "y" | "w" | "h" | "side" | "to">) {
+type Fit = Pick<Annotation, "x" | "y" | "w" | "h" | "mark" | "side" | "at">;
+
+/**
+ * The edge a bracket stands on. A box at least twice as long one way as the other gets it along its long side, so a
+ * column of rows gets a bracket down its side even when its note sits above or below. Of those two edges it takes the
+ * one facing the note, else the one nearer the note's `at`, else the left or top one. A squarer box faces its note.
+ */
+export function bracketEdge(annotation: Fit, aspect?: number): Side {
+  const { w, h } = pixels(annotation, aspect);
+  const { x, y, side, at } = annotation;
+  if (h >= 2 * w)
+    return side === "left" || side === "right"
+      ? side
+      : at !== undefined && at > x + annotation.w / 2
+        ? "right"
+        : "left";
+  if (w >= 2 * h)
+    return side === "top" || side === "bottom"
+      ? side
+      : at !== undefined && at > y + annotation.h / 2
+        ? "bottom"
+        : "top";
+  return side ?? "left";
+}
+
+/**
+ * Where the arrow of a side note lands: its \`to\` point, or else the middle of the mark's edge that faces the note. A
+ * bracket on another edge takes the arrow at its end on the note's side.
+ */
+export function target(annotation: Fit & Pick<Annotation, "to">, aspect?: number) {
   if (annotation.to) return annotation.to;
   const { x, y, w, h, side } = annotation;
-  if (side === "left") return { x, y: y + h / 2 };
-  if (side === "right") return { x: x + w, y: y + h / 2 };
-  return { x: x + w / 2, y: side === "bottom" ? y + h : y };
+  const edge = annotation.mark === "bracket" ? bracketEdge(annotation, aspect) : side;
+  if (side === "left" || side === "right") {
+    const along = edge === side ? y + h / 2 : edge === "top" ? y : y + h;
+    return { x: side === "left" ? x : x + w, y: along };
+  }
+  const along = edge === side ? x + w / 2 : edge === "left" ? x : x + w;
+  return { x: along, y: side === "bottom" ? y + h : y };
 }
 
 /** Where a side note sits along its margin: its \`at\`, or else level with where its arrow lands. */
-export function noteAt(annotation: Pick<Annotation, "x" | "y" | "w" | "h" | "side" | "to" | "at">) {
+export function noteAt(annotation: Fit & Pick<Annotation, "to">, aspect?: number) {
   if (annotation.at !== undefined) return annotation.at;
-  const point = target(annotation);
+  const point = target(annotation, aspect);
   return annotation.side === "left" || annotation.side === "right" ? point.y : point.x;
 }
 
