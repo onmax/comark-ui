@@ -70,7 +70,7 @@ export default defineComarkPlugin<ShikiOptions, Meta>((options) => ({
       const [text, ...rest] = childrenOf(code);
       if (text === undefined || Array.isArray(text) || rest.length) continue;
 
-      const why =
+      const why: [string, string] | undefined =
         drawn >= maxBlocks
           ? [
               "comark/shiki/too-many-blocks",
