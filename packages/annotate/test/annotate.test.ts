@@ -373,6 +373,36 @@ describe("comark-annotate", () => {
     expect(Number(await shot("right"))).toBeGreaterThan(70);
   });
 
+  it("runs a bracket along its box's longer side, whatever side its note is on", async () => {
+    const shot = (box: string, note: string) =>
+      run(
+        `::screenshot{src="a.png" alt="A" viewport="1329x760"}\n:::annotation{${box} mark="bracket" ${note}}\nRows.\n:::\n::`,
+      ).then(({ issues, html }) => {
+        expect(issues).toEqual([]);
+        const [, x, y] =
+          /ca-mark ca-bracket"[^>]*><svg viewBox="[^"]+"[^>]*><path d="M[\d.-]+ [\d.-]+L([\d.-]+) ([\d.-]+)Q/.exec(
+            html,
+          )!;
+        const arrow =
+          /class="ca-arrow ca-arrow-\w+[^"]*" data-n="1" style="[^"]*?(left|top):([\d.]+)%/.exec(
+            html,
+          )!;
+        return { x: Number(x), y: Number(y), arrow: `${arrow[1]}:${arrow[2]}` };
+      });
+    // A column of cards, 10.5% of 420px wide (44px) and 94.2% of 240px high (226px): the bracket's spine starts 3px
+    // outside the left or right edge, at the top, and the arrow from a note above meets that end.
+    const tall = "x=47 y=5.8 w=10.5 h=94.2";
+    expect(await shot(tall, 'side="top"')).toMatchObject({ arrow: "left:47" });
+    expect((await shot(tall, 'side="top"')).x).toBeLessThan(2);
+    const right = await shot(tall, 'side="bottom" at=70');
+    expect(right.x).toBeGreaterThan(40);
+    expect(right.arrow).toBe("left:57.5");
+    // A wide row with its note beside it gets a bracket across its top, and the arrow meets its end.
+    const wide = await shot("x=10 y=40 w=60 h=8", 'side="right"');
+    expect(wide.y).toBeLessThan(2);
+    expect(wide.arrow).toBe("top:40");
+  });
+
   it("draws a line along the longer side of its box, through the middle", async () => {
     const shot = (w: number, h: number) =>
       run(

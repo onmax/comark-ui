@@ -78,7 +78,7 @@ Use the `mark` prop to pick the shape. `box` is the default.
 ::
 
 - `line` runs through the middle of its box along its longer side, for a fold or a limit.
-- `bracket` stands on the edge that faces its side note, or the left edge without one. It spans a run of rows or a group without covering it.
+- `bracket` spans a run of rows or a group without covering it. On a box at least twice as tall as it is wide, it runs down the side even when its note sits above or below: on the edge nearer the note's `at`, else the left one, with the arrow meeting its end. A wide box gets it across the top or bottom the same way. A squarer box has it on the edge that faces its note, or the left edge without one.
 - `none` draws nothing and leaves the pointing to a side note's arrow.
 
 > [!NOTE]
