@@ -80,6 +80,44 @@ const typeset = defineComponent({
   setup: () => () => h("style", { "data-comark-typeset": "", innerHTML: typesetCss }),
 });
 
+/** Render documents parsed elsewhere without constructing or bundling the parser preset. */
+export const components = {
+  ...carousel.components,
+  ...cast.components,
+  ...charts.components,
+  ...chips.components,
+  ...colors.components,
+  ...diagrams.components,
+  pele: Mermaid,
+  ...embed.components,
+  ...github.components,
+  ...icon.components,
+  ...mark.components,
+  ...math.components,
+  ...details.components,
+  ...links.components,
+  ...fileTree.components,
+  ...fields.components,
+  ...properties.components,
+  ...badge.components,
+  ...media.components,
+  ...metrics.components,
+  ...table.components,
+  ...cards.components,
+  ...qr.components,
+  ...sources.components,
+  ...steps.components,
+  ...tabs.components,
+  ...outline.components,
+  ...tests.components,
+  ...time.components,
+  ...zoom.components,
+  ...magicMove.components,
+  ...code.components,
+  ...codeNotes.components,
+  "typeset-styles": typeset,
+} satisfies Record<string, Component>;
+
 /** Every plugin with components for `@comark/vue`, which leaves out annotate, comments, diff, and quiz. */
 export default (options?: PresetOptions): Preset<Component> =>
   preset<Component>(

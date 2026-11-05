@@ -12,11 +12,11 @@ import dark from "shiki/themes/github-dark.mjs";
 import light from "shiki/themes/github-light.mjs";
 import { build, type Rolldown } from "vite";
 import { describe, expect, it } from "vite-plus/test";
-import { createSSRApp, h } from "vue";
+import { createSSRApp, h, type Component } from "vue";
 import { renderToString as renderVue } from "vue/server-renderer";
 import html, { mermaidScript, type PresetOptions } from "../src/html.ts";
 import react from "../src/react.ts";
-import vue from "../src/vue.ts";
+import vue, * as vueRenderer from "../src/vue.ts";
 
 // No downloads and no Kroki, so the tests stay offline.
 const offline: PresetOptions = {
@@ -350,6 +350,47 @@ describe("comark-ui", () => {
       expect(out, name).toContain("@scope{:where(:scope){");
       expect(out, name).toContain(":scope>:where(:first-child)");
     }
+  });
+
+  it("renders separately parsed documents without bundling chart parsers", async () => {
+    const preset = vue(offline);
+    const vueComponents = "components" in vueRenderer ? vueRenderer.components : preset.components;
+    expect(Object.keys(vueComponents).sort()).toEqual(Object.keys(preset.components).sort());
+    const parsed = await parseMarkdown(document, { plugins: preset.plugins });
+    const render = (components: Record<string, Component>) =>
+      renderVue(createSSRApp({ render: () => h(VueDocument, { value: parsed, components }) }));
+    expect(await render(vueComponents)).toBe(await render(preset.components));
+
+    const entry = fileURLToPath(new URL("./fixtures/components.ts", import.meta.url));
+    const result = await build({
+      plugins: [
+        {
+          name: "components-before-standalone-export",
+          transform(source, id) {
+            if (id === entry && !("components" in vueRenderer))
+              return 'import preset from "comark-ui/vue"; export const components = preset().components;';
+            return source;
+          },
+        },
+      ],
+      configFile: false,
+      logLevel: "error",
+      build: {
+        write: false,
+        minify: false,
+        lib: {
+          entry,
+          formats: ["es"],
+        },
+        rollupOptions: { external: ["vue"] },
+      },
+    });
+    const [{ output }] = result as Rolldown.RolldownOutput[];
+    const modules = output.flatMap((file) => (file.type === "chunk" ? file.moduleIds : []));
+    expect(modules.some((id) => /\/(?:comark-charts|charts)\/(?:dist|src)\/vue/.test(id))).toBe(
+      true,
+    );
+    expect(modules.filter((id) => /\/(?:vega(?:-lite)?|flint-chart)\//.test(id))).toEqual([]);
   });
 
   it("loads Pele in Vue only when a document has a diagram", async () => {
