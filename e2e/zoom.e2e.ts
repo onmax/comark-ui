@@ -350,3 +350,128 @@ test("the events carry the zoomed copy's scale, which follows a resize", async (
   const after = await scales();
   expect(after.said).toBeCloseTo(after.shown, 2);
 });
+
+test("an item taller than the stage fills its width and scrolls instead of shrinking", async ({
+  page,
+}) => {
+  await page.route("**/tall.svg", (route) =>
+    route.fulfill({
+      contentType: "image/svg+xml",
+      body: '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="4800"><rect width="1200" height="4800" fill="#ddd"/><rect y="4700" width="1200" height="100" fill="#c00"/></svg>',
+    }),
+  );
+  await fixture(page, await render("![Full page](/tall.svg)"));
+  const picture = page.locator("main img");
+  const before = await rect(page, "main img");
+  await picture.click();
+  await expect.poll(() => page.evaluate(() => document.getAnimations().length)).toBe(0);
+
+  const stage = await rect(page, ".cz-stage");
+  const copy = await rect(page, ".cz-item");
+  expect(copy.width).toBeGreaterThan(before.width);
+  expect(copy.top).toBeGreaterThanOrEqual(stage.top);
+  expect(copy.top).toBeLessThan(stage.top + stage.height / 2);
+
+  // Scrolled to the end, the copy's bottom shows on the stage.
+  await page.locator(".cz-stage").evaluate((node) => (node.scrollTop = node.scrollHeight));
+  const end = await rect(page, ".cz-item");
+  expect(end.bottom).toBeLessThanOrEqual(stage.bottom);
+  expect(end.bottom).toBeGreaterThan(stage.bottom - stage.height * 0.1);
+
+  await page.keyboard.press("Escape");
+  await expect(page.locator(".cz-dialog")).toHaveCount(0);
+});
+
+test("resizing a scrolled tall item preserves its content position and clears scrolling when it fits", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setViewportSize({ width: 1000, height: 800 });
+  await page.route("**/tall.svg", (route) =>
+    route.fulfill({
+      contentType: "image/svg+xml",
+      body: '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="4800"><rect width="1200" height="4800"/></svg>',
+    }),
+  );
+  await fixture(
+    page,
+    await render("![Full page](/tall.svg)"),
+    "main{width:min(600px,90vw);margin:auto}img{max-width:100%}",
+  );
+  await page.locator("main img").click();
+  const stage = page.locator(".cz-stage");
+  await expect(stage).toHaveAttribute("data-scroll");
+  await stage.evaluate((node) => (node.scrollTop = (node.scrollHeight - node.clientHeight) / 2));
+  // Compare the source-image coordinate at the stage's top, independent of the page width and zoom scale.
+  const sourceTop = () =>
+    page.locator(".cz-item img").evaluate((node: HTMLImageElement) => {
+      const image = node.getBoundingClientRect();
+      const stage = node.closest(".cz-stage")!.getBoundingClientRect();
+      return ((stage.top - image.top) / image.width) * node.naturalWidth;
+    });
+  const before = await sourceTop();
+  expect(before).toBeGreaterThan(1000);
+  await page.setViewportSize({ width: 500, height: 900 });
+  await expect(stage).toHaveAttribute("data-scroll");
+  await expect.poll(async () => Math.abs((await sourceTop()) - before)).toBeLessThan(3);
+
+  await page.setViewportSize({ width: 400, height: 1800 });
+  await expect(stage).not.toHaveAttribute("data-scroll");
+  await expect.poll(() => stage.evaluate((node) => node.scrollTop)).toBe(0);
+  const fitted = await rect(page, ".cz-item");
+  const box = await rect(page, ".cz-stage");
+  expect(fitted.top).toBeGreaterThanOrEqual(box.top);
+  expect(fitted.bottom).toBeLessThanOrEqual(box.bottom);
+  expect((fitted.top + fitted.bottom) / 2).toBeCloseTo((box.top + box.bottom) / 2, 0);
+});
+
+for (const tall of [true, false]) {
+  test(`loading a replacement image ${tall ? "preserves a tall item's content position" : "clears scrolling when it fits"}`, async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.setViewportSize({ width: 2000, height: 800 });
+    let release = () => {};
+    const held = new Promise<void>((resolve) => (release = resolve));
+    await page.route("**/tall.svg", (route) =>
+      route.fulfill({
+        contentType: "image/svg+xml",
+        body: '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="4800"><rect width="1200" height="4800"/></svg>',
+      }),
+    );
+    await page.route("**/replacement.svg", async (route) => {
+      await held;
+      const height = tall ? 6400 : 400;
+      await route.fulfill({
+        contentType: "image/svg+xml",
+        body: `<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="${height}"><rect width="1600" height="${height}"/></svg>`,
+      });
+    });
+    await fixture(page, await render('![Full page](/tall.svg){data-zoom-src="/replacement.svg"}'));
+    await page.locator("main img").click();
+    const stage = page.locator(".cz-stage");
+    await expect(stage).toHaveAttribute("data-scroll");
+    await stage.evaluate((node) => (node.scrollTop = (node.scrollHeight - node.clientHeight) / 2));
+    const position = () =>
+      page.locator(".cz-item img").evaluate((node) => {
+        const image = node.getBoundingClientRect();
+        return (node.closest(".cz-stage")!.getBoundingClientRect().top - image.top) / image.width;
+      });
+    const before = await position();
+    expect(before).toBeGreaterThan(1);
+    release();
+    await expect(page.locator(".cz-item img")).toHaveAttribute("src", "/replacement.svg");
+    await expect(page.locator(".cz-item img")).toHaveJSProperty("naturalWidth", 1600);
+    if (tall) {
+      await expect(stage).toHaveAttribute("data-scroll");
+      await expect.poll(async () => (await rect(page, ".cz-item")).width).toBeCloseTo(1600, 0);
+      await expect.poll(async () => Math.abs((await position()) - before)).toBeLessThan(0.003);
+    } else {
+      await expect(stage).not.toHaveAttribute("data-scroll");
+      await expect.poll(() => stage.evaluate((node) => node.scrollTop)).toBe(0);
+      const fitted = await rect(page, ".cz-item");
+      const box = await rect(page, ".cz-stage");
+      expect((fitted.top + fitted.bottom) / 2).toBeCloseTo((box.top + box.bottom) / 2, 0);
+    }
+  });
+}

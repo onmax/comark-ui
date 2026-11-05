@@ -20,7 +20,10 @@ export const css = `@layer comark{${[
   ".cz-dialog button{display:inline-grid;place-items:center;border:0;border-radius:calc(var(--_comark-radius) - 2px);background:none;color:inherit;font:inherit;cursor:pointer}",
   ".cz-dialog button:focus-visible{outline:2px solid var(--_comark-ring);outline-offset:1px}",
   ".cz-close{width:2.25rem;height:2.25rem;margin-left:auto;font-size:18px}",
-  ".cz-stage{position:relative;display:grid;place-items:center;overflow:hidden}",
+  // The track keeps the stage's size, so an item taller than the stage doesn't grow it and move its center down.
+  ".cz-stage{position:relative;display:grid;grid-template:minmax(0,1fr)/minmax(0,1fr);place-items:center;overflow:hidden}",
+  ".cz-stage[data-scroll]{grid-template-rows:auto;align-items:start;overflow-y:auto}",
+  ".cz-stage[data-scroll]>.cz-item{transform-origin:top}",
   ".cz-item{position:relative;transform-origin:center;cursor:auto}",
   // The backdrop lets a little of the page through, which would show between a table's rows. An image covers its box.
   ":where(.cz-item>:first-child:not(img)){background:var(--_comark-background)}",
@@ -30,7 +33,7 @@ export const css = `@layer comark{${[
   ".cz-layer{position:absolute;inset:0;pointer-events:none}",
   ".cz-layer>*{pointer-events:auto}",
   // shadcn/ui's outline icon buttons, like comark-carousel's, so they stand out over the item's edge.
-  ".cz-dialog .cz-nav{position:absolute;top:50%;width:2.5rem;height:2.5rem;border:1px solid var(--_comark-border);border-radius:9999px;background:var(--_comark-background);transform:translateY(-50%)}",
+  ".cz-dialog .cz-nav{position:absolute;grid-row:2;grid-column:1;top:50%;width:2.5rem;height:2.5rem;border:1px solid var(--_comark-border);border-radius:9999px;background:var(--_comark-background);transform:translateY(-50%)}",
   ".cz-nav svg{width:1.25rem;height:1.25rem}",
   ".cz-dialog .cz-close:hover,.cz-dialog .cz-nav:hover{background:var(--_comark-accent)}",
   ".cz-prev{left:.5rem}",
