@@ -3,7 +3,7 @@
 [![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-qr&icon=npm)](https://npmx.dev/package/comark-qr)
 [![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-qr&period=month&icon=npm)](https://npmx.dev/package/comark-qr)
 [![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-qr)
-[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/qr/)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/qr)
 
 QR codes drawn as inline SVG while parsing, for opening a preview link on a phone. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
 
