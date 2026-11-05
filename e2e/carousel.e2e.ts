@@ -219,6 +219,71 @@ test("without the script, the scrollbar reaches the other slides", async ({ page
   expect(await track.evaluate(bar)).toBe(0);
 });
 
+test("short images and linked images are centered, while titles and text stay at the top", async ({
+  page,
+}) => {
+  const image = (height: number) => `https://example.test/${height}.svg`;
+  for (const height of [50, 150])
+    await page.route(image(height), (route) =>
+      route.fulfill({
+        contentType: "image/svg+xml",
+        body: `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="${height}"/>`,
+      }),
+    );
+  await open(
+    page,
+    `::carousel{title="Tour"}
+:::slide
+![Short](${image(50)})
+:::
+
+:::slide
+[![Linked](${image(50)})](https://example.com)
+:::
+
+:::slide
+![Tall](${image(150)})
+:::
+
+:::slide
+## Title
+
+![Titled](${image(50)})
+:::
+
+:::slide
+Text
+
+![With text](${image(50)})
+:::
+::`,
+  );
+  const slides = parts(page).track.locator(".cc-slide");
+  await slides
+    .locator("img")
+    .evaluateAll((images) =>
+      Promise.all(images.map((image) => (image as HTMLImageElement).decode())),
+    );
+  const positions = await slides.evaluateAll((slides) =>
+    slides.map((slide) => {
+      const panel = slide.getBoundingClientRect();
+      const image = slide.querySelector("img")!.getBoundingClientRect();
+      return {
+        above: image.top - panel.top,
+        below: panel.bottom - image.bottom,
+        contentTop: slide.firstElementChild!.getBoundingClientRect().top - panel.top,
+        padding: parseFloat(getComputedStyle(slide).paddingTop),
+      };
+    }),
+  );
+  expect(positions).toHaveLength(5);
+  for (const position of positions.slice(0, 2)) {
+    expect(position.above).toBeGreaterThan(position.padding);
+    expect(Math.abs(position.above - position.below)).toBeLessThan(1);
+  }
+  for (const position of positions.slice(3)) expect(position.contentTop).toBe(position.padding);
+});
+
 test("a short slide starts at the top, where a taller one does", async ({ page }) => {
   await open(page, '::carousel{title="Tour"}\nShort\n\n- One\n- Two\n- Three\n- Four\n::');
   const starts = await parts(page)

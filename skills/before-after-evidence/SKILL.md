@@ -19,7 +19,7 @@ An animation, a transition, a loading sequence, or feedback while dragging happe
 
 ## 1. Capture a comparable pair
 
-Take the after capture from the branch or its preview, and the before capture from a deployment or commit that still behaves the old way. Capture both with the same viewport, zoom, theme, data, scroll position, and open menus, so the change is the only difference.
+Take the after capture from the branch or its preview, and the before capture from a deployment, or from a separate worktree at the base commit, that still behaves the old way. Do not use `git stash` to switch between them: worktrees of one repository share the stash, so another session can pop your changes. Capture both with the same viewport, zoom, theme, data, scroll position, and open menus, so the change is the only difference.
 
 - Set up the state that shows the change before you capture: the long name that wrapped, the error that stayed hidden, the empty list.
 - Clip both captures to one region around the change, the same rectangle on each side. A `::compare` gives each image under half the page width, where a full-page capture's text is too small to read.

@@ -279,7 +279,7 @@ Set these on `.cc` or any ancestor, such as `:root`:
 | `--cc-padding` | `1rem` | The space inside each panel, halved on a narrow page |
 | `--cc-button-size` | `2rem` | The arrows' width and height, at least `2.5rem` on touch screens |
 
-Each slide sits on a soft panel as tall as the tallest one, so slides of different heights line up. To drop the panel, set `--cc-surface: transparent` and `--cc-padding: 0`.
+Each slide sits on a soft panel as tall as the tallest one, so slides of different heights line up. A slide that is one image sits in the middle of its panel. To drop the panel, set `--cc-surface: transparent` and `--cc-padding: 0`.
 
 ### Classes and attributes
 
