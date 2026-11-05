@@ -16,7 +16,7 @@ import { createSSRApp, h, type Component } from "vue";
 import { renderToString as renderVue } from "vue/server-renderer";
 import html, { mermaidScript, type PresetOptions } from "../src/html.ts";
 import react from "../src/react.ts";
-import vue, * as vueRenderer from "../src/vue.ts";
+import vue, { components as vueComponents } from "../src/vue.ts";
 
 // No downloads and no Kroki, so the tests stay offline.
 const offline: PresetOptions = {
@@ -354,7 +354,6 @@ describe("comark-ui", () => {
 
   it("renders separately parsed documents without bundling chart parsers", async () => {
     const preset = vue(offline);
-    const vueComponents = "components" in vueRenderer ? vueRenderer.components : preset.components;
     expect(Object.keys(vueComponents).sort()).toEqual(Object.keys(preset.components).sort());
     const parsed = await parseMarkdown(document, { plugins: preset.plugins });
     const render = (components: Record<string, Component>) =>
@@ -363,16 +362,6 @@ describe("comark-ui", () => {
 
     const entry = fileURLToPath(new URL("./fixtures/components.ts", import.meta.url));
     const result = await build({
-      plugins: [
-        {
-          name: "components-before-standalone-export",
-          transform(source, id) {
-            if (id === entry && !("components" in vueRenderer))
-              return 'import preset from "comark-ui/vue"; export const components = preset().components;';
-            return source;
-          },
-        },
-      ],
       configFile: false,
       logLevel: "error",
       build: {
