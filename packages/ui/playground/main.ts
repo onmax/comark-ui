@@ -74,7 +74,18 @@ const App = defineComponent(() => {
         }),
       ]),
       h("section", { class: "pane", "aria-label": "Rich-text editor" }, [
-        h("h2", "Rich text"),
+        h("div", { class: "pane-head" }, [
+          h("h2", "Rich text"),
+          h(
+            "button",
+            {
+              type: "button",
+              disabled: !editable.value,
+              onClick: () => editor.value?.chain().focus().chooseFiles().run(),
+            },
+            "Insert image",
+          ),
+        ]),
         h(
           "p",
           { class: "status", role: "status" },

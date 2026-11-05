@@ -26,9 +26,11 @@ export {
   type SplitMarkdown,
 } from "./editor/markdown.ts";
 export {
+  chooseFiles,
   findUpload,
   startUploads,
   Upload,
+  uploadCss,
   uploadKey,
   uploadPlugin,
   type PendingUpload,

@@ -130,11 +130,19 @@ const upload = Upload.configure({
 });
 ```
 
-Pass `[upload]` to `<ComarkEditor :extensions="[upload]" />` or the composable's `extensions` option. Each file shows a placeholder until the callback resolves. A rejected upload removes it and calls `onError`.
+Pass `[upload]` to `<ComarkEditor :extensions="[upload]" />` or the composable's `extensions` option. Each file shows a placeholder with a preview and its percentage until the callback resolves. A rejected upload removes it and calls `onError`. The editor adds the placeholder's styles to the page with the first one, on the `--comark-*` tokens.
+
+For an Image item in a "/" menu or a toolbar, run the `chooseFiles` command. It opens the file picker and uploads the files picked at the cursor, with the same placeholders:
+
+```ts
+editor.chain().focus().deleteRange(range).chooseFiles().run();
+```
+
+`pick` sets the types the picker offers, as an `<input accept>` value. It's `image/*,video/*,audio/*` by default.
 
 The callback's second argument reports progress as a fraction from 0 to 1. `fetch` doesn't report upload progress, so use `XMLHttpRequest.upload.onprogress` for it. `accept(file)` limits which files the editor takes.
 
-The placeholder is a local decoration, so a collaborative document never holds a half-uploaded file. Hosts that work at the ProseMirror level can use `uploadPlugin(options)`, `startUploads(view, files, pos, options)`, `findUpload(state, id)`, and `uploadKey`.
+The placeholder is a local decoration, so a collaborative document never holds a half-uploaded file. Hosts that work at the ProseMirror level can use `uploadPlugin(options)`, `startUploads(view, files, pos, options)`, `chooseFiles(view, options)`, `findUpload(state, id)`, `uploadKey`, and `uploadCss`.
 
 ## Collaborative rooms
 

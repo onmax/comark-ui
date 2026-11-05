@@ -2,6 +2,8 @@ import { Extension } from "@tiptap/core";
 import type { Node as PMNode } from "@tiptap/pm/model";
 import { type EditorState, Plugin, PluginKey, type Transaction } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
+import { theme } from "comark-zoom/theme";
+import { addStyles } from "../../../../shared/styles.ts";
 
 export interface UploadOptions {
   /**
@@ -9,8 +11,10 @@ export interface UploadOptions {
    * bytes go; `fetch` can't report them, so use XMLHttpRequest's `upload.onprogress`. Without it, nothing uploads.
    */
   upload?: (file: File, progress: (fraction: number) => void) => Promise<string>;
-  /** Which files to take from a paste or a drop. Images, video, and audio by default. */
+  /** Which files to take from a paste, a drop, or the file picker. Images, video, and audio by default. */
   accept: (file: File) => boolean;
+  /** The file types `chooseFiles()` offers in the file picker, as an `<input accept>` value. Media by default. */
+  pick?: string;
   /** Called when `upload` rejects. The placeholder is gone by then. */
   onError?: (error: unknown, file: File) => void;
 }
@@ -44,9 +48,21 @@ export function findUpload(state: EditorState, id: number) {
   return uploadKey.getState(state)?.find(undefined, undefined, (spec) => spec.id === id)[0]?.from;
 }
 
+/** The placeholder's styles, which the editor adds to the page with the first one. */
+export const uploadCss = `@layer comark{${[
+  theme(".cue-upload", "primary"),
+  `.cue-upload{display:inline-grid;position:relative;min-width:12rem;max-width:15rem;overflow:hidden;vertical-align:middle;border:1px solid var(--_comark-border);border-radius:var(--_comark-radius);background:var(--_comark-accent);color:var(--_comark-foreground);font:500 .75rem/1.4 var(--_comark-font)}`,
+  `.cue-upload>img,.cue-upload>video{grid-area:1/1;width:100%;max-height:10rem;object-fit:cover;opacity:.55}`,
+  `.cue-upload-label{grid-area:1/1;align-self:end;padding:.375rem .5rem .5rem;font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}`,
+  `.cue-upload>img~.cue-upload-label,.cue-upload>video~.cue-upload-label{background:color-mix(in srgb,var(--_comark-background) 80%,transparent)}`,
+  `.cue-upload::after{content:"";position:absolute;inset:auto 0 0;height:2px;width:var(--cue-upload);background:var(--_comark-primary);transition:width .2s ease-out}`,
+  `@media (prefers-reduced-motion:reduce){.cue-upload::after{transition:none}}`,
+].join("")}}`;
+
 // A placeholder's element lives as long as its widget, and progress reports update it in place rather than through a
 // transaction per percent.
 function placeholder(pending: PendingUpload) {
+  addStyles("editor-upload", uploadCss);
   const root = document.createElement("span");
   root.className = "cue-upload";
   root.contentEditable = "false";
@@ -137,6 +153,36 @@ function send(
   );
 }
 
+/**
+ * Opens the file picker and uploads what's picked at the cursor, with the same placeholders as a paste. Returns false
+ * without an `upload` callback. A "/" menu's Image item calls it through the `chooseFiles` command.
+ */
+export function chooseFiles(view: View, options: UploadOptions): boolean {
+  if (!options.upload) return false;
+  const input = document.createElement("input");
+  input.type = "file";
+  input.multiple = true;
+  input.accept = options.pick ?? "image/*,video/*,audio/*";
+  input.style.cssText = "position:fixed;left:-9999px";
+  input.tabIndex = -1;
+  input.addEventListener(
+    "change",
+    () => {
+      const files = Array.from(input.files ?? []);
+      input.remove();
+      // The cursor, after any edits while the picker was open.
+      if (files.length)
+        void Promise.all(startUploads(view, files, view.state.selection.from, options));
+    },
+    { once: true },
+  );
+  input.addEventListener("cancel", () => input.remove(), { once: true });
+  // WebKit needs the input to remain attached while the native picker is open.
+  document.body.append(input);
+  input.click();
+  return true;
+}
+
 function insertImage(tr: Transaction, pos: number, image: PMNode) {
   const $pos = tr.doc.resolve(pos);
   if ($pos.parent.inlineContent) tr.insert(pos, image);
@@ -224,6 +270,8 @@ declare module "@tiptap/core" {
     comarkUpload: {
       /** Uploads files at the cursor, as a paste would, such as the ones a file picker returns. */
       uploadFiles: (files: File[]) => ReturnType;
+      /** Opens the file picker and uploads the files picked at the cursor, as a "/" menu's Image item would. */
+      chooseFiles: () => ReturnType;
     };
   }
 }
@@ -231,7 +279,12 @@ declare module "@tiptap/core" {
 /** Uploads pasted and dropped files, with a placeholder that shows the progress. Pass `upload` to turn it on. */
 export const Upload = Extension.create<UploadOptions>({
   name: "comarkUpload",
-  addOptions: () => ({ upload: undefined, accept: acceptMedia, onError: undefined }),
+  addOptions: () => ({
+    upload: undefined,
+    accept: acceptMedia,
+    pick: undefined,
+    onError: undefined,
+  }),
   addProseMirrorPlugins() {
     return [uploadPlugin(this.options)];
   },
@@ -244,6 +297,11 @@ export const Upload = Extension.create<UploadOptions>({
           void Promise.all(startUploads(view, files, view.state.selection.from, this.options));
           return true;
         },
+      chooseFiles:
+        () =>
+        ({ view, dispatch }) =>
+          // `can()` checks without a dispatch, and shouldn't open a picker.
+          dispatch ? chooseFiles(view, this.options) : Boolean(this.options.upload),
     };
   },
 });
