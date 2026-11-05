@@ -45,11 +45,51 @@ describe("built docs links", () => {
       <img src="/missing.svg">
       <img src="/badge.svg/missing">
       <img src="/other/badge.svg">
+      <a href="/package.json">Package</a>
+      <img src="/doctor/xref/missing.png">
+      <img src="/guide/pond.png">
     `);
     expect(result.status).toBe(1);
-    expect(result.stderr).toContain("4 broken links");
-    for (const path of ["/missing/", "/missing.svg", "/badge.svg/missing", "/other/badge.svg"])
+    expect(result.stderr).toContain("7 broken links");
+    for (const path of [
+      "/missing/",
+      "/missing.svg",
+      "/badge.svg/missing",
+      "/other/badge.svg",
+      "/package.json",
+      "/doctor/xref/missing.png",
+      "/guide/pond.png",
+    ])
       expect(result.stderr).toContain(`links to ${path}, which has no page or file.`);
+  });
+
+  it("ignores include inputs and source text that are not browser links", () => {
+    const result = check('<code>:include{src="source.md"}</code>', {
+      "doctor/include/open-block-in-partial.html":
+        '<include src="tour.md"></include><include src="tour-closed.md"></include>',
+      "doctor/include/path-outside-root.html":
+        '<include src="../../package.json"></include><include src="ducks.md"></include>',
+      "doctor/include/read-failed.html":
+        '<include src="ponds"></include><include src="ponds/north.md"></include>',
+      "doctor/include/remote-file.html": '<include src="ducks.md"></include>',
+      "doctor/include/too-deep.html":
+        '<include src="nest/1.md"></include><include src="nest/2.md"></include>',
+      "doctor/include/unclosed-region.html":
+        '<include src="feed.sh"></include><include src="deploy.sh"></include>',
+      "include.html":
+        '<include src="./partials/install.md"></include><include src="./partials/ducks.ts"></include>',
+    });
+    expect(result.stderr).toBe("");
+    expect(result.status).toBe(0);
+  });
+
+  it("excludes the illustrative images in Doctor's cross-reference examples", () => {
+    const result = check("", {
+      "doctor/xref/ref-content.html": '<img src="pond.png">',
+      "doctor/xref/unknown-label.html": '<img src="pigeon.png">',
+    });
+    expect(result.stderr).toBe("");
+    expect(result.status).toBe(0);
   });
 
   it("resolves the docs app's flat page URLs and their fragments", () => {

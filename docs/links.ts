@@ -24,6 +24,17 @@ const attributes = (html: string, names: string) =>
   [...html.matchAll(new RegExp(`\\s(?:${names})=(?:"([^"]*)"|'([^']*)')`, "g"))].map(([, a, b]) =>
     decode(a ?? b ?? ""),
   );
+// An unhandled Comark component such as <include src="tour.md"> doesn't load its src in the browser.
+// Read attributes from elements, and only treat src as a URL on HTML elements that load it.
+const linksOf = (html: string) =>
+  [...html.matchAll(/<([a-z][\w:-]*)\b[^>]*>/gi)].flatMap(([element, tag]) =>
+    attributes(
+      element,
+      /^(audio|embed|iframe|img|input|script|source|track|video)$/i.test(tag!)
+        ? "href|src"
+        : "href",
+    ),
+  );
 
 const urlOf = (file: string) => {
   const path = `/${relative(root, file)}`;
@@ -52,7 +63,7 @@ const problems = new Set<string>();
 for (const file of files) {
   const page = urlOf(file);
   const html = readFileSync(file, "utf8");
-  for (const link of attributes(html, "href|src")) {
+  for (const link of linksOf(html)) {
     const url = new URL(link, `${SITE}${page}`);
     if (url.origin !== SITE) continue;
     if (excludedLinks.some((pattern) => pattern.test(link) || pattern.test(url.pathname))) continue;
