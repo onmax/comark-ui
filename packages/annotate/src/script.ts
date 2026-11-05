@@ -1,6 +1,11 @@
 declare global {
   interface Window {
-    __comarkAnnotate?: { users: number; stop: () => void };
+    __comarkAnnotate?: {
+      users: number;
+      stop: () => void;
+      /** A fresh PNG of the figure, with its current paint, marks and notes. */
+      capture: (figure: HTMLElement) => Promise<Blob>;
+    };
   }
 }
 
@@ -252,9 +257,36 @@ export function start(): () => void {
     context.closePath();
   };
 
+  // An SVG body, such as a chart, takes its colors and fonts from the page's rules, which an SVG drawn as an image
+  // doesn't see, so every element of the copy takes the paint it shows on the page.
+  const PAINT = ["fill", "stroke", "stroke-width", "opacity", "fill-opacity", "stroke-opacity"];
+  const TEXT = ["font-family", "font-size", "font-weight"];
+  async function raster(svg: SVGSVGElement) {
+    const { width, height } = svg.getBoundingClientRect();
+    // SAFETY: a deep clone of an SVGSVGElement is an SVGSVGElement.
+    const copy = svg.cloneNode(true) as SVGSVGElement;
+    const to = [copy, ...copy.querySelectorAll("*")];
+    [svg, ...svg.querySelectorAll("*")].forEach((node, index) => {
+      const into = to[index];
+      if (!(into instanceof SVGElement)) return;
+      const style = getComputedStyle(node);
+      const text = node.localName === "text" || node.localName === "tspan";
+      for (const prop of text ? [...PAINT, ...TEXT] : PAINT)
+        into.style.setProperty(prop, style.getPropertyValue(prop));
+    });
+    copy.setAttribute("width", String(width));
+    copy.setAttribute("height", String(height));
+    const image = new Image();
+    image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(new XMLSerializer().serializeToString(copy))}`;
+    await image.decode();
+    return image;
+  }
+
   async function compose(figure: HTMLElement) {
-    const image = figure.querySelector<HTMLImageElement>(".ca-frame>img:not(.ca-overlay)");
-    if (!image) throw new Error("The screenshot has no image.");
+    const body = figure.querySelector<SVGSVGElement>(".ca-frame>svg");
+    const shown = body ?? figure.querySelector<HTMLImageElement>(".ca-frame>img:not(.ca-overlay)");
+    if (!shown) throw new Error("The screenshot has no image.");
+    const image = shown instanceof SVGSVGElement ? await raster(shown) : shown;
     image.loading = "eager";
     if (!image.complete || !image.naturalWidth) await image.decode();
     await document.fonts.ready;
@@ -325,9 +357,9 @@ export function start(): () => void {
               context.fillText(match[0], x, y + (height - ascent - descent) / 2 + ascent);
             });
           }
-        } else if (node === image) {
-          const style = getComputedStyle(image);
-          const rect = place(image.getBoundingClientRect());
+        } else if (node === shown) {
+          const style = getComputedStyle(shown);
+          const rect = place(shown.getBoundingClientRect());
           const radius = parseFloat(style.borderTopLeftRadius) || 0;
           const outline = style.outlineStyle === "none" ? 0 : parseFloat(style.outlineWidth) || 0;
           const inset = -(parseFloat(style.outlineOffset) || 0) - outline / 2;
@@ -457,11 +489,12 @@ export function start(): () => void {
 
     const width = box.width + 2 * PAD;
     const height = box.height + 2 * PAD;
-    const shot = image.getBoundingClientRect();
-    // As sharp as the screen, or as the image file when it has more pixels than it's shown at.
+    const shot = shown.getBoundingClientRect();
+    // As sharp as the screen, or as the image file when it has more pixels than it's shown at. An SVG has no pixels of
+    // its own, so it draws at twice its size at least.
     const scale = Math.min(
       3,
-      Math.max(devicePixelRatio || 1, image.naturalWidth / (shot.width || 1)),
+      Math.max(devicePixelRatio || 1, body ? 2 : image.naturalWidth / (shot.width || 1)),
       8192 / width,
       8192 / height,
     );
@@ -706,6 +739,8 @@ export function start(): () => void {
 
   const state = {
     users: 1,
+    // The hover cache only tracks layout and text color; chart paint and content can change independently.
+    capture: compose,
     stop: () => {
       if (--state.users > 0) return;
       listeners.abort();

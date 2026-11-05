@@ -419,8 +419,10 @@ function compressionStream(kind: "compress" | "decompress") {
     throw new Error(sharingUnsupported);
   }
 }
-function reportSharing(error: unknown, message = "Could not create a sharing link.") {
-  sharingIssue.textContent = `${message} ${errorText(error)}`;
+function reportSharing(error: unknown, message?: string) {
+  // Debounced link updates must not replace the error from the reader's last action.
+  if (!message && !sharingIssue.hidden) return;
+  sharingIssue.textContent = `${message ?? "Could not create a sharing link."} ${errorText(error)}`;
   sharingIssue.hidden = false;
 }
 async function pack(text: string) {
