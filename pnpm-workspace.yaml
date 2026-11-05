@@ -158,8 +158,8 @@ allowBuilds:
 
 # Temporary dependency backports. See patches/README.md for upstream PRs and removal conditions.
 patchedDependencies:
-  '@vite-hub/docs@0.0.0-preview-4a7b419': patches/@vite-hub__docs@0.0.0-preview-4a7b419.patch
-  '@vite-hub/web-container@0.0.0-preview-4a7b419': patches/@vite-hub__web-container@0.0.0-preview-4a7b419.patch
+  "@vite-hub/docs@0.0.0-preview-4a7b419": patches/@vite-hub__docs@0.0.0-preview-4a7b419.patch
+  "@vite-hub/web-container@0.0.0-preview-4a7b419": patches/@vite-hub__web-container@0.0.0-preview-4a7b419.patch
   comark@0.8.1: patches/comark.patch
 
 # The dependencies that the @vite-hub/docs patch adds, Nuxt SEO. Remove with the patch.
