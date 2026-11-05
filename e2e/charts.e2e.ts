@@ -385,6 +385,87 @@ test("a chart copies as an image in the page's colors, and its data as a table o
   );
 });
 
+test("a marked chart copies current paint and content after hover prepares an image", async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  const render = createHtmlRenderer({ plugins: [charts()], components });
+  const body = await render(
+    '::chart{horizontal title="Pigeons"}\n| day | pigeons |\n| --- | --: |\n| Monday | 3 |\n| Friday | 14 |\n:::annotation{at="Monday" mark="circle" color="#00ff00" side="right"}\nFirst note.\n:::\n::',
+  );
+  await page.route("**/fixture/", (route) =>
+    route.fulfill({
+      contentType: "text/html",
+      body: `<!doctype html><meta charset="utf-8"><style>:root{--comark-chart-1:rgb(255,0,0)}</style><main>${body}</main>`,
+    }),
+  );
+  await page.goto("/fixture/", { waitUntil: "domcontentloaded" });
+  const figure = page.locator(".cch-marked .ca-screenshot");
+  await figure.hover();
+  await expect(figure.locator(".ca-overlay")).toHaveAttribute("src", /^blob:/);
+  const image = (cached = false) =>
+    page.evaluate(async (cached) => {
+      const blob = cached
+        ? await fetch(document.querySelector<HTMLImageElement>(".ca-overlay")!.src).then(
+            (response) => response.blob(),
+          )
+        : await (await navigator.clipboard.read())[0]!.getType("image/png");
+      const bitmap = await createImageBitmap(blob);
+      const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+      const context = canvas.getContext("2d")!;
+      context.drawImage(bitmap, 0, 0);
+      const { data } = context.getImageData(0, 0, bitmap.width, bitmap.height);
+      let red = 0;
+      let blue = 0;
+      let green = 0;
+      for (let index = 0; index < data.length; index += 4) {
+        if (data[index]! > 240 && data[index + 1]! < 20 && data[index + 2]! < 20) red++;
+        if (data[index]! < 20 && data[index + 1]! < 20 && data[index + 2]! > 240) blue++;
+        if (data[index]! < 20 && data[index + 1]! > 240 && data[index + 2]! < 20) green++;
+      }
+      const hash = [...new Uint8Array(await crypto.subtle.digest("SHA-256", data))].join(",");
+      bitmap.close();
+      return { red, blue, green, hash };
+    }, cached);
+  const initial = await image(true);
+  expect(initial.red).toBeGreaterThan(1000);
+  expect(initial.green).toBeGreaterThan(100);
+  const key = () =>
+    figure.evaluate((node) => {
+      const { width, height } = node.getBoundingClientRect();
+      return [Math.round(width), Math.round(height), getComputedStyle(node).color];
+    });
+  const before = await key();
+  await figure.evaluate((node) => node.style.setProperty("--comark-chart-1", "rgb(0,0,255)"));
+  expect(await key()).toEqual(before);
+  const copy = page.getByRole("button", { name: "Copy the chart as an image" });
+  await copy.click();
+  await expect(page.locator(".cch-status")).toHaveText("Copied as image");
+  const themed = await image();
+  expect(themed.blue).toBeGreaterThan(1000);
+  expect(themed.red).toBe(0);
+  expect(themed.green).toBeGreaterThan(100);
+  expect(themed.hash).not.toBe(initial.hash);
+
+  // Each edit leaves the old cache key intact, but must change the next copy's pixels.
+  let previous = themed.hash;
+  for (const change of ["svg", "mark", "note"]) {
+    await figure.evaluate((node, change) => {
+      if (change === "svg") node.querySelector(".ca-frame>svg text")!.textContent = "Edited";
+      if (change === "mark") node.querySelector<HTMLElement>(".ca-mark")!.style.left = "50%";
+      if (change === "note") node.querySelector(".ca-callout>div")!.textContent = "Other note.";
+    }, change);
+    expect(await key()).toEqual(before);
+    await expect(page.locator(".cch-status")).toHaveText("");
+    await copy.click();
+    await expect(page.locator(".cch-status")).toHaveText("Copied as image");
+    const current = await image();
+    expect(current.hash, change).not.toBe(previous);
+    previous = current.hash;
+  }
+});
+
 test("a side note on a chart narrower than its card starts where its arrow ends", async ({
   page,
 }) => {

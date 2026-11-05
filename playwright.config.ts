@@ -5,8 +5,9 @@ const port = Number(process.env.E2E_PORT ?? 4173);
 
 // A few end-to-end checks of the built docs site in Chromium, so CI proves the demos work without slowing it down.
 export default defineConfig({
-  testDir: "e2e",
-  testMatch: "*.e2e.ts",
+  // Run the docs migration checks in CI alongside the component contracts.
+  testDir: ".",
+  testMatch: ["e2e/*.e2e.ts", "docs/e2e/*.e2e.ts"],
   fullyParallel: true,
   reporter: process.env.CI ? "github" : "list",
   use: {

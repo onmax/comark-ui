@@ -92,7 +92,9 @@ test("a diff's counts stay readable when the page's theme and the system's disag
     ["dark", themes.light],
   ] as const) {
     await page.emulateMedia({ colorScheme: system });
-    await page.goto("/diff/");
+    const parsed = await parseMarkdown(change(), { plugins: [diffPlugin()] });
+    const html = await renderHtmlFromDocument(parsed, { components });
+    await page.setContent(`${prose}<main class="prose">${html}</main>`);
     await page.addStyleTag({ content: `main{${theme}}` });
     const ratios = await page
       .locator(".cd")

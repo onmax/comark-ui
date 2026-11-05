@@ -48,6 +48,11 @@ describe("redirects", () => {
       "https://comark-ui.onmax.me/charts/?x=1#vega-lite",
     );
   });
+  it.each(["/badges", "/badges/"])("redirects the retired builder at %s to badge docs", (path) => {
+    expect(target(`https://comark-ui.onmax.me${path}?preset=npmx`)).toBe(
+      "https://comark-ui.onmax.me/badge/?preset=npmx",
+    );
+  });
   it.each(["SKILL.md", "agents/openai.yaml", "references/example.md"])(
     "redirects the old installable lesson's %s, keeping the query and fragment",
     (file) => {
@@ -57,12 +62,16 @@ describe("redirects", () => {
         ).toBe(`https://comark-ui.onmax.me/.well-known/skills/teach-lesson/${file}?raw=1#the-idea`);
     },
   );
-  it("leaves current pages, the linter, the guides, and the badge alone", () => {
+  it("leaves current pages, the linter, the guides, the migrators, and the badge alone", () => {
     for (const path of [
       "/",
       "/zoom/",
       "/lint/getting-started/",
       "/guide/theming/",
+      "/migrate-to-comark/getting-started/",
+      "/remark-to-comark/getting-started/",
+      "/markdown-it-to-comark/getting-started/",
+      "/marked-to-comark/getting-started/",
       "/badge.svg",
       "/.well-known/skills/teach-lesson/SKILL.md",
       "/.well-known/skills/concept-lesson-extra/SKILL.md",

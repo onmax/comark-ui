@@ -145,6 +145,8 @@ allowBuilds:
   "@mongodb-js/zstd": false
   "@swc/core": false
   cbor-extract: false
+  # Its postinstall only prints a funding message.
+  core-js-pure: false
   cpu-features: false
   esbuild: false
   msgpackr-extract: true

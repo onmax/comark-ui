@@ -33,7 +33,7 @@ Use `useFetch` instead. :badge[v4]{color="info"} :badge[stable]{color="success"}
 - Seven colors from Nuxt UI, each a tint with text in the color, so a badge reads on light and dark pages.
 - Primary follows the shared `--comark-primary`, which is the page's Nuxt UI or shadcn/ui primary, or else the text color.
 - On a Nuxt UI page, every color but neutral takes the app's `--ui-*` variable.
-- SVG image badges, static or with live npm versions, downloads, and GitHub Actions status, and a [builder](/badges/) to share and export them.
+- SVG image badges, static or with live npm versions, downloads, and GitHub Actions status, served by a [hosted endpoint](#build-a-readme-badge).
 - No script. The components add the styles when they mount.
 
 ## Usage
@@ -213,9 +213,13 @@ The heading's `id` includes the badge's words, since Comark builds ids from all 
 
 ### Build a README badge
 
-Open the [badge builder](/badges/), pick Custom, npm version, Downloads, GitHub Actions, License, or Docs, and edit the options. Pick a preset from the Appearance swatches, then a color scheme and logo. Copy Markdown for a README, Comark for a document, or the image URL. Copy builder link keeps the setup and export format in the URL, and Download SVG saves a snapshot.
+The hosted endpoint takes the same image options as query parameters. Use its URL as a Markdown image in a README:
 
-The hosted endpoint takes the same image options as query parameters:
+```md
+![Built with Comark UI](https://comark-ui.onmax.me/badge.svg?label=built%20with&value=Comark%20UI&icon=package)
+```
+
+For a static badge, set `label` and `value`. For live npm or GitHub Actions data, set `source` and its package or repository options. Choose a `preset`, `scheme`, and `icon` with the same options as a Comark badge:
 
 ```text
 https://comark-ui.onmax.me/badge.svg?label=built%20with&value=Comark%20UI&icon=package

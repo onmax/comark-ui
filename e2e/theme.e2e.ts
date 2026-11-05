@@ -1,6 +1,8 @@
 import { createHtmlRenderer } from "@comark/html";
-import { expect, test } from "@playwright/test";
-import comarkUi from "../packages/ui/src/html.ts";
+import { expect, type Page, test } from "@playwright/test";
+import carousel, { components as carouselComponents } from "../packages/carousel/src/html.ts";
+import zoom, { components as zoomComponents } from "../packages/zoom/src/html.ts";
+import { typesetCss } from "../packages/ui/src/typeset-css.ts";
 import { mermaidCss } from "../packages/ui/src/client.ts";
 import { theme } from "../packages/zoom/src/theme.ts";
 
@@ -43,22 +45,32 @@ for (const mode of ["light", "dark"] as const) {
 }
 
 test("a .light class keeps the typeset's text light-mode on a dark system", async ({ page }) => {
-  const render = createHtmlRenderer(comarkUi({ icon: { fetch: false } }));
   await page.emulateMedia({ colorScheme: "dark" });
   await page.setContent(
-    `<!doctype html><html class="light"><body><main>${await render("Some text.")}</main></body></html>`,
+    `<!doctype html><html class="light"><body><main><style>${typesetCss}</style><p>Some text.</p></main></body></html>`,
   );
   await expect(page.locator("main")).toHaveCSS("color", "rgb(10, 10, 10)");
   await page.evaluate(() => document.documentElement.classList.remove("light"));
   await expect(page.locator("main")).toHaveCSS("color", "rgb(250, 250, 250)");
 });
 
-const next = (page: import("@playwright/test").Page) =>
+// Theme defaults are a plugin contract. The docs host supplies Nuxt UI tokens.
+const renderCarousel = createHtmlRenderer({
+  plugins: [carousel(), zoom()],
+  components: { ...carouselComponents, ...zoomComponents },
+});
+const openCarousel = async (page: Page) => {
+  await page.setContent(
+    `<!doctype html><main>${await renderCarousel('::carousel{title="Tour"}\nOne\n\nTwo\n\nThree\n::')}</main>`,
+  );
+};
+
+const next = (page: Page) =>
   page.locator("main .cc").first().getByRole("button", { name: "Next slide" });
 
 test("the controls default to shadcn's neutral theme, light and dark", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "light" });
-  await page.goto("/carousel/");
+  await openCarousel(page);
   await expect(next(page)).toHaveCSS("background-color", "rgb(255, 255, 255)");
   await expect(next(page)).toHaveCSS("border-top-color", "rgb(229, 229, 229)");
 
@@ -71,7 +83,7 @@ test("a shadcn theme set on any ancestor applies, and `--comark-*` wins over it"
 }) => {
   // The OS is light while the page is dark, as with shadcn's `.dark` class.
   await page.emulateMedia({ colorScheme: "light" });
-  await page.goto("/carousel/");
+  await openCarousel(page);
   await page.addStyleTag({ content: "main{--background:rgb(1 2 3);--border:rgb(4 5 6)}" });
   await expect(next(page)).toHaveCSS("background-color", "rgb(1, 2, 3)");
   await expect(next(page)).toHaveCSS("border-top-color", "rgb(4, 5, 6)");
@@ -83,7 +95,7 @@ test("a shadcn theme set on any ancestor applies, and `--comark-*` wins over it"
 test("a host's plain rule beats the plugin's own, and the zoomed view shares the tokens", async ({
   page,
 }) => {
-  await page.goto("/carousel/");
+  await openCarousel(page);
   await page.addStyleTag({
     content: ".cc-step{border-radius:0}:root{--comark-muted:rgb(10 20 30)}",
   });
@@ -94,7 +106,7 @@ test("a host's plain rule beats the plugin's own, and the zoomed view shares the
 });
 
 test("tokens set on .cz-dialog theme only the zoomed view", async ({ page }) => {
-  await page.goto("/carousel/");
+  await openCarousel(page);
   await page.addStyleTag({ content: ".cz-dialog{--comark-muted:rgb(10 20 30)}" });
   const count = page.locator("main .cc").first().locator(".cc-count");
   const color = await count.evaluate((node) => getComputedStyle(node).color);

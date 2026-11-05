@@ -13,15 +13,15 @@ const active = ref(0);
 </script>
 
 <template>
-  <div class="docs-examples" data-examples>
-    <div role="tablist" class="flex gap-2 border-b border-default">
+  <div class="docs-examples min-w-0" data-examples>
+    <div role="tablist" class="flex gap-2 overflow-x-auto border-b border-default">
       <button
         v-for="(label, at) in labels"
         :key="label"
         type="button"
         role="tab"
         :aria-selected="at === active"
-        class="px-2 py-1 text-sm"
+        class="shrink-0 px-2 py-1 text-sm"
         :class="at === active ? 'border-b-2 border-inverted font-medium' : 'text-muted'"
         @click="active = at"
       >

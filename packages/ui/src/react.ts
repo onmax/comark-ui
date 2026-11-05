@@ -30,6 +30,7 @@ import * as steps from "comark-steps/react";
 import * as table from "comark-table/react";
 import * as tabs from "comark-tabs/react";
 import * as tests from "comark-tests/react";
+import * as time from "comark-time/react";
 import * as zoom from "comark-zoom/react";
 import { addMermaidStyles, mermaidBar, startMermaid } from "./client.ts";
 import { type Preset, type PresetOptions, preset } from "./index.ts";
@@ -101,6 +102,7 @@ export default (options?: PresetOptions): Preset<AnyComponent> =>
       table,
       tabs,
       tests,
+      time,
       typeset,
       zoom,
     },

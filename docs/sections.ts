@@ -19,6 +19,7 @@ export const packageOrder = [
   "tests",
   "github",
   "properties",
+  "time",
   "sources",
   "icon",
   "qr",

@@ -22,3 +22,10 @@ const componentsManifest = (tag: string) => contentComponents[tag]?.();
     :components-manifest="componentsManifest"
   />
 </template>
+
+<style>
+/* comark-code supplies the controls; the page supplies the code block's layout. */
+.comark-content .ck > pre {
+  overflow-x: auto;
+}
+</style>
