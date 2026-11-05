@@ -286,6 +286,11 @@ export function script(css: string): () => void {
   // would blur. A copy that would have to shrink below its size on the page to fit the stage's height fills the
   // stage's width instead and scrolls, since a zoom that makes it smaller reads as zooming out.
   function place(current: View) {
+    // Save the reading position relative to the displayed width, so a responsive page width can change too.
+    const scroll = current.stage.scrollTop;
+    const position =
+      Math.max(0, scroll - (parseFloat(current.frame.style.marginBlockStart) || 0)) /
+      (parseFloat(current.frame.style.width) * current.scale || 1);
     const item = current.items[current.index]!;
     const { width } = measure(item);
     current.frame.style.width = `${width}px`;
@@ -312,11 +317,12 @@ export function script(css: string): () => void {
     current.scale = Math.max(0.1, Math.min(across, tall ? Infinity : down, natural, 4));
     current.stage.toggleAttribute("data-scroll", tall);
     // The copy grows down from its top, and its margins give the stage's scroll the height it takes once scaled.
+    const gap = box.height * 0.04;
     if (tall) {
-      const gap = box.height * 0.04;
       current.frame.style.marginBlock = `${gap}px ${height * (current.scale - 1) + gap}px`;
     }
     current.frame.style.transform = `scale(${current.scale})`;
+    current.stage.scrollTop = tall && scroll > 0 ? position * width * current.scale + gap : 0;
   }
 
   // Whether an image of a copy is still shown, so a load that finishes after a close or a move changes nothing.
