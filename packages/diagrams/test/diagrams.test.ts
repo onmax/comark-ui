@@ -69,6 +69,13 @@ describe("comark-diagrams", () => {
     ]);
   });
 
+  it("keeps the first line's indent, so ASCII art keeps its columns", async () => {
+    const art = "  .-------.\n  | ducks |\n  '-------'";
+    const html = await render(`\`\`\`svgbob\n\n${art}\n\n\`\`\``);
+    expect(requests).toEqual([{ url: "https://kroki.io/svgbob/svg", body: art }]);
+    expect(html).toContain('<figure class="cdg" data-type="svgbob">');
+  });
+
   it("tries a diagram again when Kroki times out, drops it, or fails, but not when it refuses the source", async () => {
     const fetch = vi
       .fn()
