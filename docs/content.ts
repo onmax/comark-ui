@@ -42,10 +42,8 @@ function split(source: string) {
   };
 }
 
-// The old site's links end in a slash, `/zoom/#theme`; the docs shell's paths don't. The playground isn't part of the
-// docs app yet, so its links go to the live site.
+// The old site's links end in a slash, `/zoom/#theme`; the docs shell's paths don't.
 const site = (path: string) => {
-  if (/^\/play(\/|#|$)/.test(path)) return `https://comark-ui.onmax.me${path}`;
   const [, pathname = "", rest = ""] = /^([^#?]*)(.*)$/.exec(path) ?? [];
   if (/\.\w+$/.test(pathname) || pathname === "/") return path;
   return `${pathname.replace(/\/$/, "")}${rest}`;

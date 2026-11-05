@@ -82,13 +82,23 @@ describe("built docs links", () => {
     expect(result.status).toBe(0);
   });
 
-  it("keeps the Nuxt checker's exclusions for deliberate examples and the live playground", () => {
+  it("keeps the Nuxt checker's exclusions for deliberate examples", () => {
     const result = check(`
-      <a href="/census">Example</a><a href="/ducks/mallard">Example</a>
-      <img src="/spinner.mp4"><a href="https://comark-ui.onmax.me/play/#preset=code-copy-and-wrap">Playground</a>
+      <a href="/census">Example</a><a href="/ducks/mallard">Example</a><img src="/spinner.mp4">
     `);
     expect(result.stderr).toBe("");
     expect(result.status).toBe(0);
+  });
+
+  it("reads the playground's fragment as its state, and checks the gallery's as ids", () => {
+    const result = check(
+      `<a href="/play#md=y0zMyQEA">Playground</a><a href="/play/#preset=tabs-tabs">Preset</a>
+      <a href="/play/gallery#tabs-tabs">Gallery</a><a href="/play/gallery#missing">Missing</a>`,
+      { "play/index.html": "", "play/gallery/index.html": '<article id="tabs-tabs"></article>' },
+    );
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("1 broken link");
+    expect(result.stderr).toContain('no heading or element with the id "missing"');
   });
 
   it("still checks redirects and static page fragments", () => {

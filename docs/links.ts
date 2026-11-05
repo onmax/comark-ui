@@ -73,7 +73,7 @@ for (const file of files) {
       continue;
     }
     // The playground reads its fragment as state, not as a heading.
-    if (url.hash.length > 1 && target.endsWith(".html") && !url.pathname.startsWith("/play/")) {
+    if (url.hash.length > 1 && target.endsWith(".html") && !/^\/play\/?$/.test(url.pathname)) {
       const id = decodeURIComponent(url.hash.slice(1));
       if (!idsOf(target).has(id))
         problems.add(

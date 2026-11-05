@@ -4,6 +4,7 @@ import { defineComarkPlugin, type ElementNode, type Node } from "comark";
 import { textContent } from "comark/utils";
 import comarkUi from "comark-ui/vue";
 import { createDocsParser, type DocsParserOptions } from "@vite-hub/docs/server";
+import { playable, playLink } from "./play-link.ts";
 import { browserPlugins, components as html } from "./plugins.ts";
 
 const isElement = (node: Node): node is ElementNode =>
@@ -44,7 +45,7 @@ const blocks = () => [
 ];
 
 // `:::example` shows its fenced Markdown twice, rendered and as code. The rendered copy is parsed here so the page
-// reaches the browser as nodes.
+// reaches the browser as nodes, and the playground link, which deflates the Markdown, is written here too.
 const examples = defineComarkPlugin(() => {
   const parse = createDocsParser({ plugins: blocks() });
   const visit = async (nodes: Node[]): Promise<void> => {
@@ -56,8 +57,12 @@ const examples = defineComarkPlugin(() => {
           (child): child is ElementNode => isElement(child) && child[0] === "pre",
         );
         // A Doctor example can be broken on purpose, such as invalid frontmatter, so it shows its source alone.
-        const preview = pre && (await parse(textContent(pre)).catch(() => undefined));
+        const source = pre && textContent(pre);
+        const preview = source ? await parse(source).catch(() => undefined) : undefined;
         if (preview) node.splice(2, 0, ["example-preview", {}, ...preview.nodes]);
+        // An example opens in the playground with its Markdown; a Doctor rule's doesn't.
+        if (node[0] === "example" && source && playable(source))
+          node[1].play = await playLink(source);
         continue;
       }
       // SAFETY: an element node is [tag, attributes, ...children].

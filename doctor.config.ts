@@ -31,14 +31,22 @@ export default defineDoctorConfig({
       ],
       links: {
         // As docs/content.ts copies them: a package's pages come from its docs/, the rest from docs/pages, and files
-        // from docs/public.
+        // from docs/public. The tools are Nuxt pages in docs/app/pages, and the rich-text editor at /play/editor/
+        // isn't ported to the docs app yet (docs/link-excludes.ts).
         routes(path) {
           // @vite-hub/docs also serves llms.txt and each page's Markdown copy.
           if (path === "/llms.txt" || path === "/index.md") return true;
           const markdown = /^(?:\/raw)?(\/.+)\.md$/.exec(path)?.[1];
           if (markdown) path = `${markdown}/`;
           const [first = "", ...rest] = path.split("/").filter(Boolean);
-          if (first === "play" || path === "/badge.svg") return true;
+          if (path === "/badge.svg" || /^\/play\/editor\/?$/.test(path)) return true;
+          const page = path.replace(/\/$/, "");
+          if (
+            ["", "/index"].some((end) =>
+              existsSync(new URL(`docs/app/pages${page}${end}.vue`, repo)),
+            )
+          )
+            return true;
           if (existsSync(new URL(`packages/${first}/docs/index.md`, repo)))
             return `packages/${first}/docs/${rest.join("/")}`;
           return /\.\w+$/.test(path) ? `docs/public${path}` : `docs/pages${path}`;

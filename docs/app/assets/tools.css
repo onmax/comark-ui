@@ -1,0 +1,228 @@
+/* What the playground, the gallery, and the badge builder share: the old site's tokens, read from Nuxt UI's so the
+   tools follow the shell's colors and color mode, its switches and buttons, and the index column beside a tool. */
+.tool {
+  --fg: var(--ui-text-highlighted);
+  --muted: var(--ui-text-muted);
+  --faint: var(--ui-text-dimmed);
+  --line: var(--ui-border);
+  --soft: var(--ui-bg-elevated);
+  --bg: var(--ui-bg);
+  --raised: var(--ui-bg);
+  --pre-line: var(--line);
+  --sans: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+  --mono: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 16px;
+  color: var(--muted);
+  font: 400 0.9375rem/1.7 var(--sans);
+}
+
+:is(.dark .tool:not(.light), .tool.dark) {
+  --raised: var(--ui-bg-accented);
+  --pre-line: transparent;
+}
+
+.dark .tool .shiki span {
+  color: var(--shiki-dark) !important;
+}
+
+/* @vite-hub/docs counts every path as a docs page when its base is "/", so it hides the header on wide screens, where
+   the docs sidebar would carry it. A tool has no docs sidebar, so it keeps the header. */
+@media (min-width: 64rem) {
+  body:has(.tool) .sticky.lg\:hidden:has(> header) {
+    display: block;
+  }
+}
+
+/* A tool fills the window under the header, with its index beside it. */
+.tool-layout {
+  display: grid;
+  grid-template-columns: 15rem minmax(0, 1fr);
+  height: calc(100dvh - var(--ui-header-height));
+}
+
+.tool-index {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0.75rem 1rem 2rem;
+  border-right: 1px solid var(--line);
+  font-size: 0.8125rem;
+}
+
+.tool-index-title {
+  margin: 0.25rem 0 0.5rem;
+  color: var(--fg);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.tool-index .nav-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 1rem 0 0.25rem;
+  color: var(--fg);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.tool-index .nav-group svg {
+  flex: none;
+  color: var(--faint);
+}
+
+/* Not the links inside a preset's still, which keep the look the plugins give them. */
+.tool-index a:not(.preset-page *) {
+  margin: 0 -0.5rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: var(--r-sm);
+  color: var(--muted);
+  text-decoration: none;
+  transition:
+    color 150ms ease,
+    background-color 150ms ease;
+}
+
+.tool-index a:not(.preset-page *):hover,
+.tool-index a[aria-current] {
+  color: var(--fg);
+}
+
+.tool-index a[aria-current] {
+  background: var(--soft);
+}
+
+@media (max-width: 60rem) {
+  .tool-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .tool-index {
+    display: none;
+  }
+}
+
+/* A switch: one soft track and a raised thumb on the choice. With the script, one indicator slides to the choice. */
+.tool .seg {
+  position: relative;
+  display: inline-flex;
+  padding: 3px;
+  border-radius: var(--r-md);
+  background: var(--soft);
+}
+
+.tool .seg button {
+  position: relative;
+  z-index: 1;
+  padding: 0.2rem 0.65rem;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: none;
+  color: var(--muted);
+  font: 500 0.75rem/1.5 var(--sans);
+  cursor: pointer;
+  transition: color 150ms ease;
+}
+
+.tool .seg button:hover,
+.tool .seg [aria-pressed="true"] {
+  color: var(--fg);
+}
+
+.tool .seg [aria-pressed="true"],
+.tool .seg .indicator {
+  background: var(--raised);
+  box-shadow:
+    0 0 0 0.5px rgb(0 0 0 / 0.06),
+    0 1px 3px rgb(0 0 0 / 0.1);
+}
+
+.tool .seg[data-indicator] [aria-pressed="true"] {
+  background: none;
+  box-shadow: none;
+}
+
+.tool .seg button:focus-visible {
+  outline: 2px solid var(--fg);
+  outline-offset: -2px;
+}
+
+.tool .seg .indicator {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 0;
+  border-radius: var(--r-sm);
+  pointer-events: none;
+  transition:
+    transform 200ms var(--ease-out),
+    width 200ms var(--ease-out);
+}
+
+.tool .seg .indicator[data-still] {
+  transition: none;
+}
+
+@media (hover: none) {
+  .tool .seg button {
+    padding: 0.45rem 0.85rem;
+  }
+}
+
+@media (pointer: coarse) {
+  .tool .seg button {
+    min-height: 2.5rem;
+  }
+}
+
+.tool .button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 2.5rem;
+  padding: 0 1rem;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: none;
+  font-family: inherit;
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--fg);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition:
+    box-shadow 150ms ease,
+    background-color 150ms ease,
+    scale 160ms var(--ease-out);
+}
+
+.tool .button:active {
+  scale: 0.97;
+}
+
+@media (hover: hover) {
+  .tool .button:hover {
+    box-shadow: inset 0 0 0 1px var(--faint);
+  }
+}
+
+.tool .hero h1 {
+  margin: 0 0 0.5rem;
+  color: var(--fg);
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+}
+
+.tool .hero p {
+  max-width: 34rem;
+  margin: 0;
+  font-size: 1.0625rem;
+  text-wrap: pretty;
+}

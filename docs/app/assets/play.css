@@ -1,0 +1,579 @@
+/* The playground's styles, from the old site's style.css, with its sidebar's presets column in .tool-index. */
+/* The playground: the editor and its issues on the left, the rendered page on the right. */
+.play {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  height: 100%;
+}
+
+.play-editor {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-right: 1px solid var(--line);
+}
+
+.play-bar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  height: 2.75rem;
+  padding: 0 0.5rem;
+  border-bottom: 1px solid var(--line);
+  color: var(--faint);
+  font-size: 0.8125rem;
+}
+
+.play-share,
+.play-theme-actions button {
+  padding: 0.25rem 0.625rem;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: var(--bg);
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--muted);
+  font: 500 0.75rem/1.5 var(--sans);
+  cursor: pointer;
+  transition:
+    color 150ms ease,
+    scale 160ms var(--ease-out);
+}
+
+.play-share:hover,
+.play-theme-actions button:hover {
+  color: var(--fg);
+}
+
+/* Reset and Copy float in the code's corner, as comark-code's buttons do, and leave the bar to the panes and the
+   link. Their backdrop is the pane's, so code scrolling under them doesn't show through. */
+.play-tools {
+  position: absolute;
+  top: 3.25rem;
+  right: 1rem;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 2px;
+  border-radius: var(--r-sm);
+  background: var(--soft);
+}
+
+/* Square twins of Copy link: the same outline, height, and press. */
+.play-reset,
+.play-copy {
+  display: grid;
+  place-items: center;
+  width: 1.625rem;
+  height: 1.625rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: var(--bg);
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--muted);
+  cursor: pointer;
+  transition:
+    color 150ms ease,
+    scale 160ms var(--ease-out);
+}
+
+.play-reset svg,
+.play-copy svg {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.play-reset:hover,
+.play-copy:hover {
+  color: var(--fg);
+}
+
+.play-reset[hidden],
+.play-tools[hidden],
+.play-theme-actions [hidden] {
+  display: none;
+}
+
+.play-confirm {
+  width: min(22rem, 100% - 2rem);
+  padding: 1.25rem;
+  border: 0;
+  border-radius: var(--r-md);
+  background: var(--bg);
+  box-shadow: 0 0 0 1px var(--line);
+  color: var(--muted);
+  transition:
+    opacity 150ms ease-out,
+    scale 150ms ease-out,
+    display 150ms allow-discrete,
+    overlay 150ms allow-discrete;
+}
+
+@starting-style {
+  .play-confirm[open] {
+    opacity: 0;
+    scale: 0.97;
+  }
+}
+
+.play-confirm::backdrop {
+  background: rgb(0 0 0 / 0.3);
+}
+
+.play-confirm h2 {
+  margin: 0 0 0.25rem;
+  padding: 0;
+  border: 0;
+  letter-spacing: normal;
+  color: var(--fg);
+  font: 600 0.9375rem/1.4 var(--sans);
+}
+
+.play-confirm p {
+  margin: 0 0 1rem;
+  font-size: 0.8125rem;
+  text-wrap: pretty;
+}
+
+.play-confirm div {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.play-confirm button {
+  padding: 0.375rem 0.75rem;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: var(--bg);
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--fg);
+  font: 500 0.8125rem/1.5 var(--sans);
+  cursor: pointer;
+  transition: scale 160ms var(--ease-out);
+}
+
+.play-confirm button[value="reset"] {
+  background: var(--fg);
+  box-shadow: none;
+  color: var(--bg);
+}
+
+.play-confirm button:active {
+  scale: 0.97;
+}
+
+/* The textarea sits over a colored copy of its text in one grid cell; the copy sets the height and the box scrolls. */
+.play-code {
+  display: grid;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  background: var(--soft);
+}
+
+.play-code > *,
+.play-paint pre {
+  grid-area: 1 / 1;
+}
+
+.play-paint {
+  display: grid;
+  pointer-events: none;
+}
+
+.play-paint pre,
+.play-code textarea {
+  margin: 0;
+  padding: 1rem;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: none !important;
+  color: var(--fg);
+  font: 0.8125rem/1.65 var(--mono);
+  tab-size: 2;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.play-paint code {
+  font: inherit;
+}
+
+.play-code textarea {
+  overflow: hidden;
+  outline: none;
+  color: transparent;
+  caret-color: var(--fg);
+  resize: none;
+}
+
+.play-code textarea::selection {
+  background: color-mix(in oklch, var(--fg) 18%, transparent);
+}
+
+/* The Theme pane: the preview's scheme and preset over a row per token, each a swatch or slider and the value it
+   writes, then free CSS. */
+.play-theme {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 1rem;
+  min-height: 0;
+  padding: 1rem;
+  overflow-y: auto;
+  background: var(--soft);
+  color: var(--fg);
+  font-size: 0.8125rem;
+}
+
+.play-theme[hidden] {
+  display: none;
+}
+
+.play-theme-bar,
+.play-theme-field {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.play-theme-actions {
+  display: flex;
+  gap: 0.375rem;
+}
+
+.play-theme label,
+.play-theme-field > span {
+  font-weight: 500;
+}
+
+.play-tokens {
+  display: grid;
+  grid-template-columns: minmax(0, 9.5rem) 6.5rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+}
+
+.play-tokens label {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.35;
+}
+
+.play-tokens code {
+  padding: 0;
+  overflow: hidden;
+  background: none;
+  box-shadow: none;
+  color: var(--faint);
+  font: 0.6875rem/1.4 var(--mono);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.play-theme input[type="text"],
+.play-theme input[type="color"],
+.play-theme textarea {
+  height: 1.75rem;
+  margin: 0;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: var(--bg);
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--fg);
+}
+
+.play-theme input[type="text"] {
+  min-width: 0;
+  padding: 0 0.5rem;
+  font: 0.75rem/1 var(--mono);
+}
+
+.play-theme input::placeholder,
+.play-theme textarea::placeholder {
+  color: var(--faint);
+}
+
+.play-theme input[type="color"] {
+  width: 100%;
+  padding: 3px;
+  cursor: pointer;
+}
+
+.play-theme input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.play-theme input[type="color"]::-webkit-color-swatch {
+  border: 0;
+  border-radius: 4px;
+}
+
+.play-theme input[type="color"]::-moz-color-swatch {
+  border: 0;
+  border-radius: 4px;
+}
+
+.play-theme input[type="range"] {
+  width: 100%;
+  margin: 0;
+  accent-color: var(--fg);
+}
+
+.play-theme :is(input, textarea):focus-visible {
+  outline: 2px solid var(--fg);
+  outline-offset: 1px;
+}
+
+.play-theme-extra {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.375rem;
+}
+
+.play-theme-extra summary {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  width: fit-content;
+  color: var(--fg);
+  font-weight: 500;
+  cursor: pointer;
+  list-style: none;
+}
+
+.play-theme-extra summary::-webkit-details-marker {
+  display: none;
+}
+
+.play-theme-extra summary::after {
+  content: "";
+  width: 0.375rem;
+  height: 0.375rem;
+  border: solid currentColor;
+  border-width: 0 1.5px 1.5px 0;
+  color: var(--muted);
+  rotate: -45deg;
+  transition: rotate 150ms var(--ease-out);
+}
+
+.play-theme-extra[open] summary::after {
+  rotate: 45deg;
+}
+
+.play-theme-extra p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.play-theme textarea {
+  min-height: 8rem;
+  height: auto;
+  padding: 0.5rem;
+  font: 0.75rem/1.6 var(--mono);
+  resize: vertical;
+}
+
+.play-issues {
+  flex: none;
+  max-height: 30%;
+  margin: 0;
+  padding: 0.75rem 1rem;
+  overflow-y: auto;
+  border-top: 1px solid var(--line);
+  color: oklch(0.55 0.15 50);
+  font-size: 0.8125rem;
+  list-style: none;
+}
+
+.play-issues li + li {
+  margin-top: 0.375rem;
+}
+
+.play-preview {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: var(--bg);
+}
+
+@media (max-width: 60rem) {
+  .play {
+    grid-template-rows: 50% 50%;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .play-editor {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+}
+
+/* The playground's presets: a still of each example over its name, the whole card a link. */
+.tool-index .nav-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tool-index .nav-group .ci {
+  color: var(--faint);
+}
+
+.presets {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.preset {
+  position: relative;
+  border-radius: var(--r-md);
+  transition: scale 150ms ease;
+}
+
+/* The frame sits over the still and the name's divider, so neither covers its edge. */
+.preset::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px var(--line);
+  pointer-events: none;
+  transition: box-shadow 150ms ease;
+}
+
+.preset:hover::before {
+  box-shadow: inset 0 0 0 1px var(--faint);
+}
+
+.preset:active {
+  scale: 0.98;
+}
+
+.preset:has(a[aria-current])::before {
+  box-shadow: inset 0 0 0 1.5px var(--fg);
+}
+
+/* Its size comes from the grid and its height, so the browser can skip laying out a still that's off screen. */
+.preset-thumb {
+  height: 6rem;
+  overflow: hidden;
+  content-visibility: auto;
+  border-radius: var(--r-md) var(--r-md) 0 0;
+  background: var(--bg);
+  pointer-events: none;
+}
+
+/* Laid out at a page's width, then scaled to its card: the playground fits each one, and until it runs, they fill
+   the card's width. */
+.preset-page {
+  width: 40rem;
+  padding: 1.5rem;
+  transform: scale(0.23);
+  transform-origin: 0 0;
+}
+
+.preset-page > :first-child {
+  margin-top: 0;
+}
+
+.preset-player {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 16 / 9;
+  background: var(--soft);
+  color: var(--faint);
+}
+
+.tool-index .preset > a {
+  display: block;
+  overflow: hidden;
+  margin: 0;
+  padding: 0.3rem 0.625rem 0.375rem;
+  font-size: 0.75rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-top: 1px solid var(--line);
+  border-radius: 0 0 var(--r-md) var(--r-md);
+  background: none;
+}
+
+/* The link covers the card, so the still opens the preset too. */
+.tool-index .preset > a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--r-md);
+}
+
+.tool-index .preset > a:focus-visible {
+  outline: none;
+}
+
+.preset:has(a:focus-visible) {
+  outline: 2px solid var(--fg);
+  outline-offset: 2px;
+}
+
+/* The copy icon gives way to a check while the Markdown is on the clipboard. */
+.play-share:active,
+.play-theme-actions button:active,
+.play-reset:active,
+.play-copy:active {
+  scale: 0.97;
+}
+
+.play-copy svg {
+  grid-area: 1 / 1;
+  transition:
+    opacity 200ms var(--ease-out),
+    scale 200ms var(--ease-out),
+    filter 200ms var(--ease-out);
+}
+
+.play-copy .check,
+.play-copy.copied svg:not(.check) {
+  opacity: 0;
+  scale: 0.25;
+  filter: blur(2px);
+}
+
+.play-copy.copied .check {
+  opacity: 1;
+  scale: 1;
+  filter: none;
+  color: #16a34a;
+}
+
+/* Touch: every control at least 40px tall, and the editor at 16px so iOS doesn't zoom into it. */
+@media (pointer: coarse) {
+  .play-share,
+  .play-theme-actions button,
+  .play-confirm button,
+  .play-theme input:is([type="text"], [type="color"]) {
+    min-height: 2.5rem;
+  }
+
+  .play-reset,
+  .play-copy {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  .play-paint pre,
+  .play-code textarea,
+  .play-theme :is(input, textarea) {
+    font-size: 1rem;
+  }
+}
