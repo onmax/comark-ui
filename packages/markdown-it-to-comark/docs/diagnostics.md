@@ -19,15 +19,15 @@ The same code covers a function of yours that configures an instance it's given 
 
 | markdown-it plugin | comark-ui |
 | --- | --- |
-| markdown-it-footnote | [comark-footnotes](https://comark-ui.onmax.me/footnotes/) |
-| markdown-it-anchor, markdown-it-link-attributes | [comark-links](https://comark-ui.onmax.me/links/) |
-| markdown-it-table-of-contents, markdown-it-toc-done-right | [comark-outline](https://comark-ui.onmax.me/outline/) |
-| markdown-it-katex, markdown-it-texmath | [comark-mathml](https://comark-ui.onmax.me/math/) |
-| markdown-it-github-alerts | [comark-github](https://comark-ui.onmax.me/github/) |
-| markdown-it-deflist | [comark-deflist](https://comark-ui.onmax.me/deflist/) |
-| markdown-it-mark, -ins, -sub, -sup | [comark-mark](https://comark-ui.onmax.me/mark/) |
-| markdown-it-container | [comark-details](https://comark-ui.onmax.me/details/) |
-| markdown-it-multimd-table | [comark-table](https://comark-ui.onmax.me/table/) |
+| markdown-it-footnote | [comark-footnotes](/footnotes) |
+| markdown-it-anchor, markdown-it-link-attributes | [comark-links](/links) |
+| markdown-it-table-of-contents, markdown-it-toc-done-right | [comark-outline](/outline) |
+| markdown-it-katex, markdown-it-texmath | [comark-mathml](/math) |
+| markdown-it-github-alerts | [comark-github](/github) |
+| markdown-it-deflist | [comark-deflist](/deflist) |
+| markdown-it-mark, -ins, -sub, -sup | [comark-mark](/mark) |
+| markdown-it-container | [comark-details](/details) |
+| markdown-it-multimd-table | [comark-table](/table) |
 
 ## mic0103
 

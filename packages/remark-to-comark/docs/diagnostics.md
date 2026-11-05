@@ -19,18 +19,18 @@ The same code covers react-markdown's `remarkPlugins` and `rehypePlugins`. Swap 
 
 | remark plugin | comark-ui |
 | --- | --- |
-| remark-gfm footnotes | [comark-footnotes](https://comark-ui.onmax.me/footnotes/) |
-| rehype-autolink-headings, rehype-external-links | [comark-links](https://comark-ui.onmax.me/links/) |
-| remark-toc, rehype-toc | [comark-outline](https://comark-ui.onmax.me/outline/) |
-| remark-reading-time | [comark-reading-time](https://comark-ui.onmax.me/reading-time/) |
-| remark-math, rehype-katex, rehype-mathjax | [comark-mathml](https://comark-ui.onmax.me/math/) |
-| remark-github-blockquote-alert, remark-github | [comark-github](https://comark-ui.onmax.me/github/) |
-| Docusaurus npm2yarn | [comark-tabs](https://comark-ui.onmax.me/tabs/) |
-| remark-deflist | [comark-deflist](https://comark-ui.onmax.me/deflist/) |
-| rehype-figure | [comark-figure](https://comark-ui.onmax.me/figure/) |
-| remark-embedder, remark-oembed | [comark-embed](https://comark-ui.onmax.me/embed/) |
-| remark-kbd | [comark-keys](https://comark-ui.onmax.me/keys/) |
-| remark-supersub | [comark-mark](https://comark-ui.onmax.me/mark/) |
+| remark-gfm footnotes | [comark-footnotes](/footnotes) |
+| rehype-autolink-headings, rehype-external-links | [comark-links](/links) |
+| remark-toc, rehype-toc | [comark-outline](/outline) |
+| remark-reading-time | [comark-reading-time](/reading-time) |
+| remark-math, rehype-katex, rehype-mathjax | [comark-mathml](/math) |
+| remark-github-blockquote-alert, remark-github | [comark-github](/github) |
+| Docusaurus npm2yarn | [comark-tabs](/tabs) |
+| remark-deflist | [comark-deflist](/deflist) |
+| rehype-figure | [comark-figure](/figure) |
+| remark-embedder, remark-oembed | [comark-embed](/embed) |
+| remark-kbd | [comark-keys](/keys) |
+| remark-supersub | [comark-mark](/mark) |
 
 ## rtc0103
 
@@ -50,7 +50,7 @@ The same code covers react-markdown's `remarkPlugins` and `rehypePlugins`. Swap 
 
 ## rtc0107
 
-**A lint plugin.** Lint Comark documents with [comark-linter](https://comark-ui.onmax.me/lint/), as a CLI or a Vite Doctor extension.
+**A lint plugin.** Lint Comark documents with [comark-linter](/lint), as a CLI or a Vite Doctor extension.
 
 ## rtc0201
 
