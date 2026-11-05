@@ -5,6 +5,7 @@ export const excludedLinks = [
   /^\/ducks\//,
   /^\/ponds\/?/,
   /^\/doctor\/ducks?\.md$/,
+  /^\/doctor\/xref\/(pond|pigeon)\.png$/,
   /^\/(pond-tour|spinner)\.mp4$/,
   /^\/roof\.mp3$/,
   /pond\.example\//,
