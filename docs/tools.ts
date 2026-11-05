@@ -2,12 +2,14 @@
 // pages use: docs/.generated/tools/ is served as is (each gallery cell's document, the presets' stills, the preview's
 // stylesheet), and docs/.generated/tools-data/ is imported by the pages in docs/app/pages/play/. Rendering every
 // example takes seconds and Shiki, so it runs once before Nuxt, like docs/content.ts, instead of on every request.
+import { fileURLToPath } from "node:url";
 import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync, existsSync } from "node:fs";
 import { renderHtmlFromDocument } from "@comark/html";
 import { icons as lucide } from "@iconify-json/lucide";
 import { parseMarkdown } from "comark";
 import { escapeHtml } from "comark/utils";
 import { parse } from "yaml";
+import { build } from "vite";
 import { css as criticCss } from "../packages/critic/src/index.ts";
 import { defaultConfig } from "./config.ts";
 import { highlighted, sitePlugins, withoutFor } from "./example-plugins.ts";
@@ -197,6 +199,15 @@ for (const font of ["geist-sans/Geist-Variable.woff2", "geist-mono/GeistMono-Var
     new URL(`node_modules/geist/dist/fonts/${font}`, repo),
     new URL(`play/fonts/${font.split("/")[1]}`, out),
   );
+
+// The rich-text editor is its own Vite app in packages/ui/playground, served as is at /play/editor/.
+await build({
+  configFile: false,
+  logLevel: "warn",
+  root: fileURLToPath(new URL("packages/ui/playground/", repo)),
+  base: "/play/editor/",
+  build: { outDir: fileURLToPath(new URL("play/editor/", out)), emptyOutDir: true },
+});
 
 console.log(
   `docs/.generated/tools/ written (${presets.length} presets, ${examples.length} examples)`,

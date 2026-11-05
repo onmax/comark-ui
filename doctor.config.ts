@@ -32,8 +32,8 @@ export default defineDoctorConfig({
       ],
       links: {
         // As docs/content.ts copies them: a package's pages come from its docs/, the rest from docs/pages, and files
-        // from docs/public. The tools are Nuxt pages in docs/app/pages, and the rich-text editor at /play/editor/
-        // isn't ported to the docs app yet (docs/link-excludes.ts).
+        // from docs/public. The tools are Nuxt pages in docs/app/pages, and docs/tools.ts builds the rich-text editor
+        // at /play/editor/.
         routes(path) {
           // @vite-hub/docs also serves llms.txt and each page's Markdown copy.
           if (path === "/llms.txt" || path === "/index.md") return true;

@@ -60,6 +60,7 @@
     "@vite-hub/source": "catalog:",
     "drizzle-kit": "catalog:",
     "typescript": "catalog:",
+    "vite": "catalog:",
     "vue-tsc": "^3.2.0",
     "wrangler": "catalog:",
     "yaml": "^2.9.1"

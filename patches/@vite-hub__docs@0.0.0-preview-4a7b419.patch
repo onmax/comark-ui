@@ -213,24 +213,47 @@ index 8fc02a635e7765cd62956eaa917ca6ca8b0e6dd2..6864a4edd1c05f8a2e45b3a91071b2d5
  import { existsSync, readFileSync, readdirSync } from "node:fs";
  import { dirname, join, relative } from "node:path";
 diff --git a/dist/runtime/app/app.vue b/dist/runtime/app/app.vue
-index 8c80e9bc42cc3bbc13884499ad849f3e8ff4d2d6..349eed43645f4e6a766c3a0b96216584dae6c718 100644
+index 8c80e9bc42cc3bbc13884499ad849f3e8ff4d2d6..e089b4f5789012b83438bf88e9347e409c4c6df3 100644
 --- a/dist/runtime/app/app.vue
 +++ b/dist/runtime/app/app.vue
 @@ -2,11 +2,13 @@
  import { docsAppPath, normalizeDocsPath } from "#docs/navigation"
  
  const route = useRoute()
-+const loose = (text: string) => text.toLowerCase().replace(/[^\p{L}\p{N}]/gu, "")
++const words = (text: string) => ` ${text.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim()} `
  const { site, appBase } = useDocsConfig()
  
  useHead({
    // One title pattern for every page: "KV configuration · ViteHub". A title that already names the site stays as written.
 -  titleTemplate: title => !title ? site.name : title.includes(site.name) ? title : `${title} · ${site.name}`,
 +  // The check ignores case and punctuation, so "Comark UI" counts as naming `comark-ui`.
-+  titleTemplate: title => !title ? site.name : loose(title).includes(loose(site.name)) ? title : `${title} · ${site.name}`,
++  titleTemplate: title => !title ? site.name : words(title).includes(words(site.name)) ? title : `${title} · ${site.name}`,
    // One canonical URL per page: the configured origin, no trailing slash, and no query.
    link: site.url ? [{ rel: "canonical", href: () => `${site.url}${docsAppPath(normalizeDocsPath(route.path), appBase).replace(/\/+$/, "")}` }] : [],
  })
+diff --git a/dist/runtime/app/components/AppHeader.vue b/dist/runtime/app/components/AppHeader.vue
+index 442070db8963535ad32b1e6da1addcea2497e386..6a5b3ed3934d109da613bbe93f902f7a46aebeb0 100644
+--- a/dist/runtime/app/components/AppHeader.vue
++++ b/dist/runtime/app/components/AppHeader.vue
+@@ -81,6 +81,8 @@ const touchIconButton = "pointer-coarse:size-11 max-[22.5rem]:pointer-coarse:w-1
+       </template>
+ 
+       <template #right>
++        <!-- Empty here: an app adds its own items with a `DocsHeaderActions` component, such as the package a playground shows. -->
++        <DocsHeaderActions />
+         <UContentSearchButton
+           :collapsed="false"
+           :kbds="['meta', 'K']"
+diff --git a/dist/runtime/app/components/DocsHeaderActions.vue b/dist/runtime/app/components/DocsHeaderActions.vue
+new file mode 100644
+index 0000000000000000000000000000000000000000..ca514dac2b90550e29852e6164c2f3445751b0f8
+--- /dev/null
++++ b/dist/runtime/app/components/DocsHeaderActions.vue
+@@ -0,0 +1,4 @@
++<!-- Items before the search button in the site header. An app's own `DocsHeaderActions` component replaces this one. -->
++<template>
++  <span class="contents" />
++</template>
 diff --git a/dist/runtime/app/components/DocsPage.vue b/dist/runtime/app/components/DocsPage.vue
 index 31ab4afa88f7d12c59313a7c8da59b5db30c7303..e845542268a593b005e1815d99eb67671991aa79 100644
 --- a/dist/runtime/app/components/DocsPage.vue
@@ -342,7 +365,7 @@ index be05168eb5549bd3abfb7f73766f907ba2e8d65d..f476cf84baa3a70c1730ed4c023a1b09
  }
 diff --git a/dist/runtime/app/composables/seo.ts b/dist/runtime/app/composables/seo.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..37252d57742e0a1252635de8f54fbc2041d43c25
+index 0000000000000000000000000000000000000000..1fa22eefc5645efb89c884256212f2815fd943d9
 --- /dev/null
 +++ b/dist/runtime/app/composables/seo.ts
 @@ -0,0 +1,59 @@
@@ -381,7 +404,7 @@ index 0000000000000000000000000000000000000000..37252d57742e0a1252635de8f54fbc20
 +  }
 +  else if (input.image) {
 +    const image = /^https?:\/\//.test(input.image) ? input.image : `${site.url}${docsAppPath(input.image, appBase)}`
-+    useSeoMeta({ ogImage: image, twitterImage: image })
++    useSeoMeta({ ogImage: image, ogImageUrl: null, ogImageSecureUrl: null, ogImageType: null, ogImageWidth: null, ogImageHeight: null, ogImageAlt: null, twitterImage: image, twitterImageAlt: null })
 +  }
 +  else if (ogImage) {
 +    // SAFETY: `ogImage.component` is an OgImage component; the default ships with this package, and an app names its own.
