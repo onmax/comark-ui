@@ -83,6 +83,8 @@ function restoreUnresolvedFootnoteRefs(state: {
   const definitions = state.footnote;
   const rewrite = (value: unknown): unknown => {
     if (!Array.isArray(value)) return value;
+    // Highlighted code is spans too, and `[^1]` in it already has its brackets.
+    if (value[0] === "pre" || value[0] === "code") return value;
     if (
       value[0] === "span" &&
       value.length === 3 &&

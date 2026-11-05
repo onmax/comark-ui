@@ -1,6 +1,8 @@
 import { createHtmlRenderer } from "@comark/html";
 import { createMarkdownParser, parseMarkdown, type ParserOptions } from "comark";
 import footnotes from "comark/plugins/footnotes";
+import highlight from "comark/plugins/highlight";
+import { textContent } from "comark/utils";
 import { describe, expect, it } from "vite-plus/test";
 import mark from "../src/index.ts";
 
@@ -42,6 +44,16 @@ describe("comark-mark", () => {
     expect(await render(markdown, options)).toBe(flat(await createHtmlRenderer(options)(markdown)));
     expect(await render("x[^1][^2]", { registerDefaultPlugins: false })).toBe("<p>x[^1][^2]</p>");
     expect(await render("x[^1]")).toBe("<p>x[^1]</p>");
+  });
+
+  it("leaves footnote references in highlighted code as written", async () => {
+    // Shiki splits `[^1]` into spans, and one of them holds `^1` alone, as an unresolved reference would. A docs site
+    // highlights before its own plugins run.
+    const source = "Pigeons[^1].\n\n[^1]: On the roof.";
+    const { nodes } = await parseMarkdown(`\`\`\`md\n${source}\n\`\`\``, {
+      plugins: [highlight(), mark()],
+    });
+    expect(textContent(nodes[0]!)).toBe(source);
   });
 
   it("renders without Comark's default plugins", async () => {
