@@ -3,6 +3,7 @@ import { copyFileSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vite-plus/test";
+import { site } from "../docs/paths.ts";
 
 const check = (html: string, files: Record<string, string> = {}) => {
   const dir = mkdtempSync(join(tmpdir(), "comark-docs-links-"));
@@ -129,6 +130,24 @@ describe("built docs links", () => {
     `);
     expect(result.stderr).toBe("");
     expect(result.status).toBe(0);
+  });
+
+  it("keeps playground links on the live app while the docs app has no playground", () => {
+    const paths = [
+      "/play",
+      "/play/",
+      "/play/#preset=code-copy-and-wrap",
+      "/play#md=eJx-test_123",
+      "/play/editor/",
+      "/play?theme=dark#md=eJx-test_123",
+    ];
+    const links = paths.map(site);
+    expect(links).toEqual(paths.map((path) => `https://comark-ui.onmax.me${path}`));
+    const result = check(links.map((link) => `<a href="${link}">Playground</a>`).join(""));
+    expect(result.stderr).toBe("");
+    expect(result.status).toBe(0);
+    expect(site("/zoom/#theme")).toBe("/zoom#theme");
+    expect(site("/playwright/")).toBe("/playwright");
   });
 
   it("still checks redirects and static page fragments", () => {
