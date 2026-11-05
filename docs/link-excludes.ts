@@ -1,5 +1,5 @@
 // Doctor rule examples link to made-up files and a javascript: URL on purpose, so neither the link checker nor the
-// prerenderer follows them. Playground links point at the live site during the docs migration.
+// prerenderer follows them. The rich-text editor (packages/ui/playground) isn't part of the docs app yet.
 export const excludedLinks = [
   /^\/census$/,
   /^\/ducks\//,
@@ -10,5 +10,5 @@ export const excludedLinks = [
   /^\/roof\.mp3$/,
   /pond\.example\//,
   /^javascript:/,
-  /^https:\/\/comark-ui\.onmax\.me\/play(?:\/|#|\?|$)/,
+  /^\/play\/editor\/?$/,
 ];

@@ -74,6 +74,10 @@ export default defineNuxtConfig({
     // bindings into docs/dist/server/wrangler.json, which the local Wrangler module selects for commands run from the repository's root.
     cloudflare: { deployConfig: true, nodeCompat: true },
     output: { dir: fileURLToPath(new URL("dist/", import.meta.url)) },
-    prerender: { ignore: excludedLinks },
+    // docs/tools.ts renders the playground's presets and the gallery's cells there, before Nuxt starts.
+    publicAssets: [
+      { dir: fileURLToPath(new URL(".generated/tools/", import.meta.url)), baseURL: "/" },
+    ],
+    prerender: { ignore: excludedLinks, routes: ["/play", "/play/gallery", "/badges"] },
   },
 });

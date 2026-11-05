@@ -37,7 +37,7 @@ function link(text: string, repo: string | undefined): Node[] {
 
 function walk(nodes: Node[], start: number, repo: string | undefined) {
   for (let index = nodes.length - 1; index >= start; index--) {
-    const node = nodes[index];
+    const node = nodes[index]!;
     if (!Array.isArray(node)) {
       nodes.splice(index, 1, ...link(node, repo));
       continue;

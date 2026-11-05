@@ -41,9 +41,9 @@ Each entry exports the parse plugin as `default` and the renderer's `components`
 
 Each color reads a shared token, such as `--comark-primary`, which follows the page's Nuxt UI or shadcn/ui variables, so badges match the app. Set `--cb-*` to change a color and the shared `--comark-*` tokens to theme every plugin at once. Any plain rule of your own wins.
 
-## SVG badges
+## SVG badges and builder
 
-Write SVG badges in Comark or use the [hosted image endpoint](https://comark-ui.onmax.me/badge/#build-a-readme-badge) in a README. Choose the default, npmx, Nuxt, flat, or for-the-badge preset, with automatic light/dark colors and built-in logos.
+Use the [builder](https://comark-ui.onmax.me/badges/) to preview, share, and export badges as SVG, Markdown, or Comark. Choose the default, npmx, Nuxt, flat, or for-the-badge preset, with automatic light/dark colors and built-in logos.
 
 ```md
 :badge[Comark UI]{label="built with" icon="package" color="success"}

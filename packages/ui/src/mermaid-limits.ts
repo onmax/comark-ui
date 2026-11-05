@@ -35,7 +35,7 @@ export default defineComarkPlugin<MermaidOptions, Meta>(
       for (const [n, node] of diagramsOf(tree.nodes).entries()) {
         // SAFETY: comark-pele writes the fence's text on every node as `content`.
         const content = node[1].content as string;
-        const why =
+        const why: [string, string] | undefined =
           drawn >= maxDiagrams
             ? [
                 "comark/mermaid/too-many-diagrams",
