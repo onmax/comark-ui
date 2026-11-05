@@ -18,6 +18,12 @@ describe("comark-colors", () => {
     expect(html.match(/<style data-comark-colors>/g)).toHaveLength(1);
   });
 
+  it("keeps a color on one line with its swatch, so it never splits into two values", async () => {
+    const html = await render("Its hover moves from `rgb(37 99 235)` to `hsl(226 71% 40%)`.");
+    expect(html).toContain(swatch("rgb(37 99 235)"));
+    expect(html).toMatch(/\.cco\{white-space:nowrap\}/);
+  });
+
   it("reads hex, rgb(), hsl(), hwb(), lab(), lch(), oklab(), and oklch() colors", async () => {
     for (const value of [
       "#fff",
