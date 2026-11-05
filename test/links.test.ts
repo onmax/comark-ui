@@ -84,13 +84,36 @@ describe("built docs links", () => {
     expect(result.status).toBe(0);
   });
 
-  it("excludes the illustrative images in Doctor's cross-reference examples", () => {
+  it("excludes the deliberately broken links in Doctor's rendered examples", () => {
     const result = check("", {
+      "doctor/broken-anchor.html": '<a href="#methods">Method</a><h2 id="method">Method</h2>',
+      "doctor/chips/invalid-avatar.html": '<img src="octocat">',
+      "doctor/xref/inline-figure.html": '<img src="roof.png">',
+      "doctor/xref/missing-id.html": '<img src="ducks.png">',
       "doctor/xref/ref-content.html": '<img src="pond.png">',
       "doctor/xref/unknown-label.html": '<img src="pigeon.png">',
     });
     expect(result.stderr).toBe("");
     expect(result.status).toBe(0);
+  });
+
+  it("still checks other Doctor fragments and similarly named example assets", () => {
+    const result = check('<a href="#methods">Missing heading</a>', {
+      "doctor/broken-anchor.html": '<a href="#typo">Missing heading</a>',
+      "doctor/chips/invalid-avatar.html": '<img src="octocat.png">',
+      "doctor/xref/inline-figure.html": '<img src="roof-typo.png">',
+      "guide/example.html": '<img src="roof.png">',
+    });
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("5 broken links");
+    expect(result.stderr).toContain('no heading or element with the id "methods"');
+    expect(result.stderr).toContain('no heading or element with the id "typo"');
+    for (const path of [
+      "/doctor/chips/octocat.png",
+      "/doctor/xref/roof-typo.png",
+      "/guide/roof.png",
+    ])
+      expect(result.stderr).toContain(`links to ${path}, which has no page or file.`);
   });
 
   it("resolves the docs app's flat page URLs and their fragments", () => {

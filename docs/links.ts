@@ -66,7 +66,15 @@ for (const file of files) {
   for (const link of linksOf(html)) {
     const url = new URL(link, `${SITE}${page}`);
     if (url.origin !== SITE) continue;
-    if (excludedLinks.some((pattern) => pattern.test(link) || pattern.test(url.pathname))) continue;
+    if (
+      excludedLinks.some(
+        (pattern) =>
+          pattern.test(link) ||
+          pattern.test(url.pathname) ||
+          pattern.test(`${url.pathname}${url.hash}`),
+      )
+    )
+      continue;
     const moved = redirectTarget(url);
     if (moved) {
       problems.add(
