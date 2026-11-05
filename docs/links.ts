@@ -105,7 +105,13 @@ for (const file of files) {
       if (problem) problems.add(`${page} links to the playground, but ${problem}. Fix the link.`);
       continue;
     }
-    if (excludedLinks.some((pattern) => pattern.test(link) || pattern.test(url.pathname))) continue;
+    if (
+      excludedLinks.some(
+        (pattern) =>
+          pattern.test(link) || pattern.test(url.pathname) || pattern.test(url.pathname + url.hash),
+      )
+    )
+      continue;
     const moved = redirectTarget(url);
     if (moved) {
       problems.add(
