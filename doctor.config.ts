@@ -23,6 +23,7 @@ export default defineDoctorConfig({
         "hero",
         "incorrect",
         "landing-hero",
+        "landing-footer",
         "matrix",
         "packages",
         "rules",
