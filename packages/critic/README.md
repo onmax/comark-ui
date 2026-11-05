@@ -41,7 +41,7 @@ Without the plugin, Comark reads `{++added++}` as attributes and drops the whole
 
 ## Styles
 
-The marks' styles are in `comark-critic/style.css`, also exported as `css`: insertions tinted green, deletions struck through in red, highlights amber, and comments as muted chips. Each mark has a class (`ccm-ins`, `ccm-del`, `ccm-mark`, `ccm-comment`), so they never restyle a `~~strikethrough~~`. They read the [shared tokens](https://comark-ui.onmax.me/guide/#theme), so a shadcn/ui theme restyles them, and sit in the `comark` layer so your own rules win.
+The marks' styles are in `comark-critic/style.css`, also exported as `css`: insertions tinted green, deletions struck through in red, highlights amber, and comments as muted notes with a speech bubble. Each mark has a class (`ccm-ins`, `ccm-del`, `ccm-mark`, `ccm-comment`), so they never restyle a `~~strikethrough~~`. They read the [shared tokens](https://comark-ui.onmax.me/guide/#theme), so a shadcn/ui theme restyles them, and sit in the `comark` layer so your own rules win.
 
 ## Credits
 
