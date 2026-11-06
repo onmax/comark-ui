@@ -22,8 +22,13 @@ const kept = new Set([
   "toc",
   "sidebar",
 ]);
+// scribble-loop is the landing's own SVG (landing.ts); Lucide has none, so the rail would draw nothing.
 const icon = (name: string) =>
-  name.includes(":") || name.startsWith("i-") ? name : `i-lucide-${name}`;
+  name === "scribble-loop"
+    ? "i-lucide-pen-tool"
+    : name.includes(":") || name.startsWith("i-")
+      ? name
+      : `i-lucide-${name}`;
 const plain = (text: string) =>
   text.replace(/`([^`]*)`/g, "$1").replace(/\*\*?([^*]+)\*\*?/g, "$1");
 
