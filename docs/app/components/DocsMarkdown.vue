@@ -28,4 +28,30 @@ const componentsManifest = (tag: string) => contentComponents[tag]?.();
 .comark-content .ck > pre {
   overflow-x: auto;
 }
+
+/* comark-links draws the page's headings, so Nuxt UI's ProseH2 never styles them. These are its sizes and spacing.
+   The `.cl-heading` row takes the margins, since a flex row's margins don't collapse into its heading's. */
+.docs-content > .comark-content > :is(h2, h3, h4),
+.docs-content > .comark-content > .cl-heading > :is(h2, h3, h4) {
+  color: var(--ui-text-highlighted);
+  font-weight: 700;
+}
+.docs-content > .comark-content > .cl-heading > :is(h2, h3, h4) {
+  margin: 0;
+}
+.docs-content > .comark-content > :is(h2, .cl-heading:has(> h2)) {
+  margin: 3rem 0 1.5rem;
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
+.docs-content > .comark-content > :is(h3, .cl-heading:has(> h3)) {
+  margin: 2rem 0 0.75rem;
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+}
+.docs-content > .comark-content > :is(h4, .cl-heading:has(> h4)) {
+  margin: 1.5rem 0 0.5rem;
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+}
 </style>
