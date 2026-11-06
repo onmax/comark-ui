@@ -6,7 +6,7 @@ import { dirname } from "node:path";
 import { parse, stringify } from "yaml";
 import { catalog, type RuleInfo } from "../packages/lint/src/rules/index.ts";
 import { site } from "./paths.ts";
-import { packageOrder, siteSections } from "./sections.ts";
+import { categories, packageOrder, railGroupOf, siteSections } from "./sections.ts";
 
 const repo = new URL("../", import.meta.url);
 const content = new URL("content/", import.meta.url);
@@ -86,10 +86,16 @@ for (const file of globSync("**/*.md", { cwd: pages.pathname })) {
   if (file.startsWith("partials/")) continue;
   write(file, page(new URL(file, pages), file.replace(/(^|\/)?index\.md$|\.md$/, "")).text);
 }
-for (const [id, section] of Object.entries(siteSections))
+// A sidebar lists its sections in this order, so they sort by category first: each category's heading shows once. In
+// a category, the site's own sections come before its packages, in packageOrder.
+const rank = (category: string, at: number) => categories.indexOf(category) * 1000 + at;
+for (const [id, { last, ...section }] of Object.entries(siteSections))
   write(
     `${id}/.navigation.yml`,
-    stringify({ ...section, order: Object.keys(siteSections).indexOf(id) }),
+    stringify({
+      ...section,
+      order: rank(section.category, last ? 999 : Object.keys(siteSections).indexOf(id)),
+    }),
   );
 
 // A rule page sits in its package's group in the Doctor sidebar, after the core rules.
@@ -112,15 +118,18 @@ packageOrder.forEach((name, order) => {
   for (const file of files) {
     const { frontmatter, text } = page(new URL(file, docs), `${name}/${file}`);
     write(`${name}/${file}`, text);
-    if (file === "index.md")
+    if (file === "index.md") {
+      const category = typeof frontmatter.group === "string" ? frontmatter.group : "Docs blocks";
       write(
         `${name}/.navigation.yml`,
         stringify({
           title: frontmatter.title,
           icon: icon(typeof frontmatter.icon === "string" ? frontmatter.icon : "box"),
-          order: Object.keys(siteSections).length + order,
-          category: frontmatter.group ?? "Docs blocks",
+          order: rank(category, 100 + order),
+          category,
+          group: railGroupOf(category),
         }),
       );
+    }
   }
 });
