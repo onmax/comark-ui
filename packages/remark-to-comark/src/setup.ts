@@ -1,5 +1,6 @@
 import type { ComarkPlugin, ParserOptions } from "comark";
 import html from "comark/plugins/html";
+import linkify from "comark/plugins/linkify";
 import taskList from "comark/plugins/task-list";
 import components from "comark/plugins/components";
 import attributes from "comark/plugins/attributes";
@@ -48,9 +49,10 @@ export function comarkSetup(options: SetupOptions = {}): ComarkSetup {
     autoClose: false,
     autoUnwrap: false,
   };
-  if (!gfm) parserOptions.linkify = false;
   return {
     plugins: [
+      // linkify-it's fuzzy mode finds `www.` links and `user:pass@` URLs; gfmLinks() then trims each to GFM's rules.
+      ...(gfm ? [linkify({ fuzzyLink: true, urlAuth: true })] : []),
       ...(options.frontmatter === false ? [] : [frontmatter()]),
       ...(options.html === false
         ? [dropHtml()]

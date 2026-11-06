@@ -39,11 +39,11 @@ describe("compare", () => {
   });
 
   it("reports text Comark reads as attributes", async () => {
-    const result = await both("Set it to {value} first.\n");
-    expect(result.differences[0]).toMatchObject({
-      category: "text",
-      expected: "Set it to {value} first.",
-    });
+    const result = await both("Set it to **bold**{value} first.\n");
+    expect(result.differences).toMatchObject([
+      { category: "attr:strong", expected: "<strong>", actual: "<strong value>" },
+      { category: "text", expected: "{value} first.", actual: " first." },
+    ]);
   });
 });
 

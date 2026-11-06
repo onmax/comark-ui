@@ -24,7 +24,7 @@ describe("comarkOptions reads Markdown like marked", () => {
   });
 
   it("names the block Comark reads differently", async () => {
-    const result = await both("Set {value} first.\n");
+    const result = await both("Set `it`{value} first.\n");
     expect(result.equal).toBe(false);
     expect(result.differences.map((difference) => difference.category).length).toBeGreaterThan(0);
   });

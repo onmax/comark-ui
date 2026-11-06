@@ -51,7 +51,7 @@
     "comark-zoom": "workspace:*"
   },
   "peerDependencies": {
-    "comark": "^0.8.0"
+    "comark": "^0.9.0"
   },
   "engines": {
     "node": ">=22.12.0"

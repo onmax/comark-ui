@@ -51,8 +51,8 @@
     "comark-zoom": "workspace:*"
   },
   "peerDependencies": {
-    "@comark/html": "^0.8.0",
-    "comark": "^0.8.0"
+    "@comark/html": "^0.9.0",
+    "comark": "^0.9.0"
   },
   "peerDependenciesMeta": {
     "@comark/html": {

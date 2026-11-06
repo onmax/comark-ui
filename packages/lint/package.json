@@ -100,7 +100,7 @@
   },
   "peerDependencies": {
     "@eslint/markdown": "^8.0.0",
-    "comark": "^0.8.0",
+    "comark": "^0.9.0",
     "comark-annotate": "workspace:^",
     "comark-badge": "workspace:^",
     "comark-cards": "workspace:^",

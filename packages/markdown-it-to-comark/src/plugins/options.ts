@@ -48,8 +48,9 @@ export const markdownItOptions = (options: MarkdownItOptions): ComarkPlugin => (
       // Comark builds its parser with tables and strikethrough on; a preset resets the rules to its own list.
       if (options.preset && options.preset !== "default") md.configure(options.preset);
       md.set({ html: Boolean(options.html) });
-      // Only what the project set: markdown-exit's own defaults are markdown-it's.
-      for (const name of ["typographer", "quotes", "breaks", "linkify"] as const)
+      // Only what the project set: markdown-exit's own defaults are markdown-it's. Comark's linkify plugin turns
+      // `linkify` on, since only it gives markdown-exit a linkify-it.
+      for (const name of ["typographer", "quotes", "breaks"] as const)
         if (options[name] !== undefined) md.set({ [name]: options[name] });
     },
   ],
