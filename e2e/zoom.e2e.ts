@@ -340,6 +340,37 @@ test("the copy isn't cut off by the aside's column on its way to the page and ba
   expect(await hit()).toBe(true);
 });
 
+for (const time of [0, 130, 259]) {
+  test(`a copy closes from where it is at ${time}ms into opening`, async ({ page }) => {
+    const rows = Array.from({ length: 80 }, (_, index) => `| ${index + 1} | ${index * 2} s |`);
+    await fixture(
+      page,
+      await render(`::zoom\n| Attempt | Wait |\n| --- | --- |\n${rows.join("\n")}\n::`),
+    );
+    // Open and pause in one task so even the last frame still has its overflow compensation.
+    await page.locator("main .cz").evaluate((node, time) => {
+      (node as HTMLElement).click();
+      for (const animation of document.getAnimations()) {
+        animation.pause();
+        animation.currentTime = time;
+      }
+    }, time);
+    await expect(page.locator(".cz-stage[data-scroll][data-flying]")).toHaveCount(1);
+    const before = await rect(page, ".cz-item");
+
+    await page.keyboard.press("Escape");
+    await page.evaluate(() => {
+      for (const animation of document.getAnimations()) {
+        animation.pause();
+        animation.currentTime = 0;
+      }
+    });
+    const after = await rect(page, ".cz-item");
+    expect(Math.round(after.top)).toBe(Math.round(before.top));
+    expect(Math.round(after.left)).toBe(Math.round(before.left));
+  });
+}
+
 test("a scrolled copy closes from where it is", async ({ page }) => {
   const rows = Array.from({ length: 80 }, (_, index) => `| ${index + 1} | ${index * 2} s |`);
   await fixture(

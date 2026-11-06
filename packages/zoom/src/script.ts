@@ -575,6 +575,8 @@ export function script(css: string): () => void {
   // way between the page and the stage the copy crosses them, so the stage lets it out and draws it above them. A stage
   // that stops clipping loses its scroll position and its scrollbar, so the copy is moved back to where it was.
   function fly(current: View) {
+    // An interrupted opening already has the compensation that closing must preserve.
+    if (current.stage.hasAttribute("data-flying")) return;
     const before = current.frame.getBoundingClientRect();
     current.stage.setAttribute("data-flying", "");
     const after = current.frame.getBoundingClientRect();
