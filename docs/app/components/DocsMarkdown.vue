@@ -24,9 +24,23 @@ const componentsManifest = (tag: string) => contentComponents[tag]?.();
 </template>
 
 <style>
-/* comark-code supplies the controls; the page supplies the code block's layout. */
+/* comark-code supplies the controls and the room for them at the top; the page supplies the code block's frame, as on
+   the old site: outlined in light mode, a flat panel in dark mode. Shiki writes its theme's background inline, which
+   only !important beats. */
+.comark-content .ck {
+  margin-block: 1.25rem;
+}
 .comark-content .ck > pre {
+  margin: 0;
+  padding-inline: 0.9rem;
+  padding-bottom: 0.8rem;
   overflow-x: auto;
+  border-radius: 10px;
+  background: var(--ui-bg-elevated) !important;
+  box-shadow: inset 0 0 0 1px var(--ui-border);
+}
+.dark .comark-content .ck > pre {
+  box-shadow: none;
 }
 
 /* comark-links draws the page's headings, so Nuxt UI's ProseH2 never styles them. These are its sizes and spacing.
