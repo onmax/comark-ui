@@ -192,6 +192,8 @@ onBeforeUnmount(() => stop?.());
       video.cm,
       .cn-notes,
       .comark-html:is(
+        [data-block="screenshot"],
+        [data-block="compare"],
         [data-block="diff"],
         [data-block="question"],
         [data-block="poll"],
