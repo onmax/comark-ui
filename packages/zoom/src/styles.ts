@@ -24,6 +24,7 @@ export const css = `@layer comark{${[
   ".cz-stage{position:relative;display:grid;grid-template:minmax(0,1fr)/minmax(0,1fr);place-items:center;overflow:hidden}",
   ".cz-stage[data-scroll]{grid-template-rows:auto;align-items:start;overflow-y:auto}",
   ".cz-stage[data-scroll]>.cz-item{transform-origin:top}",
+  ".cz-stage[data-flying]{z-index:1;overflow:visible}",
   ".cz-item{position:relative;transform-origin:center;cursor:auto}",
   // The backdrop lets a little of the page through, which would show between a table's rows. An image covers its box.
   ":where(.cz-item>:first-child:not(img)){background:var(--_comark-background)}",

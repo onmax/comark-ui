@@ -300,6 +300,71 @@ test("data-zoom-aside shows a copy beside the item, and the events map copies to
   });
 });
 
+test("the copy isn't cut off by the aside's column on its way to the page and back", async ({
+  page,
+}) => {
+  await fixture(
+    page,
+    (await render("![Plain](/before.png)")) +
+      '<figure class="shot"><img src="/before.png" alt="Chart" data-zoom tabindex="0" data-zoom-context=".shot" data-zoom-aside="figcaption"><figcaption>Sales by week</figcaption></figure>',
+    "main{width:1200px;margin:auto}img{width:1100px}",
+  );
+  const picture = page.locator("figure.shot img");
+  const item = await rect(page, "figure.shot img");
+  // Freezes every animation at its start, where the copy covers the item, or its end, where it's back over it.
+  const freeze = (at: "start" | "end") =>
+    page.evaluate((at) => {
+      for (const animation of document.getAnimations()) {
+        animation.pause();
+        animation.currentTime = at === "start" ? 0 : 199;
+      }
+    }, at);
+  // The item's right part lies over the aside's column, past the stage.
+  const hit = () =>
+    page.evaluate(
+      ([x, y]) => Boolean(document.elementFromPoint(x!, y!)?.closest(".cz-item")),
+      [item.right - 20, item.top + item.height / 2],
+    );
+  expect(item.right).toBeGreaterThan((await page.viewportSize())!.width - 352);
+
+  await picture.click();
+  await expect(page.locator(".cz-aside")).toHaveText("Sales by week");
+  await freeze("start");
+  expect(await hit()).toBe(true);
+  await page.evaluate(() => {
+    for (const animation of document.getAnimations()) animation.finish();
+  });
+
+  await page.keyboard.press("Escape");
+  await freeze("end");
+  expect(await hit()).toBe(true);
+});
+
+test("a scrolled copy closes from where it is", async ({ page }) => {
+  const rows = Array.from({ length: 80 }, (_, index) => `| ${index + 1} | ${index * 2} s |`);
+  await fixture(
+    page,
+    await render(`::zoom\n| Attempt | Wait |\n| --- | --- |\n${rows.join("\n")}\n::`),
+  );
+  await page.locator("main .cz").click();
+  await expect(page.locator(".cz-stage[data-scroll]")).toHaveCount(1);
+  await page.evaluate(() => {
+    for (const animation of document.getAnimations()) animation.finish();
+    document.querySelector(".cz-stage")!.scrollTop = 400;
+  });
+  const before = await rect(page, ".cz-item");
+  await page.keyboard.press("Escape");
+  await page.evaluate(() => {
+    for (const animation of document.getAnimations()) {
+      animation.pause();
+      animation.currentTime = 0;
+    }
+  });
+  const after = await rect(page, ".cz-item");
+  expect(Math.round(after.top)).toBe(Math.round(before.top));
+  expect(Math.round(after.left)).toBe(Math.round(before.left));
+});
+
 test("start() from the client entry adds its own styles", async ({ page }) => {
   const dist = new URL("../packages/zoom/dist/", import.meta.url);
   await page.route("**/client/*.mjs", (route) => {
