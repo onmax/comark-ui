@@ -544,7 +544,8 @@ export function script(css: string): () => void {
 
     const shown = items[current.index]!;
     if (!motion.matches) {
-      frame.animate(
+      fly(current);
+      const opening = frame.animate(
         [
           {
             transform: `${travel(current, shown)} scale(1)`,
@@ -553,6 +554,14 @@ export function script(css: string): () => void {
         ],
         { duration: 260, easing },
       );
+      opening.finished.then(
+        () => {
+          if (current.closing) return;
+          stage.removeAttribute("data-flying");
+          frame.style.translate = "";
+        },
+        () => {},
+      );
       for (const part of [backdrop, header, aside, footer])
         part.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200 });
     }
@@ -560,6 +569,18 @@ export function script(css: string): () => void {
     shown.dispatchEvent(
       new CustomEvent("comark-zoom:open", { bubbles: true, detail: detail(current) }),
     );
+  }
+
+  // The stage clips a zoomed copy to its own cell, which ends at the header, the footer, and an aside's column. On its
+  // way between the page and the stage the copy crosses them, so the stage lets it out and draws it above them. A stage
+  // that stops clipping loses its scroll position and its scrollbar, so the copy is moved back to where it was.
+  function fly(current: View) {
+    // An interrupted opening already has the compensation that closing must preserve.
+    if (current.stage.hasAttribute("data-flying")) return;
+    const before = current.frame.getBoundingClientRect();
+    current.stage.setAttribute("data-flying", "");
+    const after = current.frame.getBoundingClientRect();
+    current.frame.style.translate = `${before.left - after.left}px ${before.top - after.top}px`;
   }
 
   // Closing from the page goes back in history, so the zoom's entry goes away. stop() doesn't: with its listeners gone,
@@ -576,6 +597,7 @@ export function script(css: string): () => void {
       // ends on the item, and start from where it is now.
       const now = getComputedStyle(current.frame).transform;
       for (const animation of current.frame.getAnimations()) animation.cancel();
+      fly(current);
       const to = item.getBoundingClientRect();
       const visible = to.bottom > 0 && to.top < innerHeight;
       const animations = [
