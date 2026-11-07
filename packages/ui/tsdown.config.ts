@@ -55,7 +55,7 @@ const { version, dependencies } = manifest as {
 };
 
 // `comark-ui/style.css` is every package's own `style.css` and the Mermaid wrapper's styles, the rules the components
-// add on mount, in one file for a page to link or import. The workspace builds each dependency before this package.
+// add on mount, in one file for a page to link or import. The build script refreshes dependencies before loading it.
 const require = createRequire(import.meta.url);
 const stylesheet = [
   ...Object.entries(dependencies)

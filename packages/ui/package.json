@@ -51,7 +51,7 @@
     "provenance": true
   },
   "scripts": {
-    "build": "tsdown",
+    "build": "pnpm --filter \"comark-ui^...\" build && tsdown",
     "dev": "tsdown --watch",
     "doctor": "vite-doctor . --no-cache --max-warnings 0 --format text",
     "prepack": "pnpm --filter comark-ui... build",
