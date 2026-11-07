@@ -32,7 +32,11 @@ export default defineConfig({
     "*": "vp check --fix",
   },
   // oxfmt reads Comark blocks as plain Markdown and breaks them.
-  fmt: { ignorePatterns: ["**/dist/**", "**/*.md"] },
+  fmt: {
+    ignorePatterns: ["**/dist/**", "**/*.md"],
+    // Nitro 3 reads wrangler.jsonc with confbox's parseJSONC, which rejects trailing commas.
+    overrides: [{ files: ["wrangler.jsonc"], options: { trailingComma: "none" } }],
+  },
   lint: {
     ignorePatterns: ["**/dist/**"],
     options: { typeAware: true, typeCheck: false },

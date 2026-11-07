@@ -283,15 +283,22 @@ export function script(css: string): () => void {
 
   // The zoomed copy keeps the item's width on the page and scales to fill the stage, so text stays sharp. Its height is
   // its own, which grows when an image in it loads after the page's. An image stops at its natural size, past which it
-  // would blur.
+  // would blur. A copy that would have to shrink below its size on the page to fit the stage's height fills the
+  // stage's width instead and scrolls, since a zoom that makes it smaller reads as zooming out.
   function place(current: View) {
+    // Save the reading position relative to the displayed width, so a responsive page width can change too.
+    const scroll = current.stage.scrollTop;
+    const position =
+      Math.max(0, scroll - (parseFloat(current.frame.style.marginBlockStart) || 0)) /
+      (parseFloat(current.frame.style.width) * current.scale || 1);
     const item = current.items[current.index]!;
     const { width } = measure(item);
     current.frame.style.width = `${width}px`;
+    current.frame.style.marginBlock = "";
     const height = current.frame.offsetHeight || 1;
     const box = current.stage.getBoundingClientRect();
     // A group's arrows sit over the sides of the stage, so the item fits between them.
-    const next = current.stage.querySelector(".cz-next");
+    const next = current.dialog.querySelector(".cz-next");
     const arrows = next ? 2 * (box.right - next.getBoundingClientRect().left + 8) : 0;
     // An image grows no larger than its file. While a data-zoom-src file loads, the page's image may stretch, since
     // the larger file will take its place.
@@ -304,16 +311,18 @@ export function script(css: string): () => void {
       (!large || image.getAttribute("src") === large)
         ? Math.max(1, image.naturalWidth / width)
         : 4;
-    current.scale = Math.max(
-      0.1,
-      Math.min(
-        Math.min(box.width * 0.92, box.width - arrows) / width,
-        (box.height * 0.92) / height,
-        natural,
-        4,
-      ),
-    );
+    const across = Math.min(box.width * 0.92, box.width - arrows) / width;
+    const down = (box.height * 0.92) / height;
+    const tall = down < Math.min(1, across);
+    current.scale = Math.max(0.1, Math.min(across, tall ? Infinity : down, natural, 4));
+    current.stage.toggleAttribute("data-scroll", tall);
+    // The copy grows down from its top, and its margins give the stage's scroll the height it takes once scaled.
+    const gap = box.height * 0.04;
+    if (tall) {
+      current.frame.style.marginBlock = `${gap}px ${height * (current.scale - 1) + gap}px`;
+    }
     current.frame.style.transform = `scale(${current.scale})`;
+    current.stage.scrollTop = tall && scroll > 0 ? position * width * current.scale + gap : 0;
   }
 
   // Whether an image of a copy is still shown, so a load that finishes after a close or a move changes nothing.
@@ -338,13 +347,17 @@ export function script(css: string): () => void {
   }
 
   // The move that puts the copy, at scale 1, over the item. It aims at the copy's center rather than the frame's,
-  // since margins inside the copy can sit in the frame but outside the item on the page.
+  // since margins inside the copy can sit in the frame but outside the item on the page. The frame scales from its
+  // center, or from its top when it scrolls, and that point stays put at any scale.
   function travel(current: View, item: HTMLElement) {
     const center = (node: Element) => {
       const rect = node.getBoundingClientRect();
       return [rect.left + rect.width / 2, rect.top + rect.height / 2] as const;
     };
-    const [fx, fy] = center(current.frame);
+    const frame = current.frame.getBoundingClientRect();
+    const [ox, oy] = getComputedStyle(current.frame).transformOrigin.split(" ").map(parseFloat);
+    const fx = frame.left + ox! * current.scale;
+    const fy = frame.top + oy! * current.scale;
     const [cx, cy] = center(current.frame.firstElementChild!);
     const [tx, ty] = center(item);
     return `translate(${tx - fx - (cx - fx) / current.scale}px, ${ty - fy - (cy - fy) / current.scale}px)`;
@@ -353,6 +366,7 @@ export function script(css: string): () => void {
   function render(current: View) {
     const item = current.items[current.index]!;
     current.frame.replaceChildren();
+    current.stage.scrollTop = 0;
     current.pairs = [[item, copy(item, current.frame)]];
     current.frame.append(el("div", "cz-layer"));
     // Set before place() measures the stage, which the aside's column narrows.
@@ -495,7 +509,8 @@ export function script(css: string): () => void {
         // Lucide's chevrons, as in comark-carousel.
         button.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${step < 0 ? "m15 18-6-6 6-6" : "m9 18 6-6-6-6"}"/></svg>`;
         button.addEventListener("click", () => go(current.index + step));
-        stage.append(button);
+        // Beside the stage, over its cell, so they stay put while a tall item scrolls.
+        aside.before(button);
       }
     }
     view = current;
@@ -529,7 +544,8 @@ export function script(css: string): () => void {
 
     const shown = items[current.index]!;
     if (!motion.matches) {
-      frame.animate(
+      fly(current);
+      const opening = frame.animate(
         [
           {
             transform: `${travel(current, shown)} scale(1)`,
@@ -538,6 +554,14 @@ export function script(css: string): () => void {
         ],
         { duration: 260, easing },
       );
+      opening.finished.then(
+        () => {
+          if (current.closing) return;
+          stage.removeAttribute("data-flying");
+          frame.style.translate = "";
+        },
+        () => {},
+      );
       for (const part of [backdrop, header, aside, footer])
         part.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200 });
     }
@@ -545,6 +569,18 @@ export function script(css: string): () => void {
     shown.dispatchEvent(
       new CustomEvent("comark-zoom:open", { bubbles: true, detail: detail(current) }),
     );
+  }
+
+  // The stage clips a zoomed copy to its own cell, which ends at the header, the footer, and an aside's column. On its
+  // way between the page and the stage the copy crosses them, so the stage lets it out and draws it above them. A stage
+  // that stops clipping loses its scroll position and its scrollbar, so the copy is moved back to where it was.
+  function fly(current: View) {
+    // An interrupted opening already has the compensation that closing must preserve.
+    if (current.stage.hasAttribute("data-flying")) return;
+    const before = current.frame.getBoundingClientRect();
+    current.stage.setAttribute("data-flying", "");
+    const after = current.frame.getBoundingClientRect();
+    current.frame.style.translate = `${before.left - after.left}px ${before.top - after.top}px`;
   }
 
   // Closing from the page goes back in history, so the zoom's entry goes away. stop() doesn't: with its listeners gone,
@@ -561,6 +597,7 @@ export function script(css: string): () => void {
       // ends on the item, and start from where it is now.
       const now = getComputedStyle(current.frame).transform;
       for (const animation of current.frame.getAnimations()) animation.cancel();
+      fly(current);
       const to = item.getBoundingClientRect();
       const visible = to.bottom > 0 && to.top < innerHeight;
       const animations = [

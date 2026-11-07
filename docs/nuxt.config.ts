@@ -2,7 +2,7 @@ import { fileURLToPath } from "node:url";
 import { defineNuxtConfig } from "nuxt/config";
 import { env } from "vite-hub/env";
 import { excludedLinks } from "./link-excludes.ts";
-import { categories } from "./sections.ts";
+import { categories, railGroups } from "./sections.ts";
 
 export default defineNuxtConfig({
   compatibilityDate: "2026-10-01",
@@ -21,9 +21,12 @@ export default defineNuxtConfig({
       logo: "/favicon.svg",
     },
     categories,
+    groups: railGroups.map(({ title, icon }) => ({ title, icon })),
     github: { repo: "onmax/comark-ui", dir: "docs/pages" },
     // Comark plugins are functions, so they reach the server through a file.
     parser: "./markdown.ts",
+    // A playground link's fragment names a preset, not an element.
+    linkChecker: { ignoreFragments: [/^\/play(\/presets)?$/] },
   },
   linkChecker: { excludeLinks: excludedLinks },
   vitehub: {

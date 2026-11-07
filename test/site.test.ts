@@ -104,8 +104,8 @@ describe("prerendered files", () => {
         new Request(`https://comark-ui.onmax.me${path}`, { headers: { accept: "text/markdown" } }),
         binding,
       );
-    expect(await (await ask("/zoom/"))?.text()).toBe("/zoom.md");
-    expect(await (await ask("/"))?.text()).toBe("/index.md");
+    expect(await (await ask("/zoom/"))?.text()).toBe("/raw/zoom.md");
+    expect(await (await ask("/"))?.text()).toBe("/raw/index.md");
   });
   it("falls back to the page when there is no Markdown copy", async () => {
     const binding = {

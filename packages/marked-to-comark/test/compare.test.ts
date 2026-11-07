@@ -6,6 +6,23 @@ const both = async (markdown: string, options = {}) =>
   compare(markedHtml(markdown, options), await comarkHtml(markdown, comarkSetup()));
 
 describe("comarkOptions reads Markdown like marked", () => {
+  it.each([
+    "www.example.invalidtld",
+    "https://example.invalidtld/path",
+    "xmpp:me@example.com",
+    "mailto:me@example.com",
+    "ftp://example.com/path",
+    "FTP://example.com/path",
+    "Download ftp://example.com/path beside https://example.com/path.",
+    "ftp://me@example.com/path",
+    "me@example.invalidtld",
+    "(www.example.invalidtld/path).",
+    "http://example.invalidtld/one and https://example.invalidtld/two",
+    "`www.example.invalidtld` [www.example.invalidtld](https://other.com)",
+  ])("preserves marked literal links in %s", async (markdown) => {
+    expect((await both(markdown)).differences).toEqual([]);
+  });
+
   it("treats plain GFM as the same", async () => {
     const result = await both(
       "# Title\n\nSome *text* and `code`.\n\n| a | b |\n|:--|--:|\n| 1 | 2 |\n\n- [x] done\n\n```js\nconst a = 1\n```\n\n~~gone~~ https://example.com\n",
@@ -24,7 +41,7 @@ describe("comarkOptions reads Markdown like marked", () => {
   });
 
   it("names the block Comark reads differently", async () => {
-    const result = await both("Set {value} first.\n");
+    const result = await both("Set `it`{value} first.\n");
     expect(result.equal).toBe(false);
     expect(result.differences.map((difference) => difference.category).length).toBeGreaterThan(0);
   });

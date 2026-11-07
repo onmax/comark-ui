@@ -13,7 +13,7 @@ const tokens = [
 const colors = {
   success: ["success", "ui-success", "success", "#259f56", "#59d38c"],
   danger: ["danger", "ui-error", "destructive", "#ee3533", "#fd736d"],
-  warning: ["warning", "ui-warning", "", "#d97706", "#fbbf24"],
+  warning: ["warning", "ui-warning", "", "#d57506", "#fbbf24"],
   info: ["info", "ui-info", "", "#2563eb", "#60a5fa"],
 } as const;
 const status = Object.values(colors);

@@ -179,7 +179,16 @@ export default defineComarkPlugin<DiagramsOptions | undefined, DiagramsMeta>((op
       };
       walk(tree.nodes, 0);
       const drawn = await Promise.all(
-        found.map(({ node, type }) => draw(server, type, textOf(node).trim())),
+        // Only blank lines go: ASCII art's first line is indented like the rest, and svgbob draws columns as written.
+        found.map(({ node, type }) =>
+          draw(
+            server,
+            type,
+            textOf(node)
+              .replace(/^(?:[ \t]*\n)+/, "")
+              .trimEnd(),
+          ),
+        ),
       );
       for (const [at, { list, index, node, type, name }] of found.entries()) {
         const result = drawn[at];

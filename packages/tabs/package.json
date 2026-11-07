@@ -1,6 +1,6 @@
 {
   "name": "comark-tabs",
-  "version": "0.9.1",
+  "version": "0.10.0",
   "description": "Tabs and code groups for Markdown, with keys and labels synced across the page. They read without a script. A Comark plugin.",
   "keywords": [
     "code-group",
@@ -67,8 +67,8 @@
     "vue": "catalog:"
   },
   "peerDependencies": {
-    "@comark/html": "^0.8.0",
-    "comark": "^0.8.0",
+    "@comark/html": "^0.9.0",
+    "comark": "^0.9.0",
     "react": ">=18",
     "svelte": ">=5.20",
     "vue": ">=3.5"

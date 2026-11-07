@@ -279,6 +279,40 @@ test("Copy puts a screenshot on the clipboard with its marks, and a right-click 
   await expect(page.locator(".cz-header .ca-copy-status")).toHaveText("Copied");
 });
 
+for (const modifier of ["Control", "Meta"]) {
+  test(`${modifier}+C copies the screenshot reached by Tab with its notes`, async ({
+    page,
+    context,
+  }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await open(
+      page,
+      `::screenshot{src="/before.png" alt="Filter toolbar" viewport="640x250"}
+:::annotation{x=4.5 y=28.7 w=90.9 h=44.4 color="red"}
+The toolbar wraps.
+:::
+::`,
+    );
+    await page.keyboard.press("Tab");
+    const figure = page.locator("main .ca-screenshot");
+    await expect(figure.locator(".ca-stage")).toBeFocused();
+    await page.evaluate(() => navigator.clipboard.writeText("before copying"));
+    await page.keyboard.press(`${modifier}+c`);
+    // Chromium can defer PNG encoding under load; wait for the completed write before reading it.
+    await expect(figure.locator(".ca-copy-status")).toHaveText("Copied", { timeout: 15_000 });
+    const copiedHeight = await page.evaluate(async () => {
+      const [item] = await navigator.clipboard.read();
+      const bitmap = await createImageBitmap(await item!.getType("image/png"));
+      return bitmap.height;
+    });
+    const stage = await figure.locator(".ca-stage").boundingBox();
+    expect(copiedHeight).toBeGreaterThan(
+      stage!.height * (await page.evaluate(() => devicePixelRatio)),
+    );
+    await expect(page.locator(".cz-dialog")).toHaveCount(0);
+  });
+}
+
 test("a zoomed screenshot's Copy sits in the header before Close, clear of the image and its marks", async ({
   page,
   context,

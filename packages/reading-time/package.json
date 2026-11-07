@@ -1,6 +1,6 @@
 {
   "name": "comark-reading-time",
-  "version": "0.9.1",
+  "version": "0.10.0",
   "description": "A document's word count and reading time in meta.readingTime, with code blocks left out and CJK counted by character. A Comark plugin.",
   "keywords": [
     "comark",
@@ -43,7 +43,7 @@
     "comark": "catalog:"
   },
   "peerDependencies": {
-    "comark": "^0.8.0"
+    "comark": "^0.9.0"
   },
   "engines": {
     "node": ">=22.12.0"

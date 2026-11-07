@@ -1,6 +1,6 @@
 {
   "name": "comark-diff",
-  "version": "0.9.1",
+  "version": "0.10.0",
   "description": "A code change in Markdown, shown like a suggested change in a pull request review: the file, red and green lines, and the words that changed. A Comark plugin.",
   "keywords": [
     "code-review",
@@ -46,8 +46,8 @@
     "comark-zoom": "workspace:*"
   },
   "peerDependencies": {
-    "@comark/html": "^0.8.0",
-    "comark": "^0.8.0"
+    "@comark/html": "^0.9.0",
+    "comark": "^0.9.0"
   },
   "peerDependenciesMeta": {
     "@comark/html": {

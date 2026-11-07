@@ -1,4 +1,5 @@
 import type { ComarkParseTokensState, ComarkPlugin, MarkdownExitPlugin } from "comark";
+import MarkdownIt from "markdown-it";
 import { isText } from "../guards.ts";
 import { drawHtml, rendererOf } from "./bridge.ts";
 
@@ -45,11 +46,19 @@ export const markdownItOptions = (options: MarkdownItOptions): ComarkPlugin => (
   name: "markdown-it-to-comark:options",
   markdownItPlugins: [
     (md: MarkdownExit) => {
+      // Check the methods markdown-exit consumes without asserting its newer linkifier's private fields.
+      // Keep markdown-it's customization API, including schema aliases, even when linkification is off.
+      const linkify = new MarkdownIt().linkify satisfies Pick<
+        MarkdownExit["linkify"],
+        "match" | "matchAtStart" | "test"
+      >;
+      Object.assign(md, { linkify });
       // Comark builds its parser with tables and strikethrough on; a preset resets the rules to its own list.
       if (options.preset && options.preset !== "default") md.configure(options.preset);
       md.set({ html: Boolean(options.html) });
+      md.set({ linkify: options.linkify ?? false });
       // Only what the project set: markdown-exit's own defaults are markdown-it's.
-      for (const name of ["typographer", "quotes", "breaks", "linkify"] as const)
+      for (const name of ["typographer", "quotes", "breaks"] as const)
         if (options[name] !== undefined) md.set({ [name]: options[name] });
     },
   ],

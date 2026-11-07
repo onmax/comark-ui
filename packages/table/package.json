@@ -1,6 +1,6 @@
 {
   "name": "comark-table",
-  "version": "0.9.1",
+  "version": "0.10.0",
   "description": "Tables from CSV, TSV, and JSON files or fences, read while parsing, with copy buttons and sortable headers. A Comark plugin.",
   "keywords": [
     "comark",
@@ -66,8 +66,8 @@
     "vue": "catalog:"
   },
   "peerDependencies": {
-    "@comark/html": "^0.8.0",
-    "comark": "^0.8.0",
+    "@comark/html": "^0.9.0",
+    "comark": "^0.9.0",
     "react": ">=18",
     "svelte": ">=5",
     "vue": ">=3.5"

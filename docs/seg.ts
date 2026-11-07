@@ -1,4 +1,4 @@
-// The tools' switches: one indicator per switch slides to the pressed button, however it gets pressed, as on the old
+// The switches and tab rows: one indicator per group slides to the pressed button or chosen tab, however it gets pressed, as on the old
 // site. A hidden switch measures zero, so it's placed again, without sliding, whenever its size changes.
 export function indicate(group: HTMLElement, selector = "[aria-pressed=true]"): () => void {
   const bar = group.appendChild(
@@ -18,7 +18,7 @@ export function indicate(group: HTMLElement, selector = "[aria-pressed=true]"): 
   });
   sizing.observe(group);
   const pressing = new MutationObserver(place);
-  pressing.observe(group, { subtree: true, attributeFilter: ["aria-pressed"] });
+  pressing.observe(group, { subtree: true, attributeFilter: ["aria-pressed", "aria-selected"] });
   group.dataset.indicator = "";
   return () => {
     sizing.disconnect();

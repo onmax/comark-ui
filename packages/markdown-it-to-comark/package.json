@@ -1,6 +1,6 @@
 {
   "name": "markdown-it-to-comark",
-  "version": "0.9.1",
+  "version": "0.10.0",
   "description": "Moves a project from markdown-it to Comark: reports each markdown-it setup and what its plugins and options become, rewrites setups it owns to Comark's renderHtml, and escapes Markdown Comark would read differently. A CLI, a library, and a Vite Doctor extension.",
   "keywords": [
     "codemod",
@@ -82,7 +82,7 @@
     "vite-doctor": "catalog:"
   },
   "peerDependencies": {
-    "comark": "^0.8.0",
+    "comark": "^0.9.0",
     "vite-doctor": "^0.1.0"
   },
   "peerDependenciesMeta": {

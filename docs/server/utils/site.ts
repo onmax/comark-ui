@@ -56,7 +56,7 @@ export async function fromAssets(request: Request, assets: Assets): Promise<Resp
   if (request.method !== "GET" && request.method !== "HEAD") return;
   const url = new URL(request.url);
   if (url.pathname.endsWith("/") && request.headers.get("accept")?.includes("text/markdown")) {
-    url.pathname = url.pathname === "/" ? "/index.md" : `${url.pathname.slice(0, -1)}.md`;
+    url.pathname = url.pathname === "/" ? "/raw/index.md" : `/raw${url.pathname.slice(0, -1)}.md`;
     const markdown = await assets.fetch(new Request(url, request));
     if (markdown.ok) return markdown;
   }

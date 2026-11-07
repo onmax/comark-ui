@@ -1,6 +1,6 @@
 {
   "name": "comark-footnotes",
-  "version": "0.9.1",
+  "version": "0.10.0",
   "description": "Footnotes in Comark: [^1] references, [^1]: definitions over several lines and blocks, and ^[inline notes], in place of comark/plugins/footnotes.",
   "keywords": [
     "comark",
@@ -43,7 +43,7 @@
     "comark": "catalog:"
   },
   "peerDependencies": {
-    "comark": "^0.8.0"
+    "comark": "^0.9.0"
   },
   "engines": {
     "node": ">=22.12.0"

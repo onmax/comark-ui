@@ -71,7 +71,6 @@ export function comarkSetup(options: SetupOptions = {}): ComarkSetup {
       registerDefaultPlugins: false,
       autoClose: false,
       autoUnwrap: false,
-      linkify: options.linkify ?? false,
     },
   };
 }

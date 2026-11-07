@@ -1,7 +1,7 @@
 import { createHtmlRenderer } from "@comark/html";
 import { createMarkdownParser, parseMarkdown, type ParserOptions } from "comark";
 import { describe, expect, it } from "vite-plus/test";
-import critic, { type CriticOptions } from "../src/index.ts";
+import critic, { type CriticOptions, css } from "../src/index.ts";
 
 // The renderer indents blocks; the tests compare the markup alone.
 const flat = (html: string) => html.replace(/\s*\n\s*/g, "");
@@ -19,6 +19,15 @@ describe("comark-critic", () => {
       '<p>Ship <ins class="ccm-ins">on Friday</ins><del class="ccm-del">today</del>, <del class="ccm-del">after</del><ins class="ccm-ins">before</ins> the ' +
         '<mark class="ccm-mark">pizza vote</mark><span class="ccm-comment">Ask the duck.</span>.</p>',
     );
+  });
+
+  it("draws a comment as a note with a speech bubble and no edge, so it doesn't read as inline code", async () => {
+    expect(await render("Pizza is on Friday{>>Pineapple still needs a vote.<<}.")).toBe(
+      '<p>Pizza is on Friday<span class="ccm-comment">Pineapple still needs a vote.</span>.</p>',
+    );
+    const comment = /\.ccm-comment\{([^}]*)\}/.exec(css)?.[1];
+    expect(comment).not.toContain("box-shadow");
+    expect(css).toMatch(/\.ccm-comment::before\{[^}]*mask:url\("data:image\/svg\+xml,/);
   });
 
   it("renders the document with the changes accepted, or rejected", async () => {

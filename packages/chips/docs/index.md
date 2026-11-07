@@ -6,7 +6,7 @@ tagline: A link or an @user drawn as a chip with its site's favicon or the perso
 group: Review blocks
 icon: at-sign
 blurb: Links and @mentions as chips
-credits: 'After <a href="https://antfu.me">Anthony Fu</a>''s <a href="https://github.com/antfu/markdown-it-magic-link">markdown-it-magic-link</a>. Favicons from Google, avatars from GitHub and <a href="https://unavatar.io">unavatar.io</a>.'
+credits: 'After <a href="https://antfu.me">Anthony Fu</a>''s <a href="https://github.com/antfu/markdown-it-magic-link">markdown-it-magic-link</a>. Favicons from Google, avatars from GitHub and <a href="https://unavatar.io">unavatar.io</a>, and the globe from <a href="https://lucide.dev">Lucide</a>.'
 ---
 
 ::examples
@@ -189,7 +189,7 @@ The plugin adds every problem to `meta.issues`, as [Validation](/guide/validatio
 - An `avatar` that is a bare login, such as `avatar="antfu"`. Write `avatar="@antfu"`.
 - A `:chip` whose `href` isn't a web address.
 
-A site without a favicon gets a chip with no image, and no issue. Each problem has its own rule in [Doctor](/doctor/).
+A site without a favicon gets a globe in its place, and no issue. Each problem has its own rule in [Doctor](/doctor/).
 
 ### Package
 
