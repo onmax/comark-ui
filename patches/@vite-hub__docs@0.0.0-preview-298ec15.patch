@@ -1,0 +1,78 @@
+diff --git a/dist/navigation.d.ts b/dist/navigation.d.ts
+index 22688543dda5350429bc09694c280163f7283ae7..6bbd398497855a40c372f3bcfb1bcea93756e46a 100644
+--- a/dist/navigation.d.ts
++++ b/dist/navigation.d.ts
+@@ -101,6 +101,10 @@ export declare function docsHasRail(manifest: DocsManifest, icons: Pick<DocsIcon
+ }): boolean;
+ /** Title of the group of a section: the `groups` entry that lists it, else the `group` of its `.navigation.yml`. */
+ export declare function docsSectionGroup(section: Pick<DocsSection, "id" | "group">, groups: readonly DocsGroup[]): string | null;
++export declare function docsSidebarGroup(manifest: DocsManifest, section: DocsSection, groups: readonly DocsGroup[]): {
++  title: string;
++  sections: DocsSection[];
++} | null;
+ /** Sections grouped by category, in the order of `categories`. Sections of other categories are left out. */
+ export declare function docsCatalog(manifest: DocsManifest, categories: readonly string[]): DocsCatalogGroup[];
+ /**
+diff --git a/dist/navigation.js b/dist/navigation.js
+index 8f056c479f6c3577af0c92c9f46255000078051c..921090f6b6f4d9c43c08fcbe87845fb81ddc7a49 100644
+--- a/dist/navigation.js
++++ b/dist/navigation.js
+@@ -79,6 +79,27 @@ function docsHasRail(manifest, icons, groups = [], options = {
+ function docsSectionGroup(section, groups) {
+ 	return groups.find((group) => group.sections?.includes(section.id))?.title ?? section.group ?? null;
+ }
++/**
++* The sections that share a section's sidebar under the rail, or `null` when it lists its own pages. A group lists all
++* its sections. A section whose only listed page is its home would list that one link, so it lists its category.
++*/
++function docsSidebarGroup(manifest, section, groups) {
++	const title = docsSectionGroup(section, groups);
++	if (title !== null) {
++		const sections = manifest.sections.filter((candidate) => docsSectionGroup(candidate, groups) === title);
++		return sections.length > 1 ? {
++			title,
++			sections
++		} : null;
++	}
++	const { category } = section;
++	if (!category || section.pages.filter((page) => page.navigation).length > 1) return null;
++	const sections = manifest.sections.filter((candidate) => candidate.category === category);
++	return sections.length > 1 ? {
++		title: category,
++		sections
++	} : null;
++}
+ /** Sections grouped by category, in the order of `categories`. Sections of other categories are left out. */
+ function docsCatalog(manifest, categories) {
+ 	return categories.map((category) => ({
+@@ -354,4 +375,4 @@ function createDocsSearch(records) {
+ 	};
+ }
+ //#endregion
+-export { createDocsSearch, docsAppPath, docsCatalog, docsHasRail, docsHomePath, docsManifestPages, docsMarkdownLinks, docsMcpInstallLinks, docsPageIcon, docsRailEntries, docsRailEntry, docsRailGroups, docsRailIcon, docsRawFile, docsRawPath, docsRawSectionLinks, docsRawSectionLinksMarker, docsRelatedSections, docsSectionForPath, docsSectionGroup, docsSectionHome, docsSectionIcon, docsSidebarGroups, docsSidebarSections, docsTutorialNavigationCookie, findDocsPage, isDocsPath, normalizeDocsBase, normalizeDocsPath };
++export { createDocsSearch, docsAppPath, docsCatalog, docsHasRail, docsHomePath, docsManifestPages, docsMarkdownLinks, docsMcpInstallLinks, docsPageIcon, docsRailEntries, docsRailEntry, docsRailGroups, docsRailIcon, docsRawFile, docsRawPath, docsRawSectionLinks, docsRawSectionLinksMarker, docsRelatedSections, docsSectionForPath, docsSectionGroup, docsSectionHome, docsSectionIcon, docsSidebarGroup, docsSidebarGroups, docsSidebarSections, docsTutorialNavigationCookie, findDocsPage, isDocsPath, normalizeDocsBase, normalizeDocsPath };
+diff --git a/dist/runtime/app/components/DocsAsideLeftBody.vue b/dist/runtime/app/components/DocsAsideLeftBody.vue
+index 6187b311375af64eaa3b0c3878d7e63d12e8dcb9..23014c9e12210cd0b4359c374714671977eb54f2 100644
+--- a/dist/runtime/app/components/DocsAsideLeftBody.vue
++++ b/dist/runtime/app/components/DocsAsideLeftBody.vue
+@@ -1,5 +1,5 @@
+ <script setup lang="ts">
+-import { docsCatalog, docsHasRail, docsRelatedSections, docsSectionGroup, docsSectionHome, docsSidebarGroups, docsSidebarSections, normalizeDocsPath } from "#docs/navigation"
++import { docsCatalog, docsHasRail, docsRelatedSections, docsSectionHome, docsSidebarGroup, docsSidebarGroups, docsSidebarSections, normalizeDocsPath } from "#docs/navigation"
+ 
+ const route = useRoute()
+ const manifest = useDocsManifest()
+@@ -16,12 +16,7 @@ const catalog = docsCatalog(manifest, categories)
+ // A small site has no rail, so the sidebar lists every section with its pages on every page.
+ const rail = docsHasRail(manifest, iconOptions, groups, { categories, railExclude })
+ // Sidebar membership comes from every manifest section, including groups entirely excluded from the rail.
+-const group = computed(() => {
+-  const title = section.value && docsSectionGroup(section.value, groups)
+-  if (title === null) return null
+-  const sections = manifest.sections.filter(candidate => docsSectionGroup(candidate, groups) === title)
+-  return sections.length > 1 ? { title, sections } : null
+-})
++const group = computed(() => section.value ? docsSidebarGroup(manifest, section.value, groups) : null)
+ const sectionBlocks = computed(() => {
+   const sections = rail ? group.value?.sections : manifest.sections
+   return sections ? docsSidebarSections(sections) : null

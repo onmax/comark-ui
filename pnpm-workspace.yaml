@@ -100,12 +100,17 @@ catalog:
 overrides:
   # Nuxt's Nitro and the one ViteHub depends on must be one copy.
   nitro: "catalog:"
+  # Nuxt UI 4.12 asks for @nuxt/fonts 0.14, which fills its font files in Nitro 2's rollup:before hook. Nitro 3 never
+  # calls it, so every /_fonts file shipped empty. 1.x downloads them when Vite closes the bundle.
+  "@nuxt/ui>@nuxt/fonts": ^1.2.0
   vite: "catalog:"
   # The ViteHub preview pins Comark 0.8.1. The docs render with the same Comark as the plugins, and 0.9 fixes the
   # exponential backtracking in its Shiki grammar that stalled docs generation.
   comark: "catalog:"
   "@comark/html": "catalog:"
   "@comark/vue": "catalog:"
+  "@comark/react": "catalog:"
+  "@comark/svelte": "catalog:"
   # ViteHub pins KaTeX 0.18, and Comark 0.9 asks for ^0.19.1.
   katex: "catalog:"
   # The preview packages take each other as peers at "0.1.0 || 0.0.0-preview-…", and pnpm fills a missing peer from
@@ -170,5 +175,6 @@ allowBuilds:
 
 # Temporary dependency backports. See patches/README.md for upstream PRs and removal conditions.
 patchedDependencies:
+  "@vite-hub/docs@0.0.0-preview-298ec15": patches/@vite-hub__docs@0.0.0-preview-298ec15.patch
   # Workers builds resolve the `workerd` condition, which 5.0.1 lacks (crouchcd/pkce-challenge#50, merged, unreleased).
   pkce-challenge@5.0.1: patches/pkce-challenge@5.0.1.patch

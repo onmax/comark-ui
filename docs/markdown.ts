@@ -24,7 +24,10 @@ const bridge = defineComarkPlugin(() => {
       if (htmlOnly.includes(node[0])) {
         nodes[at] = [
           "comark-html",
-          { html: await renderHtmlFromDocument({ nodes: [node] }, { components: html }) },
+          {
+            html: await renderHtmlFromDocument({ nodes: [node] }, { components: html }),
+            block: node[0],
+          },
         ];
         continue;
       }

@@ -1,6 +1,5 @@
 import type { ComarkPlugin, ParserOptions } from "comark";
 import html from "comark/plugins/html";
-import linkify from "comark/plugins/linkify";
 import components from "comark/plugins/components";
 import attributes from "comark/plugins/attributes";
 import { frontmatter } from "./plugins/frontmatter.ts";
@@ -49,8 +48,6 @@ export function comarkSetup(options: SetupOptions = {}): ComarkSetup {
       ...(options.frontmatter ? [frontmatter()] : []),
       // First, so the preset resets markdown-exit's rules before the other plugins add theirs.
       markdownItOptions({ ...options, html: keepHtml }),
-      // markdown-it's linkify-it, with its defaults: fuzzy links and URL credentials on.
-      ...(options.linkify ? [linkify({ fuzzyLink: true, urlAuth: true })] : []),
       // CommonMark HTML blocks are raw until a blank line; Comark otherwise reads Markdown inside them.
       ...(keepHtml
         ? [

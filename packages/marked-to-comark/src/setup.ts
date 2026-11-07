@@ -19,7 +19,6 @@ import {
   langPrefix,
   legacyTables,
   linkText,
-  markedEmails,
   taskListClasses,
   underscoreTagText,
   underscoreTags,
@@ -88,7 +87,7 @@ export function comarkSetup(options: SetupOptions = {}): ComarkSetup {
   };
   return {
     plugins: [
-      // linkify-it's fuzzy mode finds `www.` links and `user:pass@` URLs; gfmLinks() then trims each to GFM's rules.
+      // Initialize the linkifier before gfmLinks() installs marked's recognizer.
       ...(gfm ? [linkify({ fuzzyLink: true, urlAuth: true })] : []),
       ...(options.frontmatter ? [frontmatter()] : []),
       ...(options.expandTabs ? [expandTabs(options.expandTabs)] : []),
@@ -117,7 +116,7 @@ export function comarkSetup(options: SetupOptions = {}): ComarkSetup {
           ]),
       ...(gfm ? [taskList(), taskListClasses()] : [commonmark()]),
       ...(syntax === "comark" ? [components(), attributes()] : []),
-      ...(gfm ? [gfmLinks(), markedEmails()] : []),
+      ...(gfm ? [gfmLinks()] : []),
       linkText(),
       tightLists(),
       ...(options.rawAlt ? [] : [imageAltText()]),

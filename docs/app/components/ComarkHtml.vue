@@ -2,7 +2,8 @@
 import { onMounted, ref, watch } from "vue";
 
 // A block that has only an HTML renderer (annotate, diff, quiz, comments), drawn on the server by docs/markdown.ts.
-const props = defineProps<{ html: string }>();
+// `block` is its tag, so a page's styles can tell a diff from a screenshot without looking inside.
+const props = defineProps<{ html: string; block?: string }>();
 const root = ref<HTMLElement>();
 
 // Scripts inserted by v-html are inert. Recreate them after mounting or replacing the HTML; the package runtimes
@@ -20,5 +21,5 @@ watch(() => props.html, runScripts, { flush: "post" });
 </script>
 
 <template>
-  <div ref="root" class="comark-html" v-html="html" />
+  <div ref="root" class="comark-html" :data-block="block" v-html="html" />
 </template>

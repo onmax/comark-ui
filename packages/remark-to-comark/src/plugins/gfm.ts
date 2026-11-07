@@ -1,3 +1,7 @@
+import remarkGfm from "remark-gfm";
+import remarkParse from "remark-parse";
+import { unified } from "unified";
+import { visitParents } from "unist-util-visit-parents";
 import type {
   ComarkParseTokensState,
   ComarkPlugin,
@@ -40,66 +44,58 @@ export const tightLists = (): ComarkPlugin => ({
   },
 });
 
-// GFM links bare `www.` hosts, URLs with a scheme, and emails; markdown-exit also links `example.com`.
-const GFM_LITERAL = /^(?:https?:\/\/|www\.|mailto:|xmpp:)|^[^\s@/:]+@[^\s@/:]+\.[^\s@/:]+$/i;
+type LiteralLink = NonNullable<ReturnType<MarkdownExit["linkify"]["match"]>>[number];
 
-// GFM leaves trailing punctuation, an unbalanced `)`, and a trailing entity reference out of a literal autolink.
-function gfmTrim(url: string): string {
-  let end = url.length;
-  for (;;) {
-    const rest = url.slice(0, end);
-    if (/[?!.,:*_~]$/.test(rest)) end--;
-    else if (
-      rest.endsWith(")") &&
-      (rest.match(/\(/g)?.length ?? 0) < (rest.match(/\)/g)?.length ?? 0)
-    )
-      end--;
-    else if (/&[a-z\d]+;$/i.test(rest)) end = rest.search(/&[a-z\d]+;$/i);
-    else return rest;
-  }
+function literalLink(source: string, index: number, lastIndex: number, url: string): LiteralLink {
+  const raw = source.slice(index, lastIndex);
+  return {
+    index,
+    lastIndex,
+    url,
+    raw,
+    text: raw,
+    schema: url.match(/^[a-z][a-z\d+.-]*:/i)?.[0] ?? "",
+  };
 }
 
-/**
- * Autolinks only what GitHub links: drops markdown-exit's fuzzy links to bare domains like `gsap.com`, and trims
- * the punctuation GFM leaves outside a link.
- */
+const literalParser = unified().use(remarkParse).use(remarkGfm);
+
+function literalLinks(source: string): LiteralLink[] {
+  const links: LiteralLink[] = [];
+  // A prefix keeps a text token's leading spaces or punctuation from opening a Markdown block.
+  const input = `x ${source}`;
+  visitParents(literalParser.parse(input), "link", (node) => {
+    const start = node.position?.start.offset;
+    const end = node.position?.end.offset;
+    if (start === undefined || end === undefined || /^[<[]/.test(input.slice(start))) return;
+    links.push(literalLink(source, start - 2, end - 2, node.url));
+  });
+  return links;
+}
+
+/** Use the source parser's literal-link recognizer, including its TLD and scheme boundaries. */
 export const gfmLinks = (): ComarkPlugin => ({
   name: "remark-to-comark:gfm-links",
-  markdownItPost(state) {
-    for (const block of state.tokens) {
-      if (block.type !== "inline" || !block.children) continue;
-      const children = block.children;
-      // One forward pass into a new list: searching and splicing per link is quadratic on link-heavy documents.
-      const out: Token[] = [];
-      for (let index = 0; index < children.length; index++) {
-        const open = children[index]!;
-        if (open.type !== "link_open" || open.markup !== "linkify") {
-          out.push(open);
-          continue;
+  markdownItPlugins: [
+    (md: MarkdownExit) => {
+      let previous = "";
+      let links: LiteralLink[] = [];
+      const match = (source: string) => {
+        if (source !== previous) {
+          previous = source;
+          links = /www\.|https?:\/\/|@|(?:mailto|xmpp):/i.test(source) ? literalLinks(source) : [];
         }
-        let close = index + 1;
-        while (close < children.length && children[close]!.type !== "link_close") close++;
-        const text = children[index + 1];
-        if (text?.type !== "text" || !GFM_LITERAL.test(text.content)) {
-          for (let at = index + 1; at < close; at++) out.push(children[at]!);
-          index = close;
-          continue;
-        }
-        for (let at = index; at <= close && at < children.length; at++) out.push(children[at]!);
-        index = close;
-        const kept = gfmTrim(text.content);
-        if (kept === text.content) continue;
-        const rest = text.content.slice(kept.length);
-        text.content = kept;
-        const href = open.attrs?.find(([name]) => name === "href");
-        if (href?.[1].endsWith(rest)) href[1] = href[1].slice(0, -rest.length);
-        const after = new (tokenClass(text))("text", "", 0);
-        after.content = rest;
-        out.push(after);
-      }
-      block.children = out;
-    }
-  },
+        return links;
+      };
+      md.linkify.match = match;
+      md.linkify.test = (source) => match(source).length > 0;
+      md.linkify.matchAtStart = (source) => {
+        // Inline protocol recognition needs only the first whitespace-delimited candidate.
+        const first = match(source.match(/^\S*/)?.[0] ?? "")[0];
+        return first?.index === 0 ? first : null;
+      };
+    },
+  ],
 });
 
 const isElement = (node: Node | undefined): node is ElementNode =>

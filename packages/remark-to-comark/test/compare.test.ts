@@ -1,10 +1,26 @@
 import { describe, expect, it } from "vite-plus/test";
-import { compare, comarkHtml, remarkHtml } from "./support/index.ts";
+import { compare, comarkHtml, comarkSetup, remarkHtml } from "./support/index.ts";
 
 const both = async (markdown: string) =>
   compare(await remarkHtml(markdown), await comarkHtml(markdown));
 
 describe("compare", () => {
+  it.each([
+    "www.example.invalidtld",
+    "https://example.invalidtld/path",
+    "xmpp:me@example.com",
+    "mailto:me@example.com",
+    "ftp://me@example.com/path",
+    "me@example.invalidtld",
+    "(www.example.invalidtld/path).",
+    "http://example.invalidtld/one and https://example.invalidtld/two",
+    "`www.example.invalidtld` [www.example.invalidtld](https://other.com)",
+  ])("preserves GFM literal links in %s", async (markdown) => {
+    expect(
+      compare(await remarkHtml(markdown), await comarkHtml(markdown, comarkSetup())).differences,
+    ).toEqual([]);
+  });
+
   it("treats plain GFM as the same", async () => {
     const result = await both(
       "# Title\n\nSome *text* and `code`.\n\n| a | b |\n|:--|--:|\n| 1 | 2 |\n\n- [x] done\n\n```js\nconst a = 1\n```\n",

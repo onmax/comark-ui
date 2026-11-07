@@ -51,7 +51,7 @@ export function comarkSetup(options: SetupOptions = {}): ComarkSetup {
   };
   return {
     plugins: [
-      // linkify-it's fuzzy mode finds `www.` links and `user:pass@` URLs; gfmLinks() then trims each to GFM's rules.
+      // Initialize the linkifier before gfmLinks() installs remark-gfm's recognizer.
       ...(gfm ? [linkify({ fuzzyLink: true, urlAuth: true })] : []),
       ...(options.frontmatter === false ? [] : [frontmatter()]),
       ...(options.html === false
