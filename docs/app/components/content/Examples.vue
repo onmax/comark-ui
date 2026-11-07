@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // `::examples`: one tab per `:::example`, as on the old site. Each example's Preview/Code switch shares the tab row, and
-// only the chosen tab is underlined.
+// only the chosen tab is underlined. The examples share one view, so Code stays on when the reader changes tabs.
 import { computed, useSlots, type VNode } from "vue";
 import { indicate } from "../../../seg.ts";
 
@@ -12,6 +12,7 @@ const labels = computed(() =>
   items.value.map((node, at) => String(node.props?.label ?? `Example ${at + 1}`)),
 );
 const active = ref(0);
+const view = ref<"preview" | "code">("preview");
 const tabs = useTemplateRef<HTMLElement>("tabs");
 let stop: (() => void) | undefined;
 onMounted(() => (stop = tabs.value ? indicate(tabs.value, "[aria-selected=true]") : undefined));
@@ -32,7 +33,13 @@ onBeforeUnmount(() => stop?.());
         {{ label }}
       </button>
     </div>
-    <component :is="item" v-for="(item, at) in items" v-show="at === active" :key="at" />
+    <component
+      :is="item"
+      v-for="(item, at) in items"
+      v-show="at === active"
+      :key="at"
+      v-model:view="view"
+    />
   </div>
 </template>
 
