@@ -44,9 +44,14 @@ export default defineNuxtConfig({
     // A Durable Object holds each page's room: who else is on it and where their cursor is, for comments and the editor.
     realtime: { authority: "cloudflare" },
     // The editor is the Console's Content section: the team signs in with the site's own session (server/auth.ts).
+    // console.vitehub.dev opens the same project: it signs in with OAuth against this site (consoleMcpOAuth() in
+    // server/auth.ts), so the resource must be fixed. The site still serves the Console pages itself (`embed`), because
+    // the editor's preview, live editing and the page pill's Content button need the site's own origin.
     console: {
       auth: "app",
       authorize: fileURLToPath(new URL("./server/console-authorize.ts", import.meta.url)),
+      embed: true,
+      mcp: { resource: "https://comark-ui.onmax.me/_vitehub/mcp" },
     },
   },
   // `nuxt dev` has no GitHub OAuth app: the Console runs every call as the loopback user `local`, which team.ts accepts.

@@ -22,6 +22,13 @@
       "when": 1794043616700,
       "tag": "0002_comments_one_model",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1794063686853,
+      "tag": "0003_console-oauth",
+      "breakpoints": true
     }
   ]
 }
