@@ -11,6 +11,7 @@
     "typecheck": "node landing.ts && vue-tsc -b --noEmit"
   },
   "dependencies": {
+    "@better-auth/cimd": "catalog:",
     "@better-auth/oauth-provider": "catalog:",
     "@comark/html": "catalog:",
     "@comark/vue": "catalog:",
