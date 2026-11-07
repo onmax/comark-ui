@@ -162,24 +162,10 @@ onBeforeUnmount(() => stop?.());
 
 /* A block that draws its own frame carries `data-comark-frame` and isn't framed again: a preview that holds only such
    blocks drops its ring and padding, and stacks them with a gap. A block drawn on the server sits in a `.comark-html`
-   named after it, and a screenshot or a comparison counts as framed too. */
-.docs-example-preview:not(
-  :has(
-    > :not(
-      style,
-      script,
-      [data-comark-frame],
-      .comark-html:is(
-        [data-block="screenshot"],
-        [data-block="compare"],
-        [data-block="diff"],
-        [data-block="question"],
-        [data-block="poll"],
-        [data-block="recall"]
-      )
-    )
-  )
-),
+   wrapper, so check its direct children for the marker too. */
+.docs-example-preview:not(:has(> :not(style, script, [data-comark-frame], .comark-html))):not(
+    :has(> .comark-html > :not(style, script, [data-comark-frame]))
+  ),
 .docs-example-preview:has(> p > :is(.cm-video, .cm-audio)) {
   display: flex;
   flex-direction: column;
@@ -189,8 +175,8 @@ onBeforeUnmount(() => stop?.());
   box-shadow: none;
 }
 
-.docs-example-preview > :is(.ca, [data-comark-frame]),
-.docs-example-preview > .comark-html > :is(.ca, .cd, .cqz) {
+.docs-example-preview > [data-comark-frame],
+.docs-example-preview > .comark-html > [data-comark-frame] {
   margin-block: 0;
 }
 
