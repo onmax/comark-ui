@@ -193,7 +193,7 @@ A host renders the report only after you publish it, and a private page may need
 mkdir -p tmp/report-render && cd tmp/report-render
 echo '{ "private": true, "type": "module" }' > package.json
 pnpm add --ignore-workspace comark @comark/html comark-ui playwright
-node ../render.mjs ../report.md out
+node ../../render.mjs ../../report.md out
 ```
 
 Without its own `package.json`, pnpm walks up to the repository's and can fail on its catalog. The script writes `out/report.html` and screenshots at 900px wide, 1600px tall each: `report-closed-*.png` as the reader first sees it, and `report-open-*.png` with every fold open. When Playwright has no browser downloaded, it uses the newest Chromium in `~/.cache/ms-playwright`.
