@@ -25,6 +25,8 @@ export default defineNuxtConfig({
     github: { repo: "onmax/comark-ui", dir: "docs/pages" },
     // Comark plugins are functions, so they reach the server through a file.
     parser: "./markdown.ts",
+    // A playground link's fragment names a preset, not an element.
+    linkChecker: { ignoreFragments: [/^\/play(\/presets)?$/] },
   },
   linkChecker: { excludeLinks: excludedLinks },
   vitehub: {
