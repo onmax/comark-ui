@@ -16,6 +16,7 @@ export const Tests = defineComponent({
         "section",
         {
           class: "ctr",
+          "data-comark-frame": "",
           "data-status": props.failed ? "failed" : "passed",
           "aria-label": props.title || "Test results",
         },

@@ -47,9 +47,11 @@ describe("comark-diagrams", () => {
       { url: "https://kroki.io/graphviz/svg", body: "digraph { a -> b }" },
     ]);
     expect(html).toContain(
-      '<figure class="cdg" data-type="d2"><div class="cdg-svg" role="img" aria-label="Login flow"><svg width="10" height="10" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><text>user -&gt; api</text></svg></div><figcaption>Login flow</figcaption></figure>',
+      '<figure class="cdg" data-comark-frame data-type="d2"><div class="cdg-svg" role="img" aria-label="Login flow"><svg width="10" height="10" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><text>user -&gt; api</text></svg></div><figcaption>Login flow</figcaption></figure>',
     );
-    expect(html).toContain('<figure class="cdg" data-type="graphviz"><div class="cdg-svg"><svg');
+    expect(html).toContain(
+      '<figure class="cdg" data-comark-frame data-type="graphviz"><div class="cdg-svg"><svg',
+    );
     expect(html).not.toMatch(/<\?xml|DOCTYPE|<!-- drawn/);
     expect(html.match(/<style data-comark-diagrams>/g)).toHaveLength(1);
   });
@@ -73,7 +75,7 @@ describe("comark-diagrams", () => {
     const art = "  .-------.\n  | ducks |\n  '-------'";
     const html = await render(`\`\`\`svgbob\n\n${art}\n\n\`\`\``);
     expect(requests).toEqual([{ url: "https://kroki.io/svgbob/svg", body: art }]);
-    expect(html).toContain('<figure class="cdg" data-type="svgbob">');
+    expect(html).toContain('<figure class="cdg" data-comark-frame data-type="svgbob">');
   });
 
   it("tries a diagram again when Kroki times out, drops it, or fails, but not when it refuses the source", async () => {

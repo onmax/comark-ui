@@ -12,7 +12,7 @@ const notes: NodeHandler = async ([, attrs, ...children], state) => {
   styled.add(state.context);
   const start = Number(attrs.start);
   return (
-    `${styles}<ol class="cn-notes"${Number.isInteger(start) && start !== 1 ? ` start="${start}"` : ""}>` +
+    `${styles}<ol class="cn-notes" data-comark-frame${Number.isInteger(start) && start !== 1 ? ` start="${start}"` : ""}>` +
     `${await state.flow(["div", {}, ...children], state)}</ol>`
   );
 };

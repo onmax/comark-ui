@@ -24,6 +24,7 @@ const markdown = [
 // how React writes boolean attributes and names, which HTML reads without case.
 const normalize = (html: string) =>
   html
+    .replace(/ data-comark-frame=""/g, " data-comark-frame")
     .replace(/<!--.*?-->/g, "")
     .replace(/<(style|script)[^>]*>.*?<\/\1>/gs, "")
     .replace(
@@ -45,7 +46,7 @@ describe("comark-media renderers", async () => {
   const expected = normalize(await renderHtmlFromDocument(value, { components: htmlComponents }));
 
   it("renders a video, audio, and an attachment in HTML", () => {
-    expect(expected.match(/<span class="cm cm-video"/g)).toHaveLength(2);
+    expect(expected.match(/<span class="cm cm-video" data-comark-frame/g)).toHaveLength(2);
     expect(expected.match(/<span class="cm cm-audio"/g)).toHaveLength(1);
     expect(expected).toContain("Login &amp; logout");
     expect(expected).toContain('width="1280" height="720"');

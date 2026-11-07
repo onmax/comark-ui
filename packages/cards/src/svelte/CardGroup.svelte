@@ -7,4 +7,4 @@
   onMount(addStyles);
 </script>
 
-<div class="ccr-group">{@render children?.()}</div>
+<div class="ccr-group" data-comark-frame="">{@render children?.()}</div>

@@ -10,7 +10,7 @@
   onMount(() => startMermaid());
 </script>
 
-<div class="cmm" data-source={content}>
+<div class="cmm" data-comark-frame="" data-source={content}>
   <Pele {content} {...rest} />
   <div class="cmm-bar">{@html mermaidBar()}</div>
 </div>

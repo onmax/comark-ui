@@ -13,7 +13,7 @@ export type {
 /** `::accordion` for `@comark/react`. */
 export function Accordion({ children }: { children?: ReactNode }) {
   useEffect(addStyles, []);
-  return createElement("div", { className: "cdt-accordion" }, children);
+  return createElement("div", { className: "cdt-accordion", "data-comark-frame": "" }, children);
 }
 
 type DisclosureProps = {
@@ -28,7 +28,13 @@ export function Disclosure({ variant, name, open, children }: DisclosureProps) {
   useEffect(addStyles, []);
   return createElement(
     "details",
-    { className: "cdt", "data-variant": variant, name: name || undefined, open: Boolean(open) },
+    {
+      className: "cdt",
+      "data-comark-frame": "",
+      "data-variant": variant,
+      name: name || undefined,
+      open: Boolean(open),
+    },
     children,
   );
 }

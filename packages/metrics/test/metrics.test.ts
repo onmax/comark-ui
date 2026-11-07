@@ -68,7 +68,7 @@ describe("comark-metrics", () => {
     const html = await render(
       stats(["| JS | 412 kB | 388 kB |", "| Requests | 1,204 | 1,310 |"], '{tiles better="lower"}'),
     );
-    expect(html).toContain('<dl class="cmt-tiles">');
+    expect(html).toContain('<dl class="cmt-tiles" data-comark-frame>');
     expect(html).not.toContain("<table");
     expect(tight(html)).toContain(
       '<div class="cmt-tile"><dt>JS</dt><dd class="cmt-value">388 kB</dd><dd><span class="cmt-delta" data-direction="down" data-verdict="better"><span class="cmt-change">↓ 5.8%</span></span></dd></div>',
@@ -83,7 +83,7 @@ describe("comark-metrics", () => {
     const html = tight(await render(markdown));
     expect(html).toContain("<style data-comark-metrics>");
     expect(html).toContain(
-      '<dl class="cmt-tiles"><div class="cmt-tile"><dt>Tests</dt><dd class="cmt-value"><strong>1,204</strong></dd></div><div class="cmt-tile"><dt>Status</dt><dd class="cmt-value">Passing</dd></div></dl>',
+      '<dl class="cmt-tiles" data-comark-frame><div class="cmt-tile"><dt>Tests</dt><dd class="cmt-value"><strong>1,204</strong></dd></div><div class="cmt-tile"><dt>Status</dt><dd class="cmt-value">Passing</dd></div></dl>',
     );
     expect(html).not.toContain('<span class="cmt-delta"');
     expect(await issues(markdown)).toEqual([]);

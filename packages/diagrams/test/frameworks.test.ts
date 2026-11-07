@@ -17,6 +17,7 @@ import { components as vueComponents } from "../src/vue.ts";
 // Drops what differs only in serialization: comments, whitespace between tags, and the HTML renderer's inline styles.
 const normalize = (html: string) =>
   html
+    .replace(/ data-comark-frame=""/g, " data-comark-frame")
     .replace(/<!--.*?-->/g, "")
     .replace(/<style[^>]*>.*?<\/style>/g, "")
     .replace(/\s*\n\s*/g, "")
@@ -37,7 +38,7 @@ describe("comark-diagrams renderers", async () => {
   const expected = normalize(await renderHtmlFromDocument(value, { components: htmlComponents }));
 
   it("renders the figure in HTML", () => {
-    expect(expected).toContain('<figure class="cdg" data-type="d2">');
+    expect(expected).toContain('<figure class="cdg" data-comark-frame data-type="d2">');
     expect(expected).toContain("Ducks &amp; geese");
   });
 

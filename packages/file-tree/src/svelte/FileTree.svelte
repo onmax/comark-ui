@@ -7,4 +7,4 @@
   onMount(addStyles);
 </script>
 
-<div class="cft"><ul>{@render children?.()}</ul></div>
+<div class="cft" data-comark-frame=""><ul>{@render children?.()}</ul></div>

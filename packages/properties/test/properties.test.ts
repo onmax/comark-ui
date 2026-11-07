@@ -33,7 +33,7 @@ describe("comark-properties", () => {
     expect(html.match(/<style data-comark-properties>/g)).toHaveLength(1);
     expect(await render(review)).toMatch(
       new RegExp(
-        '^<dl class="cfm">' +
+        '^<dl class="cfm" data-comark-frame>' +
           '<div data-key="status" data-kind="status"><dt>Status</dt><dd><span class="cfm-status">Ready for review</span></dd></div>' +
           '<div data-key="pr" data-kind="pr"><dt>PR</dt><dd><a href="https://github.com/onmax/comark-ui/pull/111">onmax/comark-ui#111</a></dd></div>' +
           '<div data-key="author" data-kind="person"><dt>Author</dt><dd>onmax</dd></div>' +
@@ -73,7 +73,7 @@ describe("comark-properties", () => {
 
   it("goes where ::properties sits instead", async () => {
     const html = await render(review.replace("Body", "# Palette\n\n::properties\n::\n\nBody"));
-    expect(html).toMatch(/^<h1 id="palette">Palette<\/h1><dl class="cfm">/);
+    expect(html).toMatch(/^<h1 id="palette">Palette<\/h1><dl class="cfm" data-comark-frame>/);
     expect(html.match(/class="cfm"/g)).toHaveLength(1);
   });
 

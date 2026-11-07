@@ -46,7 +46,9 @@ describe("comark-details renderers", () => {
       { plugins: [details({ iconResolver: createIcons({ collections: { lucide } }) })] },
     );
     const expected = normalize(await renderers.html(value));
-    expect(expected).toContain('<details class="cdt" data-variant="item" name="cdt-');
+    expect(expected).toContain(
+      '<details class="cdt" data-comark-frame data-variant="item" name="cdt-',
+    );
     expect(expected).toContain('<span class="ci" data-mask aria-hidden="true" style="--ci:url(');
     for (const name of ["vue", "react"] as const) {
       const html = normalize(await renderers[name](value));

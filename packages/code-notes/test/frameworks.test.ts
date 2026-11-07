@@ -18,6 +18,7 @@ const markdown = "```ts\nconst a = 1 // <1>\n```\n\n1. Why **a** & not b.";
 // Drops what differs only in serialization: comments, whitespace between tags, and the HTML renderer's inline styles.
 const normalize = (html: string) =>
   html
+    .replace(/ data-comark-frame=""/g, " data-comark-frame")
     .replace(/<!--.*?-->/g, "")
     .replace(/<style[^>]*>.*?<\/style>/g, "")
     .replace(/&amp;/g, "&")
@@ -33,7 +34,7 @@ const renderers = {
 describe("comark-code-notes renderers", async () => {
   const value = await parseMarkdown(markdown, { plugins: [notes()] });
   const html = normalize(await renderHtmlFromDocument(value, { components: htmlComponents }));
-  const list = /<ol class="cn-notes">.*<\/ol>/.exec(html)?.[0] ?? "";
+  const list = /<ol class="cn-notes" data-comark-frame>.*<\/ol>/.exec(html)?.[0] ?? "";
   const marker = /<a class="cn-marker"[^>]*><\/a>/.exec(html)?.[0] ?? "";
 
   it("renders a marker and its note in HTML", () => {

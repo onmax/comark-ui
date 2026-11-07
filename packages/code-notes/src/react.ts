@@ -10,7 +10,11 @@ export function CodeNotes({ start, children }: CodeNotesAttributes & { children?
   useEffect(addStyles, []);
   return createElement(
     "ol",
-    { className: "cn-notes", start: start && start !== 1 ? start : undefined },
+    {
+      className: "cn-notes",
+      "data-comark-frame": "",
+      start: start && start !== 1 ? start : undefined,
+    },
     children,
   );
 }

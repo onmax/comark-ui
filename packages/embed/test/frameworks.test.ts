@@ -27,6 +27,7 @@ const markdown = [
 // how React writes attribute names, which HTML reads without case.
 const normalize = (html: string) =>
   html
+    .replace(/ data-comark-frame=""/g, " data-comark-frame")
     .replace(/<!--.*?-->/g, "")
     .replace(/<style[^>]*>.*?<\/style>|<script>[\s\S]*?<\/script>/g, "")
     .replace(
@@ -48,8 +49,10 @@ describe("comark-embed renderers", async () => {
   const expected = normalize(await renderHtmlFromDocument(value, { components: htmlComponents }));
 
   it("renders a player, a card, and nothing for an unsafe link in HTML", () => {
-    expect(expected.match(/<figure class="ce"/g)).toHaveLength(3);
-    expect(expected).toContain('<a class="ce-card" href="https://example.com/docs">');
+    expect(expected.match(/<figure class="ce" data-comark-frame/g)).toHaveLength(3);
+    expect(expected).toContain(
+      '<a class="ce-card" data-comark-frame href="https://example.com/docs">',
+    );
     expect(expected).toContain("Launch &amp; demo");
     expect(expected).not.toMatch(/alert|"id"|"class"/);
   });

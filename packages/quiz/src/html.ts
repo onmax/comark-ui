@@ -64,6 +64,7 @@ async function render(node: ElementNode, state: State) {
   const options = optionsOf(node);
   const root = [
     `class="cqz${attrs.class ? ` ${attr(attrs.class)}` : ""}"`,
+    "data-comark-frame",
     'data-slot="root"',
     `data-quiz-id="${attr(attrs["quiz-id"])}"`,
     `data-quiz-kind="${kind}"`,

@@ -11,7 +11,7 @@ export function Cast({ mode, title, children }: CastAttributes & { children?: Re
   if (!mode) return null;
   return createElement(
     "figure",
-    { className: "cca", "data-mode": mode },
+    { className: "cca", "data-comark-frame": "", "data-mode": mode },
     title ? createElement("figcaption", null, title) : null,
     createElement("pre", { className: "cca-term" }, children),
   );

@@ -13,7 +13,7 @@ export const Cast = defineComponent({
     onMounted(addStyles);
     return () =>
       props.mode
-        ? h("figure", { class: "cca", "data-mode": props.mode }, [
+        ? h("figure", { class: "cca", "data-comark-frame": "", "data-mode": props.mode }, [
             props.title ? h("figcaption", props.title) : null,
             h("pre", { class: "cca-term" }, slots.default?.()),
           ])

@@ -35,6 +35,8 @@ export const Media = defineComponent({
       const { kind, src, label } = props;
       if ((kind !== "video" && kind !== "audio") || !src) return null;
       const video = kind === "video";
+      // A video draws its own frame; audio doesn't.
+      const frame = video ? "" : undefined;
       const attrs = {
         src,
         controls: true,
@@ -49,11 +51,13 @@ export const Media = defineComponent({
         "aria-label": label || undefined,
       };
       const fallback = [h("a", { href: src }, label || src)];
-      if (props.native) return h(kind, { class: "cm", ...attrs }, fallback);
+      if (props.native)
+        return h(kind, { class: "cm", "data-comark-frame": frame, ...attrs }, fallback);
       return h(
         "span",
         {
           class: `cm cm-${kind}`,
+          "data-comark-frame": frame,
           role: label ? "group" : undefined,
           "aria-label": label || undefined,
         },

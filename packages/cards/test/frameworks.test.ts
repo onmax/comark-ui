@@ -47,7 +47,7 @@ describe("comark-cards renderers", () => {
     );
     const expected = normalize(await renderers.html(value));
     expect(expected).toContain(
-      '<div class="ccr" data-color="info" data-variant="soft"><a class="ccr-link" href="/guide" aria-label="Docs"></a><span class="ci"',
+      '<div class="ccr" data-comark-frame data-color="info" data-variant="soft"><a class="ccr-link" href="/guide" aria-label="Docs"></a><span class="ci"',
     );
     for (const name of ["vue", "react"] as const) {
       const html = normalize(await renderers[name](value));
