@@ -100,7 +100,7 @@ Every page reads without a script. Scripts add zooming to zoom, arrows and keys 
 
 The HTML renderers inline each plugin's styles and script in the page. Vue, React, and Svelte render the [text styles](/guide/typeset/) with the document too, since they're scoped to the element the document renders into.
 
-The Vue, React, and Svelte components add the styles and start the script on mount, and stop it when the last one unmounts. To render on a server, import each package's `style.css`, such as `comark-zoom/style.css`, with your own styles, so the page doesn't shift on mount.
+The Vue, React, and Svelte components add the styles and start the script on mount, and stop it when the last one unmounts. To render on a server, import `comark-ui/style.css`, every package's styles in one file, with your own styles, so the page doesn't shift on mount. With a single package, import its own `style.css`, such as `comark-zoom/style.css`.
 
 Without a renderer, call `start()` from `comark-zoom/client` once on a page with `data-zoom` elements. It adds the styles and returns a stop function.
 
