@@ -63,7 +63,7 @@
     "vite-doctor": "catalog:"
   },
   "peerDependencies": {
-    "comark": "^0.8.0",
+    "comark": "^0.9.0",
     "vite-doctor": "^0.1.0"
   },
   "peerDependenciesMeta": {

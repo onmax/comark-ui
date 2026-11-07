@@ -247,6 +247,8 @@ function readList(
   reading: Reading,
 ): JSONContent {
   const items = children.filter(isElement);
+  // Tiptap's task list is a bullet list, so an ordered one would come back as `::ol{.contains-task-list}`.
+  if (tag === "ol" && items.some(isTaskItem)) reading.lossy = true;
   if (tag === "ul" && items.length && items.every(isTaskItem))
     return node(
       "taskList",

@@ -176,9 +176,7 @@ describe("comark-annotate", () => {
     expect(html).not.toContain("onerror");
   });
 
-  // Comark 0.8 moves inline HTML's text out of the element inside a block, so the blocked script's code is left as
-  // escaped text: https://github.com/comarkdown/comark/issues/505. This starts passing, and so failing, once it's fixed.
-  it.fails("removes a blocked script's code with it", async () => {
+  it("removes a blocked script's code with it", async () => {
     expect(await cleaned()).not.toContain("alert(2)");
   });
 

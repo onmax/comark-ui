@@ -71,6 +71,26 @@ describe("comarkSetup", () => {
   });
 
   it.each([
+    ["enables linkification", (md: MarkdownIt) => md.set({ linkify: true })],
+    [
+      "customizes linkification",
+      (md: MarkdownIt) => {
+        md.linkify.tlds("invalidtld", true);
+        md.linkify.add("issue:", "http:");
+        md.set({ linkify: true });
+      },
+    ],
+    ["keeps linkification off", (md: MarkdownIt) => md.linkify.tlds("invalidtld", true)],
+    ["disables linkification", (md: MarkdownIt) => md.set({ linkify: false })],
+  ])("lets a bridged plugin %s", async (_, plugin) => {
+    for (const linkify of [false, true]) {
+      const { markdownIt, comark } = both({ syntax: "plain", linkify, plugins: [[plugin]] });
+      const markdown = "www.example.com www.example.invalidtld issue://example.com\n";
+      expect(compare(markdownIt(markdown), await comark(markdown)).differences).toEqual([]);
+    }
+  });
+
+  it.each([
     ["only a comment", "<!-- a -->\n\ntext\n"],
     ["elements and a comment", '<p><a href="#">x</a></p>\n<!-- end -->\n'],
     ["elements with loose text between them", "<h3>Title</h3>\nLoose text.\n<p><a>b</a></p>\n"],

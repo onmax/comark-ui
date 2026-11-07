@@ -2,6 +2,7 @@ import type { ComarkPlugin, ParserOptions } from "comark";
 import attributes from "comark/plugins/attributes";
 import components from "comark/plugins/components";
 import html from "comark/plugins/html";
+import linkify from "comark/plugins/linkify";
 import taskList from "comark/plugins/task-list";
 import { frontmatter } from "./plugins/frontmatter.ts";
 import {
@@ -18,7 +19,6 @@ import {
   langPrefix,
   legacyTables,
   linkText,
-  markedEmails,
   taskListClasses,
   underscoreTagText,
   underscoreTags,
@@ -85,9 +85,10 @@ export function comarkSetup(options: SetupOptions = {}): ComarkSetup {
     autoUnwrap: false,
     headingIds: options.headerIds ? false : (options.headingIds ?? false),
   };
-  if (!gfm) parserOptions.linkify = false;
   return {
     plugins: [
+      // Initialize the linkifier before gfmLinks() installs marked's recognizer.
+      ...(gfm ? [linkify({ fuzzyLink: true, urlAuth: true })] : []),
       ...(options.frontmatter ? [frontmatter()] : []),
       ...(options.expandTabs ? [expandTabs(options.expandTabs)] : []),
       ...(options.legacyTables ? [legacyTables()] : []),
@@ -115,7 +116,7 @@ export function comarkSetup(options: SetupOptions = {}): ComarkSetup {
           ]),
       ...(gfm ? [taskList(), taskListClasses()] : [commonmark()]),
       ...(syntax === "comark" ? [components(), attributes()] : []),
-      ...(gfm ? [gfmLinks(), markedEmails()] : []),
+      ...(gfm ? [gfmLinks()] : []),
       linkText(),
       tightLists(),
       ...(options.rawAlt ? [] : [imageAltText()]),
