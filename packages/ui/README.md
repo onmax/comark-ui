@@ -33,6 +33,14 @@ comarkUi({
 
 It also returns `tags` and `blocks`. `tags` is every element a parsed document can hold besides the components; with the components' names, it's the allowlist for Comark's `security` plugin. `blocks` are the blocks the plugins replace while parsing, such as `::code-group`, which a linter needs beside the components' names.
 
+If a server already parsed your document, import Vue's `components` directly. This keeps the chart parsers and the rest of the parse preset out of the renderer bundle:
+
+```ts
+import { components } from "comark-ui/vue";
+```
+
+The map includes every Vue renderer and the typeset styles. Use `comarkUi(options).components` when you need the map to follow plugin options.
+
 ## Renderers
 
 | Renderer | Import |
