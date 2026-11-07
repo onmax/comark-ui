@@ -4,7 +4,8 @@
 import { indicate } from "../../../seg.ts";
 
 defineProps<{ label?: string; play?: string }>();
-const view = ref<"preview" | "code">("preview");
+// `::examples` passes the view in, so a tab keeps it when the reader moves to the next one.
+const view = defineModel<"preview" | "code">("view", { default: "preview" });
 const seg = useTemplateRef<HTMLElement>("seg");
 let stop: (() => void) | undefined;
 onMounted(() => (stop = seg.value ? indicate(seg.value) : undefined));
