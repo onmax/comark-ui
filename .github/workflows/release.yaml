@@ -193,7 +193,37 @@ jobs:
             npm publish "$tarball" --provenance --ignore-scripts --access public --tag "$tag"
           }
           export -f publish_package
-          jq -jr '.[] | ., "\u0000"' <<<"$FILES" | xargs -0 -r -n 1 -P 4 bash -c 'set -euo pipefail; publish_package "$1"' _
+          manifests=$(for file in $(jq -r '.[]' <<<"$FILES"); do
+            tar -xOzf "$TARBALLS/$file" package/package.json | jq -c --arg file "$file" \
+              '{file: $file, name, needs: ([.dependencies, .peerDependencies, .optionalDependencies | objects | keys[]] | unique)}'
+          done | jq -s .)
+          # npm answers E404 to a publish of a name it has never seen, so fail before anything goes out
+          unregistered=$(for name in $(jq -r '.[].name' <<<"$manifests"); do
+            npm view "$name" name >/dev/null 2>&1 || echo "$name"
+          done)
+          if [ -n "$unregistered" ]; then
+            echo "::error::Not on npm yet: $(tr "\n" " " <<<"$unregistered"). Publish a 0.0.0 placeholder and add its trusted publisher (release.yaml, environment npm) first."
+            exit 1
+          fi
+          # A package goes out only after every sibling it depends on, so latest never names a missing version.
+          # comark-ui follows its plugins, and comark-linter, which peers on comark-ui, follows it.
+          waves=$(jq -c '
+            (map(.name)) as $names
+            | map(.needs |= map(select(. as $n | $names | index($n)))) as $pkgs
+            | def wave($done; $out):
+                ($pkgs | map(select(.name as $n | $done | index($n) | not))) as $left
+                | if ($left | length) == 0 then $out
+                  else ($left | map(select(all(.needs[]; . as $d | $done | index($d))))) as $ready
+                    | if ($ready | length) == 0 then error("dependency cycle among \($left | map(.name) | join(", "))")
+                      else wave($done + ($ready | map(.name)); $out + [$ready | map(.file)]) end
+                  end;
+              wave([]; [])' <<<"$manifests")
+          while read -r wave; do
+            if ! jq -jr '.[] | ., "\u0000"' <<<"$wave" | xargs -0 -r -n 1 -P 4 bash -c 'set -euo pipefail; publish_package "$1"' _; then
+              echo "::error::A package in this wave failed, so the packages that depend on it were not published. Wave: $(jq -r 'join(", ")' <<<"$wave")"
+              exit 1
+            fi
+          done < <(jq -c '.[]' <<<"$waves")
 
       - name: Verify every release package is on npm
         if: ${{ !cancelled() && steps.publish.outcome != 'skipped' }}
