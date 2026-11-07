@@ -1,4 +1,4 @@
-import { Lexer } from "marked";
+import { Lexer, type Tokens } from "marked";
 import type {
   ComarkParseTokensState,
   ComarkPlugin,
@@ -59,8 +59,11 @@ function literalLinks(source: string): LiteralLink[] {
   let start = 0;
   for (const token of Lexer.lexInline(source, { gfm: true })) {
     const end = start + token.raw.length;
-    if (token.type === "link" && typeof token.href === "string" && !/^[<[]/.test(token.raw))
-      links.push(literalLink(source, start, end, token.href));
+    if (token.type === "link" && !/^[<[]/.test(token.raw)) {
+      // SAFETY: lexInline runs without extensions, so a link token is Marked's built-in link.
+      const link = token as Tokens.Link;
+      links.push(literalLink(source, start, end, link.href));
+    }
     start = end;
   }
   return links;
@@ -76,7 +79,9 @@ export const gfmLinks = (): ComarkPlugin => ({
       const match = (source: string) => {
         if (source !== previous) {
           previous = source;
-          links = /www\.|https?:\/\/|@|(?:mailto|xmpp):/i.test(source) ? literalLinks(source) : [];
+          links = /www\.|(?:https?|ftp):\/\/|@|(?:mailto|xmpp):/i.test(source)
+            ? literalLinks(source)
+            : [];
         }
         return links;
       };

@@ -46,9 +46,13 @@ export const markdownItOptions = (options: MarkdownItOptions): ComarkPlugin => (
   name: "markdown-it-to-comark:options",
   markdownItPlugins: [
     (md: MarkdownExit) => {
-      // SAFETY: markdown-exit consumes the same match/test API. Keep markdown-it's linkifier version and its
-      // plugin customization API, including schema aliases, even when linkification is off.
-      md.linkify = new MarkdownIt().linkify as unknown as MarkdownExit["linkify"];
+      // Check the methods markdown-exit consumes without asserting its newer linkifier's private fields.
+      // Keep markdown-it's customization API, including schema aliases, even when linkification is off.
+      const linkify = new MarkdownIt().linkify satisfies Pick<
+        MarkdownExit["linkify"],
+        "match" | "matchAtStart" | "test"
+      >;
+      Object.assign(md, { linkify });
       // Comark builds its parser with tables and strikethrough on; a preset resets the rules to its own list.
       if (options.preset && options.preset !== "default") md.configure(options.preset);
       md.set({ html: Boolean(options.html) });
