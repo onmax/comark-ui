@@ -225,7 +225,7 @@ How most packages work, so the bullets below don't repeat it:
   - `vp dlx skills add onmax/comark-ui` installs it from GitHub, the docs serve it under `/.well-known/skills/` through nuxt-agent-discovery, and comark-ui ships it.
   - `SKILL.md` installs the plugins, routes each block to its package's reference in `references/`, and holds what several packages share, such as the marks.
   - `test/workspace.test.ts` checks that every package has a reference linked from `SKILL.md` that ends with its Register section. A new package adds one, and a change to a package's syntax updates it.
-- `skills/before-after-evidence`, `review-document`, `visual-explanation`, and `teach-lesson` are the skills for a whole document: what goes in it and in what order.
+- `skills/before-after-evidence`, `review-document`, `report`, `visual-explanation`, and `teach-lesson` are the skills for a whole document: what goes in it and in what order.
   - `vp dlx skills add onmax/comark-ui` lists them beside comark-ui and installs the ones picked.
   - Each installs alone, so it carries the syntax of the blocks it uses in `references/blocks.md` and links nothing outside its folder. Its `references/example.md` is a finished document.
   - Each has a page in `docs/pages/skills/` that leads with that example rendered.
