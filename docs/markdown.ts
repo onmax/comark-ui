@@ -2,7 +2,7 @@
 import { renderHtmlFromDocument } from "@comark/html";
 import { defineComarkPlugin, type ElementNode, type Node } from "comark";
 import { textContent } from "comark/utils";
-import comarkUi from "comark-ui/vue";
+import { components as vueComponents } from "comark-ui/vue";
 import { createDocsParser, type DocsParserOptions } from "@vite-hub/docs/server";
 import { playable, playLink } from "./play-link.ts";
 import { browserPlugins, components as html } from "./plugins.ts";
@@ -14,7 +14,7 @@ const isElement = (node: Node): node is ElementNode =>
 // annotate, diff, quiz, and comments have only an HTML renderer, so their blocks reach the page as the HTML it draws.
 // The Vue components are named in PascalCase, `Tabs` for `tabs`.
 const name = (tag: string) => tag.replaceAll("-", "").toLowerCase();
-const vue = new Set(Object.keys(comarkUi().components).map(name));
+const vue = new Set(Object.keys(vueComponents).map(name));
 // comark-links' `span` only fixes how the HTML renderer writes `aria-hidden`, which Vue writes right.
 const htmlOnly = Object.keys(html).filter((tag) => tag !== "span" && !vue.has(name(tag)));
 const bridge = defineComarkPlugin(() => {
