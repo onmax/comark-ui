@@ -1,4 +1,5 @@
 import { theme } from "comark-zoom/theme";
+import { shikiDark } from "../../../shared/shiki.ts";
 
 // T3 Code's surface grain (pingdotgg/t3code apps/web/src/index.css): fractal noise at 3.5% opacity in a 256px tile.
 const grain = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E")`;
@@ -217,7 +218,7 @@ const rules = `
  * the page wins over both.
  */
 export const typesetCss =
-  `@layer comark{@layer typeset{@scope{${theme(":scope", "primary")}${rules}}}}`
+  `@layer comark{@layer typeset{@scope{${theme(":scope", "primary")}${rules}${shikiDark}}}}`
     .replace(/\/\*[\s\S]*?\*\//g, "")
     .replace(/\s+/g, " ")
     .replace(/ ?([{};,>(]) ?/g, "$1")

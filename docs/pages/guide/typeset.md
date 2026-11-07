@@ -27,7 +27,7 @@ The text reads the blocks' tokens, so it follows [Theming](/guide/theming/) with
 - On a [shadcn/ui](https://ui.shadcn.com) site, they come from `--foreground`, `--muted-foreground`, `--border`, and `--accent`.
 - With neither, they use shadcn's neutral theme and follow the system's light or dark mode. A `light` or `dark` class on `<html>`, or on any element around the document, pins one, as [Theming](/guide/theming/#pin-light-or-dark-mode) explains.
 
-Fonts come from Tailwind's `--font-sans` and `--font-mono`, which Nuxt UI and shadcn/ui both set. On a site with neither, the text is the system's sans-serif; set `--comark-font` to use another. Code with a light and a dark Shiki theme switches with the page through [code](/code/#theme)'s styles, with or without typeset.
+Fonts come from Tailwind's `--font-sans` and `--font-mono`, which Nuxt UI and shadcn/ui both set. On a site with neither, the text is the system's sans-serif; set `--comark-font` to use another. Code with a light and a dark Shiki theme switches with the page through typeset's styles, including the standalone stylesheet. [Code](/code/#theme)'s styles also carry the rule, so code blocks switch with typeset off.
 
 ## Change it
 
