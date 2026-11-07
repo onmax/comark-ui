@@ -24,7 +24,8 @@ export const css = `@layer comark{${[
   // Forced colors drop the surface, and the transparent outline shows instead.
   ".cmv-tab[aria-selected='true']{color:var(--_comark-foreground);background:var(--_comark-background);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--_comark-border),var(--_comark-foreground) 8%);outline:1px solid transparent;outline-offset:-1px}",
   // On a dark page the strip is lighter than the page, so the open tab rises with a lighter surface, as in comark-tabs.
-  "@supports (color:oklch(from red l c h)){.cmv-tab[aria-selected='true']{background:oklch(from var(--_comark-background) calc(l + .14 * clamp(0, (.5 - l) * 100, 1)) c h)}}",
+  // `min(1, …)` stands in for `calc()`, as there.
+  "@supports (color:oklch(from red l c h)){.cmv-tab[aria-selected='true']{background:oklch(from var(--_comark-background) min(1, l + .14 * clamp(0, (.5 - l) * 100, 1)) c h)}}",
   // The strip scrolls, so it clips whatever reaches past its padding: a tab's ring stays inside the tab.
   ".cmv-tab:focus-visible{outline:2px solid var(--_comark-ring);outline-offset:-2px}",
   ".cmv-step:focus-visible{outline:2px solid var(--_comark-ring);outline-offset:2px}",

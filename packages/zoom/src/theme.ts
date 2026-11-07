@@ -74,7 +74,9 @@ export function dark(selector: string, declarations: string): string {
 
 /**
  * Resolves the `--comark-*` tokens on `selector`, falling back to Nuxt UI's variables, then shadcn/ui's, then shadcn's
- * neutral theme. Nuxt UI's corners are twice its `--ui-radius`, so the radius halves shadcn's to double it back.
+ * neutral theme. Nuxt UI's corners are twice its `--ui-radius`, so the radius halves shadcn's to double it back. The
+ * halving sits in the `var()` fallback without a `calc()` of its own, which reads the same once the fallback is
+ * substituted, because postcss-calc, which cssnano runs, can't parse a `calc()` there.
  * They resolve on the component rather than `:root`, so a `--comark-*` set on any ancestor still inherits down.
  * `:where()` keeps them at zero specificity. The neutral theme follows the system's color mode, and a `.light` or
  * `.dark` class on the component or above it pins one (see `dark()`).
@@ -87,7 +89,7 @@ export function theme(selector: string, ...extras: Extras[]): string {
   const where = `:where(${selector})`;
   const list: Token[] = [...tokens, ...extras.flatMap((name) => groups[name])];
   return (
-    `${where}{${resolve(list, 3)};--_comark-radius:var(--comark-radius,calc(var(--ui-radius,calc(var(--radius,.625rem)/2))*2));--_comark-font:var(--comark-font,var(--font-sans,ui-sans-serif,system-ui,sans-serif))}` +
+    `${where}{${resolve(list, 3)};--_comark-radius:var(--comark-radius,calc(var(--ui-radius,var(--radius,.625rem)/2)*2));--_comark-font:var(--comark-font,var(--font-sans,ui-sans-serif,system-ui,sans-serif))}` +
     dark(where, resolve(list, 4))
   );
 }
