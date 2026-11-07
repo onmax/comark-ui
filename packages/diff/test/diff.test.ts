@@ -65,6 +65,15 @@ describe("::diff", () => {
     expect(html).not.toMatch(/<(?:ins|del)>\s*\n/);
   });
 
+  it("switches Shiki's colors to the dark theme with the page, without typeset", async () => {
+    const document = await parseMarkdown(suggestion, { plugins: [diffPlugin(), shiki()] });
+    const html = await renderHtmlFromDocument(document, { components });
+    expect(html).toContain("--shiki-dark:");
+    expect(/<style data-comark-diff>(.*?)<\/style>/s.exec(html)?.[1]).toContain(
+      '.shiki:where(.dark *) span[style*="--shiki-dark:"]{color:var(--shiki-dark)!important}',
+    );
+  });
+
   it("marks the words that changed in plain code, and leaves lines that share little whole", async () => {
     const { html } = await run(
       diff("const gap = 8\nconsole.log(a)", "const gap = 12\nreturn fetch(url)"),

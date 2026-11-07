@@ -78,6 +78,19 @@ describe("comark-code", () => {
     expect(html).toContain("--shiki-dark:");
   });
 
+  it("switches Shiki's colors to the dark theme with the page, without typeset", async () => {
+    const style = /<style data-comark-code>(.*?)<\/style>/s.exec(await render(sh))?.[1];
+    expect(style).toContain(
+      '.shiki:where(.dark *) span[style*="--shiki-dark:"]{color:var(--shiki-dark)!important}',
+    );
+    expect(style).toContain(
+      '@media (prefers-color-scheme:dark){.shiki:not(:where(.light *)) span[style*="--shiki-dark:"]{color:var(--shiki-dark)!important}',
+    );
+    expect(style).toContain(
+      '.shiki:where(.dark *) span[style*="--shiki-dark-font-style:"]{font-style:var(--shiki-dark-font-style)!important}',
+    );
+  });
+
   it("adds your actions to the blocks in their languages, before Wrap and Copy", async () => {
     const options = { actions: [run, { id: "explain", label: "Explain" }] };
     expect(await bar("```bash\nls\n```", options)).toMatch(

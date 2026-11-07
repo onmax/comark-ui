@@ -183,21 +183,6 @@ const rules = `
   }
 }
 
-/* Code highlighted with a light and a dark theme follows the page into dark mode, as the tokens do: a .dark class
-   above it, or the system's dark mode on a page with no .light class. A span switches what it has a dark value for. */
-.shiki:where(.dark *) span {
-  &[style*="--shiki-dark:"] { color: var(--shiki-dark) !important; }
-  &[style*="--shiki-dark-font-style:"] { font-style: var(--shiki-dark-font-style) !important; }
-  &[style*="--shiki-dark-font-weight:"] { font-weight: var(--shiki-dark-font-weight) !important; }
-}
-@media (prefers-color-scheme: dark) {
-  .shiki:not(:where(.light *)) span {
-    &[style*="--shiki-dark:"] { color: var(--shiki-dark) !important; }
-    &[style*="--shiki-dark-font-style:"] { font-style: var(--shiki-dark-font-style) !important; }
-    &[style*="--shiki-dark-font-weight:"] { font-weight: var(--shiki-dark-font-weight) !important; }
-  }
-}
-
 /* A block marked data-wide, such as a before/after comparison or a diagram wider than the text, grows past the column
    into the room the page gives it on each side, --comark-wide-start and --comark-wide-end, up to its own width
    (--comark-wide-width) and --comark-wide-max. It stays centered on the column while both sides have room, and moves

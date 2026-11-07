@@ -15,12 +15,8 @@ it("ships the typeset styles as a stylesheet scoped to .comark-typeset", () => {
   expect(css).toContain(":where(:scope){--_comark-background:var(--comark-background,");
   expect(css).toContain("calc(var(--typeset-size,1em) * 1.125)");
   expect(css).toContain("&:where(.footnotes,[data-footnotes])");
-  expect(css).toContain(
-    '.shiki:where(.dark *) span{&[style*="--shiki-dark:"]{color:var(--shiki-dark) !important;}',
-  );
-  expect(css).toContain(
-    '&[style*="--shiki-dark-font-style:"]{font-style:var(--shiki-dark-font-style) !important;}',
-  );
+  // comark-code switches Shiki's colors in dark mode, so typeset doesn't repeat it.
+  expect(css).not.toContain("--shiki-dark");
   expect(css).toContain("&:where(:is(p,li,td,th,a) img){margin-block-start:0;}");
 });
 

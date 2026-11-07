@@ -1,4 +1,5 @@
 import { theme } from "comark-zoom/theme";
+import { shikiDark } from "../../../shared/shiki.ts";
 
 export const css = `@layer comark{${[
   theme(".cd", "status"),
@@ -41,4 +42,5 @@ export const css = `@layer comark{${[
   // A highlighted line keeps its row's color under a neutral wash, with a bar on its edge.
   ".cd-code [data-highlight]{background-image:linear-gradient(color-mix(in srgb,var(--_comark-foreground) 6%,transparent) 0 0)}",
   ".cd-code [data-highlight]>:first-child{box-shadow:inset 2px 0 var(--_comark-ring)}",
+  shikiDark,
 ].join("")}}`;
