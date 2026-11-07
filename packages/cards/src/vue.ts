@@ -48,20 +48,29 @@ export const Card = defineComponent({
   setup(props, { slots }) {
     onMounted(addStyles);
     return () =>
-      h("div", { class: "ccr", "data-color": props.color, "data-variant": props.variant }, [
-        isSafeHref(props.to)
-          ? h("a", {
-              class: "ccr-link",
-              href: props.to,
-              target: props.target || (isExternalHref(props.to) ? "_blank" : undefined),
-              rel: rel(props.target || (isExternalHref(props.to) ? "_blank" : undefined)),
-              "aria-label": props.label,
-            })
-          : null,
-        props.icon?.src ? h(Icon, { ...props.icon }) : null,
-        props.external ? arrow() : null,
-        slots.default?.(),
-      ]);
+      h(
+        "div",
+        {
+          class: "ccr",
+          "data-comark-frame": "",
+          "data-color": props.color,
+          "data-variant": props.variant,
+        },
+        [
+          isSafeHref(props.to)
+            ? h("a", {
+                class: "ccr-link",
+                href: props.to,
+                target: props.target || (isExternalHref(props.to) ? "_blank" : undefined),
+                rel: rel(props.target || (isExternalHref(props.to) ? "_blank" : undefined)),
+                "aria-label": props.label,
+              })
+            : null,
+          props.icon?.src ? h(Icon, { ...props.icon }) : null,
+          props.external ? arrow() : null,
+          slots.default?.(),
+        ],
+      );
   },
 });
 
@@ -80,7 +89,7 @@ export const CardGroup = defineComponent({
   inheritAttrs: false,
   setup(_, { slots }) {
     onMounted(addStyles);
-    return () => h("div", { class: "ccr-group" }, slots.default?.());
+    return () => h("div", { class: "ccr-group", "data-comark-frame": "" }, slots.default?.());
   },
 });
 

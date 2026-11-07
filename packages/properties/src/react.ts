@@ -13,7 +13,7 @@ export function Properties({ children }: { children?: ReactNode }) {
     if (box.current) localizeDates(box.current);
   });
   return Children.count(children)
-    ? createElement("dl", { className: "cfm", ref: box }, children)
+    ? createElement("dl", { className: "cfm", "data-comark-frame": "", ref: box }, children)
     : null;
 }
 

@@ -54,7 +54,7 @@ describe("::question", () => {
     const { issues, html } = await run(question());
     expect(issues).toEqual([]);
     expect(html).toMatch(
-      /^<div class="cqz" data-slot="root" data-quiz-id="event-loop" data-quiz-kind="question" data-state="idle">/,
+      /^<div class="cqz" data-comark-frame data-slot="root" data-quiz-id="event-loop" data-quiz-kind="question" data-state="idle">/,
     );
     expect(html).toContain('<span class="cqz-number" data-slot="number"');
     expect(html).toContain(">1.</span>");

@@ -160,38 +160,15 @@ onBeforeUnmount(() => stop?.());
   margin-bottom: 0;
 }
 
-/* A block that draws its own frame (a chart, a diff, an embed, a code block, a file tree, callouts, tabs, a carousel,
-   a card, a quiz, a test report, a properties box) isn't framed again: a preview that holds only such blocks drops its
-   ring and padding, and stacks them with a gap. A block drawn on the server sits in a `.comark-html` named after it. */
+/* A block that draws its own frame carries `data-comark-frame` and isn't framed again: a preview that holds only such
+   blocks drops its ring and padding, and stacks them with a gap. A block drawn on the server sits in a `.comark-html`
+   named after it, and a screenshot or a comparison counts as framed too. */
 .docs-example-preview:not(
   :has(
     > :not(
       style,
       script,
-      .cch,
-      .cd,
-      .ce,
-      .ce-card,
-      .cgc,
-      .ck,
-      .cft,
-      .ct,
-      .cmv,
-      .cc,
-      .ccr,
-      .ccr-group,
-      .cdg,
-      .cmm,
-      .cca,
-      .cdt,
-      .cdt-accordion,
-      .ctr,
-      .cfm,
-      .cmt-tiles,
-      .cqz,
-      .cm-video,
-      video.cm,
-      .cn-notes,
+      [data-comark-frame],
       .comark-html:is(
         [data-block="screenshot"],
         [data-block="compare"],
@@ -212,34 +189,7 @@ onBeforeUnmount(() => stop?.());
   box-shadow: none;
 }
 
-.docs-example-preview
-  > :is(
-    .ca,
-    .cch,
-    .cd,
-    .ce,
-    .ce-card,
-    .cgc,
-    .ck,
-    .cft,
-    .ct,
-    .cmv,
-    .cc,
-    .ccr,
-    .ccr-group,
-    .cdg,
-    .cmm,
-    .cca,
-    .cdt,
-    .cdt-accordion,
-    .ctr,
-    .cfm,
-    .cmt-tiles,
-    .cqz,
-    .cm-video,
-    video.cm,
-    .cn-notes
-  ),
+.docs-example-preview > :is(.ca, [data-comark-frame]),
 .docs-example-preview > .comark-html > :is(.ca, .cd, .cqz) {
   margin-block: 0;
 }

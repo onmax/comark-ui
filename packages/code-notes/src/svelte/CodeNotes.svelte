@@ -7,4 +7,4 @@
   onMount(addStyles);
 </script>
 
-<ol class="cn-notes" start={start && start !== 1 ? start : undefined}>{@render children?.()}</ol>
+<ol class="cn-notes" data-comark-frame="" start={start && start !== 1 ? start : undefined}>{@render children?.()}</ol>

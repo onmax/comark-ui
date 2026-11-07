@@ -28,7 +28,7 @@ const cast: NodeHandler = ([, attrs, ...children], state) => {
   const styles = styled.has(state.context) ? "" : `<style data-comark-cast>${css}</style>`;
   styled.add(state.context);
   return (
-    `${styles}<figure class="cca" data-mode="${attr(mode)}">${title ? `<figcaption>${attr(title)}</figcaption>` : ""}` +
+    `${styles}<figure class="cca" data-comark-frame data-mode="${attr(mode)}">${title ? `<figcaption>${attr(title)}</figcaption>` : ""}` +
     `<pre class="cca-term">${children.map(write).join("")}</pre></figure>`
   );
 };

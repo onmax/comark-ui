@@ -58,9 +58,9 @@ describe("comark-annotate", () => {
     expect(html).not.toMatch(/<figcaption><div class="ca-heading">/);
     // Side by side on a wide page, one at a time on a narrow one, and both zoom as one gallery.
     expect(html).toContain(
-      '<div class="ca ca-compare" data-wide><div class="cc" data-carousel-columns="2" data-carousel-fits data-zoom-gallery',
+      '<div class="ca ca-compare" data-wide><div class="cc" data-comark-frame data-carousel-columns="2" data-carousel-fits data-zoom-gallery',
     );
-    expect(html).toMatch(/<div class="cc"[^>]* aria-label="Comparison"/);
+    expect(html).toMatch(/<div class="cc" data-comark-frame[^>]* aria-label="Comparison"/);
     expect(html.match(/class="cc-slide"/g)).toHaveLength(2);
   });
 
@@ -741,7 +741,7 @@ describe("comark-annotate", () => {
       `::compare{title="Toolbar fix"}\n:::screenshot{src="a.png" alt="A" title="Main"}\n:::\n\n:::screenshot{src="b.png" alt="B"}\n:::\n::`,
     );
     expect(issues).toEqual([]);
-    expect(html).toMatch(/<div class="cc"[^>]* aria-label="Toolbar fix"/);
+    expect(html).toMatch(/<div class="cc" data-comark-frame[^>]* aria-label="Toolbar fix"/);
     expect(html).toContain('<div class="ca-heading"><span class="ca-label">Main</span>');
     expect(html).toContain('data-zoom-title="Main"><div class="ca-frame">');
     expect(html).toContain('<span class="ca-label">After</span>');

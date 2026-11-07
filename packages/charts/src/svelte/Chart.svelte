@@ -8,7 +8,7 @@
 </script>
 
 {#if svg}
-  <figure class="cch" data-type={type}>
+  <figure class="cch" data-comark-frame="" data-type={type}>
     {#if title}<figcaption>{title}</figcaption>{/if}
     <div class="cch-plot">{@html svg}</div>
     <div class="cch-bar">{@html bar()}</div>

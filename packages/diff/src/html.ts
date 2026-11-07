@@ -53,7 +53,7 @@ const diff: NodeHandler = async (node, state) => {
     .join("");
   const classes = ["cd-code", code.class].filter(Boolean).join(" ");
   return (
-    `${styles(state)}<figure class="cd" data-not-typeset><figcaption>${header}</figcaption>` +
+    `${styles(state)}<figure class="cd" data-comark-frame data-not-typeset><figcaption>${header}</figcaption>` +
     `<div class="cd-scroll" tabindex="0" role="region" aria-label="${attr(file ? `Code changes in ${file}` : "Code changes")}"><table class="${attr(classes)}"${code.style ? ` style="${attr(code.style)}"` : ""}><tbody>${body}</tbody></table></div></figure>`
   );
 };

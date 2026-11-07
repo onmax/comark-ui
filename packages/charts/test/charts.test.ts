@@ -69,7 +69,7 @@ ${sizes.trim()}
     expect(document.meta.issues).toEqual([]);
     expect(document.meta.issueRules).toEqual({});
     const html = await renderHtmlFromDocument(document, { components });
-    expect(html).toContain('<figure class="cch" data-type="vega-lite">');
+    expect(html).toContain('<figure class="cch" data-comark-frame data-type="vega-lite">');
     expect(html).toContain('<svg role="img" aria-label="Bundle size"');
     expect(html).toContain("<td>annotate</td>");
   });
@@ -77,11 +77,11 @@ ${sizes.trim()}
   it("draws an SVG over the table it came from, and inlines the styles once", async () => {
     const html = await render(`${chart(sizes, '{title="Bundle size"}')}\n\n${chart(months)}`);
     expect(html).toContain(
-      '<figure class="cch" data-type="bar"><figcaption>Bundle size</figcaption><div class="cch-plot"><svg role="img" aria-label="Bundle size" xmlns="http://www.w3.org/2000/svg"',
+      '<figure class="cch" data-comark-frame data-type="bar"><figcaption>Bundle size</figcaption><div class="cch-plot"><svg role="img" aria-label="Bundle size" xmlns="http://www.w3.org/2000/svg"',
     );
     // Bars are the default, whatever x holds.
     expect(html).toContain(
-      '<figure class="cch" data-type="bar"><div class="cch-plot"><svg role="img" aria-label="bar chart of before, after by month"',
+      '<figure class="cch" data-comark-frame data-type="bar"><div class="cch-plot"><svg role="img" aria-label="bar chart of before, after by month"',
     );
     expect(html).toContain('<details class="cch-data"><summary>Data</summary><table>');
     expect(html).toContain("<td>annotate</td>");
@@ -616,7 +616,7 @@ ${sizes.trim()}
     const html = await render(chart(build, '{type="gantt" labels}'));
     expect(await issues(chart(build, '{type="gantt" labels}'))).toEqual([]);
     expect(html).toContain(
-      '<figure class="cch" data-type="gantt"><div class="cch-plot"><svg role="img" aria-label="gantt chart of step, from start to end"',
+      '<figure class="cch" data-comark-frame data-type="gantt"><div class="cch-plot"><svg role="img" aria-label="gantt chart of step, from start to end"',
     );
     const { ticks, names } = axes(html);
     expect(names).toEqual([
@@ -1004,7 +1004,7 @@ No such run.
     expect(await issues(chart(budget, '{type="sankey" labels}'))).toEqual([]);
     const html = await render(chart(budget, '{type="sankey" labels}'));
     expect(html).toContain(
-      '<figure class="cch" data-type="sankey"><div class="cch-plot"><svg role="img" aria-label="sankey chart of amount from from to to"',
+      '<figure class="cch" data-comark-frame data-type="sankey"><div class="cch-plot"><svg role="img" aria-label="sankey chart of amount from from to to"',
     );
     // Each node takes its place from the row that first names it.
     expect(words(html)).toEqual([

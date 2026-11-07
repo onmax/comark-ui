@@ -75,7 +75,7 @@ const mermaid = (zooms: boolean) => ({
       const zoomed = zooms && width ? card.replace(/^<div/, '<div data-zoom tabindex="0"') : card;
       return (
         (first ? `<style data-comark-mermaid>${mermaidCss}</style>` : "") +
-        `<div class="cmm"${wide} data-source="${attr(source)}">${zoomed}<div class="cmm-bar">${mermaidBar()}</div>` +
+        `<div class="cmm" data-comark-frame${wide} data-source="${attr(source)}">${zoomed}<div class="cmm-bar">${mermaidBar()}</div>` +
         `${first ? `<script>${mermaidScript}</script>` : ""}${zooms && width ? zoom.runtime(state) : ""}</div>`
       );
     }) satisfies NodeHandler,

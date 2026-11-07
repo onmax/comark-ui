@@ -23,7 +23,7 @@ describe("comark-code-notes", () => {
       `<span class="line">const b = 2 // keep this<a class="cn-marker" href="#${uid}-2"`,
     );
     expect(html).toContain(
-      `<ol class="cn-notes"><li id="${uid}-1"><a class="cn-marker" href="#${uid}-1-ref" data-note="1" aria-label="Back to marker 1"></a><div>Why <strong>a</strong>.</div></li>`,
+      `<ol class="cn-notes" data-comark-frame><li id="${uid}-1"><a class="cn-marker" href="#${uid}-1-ref" data-note="1" aria-label="Back to marker 1"></a><div>Why <strong>a</strong>.</div></li>`,
     );
     expect(html.match(/<style data-comark-code-notes>/g)).toHaveLength(1);
     // Two fences on one page get their own ids.
@@ -65,7 +65,7 @@ describe("comark-code-notes", () => {
         components: { ...codeComponents, ...components },
       })(fence),
     );
-    expect(html).toContain('<div class="ck">');
+    expect(html).toContain('<div class="ck" data-comark-frame>');
     expect(html).toMatch(
       /<span class="line"[^>]*>(?:<span[^>]*>[^<]*<\/span>)+<a class="cn-marker"/,
     );

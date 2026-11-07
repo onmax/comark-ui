@@ -22,6 +22,7 @@ const markdown = [
 // Drops what differs only in serialization: comments, whitespace between tags, and the HTML renderer's inline styles.
 const normalize = (html: string) =>
   html
+    .replace(/ data-comark-frame=""/g, " data-comark-frame")
     .replace(/<!--.*?-->/g, "")
     .replace(/<style[^>]*>.*?<\/style>/g, "")
     .replace(/>\s+</g, "><")
@@ -41,7 +42,9 @@ describe("comark-metrics renderers", async () => {
 
   it("renders a delta, a progress bar, a stats table, and stat tiles in HTML", () => {
     expect(html.match(/<span class="cmt-delta"/g)).toHaveLength(3);
-    expect(tight(html)).toContain('<dl class="cmt-tiles"><div class="cmt-tile"><dt>CSS</dt>');
+    expect(tight(html)).toContain(
+      '<dl class="cmt-tiles" data-comark-frame><div class="cmt-tile"><dt>CSS</dt>',
+    );
     expect(html).toContain('<span class="cmt-progress">');
     expect(html).toContain('<table class="cmt-stats">');
     expect(html).toContain("Tests &amp; docs");
@@ -54,7 +57,9 @@ describe("comark-metrics renderers", async () => {
         [])
         expect(out).toContain(part);
       expect(out).toContain('<table class="cmt-stats">');
-      expect(tight(out)).toContain(tight(html).match(/<dl class="cmt-tiles">.*?<\/dl>/)?.[0]);
+      expect(tight(out)).toContain(
+        tight(html).match(/<dl class="cmt-tiles" data-comark-frame>.*?<\/dl>/)?.[0],
+      );
     });
 
   it("ships Svelte components that compile", async () => {

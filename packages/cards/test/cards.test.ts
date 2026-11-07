@@ -21,8 +21,8 @@ describe("comark-cards", () => {
       '::card-group\n:::card{title="Guides" description="Start here." color="info"}\n:::\n\n:::card{title="API"}\nEvery **option**.\n:::\n::',
     );
     expect(body(html)).toBe(
-      '<div class="ccr-group"><div class="ccr" data-color="info"><p class="ccr-title">Guides</p><p>Start here.</p></div>' +
-        '<div class="ccr" data-color="primary"><p class="ccr-title">API</p>Every <strong>option</strong>.</div></div>',
+      '<div class="ccr-group" data-comark-frame><div class="ccr" data-comark-frame data-color="info"><p class="ccr-title">Guides</p><p>Start here.</p></div>' +
+        '<div class="ccr" data-comark-frame data-color="primary"><p class="ccr-title">API</p>Every <strong>option</strong>.</div></div>',
     );
     expect(html.match(/<style data-comark-cards>/g)).toHaveLength(1);
   });
@@ -34,7 +34,7 @@ describe("comark-cards", () => {
       ),
     );
     expect(html).toContain(
-      '<div class="ccr" data-color="primary"><a class="ccr-link" href="/guide" aria-label="Docs"></a><span class="ci" data-mask aria-hidden="true" style=',
+      '<div class="ccr" data-comark-frame data-color="primary"><a class="ccr-link" href="/guide" aria-label="Docs"></a><span class="ci" data-mask aria-hidden="true" style=',
     );
     expect(html).toContain(
       '<a class="ccr-link" href="https://github.com/onmax" target="_blank" rel="noopener noreferrer" aria-label="GitHub"></a><svg class="ccr-external"',
@@ -44,7 +44,7 @@ describe("comark-cards", () => {
   it("takes its title from a `#title` slot", async () => {
     const html = body(await render("::card\n#title\nThe `api` route\n\n#default\nBody.\n::"));
     expect(html).toBe(
-      '<div class="ccr" data-color="primary"><p class="ccr-title">The <code>api</code> route</p>Body.</div>',
+      '<div class="ccr" data-comark-frame data-color="primary"><p class="ccr-title">The <code>api</code> route</p>Body.</div>',
     );
   });
 
@@ -64,9 +64,9 @@ describe("comark-cards", () => {
     );
     const html = body(rendered);
     expect(html).toBe(
-      '<div class="ccr" data-color="error" data-variant="soft"><p class="ccr-title">Failing</p></div>' +
-        '<div class="ccr" data-color="success" data-variant="subtle"><p class="ccr-title">Passing</p></div>' +
-        '<div class="ccr" data-color="primary"><p class="ccr-title">Plain</p></div>',
+      '<div class="ccr" data-comark-frame data-color="error" data-variant="soft"><p class="ccr-title">Failing</p></div>' +
+        '<div class="ccr" data-comark-frame data-color="success" data-variant="subtle"><p class="ccr-title">Passing</p></div>' +
+        '<div class="ccr" data-comark-frame data-color="primary"><p class="ccr-title">Plain</p></div>',
     );
     expect(rendered).toContain(
       ".ccr[data-variant='soft']:has(>.ccr-link):hover{border-color:transparent}",

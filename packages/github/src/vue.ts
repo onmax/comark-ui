@@ -14,7 +14,7 @@ export const GithubCallout = defineComponent({
     onMounted(addStyles);
     return () => {
       const type = typeOf(props.type);
-      return h("div", { class: "cgc", "data-type": type }, [
+      return h("div", { class: "cgc", "data-comark-frame": "", "data-type": type }, [
         h("span", { class: "cgc-icon", "aria-hidden": "true", innerHTML: icon(type) }),
         h("p", { class: "cgc-title" }, props.title),
         h("div", { class: "cgc-body" }, slots.default?.()),

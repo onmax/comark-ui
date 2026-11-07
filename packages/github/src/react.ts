@@ -11,7 +11,7 @@ export function GithubCallout(props: { type?: string; title?: string; children?:
   const type = typeOf(props.type);
   return createElement(
     "div",
-    { className: "cgc", "data-type": type },
+    { className: "cgc", "data-comark-frame": "", "data-type": type },
     createElement("span", {
       className: "cgc-icon",
       "aria-hidden": "true",

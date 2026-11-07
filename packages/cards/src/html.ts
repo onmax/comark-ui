@@ -37,7 +37,7 @@ const card: NodeHandler = async (node, state) => {
     ? `<svg class="ccr-external" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${external}"></path></svg>`
     : "";
   return (
-    `${styles(state)}${attrs.icon ? iconStyles(state) : ""}<div class="ccr" data-color="${attr(attrs.color ?? "primary")}"${attrs.variant ? ` data-variant="${attr(attrs.variant)}"` : ""}>` +
+    `${styles(state)}${attrs.icon ? iconStyles(state) : ""}<div class="ccr" data-comark-frame data-color="${attr(attrs.color ?? "primary")}"${attrs.variant ? ` data-variant="${attr(attrs.variant)}"` : ""}>` +
     `${link}${icon}${arrow}${await state.flow(node, state)}</div>`
   );
 };
@@ -46,7 +46,7 @@ const title: NodeHandler = async (node, state) =>
   `<p class="ccr-title">${await state.flow(node, state)}</p>`;
 
 const group: NodeHandler = async (node, state) =>
-  `${styles(state)}<div class="ccr-group">${await state.flow(node, state)}</div>`;
+  `${styles(state)}<div class="ccr-group" data-comark-frame>${await state.flow(node, state)}</div>`;
 
 const columns: NodeHandler = async (node, state) =>
   `${styles(state)}<div class="ccr-columns" data-cols="${attr(node[1].cols ?? "2")}">${await state.flow(node, state)}</div>`;

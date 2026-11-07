@@ -71,6 +71,7 @@ export const Carousel = /* @__PURE__ */ defineComponent({
         "div",
         {
           class: "cc",
+          "data-comark-frame": "",
           "data-carousel-columns": columns > 1 ? String(columns) : undefined,
           "data-carousel-fits": count <= columns ? "" : undefined,
           "data-zoom-gallery": off(props.zoom) ? undefined : "",

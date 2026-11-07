@@ -67,11 +67,15 @@ describe("docs and playground registration", () => {
     ["code-notes", "```ts\nconst x = 1; // <1>\n```\n\n1. Count.", 'class="cn-marker"'],
     ["colors", "`#ff0000`", 'class="cco"'],
     ["comments", 'A :comment[word]{by="Reviewer" note="Check this."}.', 'class="cr-card"'],
-    ["details", '::details{summary="More"}\nDetails.\n::', '<details class="cdt"'],
+    [
+      "details",
+      '::details{summary="More"}\nDetails.\n::',
+      '<details class="cdt" data-comark-frame',
+    ],
     [
       "diagrams",
       "```d2 [Audit diagram]\nfirst -> second\n```",
-      '<figure class="cdg" data-type="d2">',
+      '<figure class="cdg" data-comark-frame data-type="d2">',
     ],
     [
       "diff",

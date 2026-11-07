@@ -19,6 +19,7 @@ const parse = () => parseMarkdown(markdown, { plugins: [callouts()] });
 // Drops what differs only in serialization: comments, whitespace between tags, and the HTML renderer's inline styles.
 const normalize = (html: string) =>
   html
+    .replace(/ data-comark-frame=""/g, " data-comark-frame")
     .replace(/<!--.*?-->/g, "")
     .replace(/<style[^>]*>.*?<\/style>/g, "")
     .replace(/>\s+</g, "><")

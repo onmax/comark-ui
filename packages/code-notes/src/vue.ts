@@ -14,7 +14,11 @@ export const CodeNotes = defineComponent({
     return () =>
       h(
         "ol",
-        { class: "cn-notes", start: props.start && props.start !== 1 ? props.start : undefined },
+        {
+          class: "cn-notes",
+          "data-comark-frame": "",
+          start: props.start && props.start !== 1 ? props.start : undefined,
+        },
         slots.default?.(),
       );
   },

@@ -19,7 +19,7 @@ describe("comark-cast", () => {
       '::cast{src="test.cast" title="pnpm test"}\n::\n\n::cast{src="v3.cast"}\n::',
     );
     expect(html).toContain(
-      '<figure class="cca" data-mode="screen"><figcaption>pnpm test</figcaption><pre class="cca-term">' +
+      '<figure class="cca" data-comark-frame data-mode="screen"><figcaption>pnpm test</figcaption><pre class="cca-term">' +
         'Running <span class="cca-f2">done</span>\n' +
         '<span class="cca-f2 cca-bold">✓</span> cart <span class="cca-dim">(4)</span>\n' +
         '<span class="cca-f1">✗</span> checkout\n' +

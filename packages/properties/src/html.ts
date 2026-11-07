@@ -17,7 +17,7 @@ const properties: NodeHandler = async ([, , ...children], state) => {
   const dates = rows.includes("<time")
     ? `<script>(${localizeDates.toString()})(document.currentScript.previousElementSibling)</script>`
     : "";
-  return `${styles}<dl class="cfm">${rows}</dl>${dates}`;
+  return `${styles}<dl class="cfm" data-comark-frame>${rows}</dl>${dates}`;
 };
 
 /** The HTML renderer for the properties box. Pass it as `components`; it inlines the styles once per document. */

@@ -58,7 +58,7 @@ export function Card({
   const linkTarget = target || (isExternalHref(href) ? "_blank" : undefined);
   return createElement(
     "div",
-    { className: "ccr", "data-color": color, "data-variant": variant },
+    { className: "ccr", "data-comark-frame": "", "data-color": color, "data-variant": variant },
     href
       ? createElement("a", {
           className: "ccr-link",
@@ -82,7 +82,7 @@ export function CardTitle({ children }: Children) {
 /** `::card-group` for `@comark/react`. */
 export function CardGroup({ children }: Children) {
   useEffect(addStyles, []);
-  return createElement("div", { className: "ccr-group" }, children);
+  return createElement("div", { className: "ccr-group", "data-comark-frame": "" }, children);
 }
 
 /** `::columns` for `@comark/react`. */

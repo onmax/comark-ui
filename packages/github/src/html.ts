@@ -16,7 +16,7 @@ const callout: NodeHandler = async ([, attrs, ...children], state) => {
   const styles = styled.has(state.context) ? "" : `<style data-comark-github>${css}</style>`;
   styled.add(state.context);
   return (
-    `${styles}<div class="cgc" data-type="${type}"><span class="cgc-icon" aria-hidden="true">${icon(type)}</span>` +
+    `${styles}<div class="cgc" data-comark-frame data-type="${type}"><span class="cgc-icon" aria-hidden="true">${icon(type)}</span>` +
     `<p class="cgc-title">${escapeHtml(rawText(attrs.title))}</p>` +
     `<div class="cgc-body">${await state.flow(["div", {}, ...children], state)}</div></div>`
   );

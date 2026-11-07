@@ -7,4 +7,4 @@
   onMount(addStyles);
 </script>
 
-<details class="cdt" data-variant={variant} name={name || undefined} open={Boolean(open)}>{@render children?.()}</details>
+<details class="cdt" data-comark-frame="" data-variant={variant} name={name || undefined} open={Boolean(open)}>{@render children?.()}</details>

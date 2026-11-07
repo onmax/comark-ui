@@ -18,7 +18,9 @@ export const Properties = defineComponent({
     onUpdated(localize);
     return () => {
       const rows = slots.default?.();
-      return rows?.length ? h("dl", { class: "cfm", ref: box }, rows) : null;
+      return rows?.length
+        ? h("dl", { class: "cfm", "data-comark-frame": "", ref: box }, rows)
+        : null;
     };
   },
 });

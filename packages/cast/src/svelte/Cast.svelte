@@ -8,7 +8,7 @@
 </script>
 
 {#if mode}
-  <figure class="cca" data-mode={mode}>
+  <figure class="cca" data-comark-frame="" data-mode={mode}>
     {#if title}<figcaption>{title}</figcaption>{/if}
     <pre class="cca-term">{@render children?.()}</pre>
   </figure>

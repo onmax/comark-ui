@@ -41,7 +41,7 @@ describe("::diff", () => {
       const { issues, html } = await run(suggestion, highlight);
       expect(issues).toEqual([]);
       expect(html).toContain(
-        '<figure class="cd" data-not-typeset><figcaption><svg class="cd-icon"',
+        '<figure class="cd" data-comark-frame data-not-typeset><figcaption><svg class="cd-icon"',
       );
       expect(html).toContain(
         '<span class="cd-heading"><span class="cd-label">Suggested change</span><span class="cd-file">src/a.ts</span></span><span class="cd-counts"><span class="cd-added">+1</span> <span class="cd-removed">−1</span></span></figcaption>',
