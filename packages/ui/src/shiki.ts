@@ -21,7 +21,7 @@ export type ShikiOptions = {
   highlighter: (
     language: string,
   ) => ShikiHighlighter | undefined | Promise<ShikiHighlighter | undefined>;
-  /** Theme names your highlighter has loaded. The dark one goes in `--shiki-dark`, which the typeset styles follow. */
+  /** Theme names your highlighter has loaded. The dark one goes in `--shiki-dark`, which typeset and comark-code's styles follow. */
   themes: { light: string; dark?: string };
   /** How many code blocks a document highlights. The ones after show without colors. */
   maxBlocks?: number;
