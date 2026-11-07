@@ -202,6 +202,16 @@ describe("comark-ui", () => {
     expect(out).toContain("const d = 4");
     expect(out).toContain('class="ck"');
 
+    const plain = await renderHtml(fence("ts", "const a = 1"), {
+      code: false,
+      shiki: { highlighter, themes },
+    });
+    expect(plain).toContain('class="shiki"');
+    expect(plain).not.toContain("data-comark-code");
+    expect(/<style data-comark-typeset>(.*?)<\/style>/s.exec(plain)?.[1]).toContain(
+      '.shiki:where(.dark *) span[style*="--shiki-dark:"]{color:var(--shiki-dark)!important}',
+    );
+
     asked.length = 0;
     const short = await parseMarkdown(`${fence("ts", "x".repeat(40))}\n\n${fence("ts", "y")}`, {
       plugins: html({ ...offline, shiki: { highlighter, themes, maxSource: 20 } }).plugins,

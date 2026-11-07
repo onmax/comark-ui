@@ -246,7 +246,13 @@ describe("checkMarkdown", () => {
 describe("the docs examples", async () => {
   const packages = readdirSync(new URL("../../", import.meta.url));
   const examples = await loadExamples(packages);
-  const skills = ["before-after-evidence", "review-document", "teach-lesson", "visual-explanation"];
+  const skills = [
+    "before-after-evidence",
+    "report",
+    "review-document",
+    "teach-lesson",
+    "visual-explanation",
+  ];
   const documents = [
     ...examples.map((example) => [example.id, example.source] as const),
     ...skills.map(
