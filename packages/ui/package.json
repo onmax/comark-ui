@@ -43,6 +43,7 @@
     "./package.json": "./package.json",
     "./skills": "./dist/skills.mjs",
     "./skills/*": "./dist/skills/*",
+    "./style.css": "./dist/style.css",
     "./typeset.css": "./dist/typeset.css"
   },
   "publishConfig": {
@@ -118,7 +119,10 @@
     "@tiptap/y-tiptap": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "autoprefixer": "catalog:",
     "comark": "catalog:",
+    "lightningcss": "catalog:",
+    "postcss": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "svelte": "catalog:",

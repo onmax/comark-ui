@@ -58,6 +58,9 @@ catalog:
   "@tiptap/starter-kit": ^3.31.4
   "@tiptap/vue-3": ^3.31.4
   "@tiptap/y-tiptap": ^3.0.9
+  autoprefixer: ^10.6.1
+  lightningcss: ^1.33.0
+  postcss: ^8.5.31
   yjs: ^13.6.33
   nuxt-agent-discovery: ^0.8.0
   valibot: ^1.4.2
