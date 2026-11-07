@@ -193,6 +193,7 @@ onBeforeUnmount(() => stop?.());
       video.cm,
       .cn-notes,
       .comark-html:is(
+        [data-block="chart"],
         [data-block="screenshot"],
         [data-block="compare"],
         [data-block="diff"],
@@ -240,7 +241,7 @@ onBeforeUnmount(() => stop?.());
     video.cm,
     .cn-notes
   ),
-.docs-example-preview > .comark-html > :is(.ca, .cd, .cqz) {
+.docs-example-preview > .comark-html > :is(.ca, .cch, .cd, .cqz) {
   margin-block: 0;
 }
 
