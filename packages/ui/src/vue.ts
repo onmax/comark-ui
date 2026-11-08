@@ -65,7 +65,7 @@ const Mermaid = defineComponent({
     onMounted(() => (stop = startMermaid()));
     onBeforeUnmount(() => stop());
     return () =>
-      h("div", { class: "cmm", "data-source": props.content }, [
+      h("div", { class: "cmm", "data-comark-frame": "", "data-source": props.content }, [
         // SAFETY: Comark passes the node's attributes, whose `class` is a string, as Pele's prop takes it.
         h(Pele, { ...(attrs as { class?: string }), content: props.content }),
         h("div", { class: "cmm-bar", innerHTML: mermaidBar() }),

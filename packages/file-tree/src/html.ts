@@ -26,7 +26,7 @@ const fileTree: NodeHandler = async (node, state) => {
   styled.add(state.context);
   // The icon styles come before the tree, where a `<style>` may sit.
   const icons = hasIcon(node) ? iconStyles(state) : "";
-  return `${styles}${icons}<div class="cft"><ul>${await state.flow(node, state)}</ul></div>`;
+  return `${styles}${icons}<div class="cft" data-comark-frame><ul>${await state.flow(node, state)}</ul></div>`;
 };
 
 const item: NodeHandler = async (node, state) => {

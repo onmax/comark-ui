@@ -25,6 +25,7 @@ const markdown = [
 // Drops what differs only in serialization: comments, the HTML renderer's inline styles, and how React writes a style.
 const normalize = (html: string) =>
   html
+    .replace(/ data-comark-frame=""/g, " data-comark-frame")
     .replace(/<!--.*?-->/g, "")
     .replace(/<style[^>]*>.*?<\/style>/gs, "")
     .replace(/style="([^"]*?);?"/g, (_, style: string) => `style="${style.replace(/: /g, ":")}"`)
@@ -42,7 +43,7 @@ describe("comark-cast renderers", async () => {
   const expected = normalize(await renderHtmlFromDocument(value, { components: htmlComponents }));
 
   it("renders two terminals and nothing for a missing cast in HTML", () => {
-    expect(expected.match(/<figure class="cca"/g)).toHaveLength(2);
+    expect(expected.match(/<figure class="cca" data-comark-frame/g)).toHaveLength(2);
     expect(expected).toContain("<figcaption>Tests &amp; checks</figcaption>");
     expect(expected).toContain('<pre class="cca-term">one\ntwo\nthree\nfour</pre>');
   });

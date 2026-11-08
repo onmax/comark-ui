@@ -73,6 +73,17 @@ The same tokens color the text around the blocks. [Typeset](/guide/typeset/) lis
 
 The plugins' rules sit in a `comark` CSS layer, so a plain rule of yours wins without `!important`, such as `.cc-step { border-radius: 0 }`.
 
+### Blocks with their own frame
+
+A block that draws its own frame, such as a code block, tabs, a chart, a diff, a callout, or a card, carries `data-comark-frame` on its outer element in every renderer. Select it to leave such a block out of a frame of your own, rather than listing each plugin's classes:
+
+```css
+.preview:has(> [data-comark-frame]) {
+  padding: 0;
+  box-shadow: none;
+}
+```
+
 ## Outside a Nuxt UI app
 
 A review document, static export, or email built by a script doesn't load the app's stylesheet, so the blocks fall back to shadcn's neutral theme. `nuxtUiTheme()` from `comark-ui/nuxt-ui` writes the `--ui-*` variables from your app's theme. Put its CSS on the page and the blocks match the app.

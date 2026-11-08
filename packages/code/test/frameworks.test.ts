@@ -58,7 +58,7 @@ describe("comark-code renderers", () => {
     );
     const expected = normalize(await renderers.html(value));
     expect(expected).toContain(
-      '<div class="ck"><pre data-language="sh" data-filename="install.sh"><code class="language-sh">pnpm add comark-code</code></pre><div class="ck-bar"><span class="ck-title">install.sh</span><button type="button" class="ck-action" data-code-action="run">Run</button>',
+      '<div class="ck" data-comark-frame><pre data-language="sh" data-filename="install.sh"><code class="language-sh">pnpm add comark-code</code></pre><div class="ck-bar"><span class="ck-title">install.sh</span><button type="button" class="ck-action" data-code-action="run">Run</button>',
     );
     expect(expected.match(/class="ck-copy"/g)).toHaveLength(2);
     expect(
@@ -84,14 +84,14 @@ describe("comark-code renderers", () => {
     );
     const expected = normalize(await renderers.html(value));
     expect(expected).toContain(
-      '<div class="ck" data-code-lines data-code-numbers="2" data-code-wrap><pre data-language="ts" data-filename="a.ts"><code class="language-ts"><span class="line ck-ins" data-line="9">const a = 1 </span>',
+      '<div class="ck" data-comark-frame data-code-lines data-code-numbers="2" data-code-wrap><pre data-language="ts" data-filename="a.ts"><code class="language-ts"><span class="line ck-ins" data-line="9">const a = 1 </span>',
     );
     expect(expected).toContain(
       '<details class="ck-fold"><summary>2 collapsed lines</summary><span class="line" data-line="11">',
     );
     expect(expected).toContain('aria-pressed="true"');
     expect(expected).toContain(
-      '<div class="ck" data-code-frame="terminal"><pre data-language="sh">',
+      '<div class="ck" data-comark-frame data-code-frame="terminal"><pre data-language="sh">',
     );
     for (const name of ["vue", "react"] as const) {
       const html = normalize(await renderers[name](value));

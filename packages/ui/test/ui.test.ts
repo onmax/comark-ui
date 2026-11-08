@@ -96,7 +96,7 @@ describe("comark-ui", () => {
     expect(out).toContain('data-diagram="sequence"');
     // A wide block with its own width, so a page that gives wide blocks room shows it at its size.
     expect(out).toMatch(
-      /<div class="cmm" data-wide style="--cmm-svg:\d+px" data-source="flowchart LR/,
+      /<div class="cmm" data-comark-frame data-wide style="--cmm-svg:\d+px" data-source="flowchart LR/,
     );
     const off = await renderHtml(markdown, { mermaid: false });
     expect(off).not.toContain("pele-diagram");
@@ -202,6 +202,16 @@ describe("comark-ui", () => {
     expect(out).toContain("const d = 4");
     expect(out).toContain('class="ck"');
 
+    const plain = await renderHtml(fence("ts", "const a = 1"), {
+      code: false,
+      shiki: { highlighter, themes },
+    });
+    expect(plain).toContain('class="shiki"');
+    expect(plain).not.toContain("data-comark-code");
+    expect(/<style data-comark-typeset>(.*?)<\/style>/s.exec(plain)?.[1]).toContain(
+      '.shiki:where(.dark *) span[style*="--shiki-dark:"]{color:var(--shiki-dark)!important}',
+    );
+
     asked.length = 0;
     const short = await parseMarkdown(`${fence("ts", "x".repeat(40))}\n\n${fence("ts", "y")}`, {
       plugins: html({ ...offline, shiki: { highlighter, themes, maxSource: 20 } }).plugins,
@@ -260,7 +270,9 @@ describe("comark-ui", () => {
   it("keeps the source of a Mermaid diagram that fails, with nothing to zoom", async () => {
     const out = await renderHtml("```mermaid\nflowchart LR\n  A -->\n```");
     expect(out).toContain("data-error=");
-    expect(out).toContain('<div class="cmm" data-source="flowchart LR\n  A --&gt;\n">');
+    expect(out).toContain(
+      '<div class="cmm" data-comark-frame data-source="flowchart LR\n  A --&gt;\n">',
+    );
     expect(out).not.toContain("data-zoom");
     expect(out).not.toContain('class="cmm" data-wide');
   });
@@ -342,7 +354,7 @@ describe("comark-ui", () => {
       for (const block of blocks) expect(out, name).toContain(block);
       // The same wrapper and bar as the HTML renderer; Pele zooms the diagram itself in the browser.
       expect(out, name).toMatch(
-        /<div class="cmm" data-source="flowchart LR\n {2}Draft --&gt; Review\n?">/,
+        /<div class="cmm" data-comark-frame(="")? data-source="flowchart LR\n {2}Draft --&gt; Review\n?">/,
       );
       expect(out, name).toContain('<div class="cmm-bar"><button type="button" class="cmm-image"');
       // In the server's HTML, unescaped, so the page arrives styled.
@@ -350,6 +362,39 @@ describe("comark-ui", () => {
       expect(out, name).toContain("@scope{:where(:scope){");
       expect(out, name).toContain(":scope>:where(:first-child)");
     }
+  });
+
+  it("marks every block that draws its own frame, in every renderer", async () => {
+    const framed = [
+      "```ts\nconst a = 1\n```",
+      "::code-group\n```sh [pnpm]\npnpm add x\n```\n```sh [npm]\nnpm i x\n```\n::",
+      "> [!TIP]\n> Read this.",
+    ];
+    const plain = "Just a paragraph.";
+    const roots = /<(\w+) class="(ck|ct|cgc|cd)"[^>]*>/g;
+    const marked = (out: string) =>
+      [...out.matchAll(roots)].map(([tag, , name]) => [name, tag.includes(" data-comark-frame")]);
+    const vueRender = async (markdown: string) => {
+      const preset = vue(offline);
+      const value = await parseMarkdown(markdown, { plugins: preset.plugins });
+      return renderVue(
+        createSSRApp({ render: () => h(VueDocument, { value, components: preset.components }) }),
+      );
+    };
+    for (const render of [renderHtml, vueRender]) {
+      const out = await render([...framed, plain].join("\n\n"));
+      expect(marked(out)).toEqual([
+        ["ck", true],
+        ["ct", true],
+        ["ck", true],
+        ["ck", true],
+        ["cgc", true],
+      ]);
+      expect(out).toMatch(/<p>Just a paragraph.<\/p>/);
+    }
+    // diff renders only to HTML.
+    const diff = await renderHtml("::diff\n```ts\na\n```\n```ts\nb\n```\n::");
+    expect(marked(diff)).toEqual([["cd", true]]);
   });
 
   it("renders separately parsed documents without bundling chart parsers", async () => {

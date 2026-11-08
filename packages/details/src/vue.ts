@@ -17,7 +17,7 @@ export const Accordion = defineComponent({
   inheritAttrs: false,
   setup(_, { slots }) {
     onMounted(addStyles);
-    return () => h("div", { class: "cdt-accordion" }, slots.default?.());
+    return () => h("div", { class: "cdt-accordion", "data-comark-frame": "" }, slots.default?.());
   },
 });
 
@@ -33,6 +33,7 @@ export const Disclosure = defineComponent({
         "details",
         {
           class: "cdt",
+          "data-comark-frame": "",
           "data-variant": props.variant,
           name: props.name || undefined,
           open: props.open ? "" : undefined,

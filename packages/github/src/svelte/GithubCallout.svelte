@@ -8,7 +8,7 @@
   onMount(addStyles);
 </script>
 
-<div class="cgc" data-type={kind}>
+<div class="cgc" data-comark-frame="" data-type={kind}>
   <span class="cgc-icon" aria-hidden="true">{@html icon(kind)}</span>
   <p class="cgc-title">{title}</p>
   <div class="cgc-body">{@render children?.()}</div>

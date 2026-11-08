@@ -7,4 +7,4 @@
   onMount(addStyles);
 </script>
 
-<dl class="cmt-tiles">{@render children?.()}</dl>
+<dl class="cmt-tiles" data-comark-frame="">{@render children?.()}</dl>

@@ -39,6 +39,17 @@ One row.
 `;
 
 describe("comark-annotate", () => {
+  it.each([
+    ["screenshot", '::screenshot{src="a.png" alt="A"}\n::'],
+    ["carousel comparison", compare],
+    ["slider comparison", compare.replace("::compare", '::compare{mode="slider"}')],
+  ])("marks the outer %s as framed", async (_, markdown) => {
+    const { issues, html } = await run(markdown);
+    expect(issues).toEqual([]);
+    const root = html.replace(/<style[^>]*>[^]*?<\/style>/g, "").match(/^<[^>]+>/)?.[0];
+    expect(root).toMatch(/^<div class="ca\b[^"]*" data-comark-frame[ >]/);
+  });
+
   it("renders a compare with numbered marks and linked notes", async () => {
     const { issues, html } = await run(compare);
     expect(issues).toEqual([]);
@@ -58,9 +69,9 @@ describe("comark-annotate", () => {
     expect(html).not.toMatch(/<figcaption><div class="ca-heading">/);
     // Side by side on a wide page, one at a time on a narrow one, and both zoom as one gallery.
     expect(html).toContain(
-      '<div class="ca ca-compare" data-wide><div class="cc" data-carousel-columns="2" data-carousel-fits data-zoom-gallery',
+      '<div class="ca ca-compare" data-comark-frame data-wide><div class="cc" data-comark-frame data-carousel-columns="2" data-carousel-fits data-zoom-gallery',
     );
-    expect(html).toMatch(/<div class="cc"[^>]* aria-label="Comparison"/);
+    expect(html).toMatch(/<div class="cc" data-comark-frame[^>]* aria-label="Comparison"/);
     expect(html.match(/class="cc-slide"/g)).toHaveLength(2);
   });
 
@@ -72,7 +83,7 @@ describe("comark-annotate", () => {
     );
     expect(issues).toEqual([]);
     expect(html).toContain(
-      '<div class="ca ca-compare ca-slider" data-wide><div class="ca-swipe" data-zoom tabindex="0" data-zoom-context=".ca" data-zoom-aside=".ca-swipe-notes" data-zoom-title="Before / After"><div class="ca-side ca-side-before"><div class="ca-heading"><span class="ca-label">Before</span></div><div class="ca-stage"><div class="ca-frame"><img src="before.png"',
+      '<div class="ca ca-compare ca-slider" data-comark-frame data-wide><div class="ca-swipe" data-zoom tabindex="0" data-zoom-context=".ca" data-zoom-aside=".ca-swipe-notes" data-zoom-title="Before / After"><div class="ca-side ca-side-before"><div class="ca-heading"><span class="ca-label">Before</span></div><div class="ca-stage"><div class="ca-frame"><img src="before.png"',
     );
     expect(html).toContain(
       '<div class="ca-side ca-side-after"><div class="ca-heading"><span class="ca-label">After</span> <a href="https://pr2.example.com/plan"',
@@ -124,7 +135,9 @@ describe("comark-annotate", () => {
       'See <a href="#fig-login" class="cxr-ref">Figure 1</a> and <a href="#fig-toolbar" class="cxr-ref">Figure 2</a>.',
     );
     expect(html).toContain('<figure id="fig-login" class="ca-screenshot">');
-    expect(html).toContain('<div id="fig-toolbar" class="ca ca-compare" data-wide>');
+    expect(html).toContain(
+      '<div id="fig-toolbar" class="ca ca-compare" data-comark-frame data-wide>',
+    );
     expect(html).toContain('<figure id="fig-new" class="ca-screenshot">');
     expect(html).toMatch(/<li id="ca-[a-z\d]+-1"/);
     const ids = [...html.matchAll(/ id="([^"]+)"/g)].map((match) => match[1]);
@@ -137,7 +150,9 @@ describe("comark-annotate", () => {
           .replace('alt="Old toolbar"', `alt="Old toolbar" id='a"b<'`),
       )
     ).html;
-    expect(slider).toContain('<div id="fig-swipe" class="ca ca-compare ca-slider" data-wide>');
+    expect(slider).toContain(
+      '<div id="fig-swipe" class="ca ca-compare ca-slider" data-comark-frame data-wide>',
+    );
     expect(slider).toContain('<div id="a&quot;b&lt;" class="ca-side ca-side-before">');
     expect((await run('::screenshot{src="a.png" alt="A"}\n::')).html).toContain(
       '<figure class="ca-screenshot">',
@@ -741,7 +756,7 @@ describe("comark-annotate", () => {
       `::compare{title="Toolbar fix"}\n:::screenshot{src="a.png" alt="A" title="Main"}\n:::\n\n:::screenshot{src="b.png" alt="B"}\n:::\n::`,
     );
     expect(issues).toEqual([]);
-    expect(html).toMatch(/<div class="cc"[^>]* aria-label="Toolbar fix"/);
+    expect(html).toMatch(/<div class="cc" data-comark-frame[^>]* aria-label="Toolbar fix"/);
     expect(html).toContain('<div class="ca-heading"><span class="ca-label">Main</span>');
     expect(html).toContain('data-zoom-title="Main"><div class="ca-frame">');
     expect(html).toContain('<span class="ca-label">After</span>');

@@ -19,6 +19,7 @@ const markdown =
 // Drops what differs only in serialization: comments, line breaks between tags, and the HTML renderer's inline styles.
 const normalize = (html: string) =>
   html
+    .replace(/ data-comark-frame=""/g, " data-comark-frame")
     .replace(/<!--.*?-->/g, "")
     .replace(/<style[^>]*>.*?<\/style>/g, "")
     .replace(/&amp;/g, "&")
@@ -37,7 +38,7 @@ describe("comark-tests renderers", async () => {
 
   it("renders the summary and the failure in HTML", () => {
     expect(expected).toContain(
-      '<section class="ctr" data-status="failed" aria-label="Ducks & geese">',
+      '<section class="ctr" data-comark-frame data-status="failed" aria-label="Ducks & geese">',
     );
     expect(expected).toContain('<details class="ctr-failure"><summary>maps</summary>');
   });

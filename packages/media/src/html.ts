@@ -17,7 +17,7 @@ const media: NodeHandler = ([, attrs], state) => {
   styled.add(state.context);
   const video = kind === "video";
   const element =
-    `<${kind}${native ? ' class="cm"' : ""} src="${attr(src)}" controls${video ? " playsinline" : ""} preload="metadata"` +
+    `<${kind}${native ? ` class="cm"${video ? " data-comark-frame" : ""}` : ""} src="${attr(src)}" controls${video ? " playsinline" : ""} preload="metadata"` +
     (poster && video ? ` poster="${attr(poster)}"` : "") +
     // The browser keeps this room, at the video's ratio, until the video loads.
     (width && height && video ? ` width="${attr(width)}" height="${attr(height)}"` : "") +
@@ -31,7 +31,7 @@ const media: NodeHandler = ([, attrs], state) => {
   // The styles come inline before the script, so the script has nothing to add.
   const script = started.has(state.context) ? "" : `<script>(${start.toString()})("")</script>`;
   started.add(state.context);
-  return `${styles}<span class="cm cm-${kind}"${label ? ` role="group" aria-label="${attr(label)}"` : ""}>${element}<span class="cm-bar">${controls(kind)}</span></span>${script}`;
+  return `${styles}<span class="cm cm-${kind}"${video ? " data-comark-frame" : ""}${label ? ` role="group" aria-label="${attr(label)}"` : ""}>${element}<span class="cm-bar">${controls(kind)}</span></span>${script}`;
 };
 
 /** The HTML renderer for videos and audio. Pass it as `components`; it inlines the styles and the players' script once per document. */

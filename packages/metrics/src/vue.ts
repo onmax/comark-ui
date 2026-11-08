@@ -64,7 +64,7 @@ export const StatTiles = defineComponent({
   inheritAttrs: false,
   setup(_, { slots }) {
     onMounted(addStyles);
-    return () => h("dl", { class: "cmt-tiles" }, slots.default?.());
+    return () => h("dl", { class: "cmt-tiles", "data-comark-frame": "" }, slots.default?.());
   },
 });
 

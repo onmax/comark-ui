@@ -31,6 +31,7 @@ const markdown = [
 // Drops what differs only in serialization: comments, whitespace between tags, and the HTML renderer's inline styles.
 const normalize = (html: string) =>
   html
+    .replace(/ data-comark-frame=""/g, " data-comark-frame")
     .replace(/<!--.*?-->/g, "")
     .replace(/<style[^>]*>.*?<\/style>/g, "")
     .replace(/>\s+/g, ">")
@@ -50,7 +51,7 @@ describe("comark-properties renderers", async () => {
 
   it("renders the box under the title in HTML", () => {
     expect(expected).toContain(
-      '<h1 id="palette">Palette</h1><dl class="cfm"><div data-key="status" data-kind="status">',
+      '<h1 id="palette">Palette</h1><dl class="cfm" data-comark-frame><div data-key="status" data-kind="status">',
     );
     expect(expected).toContain('<span class="cfm-tag">colors</span>');
   });

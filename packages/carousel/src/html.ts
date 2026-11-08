@@ -43,7 +43,7 @@ function shell(count: number, options: CarouselOptions, track: string, state: St
         `<button type="button" class="cc-step" data-carousel-step="1" aria-label="Next slide">${chevron("m9 18 6-6-6-6")}</button></div></div>`
       : "";
   return (
-    `<div class="cc"${columns > 1 ? ` data-carousel-columns="${columns}"` : ""}${count <= columns ? " data-carousel-fits" : ""}${zoom ? " data-zoom-gallery" : ""} role="region" aria-roledescription="carousel" aria-label="${attr(options.title ?? "Carousel")}">` +
+    `<div class="cc" data-comark-frame${columns > 1 ? ` data-carousel-columns="${columns}"` : ""}${count <= columns ? " data-carousel-fits" : ""}${zoom ? " data-zoom-gallery" : ""} role="region" aria-roledescription="carousel" aria-label="${attr(options.title ?? "Carousel")}">` +
     `<div class="cc-track">${track}</div>${controls}</div>${zoom ? zoomRuntime(state) : ""}${runtime(state)}`
   );
 }

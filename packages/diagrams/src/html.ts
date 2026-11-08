@@ -16,7 +16,7 @@ const diagram: NodeHandler = ([, attrs], state) => {
   styled.add(state.context);
   // The plugin sanitized the SVG when it drew it.
   return (
-    `${styles}<figure class="cdg" data-type="${attr(type)}"><div class="cdg-svg"${label ? ` role="img" aria-label="${attr(label)}"` : ""}>${rawText(svg)}</div>` +
+    `${styles}<figure class="cdg" data-comark-frame data-type="${attr(type)}"><div class="cdg-svg"${label ? ` role="img" aria-label="${attr(label)}"` : ""}>${rawText(svg)}</div>` +
     `${label ? `<figcaption>${attr(label)}</figcaption>` : ""}</figure>`
   );
 };

@@ -22,14 +22,14 @@ const styles = (state: State) => {
 };
 
 const accordion: NodeHandler = async (node, state) =>
-  `${styles(state)}<div class="cdt-accordion">${await state.flow(node, state)}</div>`;
+  `${styles(state)}<div class="cdt-accordion" data-comark-frame>${await state.flow(node, state)}</div>`;
 
 const disclosure: NodeHandler = async (node, state) => {
   const [, attrs, head] = node;
   // The icon styles come before the block, where a `<style>` may sit.
   const icons = Array.isArray(head) && head[1]?.icon ? iconStyles(state) : "";
   return (
-    `${styles(state)}${icons}<details class="cdt" data-variant="${attr(attrs.variant)}"${attrs.name ? ` name="${attr(attrs.name)}"` : ""}${attrs.open ? " open" : ""}>` +
+    `${styles(state)}${icons}<details class="cdt" data-comark-frame data-variant="${attr(attrs.variant)}"${attrs.name ? ` name="${attr(attrs.name)}"` : ""}${attrs.open ? " open" : ""}>` +
     `${await state.flow(node, state)}</details>`
   );
 };

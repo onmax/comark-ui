@@ -22,7 +22,7 @@ describe("comark-tabs", () => {
     const html = await render(os);
     const [, id] = /id="(ct-[a-z0-9]+-1)-tab-1"/.exec(html) ?? [];
     expect(html).toContain(
-      '<div class="ct" data-tabs-sync="os"><div class="ct-list" role="tablist">' +
+      '<div class="ct" data-comark-frame data-tabs-sync="os"><div class="ct-list" role="tablist">' +
         `<button type="button" class="ct-tab" role="tab" id="${id}-tab-1" aria-controls="${id}-panel-1" aria-selected="true" tabindex="0">macOS</button>` +
         `<button type="button" class="ct-tab" role="tab" id="${id}-tab-2" aria-controls="${id}-panel-2" aria-selected="false" tabindex="-1">Windows</button></div>`,
     );
@@ -72,7 +72,7 @@ describe("comark-tabs", () => {
   it("turns a code group into tabs labelled by each block's filename", async () => {
     const html = await markup(pm);
     expect(html).toContain(
-      '<div class="ct" data-tabs-code data-code-header data-tabs-magic="auto" data-tabs-sync="pm">',
+      '<div class="ct" data-comark-frame data-tabs-code data-code-header data-tabs-magic="auto" data-tabs-sync="pm">',
     );
     expect(html).toContain('aria-selected="true" tabindex="0">pnpm</button>');
     expect(html).toContain('aria-selected="false" tabindex="-1">npm</button>');
@@ -214,7 +214,7 @@ ${pm.replace('sync="pm"', flag)}`;
       const markdown = "```sh pm\nnpm i -D vitest\ncd my-npm-app && npm run dev\n```";
       const html = await markup(markdown);
       expect(html).toContain(
-        '<div class="ct" data-tabs-code data-code-header data-tabs-magic="auto" data-tabs-sync="pm">',
+        '<div class="ct" data-comark-frame data-tabs-code data-code-header data-tabs-magic="auto" data-tabs-sync="pm">',
       );
       expect(
         [...html.matchAll(/role="tab"[^>]*>([^<]+)<\/button>/g)].map(([, label]) => label),

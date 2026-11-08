@@ -620,37 +620,9 @@ dl:not([class]) > dd > :last-child {
   margin-block: 0;
 }
 
-/* A block that draws its own frame (a chart, a diff, a diagram, a code block and its notes, a file tree, callouts,
-   tabs, a carousel, a card, a test report, a properties box) isn't framed again: a preview that holds one drops its
-   ring and padding. */
-.example-preview:has(
-  > :is(
-    .cch,
-    .cd,
-    .ce,
-    .ce-card,
-    .cgc,
-    .ck,
-    .cft,
-    .ct,
-    .cmv,
-    .cc,
-    .ccr,
-    .ccr-group,
-    .cdg,
-    .cmm,
-    .cca,
-    .cdt,
-    .cdt-accordion,
-    .ctr,
-    .cfm,
-    .cmt-tiles,
-    .cqz,
-    .cm-video,
-    video.cm,
-    .cn-notes
-  )
-) {
+/* A block that draws its own frame carries `data-comark-frame` and isn't framed again: a preview that holds one drops
+   its ring and padding. */
+.example-preview:has(> :is([data-comark-frame])) {
   padding: 0;
   border-radius: 0;
   box-shadow: none;
@@ -664,137 +636,18 @@ dl:not([class]) > dd > :last-child {
 }
 
 /* Only such blocks stack with a gap. */
-.example-preview:not(
-  :has(
-    > :not(
-      style,
-      script,
-      .cch,
-      .cd,
-      .ce,
-      .ce-card,
-      .cgc,
-      .ck,
-      .cft,
-      .ct,
-      .cmv,
-      .cc,
-      .ccr,
-      .ccr-group,
-      .cdg,
-      .cmm,
-      .cca,
-      .cdt,
-      .cdt-accordion,
-      .ctr,
-      .cfm,
-      .cmt-tiles,
-      .cqz,
-      .cm-video,
-      video.cm,
-      .cn-notes
-    )
-  )
-) {
+.example-preview:not(:has(> :not(style, script, [data-comark-frame]))) {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-.example-preview:not(
-    :has(
-      > :not(
-        style,
-        script,
-        .cch,
-        .cd,
-        .ce,
-        .ce-card,
-        .cgc,
-        .ck,
-        .cft,
-        .ct,
-        .cmv,
-        .cc,
-        .ccr,
-        .ccr-group,
-        .cdg,
-        .cmm,
-        .cca,
-        .cdt,
-        .cdt-accordion,
-        .ctr,
-        .cfm,
-        .cmt-tiles,
-        .cqz,
-        .cm-video,
-        video.cm,
-        .cn-notes
-      )
-    )
-  )
-  > * {
+.example-preview:not(:has(> :not(style, script, [data-comark-frame]))) > * {
   margin-block: 0;
 }
 
 /* With text among them, a rule under the example keeps its last lines from reading as the page's. */
-.example-preview:has(
-    > :is(
-      .cch,
-      .cd,
-      .ce,
-      .ce-card,
-      .cgc,
-      .ck,
-      .cft,
-      .ct,
-      .cmv,
-      .cc,
-      .ccr,
-      .ccr-group,
-      .cdg,
-      .cmm,
-      .cca,
-      .cdt,
-      .cdt-accordion,
-      .ctr,
-      .cfm,
-      .cmt-tiles,
-      .cqz,
-      .cm-video,
-      video.cm,
-      .cn-notes
-    )
-  ):has(
-    > :not(
-      style,
-      script,
-      .cch,
-      .cd,
-      .ce,
-      .ce-card,
-      .cgc,
-      .ck,
-      .cft,
-      .ct,
-      .cmv,
-      .cc,
-      .ccr,
-      .ccr-group,
-      .cdg,
-      .cmm,
-      .cca,
-      .cdt,
-      .cdt-accordion,
-      .ctr,
-      .cfm,
-      .cmt-tiles,
-      .cqz,
-      .cm-video,
-      video.cm,
-      .cn-notes
-    )
-  ) {
+.example-preview:has(> :is([data-comark-frame])):has(> :not(style, script, [data-comark-frame])) {
   padding-bottom: 1.5rem;
   border-bottom: 1px solid var(--line);
 }

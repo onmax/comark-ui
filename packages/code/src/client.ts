@@ -51,6 +51,7 @@ export function parts(attributes: Record<string, unknown>): {
   return {
     wrapper: {
       class: "ck",
+      "data-comark-frame": "",
       ...(attributes.frame === "terminal" && { "data-code-frame": "terminal" }),
       ...(attributes.lines === true && { "data-code-lines": "" }),
       ...(Number(attributes.numbers) > 0 && {

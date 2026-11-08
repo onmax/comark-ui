@@ -41,7 +41,7 @@ describe("::diff", () => {
       const { issues, html } = await run(suggestion, highlight);
       expect(issues).toEqual([]);
       expect(html).toContain(
-        '<figure class="cd" data-not-typeset><figcaption><svg class="cd-icon"',
+        '<figure class="cd" data-comark-frame data-not-typeset><figcaption><svg class="cd-icon"',
       );
       expect(html).toContain(
         '<span class="cd-heading"><span class="cd-label">Suggested change</span><span class="cd-file">src/a.ts</span></span><span class="cd-counts"><span class="cd-added">+1</span> <span class="cd-removed">−1</span></span></figcaption>',
@@ -63,6 +63,15 @@ describe("::diff", () => {
     expect(html).not.toContain("<del>");
     // Nothing between the tags, so `white-space: pre` shows the line as written.
     expect(html).not.toMatch(/<(?:ins|del)>\s*\n/);
+  });
+
+  it("switches Shiki's colors to the dark theme with the page, without typeset", async () => {
+    const document = await parseMarkdown(suggestion, { plugins: [diffPlugin(), shiki()] });
+    const html = await renderHtmlFromDocument(document, { components });
+    expect(html).toContain("--shiki-dark:");
+    expect(/<style data-comark-diff>(.*?)<\/style>/s.exec(html)?.[1]).toContain(
+      '.shiki:where(.dark *) span[style*="--shiki-dark:"]{color:var(--shiki-dark)!important}',
+    );
   });
 
   it("marks the words that changed in plain code, and leaves lines that share little whole", async () => {

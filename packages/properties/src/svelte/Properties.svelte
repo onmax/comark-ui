@@ -27,4 +27,4 @@
   });
 </script>
 
-{#if children}<dl class="cfm" bind:this={box}>{@render children()}</dl>{/if}
+{#if children}<dl class="cfm" data-comark-frame="" bind:this={box}>{@render children()}</dl>{/if}
