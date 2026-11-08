@@ -9,15 +9,28 @@ import { describe, expect, it } from "vite-plus/test";
 const script = fileURLToPath(new URL("../worker-budget.ts", import.meta.url));
 const mib = 1024 ** 2;
 
-function checkBudget(files: Record<string, string | Buffer>) {
+function checkBudget(
+  files: Record<string, string | Buffer>,
+  maps?: Record<string, string | Buffer>,
+) {
   const directory = mkdtempSync(join(tmpdir(), "comark-worker-budget-"));
   try {
-    for (const [name, content] of Object.entries(files)) {
-      const path = join(directory, name);
-      mkdirSync(dirname(path), { recursive: true });
-      writeFileSync(path, content);
+    const workerDirectory = join(directory, "worker");
+    const mapDirectory = join(directory, "maps");
+    for (const [root, entries] of [
+      [workerDirectory, files],
+      [mapDirectory, maps ?? {}],
+    ] as const) {
+      mkdirSync(root);
+      for (const [name, content] of Object.entries(entries)) {
+        const path = join(root, name);
+        mkdirSync(dirname(path), { recursive: true });
+        writeFileSync(path, content);
+      }
     }
-    return spawnSync(process.execPath, [script, directory], { encoding: "utf8" });
+    return spawnSync(process.execPath, [script, workerDirectory, ...(maps ? [mapDirectory] : [])], {
+      encoding: "utf8",
+    });
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }
@@ -43,18 +56,34 @@ describe("Worker upload budgets", () => {
     expect(result.stderr).toContain("Pass --upload-source-maps to Wrangler");
   });
 
+  it("reads maps from the original build when Wrangler only copies modules", () => {
+    const result = checkBudget(
+      { "index.js": "export default {}" },
+      { "chunks/page.js.map": "{}", "wrangler.json": Buffer.alloc(65 * mib) },
+    );
+    expect(result.status, result.stderr).toBe(0);
+  });
+
+  it("requires maps in the original build even if the dry run has stale maps", () => {
+    const result = checkBudget({ "index.js": "export default {}", "index.js.map": "{}" }, {});
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("Pass --upload-source-maps to Wrangler");
+  });
+
   it.each([
     ["worker", "chunks/page.js", 33],
     ["maps", "chunks/page.js.map", 31],
   ] as const)(
     "rejects %s exceeding the uncompressed limit even when gzip is tiny",
     (kind, name, size) => {
-      const result = checkBudget({
-        "index.js": "export default {}",
-        "index.js.map": "{}",
+      const oversized = {
         [name]: Buffer.alloc(size * mib),
         [`nested/${name}`]: Buffer.alloc(size * mib),
-      });
+      };
+      const result =
+        kind === "maps"
+          ? checkBudget({ "index.js": "export default {}" }, oversized)
+          : checkBudget({ "index.js.map": "{}", ...oversized });
       expect(result.status).toBe(1);
       expect(result.stderr).toMatch(new RegExp(`${kind} exceeds the .* MiB uncompressed budget`));
     },
@@ -64,11 +93,11 @@ describe("Worker upload budgets", () => {
     ["worker", "index.js", 9],
     ["maps", "index.js.map", 13],
   ] as const)("retains the %s gzip budget", (kind, name, size) => {
-    const result = checkBudget({
-      "index.js": "export default {}",
-      "index.js.map": "{}",
-      [name]: randomBytes(size * mib),
-    });
+    const oversized = { [name]: randomBytes(size * mib) };
+    const result =
+      kind === "maps"
+        ? checkBudget({ "index.js": "export default {}" }, oversized)
+        : checkBudget({ "index.js.map": "{}", ...oversized });
     expect(result.status).toBe(1);
     expect(result.stderr).toMatch(new RegExp(`${kind} exceeds the .* MiB gzip budget`));
   });

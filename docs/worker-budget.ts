@@ -13,14 +13,17 @@ const limits = {
   maps: { uncompressed: 48 * 1024 ** 2, gzip: 12 * 1024 ** 2 },
 };
 const directory = resolve(process.argv[2] ?? ".wrangler/dry-run");
-const files = await readdir(directory, { recursive: true, withFileTypes: true });
+const directories = { worker: directory, maps: resolve(process.argv[3] ?? directory) };
 const sizes = { worker: { uncompressed: 0, gzip: 0 }, maps: { uncompressed: 0, gzip: 0 } };
-for (const file of files) {
-  if (!file.isFile() || ["README.md", "bundle-meta.json"].includes(file.name)) continue;
-  const kind = file.name.endsWith(".map") ? "maps" : "worker";
-  const content = await readFile(resolve(file.parentPath, file.name));
-  sizes[kind].uncompressed += content.length;
-  sizes[kind].gzip += gzipSync(content).length;
+for (const kind of ["worker", "maps"] as const) {
+  const files = await readdir(directories[kind], { recursive: true, withFileTypes: true });
+  for (const file of files) {
+    if (!file.isFile() || ["README.md", "bundle-meta.json"].includes(file.name)) continue;
+    if (file.name.endsWith(".map") !== (kind === "maps")) continue;
+    const content = await readFile(resolve(file.parentPath, file.name));
+    sizes[kind].uncompressed += content.length;
+    sizes[kind].gzip += gzipSync(content).length;
+  }
 }
 assert(
   sizes.maps.gzip > 0,

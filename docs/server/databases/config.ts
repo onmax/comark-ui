@@ -1,6 +1,7 @@
 // Better Auth's tables. Comments and the editor's sessions add their own to this database (see wrangler.jsonc).
 import { sql } from "drizzle-orm";
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { authSqliteSchema } from "vite-hub/auth/schema";
 import { defineDatabase } from "vite-hub/database";
 
 const now = sql`(cast(unixepoch('subsecond') * 1000 as integer))`;
@@ -79,5 +80,33 @@ export const verification = sqliteTable(
   (table) => [index("verification_identifier_idx").on(table.identifier)],
 );
 
+// The tables of consoleMcpOAuth() (server/auth.ts): the JWT signing keys and the OAuth clients, tokens and consents with
+// which console.vitehub.dev signs in.
+export const {
+  jwks,
+  oauthAccessToken,
+  oauthClient,
+  oauthClientAssertion,
+  oauthClientResource,
+  oauthConsent,
+  oauthRefreshToken,
+  oauthResource,
+} = authSqliteSchema;
+
 // Where the database lives is in nuxt.config.ts, under `vitehub.database`.
-export default defineDatabase({ schema: { user, session, account, verification } });
+export default defineDatabase({
+  schema: {
+    user,
+    session,
+    account,
+    verification,
+    jwks,
+    oauthAccessToken,
+    oauthClient,
+    oauthClientAssertion,
+    oauthClientResource,
+    oauthConsent,
+    oauthRefreshToken,
+    oauthResource,
+  },
+});
