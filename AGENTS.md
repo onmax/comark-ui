@@ -279,5 +279,6 @@ How most packages work, so the bullets below don't repeat it:
 uppt opens a draft `release/vX.Y.Z` PR from conventional commits on `main`, in lockstep for every package matched by `packages/*`. Merging it tags the version and publishes each package to npm through OIDC trusted publishing, with no approval step.
 
 - A new package needs a trusted publisher on npmjs.com before its first release, with workflow `release.yaml`, environment `npm`, and `npm publish` allowed.
+- Publish goes in waves of dependency order, so comark-ui follows its plugins and comark-linter follows comark-ui. A package that fails stops every later wave, so `latest` never names a sibling version npm lacks.
 - If publishing fails after the tag exists, run `gh workflow run release.yaml --repo onmax/comark-ui --ref vX.Y.Z`.
 - The docs deploy through Cloudflare Workers Builds on every push to `main`.
