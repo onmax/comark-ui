@@ -18,7 +18,7 @@ describe("comark-file-tree", () => {
     );
     const tree = body(html).replace(/<svg.*?<\/svg>/g, "");
     expect(tree).toBe(
-      '<div class="cft"><ul>' +
+      '<div class="cft" data-comark-frame><ul>' +
         '<li data-type="folder"><details open><summary><span class="cft-entry"><span class="cft-name">src</span></span></summary><ul>' +
         '<li data-type="folder"><details open><summary><span class="cft-entry"><span class="cft-name">components</span></span></summary><ul>' +
         '<li data-type="file"><span class="cft-entry"><span class="cft-name">Button.vue</span></span></li></ul></details></li>' +

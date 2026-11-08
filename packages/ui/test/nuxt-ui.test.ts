@@ -93,7 +93,7 @@ describe("the plugins' styles", () => {
     );
     const output = await render("![A cat](/cat.png)");
     expect(output).toContain("var(--comark-background,var(--ui-bg,var(--background,#fff)))");
-    expect(output).toContain("calc(var(--ui-radius,calc(var(--radius,.625rem)/2))*2)");
+    expect(output).toContain("calc(var(--ui-radius,var(--radius,.625rem)/2)*2)");
   });
 
   it("read the primary color from Nuxt UI, then shadcn/ui, in every block that draws it", async () => {

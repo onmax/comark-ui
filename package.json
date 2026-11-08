@@ -38,6 +38,8 @@
     "comark-linter": "workspace:*",
     "geist": "catalog:",
     "pkg-pr-new": "catalog:",
+    "postcss": "catalog:",
+    "postcss-calc": "catalog:",
     "publint": "catalog:",
     "shiki": "catalog:",
     "tsdown": "catalog:",

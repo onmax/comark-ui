@@ -102,6 +102,12 @@ catalogs:
     pkg-pr-new:
       specifier: ^0.0.92
       version: 0.0.92
+    postcss:
+      specifier: ^8.5.31
+      version: 8.5.31
+    postcss-calc:
+      specifier: ^10.1.1
+      version: 10.1.1
     publint:
       specifier: ^0.3.25
       version: 0.3.25
@@ -236,6 +242,12 @@ importers:
       pkg-pr-new:
         specifier: 'catalog:'
         version: 0.0.92
+      postcss:
+        specifier: 'catalog:'
+        version: 8.5.31
+      postcss-calc:
+        specifier: 'catalog:'
+        version: 10.1.1(postcss@8.5.31)
       publint:
         specifier: 'catalog:'
         version: 0.3.25
@@ -10891,6 +10903,12 @@ packages:
 
   postal-mime@2.7.6:
     resolution: {integrity: sha512-UUlyE2KlxmvwMGq060onF/VWU3zD6dVW31FwokQ5v26jWd35fbs2MoTFzh+jXnPwAyV2MULMKXcBInGOl5TO6Q==}
+
+  postcss-calc@10.1.1:
+    resolution: {integrity: sha512-NYEsLHh8DgG/PRH2+G9BTuUdtf9ViS+vdoQ0YA5OQdGsfN4ztiwtDWNtBl9EKeqNMFnIu8IKZ0cLxEQ5r5KVMw==}
+    engines: {node: ^18.12 || ^20.9 || >=22.0}
+    peerDependencies:
+      postcss: ^8.4.38
 
   postcss-calc@11.2.3:
     resolution: {integrity: sha512-pFW3MR2a4W7uHcSGUiyQGGXZWHon83ljbNwnUJ1mRKublWQbv+3o9NiqhlV4TJfNby+U+zLY2OgiywzhA5eFqw==}
@@ -23943,6 +23961,12 @@ snapshots:
 
   postal-mime@2.7.6: {}
 
+  postcss-calc@10.1.1(postcss@8.5.31):
+    dependencies:
+      postcss: 8.5.31
+      postcss-selector-parser: 7.1.6
+      postcss-value-parser: 4.2.0
+
   postcss-calc@11.2.3(postcss@8.5.31):
     dependencies:
       '@csstools/css-tokenizer': 4.0.2
@@ -23954,8 +23978,7 @@ snapshots:
       cssesc: 3.0.0
       util-deprecate: 1.0.2
 
-  postcss-value-parser@4.2.0:
-    optional: true
+  postcss-value-parser@4.2.0: {}
 
   postcss@8.5.23:
     dependencies:

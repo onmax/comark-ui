@@ -47,7 +47,7 @@ function Mermaid(props: Parameters<typeof Pele>[0]) {
   useEffect(() => startMermaid(), []);
   return createElement(
     "div",
-    { className: "cmm", "data-source": props.content },
+    { className: "cmm", "data-comark-frame": "", "data-source": props.content },
     createElement(Pele, props),
     createElement("div", {
       className: "cmm-bar",

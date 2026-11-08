@@ -29,7 +29,7 @@ describe("comark-media", () => {
       "![Signing in with a passkey](./login.mp4)\n\n![Checkout](https://cdn.test/a.webm?v=2)",
     );
     expect(html).toContain(
-      '<span class="cm cm-video" role="group" aria-label="Signing in with a passkey"><video src="./login.mp4" controls playsinline preload="metadata" aria-label="Signing in with a passkey"><a href="./login.mp4">Signing in with a passkey</a></video><span class="cm-bar">',
+      '<span class="cm cm-video" data-comark-frame role="group" aria-label="Signing in with a passkey"><video src="./login.mp4" controls playsinline preload="metadata" aria-label="Signing in with a passkey"><a href="./login.mp4">Signing in with a passkey</a></video><span class="cm-bar">',
     );
     expect(html).toContain('src="https://cdn.test/a.webm?v=2"');
     expect(html.match(/<style data-comark-media>/g)).toHaveLength(1);
@@ -38,7 +38,7 @@ describe("comark-media", () => {
   it("reads .mp4, .webm, .mov, and .m4v as video, .mp3, .wav, .ogg, and .m4a as audio, and leaves images", async () => {
     for (const file of ["a.mp4", "a.webm", "a.MOV", "a.m4v"])
       expect(await render(`![Clip](${file})`), file).toContain(
-        `<span class="cm cm-video" role="group" aria-label="Clip"><video src="${file}"`,
+        `<span class="cm cm-video" data-comark-frame role="group" aria-label="Clip"><video src="${file}"`,
       );
     for (const file of ["a.mp3", "a.wav", "a.ogg", "a.m4a"])
       expect(await render(`![Clip](${file})`), file).toContain(
@@ -81,7 +81,7 @@ describe("comark-media", () => {
       '<audio class="cm" src="alert.mp3" controls preload="metadata" loop aria-label="Alert"><a href="alert.mp3">Alert</a></audio>',
     );
     expect(html).toContain(
-      '<video class="cm" src="clip.mp4" controls playsinline preload="metadata" aria-label="Clip"><a href="clip.mp4">Clip</a></video>',
+      '<video class="cm" data-comark-frame src="clip.mp4" controls playsinline preload="metadata" aria-label="Clip"><a href="clip.mp4">Clip</a></video>',
     );
     expect(html).not.toContain('class="cm-bar"');
     expect(html).not.toContain("<script>");
@@ -100,7 +100,7 @@ describe("comark-media", () => {
 
   it("plays a GitHub attachment link alone in a paragraph, and only that", async () => {
     expect(await render(attachment)).toContain(
-      `<span class="cm cm-video"><video src="${attachment}" controls playsinline preload="metadata"><a href="${attachment}">${attachment}</a></video>`,
+      `<span class="cm cm-video" data-comark-frame><video src="${attachment}" controls playsinline preload="metadata"><a href="${attachment}">${attachment}</a></video>`,
     );
     expect(await render(`See ${attachment}`)).not.toContain("<video");
     expect(await render(`[the recording](${attachment})`)).not.toContain("<video");

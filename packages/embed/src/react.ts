@@ -32,7 +32,7 @@ export function Embed({ provider, src, label, size, href, title, host }: EmbedAt
   if (!src)
     return createElement(
       "a",
-      { className: "ce-card", href },
+      { className: "ce-card", "data-comark-frame": "", href },
       icon(icons.globe),
       createElement("strong", null, title),
       " ",
@@ -40,7 +40,7 @@ export function Embed({ provider, src, label, size, href, title, host }: EmbedAt
     );
   return createElement(
     "figure",
-    { className: "ce", "data-provider": provider, "data-size": size },
+    { className: "ce", "data-comark-frame": "", "data-provider": provider, "data-size": size },
     createElement(
       "div",
       { className: "ce-frame" },

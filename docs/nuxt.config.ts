@@ -66,11 +66,11 @@ export default defineNuxtConfig({
     },
   },
   // The agent skill at the repository's root, under /.well-known/skills/. robots.txt keeps crawlers out of the Console,
-  // the API, and sign-in.
+  // its sign-in page, and the API.
   agentDiscovery: {
     siteUrl: "https://comark-ui.onmax.me",
     skills: { dir: "../skills" },
-    robots: { disallow: ["/_vitehub", "/api", "/sign-in"] },
+    robots: { disallow: ["/_vitehub", "/api"] },
   },
   nitro: {
     // The root wrangler.jsonc holds what ViteHub doesn't generate (name, routes, previews). Nitro merges it with ViteHub's

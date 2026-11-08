@@ -13,7 +13,7 @@ export const Diagram = defineComponent({
     onMounted(addStyles);
     return () =>
       props.svg
-        ? h("figure", { class: "cdg", "data-type": props.type }, [
+        ? h("figure", { class: "cdg", "data-comark-frame": "", "data-type": props.type }, [
             // The plugin sanitized the SVG when it drew it.
             h("div", {
               class: "cdg-svg",

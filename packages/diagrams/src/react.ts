@@ -11,7 +11,7 @@ export function Diagram({ type, svg, label }: DiagramAttributes) {
   if (!svg) return null;
   return createElement(
     "figure",
-    { className: "cdg", "data-type": type },
+    { className: "cdg", "data-comark-frame": "", "data-type": type },
     // The plugin sanitized the SVG when it drew it.
     createElement("div", {
       className: "cdg-svg",

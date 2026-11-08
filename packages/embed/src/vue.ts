@@ -46,7 +46,7 @@ export const Embed = defineComponent({
     return () => {
       if (!props.href) return null;
       if (!props.src)
-        return h("a", { class: "ce-card", href: props.href }, [
+        return h("a", { class: "ce-card", "data-comark-frame": "", href: props.href }, [
           icon(icons.globe),
           h("strong", props.title),
           " ",
@@ -54,7 +54,12 @@ export const Embed = defineComponent({
         ]);
       return h(
         "figure",
-        { class: "ce", "data-provider": props.provider, "data-size": props.size },
+        {
+          class: "ce",
+          "data-comark-frame": "",
+          "data-provider": props.provider,
+          "data-size": props.size,
+        },
         [
           h("div", { class: "ce-frame" }, [
             h("iframe", {

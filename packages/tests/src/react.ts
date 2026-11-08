@@ -19,6 +19,7 @@ export function Tests({
     "section",
     {
       className: "ctr",
+      "data-comark-frame": "",
       "data-status": failed ? "failed" : "passed",
       "aria-label": title || "Test results",
     },

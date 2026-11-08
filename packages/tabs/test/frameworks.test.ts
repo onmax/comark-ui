@@ -84,7 +84,7 @@ describe("comark-tabs renderers", () => {
       '<div class="ct-panel" role="tabpanel" id="panel-2" aria-labelledby="tab-2" tabindex="0" data-inactive><div class="ct-caption">Windows</div>',
     );
     expect(expected).toContain(
-      '<div class="ct" data-tabs-code data-code-header data-tabs-magic="auto"><div class="ct-list" role="tablist">',
+      '<div class="ct" data-comark-frame data-tabs-code data-code-header data-tabs-magic="auto"><div class="ct-list" role="tablist">',
     );
     for (const name of ["vue", "react"] as const) {
       const html = normalize(await renderers[name](value));

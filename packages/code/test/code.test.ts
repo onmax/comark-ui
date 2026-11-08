@@ -32,7 +32,7 @@ describe("comark-code", () => {
   it("wraps a code block with Wrap and Copy buttons, and leaves the block as it was", async () => {
     const html = await markup("```ts\nconst a = 1\n```");
     expect(html).toMatch(
-      /^<div class="ck"><pre data-language="ts"><code class="language-ts">const a = 1<\/code><\/pre><div class="ck-bar"><span class="ck-title">ts<\/span><button/,
+      /^<div class="ck" data-comark-frame><pre data-language="ts"><code class="language-ts">const a = 1<\/code><\/pre><div class="ck-bar"><span class="ck-title">ts<\/span><button/,
     );
     expect(html).toContain(
       '<button type="button" class="ck-wrap" aria-label="Wrap lines" aria-pressed="false" title="Wrap lines">',
@@ -73,9 +73,22 @@ describe("comark-code", () => {
       "```ts [config.ts]\nconst a = 1\n```",
     );
     expect(html).toMatch(
-      /<div class="ck"><pre data-language="ts" data-filename="config.ts" class="shiki /,
+      /<div class="ck" data-comark-frame><pre data-language="ts" data-filename="config.ts" class="shiki /,
     );
     expect(html).toContain("--shiki-dark:");
+  });
+
+  it("switches Shiki's colors to the dark theme with the page, without typeset", async () => {
+    const style = /<style data-comark-code>(.*?)<\/style>/s.exec(await render(sh))?.[1];
+    expect(style).toContain(
+      '.shiki:where(.dark *) span[style*="--shiki-dark:"]{color:var(--shiki-dark)!important}',
+    );
+    expect(style).toContain(
+      '@media (prefers-color-scheme:dark){.shiki:not(:where(.light *)) span[style*="--shiki-dark:"]{color:var(--shiki-dark)!important}',
+    );
+    expect(style).toContain(
+      '.shiki:where(.dark *) span[style*="--shiki-dark-font-style:"]{font-style:var(--shiki-dark-font-style)!important}',
+    );
   });
 
   it("adds your actions to the blocks in their languages, before Wrap and Copy", async () => {
@@ -137,10 +150,12 @@ describe("comark-code", () => {
         components: { ...tabsComponents, ...components },
       })(group);
       expect(html).toContain(
-        '<div class="ct" data-tabs-code data-code-header data-tabs-magic="auto">',
+        '<div class="ct" data-comark-frame data-tabs-code data-code-header data-tabs-magic="auto">',
       );
       expect(
-        html.match(/<div class="ck" data-code-frame="terminal"><pre data-language="sh">/g),
+        html.match(
+          /<div class="ck" data-comark-frame data-code-frame="terminal"><pre data-language="sh">/g,
+        ),
       ).toHaveLength(2);
       expect(html.match(/data-code-action="run"/g)).toHaveLength(2);
     }
@@ -164,7 +179,7 @@ describe("comark-code lines", () => {
   it("marks lines added, deleted, and to look at, after Shiki draws them", async () => {
     const html = await highlighted(`\`\`\`ts {4} ins={1} del={2} mark={3}\n${block}`);
     expect(html).toMatch(
-      /^<div class="ck" data-code-lines><pre data-language="ts" data-highlights="\[4\]" class="shiki /,
+      /^<div class="ck" data-comark-frame data-code-lines><pre data-language="ts" data-highlights="\[4\]" class="shiki /,
     );
     expect(html).toContain('<span class="line ck-ins"><span style="');
     expect(html).toContain('<span class="line ck-del">');
@@ -183,7 +198,9 @@ describe("comark-code lines", () => {
 
   it("numbers the lines, from 1 or from startLineNumber", async () => {
     const html = await highlighted(`\`\`\`ts showLineNumbers\n${block}`, [code()]);
-    expect(html).toContain('<div class="ck" data-code-lines data-code-numbers="1">');
+    expect(html).toContain(
+      '<div class="ck" data-comark-frame data-code-lines data-code-numbers="1">',
+    );
     expect(html).toContain('<span class="line" data-line="1">const a = 1');
     const from = await highlighted(`\`\`\`ts startLineNumber=98\n${block}`, [code()]);
     expect(from).toContain('data-code-numbers="3"');
@@ -225,7 +242,7 @@ describe("comark-code lines", () => {
   it("titles a block with title, and starts it wrapped with wrap", async () => {
     const html = await highlighted('```ts title="src/a.ts" wrap\nconst a = 1\n```', [code()]);
     expect(html).toMatch(
-      /^<div class="ck" data-code-wrap><pre data-language="ts" data-filename="src\/a.ts">/,
+      /^<div class="ck" data-comark-frame data-code-wrap><pre data-language="ts" data-filename="src\/a.ts">/,
     );
     expect(html).toContain('<span class="ck-title">src/a.ts</span>');
     expect(html).toContain('class="ck-wrap" aria-label="Wrap lines" aria-pressed="true"');
@@ -233,7 +250,9 @@ describe("comark-code lines", () => {
 
   it("frames shell sessions as a terminal, unless they're named like a file or turned off", async () => {
     const html = await highlighted("```bash\nls\n```", [code()]);
-    expect(html).toMatch(/^<div class="ck" data-code-frame="terminal"><pre data-language="bash">/);
+    expect(html).toMatch(
+      /^<div class="ck" data-comark-frame data-code-frame="terminal"><pre data-language="bash">/,
+    );
     expect(html).not.toContain("ck-title");
     expect(await highlighted('```sh title="Install"\nls\n```', [code()])).toContain(
       '<span class="ck-title">Install</span>',
@@ -267,7 +286,7 @@ describe("comark-code lines", () => {
       shiki({ transformers: [transformer] }),
       code(),
     ]);
-    expect(html).toContain('<div class="ck" data-code-lines>');
+    expect(html).toContain('<div class="ck" data-comark-frame data-code-lines>');
     expect(html).toContain('<span class="line diff add">');
     expect(html).not.toContain("&quot;");
   });
@@ -316,7 +335,7 @@ describe("comark-code lines", () => {
     expect(html).toContain(
       '<pre data-language="ts" data-filename="a.ts" data-meta="ins={1}" class="shiki ',
     );
-    expect(html).toContain('<div class="ck" data-code-frame="terminal">');
+    expect(html).toContain('<div class="ck" data-comark-frame data-code-frame="terminal">');
     expect(await issues(markdown)).toEqual([]);
   });
 });

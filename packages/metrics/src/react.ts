@@ -40,7 +40,7 @@ export function ProgressBar({ value, max, percent, label }: ProgressAttributes) 
 /** `::stats{tiles}` for `@comark/react`. */
 export function StatTiles({ children }: { children?: ReactNode }) {
   useEffect(addStyles, []);
-  return createElement("dl", { className: "cmt-tiles" }, children);
+  return createElement("dl", { className: "cmt-tiles", "data-comark-frame": "" }, children);
 }
 
 /** Pass these as `components` to `@comark/react`. */

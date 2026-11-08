@@ -30,7 +30,7 @@ export const FileTree = defineComponent({
   inheritAttrs: false,
   setup(_, { slots }) {
     onMounted(addStyles);
-    return () => h("div", { class: "cft" }, [h("ul", slots.default?.())]);
+    return () => h("div", { class: "cft", "data-comark-frame": "" }, [h("ul", slots.default?.())]);
   },
 });
 

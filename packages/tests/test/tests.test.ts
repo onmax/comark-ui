@@ -19,7 +19,7 @@ describe("comark-tests", () => {
       ),
     );
     expect(html).toContain(
-      '<section class="ctr" data-status="failed" aria-label="Unit tests"><p class="ctr-summary"><strong class="ctr-title">Unit tests</strong>' +
+      '<section class="ctr" data-comark-frame data-status="failed" aria-label="Unit tests"><p class="ctr-summary"><strong class="ctr-title">Unit tests</strong>' +
         '<span class="ctr-count" data-kind="passed">2 passed</span><span class="ctr-count" data-kind="failed">2 failed</span>' +
         '<span class="ctr-count" data-kind="skipped">1 skipped</span><span class="ctr-time">4.2 s</span></p>',
     );
@@ -38,7 +38,7 @@ describe("comark-tests", () => {
       ),
     );
     expect(html).toContain(
-      '<section class="ctr" data-status="passed" aria-label="Test results"><p class="ctr-summary"><span class="ctr-count" data-kind="passed">1 passed</span><span class="ctr-time">250 ms</span></p></section>',
+      '<section class="ctr" data-comark-frame data-status="passed" aria-label="Test results"><p class="ctr-summary"><span class="ctr-count" data-kind="passed">1 passed</span><span class="ctr-time">250 ms</span></p></section>',
     );
   });
 

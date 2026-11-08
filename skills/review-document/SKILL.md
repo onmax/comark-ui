@@ -1,6 +1,6 @@
 ---
 name: review-document
-description: Turns a review's findings into one short Markdown document a reader can act on, with the verdict first and each finding ranked, located, backed by evidence, and paired with its fix. Use when writing up a code review, a design or QA review, an audit, or any report whose reader must decide what to do next.
+description: Turns a review's findings into one short Markdown document a reader can act on, with the verdict first and each finding ranked, located, backed by evidence, and paired with its fix. Use when writing up a code review, a design or QA review, or an audit, where the reader must decide what to do about what you found.
 license: MIT
 ---
 

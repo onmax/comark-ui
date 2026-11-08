@@ -38,7 +38,7 @@ const progress: NodeHandler = ([, attrs], state) => {
 };
 
 const tiles: NodeHandler = async (node, state) =>
-  `${styles(state)}<dl class="cmt-tiles">${await state.flow(node, state)}</dl>`;
+  `${styles(state)}<dl class="cmt-tiles" data-comark-frame>${await state.flow(node, state)}</dl>`;
 
 /** The HTML renderer for `:delta`, `:progress`, and `::stats`. Pass it as `components`; it inlines the styles once per document. */
 export const components: Record<"delta" | "progress-bar" | "stat-tiles", NodeHandler> = {

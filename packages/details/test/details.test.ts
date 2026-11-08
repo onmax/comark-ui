@@ -21,8 +21,8 @@ describe("comark-details", () => {
       '::details{summary="Why pnpm?"}\nIt saves disk.\n::\n\n::details{open}\n#summary\nWhy **this**?\n\n#default\nBecause.\n::',
     );
     expect(body(html)).toBe(
-      '<details class="cdt" data-variant="details"><summary class="cdt-summary"><span>Why pnpm?</span></summary>It saves disk.</details>' +
-        '<details class="cdt" data-variant="details" open><summary class="cdt-summary"><span>Why <strong>this</strong>?</span></summary>Because.</details>',
+      '<details class="cdt" data-comark-frame data-variant="details"><summary class="cdt-summary"><span>Why pnpm?</span></summary>It saves disk.</details>' +
+        '<details class="cdt" data-comark-frame data-variant="details" open><summary class="cdt-summary"><span>Why <strong>this</strong>?</span></summary>Because.</details>',
     );
     expect(html.match(/<style data-comark-details>/g)).toHaveLength(1);
     expect(html).not.toContain("<template");
@@ -50,10 +50,10 @@ describe("comark-details", () => {
       ),
     );
     expect(html).toContain(
-      '<div class="cdt-accordion"><details class="cdt" data-variant="item"><summary class="cdt-summary"><span class="ci" data-mask aria-hidden="true" style=',
+      '<div class="cdt-accordion" data-comark-frame><details class="cdt" data-comark-frame data-variant="item"><summary class="cdt-summary"><span class="ci" data-mask aria-hidden="true" style=',
     );
     expect(html).toContain(
-      '<details class="cdt" data-variant="item" open><summary class="cdt-summary"><span>Use</span></summary>Call it.</details></div>',
+      '<details class="cdt" data-comark-frame data-variant="item" open><summary class="cdt-summary"><span>Use</span></summary>Call it.</details></div>',
     );
   });
 
@@ -81,7 +81,7 @@ describe("comark-details", () => {
       ),
     );
     expect(html).toContain(
-      '<details class="cdt" data-variant="collapsible"><summary class="cdt-summary"><span><span class="cdt-toggle" data-show="Open " data-hide="Hide "></span>options</span></summary><ul>',
+      '<details class="cdt" data-comark-frame data-variant="collapsible"><summary class="cdt-summary"><span><span class="cdt-toggle" data-show="Open " data-hide="Hide "></span>options</span></summary><ul>',
     );
     expect(html).toContain('data-show="Show " data-hide="Hide "></span>properties</span>');
   });
