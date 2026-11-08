@@ -104,6 +104,8 @@ catalog:
   lru-cache: ^11.5.3
 
 overrides:
+  # Content and the docs renderer share the preset built in this workspace.
+  comark-ui: workspace:*
   # Nuxt's Nitro and the one ViteHub depends on must be one copy.
   nitro: "catalog:"
   # Nuxt UI 4.12 asks for @nuxt/fonts 0.14, which fills its font files in Nitro 2's rollup:before hook. Nitro 3 never

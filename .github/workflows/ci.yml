@@ -47,7 +47,9 @@ jobs:
       - name: Worker bundle
         run: |
           node --input-type=module -e "import { readFileSync } from 'node:fs'; import assert from 'node:assert/strict'; const { compatibility_flags: flags } = JSON.parse(readFileSync('docs/dist/server/wrangler.json', 'utf8')); assert(flags.includes('nodejs_compat')); assert(!flags.includes('nodejs_compat_v2')); assert(!flags.includes('no_nodejs_compat_v2'));"
-          pnpm exec wrangler deploy --dry-run --outdir .wrangler/dry-run
+          pnpm exec wrangler deploy --dry-run --upload-source-maps --outdir .wrangler/dry-run
+          # Wrangler's no-bundle dry run copies modules without their source maps.
+          node docs/worker-budget.ts .wrangler/dry-run docs/dist/server
 
   check:
     needs: build
