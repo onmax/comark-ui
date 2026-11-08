@@ -19,7 +19,7 @@ const tests: NodeHandler = async ([, attrs, ...children], state) => {
   const counts = summary({ passed: count(attrs.passed), failed, skipped: count(attrs.skipped) });
   const title = rawText(attrs.title);
   return (
-    `${styles}<section class="ctr" data-status="${failed ? "failed" : "passed"}" aria-label="${attr(title || "Test results")}"><p class="ctr-summary">` +
+    `${styles}<section class="ctr" data-comark-frame data-status="${failed ? "failed" : "passed"}" aria-label="${attr(title || "Test results")}"><p class="ctr-summary">` +
     (title ? `<strong class="ctr-title">${attr(title)}</strong>` : "") +
     counts
       .map(({ kind, text }) => `<span class="ctr-count" data-kind="${kind}">${text}</span>`)

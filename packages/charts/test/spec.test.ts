@@ -32,7 +32,7 @@ describe("comark-charts with a Vega-Lite spec", () => {
     expect(await issues(markdown)).toEqual([]);
     const html = await render(markdown);
     expect(html).toContain(
-      '<figure class="cch" data-type="vega-lite"><figcaption>Latency per request</figcaption><div class="cch-plot"><svg role="img" aria-label="Latency per request"',
+      '<figure class="cch" data-comark-frame data-type="vega-lite"><figcaption>Latency per request</figcaption><div class="cch-plot"><svg role="img" aria-label="Latency per request"',
     );
     expect(html).toContain(">/search</text>");
     // In the house inks, which the stylesheet swaps for the page's.

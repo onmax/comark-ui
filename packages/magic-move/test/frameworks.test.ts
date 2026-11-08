@@ -60,7 +60,7 @@ describe("comark-magic-move renderers", () => {
       const [html = ""] = (await render(value)).split("<style");
       const [, id] = /id="([^"]+)-tab-1"/.exec(html) ?? [];
       expect(html, name).toMatch(
-        /<div class="cmv" data-code-header(="")?><div class="cmv-list" role="tablist" aria-label="Refactor"><button type="button" class="cmv-tab" role="tab"/,
+        /<div class="cmv" data-comark-frame(="")? data-code-header(="")?><div class="cmv-list" role="tablist" aria-label="Refactor"><button type="button" class="cmv-tab" role="tab"/,
       );
       expect(html, name).toContain(
         `id="${id}-tab-2" aria-controls="${id}-panel-2" aria-selected="false" tabindex="-1">Step 2</button>`,

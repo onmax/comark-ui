@@ -15,7 +15,7 @@ export function Chart(props: {
   if (!props.svg) return createElement("div", null, props.children);
   return createElement(
     "figure",
-    { className: "cch", "data-type": props.type },
+    { className: "cch", "data-comark-frame": "", "data-type": props.type },
     props.title ? createElement("figcaption", null, props.title) : null,
     createElement("div", { className: "cch-plot", dangerouslySetInnerHTML: { __html: props.svg } }),
     createElement("div", { className: "cch-bar", dangerouslySetInnerHTML: { __html: bar() } }),

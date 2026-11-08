@@ -786,31 +786,7 @@ const onListFocus = () => {
 }
 
 /* The card is the frame, so a block that draws its own drops it when it's all the card shows. */
-.canvas
-  .demo-page
-  > :is(
-    .cch,
-    .cd,
-    .ce,
-    .ce-card,
-    .cgc,
-    .ck,
-    .cft,
-    .ct,
-    .cmv,
-    .cc,
-    .ccr,
-    .ccr-group,
-    .cdg,
-    .cmm,
-    .cca,
-    .cdt,
-    .cdt-accordion,
-    .ctr,
-    .cfm,
-    .cmt-tiles,
-    .cqz
-  ):only-child {
+.canvas .demo-page > :is([data-comark-frame]):only-child {
   margin: 0;
   padding: 0;
   border: 0;

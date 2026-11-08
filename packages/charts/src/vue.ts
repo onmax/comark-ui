@@ -15,7 +15,7 @@ export const Chart = defineComponent({
     onBeforeUnmount(() => stop());
     return () =>
       props.svg
-        ? h("figure", { class: "cch", "data-type": props.type }, [
+        ? h("figure", { class: "cch", "data-comark-frame": "", "data-type": props.type }, [
             props.title ? h("figcaption", props.title) : null,
             h("div", { class: "cch-plot", innerHTML: props.svg }),
             h("div", { class: "cch-bar", innerHTML: bar() }),

@@ -1,6 +1,7 @@
 import { css as icons } from "comark-icon/client";
 import { theme } from "comark-zoom/theme";
 import { disclosureMotion } from "../../../shared/disclosure.ts";
+import { shikiDark } from "../../../shared/shiki.ts";
 
 // Lucide's chevrons-up-down, drawn as a mask in the text's color.
 const chevrons = `url("data:image/svg+xml,${encodeURIComponent(
@@ -97,6 +98,7 @@ export const css = `${icons}@layer comark{${[
   `${lines} .highlighted-word{border-radius:calc(var(--_comark-radius) - 6px);background:color-mix(in srgb,var(--_comark-foreground) 12%,transparent)}`,
   ".ck>pre.has-focused .line:not(.focused){opacity:.7;filter:blur(.095rem);transition:filter .3s,opacity .3s}",
   ".ck>pre.has-focused:hover .line:not(.focused){opacity:1;filter:none}",
+  shikiDark,
 ].join("")}}${
   // Pages set a code block's padding, overflow, and `white-space` with plain rules, which beat any layered one. A tinted
   // line reaches past the block, which must clip it.

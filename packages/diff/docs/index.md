@@ -235,7 +235,7 @@ A diff is a card like shadcn/ui's Card, so it follows the shared tokens in [Them
 | `--comark-radius` | The card's corners |
 | `--comark-font` | The header's label |
 
-With Comark's `shiki` plugin, the code's colors are Shiki's.
+With Comark's `shiki` plugin, the code's colors are Shiki's. With a light and a dark theme, they switch with the page, as [code blocks](/code/#theme) do.
 
 ### Variables
 

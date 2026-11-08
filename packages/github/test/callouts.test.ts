@@ -9,7 +9,7 @@ const render = (markdown: string, options?: Options, registerDefaultPlugins = tr
     markdown,
   );
 const callout = (html: string) =>
-  /<div class="cgc" data-type="(\w+)">.*?<p class="cgc-title">(.*?)<\/p><div class="cgc-body">([\s\S]*?)<\/div><\/div>/.exec(
+  /<div class="cgc" data-comark-frame data-type="(\w+)">.*?<p class="cgc-title">(.*?)<\/p><div class="cgc-body">([\s\S]*?)<\/div><\/div>/.exec(
     html.replaceAll("\n", " "),
   );
 
@@ -21,7 +21,7 @@ describe("comark-github callouts", () => {
       const lower = type.toLowerCase();
       expect(html).toMatch(
         new RegExp(
-          `<div class="cgc" data-type="${lower}"><span class="cgc-icon" aria-hidden="true"><svg [^>]+>.+?</svg></span><p class="cgc-title">${lower[0]!.toUpperCase()}${lower.slice(1)}</p>`,
+          `<div class="cgc" data-comark-frame data-type="${lower}"><span class="cgc-icon" aria-hidden="true"><svg [^>]+>.+?</svg></span><p class="cgc-title">${lower[0]!.toUpperCase()}${lower.slice(1)}</p>`,
         ),
       );
       expect(html).toContain(`Body of ${type}.`);
@@ -95,7 +95,7 @@ describe("comark-github callouts", () => {
   it("finds callouts nested in lists and other blocks", async () => {
     const html = await render("- Item\n\n  > [!IMPORTANT]\n  > Inside a list.");
     expect(html).toMatch(
-      /<li>[\s\S]*<div class="cgc" data-type="important">[\s\S]*Inside a list\./,
+      /<li>[\s\S]*<div class="cgc" data-comark-frame data-type="important">[\s\S]*Inside a list\./,
     );
   });
 

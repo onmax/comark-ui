@@ -375,6 +375,8 @@ When you render on a server, import `comark-code/style.css` with your own styles
 
 The header sits on the code block's own background, so it takes your `pre` styles and Shiki's theme. The title and buttons follow the shared tokens in [Theming](/guide/theming/).
 
+Code highlighted with a light and a dark Shiki theme switches to the dark one with the page: under a `.dark` class, or in the system's dark mode unless a `.light` class is above it. Shiki writes the light colors inline, so this rule is `!important`.
+
 The rules sit in a `comark` CSS layer, so any plain rule of your own wins. These sit outside the layer, so they beat a page's own `pre` styles:
 
 - The `padding-top` that makes room for the header above the first line.

@@ -18,6 +18,7 @@ import { components as vueComponents } from "../src/vue.ts";
 // and how each framework closes an empty element.
 const normalize = (html: string) =>
   html
+    .replace(/ data-comark-frame=""/g, " data-comark-frame")
     .replace(/<!--.*?-->/g, "")
     .replace(/<style[^>]*>.*?<\/style>/gs, "")
     .replace(/\s*\/>/g, ">")
@@ -36,7 +37,7 @@ describe("comark-charts renderers", () => {
     const value = await parseMarkdown(markdown, { plugins: [charts()] });
     const html = normalize(await renderHtmlFromDocument(value, { components: htmlComponents }));
     expect(html).toContain(
-      '<figure class="cch" data-type="bar"><figcaption>Bundle size</figcaption><div class="cch-plot"><svg role="img" aria-label="Bundle size"',
+      '<figure class="cch" data-comark-frame data-type="bar"><figcaption>Bundle size</figcaption><div class="cch-plot"><svg role="img" aria-label="Bundle size"',
     );
     const vue = normalize(
       await renderVue(
@@ -50,7 +51,7 @@ describe("comark-charts renderers", () => {
       const svg = /<svg[^]*<\/svg>/.exec(output)?.[0];
       expect(svg).toBe(/<svg[^]*<\/svg>/.exec(html)?.[0]);
       expect(output).toContain(
-        '<figure class="cch" data-type="bar"><figcaption>Bundle size</figcaption>',
+        '<figure class="cch" data-comark-frame data-type="bar"><figcaption>Bundle size</figcaption>',
       );
       expect(output).toContain('<details class="cch-data"><summary>Data</summary>');
       expect(output).toContain("<td>annotate</td>");

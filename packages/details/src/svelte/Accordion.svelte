@@ -7,4 +7,4 @@
   onMount(addStyles);
 </script>
 
-<div class="cdt-accordion">{@render children?.()}</div>
+<div class="cdt-accordion" data-comark-frame="">{@render children?.()}</div>

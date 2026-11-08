@@ -17,11 +17,14 @@ const name = (tag: string) => tag.replaceAll("-", "").toLowerCase();
 const vue = new Set(Object.keys(comarkUi().components).map(name));
 // comark-links' `span` only fixes how the HTML renderer writes `aria-hidden`, which Vue writes right.
 const htmlOnly = Object.keys(html).filter((tag) => tag !== "span" && !vue.has(name(tag)));
+// A chart's notes are comark-annotate marks, which only the HTML renderer draws, so a chart with any goes as HTML too.
+const needsHtml = (node: ElementNode) =>
+  htmlOnly.includes(node[0]) || (node[0] === "chart" && Array.isArray(node[1].marks));
 const bridge = defineComarkPlugin(() => {
   const visit = async (nodes: Node[]): Promise<void> => {
     for (const [at, node] of nodes.entries()) {
       if (!isElement(node)) continue;
-      if (htmlOnly.includes(node[0])) {
+      if (needsHtml(node)) {
         nodes[at] = [
           "comark-html",
           {

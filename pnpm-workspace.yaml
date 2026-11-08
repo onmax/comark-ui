@@ -43,6 +43,9 @@ catalog:
   markdown-it-cjk-friendly: ^3.0.0
   pkg-pr-new: ^0.0.92
   publint: ^0.3.25
+  postcss: ^8.5.31
+  # Nuxt minifies with cssnano 8, which runs postcss-calc 10.
+  postcss-calc: ^10.1.1
   shiki: ^4.5.0
   tsdown: ^0.23.1
   typescript: ^6.0.3
@@ -60,7 +63,6 @@ catalog:
   "@tiptap/y-tiptap": ^3.0.9
   autoprefixer: ^10.6.1
   lightningcss: ^1.33.0
-  postcss: ^8.5.31
   yjs: ^13.6.33
   nuxt-agent-discovery: ^0.8.0
   valibot: ^1.4.2

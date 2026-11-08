@@ -1,4 +1,5 @@
 import { theme } from "comark-zoom/theme";
+import { shikiDark } from "../../../shared/shiki.ts";
 
 // T3 Code's surface grain (pingdotgg/t3code apps/web/src/index.css): fractal noise at 3.5% opacity in a 256px tile.
 const grain = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E")`;
@@ -183,21 +184,6 @@ const rules = `
   }
 }
 
-/* Code highlighted with a light and a dark theme follows the page into dark mode, as the tokens do: a .dark class
-   above it, or the system's dark mode on a page with no .light class. A span switches what it has a dark value for. */
-.shiki:where(.dark *) span {
-  &[style*="--shiki-dark:"] { color: var(--shiki-dark) !important; }
-  &[style*="--shiki-dark-font-style:"] { font-style: var(--shiki-dark-font-style) !important; }
-  &[style*="--shiki-dark-font-weight:"] { font-weight: var(--shiki-dark-font-weight) !important; }
-}
-@media (prefers-color-scheme: dark) {
-  .shiki:not(:where(.light *)) span {
-    &[style*="--shiki-dark:"] { color: var(--shiki-dark) !important; }
-    &[style*="--shiki-dark-font-style:"] { font-style: var(--shiki-dark-font-style) !important; }
-    &[style*="--shiki-dark-font-weight:"] { font-weight: var(--shiki-dark-font-weight) !important; }
-  }
-}
-
 /* A block marked data-wide, such as a before/after comparison or a diagram wider than the text, grows past the column
    into the room the page gives it on each side, --comark-wide-start and --comark-wide-end, up to its own width
    (--comark-wide-width) and --comark-wide-max. It stays centered on the column while both sides have room, and moves
@@ -232,7 +218,7 @@ const rules = `
  * the page wins over both.
  */
 export const typesetCss =
-  `@layer comark{@layer typeset{@scope{${theme(":scope", "primary")}${rules}}}}`
+  `@layer comark{@layer typeset{@scope{${theme(":scope", "primary")}${rules}${shikiDark}}}}`
     .replace(/\/\*[\s\S]*?\*\//g, "")
     .replace(/\s+/g, " ")
     .replace(/ ?([{};,>(]) ?/g, "$1")

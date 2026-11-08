@@ -26,7 +26,11 @@ const glyph = (d: string) =>
 /** `::file-tree` for `@comark/react`. */
 export function FileTree({ children }: { children?: ReactNode }) {
   useEffect(addStyles, []);
-  return createElement("div", { className: "cft" }, createElement("ul", null, children));
+  return createElement(
+    "div",
+    { className: "cft", "data-comark-frame": "" },
+    createElement("ul", null, children),
+  );
 }
 
 type FileTreeItemProps = {

@@ -26,6 +26,7 @@ export function Media({
     kind,
     {
       className: native ? "cm" : undefined,
+      "data-comark-frame": native && video ? "" : undefined,
       src,
       controls: true,
       playsInline: video || undefined,
@@ -45,6 +46,7 @@ export function Media({
     "span",
     {
       className: `cm cm-${kind}`,
+      "data-comark-frame": video ? "" : undefined,
       role: label ? "group" : undefined,
       "aria-label": label || undefined,
     },

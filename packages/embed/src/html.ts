@@ -24,9 +24,9 @@ const embed: NodeHandler = ([, attrs], state) => {
       : "";
   if (script) started.add(state.context);
   if (!src)
-    return `${styles}<a class="ce-card" href="${attr(href)}">${icon(icons.globe)}<strong>${attr(title)}</strong> <span>${attr(host)}</span></a>`;
+    return `${styles}<a class="ce-card" data-comark-frame href="${attr(href)}">${icon(icons.globe)}<strong>${attr(title)}</strong> <span>${attr(host)}</span></a>`;
   return (
-    `${styles}${script}<figure class="ce" data-provider="${attr(provider)}" data-size="${attr(size)}"><div class="ce-frame">` +
+    `${styles}${script}<figure class="ce" data-comark-frame data-provider="${attr(provider)}" data-size="${attr(size)}"><div class="ce-frame">` +
     `<iframe src="${attr(src)}" title="${attr(label)}" loading="lazy" allow="${allow}" allowfullscreen referrerpolicy="${referrerPolicy}"></iframe></div>` +
     `<figcaption><a href="${attr(href)}">${attr(title)}${icon(icons.external)}</a></figcaption></figure>`
   );

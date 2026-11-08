@@ -15,12 +15,17 @@ it("ships the typeset styles as a stylesheet scoped to .comark-typeset", () => {
   expect(css).toContain(":where(:scope){--_comark-background:var(--comark-background,");
   expect(css).toContain("calc(var(--typeset-size,1em) * 1.125)");
   expect(css).toContain("&:where(.footnotes,[data-footnotes])");
-  expect(css).toContain(
-    '.shiki:where(.dark *) span{&[style*="--shiki-dark:"]{color:var(--shiki-dark) !important;}',
-  );
-  expect(css).toContain(
-    '&[style*="--shiki-dark-font-style:"]{font-style:var(--shiki-dark-font-style) !important;}',
-  );
+  // Standalone consumers do not load comark-code's styles.
+  for (const selector of [".shiki:where(.dark *) span", ".shiki:not(:where(.light *)) span"]) {
+    expect(css).toContain(`${selector}[style*="--shiki-dark:"]{color:var(--shiki-dark)!important}`);
+    expect(css).toContain(
+      `${selector}[style*="--shiki-dark-font-style:"]{font-style:var(--shiki-dark-font-style)!important}`,
+    );
+    expect(css).toContain(
+      `${selector}[style*="--shiki-dark-font-weight:"]{font-weight:var(--shiki-dark-font-weight)!important}`,
+    );
+  }
+  expect(css).toContain("@media(prefers-color-scheme:dark){.shiki:not(:where(.light *)) span");
   expect(css).toContain("&:where(:is(p,li,td,th,a) img){margin-block-start:0;}");
 });
 

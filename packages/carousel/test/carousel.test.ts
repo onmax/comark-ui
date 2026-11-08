@@ -18,7 +18,7 @@ describe("comark-carousel", () => {
       '::carousel{title="Tour"}\n![One](a.png)\n\n```ts\nconst two = 2\n```\n\n> Three\n::',
     );
     expect(html).toContain(
-      '<div class="cc" data-zoom-gallery role="region" aria-roledescription="carousel" aria-label="Tour">',
+      '<div class="cc" data-comark-frame data-zoom-gallery role="region" aria-roledescription="carousel" aria-label="Tour">',
     );
     expect(html.match(/class="cc-slide"/g)).toHaveLength(3);
     expect(html).toContain(
@@ -79,7 +79,7 @@ describe("comark-carousel", () => {
   it("shows several columns, and marks slides that all fit so wide pages hide the controls", async () => {
     const html = await render("::carousel{columns=2}\nOne\n\nTwo\n::");
     expect(html).toContain(
-      '<div class="cc" data-carousel-columns="2" data-carousel-fits data-zoom-gallery',
+      '<div class="cc" data-comark-frame data-carousel-columns="2" data-carousel-fits data-zoom-gallery',
     );
     expect(html).toContain('<div class="cc-controls">');
     expect(await render("::carousel\nOnly one\n::")).not.toContain('<div class="cc-controls">');
@@ -88,7 +88,7 @@ describe("comark-carousel", () => {
   it("can turn zoom off, with a plain or a bound prop", async () => {
     for (const props of ["zoom=false", ':zoom="false"']) {
       const html = await render(`::carousel{${props}}\nOne\n\nTwo\n::`);
-      expect(html).toContain('<div class="cc" role="region"');
+      expect(html).toContain('<div class="cc" data-comark-frame role="region"');
       expect(html).toContain(
         '<div class="cc-slide" role="group" aria-roledescription="slide" aria-label="2 of 2">',
       );

@@ -11,7 +11,7 @@
   onMount(() => start(css));
 </script>
 
-<div class="cmv" data-code-header>
+<div class="cmv" data-comark-frame="" data-code-header>
   <div class="cmv-list" role="tablist" aria-label={title || undefined}>
     {#each labels as label, at}
       <button
