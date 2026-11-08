@@ -4,9 +4,11 @@ import type {} from "../.vitehub/types/auth.d.ts";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthMiddleware } from "better-auth/api";
 import { defineAuth } from "vite-hub/auth";
+import { consoleMcpOAuth } from "vite-hub/console/auth";
 import { db, schema } from "vite-hub/database/drizzle";
 
 // Sign in with GitHub, nothing else. Anyone can sign in; only the logins in server/utils/team.ts can then comment or edit.
+// The site is also the OAuth server of its Console: console.vitehub.dev signs the team in here (consoleMcpOAuth()).
 export default defineAuth(({ env, requestOrigin }) => ({
   appName: "comark ui",
   baseURL: requestOrigin,
@@ -21,6 +23,8 @@ export default defineAuth(({ env, requestOrigin }) => ({
       overrideUserInfoOnSignIn: true,
     },
   },
+  // The same resource as `vitehub.console.mcp.resource` in nuxt.config.ts. Tokens name it on every host.
+  plugins: [...consoleMcpOAuth({ resource: "https://comark-ui.onmax.me/_vitehub/mcp" })],
   // Not `input: false`: Better Auth drops such a field from the GitHub profile too, so the login would never be stored.
   user: { additionalFields: { login: { type: "string", required: false } } },
   // A name can be changed, a login only by GitHub.
