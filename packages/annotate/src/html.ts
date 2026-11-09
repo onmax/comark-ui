@@ -176,8 +176,14 @@ async function parts(
   // The number sits outside a corner of its mark so it never covers what the mark points at, and picks a corner that
   // keeps it off the other numbers and marks.
   const corners = place(shot.annotations, shot.aspect, boxPadding).css;
-  const padding =
-    boxPadding === BOX_PADDING ? "" : `;padding:${boxPadding}px;margin:${-boxPadding}px`;
+  // A box reaches its padding past its area through calc(), not CSS padding, which a host's box-sizing reset would
+  // fold back inside the area.
+  const area = (annotation: Annotation) => {
+    const pad = annotation.mark === "box" ? boxPadding : 0;
+    return pad
+      ? `left:calc(${annotation.x}% - ${pad}px);top:calc(${annotation.y}% - ${pad}px);width:calc(${annotation.w}% + ${2 * pad}px);height:calc(${annotation.h}% + ${2 * pad}px)`
+      : `left:${annotation.x}%;top:${annotation.y}%;width:${annotation.w}%;height:${annotation.h}%`;
+  };
   const pinned = (annotation: Annotation) => {
     const css = corners.get(annotation.n);
     return css ? stamp(annotation).replace('">', `" style="${css}">`) : stamp(annotation);
@@ -186,7 +192,7 @@ async function parts(
   const pins = shot.annotations.map(
     (annotation) =>
       `<span class="ca-mark ca-${annotation.mark}" data-n="${annotation.n}" role="img" aria-label="${attr(annotation.number ? `${label(annotation)}: ${noteText(annotation)}` : label(annotation))}" title="${attr(noteText(annotation))}" ` +
-      `style="${color(annotation)}left:${annotation.x}%;top:${annotation.y}%;width:${annotation.w}%;height:${annotation.h}%${annotation.mark === "box" ? padding : ""}">` +
+      `style="${color(annotation)}${area(annotation)}">` +
       `${markSvg(annotation, shot.aspect)}${pinned(annotation)}</span>`,
   );
   const listed = shot.annotations.filter((annotation) => !annotation.side);
