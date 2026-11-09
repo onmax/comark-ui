@@ -17,6 +17,10 @@ export const css = `@layer comark{${[
   ".cz-header{position:relative;display:flex;gap:.75rem;align-items:center;min-height:2.75rem;padding:0 .5rem 0 1rem}",
   ".cz-title{overflow:hidden;font-weight:500;white-space:nowrap;text-overflow:ellipsis}",
   ".cz-count{color:var(--_comark-muted);font-variant-numeric:tabular-nums}",
+  ".cz-place{margin-left:auto;color:var(--_comark-muted);font-variant-numeric:tabular-nums;white-space:nowrap}",
+  ".cz-place:not(:empty)+.cz-close{margin-left:0}",
+  // Up and Down move between figures, so the count is for keyboards.
+  "@media (hover:none){.cz-place{display:none}.cz-place+.cz-close{margin-left:auto}}",
   ".cz-dialog button{display:inline-grid;place-items:center;border:0;border-radius:calc(var(--_comark-radius) - 2px);background:none;color:inherit;font:inherit;cursor:pointer}",
   ".cz-dialog button:focus-visible{outline:2px solid var(--_comark-ring);outline-offset:1px}",
   ".cz-close{width:2.25rem;height:2.25rem;margin-left:auto;font-size:18px}",

@@ -70,6 +70,7 @@ export function script(css: string): () => void {
     header: HTMLElement;
     title: HTMLElement;
     count: HTMLElement;
+    place: HTMLElement;
     stage: HTMLElement;
     aside: HTMLElement;
     footer: HTMLElement;
@@ -121,8 +122,13 @@ export function script(css: string): () => void {
       if (node.parentElement?.closest(SELECTOR)) node.removeAttribute("tabindex");
   }
 
-  // A named group spans the page. A gallery (a carousel, a comparison) groups the zoomable items inside it. Hidden
-  // items, such as those in a closed tab, have no size to zoom from.
+  // Hidden items, such as those in a closed tab, have no size to zoom from.
+  function zoomable(node: HTMLElement) {
+    const { width, height } = node.getBoundingClientRect();
+    return outermost(node) === node && !node.closest(".cz-dialog") && (width > 0 || height > 0);
+  }
+
+  // A named group spans the page. A gallery (a carousel, a comparison) groups the zoomable items inside it.
   function groupOf(item: HTMLElement): HTMLElement[] {
     const group = item.getAttribute("data-zoom-group");
     const gallery = item.closest("[data-zoom-gallery]");
@@ -130,11 +136,15 @@ export function script(css: string): () => void {
       ? document.querySelectorAll<HTMLElement>(`[data-zoom-group="${CSS.escape(group)}"]`)
       : gallery?.querySelectorAll<HTMLElement>(SELECTOR);
     if (!nodes) return [item];
-    return [...nodes].filter((node) => {
-      if (node === item) return true;
-      const { width, height } = node.getBoundingClientRect();
-      return outermost(node) === node && !node.closest(".cz-dialog") && (width > 0 || height > 0);
-    });
+    return [...nodes].filter((node) => node === item || zoomable(node));
+  }
+
+  // A figure is a group, or an item on its own, so the page's figures are the zoomable items in document order with
+  // each group counted at its first item.
+  function figures() {
+    return [...document.querySelectorAll<HTMLElement>(SELECTOR)].filter(
+      (node) => zoomable(node) && groupOf(node)[0] === node,
+    );
   }
 
   function titleOf(item: HTMLElement) {
@@ -382,6 +392,10 @@ export function script(css: string): () => void {
     current.title.textContent = titleOf(item);
     current.count.textContent =
       current.items.length > 1 ? `${current.index + 1} / ${current.items.length}` : "";
+    const all = figures();
+    const at = all.indexOf(current.items[0]!);
+    current.place.textContent =
+      all.length > 1 && at >= 0 ? `Figure ${at + 1} of ${all.length}` : "";
     current.dialog.setAttribute("aria-label", titleOf(item) || "Zoomed view");
     for (const [index, thumb] of [...current.footer.querySelectorAll(".cz-thumb")].entries())
       thumb.setAttribute("aria-current", String(index === current.index));
@@ -390,6 +404,7 @@ export function script(css: string): () => void {
 
   // Runs once the dialog is on the page, so each thumbnail has its size to fit a copy into.
   function thumbs(current: View) {
+    current.footer.querySelector(".cz-strip")?.remove();
     if (current.items.length < 2) return;
     const strip = el("div", "cz-strip", { role: "group", "aria-label": "Items" });
     current.footer.append(strip);
@@ -407,6 +422,72 @@ export function script(css: string): () => void {
       thumb.append(inner);
       thumb.addEventListener("click", () => go(index));
     }
+  }
+
+  function arrows(current: View) {
+    for (const button of current.dialog.querySelectorAll(".cz-nav")) button.remove();
+    if (current.items.length < 2) return;
+    for (const [name, step, label] of [
+      ["cz-prev", -1, "Previous"],
+      ["cz-next", 1, "Next"],
+    ] as const) {
+      const button = el("button", `cz-nav ${name}`, { type: "button", "aria-label": label });
+      // Lucide's chevrons, as in comark-carousel.
+      button.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${step < 0 ? "m15 18-6-6 6-6" : "m9 18 6-6-6-6"}"/></svg>`;
+      button.addEventListener("click", () => go(current.index + step));
+      // Beside the stage, over its cell, so they stay put while a tall item scrolls.
+      current.aside.before(button);
+    }
+  }
+
+  // Up and Down read the page: a tall item scrolls first, then the view moves to the previous or next figure, at its
+  // first item, so a page of comparisons reads before and after in order. The page scrolls underneath, so closing
+  // flies back to the figure shown. The ends don't wrap, so the last figure reads as the end of the page.
+  function walk(step: 1 | -1) {
+    const current = view;
+    if (!current || current.closing || current.stage.hasAttribute("data-flying")) return;
+    const { stage } = current;
+    const room =
+      step > 0 ? stage.scrollHeight - stage.clientHeight - stage.scrollTop : stage.scrollTop;
+    if (stage.hasAttribute("data-scroll") && room > 1) {
+      stage.scrollBy({
+        top: step * stage.clientHeight * 0.25,
+        behavior: motion.matches ? "instant" : "smooth",
+      });
+      return;
+    }
+    const all = [...document.querySelectorAll<HTMLElement>(SELECTOR)].filter(zoomable);
+    const at = current.items.map((item) => all.indexOf(item)).filter((index) => index >= 0);
+    if (!at.length) return;
+    let next: HTMLElement | undefined;
+    for (
+      let index = (step > 0 ? Math.max(...at) : Math.min(...at)) + step;
+      !next && all[index];
+      index += step
+    )
+      if (!current.items.includes(all[index]!)) next = all[index];
+    if (!next) return;
+    for (const item of current.items) item.style.visibility = "";
+    current.items = groupOf(next);
+    current.index = 0;
+    const item = current.items[0]!;
+    item.style.visibility = "hidden";
+    item.scrollIntoView({ block: "center", behavior: "instant" });
+    current.returnFocus = item;
+    arrows(current);
+    thumbs(current);
+    render(current);
+    if (!motion.matches)
+      current.frame.animate(
+        [
+          { translate: `0 ${step * 24}px`, opacity: 0 },
+          { translate: "0 0", opacity: 1 },
+        ],
+        { duration: 180, easing },
+      );
+    item.dispatchEvent(
+      new CustomEvent("comark-zoom:change", { bubbles: true, detail: detail(current) }),
+    );
   }
 
   function go(index: number) {
@@ -472,9 +553,10 @@ export function script(css: string): () => void {
     const header = el("div", "cz-header");
     const title = el("span", "cz-title");
     const count = el("span", "cz-count");
+    const place = el("span", "cz-place");
     const close = el("button", "cz-close", { type: "button", "aria-label": "Close" });
     close.textContent = "✕";
-    header.append(title, count, close);
+    header.append(title, count, place, close);
     const stage = el("div", "cz-stage");
     const frame = el("div", "cz-item");
     stage.append(frame);
@@ -487,6 +569,7 @@ export function script(css: string): () => void {
       header,
       title,
       count,
+      place,
       stage,
       aside,
       footer,
@@ -500,19 +583,7 @@ export function script(css: string): () => void {
       closing: false,
       pressed: null,
     };
-    if (items.length > 1) {
-      for (const [name, step, label] of [
-        ["cz-prev", -1, "Previous"],
-        ["cz-next", 1, "Next"],
-      ] as const) {
-        const button = el("button", `cz-nav ${name}`, { type: "button", "aria-label": label });
-        // Lucide's chevrons, as in comark-carousel.
-        button.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${step < 0 ? "m15 18-6-6 6-6" : "m9 18 6-6-6-6"}"/></svg>`;
-        button.addEventListener("click", () => go(current.index + step));
-        // Beside the stage, over its cell, so they stay put while a tall item scrolls.
-        aside.before(button);
-      }
-    }
+    arrows(current);
     view = current;
     document.body.append(dialog);
     thumbs(current);
@@ -657,12 +728,21 @@ export function script(css: string): () => void {
         }
         return;
       }
+      // A control in the copy, such as a comparison's slider, keeps its own arrow keys.
+      const own =
+        event.defaultPrevented ||
+        (event.target instanceof Element &&
+          event.target.closest("[role=slider],input,textarea,select,[contenteditable]"));
       if (event.key === "Escape") {
         event.preventDefault();
         void shut();
-      } else if (event.key === "ArrowLeft" && view.items.length > 1) go(view.index - 1);
+      } else if (own && event.key.startsWith("Arrow")) return;
+      else if (event.key === "ArrowLeft" && view.items.length > 1) go(view.index - 1);
       else if (event.key === "ArrowRight" && view.items.length > 1) go(view.index + 1);
-      else if (event.key === "Tab") {
+      else if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+        event.preventDefault();
+        walk(event.key === "ArrowUp" ? -1 : 1);
+      } else if (event.key === "Tab") {
         // Keep focus in the dialog.
         const focusable = [
           ...view.dialog.querySelectorAll<HTMLElement>(
