@@ -31,6 +31,7 @@ export function Tabs({ labels = [], icons = [], sync, code, magic, children }: T
       "div",
       {
         className: "ct",
+        "data-comark-mounts": "",
         "data-comark-frame": "",
         "data-tabs-code": code ? "" : undefined,
         "data-code-header": code ? "" : undefined,

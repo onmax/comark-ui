@@ -1,4 +1,5 @@
 import { theme } from "comark-zoom/theme";
+import { scripted } from "../../../shared/scripted.ts";
 
 /**
  * The carousel styles. The script adds them to the page once. Theme the controls with the shared `--comark-*` tokens,
@@ -12,9 +13,6 @@ export const css = `@layer comark{${[
   ".cc[data-carousel-columns='2']{--cc-columns:2}",
   ".cc[data-carousel-columns='3']{--cc-columns:3}",
   ".cc-track{position:relative;display:grid;grid-auto-flow:column;grid-auto-columns:calc((100% - (var(--cc-columns) - 1) * var(--cc-gap,1rem)) / var(--cc-columns));gap:var(--cc-gap,1rem);overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory}",
-  // Without the script there are no arrows, so the scrollbar is how a mouse reaches the other slides.
-  "[data-carousel-ready] .cc-track{scrollbar-width:none}",
-  "[data-carousel-ready] .cc-track::-webkit-scrollbar{display:none}",
   // Every slide is a panel as tall as the tallest one, with its content at the top, so a slide's title stays put when
   // the next slide is taller. Only slides in a track: the zoomed copy stays bare.
   ".cc-track>.cc-slide{min-width:0;scroll-snap-align:start;align-content:start;padding:var(--cc-padding,1rem);border-radius:var(--_comark-radius);background:var(--cc-surface,color-mix(in srgb,var(--_comark-foreground) 4%,transparent))}",
@@ -38,7 +36,12 @@ export const css = `@layer comark{${[
   // One quiet row under the slides, as in Embla's examples: where you are on the left, shadcn's outline icon buttons
   // on the right. It needs no gutter beside the slides, so it stays the same on a phone.
   ".cc-controls{display:none;align-items:center;justify-content:space-between;gap:.5rem;margin-top:.75rem}",
-  "[data-carousel-ready] .cc-controls{display:flex}",
+  // Without the script there are no arrows, so the scrollbar is how a mouse reaches the other slides.
+  scripted("data-carousel-ready", ".cc", [
+    "& .cc-track{scrollbar-width:none}",
+    "& .cc-track::-webkit-scrollbar{display:none}",
+    "& .cc-controls{display:flex}",
+  ]),
   // Slides that all fit side by side need no controls, until a narrow page shows them one at a time.
   "@container (min-width:36.01rem){.cc[data-carousel-fits] .cc-controls{display:none!important}}",
   ".cc-count{color:var(--_comark-muted);font-size:.875rem;line-height:1.25rem;font-variant-numeric:tabular-nums}",

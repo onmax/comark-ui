@@ -10,7 +10,7 @@ export function DataTable({ copy, children }: TableAttributes & { children?: Rea
   useEffect(() => start(css), []);
   return createElement(
     "div",
-    { className: "ctb" },
+    { className: "ctb", "data-comark-mounts": "" },
     copy
       ? createElement("div", { className: "ctb-bar", dangerouslySetInnerHTML: { __html: bar() } })
       : null,
