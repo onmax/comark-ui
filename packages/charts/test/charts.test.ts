@@ -1072,7 +1072,7 @@ Salary.
     // enough to center a stamp; assuming another 6px of padding incorrectly slides it along the left edge.
     expect(html.match(/ca-stamp" style="([^"]*)"/)?.[1]).toBe("left:0;top:0;translate:-50% -50%");
     expect(html.match(/class="ca-mark ca-box"[^>]*style="([^"]*)"/)?.[1]).toMatch(
-      /^left:1%;.*;padding:0px;margin:0px$/,
+      /^left:1%;top:[\d.]+%;width:[\d.]+%;height:[\d.]+%$/,
     );
   });
 

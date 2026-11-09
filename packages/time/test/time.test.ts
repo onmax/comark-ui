@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import { createHtmlRenderer } from "@comark/html";
 import { defineComarkPlugin, parseMarkdown } from "comark";
 import { describe, expect, it } from "vite-plus/test";
@@ -136,6 +138,20 @@ describe("comark-time", () => {
     expect(ids).toHaveLength(2);
     expect(new Set(ids).size).toBe(2);
     expect(tips).toEqual(ids);
+  });
+
+  // lightningcss, which Vite minifies CSS with, can't parse `anchored()`, so only the inlined styles flip the pill.
+  it("flips the pill below the text in the inlined styles, and keeps style.css readable by Vite", async () => {
+    const inline = /<style data-comark-time>(.*?)<\/style>/s.exec(
+      await render(":time[2026-11-02]"),
+    )?.[1];
+    expect(inline).toContain("@container anchored(fallback:--ctm-below)");
+    const sheet = readFileSync(
+      createRequire(import.meta.url).resolve("comark-time/style.css"),
+      "utf8",
+    );
+    expect(sheet).not.toContain("anchored(");
+    expect(sheet).toBe(inline?.replace(/@container anchored\([^{]*\{[^}]*\}\}/, ""));
   });
 
   it("gives documents on one page different ids", async () => {
