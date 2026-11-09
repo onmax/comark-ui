@@ -18,7 +18,7 @@ pnpm add -D markdown-it-to-comark
 pnpm markdown-it-to-comark check .
 ```
 
-`check` prints one diagnostic per finding, warnings first, each linking its section in [Diagnostics](/markdown-it-to-comark/diagnostics/). `--verbose` adds what each plugin and option becomes, and `--json` prints everything for agents.
+`check` prints one diagnostic per finding, warnings first, each linking its section in [Diagnostics](/markdown-it-to-comark/diagnostics). `--verbose` adds what each plugin and option becomes, and `--json` prints everything for agents.
 
 ## Migrate the Markdown
 

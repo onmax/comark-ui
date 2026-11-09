@@ -18,7 +18,7 @@ Extra filters collapse into **+2 filters**.
 
 ## Features
 
-- Each [`annotation`](/annotate/components/annotation/) inside it draws one mark and its note.
+- Each [`annotation`](/annotate/components/annotation) inside it draws one mark and its note.
 - A click anywhere on the screenshot zooms it, with its notes beside it.
 - The Copy button copies it as a PNG with its marks and notes drawn in.
 
@@ -73,7 +73,7 @@ Use the `viewport` prop to record the capture size in pixels, like `1440x900`. T
 
 ### Ink
 
-Use the `ink` prop to color every mark and note that doesn't set its own `color`. It takes an annotation's [`color`](/annotate/components/annotation/#color) values.
+Use the `ink` prop to color every mark and note that doesn't set its own `color`. It takes an annotation's [`color`](/annotate/components/annotation#color) values.
 
 ::example
 ```md
@@ -120,7 +120,7 @@ Copying needs setup in two cases:
 
 The image keeps its `alt` text. Each numbered mark is an image named by its number and note, such as "Annotation 1: Extra filters collapse into +2 filters." A side note's mark is named "Side note:" and its note. The arrows are hidden from screen readers.
 
-The image is one tab stop that opens the [zoomed view](/zoom/). The Copy button is labelled "Copy the screenshot with its marks", and a status announces "Copied" once the PNG is on the clipboard.
+The image is one tab stop that opens the [zoomed view](/zoom). The Copy button is labelled "Copy the screenshot with its marks", and a status announces "Copied" once the PNG is on the clipboard.
 
 ### Keyboard interactions
 
@@ -142,7 +142,7 @@ The image is one tab stop that opens the [zoomed view](/zoom/). The Copy button 
 | `href` | — | The page you captured, linked by its host next to the title. An http:// or https:// URL with a host. |
 | `viewport` | — | Capture size in pixels, like `1440x900`. A `compare` checks that both sides match. |
 | `ink` | — | The color of every mark and note that doesn't set its own `color`. Takes the same values as `color`: `red`, `amber`, `green`, `blue`, `violet`, `gray`, or a 3- or 6-digit hex color. Without it, marks take the compare's `ink`, or else violet. |
-| `id` | — | An id for the screenshot, such as `#fig-login`, that links and [comark-xref](/xref/) references point at. |
+| `id` | — | An id for the screenshot, such as `#fig-login`, that links and [comark-xref](/xref) references point at. |
 
 ### Issues
 
@@ -159,4 +159,4 @@ The plugin adds these problems to `meta.issues`:
 - Two numbers overlap at every corner of their marks.
 - More than 40 annotations in one screenshot or compare. Past 40, hovering stops linking marks to notes.
 
-Each has its own rule in [Doctor](/doctor/). [Annotate](/annotate/#issues) covers how issues name their block.
+Each has its own rule in [Doctor](/doctor). [Annotate](/annotate#issues) covers how issues name their block.

@@ -3,7 +3,7 @@
 [![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-steps&icon=npm)](https://npmx.dev/package/comark-steps)
 [![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-steps&period=month&icon=npm)](https://npmx.dev/package/comark-steps)
 [![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-steps)
-[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/steps/)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/steps)
 
 Numbered steps from the headings of a tutorial, or from a numbered list, in Nuxt UI's `::steps` syntax. The numbers are a CSS counter, so there's no script. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
 

@@ -3,7 +3,7 @@
 [![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-properties&icon=npm)](https://npmx.dev/package/comark-properties)
 [![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-properties&period=month&icon=npm)](https://npmx.dev/package/comark-properties)
 [![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-properties)
-[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/properties/)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/properties)
 
 A document's chosen frontmatter keys, such as status, pull request, author, date, and tags, as a box of properties at the top or where `::properties` sits. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
 

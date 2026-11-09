@@ -5,7 +5,6 @@ import { globSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:f
 import { dirname } from "node:path";
 import { parse, stringify } from "yaml";
 import { catalog, type RuleInfo } from "../packages/lint/src/rules/index.ts";
-import { site } from "./paths.ts";
 import { categories, packageOrder, railGroupOf, siteSections } from "./sections.ts";
 
 const repo = new URL("../", import.meta.url);
@@ -48,14 +47,6 @@ function split(source: string) {
   };
 }
 
-const links = (body: string) =>
-  body
-    .replace(/\]\((\/[^)\s]*)\)/g, (_, path: string) => `](${site(path)})`)
-    .replace(
-      /\b(to|href)="(\/[^"]*)"/g,
-      (_, key: string, path: string) => `${key}="${site(path)}"`,
-    );
-
 function page(file: URL, slug: string) {
   const { frontmatter, body } = split(readFileSync(file, "utf8"));
   const out: Record<string, unknown> = Object.fromEntries(
@@ -70,7 +61,7 @@ function page(file: URL, slug: string) {
   if (typeof out.icon === "string") out.icon = icon(out.icon);
   if (typeof frontmatter.label === "string") out.navigation = { title: frontmatter.label };
   out.title ??= /^# (.+)$/m.exec(body)?.[1] ?? slug.split("/").at(-1);
-  return { frontmatter, text: `---\n${stringify(out)}---\n${links(body)}` };
+  return { frontmatter, text: `---\n${stringify(out)}---\n${body}` };
 }
 
 function write(path: string, text: string) {

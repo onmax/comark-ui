@@ -14,14 +14,14 @@ markdown-it-to-comark moves a project from markdown-it to Comark. It changes onl
 
 ## Features
 
-- `check` lists every markdown-it setup it finds, with a [fix](/markdown-it-to-comark/diagnostics/) for each problem.
+- `check` lists every markdown-it setup it finds, with a [fix](/markdown-it-to-comark/diagnostics) for each problem.
 - `rewrite` swaps a markdown-it instance for Comark's `renderHtml` when every option and plugin carries over.
 - `content` escapes the Markdown Comark would read differently.
 - `markdownItPlugin()` runs a markdown-it plugin on Comark, renderer rules included, so plugins keep their output.
 - It finds setups in your own code and in VitePress, VuePress, Vite Markdown plugins, Eleventy, and VS Code extensions.
-- It also runs in [Vite Doctor](/markdown-it-to-comark/vite-doctor/).
+- It also runs in [Vite Doctor](/markdown-it-to-comark/vite-doctor).
 
-Tested on [100 projects](/markdown-it-to-comark/testing/).
+Tested on [100 projects](/markdown-it-to-comark/testing).
 
 ## Why Comark
 
@@ -35,7 +35,7 @@ Try the check without installing anything. It only reads the project:
 pnpm dlx markdown-it-to-comark check .
 ```
 
-The whole migration is four commands. [Getting started](/markdown-it-to-comark/getting-started/) explains each one.
+The whole migration is four commands. [Getting started](/markdown-it-to-comark/getting-started) explains each one.
 
 ```sh
 pnpm markdown-it-to-comark check .

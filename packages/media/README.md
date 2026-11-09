@@ -3,7 +3,7 @@
 [![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-media&icon=npm)](https://npmx.dev/package/comark-media)
 [![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-media&period=month&icon=npm)](https://npmx.dev/package/comark-media)
 [![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-media)
-[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/media/)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/media)
 
 Videos and audio written as images, as GitLab does. Both get controls on the shadcn/ui tokens, with the browser's own as their fallback. A GitHub attachment link alone in a paragraph plays too, as on GitHub. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
 

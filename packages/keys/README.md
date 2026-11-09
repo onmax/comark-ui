@@ -3,7 +3,7 @@
 [![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-keys&icon=npm)](https://npmx.dev/package/comark-keys)
 [![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-keys&period=month&icon=npm)](https://npmx.dev/package/comark-keys)
 [![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-keys)
-[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/keys/)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/keys)
 
 Keyboard shortcuts in [Comark](https://comark.dev): `++ctrl+shift+k++` renders each key as a `<kbd>`, with the names and aliases of [pymdownx.keys](https://facelessuser.github.io/pymdown-extensions/extensions/keys/). A parse plugin with no components and no styles, so it works in any renderer.
 

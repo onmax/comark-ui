@@ -3,7 +3,7 @@
 [![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-include&icon=npm)](https://npmx.dev/package/comark-include)
 [![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-include&period=month&icon=npm)](https://npmx.dev/package/comark-include)
 [![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-include)
-[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/include/)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/include)
 
 Include Markdown partials and code snippets from files, with `:include{src="./part.md"}`. A [Comark](https://comark.dev) parse plugin: the included text renders as the rest of the document does, in any renderer.
 
@@ -64,7 +64,7 @@ include "./duck-log.md": file not found. It resolved to "guide/duck-log.md" unde
 include "./pizzas.md": guide/pizzas.md includes itself (guide/pizzas.md -> guide/merged-prs.md -> guide/pizzas.md). Remove one of the includes.
 ```
 
-Every kind of problem has a rule in [Doctor](https://comark-ui.onmax.me/doctor/). A partial that leaves a `::block` open is closed at the end of its paste and reported.
+Every kind of problem has a rule in [Doctor](https://comark-ui.onmax.me/doctor). A partial that leaves a `::block` open is closed at the end of its paste and reported.
 
 Use `:include`, with one colon: a `::include` line would take in the rest of the document. Streaming parses aren't supported.
 

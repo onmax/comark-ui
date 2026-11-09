@@ -85,7 +85,7 @@ describe("Shiki limit diagnostics", () => {
           ruleId: rule,
           code,
           diagnostic: expect.objectContaining({
-            docs: `https://comark-ui.onmax.me/doctor/${rule.replace(/^comark\//, "")}/`,
+            docs: `https://comark-ui.onmax.me/doctor/${rule.replace(/^comark\//, "")}`,
           }),
         }),
       ]);

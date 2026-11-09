@@ -28,7 +28,7 @@ Built with :icon{name="logos:vue"} Vue and :icon{name="logos:vitejs"} Vite, depl
 - An icon in one color takes the color of the text around it. One with its own colors, such as a logo, keeps them.
 - The plugin resolves icons while parsing and inlines them as CSS images, so the page needs no server and no script for them.
 - Nuxt UI's icon names work too, so Markdown written for Nuxt UI renders the same.
-- Other plugins draw their icons with the same public resolver and options, such as [comark-tabs](/tabs/#icon) for tab icons.
+- Other plugins draw their icons with the same public resolver and options, such as [comark-tabs](/tabs#icon) for tab icons.
 
 ## Usage
 
@@ -157,7 +157,7 @@ Pass options under `icon` in `comarkUi()`, or to `icon()` and `createIcons()` al
 
 ### Issues
 
-The plugin checks every icon while parsing and adds problems to `meta.issues`, as [Validation](/guide/validation/) describes. It leaves out an icon it can't draw.
+The plugin checks every icon while parsing and adds problems to `meta.issues`, as [Validation](/guide/validation) describes. It leaves out an icon it can't draw.
 
 ```txt
 `:icon` 1 ("lucide:aple"): The `lucide` set has no icon `aple`. Find its name at https://icones.js.org/collection/lucide.
@@ -171,7 +171,7 @@ It reports:
 - A request that failed.
 - A prop `:icon` doesn't read.
 
-Each one has its own rule in [Doctor](/doctor/). Rendering never throws.
+Each one has its own rule in [Doctor](/doctor). Rendering never throws.
 
 ### Package
 
@@ -190,7 +190,7 @@ import icon, { components } from "comark-icon/html";
 const render = createHtmlRenderer({ plugins: [icon()], components });
 ```
 
-For Vue, React, or Svelte, import from `comark-icon/vue`, `comark-icon/react`, or `comark-icon/svelte`. The `Icon` component adds the styles on mount. On a server, import `comark-icon/style.css` with your styles so the page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-icon/vue`, `comark-icon/react`, or `comark-icon/svelte`. The `Icon` component adds the styles on mount. On a server, import `comark-icon/style.css` with your styles so the page doesn't shift. [Renderers](/guide/renderers) covers using it with other plugins.
 
 ## Theme
 
@@ -198,7 +198,7 @@ An icon is a `.ci` the height of the text, `1em`, and as wide as its shape. The 
 
 ### Variables
 
-Icons don't read the [shared tokens](/guide/theming/). An icon in one color paints in `currentColor`, and one with its own colors keeps them.
+Icons don't read the [shared tokens](/guide/theming). An icon in one color paints in `currentColor`, and one with its own colors keeps them.
 
 | Variable | Default | Used for |
 | --- | --- | --- |

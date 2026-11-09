@@ -13,7 +13,7 @@ credits: 'Syntax from <a href="https://ui.nuxt.com/docs/typography">Nuxt UI</a>'
 :::example{label="Link cards"}
 ```md
 ::card-group
-:::card{title="Renderers" icon="lucide:rocket" to="/guide/renderers/"}
+:::card{title="Renderers" icon="lucide:rocket" to="/guide/renderers"}
 Render with HTML, Vue, React, or Svelte.
 :::
 
@@ -107,7 +107,7 @@ Use the `description` prop to set the card's text when it has no content of its 
 
 #### Icon
 
-Use the `icon` prop to show an icon above the title, in the card's color. [comark-icon](/icon/) resolves it while parsing.
+Use the `icon` prop to show an icon above the title, in the card's color. [comark-icon](/icon) resolves it while parsing.
 
 ::example
 ```md
@@ -123,7 +123,7 @@ Use the `to` prop to make the card a link card. A web address opens in a new tab
 
 ::example
 ```md
-::card{title="Renderers" icon="lucide:rocket" to="/guide/renderers/"}
+::card{title="Renderers" icon="lucide:rocket" to="/guide/renderers"}
 Render with HTML, Vue, React, or Svelte.
 ::
 ```
@@ -179,11 +179,11 @@ Use `::card-group` to set cards in two columns. A group narrower than 36rem, suc
 ::example
 ```md
 ::card-group
-:::card{title="Renderers" to="/guide/renderers/"}
+:::card{title="Renderers" to="/guide/renderers"}
 Render with HTML, Vue, React, or Svelte.
 :::
 
-:::card{title="Theming" to="/guide/theming/"}
+:::card{title="Theming" to="/guide/theming"}
 Match the page's colors.
 :::
 ::
@@ -262,7 +262,7 @@ Links to other sites open in a new tab with `rel="noopener noreferrer"`. Set `ta
 
 | Option | Default | Description |
 | --- | --- | --- |
-| `iconResolver` | Icons from the Iconify API | Resolves a card's `icon`, from `createIcons()` in [comark-icon](/icon/). |
+| `iconResolver` | Icons from the Iconify API | Resolves a card's `icon`, from `createIcons()` in [comark-icon](/icon). |
 
 Pass the page's resolver so every plugin shares it:
 
@@ -287,7 +287,7 @@ The plugin sets `external` when the link opens in a new tab. `label` is the link
 
 ### Issues
 
-The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation/) describes:
+The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation) describes:
 
 - `href` instead of `to`. The card still links, but Nuxt UI ignores `href`.
 - A `to` that runs a script, such as `javascript:`, which doesn't link.
@@ -296,7 +296,7 @@ The plugin adds every problem to `meta.issues`, as [Validation](/guide/validatio
 - A `cols` outside 1 to 6, an empty `::columns`, and an icon comark-icon can't draw.
 - A prop `::card` or `::columns` doesn't read, such as `link` or `columns`, which is ignored.
 
-Each issue names its block, by its title when it has one, says how to fix it, and has its own rule in [Doctor](/doctor/).
+Each issue names its block, by its title when it has one, says how to fix it, and has its own rule in [Doctor](/doctor).
 
 ### Package
 
@@ -315,11 +315,11 @@ import cards, { components } from "comark-cards/html";
 const render = createHtmlRenderer({ plugins: [cards()], components });
 ```
 
-For Vue, React, or Svelte, import from `comark-cards/vue`, `comark-cards/react`, or `comark-cards/svelte`. The components add the styles when they mount. On a server, import `comark-cards/style.css` with your own styles so the page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-cards/vue`, `comark-cards/react`, or `comark-cards/svelte`. The components add the styles when they mount. On a server, import `comark-cards/style.css` with your own styles so the page doesn't shift. [Renderers](/guide/renderers) covers using it with other plugins.
 
 ## Theme
 
-Cards use the shared tokens in [Theming](/guide/theming/), plus a variable per color. The rules sit in a `comark` CSS layer, so any plain rule of yours wins.
+Cards use the shared tokens in [Theming](/guide/theming), plus a variable per color. The rules sit in a `comark` CSS layer, so any plain rule of yours wins.
 
 ### Shared tokens
 

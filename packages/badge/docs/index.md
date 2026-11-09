@@ -33,7 +33,7 @@ Use `useFetch` instead. :badge[v4]{color="info"} :badge[stable]{color="success"}
 - Seven colors from Nuxt UI, each a tint with text in the color, so a badge reads on light and dark pages.
 - Primary follows the shared `--comark-primary`, which is the page's Nuxt UI or shadcn/ui primary, or else the text color.
 - On a Nuxt UI page, every color but neutral takes the app's `--ui-*` variable.
-- SVG image badges, static or with live npm versions, downloads, and GitHub Actions status, and a [builder](/badges/) to share and export them.
+- SVG image badges, static or with live npm versions, downloads, and GitHub Actions status, and a [builder](/badges) to share and export them.
 - No script. The components add the styles when they mount.
 
 ## Usage
@@ -213,7 +213,7 @@ The heading's `id` includes the badge's words, since Comark builds ids from all 
 
 ### Build a README badge
 
-Open the [badge builder](/badges/), pick Custom, npm version, Downloads, GitHub Actions, License, or Docs, and edit the options. Pick a preset from the Appearance swatches, then a color scheme and logo. Copy Markdown for a README, Comark for a document, or the image URL. Copy builder link keeps the setup and export format in the URL, and Download SVG saves a snapshot.
+Open the [badge builder](/badges), pick Custom, npm version, Downloads, GitHub Actions, License, or Docs, and edit the options. Pick a preset from the Appearance swatches, then a color scheme and logo. Copy Markdown for a README, Comark for a document, or the image URL. Copy builder link keeps the setup and export format in the URL, and Download SVG saves a snapshot.
 
 The hosted endpoint takes the same image options as query parameters:
 
@@ -329,14 +329,14 @@ Every renderer entry exports `colors`, the seven semantic colors. An image badge
 
 ### Issues
 
-The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation/) describes:
+The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation) describes:
 
 - A `color` it doesn't know. The badge shows as primary, and the issue lists the colors it knows.
 - A prop it doesn't read.
 - An empty prose badge.
 - Invalid image options, reported under `comark/badge/invalid-image`. The content stays as a neutral prose badge.
 
-Each issue names its badge by its number and text, and says how to fix it. Each one has its own rule in [Doctor](/doctor/).
+Each issue names its badge by its number and text, and says how to fix it. Each one has its own rule in [Doctor](/doctor).
 
 ### Package
 
@@ -355,11 +355,11 @@ import badge, { components } from "comark-badge/html";
 const render = createHtmlRenderer({ plugins: [badge()], components });
 ```
 
-For Vue, React, or Svelte, import from `comark-badge/vue`, `comark-badge/react`, or `comark-badge/svelte`. When you render on a server, import `comark-badge/style.css` with your own styles so the page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-badge/vue`, `comark-badge/react`, or `comark-badge/svelte`. When you render on a server, import `comark-badge/style.css` with your own styles so the page doesn't shift. [Renderers](/guide/renderers) covers using it with other plugins.
 
 ## Theme
 
-Prose badges follow the shared tokens in [Theming](/guide/theming/), and a variable per color. The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
+Prose badges follow the shared tokens in [Theming](/guide/theming), and a variable per color. The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
 
 ### Shared tokens
 

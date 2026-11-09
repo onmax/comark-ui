@@ -19,9 +19,9 @@ In a pnpm workspace that has a package only through another one, `npx` finds the
 
 Pick `comark-ui` from the list of skills. `vp dlx skills add https://comark-ui.onmax.me` installs the same skill from this site.
 
-A project that installs `comark-ui` can link the skill from `node_modules` instead, so it matches the installed version. Run `vp dlx skills experimental_sync` after each install, as [Skills](/skills/#from-npm) shows.
+A project that installs `comark-ui` can link the skill from `node_modules` instead, so it matches the installed version. Run `vp dlx skills experimental_sync` after each install, as [Skills](/skills#from-npm) shows.
 
-For a whole document, such as before/after evidence, a review, or a lesson, add the matching [skills](/skills/) from the same list.
+For a whole document, such as before/after evidence, a review, or a lesson, add the matching [skills](/skills) from the same list.
 
 ## Markdown pages
 
@@ -42,7 +42,7 @@ const skill = dirname(fileURLToPath(import.meta.resolve("comark-ui/skills/comark
 await cp(skill, "skills/comark-ui", { recursive: true });
 ```
 
-Keep the folder whole, since `SKILL.md` links each reference by its path. An app in a Worker can't read `node_modules`, so it imports every skill's files as text from `comark-ui/skills`, as [Skills](/skills/#bundle-them-in-your-app) shows. If your agents only write Markdown, cut each reference at its `## Register` heading, which always comes last.
+Keep the folder whole, since `SKILL.md` links each reference by its path. An app in a Worker can't read `node_modules`, so it imports every skill's files as text from `comark-ui/skills`, as [Skills](/skills#bundle-them-in-your-app) shows. If your agents only write Markdown, cut each reference at its `## Register` heading, which always comes last.
 
 ## Check the result
 
@@ -52,7 +52,7 @@ comark-linter lists every problem in a document, each with its line. Outside a p
 vp dlx --package comark-linter --package comark-ui comark-lint duck-audit.md
 ```
 
-Marks need a look too, since a box can sit inside the image and still miss its target. [Install the CLI directly](/annotate/#cli) at the same version as the project's Comark UI packages. `comark-annotate render` writes a standalone page next to the file, and the agent screenshots it in a browser to confirm each mark sits on its target:
+Marks need a look too, since a box can sit inside the image and still miss its target. [Install the CLI directly](/annotate#cli) at the same version as the project's Comark UI packages. `comark-annotate render` writes a standalone page next to the file, and the agent screenshots it in a browser to confirm each mark sits on its target:
 
 ```sh
 vp exec comark-annotate render duck-audit.md -o duck-audit.html
@@ -60,4 +60,4 @@ vp exec comark-annotate render duck-audit.md -o duck-audit.html
 
 ## Writing for reviewers
 
-[A review document](/recipes/review/) builds pull request evidence from several plugins. [Sharing a review](/recipes/share/) shows how the agent publishes it to [Drop](https://drop.vitehub.dev/?utm_source=comark-ui&utm_medium=guide), where reviewers comment on the exact spot and the agent reads their comments.
+[A review document](/recipes/review) builds pull request evidence from several plugins. [Sharing a review](/recipes/share) shows how the agent publishes it to [Drop](https://drop.vitehub.dev/?utm_source=comark-ui&utm_medium=guide), where reviewers comment on the exact spot and the agent reads their comments.

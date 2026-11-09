@@ -149,18 +149,18 @@ Pass options under `diagrams` in `comarkUi()`, or to `diagrams()` alone.
 
 ### Issues
 
-A diagram Kroki can't draw stays as code. The plugin adds a sentence with the first two lines of the tool's error to `meta.issues`, as [Validation](/guide/validation/) describes. The same happens when the server can't be reached:
+A diagram Kroki can't draw stays as code. The plugin adds a sentence with the first two lines of the tool's error to `meta.issues`, as [Validation](/guide/validation) describes. The same happens when the server can't be reached:
 
 ```txt
 The ```dot fence 2: Kroki couldn't draw it: Error: <stdin>: syntax error in line 1 near 'a'. Fix the diagram's source.
 The ```d2 fence 1: couldn't reach the Kroki server at https://kroki.io (fetch failed). Check `server`, or build again.
 ```
 
-Each issue has its own rule in [Doctor](/doctor/).
+Each issue has its own rule in [Doctor](/doctor).
 
 ### Package
 
-[comark-ui](/getting-started/) installs and registers `comark-diagrams`. To use it alone, install it and pass the renderer's `components`:
+[comark-ui](/getting-started) installs and registers `comark-diagrams`. To use it alone, install it and pass the renderer's `components`:
 
 ```sh
 pnpm add comark @comark/html comark-diagrams
@@ -173,7 +173,7 @@ import diagrams, { components } from "comark-diagrams/html";
 const render = createHtmlRenderer({ plugins: [diagrams()], components });
 ```
 
-For Vue, React, or Svelte, import from `comark-diagrams/vue`, `comark-diagrams/react`, or `comark-diagrams/svelte`. The components add the styles on mount. Import `comark-diagrams/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-diagrams/vue`, `comark-diagrams/react`, or `comark-diagrams/svelte`. The components add the styles on mount. Import `comark-diagrams/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers) covers using it with other plugins.
 
 ## Theme
 

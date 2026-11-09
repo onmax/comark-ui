@@ -66,7 +66,7 @@ packages/
 - Output pasted from `tree`, in Unicode or ASCII, reads the same as indented paths.
 - Mark entries added, removed, or changed, and add a note to any line.
 - Folders are open `<details>` a reader can fold.
-- With [comark-icon](/icon/), each file gets its type's icon, as in VS Code.
+- With [comark-icon](/icon), each file gets its type's icon, as in VS Code.
 
 ## Usage
 
@@ -239,7 +239,7 @@ Pass options under `fileTree` in `comarkUi()`, or to `fileTree()` alone.
 
 | Option | Default | Description |
 | --- | --- | --- |
-| `iconResolver` | — | Resolves each entry's icon, from `createIcons()` in [comark-icon](/icon/). Without it, every entry gets a plain glyph and nothing is fetched. `comarkUi()` passes the resolver built from the `icon` options. |
+| `iconResolver` | — | Resolves each entry's icon, from `createIcons()` in [comark-icon](/icon). Without it, every entry gets a plain glyph and nothing is fetched. `comarkUi()` passes the resolver built from the `icon` options. |
 | `icons` | Iconify's vscode-icons | Icons by file name, extension, or `name/` for a folder, on top of the built-in ones. `folder` and `file` set the fallbacks. |
 
 Pass an `iconResolver` to give each file its type's icon:
@@ -269,14 +269,14 @@ The parse plugin replaces the block with a `file-tree` node holding one `file-tr
 
 ### Issues
 
-The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation/) describes:
+The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation) describes:
 
 - A Markdown list instead of a fence. It renders as the list, and the issue says to use a fenced block.
 - Content beside the fence doesn't render, and only the first fenced block does.
 - An empty fence, or a block with nothing in it.
 - A prop, which the block doesn't read.
 
-Each one has its own rule in [Doctor](/doctor/).
+Each one has its own rule in [Doctor](/doctor).
 
 ### Package
 
@@ -295,11 +295,11 @@ import fileTree, { components } from "comark-file-tree/html";
 const render = createHtmlRenderer({ plugins: [fileTree()], components });
 ```
 
-For Vue, React, or Svelte, import from `comark-file-tree/vue`, `comark-file-tree/react`, or `comark-file-tree/svelte`. The components add the styles on mount. On a server, import `comark-file-tree/style.css` with your styles so the page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-file-tree/vue`, `comark-file-tree/react`, or `comark-file-tree/svelte`. The components add the styles on mount. On a server, import `comark-file-tree/style.css` with your styles so the page doesn't shift. [Renderers](/guide/renderers) covers using it with other plugins.
 
 ## Theme
 
-Trees follow the shared tokens in [Theming](/guide/theming/), and a variable per kind of change.
+Trees follow the shared tokens in [Theming](/guide/theming), and a variable per kind of change.
 
 ### Shared tokens
 

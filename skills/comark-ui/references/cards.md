@@ -6,7 +6,7 @@ comark-cards draws cards, link cards, and card groups, and lays blocks out in co
 
 ```md
 ::card-group
-:::card{title="Renderers" icon="lucide:rocket" to="/guide/renderers/"}
+:::card{title="Renderers" icon="lucide:rocket" to="/guide/renderers"}
 Render with HTML, Vue, React, or Svelte.
 :::
 

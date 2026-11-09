@@ -8,6 +8,6 @@ The pond has a :a[feed the ducks]{href="javascript:alert(1)"} button.
 
 ::correct
 ```md
-The pond has a :a[feed the ducks]{href="/ducks/feed/"} button.
+The pond has a :a[feed the ducks]{href="/ducks/feed"} button.
 ```
 ::

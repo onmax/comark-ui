@@ -3,7 +3,7 @@
 [![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-cast&icon=npm)](https://npmx.dev/package/comark-cast)
 [![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-cast&period=month&icon=npm)](https://npmx.dev/package/comark-cast)
 [![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-cast)
-[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/cast/)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/cast)
 
 Terminal recordings from [asciinema](https://asciinema.org) casts, shown as the terminal's final screen or its whole log in colored text, with no player and no script. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
 

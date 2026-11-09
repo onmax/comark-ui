@@ -98,7 +98,7 @@ async function request(url: string, settings: Required<UrlOptions>): Promise<Ans
 async function once(url: string, timeout: number, method: string): Promise<Answer> {
   const headers = new Headers({
     accept: "text/html,application/xhtml+xml,*/*;q=0.8",
-    "user-agent": "Mozilla/5.0 (compatible; comark-linter; +https://comark-ui.onmax.me/lint/)",
+    "user-agent": "Mozilla/5.0 (compatible; comark-linter; +https://comark-ui.onmax.me/lint)",
   });
   const { hostname } = new URL(url);
   const token = process.env.GITHUB_TOKEN;

@@ -25,7 +25,7 @@ const diagnostics = defineDoctorDiagnostics(
   {
     docsBase: (code) => {
       const rule = ruleOf.get(code);
-      return rule && `https://comark-ui.onmax.me/doctor/${rule.replace(/^comark\//, "")}/`;
+      return rule && `https://comark-ui.onmax.me/doctor/${rule.replace(/^comark\//, "")}`;
     },
   },
 );

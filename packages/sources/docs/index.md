@@ -68,7 +68,7 @@ Homing works by the sun :cite[1], and by smell :cite[2,3].
 
 Hover or focus a citation to show a card with the site's icon, the site, and the source's title. The card stays open while the pointer moves onto it, and a click opens the source. Escape closes it. On a touch screen, a tap follows the citation to the list instead.
 
-The card shows the list's icon, which [comark-chips](/chips/) draws as the site's favicon or an account's avatar. comark-ui turns chips on. With no icon in the list, the card shows a globe.
+The card shows the list's icon, which [comark-chips](/chips) draws as the site's favicon or an account's avatar. comark-ui turns chips on. With no icon in the list, the card shows a globe.
 
 Without the script, such as in a feed reader, the browser shows the source's title as the citation's tooltip.
 
@@ -88,7 +88,7 @@ Homing works by the sun :cite[1].
 
 ### Sources in agent-written documents
 
-An agent can cite as it writes and list its links once at the end. The plugin checks that every citation points at a source that exists. Reject a document whose `meta.issues` isn't empty, as [Validation](/guide/validation/) describes, and the agent gets a sentence to fix it with, such as "`:cite` 3 cites source 4, but `::sources` lists 3".
+An agent can cite as it writes and list its links once at the end. The plugin checks that every citation points at a source that exists. Reject a document whose `meta.issues` isn't empty, as [Validation](/guide/validation) describes, and the agent gets a sentence to fix it with, such as "`:cite` 3 cites source 4, but `::sources` lists 3".
 
 ## API
 
@@ -104,7 +104,7 @@ The plugin takes no options. `sources: false` in `comarkUi()` turns it off.
 
 ### Issues
 
-The plugin adds these to `meta.issues`, as [Validation](/guide/validation/) describes:
+The plugin adds these to `meta.issues`, as [Validation](/guide/validation) describes:
 
 - A citation with no number.
 - A citation of a source the list doesn't have.
@@ -114,7 +114,7 @@ The plugin adds these to `meta.issues`, as [Validation](/guide/validation/) desc
 - Content beside the list, which it drops.
 - A prop it doesn't read.
 
-Each names its block and the fix, and has its own rule in [Doctor](/doctor/).
+Each names its block and the fix, and has its own rule in [Doctor](/doctor).
 
 ### Package
 
@@ -133,11 +133,11 @@ import sources, { components } from "comark-sources/html";
 const render = createHtmlRenderer({ plugins: [sources()], components });
 ```
 
-For Vue, React, or Svelte, import from `comark-sources/vue`, `comark-sources/react`, or `comark-sources/svelte`. The components add the styles and start the card on mount. On a server-rendered page, also import `comark-sources/style.css` so it doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-sources/vue`, `comark-sources/react`, or `comark-sources/svelte`. The components add the styles and start the card on mount. On a server-rendered page, also import `comark-sources/style.css` so it doesn't shift. [Renderers](/guide/renderers) covers using it with other plugins.
 
 ## Theme
 
-Citations and sources read the [shared tokens](/guide/theming/). The rules sit in a `comark` CSS layer, so any plain rule of yours wins. The card sits at the end of the page but takes its citation's tokens, so a theme on the document's container reaches it too.
+Citations and sources read the [shared tokens](/guide/theming). The rules sit in a `comark` CSS layer, so any plain rule of yours wins. The card sits at the end of the page but takes its citation's tokens, so a theme on the document's container reaches it too.
 
 ### Shared tokens
 

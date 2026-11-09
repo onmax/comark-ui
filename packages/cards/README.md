@@ -3,7 +3,7 @@
 [![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-cards&icon=npm)](https://npmx.dev/package/comark-cards)
 [![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-cards&period=month&icon=npm)](https://npmx.dev/package/comark-cards)
 [![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-cards)
-[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/cards/)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/cards)
 
 Cards, link cards, and columns in Nuxt UI's syntax, with no script. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
 
@@ -20,7 +20,7 @@ const render = createHtmlRenderer({ plugins: [cards()], components });
 
 ```md
 ::card-group
-:::card{title="Guides" icon="lucide:book-open" to="/guides/"}
+:::card{title="Guides" icon="lucide:book-open" to="/guides"}
 Start here.
 :::
 

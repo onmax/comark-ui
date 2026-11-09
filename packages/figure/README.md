@@ -3,7 +3,7 @@
 [![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-figure&icon=npm)](https://npmx.dev/package/comark-figure)
 [![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-figure&period=month&icon=npm)](https://npmx.dev/package/comark-figure)
 [![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-figure)
-[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/figure/)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/figure)
 
 Image captions in [Comark](https://comark.dev): an image alone in its paragraph with a title, `![alt](src "Caption")`, becomes a native `<figure>` with the title as its `<figcaption>`. A parse plugin with no components and no styles, so it works in any renderer.
 
@@ -35,7 +35,7 @@ The caption comes from the title only, so the alt text stays on the image for sc
 
 Images in list items, blockquotes, and definitions become figures too. A `::component` that holds only the image is left alone.
 
-With [comark-zoom](https://comark-ui.onmax.me/zoom/), the image inside a figure still zooms, in either plugin order.
+With [comark-zoom](https://comark-ui.onmax.me/zoom), the image inside a figure still zooms, in either plugin order.
 
 ## Options
 
