@@ -96,11 +96,11 @@ export function Doc({ source }: { source: string }) {
 For Svelte, import `comarkUi` from `comark-ui/svelte`.
 
 > [!NOTE]
-> The Vue, React, and Svelte entries leave out [annotate](/annotate/), [comments](/comments/), [diff](/diff/), and [quiz](/quiz/), which render only to HTML.
+> The Vue, React, and Svelte entries leave out [annotate](/annotate), [comments](/comments), [diff](/diff), and [quiz](/quiz), which render only to HTML.
 
 ### Write a block
 
-Every block on this site now renders. Try one from the [playground](/play/), or start with a callout:
+Every block on this site now renders. Try one from the [playground](/play), or start with a callout:
 
 ```md
 > [!TIP]
@@ -110,7 +110,7 @@ Every block on this site now renders. Try one from the [playground](/play/), or 
 
 ## Options
 
-Every plugin is on except [include](/include/), which reads files from disk.
+Every plugin is on except [include](/include), which reads files from disk.
 
 ### Turn a plugin off
 
@@ -137,7 +137,7 @@ Each key is the package name without `comark-`, in camelCase, such as `fileTree`
 
 ### Read files
 
-[cast](/cast/), [table](/table/), and [tests](/tests/) can read files from disk, so comark-ui gives them a reader that finds none. Inline casts, CSV fences, and pasted reports still render. Pass `{ root }` to read files under a folder, or `{ read }` to read them yourself.
+[cast](/cast), [table](/table), and [tests](/tests) can read files from disk, so comark-ui gives them a reader that finds none. Inline casts, CSV fences, and pasted reports still render. Pass `{ root }` to read files under a folder, or `{ read }` to read them yourself.
 
 ### Icons
 
@@ -148,15 +148,15 @@ Each key is the package name without `comark-`, in camelCase, such as `fileTree`
 Pass `chips: { download: false }` when you parse in a browser, which may block downloading another site's images.
 
 > [!WARNING]
-> [diagrams](/diagrams/) sends each diagram's source to `https://kroki.io` unless you pass your own `server`.
+> [diagrams](/diagrams) sends each diagram's source to `https://kroki.io` unless you pass your own `server`.
 
 ### Critic styles
 
-[critic](/critic/) has no component for its styles. Put `criticCss`, which every entry exports, in the page.
+[critic](/critic) has no component for its styles. Put `criticCss`, which every entry exports, in the page.
 
 ### Text styles
 
-comark-ui also styles the headings, paragraphs, lists, tables, code, and quotes around the blocks, with the same tokens. Pass `typeset: false` if your site already styles Markdown. [Typeset](/guide/typeset/) has the details.
+comark-ui also styles the headings, paragraphs, lists, tables, code, and quotes around the blocks, with the same tokens. Pass `typeset: false` if your site already styles Markdown. [Typeset](/guide/typeset) has the details.
 
 ### Untrusted Markdown
 
@@ -174,7 +174,7 @@ const render = createHtmlRenderer({ plugins: [...plugins, security({ allowedTags
 
 ## Mermaid
 
-comark-ui draws `mermaid` fences with [comark-pele](/mermaid/), a third-party plugin by farnabaz, themed by the shared `--comark-*` tokens. The `mermaid` option takes comark-pele's options, or `false`:
+comark-ui draws `mermaid` fences with [comark-pele](/mermaid), a third-party plugin by farnabaz, themed by the shared `--comark-*` tokens. The `mermaid` option takes comark-pele's options, or `false`:
 
 ```ts
 comarkUi({ mermaid: { languages: ["mermaid"] } }); // only `mermaid` fences, not `pele` ones
@@ -190,7 +190,7 @@ comarkUi({ mermaid: { maxDiagrams: 4, maxSource: 8000 } });
 > [!NOTE]
 > Pele adds about 260 KB gzipped to a bundle. `comark-ui/vue` loads it only when a document has a diagram, and Vue's server renderer waits for it. The other entries load it with the rest, so turn it off there if a size limit matters more than diagrams.
 
-If you use Comark's built-in `mermaid` plugin instead, pass `mermaid: false`, since both read `mermaid` fences. [Mermaid](/mermaid/) covers syntax and theming.
+If you use Comark's built-in `mermaid` plugin instead, pass `mermaid: false`, since both read `mermaid` fences. [Mermaid](/mermaid) covers syntax and theming.
 
 ## Code highlighting
 
@@ -217,11 +217,11 @@ The JavaScript regex engine needs no WebAssembly, so it runs on Workers. A site 
 
 ## One block alone
 
-Every block is its own package, and comark-ui only registers them. To install fewer, each block's page ends with how to install and register it alone. [Renderers](/guide/renderers/) shows several in one renderer.
+Every block is its own package, and comark-ui only registers them. To install fewer, each block's page ends with how to install and register it alone. [Renderers](/guide/renderers) shows several in one renderer.
 
 ## Versions
 
-`comark-ui@X` holds every block at version `X`. [comark-linter](/lint/) finds an installed comark-ui and checks documents with its plugins.
+`comark-ui@X` holds every block at version `X`. [comark-linter](/lint) finds an installed comark-ui and checks documents with its plugins.
 
 ## pnpm trust errors
 
@@ -258,14 +258,14 @@ The policy still checks every other package and version. A later upgrade needs i
 
 ## Next steps
 
-[Editor](/guide/editor/) adds a Tiptap editor to your app, with Vue bindings, file uploads, and Markdown conversion.
+[Editor](/guide/editor) adds a Tiptap editor to your app, with Vue bindings, file uploads, and Markdown conversion.
 
 ::card-group
-:::card{title="Theming" icon="lucide:palette" to="/guide/theming/"}
+:::card{title="Theming" icon="lucide:palette" to="/guide/theming"}
 Match the blocks to your site. Nuxt UI and shadcn/ui apps match with no setup.
 :::
 
-:::card{title="Agents" icon="lucide:bot" to="/guide/agents/"}
+:::card{title="Agents" icon="lucide:bot" to="/guide/agents"}
 Install the comark-ui skill so your agent writes the blocks.
 :::
 ::

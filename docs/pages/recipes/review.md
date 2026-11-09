@@ -59,12 +59,12 @@ The reviewer decides whether to approve, so lead with the decision:
 
 ## Setup
 
-Register the plugins in one renderer, as [Renderers](/guide/renderers/#several-plugins) shows. This document needs annotate, diff, github, embed, and zoom. Annotate brings zoom for the screenshots, and `zoom()` adds it for the table.
+Register the plugins in one renderer, as [Renderers](/guide/renderers#several-plugins) shows. This document needs annotate, diff, github, embed, and zoom. Annotate brings zoom for the screenshots, and `zoom()` adds it for the table.
 
 ## Check it
 
-Run [comark-linter](/lint/) on the file before you post it, then open the rendered page and check that each mark sits on its target. [Agents](/guide/agents/#check-the-result) shows both commands.
+Run [comark-linter](/lint) on the file before you post it, then open the rendered page and check that each mark sits on its target. [Agents](/guide/agents#check-the-result) shows both commands.
 
 ## Share it
 
-[Sharing a review](/recipes/share/) puts the document on Drop, where reviewers comment on the exact spot, or on a page you host.
+[Sharing a review](/recipes/share) puts the document on Drop, where reviewers comment on the exact spot, or on a page you host.

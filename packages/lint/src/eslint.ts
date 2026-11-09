@@ -105,7 +105,7 @@ const rules = Object.fromEntries(
         type: "problem",
         docs: {
           description: info[id].title,
-          url: `https://comark-ui.onmax.me/doctor/${id.replace(/^comark\//, "")}/`,
+          url: `https://comark-ui.onmax.me/doctor/${id.replace(/^comark\//, "")}`,
         },
         schema: [],
       },

@@ -161,7 +161,7 @@ Pass options under `xref` in `comarkUi()`, or to `xref()` alone.
 
 ### Issues
 
-The plugin adds these to `meta.issues`, as [Validation](/guide/validation/) describes:
+The plugin adds these to `meta.issues`, as [Validation](/guide/validation) describes:
 
 - A reference with no id.
 - A reference to a missing label. It renders as `[id]`.
@@ -169,7 +169,7 @@ The plugin adds these to `meta.issues`, as [Validation](/guide/validation/) desc
 - A labeled image that shares its paragraph with text, so it isn't a figure.
 - Text inside a `:ref`, which it drops.
 
-Each names its block and the fix, and has its own rule in [Doctor](/doctor/).
+Each names its block and the fix, and has its own rule in [Doctor](/doctor).
 
 ### Package
 
@@ -186,7 +186,7 @@ import xref from "comark-xref";
 const render = createHtmlRenderer({ plugins: [xref()] });
 ```
 
-[Renderers](/guide/renderers/) covers using it with other plugins.
+[Renderers](/guide/renderers) covers using it with other plugins.
 
 ## Theme
 

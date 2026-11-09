@@ -143,14 +143,14 @@ The parse plugin replaces the block with a `steps` node holding one `step` per s
 
 ### Issues
 
-The plugin adds these to `meta.issues`, as [Validation](/guide/validation/) describes:
+The plugin adds these to `meta.issues`, as [Validation](/guide/validation) describes:
 
 - Content before the first heading renders above the steps.
 - A block with no headings at its `level` and no numbered list renders as plain content. When its headings are at another level, the issue names the `level` to write.
 - A `level` outside 2 to 6 falls back to 3.
 - A prop other than `level`, such as `start`, is ignored.
 
-Each names its block and the fix, and has its own rule in [Doctor](/doctor/).
+Each names its block and the fix, and has its own rule in [Doctor](/doctor).
 
 ### Package
 
@@ -169,11 +169,11 @@ import steps, { components } from "comark-steps/html";
 const render = createHtmlRenderer({ plugins: [steps()], components });
 ```
 
-For Vue, React, or Svelte, import from `comark-steps/vue`, `comark-steps/react`, or `comark-steps/svelte`. The components add the styles on mount. When you render on a server, also import `comark-steps/style.css` so the page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-steps/vue`, `comark-steps/react`, or `comark-steps/svelte`. The components add the styles on mount. When you render on a server, also import `comark-steps/style.css` so the page doesn't shift. [Renderers](/guide/renderers) covers using it with other plugins.
 
 ## Theme
 
-Steps follow the shared tokens in [Theming](/guide/theming/).
+Steps follow the shared tokens in [Theming](/guide/theming).
 
 ### Shared tokens
 

@@ -3,13 +3,13 @@
 [![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-annotate&icon=npm)](https://npmx.dev/package/comark-annotate)
 [![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-annotate&period=month&icon=npm)](https://npmx.dev/package/comark-annotate)
 [![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-annotate)
-[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/annotate/)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/annotate)
 
 Hand-drawn marks, numbered notes, and arrows on screenshots, written in Markdown. A [Comark](https://comark.dev) plugin that renders static HTML.
 
-[![A dashboard screenshot with handwritten notes above and beside it, each pointing at a value with a hand-drawn arrow](https://comark-ui.onmax.me/readme.png)](https://comark-ui.onmax.me/annotate/)
+[![A dashboard screenshot with handwritten notes above and beside it, each pointing at a value with a hand-drawn arrow](https://comark-ui.onmax.me/readme.png)](https://comark-ui.onmax.me/annotate)
 
-**[Docs and live demo](https://comark-ui.onmax.me/annotate/)**
+**[Docs and live demo](https://comark-ui.onmax.me/annotate)**
 
 ```sh
 pnpm add comark @comark/html comark-annotate
@@ -46,7 +46,7 @@ The plugin adds every problem to `meta.issues`, one sentence each naming the blo
 
 A strict CSP needs `style-src 'unsafe-inline'`. Notes are ordinary Markdown, so raw HTML in them renders like anywhere else in the document. For untrusted input, add Comark's `security` plugin and list the tags to drop, such as `security({ blockedTags: ["script", "style", "iframe"] })`. It cleans notes too.
 
-The styles follow shadcn/ui: they read its CSS variables, such as `--background` and `--border`, when the page has them, and use its neutral theme otherwise. Set `--comark-background`, `--comark-foreground`, `--comark-muted`, `--comark-border`, `--comark-accent`, `--comark-ring`, `--comark-radius`, or `--comark-font` to theme zoom, carousel, and annotate at once. Any plain rule of your own wins. See [Theming](https://comark-ui.onmax.me/guide/theming/) for the Nuxt UI mapping. Override the mark colors with a plain rule such as `.ca { --ca-color: #0070f3; --ca-solid: #0070f3; --ca-ink: #fff }`, which sets the marks, the stamps, and the stamp numbers. See the annotations' [Theming page](https://comark-ui.onmax.me/annotate/#theme).
+The styles follow shadcn/ui: they read its CSS variables, such as `--background` and `--border`, when the page has them, and use its neutral theme otherwise. Set `--comark-background`, `--comark-foreground`, `--comark-muted`, `--comark-border`, `--comark-accent`, `--comark-ring`, `--comark-radius`, or `--comark-font` to theme zoom, carousel, and annotate at once. Any plain rule of your own wins. See [Theming](https://comark-ui.onmax.me/guide/theming) for the Nuxt UI mapping. Override the mark colors with a plain rule such as `.ca { --ca-color: #0070f3; --ca-solid: #0070f3; --ca-ink: #fff }`, which sets the marks, the stamps, and the stamp numbers. See the annotations' [Theming page](https://comark-ui.onmax.me/annotate#theme).
 
 Screenshots reserve their authored `viewport`, or their dimensions read from a data URI. `annotate({ size: true })` also measures remote screenshots at render time; enable it only for trusted documents, since requests follow redirects and can reach private networks. `annotate({ size: false })` disables measurement and still uses authored viewports.
 
@@ -54,7 +54,7 @@ Screenshots reserve their authored `viewport`, or their dimensions read from a d
 
 The comark-ui agent skill knows the syntax, how to measure marks from the page, and how to check the result. `vp dlx skills add onmax/comark-ui` installs it, and an app that serves skills to its own agents can bundle it from `comark-ui/skills/comark-ui/`, which always matches the renderers it installed.
 
-Install comark-annotate directly in the package where you run the CLI, at the version of your Comark UI packages. The [docs](https://comark-ui.onmax.me/annotate/#cli) show how. Then check and preview documents:
+Install comark-annotate directly in the package where you run the CLI, at the version of your Comark UI packages. The [docs](https://comark-ui.onmax.me/annotate#cli) show how. Then check and preview documents:
 
 ```sh
 vp exec comark-annotate check report.md other.md        # one line per problem, exit 1 if any

@@ -3,7 +3,7 @@
 [![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-time&icon=npm)](https://npmx.dev/package/comark-time)
 [![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-time&period=month&icon=npm)](https://npmx.dev/package/comark-time)
 [![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-time)
-[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/time/)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/time)
 
 Dates as relative time: "today", "2 days ago", "in 3 weeks". Past a threshold, 4 weeks by default, the text becomes a date, and hover or focus opens a tooltip with the full date and time. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
 

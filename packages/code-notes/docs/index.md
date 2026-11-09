@@ -125,7 +125,7 @@ In the other order the code isn't highlighted, and `meta.issues` says to move it
 
 ### With comark-code
 
-[comark-code](/code/) adds a bar of buttons to each block. CSS draws the marker's number, so Copy takes only the code.
+[comark-code](/code) adds a bar of buttons to each block. CSS draws the marker's number, so Copy takes only the code.
 
 ## Accessibility
 
@@ -146,14 +146,14 @@ The plugin takes no options. In `comarkUi()`, `codeNotes: false` turns it off.
 
 ### Issues
 
-The plugin adds these problems to `meta.issues`, as [Validation](/guide/validation/) describes:
+The plugin adds these problems to `meta.issues`, as [Validation](/guide/validation) describes:
 
 - A fence has markers but no numbered list after it.
 - A marker has no note.
 - A note has no marker.
 - `shiki` runs after the plugin.
 
-Each names its fence and the fix, and has its own rule in [Doctor](/doctor/):
+Each names its fence and the fix, and has its own rule in [Doctor](/doctor):
 
 ```txt
 The ```ts fence 2: marker <3> has no note, since the list after it has 2 items. Add its note, or remove the marker.
@@ -162,7 +162,7 @@ The ```py fence 1 has markers like `<1>` but no numbered list right after it, so
 
 ### Package
 
-[comark-ui](/getting-started/) installs and registers `comark-code-notes`. To use it alone, install it and pass the renderer's `components`:
+[comark-ui](/getting-started) installs and registers `comark-code-notes`. To use it alone, install it and pass the renderer's `components`:
 
 ```sh
 pnpm add comark @comark/html comark-code-notes
@@ -178,7 +178,7 @@ const render = createHtmlRenderer({ plugins: [shiki(), codeNotes()], components 
 
 Register `codeNotes()` after `shiki()`, as [Plugin order](#plugin-order) explains.
 
-For Vue, React, or Svelte, import from `comark-code-notes/vue`, `comark-code-notes/react`, or `comark-code-notes/svelte`. The components add the styles on mount. Import `comark-code-notes/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-code-notes/vue`, `comark-code-notes/react`, or `comark-code-notes/svelte`. The components add the styles on mount. Import `comark-code-notes/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers) covers using it with other plugins.
 
 ## Theme
 
@@ -186,7 +186,7 @@ Markers are round badges tinted with the primary color, with the number in that 
 
 ### Shared tokens
 
-Markers and notes read these [shared tokens](/guide/theming/):
+Markers and notes read these [shared tokens](/guide/theming):
 
 | Token | Used for |
 | --- | --- |

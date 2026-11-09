@@ -3,7 +3,7 @@
 [![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-zoom&icon=npm)](https://npmx.dev/package/comark-zoom)
 [![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-zoom&period=month&icon=npm)](https://npmx.dev/package/comark-zoom)
 [![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-zoom)
-[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/zoom/)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/zoom)
 
 Zoom images and any block like medium-zoom, written in Markdown. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
 
@@ -49,4 +49,4 @@ The zoomed view fires `comark-zoom:open`, `comark-zoom:change`, and `comark-zoom
 
 An item that needs styles from its ancestors names them with `data-zoom-context`, a selector: the copy goes inside empty copies of every ancestor that matches. `data-zoom-aside`, another selector, puts a copy of that element beside the zoomed item at its own size, such as a caption.
 
-The styles follow shadcn/ui: they read its CSS variables, such as `--background` and `--border`, when the page has them, and use its neutral theme otherwise. Set `--comark-background`, `--comark-foreground`, `--comark-muted`, `--comark-border`, `--comark-accent`, `--comark-ring`, `--comark-radius`, or `--comark-font` to theme zoom, carousel, and annotate at once; the rules sit in a `comark` CSS layer, so any plain rule of your own wins. See [Theming](https://comark-ui.onmax.me/guide/theming/) for the Nuxt UI mapping. To theme only the zoomed view, set the tokens on `.cz-dialog`, and change the backdrop with `--cz-backdrop` or `--cz-backdrop-opacity`; see the zoom's [Theming page](https://comark-ui.onmax.me/zoom/#theme).
+The styles follow shadcn/ui: they read its CSS variables, such as `--background` and `--border`, when the page has them, and use its neutral theme otherwise. Set `--comark-background`, `--comark-foreground`, `--comark-muted`, `--comark-border`, `--comark-accent`, `--comark-ring`, `--comark-radius`, or `--comark-font` to theme zoom, carousel, and annotate at once; the rules sit in a `comark` CSS layer, so any plain rule of your own wins. See [Theming](https://comark-ui.onmax.me/guide/theming) for the Nuxt UI mapping. To theme only the zoomed view, set the tokens on `.cz-dialog`, and change the backdrop with `--cz-backdrop` or `--cz-backdrop-opacity`; see the zoom's [Theming page](https://comark-ui.onmax.me/zoom#theme).

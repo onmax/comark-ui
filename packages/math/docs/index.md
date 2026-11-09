@@ -129,7 +129,7 @@ Pass options under `math` in `comarkUi()`, or to `math()` alone.
 
 ### Issues
 
-The plugin adds these to `meta.issues`, as [Validation](/guide/validation/) describes:
+The plugin adds these to `meta.issues`, as [Validation](/guide/validation) describes:
 
 - A formula whose TeX doesn't typeset, with the typesetter's reason. Its TeX shows in its place.
 - An `output` that needs KaTeX when `katex` isn't installed. Formulas fall back to MathML.
@@ -138,7 +138,7 @@ The plugin adds these to `meta.issues`, as [Validation](/guide/validation/) desc
 Math `\frac{a}` failed to typeset: Unexpected end of input in a macro argument, expected '}'. Fix the TeX or wrap it in code.
 ```
 
-Each has its own rule in [Doctor](/doctor/).
+Each has its own rule in [Doctor](/doctor).
 
 ### Package
 
@@ -155,7 +155,7 @@ import math, { components } from "comark-mathml/html";
 const render = createHtmlRenderer({ plugins: [math()], components });
 ```
 
-For Vue, React, or Svelte, import from `comark-mathml/vue`, `comark-mathml/react`, or `comark-mathml/svelte`. The components add the styles on mount. On a server-rendered page, also import `comark-mathml/style.css` so it doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-mathml/vue`, `comark-mathml/react`, or `comark-mathml/svelte`. The components add the styles on mount. On a server-rendered page, also import `comark-mathml/style.css` so it doesn't shift. [Renderers](/guide/renderers) covers using it with other plugins.
 
 ## Theme
 

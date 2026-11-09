@@ -5,7 +5,7 @@ keywords: WYSIWYG, rich text, ProseMirror
 tagline: A Tiptap editor for Comark Markdown, with Vue bindings, file uploads, and a codec for collaborative rooms.
 ---
 
-Use `comark-ui/editor` to edit Comark documents and save them back to Markdown. [Open the editor playground](/play/editor/) to edit Markdown and rich text side by side, or use the [Markdown playground](/play/) to preview the rendered plugins.
+Use `comark-ui/editor` to edit Comark documents and save them back to Markdown. [Open the editor playground](/play/editor) to edit Markdown and rich text side by side, or use the [Markdown playground](/play) to preview the rendered plugins.
 
 ## Setup
 
@@ -38,7 +38,7 @@ const { plugins } = comarkUi({ chips: { download: false }, icon: { fetch: false 
 </template>
 ```
 
-The editor shows the frontmatter above the text as read-only [Properties](/properties/) rows. Pass Properties' options in `properties`, or `:properties="false"` to hide them.
+The editor shows the frontmatter above the text as read-only [Properties](/properties) rows. Pass Properties' options in `properties`, or `:properties="false"` to hide them.
 
 Mount the editor in the browser, inside `<ClientOnly>` in Nuxt. `ComarkEditor` renders Tiptap's `EditorContent`, and your app supplies the toolbar and styles.
 
@@ -178,7 +178,7 @@ Pass your renderer's plugins for the same check as `checkMarkdown()`. The codec 
 
 A host that stores frontmatter apart, such as ViteHub Content, needs no `split()` or `join()`. A host that keeps the whole file as the body and skips them opens any document with frontmatter read-only.
 
-Build a room's [Properties](/properties/) rows from its fields with `rowsOf(fields, options)` from comark-properties. They stay read-only, since the editor doesn't edit fields yet.
+Build a room's [Properties](/properties) rows from its fields with `rowsOf(fields, options)` from comark-properties. They stay read-only, since the editor doesn't edit fields yet.
 
 ## Vue options
 
@@ -192,4 +192,4 @@ Build a room's [Properties](/properties/) rows from its fields with `rowsOf(fiel
 
 ## Next steps
 
-[Installation](/getting-started/) registers the blocks for rendering, [Renderers](/guide/renderers/) displays the saved Markdown, and [Validation](/guide/validation/) checks documents for authoring problems.
+[Installation](/getting-started) registers the blocks for rendering, [Renderers](/guide/renderers) displays the saved Markdown, and [Validation](/guide/validation) checks documents for authoring problems.

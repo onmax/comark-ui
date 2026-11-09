@@ -24,7 +24,7 @@ Internal teams only.
 
 :::example{label="New tab"}
 ```md
-Read [the incident report](https://example.com/incidents/42){target="_blank"} before the review, then come back to [the checklist](/links/).
+Read [the incident report](https://example.com/incidents/42){target="_blank"} before the review, then come back to [the checklist](/links).
 ```
 :::
 ::
@@ -228,7 +228,7 @@ const render = createHtmlRenderer({
 
 The plugins work in any order. The package has no default export, so import them by name.
 
-For Vue, React, or Svelte, import from `comark-links/vue`, `comark-links/react`, or `comark-links/svelte`. The components add the styles when they mount. Import `comark-links/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-links/vue`, `comark-links/react`, or `comark-links/svelte`. The components add the styles when they mount. Import `comark-links/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers) covers using it with other plugins.
 
 The components replace `h1` to `h6`, but change only the headings `anchors()` gave a link. Headings stay in place in the document's tree, so a table of contents built from the tree still finds them.
 
@@ -238,7 +238,7 @@ The rules sit in the `comark` CSS layer, so any plain rule of yours wins.
 
 ### Shared tokens
 
-The heading links read these [shared tokens](/guide/theming/):
+The heading links read these [shared tokens](/guide/theming):
 
 | Token | Used for |
 | --- | --- |

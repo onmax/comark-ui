@@ -191,7 +191,7 @@ Every row becomes HTML, so thousands of rows make a heavy page. Trim the data to
 
 ### Reading files
 
-The plugin reads files like [comark-include](/include/), from disk under `root` or through your `read`. It refuses symlinks that lead out of `root` and doesn't fetch URLs, so download the data first.
+The plugin reads files like [comark-include](/include), from disk under `root` or through your `read`. It refuses symlinks that lead out of `root` and doesn't fetch URLs, so download the data first.
 
 ## Accessibility
 
@@ -236,14 +236,14 @@ Pass options under `table` in `comarkUi()`, such as `comarkUi({ table: { root: "
 
 | Option | Default | Description |
 | --- | --- | --- |
-| `root` | `"."` | The folder `src` can't leave, as in [comark-include](/include/). |
+| `root` | `"."` | The folder `src` can't leave, as in [comark-include](/include). |
 | `base` | `""` | The document's folder under `root`, where relative paths start. |
 | `read` | Reads from disk | A function that takes a path under the root and returns the file's text. Pass it in a browser or an edge runtime. |
 | `fences` | `true` | `false` keeps ` ```csv ` and ` ```tsv ` fences as code. |
 
 ### Issues
 
-The plugin adds these problems to `meta.issues`, as [Validation](/guide/validation/) describes:
+The plugin adds these problems to `meta.issues`, as [Validation](/guide/validation) describes:
 
 - A file that's missing, outside the root, a URL, unreadable, or in a format it can't read.
 - A `base` option that leaves the root.
@@ -254,7 +254,7 @@ The plugin adds these problems to `meta.issues`, as [Validation](/guide/validati
 - A tone span that doesn't fill its cell, or a tone it doesn't know.
 - A prop it doesn't read.
 
-A fence it can't read stays code. Each issue names its table and says how to fix it, and each has its own rule in [Doctor](/doctor/):
+A fence it can't read stays code. Each issue names its table and says how to fix it, and each has its own rule in [Doctor](/doctor):
 
 ```txt
 `::table` 1 ("bench.csv"): file not found. It resolved to "guide/bench.csv" under the root; check the path or `base`.
@@ -278,7 +278,7 @@ import table, { components } from "comark-table/html";
 const render = createHtmlRenderer({ plugins: [table({ root: "docs" })], components });
 ```
 
-For Vue, React, or Svelte, import from `comark-table/vue`, `comark-table/react`, or `comark-table/svelte`. The components start the script when they mount. Import `comark-table/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-table/vue`, `comark-table/react`, or `comark-table/svelte`. The components start the script when they mount. Import `comark-table/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers) covers using it with other plugins.
 
 ## Theme
 
@@ -286,7 +286,7 @@ The Copy button and its arrow sit in a bar above the table, styled like shadcn/u
 
 ### Shared tokens
 
-Tables read these [shared tokens](/guide/theming/):
+Tables read these [shared tokens](/guide/theming):
 
 | Token | Used for |
 | --- | --- |

@@ -2,7 +2,7 @@
 
 ::incorrect
 ```md
-::card{title="Pond report" link="/ponds/"}
+::card{title="Pond report" link="/ponds"}
 14 ducks, 3 pigeons.
 ::
 ```
@@ -10,7 +10,7 @@
 
 ::correct
 ```md
-::card{title="Pond report" to="/ponds/"}
+::card{title="Pond report" to="/ponds"}
 14 ducks, 3 pigeons.
 ::
 ```

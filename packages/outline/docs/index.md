@@ -143,7 +143,7 @@ The page tells the outline what it covers, and the outline tells the page when i
 | Variable | Set by | Description |
 | --- | --- | --- |
 | `--comark-inset-end` | The page, on `:root` | The width the page covers at the right edge, such as a side panel, in `px` or `rem`. The outline keeps clear of it, or hides, and moves when it changes. |
-| `data-comark-rail` | The outline, on `<html>` | Set while the outline keeps a column beside [wide blocks](/guide/typeset/#wide-blocks). Shrink `--comark-wide-end` by `--comark-rail-width` while it's there. |
+| `data-comark-rail` | The outline, on `<html>` | Set while the outline keeps a column beside [wide blocks](/guide/typeset#wide-blocks). Shrink `--comark-wide-end` by `--comark-rail-width` while it's there. |
 | `--comark-rail-width` | The outline, on `<html>` | The column it keeps with its gap, `264px`, while `data-comark-rail` is set. |
 
 ### Beside wide blocks
@@ -205,14 +205,14 @@ In `comarkUi()`, pass them as `outline`, such as `outline: { rail: true }`. `out
 
 ### Issues
 
-The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation/) describes:
+The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation) describes:
 
 - A `depth` outside 2 to 6. The block renders nothing.
 - A prop it doesn't read.
 - Content inside the block, which is dropped.
 - A page with no headings to list. The block renders nothing.
 
-Each issue names its block and says how to fix it, and each has its own rule in [Doctor](/doctor/).
+Each issue names its block and says how to fix it, and each has its own rule in [Doctor](/doctor).
 
 ### Package
 
@@ -233,7 +233,7 @@ const render = createHtmlRenderer({ plugins: [toc()], components });
 
 Pass the options to the plugin, such as `toc({ rail: true })` for the [side outline](#side-outline).
 
-For Vue, React, or Svelte, import from `comark-outline/vue`, `comark-outline/react`, or `comark-outline/svelte`. The components add the styles when they mount. Import `comark-outline/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-outline/vue`, `comark-outline/react`, or `comark-outline/svelte`. The components add the styles when they mount. Import `comark-outline/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers) covers using it with other plugins.
 
 ## Theme
 
@@ -241,7 +241,7 @@ The list has no box, so it reads like the page's text. The rules sit in a `comar
 
 ### Shared tokens
 
-The list reads these [shared tokens](/guide/theming/):
+The list reads these [shared tokens](/guide/theming):
 
 | Token | Used for |
 | --- | --- |

@@ -3,7 +3,7 @@
 [![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-mathml&icon=npm)](https://npmx.dev/package/comark-mathml)
 [![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-mathml&period=month&icon=npm)](https://npmx.dev/package/comark-mathml)
 [![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-mathml)
-[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/math/)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/math)
 
 LaTeX math in [Comark](https://comark.dev), in place of `comark/plugins/math`: `$…$` and `\(…\)` inline, `$$…$$`, `\[…\]`, and `math` fences as display math, typeset to MathML while parsing, so the page loads no math script, fonts, or stylesheet. For HTML, Vue, React, and Svelte.
 

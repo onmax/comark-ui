@@ -49,8 +49,8 @@ pie title Birds at the pond
 - [comark-pele](https://github.com/farnabaz/comark-pele) turns each `mermaid` fence into SVG with [Pele](https://pele.run), a Mermaid renderer with no dependencies.
 - The diagram reads with no script, and its source never leaves your machine.
 - Through comark-ui, Copy image and Copy source copy a diagram as a PNG or as its Markdown. With `comark-ui/html`, a click, `Enter`, or `Space` zooms it.
-- Through comark-ui, diagrams follow the [shared tokens](/guide/theming/) in light and dark.
-- comark-pele is a third-party plugin by [farnabaz](https://github.com/farnabaz). [comark-ui](/getting-started/) registers it for you.
+- Through comark-ui, diagrams follow the [shared tokens](/guide/theming) in light and dark.
+- comark-pele is a third-party plugin by [farnabaz](https://github.com/farnabaz). [comark-ui](/getting-started) registers it for you.
 
 ## Usage
 
@@ -107,7 +107,7 @@ Hover or focus a diagram to show its buttons in the top corner:
 - **Copy image** copies a PNG at twice the diagram's size, up to 4096 pixels a side, on the page's background color. If the browser refuses the clipboard, an Open PNG link appears so you can save it.
 - **Copy source** copies a ` ```mermaid ` fence, longer than any run of backticks inside it. If the browser refuses the clipboard, the Markdown shows under the diagram, selected, for `Ctrl+C` or `⌘C`.
 
-Click a diagram to zoom it out of the page with [zoom](/zoom/). `zoom: false` in `comarkUi()` turns off all zoom but keeps the buttons.
+Click a diagram to zoom it out of the page with [zoom](/zoom). `zoom: false` in `comarkUi()` turns off all zoom but keeps the buttons.
 
 > [!NOTE]
 > Vue, React, and Svelte draw the same buttons but don't zoom with comark-zoom. Pele's own `mount()` zooms a diagram in place when it had to shrink, with its buttons in the bottom corner.
@@ -124,7 +124,7 @@ pele({ languages: ["mermaid"] }); // only `mermaid` fences, not `pele` ones
 
 ### Check a diagram before you publish
 
-A diagram Pele can't draw shows its source as code, with the error in the wrapper's `data-error`. Nothing goes in `meta.issues`, so try it in the [playground](/play/#preset=mermaid-flowchart) first.
+A diagram Pele can't draw shows its source as code, with the error in the wrapper's `data-error`. Nothing goes in `meta.issues`, so try it in the [playground](/play#preset=mermaid-flowchart) first.
 
 ### Comark's own mermaid plugin
 
@@ -146,7 +146,7 @@ A diagram that zooms is a tab stop that opens a modal dialog, and focus returns 
 
 ### Options
 
-In `comarkUi()`, `mermaid` takes comark-pele's options, or `false` to leave `mermaid` fences as code. [Getting started](/getting-started/#mermaid) says when to turn it off.
+In `comarkUi()`, `mermaid` takes comark-pele's options, or `false` to leave `mermaid` fences as code. [Getting started](/getting-started#mermaid) says when to turn it off.
 
 | Option | Default | Description |
 | --- | --- | --- |
@@ -155,7 +155,7 @@ In `comarkUi()`, `mermaid` takes comark-pele's options, or `false` to leave `mer
 
 ### Script
 
-`comark-ui/html` inlines the buttons' script and comark-zoom's. It exports the buttons' script text as `mermaidScript`, so a page with a strict Content Security Policy can allow it by hash, as [Renderers](/guide/renderers/#content-security-policy) shows. Copy image also needs `img-src data:` in that policy.
+`comark-ui/html` inlines the buttons' script and comark-zoom's. It exports the buttons' script text as `mermaidScript`, so a page with a strict Content Security Policy can allow it by hash, as [Renderers](/guide/renderers#content-security-policy) shows. Copy image also needs `img-src data:` in that policy.
 
 ### Issues
 
@@ -180,13 +180,13 @@ const render = createHtmlRenderer({ plugins: [pele()], components: { Pele } });
 
 The HTML renderer writes static SVG and runs in Node or a Cloudflare Worker. For Vue, React, or Svelte, import from `comark-pele/vue`, `comark-pele/react`, or `comark-pele/svelte`, or from comark-ui's entry for that renderer. They draw the same SVG on the server, then fit each diagram to its container and add zoom in the browser.
 
-On its own, comark-pele draws with Pele's colors. To put its diagrams on the `--comark-*` tokens as comark-ui does, add `mermaidCss` from `comark-ui/client` to the page. [Theme](#theme) lists what it sets, and [Renderers](/guide/renderers/) covers using it with other plugins.
+On its own, comark-pele draws with Pele's colors. To put its diagrams on the `--comark-*` tokens as comark-ui does, add `mermaidCss` from `comark-ui/client` to the page. [Theme](#theme) lists what it sets, and [Renderers](/guide/renderers) covers using it with other plugins.
 
 In a browser-only setup, `addMermaidStyles()` from `comark-ui/client` adds the styles to the document once. For the buttons too, wrap each card in `div.cmm` with the source in `data-source` and `mermaidBar()` in a `div.cmm-bar`. Then call `startMermaid()`, which adds the styles, starts the buttons, and returns a function that stops them. The Vue, React, and Svelte entries do this for you.
 
 ## Theme
 
-Through [comark-ui](/getting-started/), each diagram sits on a card in a 1px frame, and Pele paints it with the page's colors, so it switches with light and dark without redrawing. The rules sit in a `comark` CSS layer, so any plain rule of yours wins.
+Through [comark-ui](/getting-started), each diagram sits on a card in a 1px frame, and Pele paints it with the page's colors, so it switches with light and dark without redrawing. The rules sit in a `comark` CSS layer, so any plain rule of yours wins.
 
 ### Shared tokens
 
@@ -200,7 +200,7 @@ Through [comark-ui](/getting-started/), each diagram sits on a card in a 1px fra
 | `--comark-radius` | The card's corners, and a little less on nodes |
 | `--comark-font` | Every label |
 
-Pie and xy charts color their series with `--comark-chart-1` to `--comark-chart-8`, then shadcn's `--chart-*`, like [charts](/charts/#theme).
+Pie and xy charts color their series with `--comark-chart-1` to `--comark-chart-8`, then shadcn's `--chart-*`, like [charts](/charts#theme).
 
 ### Variables
 
@@ -210,7 +210,7 @@ Pele paints with its `--pele-*` variables, which comark-ui sets on `:root` from 
 
 | Selector | Is |
 | --- | --- |
-| `div.cmm` | The wrapper around a diagram and its buttons, with the source in `data-source`. In `comark-ui/html` a drawn one is a [wide block](/guide/typeset/) with `data-wide` |
+| `div.cmm` | The wrapper around a diagram and its buttons, with the source in `data-source`. In `comark-ui/html` a drawn one is a [wide block](/guide/typeset) with `data-wide` |
 | `div.pele-diagram` | A diagram, with `data-diagram` set to its type, such as `flowchart` or `pie`, and `data-zoom` when it zooms |
 | `svg.pele` | The drawing |
 | `.pele-diagram[data-error]` | A diagram that failed |

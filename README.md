@@ -10,7 +10,7 @@
 
 Comark UI is a free, open source library built on [Comark](https://comark.dev), with 40+ blocks for docs, reviews, and agent reports. Write tabs, cards, charts, annotated screenshots, and more in Markdown. Install them together with [`comark-ui`](./packages/ui), or use individual packages.
 
-[Documentation](https://comark-ui.onmax.me) · [Getting started](https://comark-ui.onmax.me/getting-started/) · [Playground](https://comark-ui.onmax.me/play/) · [Badge builder](https://comark-ui.onmax.me/badges/)
+[Documentation](https://comark-ui.onmax.me) · [Getting started](https://comark-ui.onmax.me/getting-started) · [Playground](https://comark-ui.onmax.me/play) · [Badge builder](https://comark-ui.onmax.me/badges)
 
 An independent project by [@onmax](https://github.com/onmax).
 
@@ -43,7 +43,7 @@ comarkUi({
 });
 ```
 
-HTML, Vue, React, and Svelte have their own entries: `comark-ui/html`, `comark-ui/vue`, `comark-ui/react`, and `comark-ui/svelte`. Annotate and diff are HTML-only. See [renderers](https://comark-ui.onmax.me/guide/renderers/) for framework setup and [theming](https://comark-ui.onmax.me/guide/theming/) to change the shared styles.
+HTML, Vue, React, and Svelte have their own entries: `comark-ui/html`, `comark-ui/vue`, `comark-ui/react`, and `comark-ui/svelte`. Annotate and diff are HTML-only. See [renderers](https://comark-ui.onmax.me/guide/renderers) for framework setup and [theming](https://comark-ui.onmax.me/guide/theming) to change the shared styles.
 
 ## Components
 
@@ -111,7 +111,7 @@ Install [`comark-linter`](./packages/lint) separately to check documents for unc
 pnpm add -D comark-linter
 ```
 
-It detects your installed `comark-ui` and checks documents with its plugins. Use it from the [CLI, a script, ESLint, or Vite Doctor](https://comark-ui.onmax.me/lint/).
+It detects your installed `comark-ui` and checks documents with its plugins. Use it from the [CLI, a script, ESLint, or Vite Doctor](https://comark-ui.onmax.me/lint).
 
 ## Moving to Comark
 

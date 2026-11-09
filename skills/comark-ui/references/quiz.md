@@ -49,7 +49,7 @@ Promise callbacks are microtasks, and a timer's callback is a task.
 - Options are shuffled the same way for every reader, so do not write options that point at others by place, such as "All of the above" or "Both A and B". Keep the options about as long as each other, since a right option much longer than the rest is reported.
 - Keep a block to six options or fewer. Mark at least one right option in a question, or ask it as a poll. Put no block inside another block's prompt, option, or slot.
 
-The HTML renderer inlines the quiz script and styles. Hosts can listen for `comark-quiz:answer` and `comark-quiz:ready`, and restore answers or results with `comark-quiz:state` (or `window.__comarkQuizState` set before the script runs). In an iframe, `data-quiz-relay` on the lesson's `<html>` relays all three over postMessage to the parent; see [Saving answers](https://comark-ui.onmax.me/quiz/#saving-answers) on its page for the event shapes and storage behavior.
+The HTML renderer inlines the quiz script and styles. Hosts can listen for `comark-quiz:answer` and `comark-quiz:ready`, and restore answers or results with `comark-quiz:state` (or `window.__comarkQuizState` set before the script runs). In an iframe, `data-quiz-relay` on the lesson's `<html>` relays all three over postMessage to the parent; see [Saving answers](https://comark-ui.onmax.me/quiz#saving-answers) on its page for the event shapes and storage behavior.
 
 ## Register
 

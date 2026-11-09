@@ -18,7 +18,7 @@ import comark from "comark-linter/eslint";
 export default [comark.configs.recommended];
 ```
 
-[ESLint](/lint/eslint/) has the setup and the rules' settings.
+[ESLint](/lint/eslint) has the setup and the rules' settings.
 
 ### Run it next to oxlint
 
@@ -95,7 +95,7 @@ export default defineDoctorConfig({
 }
 ```
 
-One report covers code and documents. Each comark-lint problem has a code linked to its rule's page in [Doctor](/doctor/).
+One report covers code and documents. Each comark-lint problem has a code linked to its rule's page in [Doctor](/doctor).
 
 > [!NOTE]
 > Vite Doctor exits with 0 on warnings alone, and most comark-lint rules are warnings. `--max-warnings 0` makes them fail the script.
@@ -104,9 +104,9 @@ In a coding agent's terminal, Vite Doctor prints a compact report with the fix f
 
 ### Annotate a pull request
 
-Pass `--format sarif` to Vite Doctor for a file GitHub code scanning uses to annotate the pull request. [Vite Doctor](/lint/vite-doctor/) lists the options.
+Pass `--format sarif` to Vite Doctor for a file GitHub code scanning uses to annotate the pull request. [Vite Doctor](/lint/vite-doctor) lists the options.
 
 ## Next steps
 
-- [Getting started](/lint/getting-started/) lists every command-line flag and option.
-- [Doctor](/doctor/) has a page for every rule.
+- [Getting started](/lint/getting-started) lists every command-line flag and option.
+- [Doctor](/doctor) has a page for every rule.

@@ -14,7 +14,6 @@ import { lint, type Diagnostic } from "../packages/lint/src/index.ts";
 import { isElement } from "../shared/nodes.ts";
 import { rawText } from "../shared/text.ts";
 import { loadExamples, thirdParty } from "./examples.ts";
-import { site } from "./paths.ts";
 import { browserPlugins, components } from "./plugins.ts";
 import { packageOrder } from "./sections.ts";
 
@@ -173,7 +172,7 @@ async function demoCard({ id, pkg, page, label, source }: Demo) {
   const command = escapeHtml(`pnpm add ${pkg.npm}`);
   return (
     `<article class="demo demo-${pkg.slug.replaceAll("/", "-")}" data-package="${pkg.slug}" data-example="${id}">` +
-    `<a class="demo-link" href="${site(`/${page}`)}" draggable="false" tabindex="-1">${icon(pkg.icon)}<strong>${escapeHtml(pkg.label)}</strong>${label ? `<span>${escapeHtml(label.toLowerCase())}</span>` : ""}</a>` +
+    `<a class="demo-link" href="/${page}" draggable="false" tabindex="-1">${icon(pkg.icon)}<strong>${escapeHtml(pkg.label)}</strong>${label ? `<span>${escapeHtml(label.toLowerCase())}</span>` : ""}</a>` +
     `<button type="button" class="demo-copy" data-copy="${command}" tabindex="-1" title="Copy ${command}" aria-label="Copy ${command}">${copyIcon}${checkIcon}</button>` +
     `<div class="demo-screen" inert><div class="demo-page">${still}</div></div></article>`
   );

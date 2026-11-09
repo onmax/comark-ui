@@ -46,7 +46,7 @@ content/review.md
 
 ### Turn a rule off or up
 
-Each rule has the name its page in [Doctor](/doctor/) gives it. Set it in `rules` after the recommended config:
+Each rule has the name its page in [Doctor](/doctor) gives it. Set it in `rules` after the recommended config:
 
 ```js
 // eslint.config.js
@@ -74,7 +74,7 @@ Turn one off for a single line with a comment above it:
 
 ### Add your own components
 
-Like the [command line](/lint/getting-started/), the plugin loads every installed comark-ui package. To add your own plugins and components, point `settings.comark.config` at a `comark-lint.config.mjs`:
+Like the [command line](/lint/getting-started), the plugin loads every installed comark-ui package. To add your own plugins and components, point `settings.comark.config` at a `comark-lint.config.mjs`:
 
 ```js
 // eslint.config.js
@@ -124,7 +124,7 @@ Some read Comark syntax as plain Markdown. `markdown/no-missing-label-refs`, for
 
 ## oxlint
 
-oxlint can't run this plugin yet. Its JS plugins only lint JavaScript and TypeScript, and it [doesn't support](https://oxc.rs/docs/guide/usage/linter/js-plugins.html) custom file formats or parsers yet, so it never reads a `.md` file. Run `comark-lint` next to it, as the [Guides](/lint/guides/#run-it-next-to-oxlint) show.
+oxlint can't run this plugin yet. Its JS plugins only lint JavaScript and TypeScript, and it [doesn't support](https://oxc.rs/docs/guide/usage/linter/js-plugins.html) custom file formats or parsers yet, so it never reads a `.md` file. Run `comark-lint` next to it, as the [Guides](/lint/guides#run-it-next-to-oxlint) show.
 
 ## API
 

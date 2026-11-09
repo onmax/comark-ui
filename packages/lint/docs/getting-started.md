@@ -74,11 +74,11 @@ if (diagnostics.some((diagnostic) => diagnostic.severity === "error")) process.e
 
 ### Add it to ESLint
 
-Add `comark-linter/eslint`'s recommended config to `eslint.config.js` to lint Markdown with `eslint .` and in your editor. [ESLint](/lint/eslint/) has the setup.
+Add `comark-linter/eslint`'s recommended config to `eslint.config.js` to lint Markdown with `eslint .` and in your editor. [ESLint](/lint/eslint) has the setup.
 
 ### Add it to Vite Doctor
 
-Register `comark-linter/doctor` in `doctor.config.ts` to lint your Markdown in the same run as your code. [Vite Doctor](/lint/vite-doctor/) has the setup.
+Register `comark-linter/doctor` in `doctor.config.ts` to lint your Markdown in the same run as your code. [Vite Doctor](/lint/vite-doctor) has the setup.
 
 ## API
 
@@ -198,7 +198,7 @@ When parsing or a rule throws, the result's optional `cause` holds the original 
 
 ## Next steps
 
-- [ESLint](/lint/eslint/) runs every rule as an ESLint rule.
-- [Vite Doctor](/lint/vite-doctor/) runs every rule in the same report as your code.
-- [Guides](/lint/guides/) add comark-lint to your lint script, staged files, and CI.
-- [Doctor](/doctor/) has a page for every rule.
+- [ESLint](/lint/eslint) runs every rule as an ESLint rule.
+- [Vite Doctor](/lint/vite-doctor) runs every rule in the same report as your code.
+- [Guides](/lint/guides) add comark-lint to your lint script, staged files, and CI.
+- [Doctor](/doctor) has a page for every rule.

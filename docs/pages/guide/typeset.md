@@ -21,13 +21,13 @@ The styles need `@scope`, which every current browser has. An older one shows it
 
 ## Your site's theme
 
-The text reads the blocks' tokens, so it follows [Theming](/guide/theming/) with nothing to set:
+The text reads the blocks' tokens, so it follows [Theming](/guide/theming) with nothing to set:
 
 - On a [Nuxt UI](https://ui.nuxt.com) site, text, muted text, rules, and code backgrounds come from `--ui-text-highlighted`, `--ui-text-muted`, `--ui-border`, and `--ui-bg-elevated`, and a `.dark` class switches them.
 - On a [shadcn/ui](https://ui.shadcn.com) site, they come from `--foreground`, `--muted-foreground`, `--border`, and `--accent`.
-- With neither, they use shadcn's neutral theme and follow the system's light or dark mode. A `light` or `dark` class on `<html>`, or on any element around the document, pins one, as [Theming](/guide/theming/#pin-light-or-dark-mode) explains.
+- With neither, they use shadcn's neutral theme and follow the system's light or dark mode. A `light` or `dark` class on `<html>`, or on any element around the document, pins one, as [Theming](/guide/theming#pin-light-or-dark-mode) explains.
 
-Fonts come from Tailwind's `--font-sans` and `--font-mono`, which Nuxt UI and shadcn/ui both set. On a site with neither, the text is the system's sans-serif; set `--comark-font` to use another. Code with a light and a dark Shiki theme switches with the page through typeset's styles, including the standalone stylesheet. [Code](/code/#theme)'s styles also carry the rule, so code blocks switch with typeset off.
+Fonts come from Tailwind's `--font-sans` and `--font-mono`, which Nuxt UI and shadcn/ui both set. On a site with neither, the text is the system's sans-serif; set `--comark-font` to use another. Code with a light and a dark Shiki theme switches with the page through typeset's styles, including the standalone stylesheet. [Code](/code#theme)'s styles also carry the rule, so code blocks switch with typeset off.
 
 ## Change it
 
@@ -54,7 +54,7 @@ The `--typeset-*` variables are shadcn/typeset's, so values you set for it carry
 }
 ```
 
-The colors are the shared [tokens](/guide/theming/#tokens): `--comark-foreground` for text and headings, `--comark-muted` for captions, markers, and quotes, `--comark-border` for rules and table lines, `--comark-accent` for code backgrounds, and `--comark-radius` for code and image corners.
+The colors are the shared [tokens](/guide/theming#tokens): `--comark-foreground` for text and headings, `--comark-muted` for captions, markers, and quotes, `--comark-border` for rules and table lines, `--comark-accent` for code backgrounds, and `--comark-radius` for code and image corners.
 
 ### Grain
 
@@ -102,7 +102,7 @@ The column's width is yours to set, since only the page knows what sits beside i
 
 ### Wide blocks
 
-A [before/after comparison](/annotate/components/compare/) and a Mermaid diagram wider than the column carry `data-wide`, so the diagram's labels don't shrink to fit. They grow into the room you give them on each side of the column, and keep to the column if you give none. For a column centered in the window:
+A [before/after comparison](/annotate/components/compare) and a Mermaid diagram wider than the column carry `data-wide`, so the diagram's labels don't shrink to fit. They grow into the room you give them on each side of the column, and keep to the column if you give none. For a column centered in the window:
 
 ```css
 .article {
@@ -115,11 +115,11 @@ A [before/after comparison](/annotate/components/compare/) and a Mermaid diagram
 | Variable | Default | Description |
 | --- | --- | --- |
 | `--comark-wide-start` | `0px` | How far a wide block may grow before the column, on the left in a left-to-right page. `100%` in it is the column's width. |
-| `--comark-wide-end` | `0px` | How far it may grow after the column. Keep it clear of what sits beside the text, such as a side panel or an [outline](/outline/). |
+| `--comark-wide-end` | `0px` | How far it may grow after the column. Keep it clear of what sits beside the text, such as a side panel or an [outline](/outline). |
 | `--comark-wide-max` | `72rem` | The widest a wide block grows, however much room there is. |
 | `--comark-wide-width` | Set by the block | A block's own width, which a diagram never grows past. Your own blocks can set it too. |
 
-A wide block stays centered on the column. When one side has less room, such as beside a panel, it shifts toward the side with more, so a diagram keeps its size. The [side outline](/outline/#side-outline) tells the page when it needs a column beside wide blocks. Only top-level blocks grow, so a diagram inside tabs or a list keeps to its parent. A `##`, `###`, or `####` heading right above a comparison grows with it, so it starts where Before does and reads as the comparison's title. To make your own block wide, put `data-wide` on its outer element.
+A wide block stays centered on the column. When one side has less room, such as beside a panel, it shifts toward the side with more, so a diagram keeps its size. The [side outline](/outline#side-outline) tells the page when it needs a column beside wide blocks. Only top-level blocks grow, so a diagram inside tabs or a list keeps to its parent. A `##`, `###`, or `####` heading right above a comparison grows with it, so it starts where Before does and reads as the comparison's title. To make your own block wide, put `data-wide` on its outer element.
 
 ## Turn it off
 
@@ -165,5 +165,5 @@ The `comark` layer is declared where your CSS first names it. Name it before you
 
 ## Next steps
 
-- [Theming](/guide/theming/) sets the tokens the text and the blocks share.
-- [Renderers](/guide/renderers/) shows how each renderer adds the blocks' styles and scripts.
+- [Theming](/guide/theming) sets the tokens the text and the blocks share.
+- [Renderers](/guide/renderers) shows how each renderer adds the blocks' styles and scripts.
