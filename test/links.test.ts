@@ -3,20 +3,14 @@ import { copyFileSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vite-plus/test";
-import { site } from "../docs/paths.ts";
 
 const check = (html: string, files: Record<string, string> = {}) => {
   const dir = mkdtempSync(join(tmpdir(), "comark-docs-links-"));
   try {
     mkdirSync(join(dir, "dist/public"), { recursive: true });
-    mkdirSync(join(dir, "server/utils"), { recursive: true });
     writeFileSync(join(dir, "package.json"), '{"type":"module"}');
     for (const file of ["links.ts", "link-excludes.ts"])
       copyFileSync(new URL(`../docs/${file}`, import.meta.url), join(dir, file));
-    copyFileSync(
-      new URL("../docs/server/utils/site.ts", import.meta.url),
-      join(dir, "server/utils/site.ts"),
-    );
     writeFileSync(join(dir, "dist/public/index.html"), html);
     for (const [path, body] of Object.entries(files)) {
       const file = join(dir, "dist/public", path);
@@ -42,7 +36,7 @@ describe("built docs links", () => {
 
   it("still rejects missing pages and files, including names similar to the badge route", () => {
     const result = check(`
-      <a href="/missing/">Missing page</a>
+      <a href="/missing">Missing page</a>
       <img src="/missing.svg">
       <img src="/badge.svg/missing">
       <img src="/other/badge.svg">
@@ -55,7 +49,7 @@ describe("built docs links", () => {
     expect(result.status).toBe(1);
     expect(result.stderr).toContain("9 broken links");
     for (const path of [
-      "/missing/",
+      "/missing",
       "/missing.svg",
       "/badge.svg/missing",
       "/other/badge.svg",
@@ -132,7 +126,7 @@ describe("built docs links", () => {
   });
 
   it("resolves the docs app's flat page URLs and their fragments", () => {
-    const result = check(`<a href="/zoom#theme">Zoom</a><a href="/tabs/#usage">Tabs</a>`, {
+    const result = check(`<a href="/zoom#theme">Zoom</a><a href="/tabs#usage">Tabs</a>`, {
       "zoom.html": '<h2 id="theme">Theme</h2>',
       "tabs.html": '<h2 id="usage">Usage</h2>',
     });
@@ -171,7 +165,7 @@ describe("built docs links", () => {
 
   it("reads the playground's fragment as its state, and checks the gallery's as ids", () => {
     const result = check(
-      `<a href="/play#code=q1ZKU7KqVkrOzytJzSvRy01RslJSVvDIVKqtBQA">Playground</a><a href="/play/#code=q1YqUbJSKklMKtYFEUq1AA">Preset</a>
+      `<a href="/play#code=q1ZKU7KqVkrOzytJzSvRy01RslJSVvDIVKqtBQA">Playground</a><a href="/play#code=q1YqUbJSKklMKtYFEUq1AA">Preset</a>
       <a href="/play/gallery#tabs-tabs">Gallery</a><a href="/play/gallery#missing">Missing</a>`,
       { "play/index.html": "", "play/gallery/index.html": '<article id="tabs-tabs"></article>' },
     );
@@ -180,26 +174,17 @@ describe("built docs links", () => {
     expect(result.stderr).toContain('no heading or element with the id "missing"');
   });
 
-  it("keeps playground links on the site and drops the old trailing slash elsewhere", () => {
-    expect(site("/play/#code=q1YqUbJSSs5PSdVNzi-o1E3MS9EtL0osUKoFAA")).toBe(
-      "/play#code=q1YqUbJSSs5PSdVNzi-o1E3MS9EtL0osUKoFAA",
+  it("reports a trailing slash and a missing fragment", () => {
+    const result = check(
+      `<a href="/zoom/">Slash</a><a href="/zoom">Page</a>
+      <a href="#missing">Missing heading</a><a href="#present">Existing heading</a>
+      <h2 id="present">Present</h2>`,
+      { "zoom.html": "" },
     );
-    expect(site("/play#code=eJx-test_123")).toBe("/play#code=eJx-test_123");
-    expect(site("/zoom/#theme")).toBe("/zoom#theme");
-    expect(site("/playwright/")).toBe("/playwright");
-  });
-
-  it("still checks redirects and static page fragments", () => {
-    const result = check(`
-      <a href="/zoom/getting-started/">Redirected page</a>
-      <a href="#missing">Missing heading</a>
-      <a href="#present">Existing heading</a>
-      <h2 id="present">Present</h2>
-    `);
     expect(result.status).toBe(1);
     expect(result.stderr).toContain("2 broken links");
     expect(result.stderr).toContain(
-      "which the Worker redirects to https://comark-ui.onmax.me/zoom/",
+      "which Cloudflare redirects to /zoom. Drop the trailing slash.",
     );
     expect(result.stderr).toContain('no heading or element with the id "missing"');
   });

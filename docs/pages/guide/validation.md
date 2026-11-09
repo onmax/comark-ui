@@ -36,16 +36,16 @@ include "./ducks.md": file not found. It resolved to "guide/ducks.md" under the 
 
 | Plugin | Reports |
 | --- | --- |
-| [charts](/charts/#issues) | Invalid chart tables and marks |
-| [annotate](/annotate/#issues) | Missing or unknown props, marks outside the image, overlapping side notes, compares whose viewports differ, and diffs that are too long, mix files, or change nothing |
-| [carousel](/carousel/#issues) | Content outside every `:::slide`, empty carousels, bad `columns`, stray slides, and props bound to render-time data |
-| [embed](/embed/) | Missing, non-https, or unreadable links, cards without a `title`, and a bad `start` |
-| [tabs](/tabs/#issues) | Missing or repeated labels, content outside every tab, anything but code blocks in a code group, empty blocks, and stray `:::tabs-item` |
-| [include](/include/#issues) | Missing files, paths that leave the root, cycles, and bad `lines` or `region` |
+| [charts](/charts#issues) | Invalid chart tables and marks |
+| [annotate](/annotate#issues) | Missing or unknown props, marks outside the image, overlapping side notes, compares whose viewports differ, and diffs that are too long, mix files, or change nothing |
+| [carousel](/carousel#issues) | Content outside every `:::slide`, empty carousels, bad `columns`, stray slides, and props bound to render-time data |
+| [embed](/embed) | Missing, non-https, or unreadable links, cards without a `title`, and a bad `start` |
+| [tabs](/tabs#issues) | Missing or repeated labels, content outside every tab, anything but code blocks in a code group, empty blocks, and stray `:::tabs-item` |
+| [include](/include#issues) | Missing files, paths that leave the root, cycles, and bad `lines` or `region` |
 
 code and zoom report nothing, since every code block gets its buttons and anything can zoom. github reports only a `repo` that isn't `owner/name`. It leaves a quote that isn't a callout as a quote, and drops HTML that GitHub doesn't allow.
 
-`meta.issueRules` maps each issue's sentence to its rule. [Doctor](/doctor/) has a page per rule, with Markdown that triggers it and the fix:
+`meta.issueRules` maps each issue's sentence to its rule. [Doctor](/doctor) has a page per rule, with Markdown that triggers it and the fix:
 
 ```ts
 meta.issueRules['screenshot "after.png", annotation 2: the box runs past the image edge. Keep x + w and y + h within 100.'];
@@ -54,12 +54,12 @@ meta.issueRules['screenshot "after.png", annotation 2: the box runs past the ima
 
 ## Line numbers
 
-Comark gives nodes no source positions, so `meta.issues` can't say where a problem is. [comark-linter](/lint/) finds each issue's line. It also catches what Comark lets pass: unclosed blocks, misspelled components, broken links and anchors, links to localhost, unsafe URLs, repeated ids, images without alt text, and links without text.
+Comark gives nodes no source positions, so `meta.issues` can't say where a problem is. [comark-linter](/lint) finds each issue's line. It also catches what Comark lets pass: unclosed blocks, misspelled components, broken links and anchors, links to localhost, unsafe URLs, repeated ids, images without alt text, and links without text.
 
-It reports each issue under its rule. Run it in CI and in [Vite Doctor](/lint/vite-doctor/), which shows the rule's code:
+It reports each issue under its rule. Run it in CI and in [Vite Doctor](/lint/vite-doctor), which shows the rule's code:
 
 ```sh
 pnpm comark-lint "docs/**/*.md"
 ```
 
-comark-annotate's own CLI checks only annotate, carousel, and zoom, without line numbers. It also renders a file to a standalone page you can screenshot. Use [`comark-annotate render`](/guide/agents/#check-the-result) to look at the marks, and comark-lint for the rest.
+comark-annotate's own CLI checks only annotate, carousel, and zoom, without line numbers. It also renders a file to a standalone page you can screenshot. Use [`comark-annotate render`](/guide/agents#check-the-result) to look at the marks, and comark-lint for the rest.

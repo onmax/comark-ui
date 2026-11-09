@@ -145,7 +145,7 @@ Each row has a [Lucide](https://lucide.dev) icon before its label, picked by `da
 .cfm [data-key="owner"] { --cfm-icon: url("https://api.iconify.design/lucide/crown.svg"); }
 ```
 
-[A pull request description](/recipes/pull-request/) combines the box with numbers and a test run.
+[A pull request description](/recipes/pull-request) combines the box with numbers and a test run.
 
 ## API
 
@@ -166,7 +166,7 @@ Pass options under `properties` in `comarkUi()`, or to `properties()` alone.
 
 ### Issues
 
-The plugin adds these problems to `meta.issues`, as [Validation](/guide/validation/) describes:
+The plugin adds these problems to `meta.issues`, as [Validation](/guide/validation) describes:
 
 - A value that's an object or a list of lists. It isn't shown.
 - A `::properties` with nothing to show.
@@ -174,7 +174,7 @@ The plugin adds these problems to `meta.issues`, as [Validation](/guide/validati
 - A prop on `::properties`. It's ignored.
 - An invalid `locale` option. It's ignored, so dates use the reader's locale.
 
-Each names the key or block and the fix, and has its own rule in [Doctor](/doctor/).
+Each names the key or block and the fix, and has its own rule in [Doctor](/doctor).
 
 ### Package
 
@@ -193,11 +193,11 @@ import properties, { components } from "comark-properties/html";
 const render = createHtmlRenderer({ plugins: [properties()], components });
 ```
 
-For Vue, React, or Svelte, import from `comark-properties/vue`, `comark-properties/react`, or `comark-properties/svelte`. The components add the styles on mount. Import `comark-properties/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-properties/vue`, `comark-properties/react`, or `comark-properties/svelte`. The components add the styles on mount. Import `comark-properties/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers) covers using it with other plugins.
 
 ## Theme
 
-The box reads the [shared tokens](/guide/theming/). The rules sit in a `comark` CSS layer, so any plain rule of yours wins.
+The box reads the [shared tokens](/guide/theming). The rules sit in a `comark` CSS layer, so any plain rule of yours wins.
 
 ### Shared tokens
 

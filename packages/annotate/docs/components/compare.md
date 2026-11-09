@@ -34,7 +34,7 @@ Fixed.
 
 ## Usage
 
-Put exactly two [`screenshot`](/annotate/components/screenshot/) blocks inside, the one before the change first.
+Put exactly two [`screenshot`](/annotate/components/screenshot) blocks inside, the one before the change first.
 
 ```md
 ::compare
@@ -137,7 +137,7 @@ Side by side, a note with `side="left"` or `side="right"` joins the numbered lis
 
 ## Accessibility
 
-Side by side, the pair is a carousel region named by its `title`. Each screenshot is a slide, such as "1 of 2", and a tab stop that opens the [zoomed view](/zoom/).
+Side by side, the pair is a carousel region named by its `title`. Each screenshot is a slide, such as "1 of 2", and a tab stop that opens the [zoomed view](/zoom).
 
 In a slider, the pair is one tab stop that zooms. Its divider is a slider named "Divider between Before and After", with a value such as "Before 50%, After 50%". It takes the arrow keys on the page and in the zoomed view.
 
@@ -161,7 +161,7 @@ In a slider, the pair is one tab stop that zooms. Its divider is a slider named 
 | `title` | "Comparison" | What the comparison shows. Screen readers read it side by side. In a slider, it titles the zoomed view, and defaults to the screenshots' titles joined by " / ". |
 | `mode` | `columns` | `columns` puts the screenshots side by side. `slider` lays one over the other with a divider to drag. |
 | `ink` | — | The color of every mark and note in both screenshots that doesn't set its own. A screenshot's own `ink` wins. |
-| `id` | — | An id for the comparison, such as `#fig-toolbar`, that links and [comark-xref](/xref/) references point at. |
+| `id` | — | An id for the comparison, such as `#fig-toolbar`, that links and [comark-xref](/xref) references point at. |
 
 ### Issues
 
@@ -175,4 +175,4 @@ The plugin adds these problems to `meta.issues`:
 - `ink` isn't a named color or a 3- or 6-digit hex color.
 - An unknown prop. `label`, `color`, and `viewport` get a hint.
 
-Each has its own rule in [Doctor](/doctor/). [Annotate](/annotate/#issues) covers how issues name their block.
+Each has its own rule in [Doctor](/doctor). [Annotate](/annotate#issues) covers how issues name their block.

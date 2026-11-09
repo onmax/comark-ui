@@ -111,7 +111,7 @@ The plugin takes no options. In `comarkUi()`, `colors: false` turns it off.
 
 ### Issues
 
-The plugin adds these to `meta.issues`, as [Validation](/guide/validation/) describes. Each names its palette and the fix:
+The plugin adds these to `meta.issues`, as [Validation](/guide/validation) describes. Each names its palette and the fix:
 
 - A palette with no list.
 - Content beside the list, which it drops.
@@ -119,11 +119,11 @@ The plugin adds these to `meta.issues`, as [Validation](/guide/validation/) desc
 - A color it can't draw. It leaves the line out.
 - A prop, which a palette doesn't have.
 
-Each has its own rule in [Doctor](/doctor/).
+Each has its own rule in [Doctor](/doctor).
 
 ### Package
 
-[comark-ui](/getting-started/) installs and registers `comark-colors`. To use it alone, install it and pass the renderer's `components`:
+[comark-ui](/getting-started) installs and registers `comark-colors`. To use it alone, install it and pass the renderer's `components`:
 
 ```sh
 pnpm add comark @comark/html comark-colors
@@ -136,11 +136,11 @@ import colors, { components } from "comark-colors/html";
 const render = createHtmlRenderer({ plugins: [colors()], components });
 ```
 
-For Vue, React, or Svelte, import from `comark-colors/vue`, `comark-colors/react`, or `comark-colors/svelte`. The components add the styles on mount. On a server-rendered page, also import `comark-colors/style.css` so it doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-colors/vue`, `comark-colors/react`, or `comark-colors/svelte`. The components add the styles on mount. On a server-rendered page, also import `comark-colors/style.css` so it doesn't shift. [Renderers](/guide/renderers) covers using it with other plugins.
 
 ## Theme
 
-Swatches and tiles follow the [shared tokens](/guide/theming/). A tile's value is in the system's monospace font. The rules sit in a `comark` CSS layer, so any plain rule of yours wins.
+Swatches and tiles follow the [shared tokens](/guide/theming). A tile's value is in the system's monospace font. The rules sit in a `comark` CSS layer, so any plain rule of yours wins.
 
 ### Shared tokens
 

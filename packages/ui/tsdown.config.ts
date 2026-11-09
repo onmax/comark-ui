@@ -1,6 +1,8 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
+import { createRequire } from "node:module";
 import { parseMarkdown } from "comark";
 import { definePackage } from "../../tsdown.shared.ts";
+import { mermaidCss } from "./src/client.ts";
 import type { Skill } from "./src/skills.ts";
 import { typesetStylesheet } from "./src/typeset-css.ts";
 
@@ -45,8 +47,28 @@ const manifest: unknown = JSON.parse(
 );
 if (!(manifest instanceof Object && "version" in manifest))
   throw new Error("packages/ui/package.json has no version.");
-// SAFETY: the workspace test checks that every manifest's version is the shared version string.
-const { version } = manifest as { version: string };
+// SAFETY: the workspace test checks that every manifest's version is the shared version string, and this one lists
+// its packages in `dependencies`.
+const { version, dependencies } = manifest as {
+  version: string;
+  dependencies: Record<string, string>;
+};
+
+// `comark-ui/style.css` is every package's own `style.css` and the Mermaid wrapper's styles, the rules the components
+// add on mount, in one file for a page to link or import. The build script refreshes dependencies before loading it.
+const require = createRequire(import.meta.url);
+const stylesheet = [
+  ...Object.entries(dependencies)
+    .filter(([, range]) => range.startsWith("workspace:"))
+    .flatMap(([name]) => {
+      // SAFETY: every workspace package's manifest has an `exports` map; publint fails the build of one without.
+      const { exports } = require(`${name}/package.json`) as { exports: Record<string, unknown> };
+      return "./style.css" in exports
+        ? [readFileSync(require.resolve(`${name}/style.css`), "utf8")]
+        : [];
+    }),
+  mermaidCss,
+].join("\n");
 
 export default definePackage({
   entry: [
@@ -76,6 +98,12 @@ export default definePackage({
       name: "typeset-css",
       generateBundle() {
         this.emitFile({ type: "asset", fileName: "typeset.css", source: typesetStylesheet() });
+      },
+    },
+    {
+      name: "style-css",
+      generateBundle() {
+        this.emitFile({ type: "asset", fileName: "style.css", source: stylesheet });
       },
     },
   ],

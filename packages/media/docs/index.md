@@ -130,7 +130,7 @@ media({ controls: "native" });
 
 ### Plugin order
 
-Its place in `plugins` doesn't matter. [comark-zoom](/zoom/) never sees a video as an image to zoom, and [comark-chips](/chips/) never turns a GitHub attachment link into a chip.
+Its place in `plugins` doesn't matter. [comark-zoom](/zoom) never sees a video as an image to zoom, and [comark-chips](/chips) never turns a GitHub attachment link into a chip.
 
 ### Private attachments
 
@@ -187,12 +187,12 @@ Pass options under `media` in `comarkUi()`, or to `media()` when you use the plu
 
 | Option | Default | Description |
 | --- | --- | --- |
-| `controls` | `"styled"` | `"styled"` draws the controls with the [shared tokens](/guide/theming/), which a small script runs. `"native"` always uses the browser's controls and leaves the script out. |
+| `controls` | `"styled"` | `"styled"` draws the controls with the [shared tokens](/guide/theming), which a small script runs. `"native"` always uses the browser's controls and leaves the script out. |
 | `size` | Data URIs only | Reads video dimensions while parsing. `true` also fetches remote URLs with range requests. Enable it only for trusted documents. `false` disables measurement. |
 
 ### Issues
 
-The plugin adds these problems to `meta.issues`, as [Validation](/guide/validation/) describes:
+The plugin adds these problems to `meta.issues`, as [Validation](/guide/validation) describes:
 
 - A video or audio file with nothing in its brackets.
 - `autoplay` without `muted`.
@@ -200,7 +200,7 @@ The plugin adds these problems to `meta.issues`, as [Validation](/guide/validati
 - A `width` or `height` without the other, or one that isn't a whole number of pixels.
 - A prop it doesn't know.
 
-Each has its own rule in [Doctor](/doctor/):
+Each has its own rule in [Doctor](/doctor):
 
 ```txt
 `![](demo.mp4)` has no label. Describe the video in the brackets, like `![Signing in with a passkey](demo.mp4)`.
@@ -224,7 +224,7 @@ import media, { components } from "comark-media/html";
 const render = createHtmlRenderer({ plugins: [media()], components });
 ```
 
-For Vue, React, or Svelte, import from `comark-media/vue`, `comark-media/react`, or `comark-media/svelte`. The components add the styles and start the players when they mount. Import `comark-media/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-media/vue`, `comark-media/react`, or `comark-media/svelte`. The components add the styles and start the players when they mount. Import `comark-media/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers) covers using it with other plugins.
 
 ## Theme
 
@@ -239,7 +239,7 @@ The rules sit in a `comark` CSS layer, so any plain rule of yours wins.
 
 ### Shared tokens
 
-Players read these [shared tokens](/guide/theming/):
+Players read these [shared tokens](/guide/theming):
 
 | Token | Used for |
 | --- | --- |

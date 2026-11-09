@@ -10,7 +10,7 @@ A link card is covered by one link, so a `javascript:`, `vbscript:`, or `data:` 
 
 ::correct
 ```md
-::card{title="Pond report" to="/ponds/"}
+::card{title="Pond report" to="/ponds"}
 14 ducks, 3 pigeons.
 ::
 ```

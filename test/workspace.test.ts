@@ -53,7 +53,10 @@ describe.each(folders)("packages/%s", (folder) => {
   });
 
   it("builds with the shared preset, and before it packs", () => {
-    expect(pkg.scripts.build).toBe("tsdown");
+    // The preset embeds dependency styles, so a direct build must refresh them before tsdown loads its config.
+    expect(pkg.scripts.build).toBe(
+      folder === "ui" ? 'pnpm --filter "comark-ui^..." build && tsdown' : "tsdown",
+    );
     expect(pkg.scripts.prepack).toMatch(new RegExp(`pnpm --filter ${pkg.name}(\\.\\.\\.)? build$`));
     expect(read(`packages/${folder}/tsdown.config.ts`)).toContain('from "../../tsdown.shared.ts"');
   });

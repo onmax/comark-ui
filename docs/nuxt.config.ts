@@ -35,7 +35,7 @@ export default defineNuxtConfig({
     github: { repo: "onmax/comark-ui", dir: "docs/pages" },
     // Comark plugins are functions, so they reach the server through a file.
     parser: "./markdown.ts",
-    // generate runs links.ts, which also checks Worker redirects. ViteHub's duplicate pass glob-matches every raw URL
+    // generate runs links.ts instead. ViteHub's duplicate pass glob-matches every raw URL
     // exclusion against every link, taking longer than CI's build timeout on this site.
     linkChecker: false,
   },
@@ -99,6 +99,6 @@ export default defineNuxtConfig({
     prerender: { ignore: excludedLinks, routes: ["/play", "/play/gallery", "/badges"] },
   },
   // The playground's preview is a sandboxed frame with no origin, so a font it loads needs CORS. On the Worker,
-  // docs/server/middleware/site.ts sets it.
+  // docs/server/middleware/assets.ts sets it.
   routeRules: { "/play/fonts/**": { headers: { "access-control-allow-origin": "*" } } },
 });

@@ -23,7 +23,7 @@ tagline: Get a review document in front of reviewers. Publish it to Drop, where 
 :::
 
 :::tabs-item{label="Your own page"}
-Render the document with the plugins it uses, as [Renderers](/guide/renderers/#several-plugins) shows, and deploy the page with your preview. For a document of screenshots, first [install the CLI directly](/annotate/#cli) at the same version as the project's Comark UI packages. `comark-annotate render` writes the page for you. Keep the images next to it:
+Render the document with the plugins it uses, as [Renderers](/guide/renderers#several-plugins) shows, and deploy the page with your preview. For a document of screenshots, first [install the CLI directly](/annotate#cli) at the same version as the project's Comark UI packages. `comark-annotate render` writes the page for you. Keep the images next to it:
 
 ```sh
 vp exec comark-annotate render review.md -o review.html
@@ -39,7 +39,7 @@ Use Drop for a review with several rounds. Comments sit on their screenshot, and
 
 Use your own page if your team wants no service in the loop or already reviews on preview deployments.
 
-Either way, write the document as [A review document](/recipes/review/) shows, and check it with [comark-lint](/lint/) first.
+Either way, write the document as [A review document](/recipes/review) shows, and check it with [comark-lint](/lint) first.
 
 ## About Drop
 

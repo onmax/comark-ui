@@ -141,7 +141,7 @@ const { plugins, components } = comarkUi({ comments: { mark: "pen" } });
 
 ### Comments or critic
 
-[Critic](/critic/) reads CriticMarkup, inline marks with no notes that a host shows, accepts, or rejects with its `mode`. Comments add an author, a reason in the margin, and replies. Use critic to publish an edited draft, and comments for a review someone answers.
+[Critic](/critic) reads CriticMarkup, inline marks with no notes that a host shows, accepts, or rejects with its `mode`. Comments add an author, a reason in the margin, and replies. Use critic to publish an edited draft, and comments for a review someone answers.
 
 ## Accessibility
 
@@ -192,7 +192,7 @@ The bubble is a checkbox named by its thread, such as "2 comments on “15 minut
 
 ### Issues
 
-The plugin adds a problem with any suggestion, comment, or reply to `meta.issues`, as [Validation](/guide/validation/) describes:
+The plugin adds a problem with any suggestion, comment, or reply to `meta.issues`, as [Validation](/guide/validation) describes:
 
 ```txt
 reply to "tll" matches no comment or suggestion's `#id`, so it renders nothing. Did you mean `reply="ttl"`?
@@ -211,7 +211,7 @@ It reports:
 - A reply with text in its brackets. The text stays where it is.
 - A comment or suggestion inside another one, or in a heading or a table cell, where it gets no card.
 
-Each one has its own rule in [Doctor](/doctor/).
+Each one has its own rule in [Doctor](/doctor).
 
 ### Package
 
@@ -228,11 +228,11 @@ import comments, { components } from "comark-comments/html";
 const render = createHtmlRenderer({ plugins: [comments({ mark: "track" })], components });
 ```
 
-Comments render only to HTML. [Renderers](/guide/renderers/) covers the rest.
+Comments render only to HTML. [Renderers](/guide/renderers) covers the rest.
 
 ## Theme
 
-The cards and bubbles follow the shared tokens in [Theming](/guide/theming/). The rules sit in a `comark` CSS layer, so any plain rule of yours wins, except the margin each block leaves on a wide page. That one is `!important` so a page's paragraph margins can't close it.
+The cards and bubbles follow the shared tokens in [Theming](/guide/theming). The rules sit in a `comark` CSS layer, so any plain rule of yours wins, except the margin each block leaves on a wide page. That one is `!important` so a page's paragraph margins can't close it.
 
 ### Styles
 

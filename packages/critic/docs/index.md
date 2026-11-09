@@ -178,7 +178,7 @@ Pass options under `critic` in `comarkUi()`, or to `critic()` alone.
 
 ### Issues
 
-The plugin adds a sentence to `meta.issues` for each of these. Each one has its own rule in [Doctor](/doctor/).
+The plugin adds a sentence to `meta.issues` for each of these. Each one has its own rule in [Doctor](/doctor).
 
 - A mark with no closing half in its paragraph. The mark stays as written.
 - A substitution without `~>`.
@@ -227,7 +227,7 @@ No component adds them, so put them in the page yourself. comark-ui re-exports `
 
 ### Shared tokens
 
-The marks read these [shared tokens](/guide/theming/):
+The marks read these [shared tokens](/guide/theming):
 
 | Token | Used for |
 | --- | --- |
@@ -257,4 +257,4 @@ The rules sit in a `comark` CSS layer, so any plain rule of yours wins. To color
 }
 ```
 
-shadcn/ui before Tailwind 4 stores `--destructive` as bare HSL numbers, so map it as [Theming](/guide/theming/) does the shared tokens: `--comark-danger: hsl(var(--destructive))`.
+shadcn/ui before Tailwind 4 stores `--destructive` as bare HSL numbers, so map it as [Theming](/guide/theming) does the shared tokens: `--comark-danger: hsl(var(--destructive))`.

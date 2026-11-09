@@ -147,9 +147,9 @@ Pass the plugin and its `components` to the renderer.
 
 ### Zoom a slide
 
-The zoomed view shows the other slides in a strip at the bottom. Paging there moves the carousel too, so closing it lands on the slide you were viewing. Zoom comes from [comark-zoom](/zoom/), which the package installs.
+The zoomed view shows the other slides in a strip at the bottom. Paging there moves the carousel too, so closing it lands on the slide you were viewing. Zoom comes from [comark-zoom](/zoom), which the package installs.
 
-For annotated screenshots in a carousel, see the [recipe](/recipes/carousel/).
+For annotated screenshots in a carousel, see the [recipe](/recipes/carousel).
 
 ### Images in slides
 
@@ -216,7 +216,7 @@ comark-carousel takes no options. `carousel: false` in `comarkUi()` turns it off
 
 ### Issues
 
-The plugin adds each carousel's problems to `meta.issues`, as [Validation](/guide/validation/) describes:
+The plugin adds each carousel's problems to `meta.issues`, as [Validation](/guide/validation) describes:
 
 ```txt
 carousel 2 ("Setup") drops the paragraph "Pass the plugin" because it sits outside every :::slide; move it into a :::slide.
@@ -231,7 +231,7 @@ It reports:
 - A `:zoom` or `:title` that reads render-time data or a missing key.
 - A prop it doesn't know.
 
-Each one has its own rule in [Doctor](/doctor/).
+Each one has its own rule in [Doctor](/doctor).
 
 ### Package
 
@@ -248,11 +248,11 @@ import carousel, { components } from "comark-carousel/html";
 const render = createHtmlRenderer({ plugins: [carousel()], components });
 ```
 
-For Vue, React, or Svelte, import from `comark-carousel/vue`, `comark-carousel/react`, or `comark-carousel/svelte`. When you render on a server, import `comark-carousel/style.css` and `comark-zoom/style.css` with your own styles. [Renderers](/guide/renderers/) covers the rest.
+For Vue, React, or Svelte, import from `comark-carousel/vue`, `comark-carousel/react`, or `comark-carousel/svelte`. When you render on a server, import `comark-carousel/style.css` and `comark-zoom/style.css` with your own styles. [Renderers](/guide/renderers) covers the rest.
 
 ## Theme
 
-The arrows, counter, and slide panels use the shared tokens in [Theming](/guide/theming/), plus four variables for spacing and sizes. The rules sit in a `comark` CSS layer, so any plain rule of yours wins.
+The arrows, counter, and slide panels use the shared tokens in [Theming](/guide/theming), plus four variables for spacing and sizes. The rules sit in a `comark` CSS layer, so any plain rule of yours wins.
 
 ### Shared tokens
 
@@ -266,7 +266,7 @@ The arrows, counter, and slide panels use the shared tokens in [Theming](/guide/
 | `--comark-ring` | The focus ring on the arrows |
 | `--comark-radius` | The slide panels' corners |
 
-The zoomed view comes from comark-zoom and has a [theme](/zoom/#theme) of its own.
+The zoomed view comes from comark-zoom and has a [theme](/zoom#theme) of its own.
 
 ### Variables
 

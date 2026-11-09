@@ -9,11 +9,11 @@ import type {
 } from "@vite-hub/ui/playground-render";
 import { parseMarkdown } from "comark";
 import { defaultConfig, readConfig } from "./config.ts";
-import { readTheme, schemeCss, schemeOf, themeCss } from "./play-theme.ts";
+import { readTheme } from "./play-theme.ts";
 import { configFile, contentFile, themeFile } from "./play-link.ts";
 import { browserPlugins, components } from "./plugins.ts";
-import { previewDocument } from "./preview.ts";
 import { errorText } from "../shared/text.ts";
+export { playDocument } from "./preview.ts";
 
 /** A preset as docs/tools.ts writes it to /play/presets.json: its files, its package, and its still. */
 export interface Preset extends PlaygroundPreset {
@@ -34,16 +34,6 @@ export async function render(files: PlaygroundFiles): Promise<PlaygroundResult> 
   } catch (error) {
     return { html: "", issues: [...issues, errorText(error)].map((message) => ({ message })) };
   }
-}
-
-/** The preview's page: comark-ui's styles, then the shadcn tokens of its scheme and the Theme pane's CSS. */
-export function playDocument(html: string, files: PlaygroundFiles) {
-  const { theme } = readTheme(files[themeFile]);
-  const scheme = schemeOf(theme);
-  return previewDocument(html, {
-    scheme,
-    css: [schemeCss(scheme), themeCss(theme)].filter(Boolean).join("\n\n"),
-  });
 }
 
 // Each still in the presets' column is a page scaled to show all of itself, unless that would fill less than most of

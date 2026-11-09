@@ -3,7 +3,7 @@
 [![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-quiz&icon=npm)](https://npmx.dev/package/comark-quiz)
 [![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-quiz&period=month&icon=npm)](https://npmx.dev/package/comark-quiz)
 [![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-quiz)
-[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/quiz/)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/quiz)
 
 Questions, polls, and recall cards for lessons written in Markdown. A reader checks an answer and sees why each option is right or wrong, votes in a poll, or tests themselves on a card whose answer stays blurred until they ask. A [Comark](https://comark.dev) plugin for HTML. It reads without a script.
 
@@ -57,7 +57,7 @@ Only the HTML renderer exists, since the blocks need its script.
 
 ## Customize
 
-The styles follow shadcn/ui's Card and RadioGroup: they read its CSS variables, such as `--background`, `--border`, and `--primary`, when the page has them, and use its neutral theme otherwise. Set the shared `--comark-*` tokens to theme the blocks with the other comark plugins, and `--cqz-primary`, `--cqz-correct`, `--cqz-incorrect`, `--cqz-correct-foreground`, `--cqz-incorrect-foreground`, `--cqz-bar`, `--cqz-bar-strong`, and `--cqz-surface` for their own colors. The correct and incorrect foreground tokens control feedback text and icons independently of option borders and tints. Every part has a `data-slot` and every state a `data-state`. The rules sit in a `comark` CSS layer, so any plain rule of your own wins. The one exception is the first and last blocks inside the prompt, an option, a reason, the hint, the explanation, and the answer, which drop their margins with `!important` so a page's paragraph margins don't push them off the card's edges. See the [Theming page](https://comark-ui.onmax.me/quiz/#theme).
+The styles follow shadcn/ui's Card and RadioGroup: they read its CSS variables, such as `--background`, `--border`, and `--primary`, when the page has them, and use its neutral theme otherwise. Set the shared `--comark-*` tokens to theme the blocks with the other comark plugins, and `--cqz-primary`, `--cqz-correct`, `--cqz-incorrect`, `--cqz-correct-foreground`, `--cqz-incorrect-foreground`, `--cqz-bar`, `--cqz-bar-strong`, and `--cqz-surface` for their own colors. The correct and incorrect foreground tokens control feedback text and icons independently of option borders and tints. Every part has a `data-slot` and every state a `data-state`. The rules sit in a `comark` CSS layer, so any plain rule of your own wins. The one exception is the first and last blocks inside the prompt, an option, a reason, the hint, the explanation, and the answer, which drop their margins with `!important` so a page's paragraph margins don't push them off the card's edges. See the [Theming page](https://comark-ui.onmax.me/quiz#theme).
 
 The icons are [Lucide](https://lucide.dev)'s, under its license (see `LICENSE`).
 

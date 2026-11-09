@@ -3,7 +3,7 @@
 [![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-file-tree&icon=npm)](https://npmx.dev/package/comark-file-tree)
 [![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-file-tree&period=month&icon=npm)](https://npmx.dev/package/comark-file-tree)
 [![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-file-tree)
-[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/file-tree/)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/file-tree)
 
 A project's folders and files from an indented list in a fenced block, or pasted `tree` output, with added, removed, and changed entries marked and a note on any line. Folders are open `<details>`, so there's no script. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
 

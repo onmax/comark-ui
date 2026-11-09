@@ -318,7 +318,7 @@ The plugin's one option goes under `details` in `comarkUi()`, or to `details()` 
 
 | Option | Default | Description |
 | --- | --- | --- |
-| `iconResolver` | Icons from the Iconify API | Resolves each block's `icon`, from `createIcons()` in [comark-icon](/icon/). In `comarkUi()` it defaults to the resolver built from the `icon` options. |
+| `iconResolver` | Icons from the Iconify API | Resolves each block's `icon`, from `createIcons()` in [comark-icon](/icon). In `comarkUi()` it defaults to the resolver built from the `icon` options. |
 
 Pass the page's resolver so every plugin shares it:
 
@@ -344,7 +344,7 @@ Every block becomes a `disclosure` node, drawn as `<details>`. Its first child i
 
 ### Issues
 
-The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation/) describes:
+The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation) describes:
 
 - A `::details` with no summary shows "Details".
 - Content in an `::accordion` outside every `:::accordion-item`, which doesn't render, and an accordion with no items.
@@ -353,7 +353,7 @@ The plugin adds every problem to `meta.issues`, as [Validation](/guide/validatio
 - An empty `::collapsible`, and an icon comark-icon can't draw.
 - A prop the block doesn't read, such as a misspelled `summary`.
 
-Each issue names its block, says how to fix it, and has its own rule in [Doctor](/doctor/).
+Each issue names its block, says how to fix it, and has its own rule in [Doctor](/doctor).
 
 ### Package
 
@@ -372,11 +372,11 @@ import details, { components } from "comark-details/html";
 const render = createHtmlRenderer({ plugins: [details()], components });
 ```
 
-For Vue, React, or Svelte, import from `comark-details/vue`, `comark-details/react`, or `comark-details/svelte`. The components add the styles when they mount. On a server, import `comark-details/style.css` with your own styles so the page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-details/vue`, `comark-details/react`, or `comark-details/svelte`. The components add the styles when they mount. On a server, import `comark-details/style.css` with your own styles so the page doesn't shift. [Renderers](/guide/renderers) covers using it with other plugins.
 
 ## Theme
 
-Details and accordions are bordered boxes with a chevron that turns as they open. A collapsible is a quiet line of text. All three use the shared tokens in [Theming](/guide/theming/).
+Details and accordions are bordered boxes with a chevron that turns as they open. A collapsible is a quiet line of text. All three use the shared tokens in [Theming](/guide/theming).
 
 ### Shared tokens
 

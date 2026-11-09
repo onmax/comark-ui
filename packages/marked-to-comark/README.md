@@ -2,11 +2,11 @@
 
 [![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=marked-to-comark&icon=npm)](https://npmx.dev/package/marked-to-comark)
 [![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/marked-to-comark)
-[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/marked-to-comark/)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/marked-to-comark)
 
 Moves a project from [marked](https://github.com/markedjs/marked) to [Comark](https://comark.dev). It finds every marked setup in the code, rewrites the calls it can, and escapes the Markdown Comark would read differently. What it can't do, it reports, with the fix and a docs link.
 
-[Docs](https://comark-ui.onmax.me/marked-to-comark/) · [Getting started](https://comark-ui.onmax.me/marked-to-comark/getting-started/) · [Diagnostics](https://comark-ui.onmax.me/marked-to-comark/diagnostics/) · [How it was tested](https://comark-ui.onmax.me/marked-to-comark/testing/)
+[Docs](https://comark-ui.onmax.me/marked-to-comark) · [Getting started](https://comark-ui.onmax.me/marked-to-comark/getting-started) · [Diagnostics](https://comark-ui.onmax.me/marked-to-comark/diagnostics) · [How it was tested](https://comark-ui.onmax.me/marked-to-comark/testing)
 
 ## Try it
 
@@ -51,11 +51,11 @@ Without `--write`, `content` and `rewrite` print the change and touch nothing. m
 
 Rewritten code imports `comarkOptions` from `marked-to-comark/setup`, the Comark setup that reads Markdown like marked, without the rest of the package. It takes marked's own settings: `gfm`, `breaks`, `headerIds` and `headerPrefix` for marked before v7, `langPrefix`, and the settings that copy how older versions read tabs, tags, and tables. For extensions, [MKC0102](https://comark-ui.onmax.me/marked-to-comark/diagnostics#mkc0102) names the Comark plugin or [comark-ui](https://comark-ui.onmax.me) package that does the same job.
 
-The same findings run as a [Vite Doctor](https://comark-ui.onmax.me/marked-to-comark/vite-doctor/) extension, next to comark-linter.
+The same findings run as a [Vite Doctor](https://comark-ui.onmax.me/marked-to-comark/vite-doctor) extension, next to comark-linter.
 
 ## How close it gets
 
-On 13,569 Markdown files from the 100 most-starred repositories that declare marked, Comark's parse tree matches marked's HTML for 96.6% after migration, once whitespace is normalized, with each project's marked version and setup on marked's side. Through `@comark/html` it's 88.3%, mostly because of that renderer's own formatting bugs. [How it was tested](https://comark-ui.onmax.me/marked-to-comark/testing/) has the method and what still differs.
+On 13,569 Markdown files from the 100 most-starred repositories that declare marked, Comark's parse tree matches marked's HTML for 96.6% after migration, once whitespace is normalized, with each project's marked version and setup on marked's side. Through `@comark/html` it's 88.3%, mostly because of that renderer's own formatting bugs. [How it was tested](https://comark-ui.onmax.me/marked-to-comark/testing) has the method and what still differs.
 
 It leaves some work to you, and reports each piece:
 
