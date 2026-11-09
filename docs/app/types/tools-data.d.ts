@@ -17,7 +17,7 @@ declare module "~~/.generated/tools-data/gallery.json" {
     label: string;
     icon: string;
     npm: string;
-    examples: { id: string; label: string; page: string; playable: boolean }[];
+    examples: { id: string; label: string; page: string; playable: boolean; play?: string }[];
   }[];
   export default groups;
 }

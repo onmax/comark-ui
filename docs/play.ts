@@ -7,7 +7,14 @@ import { defaultConfig, readConfig } from "./config.ts";
 import { defaultTheme, readTheme, themeCss, themePresets, type Theme } from "./play-theme.ts";
 import { browserPlugins, components } from "./plugins.ts";
 import { previewDocument } from "./preview.ts";
-import { pack, sharingUnsupported, unpack } from "./play-link.ts";
+import {
+  decodePlaygroundLink,
+  encodePlaygroundLink,
+  playgroundUrl,
+  readPlaygroundHash,
+  type PlaygroundFiles,
+} from "@vite-hub/ui/playground";
+import { configFile, contentFile, presetCode, templateOf, themeFile } from "./play-link.ts";
 import { errorText } from "../shared/text.ts";
 
 export interface Preset {
@@ -423,14 +430,15 @@ export async function startPlayground(
     showIssues(problems);
   }
 
+  const templates = presets.map(templateOf);
   async function link() {
-    const config =
-      configEditor.value === defaultConfig ? "" : `&config=${await pack(configEditor.value)}`;
-    const themed =
-      themeCss(theme) || theme.preset !== "shadcn" || theme.scheme
-        ? `&theme=${await pack(JSON.stringify(theme))}`
-        : "";
-    return `#md=${await pack(editor.value)}${config}${themed}`;
+    const files: PlaygroundFiles = { [contentFile]: editor.value };
+    if (configEditor.value !== defaultConfig) files[configFile] = configEditor.value;
+    if (themeCss(theme) || theme.preset !== "shadcn" || theme.scheme)
+      files[themeFile] = JSON.stringify(theme);
+    const template = base && templateOf(base);
+    const code = await encodePlaygroundLink({ template: template?.id, files }, template?.files);
+    return playgroundUrl("", code);
   }
 
   let loadRun = 0;
@@ -438,49 +446,44 @@ export async function startPlayground(
     if (signal.aborted) return;
     const run = ++loadRun;
     const navigationIssues: string[] = [];
-    const hash = new URLSearchParams(location.hash.slice(1));
-    const code = hash.get("md");
-    const config = hash.get("config");
-    const sharedTheme = hash.get("theme");
-    // A preset keeps whatever config is in the tab, so one config can be tried across them.
-    if (config !== null) {
-      const decodedConfig = await unpack(config).catch(() => {
-        navigationIssues.push("The link's config is cut off or changed; using the default config.");
-        return defaultConfig;
-      });
-      if (run !== loadRun) return;
-      configEditor.value = decodedConfig;
-      repaint(configEditor);
-    } else if (code !== null) configEditor.value = defaultConfig;
-    // The theme rides along like the config.
-    let nextTheme: Theme | undefined;
-    if (sharedTheme !== null)
-      nextTheme = await unpack(sharedTheme)
-        .then((text) => readTheme(JSON.parse(text)))
-        .catch(() => {
-          navigationIssues.push("The link's theme is cut off or changed; using the default theme.");
-          return defaultTheme();
-        });
-    else if (code !== null) nextTheme = defaultTheme();
+    const code = readPlaygroundHash(location.hash);
+    const state = code === undefined ? undefined : await decodePlaygroundLink(code, templates);
     if (run !== loadRun) return;
-    if (nextTheme) setTheme(nextTheme);
-    const preset =
-      presets.find((preset) => preset.id === hash.get("preset")) ??
-      (code === null ? presets[0] : undefined);
-    let markdown = preset?.source;
-    if (!preset && code !== null)
-      markdown = await unpack(code).catch((error) =>
-        error instanceof Error && error.message === sharingUnsupported
-          ? sharingUnsupported
-          : "The link's Markdown is cut off or changed.",
-      );
-    if (run !== loadRun) return;
+    const preset = state
+      ? presets.find((preset) => preset.id === state.template)
+      : code === undefined
+        ? presets[0]
+        : undefined;
+    const files = state?.files;
+    // A preset as it is keeps whatever config and theme are in the tab, so one config can be tried across them.
+    const asIs =
+      !!preset &&
+      !!files &&
+      Object.keys(files).length === 1 &&
+      files[contentFile] === preset.source;
+    if (files && !asIs) {
+      configEditor.value = files[configFile] ?? defaultConfig;
+      const sharedTheme = files[themeFile];
+      let nextTheme = defaultTheme();
+      if (sharedTheme !== undefined)
+        try {
+          nextTheme = readTheme(JSON.parse(sharedTheme));
+        } catch {
+          navigationIssues.push("The link's theme is not valid; using the default theme.");
+        }
+      setTheme(nextTheme);
+    }
+    const markdown = files
+      ? (files[contentFile] ?? "")
+      : code === undefined
+        ? preset?.source
+        : "The link's Markdown is cut off or changed.";
     loadIssues = navigationIssues;
     if (markdown !== undefined) editor.value = markdown;
     base = preset;
-    markPreset(preset?.id);
+    reset.hidden = !preset || editor.value === preset.source;
+    markPreset(reset.hidden ? preset?.id : undefined);
     revealPreset(preset?.id);
-    reset.hidden = true;
     pointNpmx(preset?.npm);
     repaint(editor);
     repaint(configEditor);
@@ -521,8 +524,13 @@ export async function startPlayground(
     confirmReset.returnValue = "";
     confirmReset.showModal();
   });
-  confirmReset.addEventListener("close", () => {
-    if (confirmReset.returnValue === "reset" && base) location.hash = `preset=${base.id}`;
+  confirmReset.addEventListener("close", async () => {
+    if (confirmReset.returnValue !== "reset" || !base) return;
+    try {
+      location.hash = playgroundUrl("", await presetCode(base));
+    } catch (error) {
+      showIssues([errorText(error)]);
+    }
   });
   copy.addEventListener("click", async () => {
     const shown = configEditor.closest<HTMLElement>(".play-code")?.hidden ? editor : configEditor;

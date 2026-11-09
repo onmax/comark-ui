@@ -171,7 +171,7 @@ describe("built docs links", () => {
 
   it("reads the playground's fragment as its state, and checks the gallery's as ids", () => {
     const result = check(
-      `<a href="/play#md=y0zMyQEA">Playground</a><a href="/play/#preset=tabs-tabs">Preset</a>
+      `<a href="/play#code=q1ZKU7KqVkrOzytJzSvRy01RslJSVvDIVKqtBQA">Playground</a><a href="/play/#code=q1YqUbJSKklMKtYFEUq1AA">Preset</a>
       <a href="/play/gallery#tabs-tabs">Gallery</a><a href="/play/gallery#missing">Missing</a>`,
       { "play/index.html": "", "play/gallery/index.html": '<article id="tabs-tabs"></article>' },
     );
@@ -181,8 +181,10 @@ describe("built docs links", () => {
   });
 
   it("keeps playground links on the site and drops the old trailing slash elsewhere", () => {
-    expect(site("/play/#preset=code-copy-and-wrap")).toBe("/play#preset=code-copy-and-wrap");
-    expect(site("/play#md=eJx-test_123")).toBe("/play#md=eJx-test_123");
+    expect(site("/play/#code=q1YqUbJSSs5PSdVNzi-o1E3MS9EtL0osUKoFAA")).toBe(
+      "/play#code=q1YqUbJSSs5PSdVNzi-o1E3MS9EtL0osUKoFAA",
+    );
+    expect(site("/play#code=eJx-test_123")).toBe("/play#code=eJx-test_123");
     expect(site("/zoom/#theme")).toBe("/zoom#theme");
     expect(site("/playwright/")).toBe("/playwright");
   });

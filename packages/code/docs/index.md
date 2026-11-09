@@ -460,4 +460,4 @@ Bigger buttons further from the corner, and a title in the code's font, lined up
 }
 ```
 
-To try it, paste it into Extra CSS in the [playground's Theme pane](/play/#preset=code-copy-and-wrap).
+To try it, paste it into Extra CSS in the [playground's Theme pane](/play#code=q1YqUbJSSs5PSdVNzi-o1E3MS9EtL0osUKoFAA).

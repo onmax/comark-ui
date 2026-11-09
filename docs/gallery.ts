@@ -1,10 +1,16 @@
 // The component gallery's script. It pans and zooms the canvas, shows each frame in its color scheme and as tall as its
 // content, filters the examples, and edits them: an example's props, a copy of it, or one copy per value of a prop. A changed cell renders
 // in the browser with the plugins its page used, which load with the first change, and the changes ride in the URL's
-// `edit` parameter, so a link or a screenshot shows them. docs/app/pages/play/gallery.vue starts it on mount and stops
+// `code` parameter as files, through @vite-hub/ui/playground, so a link or a screenshot shows them. docs/app/pages/play/gallery.vue starts it on mount and stops
 // it on unmount, since the docs app navigates without loading pages.
 import { cellDocument } from "./preview.ts";
-import { pack, unpack } from "./play-link.ts";
+import {
+  decodePlaygroundLink,
+  encodePlaygroundLink,
+  playgroundHashKey,
+  type PlaygroundFiles,
+} from "@vite-hub/ui/playground";
+import { playLink } from "./play-link.ts";
 import { errorText } from "../shared/text.ts";
 
 export interface Cell {
@@ -438,33 +444,36 @@ export function startGallery(root: HTMLElement, data: GalleryData): () => void {
 
   let saving: ReturnType<typeof setTimeout> | undefined;
   let saveVersion = 0;
-  function savedState() {
-    const edits = Object.fromEntries(
-      [...sources].filter(([id, source]) => data.cells[id] && data.cells[id].source !== source),
-    );
-    return Object.keys(edits).length || added.length
-      ? {
-          edits,
-          added: added.map((cell) => ({ ...cell, source: sources.get(cell.id) ?? cell.source })),
-        }
-      : undefined;
-  }
+  // As files, each cell's Markdown is `<id>.md`, and `added.json` places the copies. The examples' own Markdown is the
+  // base, so a link holds only the cells that changed.
+  const fileOf = (id: string) => `${id}.md`;
+  const examplesFiles: PlaygroundFiles = Object.fromEntries(
+    Object.entries(data.cells).map(([id, cell]) => [fileOf(id), cell.source]),
+  );
+  const edited = () =>
+    added.length > 0 || [...sources].some(([id, source]) => data.cells[id]?.source !== source);
   async function saveNow(): Promise<string> {
     clearTimeout(saving);
     const version = saveVersion;
-    const state = savedState();
-    const code = state ? await pack(JSON.stringify(state)) : undefined;
+    const files: PlaygroundFiles = Object.fromEntries(
+      [...sources].map(([id, source]) => [fileOf(id), source]),
+    );
+    if (added.length)
+      files["added.json"] = JSON.stringify(
+        added.map(({ id, after, label }) => ({ id, after, label })),
+      );
+    const code = edited() ? await encodePlaygroundLink({ files }, examplesFiles) : undefined;
     // Compression can finish after another edit or reset. Only the current snapshot may reach the URL.
     if (version !== saveVersion) return saveNow();
     const url = new URL(location.href);
-    if (code) url.searchParams.set("edit", code);
-    else url.searchParams.delete("edit");
+    if (code) url.searchParams.set(playgroundHashKey, code);
+    else url.searchParams.delete(playgroundHashKey);
     if (!signal.aborted) history.replaceState(history.state, "", url);
     return url.href;
   }
   function save() {
     saveVersion++;
-    clear.hidden = share.hidden = !savedState();
+    clear.hidden = share.hidden = !edited();
     clearTimeout(saving);
     saving = setTimeout(() => void saveNow().catch((error) => reportSharing(error)), 250);
   }
@@ -472,7 +481,7 @@ export function startGallery(root: HTMLElement, data: GalleryData): () => void {
   // A cell's Playground link, and the inspector's while it's open, take the cell's Markdown as it is now.
   async function link(id: string): Promise<string> {
     const source = sources.get(id) ?? "";
-    const href = `/play#md=${await pack(source)}`;
+    const href = await playLink(source);
     if (source !== (sources.get(id) ?? "")) return link(id);
     const own = article(id)?.querySelector<HTMLAnchorElement>('[data-action="play"]');
     if (own) own.href = href;
@@ -1092,19 +1101,22 @@ export function startGallery(root: HTMLElement, data: GalleryData): () => void {
   });
 
   // A link's changes render as the page opens.
-  const edit = new URLSearchParams(location.search).get("edit");
-  if (edit) {
+  const code = new URLSearchParams(location.search).get(playgroundHashKey);
+  if (code) {
     pending.add("");
     gallery.dataset.busy = "";
-    void unpack(edit)
-      .then((text) => {
-        const saved: { edits?: Record<string, string>; added?: Added[] } = JSON.parse(text);
-        for (const [id, source] of Object.entries(saved.edits ?? {}))
-          if (data.cells[id]) change(id, source);
-        for (const cell of saved.added ?? []) {
+    void decodePlaygroundLink(code)
+      .then((state) => {
+        if (!state) throw new Error("The link is cut off or changed.");
+        const copiesOf: Omit<Added, "source">[] = JSON.parse(state.files["added.json"] ?? "[]");
+        for (const id of Object.keys(data.cells)) {
+          const source = state.files[fileOf(id)];
+          if (source !== undefined) change(id, source);
+        }
+        for (const cell of copiesOf) {
           const number = Number(cell.id.split("--")[1]);
           if (Number.isFinite(number)) copies = Math.max(copies, number);
-          addCell(cell.after, cell.label, cell.source, cell.id);
+          addCell(cell.after, cell.label, state.files[fileOf(cell.id)] ?? "", cell.id);
         }
         hold();
         keep();
