@@ -8,7 +8,16 @@ async function open(page: Page, theme = defaultTheme()) {
   await page.setContent('<iframe sandbox="allow-scripts allow-popups"></iframe>');
   const dark = await page.evaluate(() => matchMedia("(prefers-color-scheme: dark)").matches);
   // The document is rendered in Node, with the same initial system scheme as the browser.
-  globalThis.matchMedia = (() => ({ matches: dark })) as typeof matchMedia;
+  globalThis.matchMedia = (media) => ({
+    matches: dark,
+    media,
+    onchange: null,
+    addListener() {},
+    removeListener() {},
+    addEventListener() {},
+    removeEventListener() {},
+    dispatchEvent: () => true,
+  });
   const html = playDocument(
     '<p style="background:var(--background);color:var(--foreground)">Preview</p>',
     { [themeFile]: themeText(theme) },
@@ -25,7 +34,7 @@ for (const initial of ["light", "dark"] as const) {
     await open(page);
     const root = preview(page).locator("html");
     const text = preview(page).getByText("Preview");
-    for (const scheme of [initial, initial === "light" ? "dark" : "light", initial]) {
+    for (const scheme of [initial, initial === "light" ? "dark" : "light", initial] as const) {
       await page.emulateMedia({ colorScheme: scheme });
       await expect(root).toHaveClass(scheme);
       await expect(root).toHaveCSS("color-scheme", scheme);
