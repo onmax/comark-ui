@@ -26,7 +26,7 @@ Moves the build to [Vite](https://vite.dev). Reviewed by @antfu.
 
 Every web link becomes a chip with its site's favicon, and every `@user` a chip with their GitHub avatar that links to their profile. A link into a GitHub account or repository shows the account's avatar, and a link into an X, Bluesky, YouTube, or GitLab account shows theirs through [unavatar.io](https://unavatar.io). Relative links, links around images, and links written as HTML stay plain.
 
-The images are downloaded while parsing and inlined as data URIs, so the page asks no other site for them. One that can't be downloaded stays a URL for the reader's browser to load. An avatar that answers with an HTTP error, such as an `@user` with no account, is reported in `meta.issues`.
+The images are downloaded while parsing and inlined as data URIs, so the page asks no other site for them. One that can't be downloaded, or whose server answers with an error, stays a URL for the reader's browser to load. An avatar that answers with a client error, such as a 404 for an `@user` with no account, is reported in `meta.issues`.
 
 ## Props
 
