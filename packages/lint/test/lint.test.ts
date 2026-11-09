@@ -709,7 +709,7 @@ describe("lint-comark/doctor", () => {
       expect(report.diagnostic.why).toBe(report.message);
       expect(report.diagnostic.fix).toBe(report.suggestion);
       expect(report.diagnostic.docs).toBe(
-        `https://comark-ui.onmax.me/doctor/${report.ruleId.replace(/^comark\//, "")}/`,
+        `https://comark-ui.onmax.me/doctor/${report.ruleId.replace(/^comark\//, "")}`,
       );
       expect(report.diagnostic.sources).toEqual([
         `${report.file}:${report.range!.line}:${report.range!.column}`,

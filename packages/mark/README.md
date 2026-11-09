@@ -3,7 +3,7 @@
 [![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-mark&icon=npm)](https://npmx.dev/package/comark-mark)
 [![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-mark&period=month&icon=npm)](https://npmx.dev/package/comark-mark)
 [![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-mark)
-[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/mark/)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/mark)
 
 Highlights and superscripts in [Comark](https://comark.dev): `==text==` as `<mark>` and `^text^` as `<sup>`. A plugin for HTML, Vue, React, and Svelte.
 

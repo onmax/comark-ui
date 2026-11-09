@@ -8,7 +8,6 @@
 // heights known before any is shown. It holds still: it follows a drag and coasts to rest after it, and pans sideways
 // with a trackpad.
 import landing from "../../../.generated/landing.json";
-import { site } from "../../../paths.ts";
 
 type View = "canvas" | "list";
 
@@ -331,7 +330,7 @@ const onListFocus = () => {
     </div>
     <ul class="canvas-list" @focusin="onListFocus">
       <li v-for="pkg in landing.packages" :key="pkg.slug">
-        <NuxtLink :to="site(`/${pkg.slug}`)">
+        <NuxtLink :to="`/${pkg.slug}`">
           <span class="canvas-list-icon">
             <UIcon
               :name="pkg.icon === 'scribble-loop' ? 'i-lucide-pen-tool' : `i-lucide-${pkg.icon}`"

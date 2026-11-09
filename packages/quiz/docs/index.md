@@ -262,7 +262,7 @@ Promise callbacks are microtasks, and a timer's callback is a task.
 
 ### A lesson
 
-This lesson explains why `await` doesn't let a page paint with [steps](/steps/), a [callout](/github/), and [citations](/sources/), then checks it with a question and a recall card:
+This lesson explains why `await` doesn't let a page paint with [steps](/steps), a [callout](/github), and [citations](/sources), then checks it with a question and a recall card:
 
 ::examples
 :::example{label="Lesson"}
@@ -490,7 +490,7 @@ A state the host sends before the frame's script starts is lost, so send it in r
 
 ### Issues
 
-The plugin adds each problem to `meta.issues`, as [Validation](/guide/validation/) describes, and each kind has its own rule in [Doctor](/doctor/):
+The plugin adds each problem to `meta.issues`, as [Validation](/guide/validation) describes, and each kind has its own rule in [Doctor](/doctor):
 
 - a question with no `[x]`, or a poll with one
 - a question or poll with no options
@@ -522,11 +522,11 @@ import quiz, { components } from "comark-quiz/html";
 const render = createHtmlRenderer({ plugins: [quiz()], components });
 ```
 
-Only the HTML renderer exists. [Renderers](/guide/renderers/) covers using it with other plugins.
+Only the HTML renderer exists. [Renderers](/guide/renderers) covers using it with other plugins.
 
 ## Theme
 
-Each block is styled like shadcn/ui's Card and follows the shared tokens in [Theming](/guide/theming/), dark mode included. Only state adds color: primary for a selection, green for right, red for wrong, and a fill for results. The rules sit in a `comark` CSS layer, so any plain rule of yours wins.
+Each block is styled like shadcn/ui's Card and follows the shared tokens in [Theming](/guide/theming), dark mode included. Only state adds color: primary for a selection, green for right, red for wrong, and a fill for results. The rules sit in a `comark` CSS layer, so any plain rule of yours wins.
 
 ### Shared tokens
 

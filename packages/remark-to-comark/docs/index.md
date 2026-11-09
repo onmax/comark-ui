@@ -15,17 +15,17 @@ remark-to-comark moves a Markdown project from remark to Comark. It changes only
 ## Features
 
 - `migrate` does the whole move in one command, then lists what's left for you.
-- `check` lists every remark setup it finds, with a [fix](/remark-to-comark/diagnostics/) for each problem.
+- `check` lists every remark setup it finds, with a [fix](/remark-to-comark/diagnostics) for each problem.
 - `rewrite` swaps a unified chain for Comark's `renderHtml` when every plugin carries over.
 - `content` escapes the Markdown Comark would read differently.
 - It finds setups in unified, react-markdown, Vue, Svelte, Astro, Next.js, Docusaurus, Gatsby, and Nuxt Content.
-- It also runs in [Vite Doctor](/remark-to-comark/vite-doctor/).
+- It also runs in [Vite Doctor](/remark-to-comark/vite-doctor).
 
-Tested on [100 projects](/remark-to-comark/testing/).
+Tested on [100 projects](/remark-to-comark/testing).
 
 ## Why Comark
 
-Comark renders components written in plain-text Markdown to Vue, React, Svelte, Angular, HTML, and the terminal, and it renders a half-streamed reply without breaking. It turns Markdown into HTML 6 to 7 times faster than remark, but its browser bundle is bigger. [Speed and size](/remark-to-comark/testing/#speed-and-size) has the numbers.
+Comark renders components written in plain-text Markdown to Vue, React, Svelte, Angular, HTML, and the terminal, and it renders a half-streamed reply without breaking. It turns Markdown into HTML 6 to 7 times faster than remark, but its browser bundle is bigger. [Speed and size](/remark-to-comark/testing#speed-and-size) has the numbers.
 
 ## Usage
 
@@ -35,7 +35,7 @@ Migrate the project in the current directory:
 pnpm dlx remark-to-comark migrate
 ```
 
-It escapes the Markdown, rewrites the unified chains, and ends with what's left for you. It only runs on a clean git tree, so `git diff` shows every change and `git checkout .` undoes them. To see the findings first without changing anything, run `pnpm dlx remark-to-comark check`. [Getting started](/remark-to-comark/getting-started/) explains each step.
+It escapes the Markdown, rewrites the unified chains, and ends with what's left for you. It only runs on a clean git tree, so `git diff` shows every change and `git checkout .` undoes them. To see the findings first without changing anything, run `pnpm dlx remark-to-comark check`. [Getting started](/remark-to-comark/getting-started) explains each step.
 
 ## Limits
 

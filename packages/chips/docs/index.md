@@ -182,18 +182,18 @@ Pass options under `chips` in `comarkUi()`, or to `chips()` alone.
 
 ### Issues
 
-The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation/) describes:
+The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation) describes:
 
 - An avatar that answers with a client error, such as a 404 for an `@user` with no GitHub account. A server error leaves the image to the reader's browser without an issue.
 - A download the site rate-limits with HTTP 429. The chip keeps the URL, and the issue says to build again.
 - An `avatar` that is a bare login, such as `avatar="antfu"`. Write `avatar="@antfu"`.
 - A `:chip` whose `href` isn't a web address.
 
-A site without a favicon gets a globe in its place, and no issue. Each problem has its own rule in [Doctor](/doctor/).
+A site without a favicon gets a globe in its place, and no issue. Each problem has its own rule in [Doctor](/doctor).
 
 ### Package
 
-[comark-ui](/getting-started/) installs and registers `comark-chips`. To use it alone, install it and pass the renderer's `components`:
+[comark-ui](/getting-started) installs and registers `comark-chips`. To use it alone, install it and pass the renderer's `components`:
 
 ```sh
 pnpm add comark @comark/html comark-chips
@@ -206,11 +206,11 @@ import chips, { components } from "comark-chips/html";
 const render = createHtmlRenderer({ plugins: [chips()], components });
 ```
 
-For Vue, React, or Svelte, import from `comark-chips/vue`, `comark-chips/react`, or `comark-chips/svelte`. The components add the styles on mount. On a server, import `comark-chips/style.css` with your styles so the page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-chips/vue`, `comark-chips/react`, or `comark-chips/svelte`. The components add the styles on mount. On a server, import `comark-chips/style.css` with your styles so the page doesn't shift. [Renderers](/guide/renderers) covers using it with other plugins.
 
 ## Theme
 
-Chips read the shared tokens in [Theming](/guide/theming/). The rules sit in a `comark` CSS layer, so a plain rule of yours wins without `!important`.
+Chips read the shared tokens in [Theming](/guide/theming). The rules sit in a `comark` CSS layer, so a plain rule of yours wins without `!important`.
 
 ### Shared tokens
 

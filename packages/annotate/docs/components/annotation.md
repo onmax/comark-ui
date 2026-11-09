@@ -202,13 +202,13 @@ For a full-page screenshot, add the scroll offset and divide by the page size in
 
 Each number sits on a corner of its mark. It takes the first of top left, top right, bottom left, and bottom right that's clear of other numbers, marks, and arrows. Where it would hang past the image's edge, it lines up with the mark's edge instead.
 
-Set [`viewport`](/annotate/components/screenshot/#viewport) on the screenshot so the plugin judges corners against the image's real shape. If two numbers overlap at every corner, the plugin reports both annotations.
+Set [`viewport`](/annotate/components/screenshot#viewport) on the screenshot so the plugin judges corners against the image's real shape. If two numbers overlap at every corner, the plugin reports both annotations.
 
 ### Side notes that fit
 
 The plugin reports side notes that sit close together on one margin. It can't measure the text, so check the rendered page too. If two notes collide, move one with `at`, to another side, or into the list.
 
-In a [compare](/annotate/components/compare/#side-notes-in-a-pair) side by side, only notes above and below the image keep their arrow. In a slider, every note joins the list.
+In a [compare](/annotate/components/compare#side-notes-in-a-pair) side by side, only notes above and below the image keep their arrow. In a slider, every note joins the list.
 
 ## API
 
@@ -239,4 +239,4 @@ The plugin adds these problems to `meta.issues`:
 - The annotation sits outside a screenshot.
 - An unknown prop. Likely slips such as `width`, `height`, `colour`, `left`, `top`, `target`, and `label` get a hint.
 
-Each has its own rule in [Doctor](/doctor/). [Annotate](/annotate/#issues) covers how issues name their block.
+Each has its own rule in [Doctor](/doctor). [Annotate](/annotate#issues) covers how issues name their block.

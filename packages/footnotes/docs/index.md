@@ -168,7 +168,7 @@ Pass options under `footnotes` in `comarkUi()`, or to `footnotes()` alone. They'
 
 ### Issues
 
-The plugin adds a sentence to `meta.issues` for each of these. Each has its own rule in [Doctor](/doctor/).
+The plugin adds a sentence to `meta.issues` for each of these. Each has its own rule in [Doctor](/doctor).
 
 - A reference with no definition.
 - A definition nothing references.

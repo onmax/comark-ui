@@ -150,7 +150,7 @@ Week 15 is missing for the pigeons.
 - Copy a screenshot as a PNG with its marks and notes drawn in.
 - Compare two screenshots side by side, or one over the other with a slider.
 - It all reads the same without a script.
-- [zoom](/zoom/) and [carousel](/carousel/) come with the package.
+- [zoom](/zoom) and [carousel](/carousel) come with the package.
 
 ## Usage
 
@@ -168,21 +168,21 @@ Props go inline, in a YAML props block, or bound with `:x`.
 
 ### Screenshot
 
-Use [`screenshot`](/annotate/components/screenshot/) for an image with marks on it. Other content becomes its caption.
+Use [`screenshot`](/annotate/components/screenshot) for an image with marks on it. Other content becomes its caption.
 
 ### Annotation
 
-Use [`annotation`](/annotate/components/annotation/) for one mark and its note, numbered under the image or beside it with an arrow.
+Use [`annotation`](/annotate/components/annotation) for one mark and its note, numbered under the image or beside it with an arrow.
 
 ### Compare
 
-Use [`compare`](/annotate/components/compare/) to show two screenshots side by side, or one over the other with a slider.
+Use [`compare`](/annotate/components/compare) to show two screenshots side by side, or one over the other with a slider.
 
 ## Examples
 
 ### Share a screenshot
 
-The Copy button copies a screenshot as a PNG with its marks and notes. The [screenshot page](/annotate/components/screenshot/#copy-a-screenshot) has the keys and the setup some pages need.
+The Copy button copies a screenshot as a PNG with its marks and notes. The [screenshot page](/annotate/components/screenshot#copy-a-screenshot) has the keys and the setup some pages need.
 
 ### Side notes
 
@@ -198,15 +198,15 @@ r now counts the office cat.
 ```
 ::
 
-The [annotation page](/annotate/components/annotation/#side-note) covers where side notes sit and how to keep them apart.
+The [annotation page](/annotate/components/annotation#side-note) covers where side notes sit and how to keep them apart.
 
 ### Place marks on their target
 
-Measure each element in the page you captured instead of estimating from the image. The [annotation page](/annotate/components/annotation/#place-marks-on-their-target) shows how.
+Measure each element in the page you captured instead of estimating from the image. The [annotation page](/annotate/components/annotation#place-marks-on-their-target) shows how.
 
 ### Page through screenshots across a page
 
-The [recipes](/recipes/zoom/) show how to page through screenshots spread across a page, or through a flow one step at a time.
+The [recipes](/recipes/zoom) show how to page through screenshots spread across a page, or through a flow one step at a time.
 
 ## API
 
@@ -236,7 +236,7 @@ pnpm links the executable only for a direct dependency. When comark-annotate is 
 
 ### Issues
 
-The plugin adds each problem to `meta.issues`, as [Validation](/guide/validation/) describes. Each issue names its block:
+The plugin adds each problem to `meta.issues`, as [Validation](/guide/validation) describes. Each issue names its block:
 
 - A screenshot by its `src`, or by its position and `alt` when another screenshot has the same `src`.
 - A compare by its position, and its `title` if it has one.
@@ -248,15 +248,15 @@ screenshot "after.png", annotation 2: the box runs past the image edge. Keep x +
 
 It also reports an unknown prop, with the valid ones, and a `:bound` prop that points at missing frontmatter. The renderer resolves bindings to `data` or `props`. Each block's page lists the rest:
 
-- [screenshot](/annotate/components/screenshot/#issues)
-- [annotation](/annotate/components/annotation/#issues)
-- [compare](/annotate/components/compare/#issues)
+- [screenshot](/annotate/components/screenshot#issues)
+- [annotation](/annotate/components/annotation#issues)
+- [compare](/annotate/components/compare#issues)
 
-Each kind of problem has its own rule in [Doctor](/doctor/), with an example and its fix.
+Each kind of problem has its own rule in [Doctor](/doctor), with an example and its fix.
 
 ### Package
 
-[comark-ui](/getting-started/) brings `comark-annotate` and registers it. To use it alone, install it and pass the HTML renderers as `components`:
+[comark-ui](/getting-started) brings `comark-annotate` and registers it. To use it alone, install it and pass the HTML renderers as `components`:
 
 ```sh
 pnpm add comark @comark/html comark-annotate
@@ -270,17 +270,17 @@ const render = createHtmlRenderer({ plugins: [annotate()], components });
 const html = await render(markdown);
 ```
 
-Annotate renders only to HTML. [Renderers](/guide/renderers/) covers using it with other plugins, a strict Content Security Policy, and untrusted notes.
+Annotate renders only to HTML. [Renderers](/guide/renderers) covers using it with other plugins, a strict Content Security Policy, and untrusted notes.
 
-The comark-ui agent skill knows the syntax, how to measure marks, and how to check the result. Install it with `vp dlx skills add onmax/comark-ui`, and see [Agents](/guide/agents/).
+The comark-ui agent skill knows the syntax, how to measure marks, and how to check the result. Install it with `vp dlx skills add onmax/comark-ui`, and see [Agents](/guide/agents).
 
 ## Theme
 
-Screenshots and comparisons follow the page's theme, but mark colors don't, because each one means something. The rules sit in a `comark` CSS layer, so any plain rule of your own wins. `::diff` is in [comark-diff](/diff/), with its own [Theme section](/diff/#theme).
+Screenshots and comparisons follow the page's theme, but mark colors don't, because each one means something. The rules sit in a `comark` CSS layer, so any plain rule of your own wins. `::diff` is in [comark-diff](/diff), with its own [Theme section](/diff#theme).
 
 ### Shared tokens
 
-Annotate reads these [shared tokens](/guide/theming/):
+Annotate reads these [shared tokens](/guide/theming):
 
 | Token | Used for |
 | --- | --- |

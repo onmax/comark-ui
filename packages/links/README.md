@@ -3,7 +3,7 @@
 [![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-links&icon=npm)](https://npmx.dev/package/comark-links)
 [![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-links&period=month&icon=npm)](https://npmx.dev/package/comark-links)
 [![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-links)
-[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/links/)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/links)
 
 Links in [Comark](https://comark.dev): a `#` link beside each heading, and external links with the `target` and `rel` you choose and a warning before one opens a new tab. For HTML, Vue, React, and Svelte.
 

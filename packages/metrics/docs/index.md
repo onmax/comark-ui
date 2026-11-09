@@ -274,7 +274,7 @@ The plugin takes no options. `metrics: false` in `comarkUi()` turns it off.
 
 ### Issues
 
-The plugin adds these problems to `meta.issues`, as [Validation](/guide/validation/) describes:
+The plugin adds these problems to `meta.issues`, as [Validation](/guide/validation) describes:
 
 - A missing or unreadable number.
 - A `better` that isn't `lower` or `higher`.
@@ -285,7 +285,7 @@ The plugin adds these problems to `meta.issues`, as [Validation](/guide/validati
 - A row whose cells aren't numbers, or are in different units.
 - A prop a block doesn't read.
 
-Each issue names its block and says how to fix it, and each has its own rule in [Doctor](/doctor/):
+Each issue names its block and says how to fix it, and each has its own rule in [Doctor](/doctor):
 
 ```txt
 `:progress` 1: `value=85` is outside 0 to 1, so the bar was clamped. Write a fraction such as `value=0.85`, or set `max=100`.
@@ -309,7 +309,7 @@ import metrics, { components } from "comark-metrics/html";
 const render = createHtmlRenderer({ plugins: [metrics()], components });
 ```
 
-For Vue, React, or Svelte, import from `comark-metrics/vue`, `comark-metrics/react`, or `comark-metrics/svelte`. The components add the styles when they mount. Import `comark-metrics/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-metrics/vue`, `comark-metrics/react`, or `comark-metrics/svelte`. The components add the styles when they mount. Import `comark-metrics/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers) covers using it with other plugins.
 
 ## Theme
 
@@ -317,7 +317,7 @@ A progress bar follows shadcn/ui's Progress, the primary color on a track of its
 
 ### Shared tokens
 
-Deltas, bars, and tables read these [shared tokens](/guide/theming/):
+Deltas, bars, and tables read these [shared tokens](/guide/theming):
 
 | Token | Used for |
 | --- | --- |

@@ -2,7 +2,6 @@
 // `::landing-hero`: the landing's headline and pitch beside the install command, the way in, and the repository.
 // Humans install the packages with their package manager; agents install the comark-ui skill.
 import landing from "../../../.generated/landing.json";
-import { site } from "../../../paths.ts";
 
 const props = defineProps<{ install: string }>();
 
@@ -108,7 +107,7 @@ const stars =
       </div>
       <div class="landing-hero-actions">
         <UButton
-          :to="site('/play/')"
+          to="/play"
           color="neutral"
           size="lg"
           icon="i-lucide-flask-conical"

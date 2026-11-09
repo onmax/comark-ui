@@ -21,8 +21,8 @@ Choose by what you have:
 
 - Findings from a code, design, or QA review, and a reader who must decide: this skill.
 - A diff nobody has reviewed yet: your review process first, then this skill.
-- Options to choose between, or a plan to approve, rather than findings: [Report](/skills/report/).
-- One visible change to prove: [Before/after evidence](/skills/before-after-evidence/) alone. Inside a review, its compare is one finding's evidence.
+- Options to choose between, or a plan to approve, rather than findings: [Report](/skills/report).
+- One visible change to prove: [Before/after evidence](/skills/before-after-evidence) alone. Inside a review, its compare is one finding's evidence.
 
 ## It's working if
 

@@ -142,7 +142,7 @@ The results are a section named by their title, or "Test results" without one. E
 
 - **Passed, failed, and skipped.** Counted from the `<testcase>` elements, so the totals match the cases. A case with `<failure>` or `<error>` failed, and one with `<skipped>` was skipped. Failed and skipped show only when there are any.
 - **Duration.** The `time` of the root element, else the sum of the suites', else the sum of the cases', as `250 ms`, `4.2 s`, or `1 min 21 s`.
-- **Failures.** Each one is a `<details>` named `classname › name`, with the failure's `message` and its stack in a code block. With [comark-code](/code/), the stack gets a Copy button.
+- **Failures.** Each one is a `<details>` named `classname › name`, with the failure's `message` and its stack in a code block. With [comark-code](/code), the stack gets a Copy button.
 
 The root can be `<testsuites>` or a single `<testsuite>`.
 
@@ -152,13 +152,13 @@ Pass options under `tests` in `comarkUi()`, or to `tests()` alone. In `comarkUi(
 
 | Option | Default | Description |
 | --- | --- | --- |
-| `root` | `"."` | The folder `src` can't leave, as in [comark-include](/include/). |
+| `root` | `"."` | The folder `src` can't leave, as in [comark-include](/include). |
 | `base` | `""` | The document's folder under `root`, where relative paths start. |
 | `read` | Reads from disk | Takes a path under the root and returns the file's text. Pass one in a browser or an edge runtime. |
 
 ### Issues
 
-The plugin adds these problems to `meta.issues`, as [Validation](/guide/validation/) describes:
+The plugin adds these problems to `meta.issues`, as [Validation](/guide/validation) describes:
 
 - A block with no `src` and no ` ```xml ` fence.
 - A file that's missing, outside the root, a URL, or can't be read.
@@ -168,7 +168,7 @@ The plugin adds these problems to `meta.issues`, as [Validation](/guide/validati
 - Content inside a block that has `src`. The block drops it.
 - A prop it doesn't read. It's ignored.
 
-A block with an unreadable report renders nothing. Each issue names the block and the fix, and has its own rule in [Doctor](/doctor/):
+A block with an unreadable report renders nothing. Each issue names the block and the fix, and has its own rule in [Doctor](/doctor):
 
 ```txt
 `::tests` 1 ("junit.xml"): its XML is malformed at line 3: `</testsuite>` closes `<testcase>`. Fix the report, or run the tests again to rewrite it.
@@ -192,7 +192,7 @@ import tests, { components } from "comark-tests/html";
 const render = createHtmlRenderer({ plugins: [tests({ root: "." })], components });
 ```
 
-For Vue, React, or Svelte, import from `comark-tests/vue`, `comark-tests/react`, or `comark-tests/svelte`. The components add the styles on mount. Import `comark-tests/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-tests/vue`, `comark-tests/react`, or `comark-tests/svelte`. The components add the styles on mount. Import `comark-tests/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers) covers using it with other plugins.
 
 ## Theme
 
@@ -200,7 +200,7 @@ Results sit in a bordered card. Each count is a tinted badge, green for passed, 
 
 ### Shared tokens
 
-The results read these [shared tokens](/guide/theming/):
+The results read these [shared tokens](/guide/theming):
 
 | Token | Used for |
 | --- | --- |

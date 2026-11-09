@@ -46,7 +46,7 @@ describe("Mermaid limit diagnostics", () => {
           ruleId: rule,
           code,
           diagnostic: expect.objectContaining({
-            docs: `https://comark-ui.onmax.me/doctor/${path}/`,
+            docs: `https://comark-ui.onmax.me/doctor/${path}`,
           }),
         }),
       ]);

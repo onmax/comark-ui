@@ -141,7 +141,7 @@ greet(name, { formal: true })
 
 ### Review a change instead
 
-An animation shows one step at a time, so a reviewer can't see all the removed and added lines at once. For a change someone approves, write a [`::diff`](/diff/).
+An animation shows one step at a time, so a reviewer can't see all the removed and added lines at once. For a change someone approves, write a [`::diff`](/diff).
 
 ## Accessibility
 
@@ -179,7 +179,7 @@ comark-magic-move takes no options. `magicMove: false` in `comarkUi()` turns it 
 
 ### Issues
 
-The plugin adds each problem to `meta.issues`, as [Validation](/guide/validation/) describes:
+The plugin adds each problem to `meta.issues`, as [Validation](/guide/validation) describes:
 
 ```txt
 magic-move 1 has one code block, so there's nothing to move between; add a code block for each step, or use a plain code block.
@@ -191,7 +191,7 @@ It reports:
 - Content that isn't a code block. The block drops it.
 - A prop it doesn't know.
 
-Each one has its own rule in [Doctor](/doctor/).
+Each one has its own rule in [Doctor](/doctor).
 
 ### Package
 
@@ -208,11 +208,11 @@ import magicMove, { components } from "comark-magic-move/html";
 const render = createHtmlRenderer({ plugins: [magicMove()], components });
 ```
 
-For Vue, React, or Svelte, import from `comark-magic-move/vue`, `comark-magic-move/react`, or `comark-magic-move/svelte`. On a server, import `comark-magic-move/style.css` with your styles. [Renderers](/guide/renderers/) covers the rest.
+For Vue, React, or Svelte, import from `comark-magic-move/vue`, `comark-magic-move/react`, or `comark-magic-move/svelte`. On a server, import `comark-magic-move/style.css` with your styles. [Renderers](/guide/renderers) covers the rest.
 
 ## Theme
 
-The tabs follow the shared tokens in [Theming](/guide/theming/), and two variables set the header and the space between steps. The code keeps its highlighter's colors. The rules sit in a `comark` CSS layer, so any plain rule of yours wins.
+The tabs follow the shared tokens in [Theming](/guide/theming), and two variables set the header and the space between steps. The code keeps its highlighter's colors. The rules sit in a `comark` CSS layer, so any plain rule of yours wins.
 
 ### Shared tokens
 
@@ -239,7 +239,7 @@ Set these on `.cmv` or any ancestor, such as `:root`:
 
 | Selector | Is |
 | --- | --- |
-| `.cmv` | The block, with comark-code's [`data-code-header`](/code/#your-own-header), so each step's buttons sit in the tabs' strip |
+| `.cmv` | The block, with comark-code's [`data-code-header`](/code#your-own-header), so each step's buttons sit in the tabs' strip |
 | `.cmv-list` | The tabs, shown once the script runs |
 | `.cmv-tab` | A tab, with `aria-selected="true"` when its step is open |
 | `.cmv-stage` | The steps |

@@ -33,7 +33,7 @@ Each screenshot is a slide, headed by its `title` and carrying its own notes. A 
 
 ## When to use it
 
-Use a carousel for a sequence, such as the steps of a flow or one view at several sizes. For one view before and after a change, use [`::compare`](/annotate/components/compare/). It's a two-column carousel that numbers notes across both sides.
+Use a carousel for a sequence, such as the steps of a flow or one view at several sizes. For one view before and after a change, use [`::compare`](/annotate/components/compare). It's a two-column carousel that numbers notes across both sides.
 
 ## Two at a time
 
@@ -49,4 +49,4 @@ Use a carousel for a sequence, such as the steps of a flow or one view at severa
 ::
 ```
 
-Each slide sits on a panel as tall as the tallest one, so screenshots of different heights line up. To drop the panel, set `--cc-surface: transparent` and `--cc-padding: 0`, as the carousel's [Theming](/carousel/#theme) shows.
+Each slide sits on a panel as tall as the tallest one, so screenshots of different heights line up. To drop the panel, set `--cc-surface: transparent` and `--cc-padding: 0`, as the carousel's [Theming](/carousel#theme) shows.

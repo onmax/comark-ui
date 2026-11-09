@@ -19,7 +19,7 @@ export default defineDoctorConfig({
 });
 ```
 
-Each rule covers one kind of finding and reports the same text as `markdown-it-to-comark check`, with a link to [Diagnostics](/markdown-it-to-comark/diagnostics/). `vite-doctor . --format agent` adds the fix and the command to rerun.
+Each rule covers one kind of finding and reports the same text as `markdown-it-to-comark check`, with a link to [Diagnostics](/markdown-it-to-comark/diagnostics). `vite-doctor . --format agent` adds the fix and the command to rerun.
 
 ## Fixes
 

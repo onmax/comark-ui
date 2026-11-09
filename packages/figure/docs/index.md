@@ -130,7 +130,7 @@ figcaption {
 
 ### With comark-zoom
 
-With [comark-zoom](/zoom/), a figure's image zooms like any other, in either plugin order.
+With [comark-zoom](/zoom), a figure's image zooms like any other, in either plugin order.
 
 ## API
 

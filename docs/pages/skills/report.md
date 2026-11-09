@@ -27,8 +27,8 @@ Ask once the research is done, such as "Write up which modules we should migrate
 Choose by what you have:
 
 - Options to compare, or a plan to approve: this skill.
-- Findings about code, a design, or a system that already exists: [Review document](/skills/review-document/).
-- A question about how something works: [Visual explanation](/skills/visual-explanation/).
+- Findings about code, a design, or a system that already exists: [Review document](/skills/review-document).
+- A question about how something works: [Visual explanation](/skills/visual-explanation).
 
 ## It's working if
 
