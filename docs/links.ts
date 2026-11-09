@@ -1,10 +1,11 @@
-// Checks every internal link in the built docs the way the deployed site answers it: the Worker's redirects first, then
-// the dynamic badge endpoint or prerendered files. A link that redirects, has no target, or names a heading that
-// isn't there fails the build.
+// Checks every internal link in the built docs the way the deployed site answers it: the dynamic badge endpoint or a
+// prerendered file. A link with a trailing slash, which Cloudflare redirects, a link with no target, or one that names a
+// heading that isn't there fails the build.
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { excludedLinks } from "./link-excludes.ts";
-import { redirectTarget, SITE } from "./server/utils/site.ts";
+
+const SITE = "https://comark-ui.onmax.me";
 
 const root = new URL("./dist/public/", import.meta.url).pathname;
 if (!existsSync(root)) throw new Error("Build the docs first: pnpm docs:generate.");
@@ -39,15 +40,13 @@ const linksOf = (html: string) =>
 const urlOf = (file: string) => {
   const path = `/${relative(root, file)}`;
   return path.endsWith("/index.html")
-    ? path.slice(0, -"index.html".length)
+    ? path.slice(0, -"/index.html".length) || "/"
     : path.replace(/\.html$/, "");
 };
-const fileOf = (path: string) => {
-  const page = path.replace(/\/$/, "");
-  return [path, `${page}.html`, `${page}/index.html`]
+const fileOf = (path: string) =>
+  [path, `${path}.html`, `${path}/index.html`]
     .map((candidate) => join(root, candidate))
     .find((file) => existsSync(file) && statSync(file).isFile());
-};
 
 // The playground's preset column and the gallery's cells are pieces that the tool pages load, not pages.
 const files = pages(root).filter(
@@ -76,10 +75,9 @@ for (const file of files) {
       )
     )
       continue;
-    const moved = redirectTarget(url);
-    if (moved) {
+    if (url.pathname.length > 1 && url.pathname.endsWith("/")) {
       problems.add(
-        `${page} links to ${url.pathname}, which the Worker redirects to ${moved}. Link there, or exempt the page in docs/server/utils/site.ts.`,
+        `${page} links to ${url.pathname}, which Cloudflare redirects to ${url.pathname.slice(0, -1)}. Drop the trailing slash.`,
       );
       continue;
     }
@@ -93,7 +91,7 @@ for (const file of files) {
       continue;
     }
     // The playground reads its fragment as state, not as a heading.
-    if (url.hash.length > 1 && target.endsWith(".html") && !/^\/play\/?$/.test(url.pathname)) {
+    if (url.hash.length > 1 && target.endsWith(".html") && url.pathname !== "/play") {
       const id = decodeURIComponent(url.hash.slice(1));
       if (!idsOf(target).has(id))
         problems.add(

@@ -174,7 +174,7 @@ pnpm add comark @comark/html comark-code
 ````
 ::
 
-`sh`, `bash`, `zsh`, `shell`, `shellscript`, `shellsession`, `console`, and `ansi` blocks are terminals unless their title is a file's name, like `install.sh`. A terminal's header shows its title but not its language. In a [code group](/tabs/#code-group) the tab names the block, so a terminal there draws no line under its header.
+`sh`, `bash`, `zsh`, `shell`, `shellscript`, `shellsession`, `console`, and `ansi` blocks are terminals unless their title is a file's name, like `install.sh`. A terminal's header shows its title but not its language. In a [code group](/tabs#code-group) the tab names the block, so a terminal there draws no line under its header.
 
 ### Wrap
 
@@ -209,7 +209,7 @@ Use the `lang` attribute on a `diff` fence to highlight it as that language. Eac
 Paste `git diff` output as it is. If the block has `@@` hunk headers, the plugin drops them and the file headers before the first hunk. Without `lang`, a `diff` fence stays a diff in Shiki's colors.
 
 > [!TIP]
-> A `diff` fence marks a change inside one block. To show the code before and after side by side, use [Diff](/diff/).
+> A `diff` fence marks a change inside one block. To show the code before and after side by side, use [Diff](/diff).
 
 ## Examples
 
@@ -234,7 +234,7 @@ const stop = onCodeAction("run", ({ code, language }) => terminal.run(code));
 
 A click also sends a `comark-code-action` event from the block, with the action's `id`, the code, and the language in its `detail`. It bubbles up, so one listener on the page can handle every action.
 
-To try an action, add one under `comark-code` in the [playground](/play/)'s Config tab.
+To try an action, add one under `comark-code` in the [playground](/play)'s Config tab.
 
 ### Icons on your buttons
 
@@ -249,7 +249,7 @@ code({
 });
 ```
 
-If the plugin can't draw an icon, it reports it in `meta.issues` under the same [Doctor](/doctor/) rule as an `:icon`'s, and the button shows its title as text.
+If the plugin can't draw an icon, it reports it in `meta.issues` under the same [Doctor](/doctor) rule as an `:icon`'s, and the button shows its title as text.
 
 ### Highlight with Shiki
 
@@ -339,7 +339,7 @@ Each action takes:
 
 ### Issues
 
-The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation/) describes, and never throws:
+The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation) describes, and never throws:
 
 - A range past the block's last line.
 - A range that isn't in braces, or a part of one that isn't a line or a run from a lower line to a higher one.
@@ -348,7 +348,7 @@ The plugin adds every problem to `meta.issues`, as [Validation](/guide/validatio
 - comark-code listed before `shiki` in `plugins`.
 - An action's icon it can't draw.
 
-Each issue names the block by its title, or else by its first line, and says how to write it. Each one has its own rule in [Doctor](/doctor/).
+Each issue names the block by its title, or else by its first line, and says how to write it. Each one has its own rule in [Doctor](/doctor).
 
 ### Package
 
@@ -365,15 +365,15 @@ import code, { components } from "comark-code/html";
 const render = createHtmlRenderer({ plugins: [code()], components });
 ```
 
-The components replace how `pre` renders. The block keeps its own markup, so Shiki's highlighting and your `pre` styles still apply, and it works in a [code group](/tabs/#code-group) whichever plugin comes first.
+The components replace how `pre` renders. The block keeps its own markup, so Shiki's highlighting and your `pre` styles still apply, and it works in a [code group](/tabs#code-group) whichever plugin comes first.
 
-For Vue, React, or Svelte, import from `comark-code/vue`, `comark-code/react`, or `comark-code/svelte`, which needs Svelte 5.20 or later. [Renderers](/guide/renderers/) covers server rendering and using it with other plugins.
+For Vue, React, or Svelte, import from `comark-code/vue`, `comark-code/react`, or `comark-code/svelte`, which needs Svelte 5.20 or later. [Renderers](/guide/renderers) covers server rendering and using it with other plugins.
 
 When you render on a server, import `comark-code/style.css` with your own styles so the code blocks are styled before the components mount.
 
 ## Theme
 
-The header sits on the code block's own background, so it takes your `pre` styles and Shiki's theme. The title and buttons follow the shared tokens in [Theming](/guide/theming/).
+The header sits on the code block's own background, so it takes your `pre` styles and Shiki's theme. The title and buttons follow the shared tokens in [Theming](/guide/theming).
 
 Code highlighted with a light and a dark Shiki theme switches to the dark one with the page: under a `.dark` class, or in the system's dark mode unless a `.light` class is above it. Shiki writes the light colors inline, so this rule is `!important`.
 
@@ -415,7 +415,7 @@ The three colors lighten in dark mode with the shared status tokens.
 
 ### Your own header
 
-A block that draws a header above its code blocks, like a [code group](/tabs/#code-group) or a [magic move](/magic-move/), puts `data-code-header` on its root and sets `--ck-header` to how far its header's top sits above the code block's top. Each code block inside then makes no room for a header of its own, hides its title, and puts its buttons at the right end of your header, centered in it. The code script sets `--ck-controls` on your root to the active blocks' controls width, including configured actions. Reserve `var(--ck-controls, 3.75rem)` outside your header's scrolling content. Controls use at most 60% of the block's width and scroll independently when they need more room.
+A block that draws a header above its code blocks, like a [code group](/tabs#code-group) or a [magic move](/magic-move), puts `data-code-header` on its root and sets `--ck-header` to how far its header's top sits above the code block's top. Each code block inside then makes no room for a header of its own, hides its title, and puts its buttons at the right end of your header, centered in it. The code script sets `--ck-controls` on your root to the active blocks' controls width, including configured actions. Reserve `var(--ck-controls, 3.75rem)` outside your header's scrolling content. Controls use at most 60% of the block's width and scroll independently when they need more room.
 
 ```css
 .my-group {
@@ -460,4 +460,4 @@ Bigger buttons further from the corner, and a title in the code's font, lined up
 }
 ```
 
-To try it, paste it into Extra CSS in the [playground's Theme pane](/play/#preset=code-copy-and-wrap).
+To try it, paste it into Extra CSS in the [playground's Theme pane](/play#preset=code-copy-and-wrap).

@@ -39,7 +39,7 @@ The extension runs once registered, and the `comark/recommended` preset turns ev
 pnpm vite-doctor . --config doctor.config.ts
 ```
 
-It lints `**/*.{md,mdc}`, except `node_modules` and `dist`. Set `include` and `exclude` to change that. Each rule reports with its own code, linked to its page in [Doctor](/doctor/).
+It lints `**/*.{md,mdc}`, except `node_modules` and `dist`. Set `include` and `exclude` to change that. Each rule reports with its own code, linked to its page in [Doctor](/doctor).
 
 ## Examples
 
@@ -78,19 +78,19 @@ Links resolve from the project root. `comark/dead-url` is marked `env-dependent`
 
 ### Options
 
-It takes the same options as the [command line's config](/lint/getting-started/#add-your-own-components), plus two of its own:
+It takes the same options as the [command line's config](/lint/getting-started#add-your-own-components), plus two of its own:
 
 | Option | Default | Description |
 | --- | --- | --- |
 | `include` | `**/*.{md,mdc}` | The Markdown to check, relative to the project root. |
 | `exclude` | `**/node_modules/**`, `**/dist/**` | Globs to skip. |
 
-The [library options](/lint/getting-started/#library) list the rest, all but `file`.
+The [library options](/lint/getting-started#library) list the rest, all but `file`.
 
 ### Codes
 
 The core rules' codes start at `COMARK0001`, and each package gets a hundred codes. comark-annotate's start at `COMARK0101`, comark-cards' at `COMARK0201`, and so on.
 
-Of the core rules, unreadable frontmatter and unsafe URLs are errors. So are a few package rules, such as an unsafe card link, a path outside the project root, and a quiz question with no correct option. The rest are warnings. Each rule's page shows its severity, and [Doctor's overview](/doctor/#rules) lists every code.
+Of the core rules, unreadable frontmatter and unsafe URLs are errors. So are a few package rules, such as an unsafe card link, a path outside the project root, and a quiz question with no correct option. The rest are warnings. Each rule's page shows its severity, and [Doctor's overview](/doctor#rules) lists every code.
 
 Each diagnostic has `why`, `fix`, its docs link, and the Markdown location in `sources`. A parsing or rule failure also keeps the original exception in `cause`.

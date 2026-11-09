@@ -12,7 +12,6 @@ import {
   type Node,
 } from "comark";
 import { textContent } from "comark/utils";
-import { site } from "./paths.ts";
 
 const isElement = (node: Node): node is ElementNode =>
   Array.isArray(node) && typeof node[0] === "string";
@@ -24,7 +23,7 @@ async function playLink(source: string) {
   const stream = new Blob([source]).stream().pipeThrough(new CompressionStream("deflate-raw"));
   const bytes = new Uint8Array(await new Response(stream).arrayBuffer());
   const base64 = btoa(String.fromCharCode(...bytes));
-  return `${site("/play/")}#md=${base64.replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/, "")}`;
+  return `/play#md=${base64.replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/, "")}`;
 }
 
 async function studio(node: ElementNode, plugins: () => ComarkPlugin[]) {

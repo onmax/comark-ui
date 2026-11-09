@@ -193,7 +193,7 @@ The default reader refuses symlinks that lead out of `root`.
 
 ### Issues
 
-The plugin adds these problems to `meta.issues`, as [Validation](/guide/validation/) describes:
+The plugin adds these problems to `meta.issues`, as [Validation](/guide/validation) describes:
 
 - The block has no cast: no `src` and no code block.
 - The file can't be found or read, sits outside `root`, or isn't a local file.
@@ -204,11 +204,11 @@ The plugin adds these problems to `meta.issues`, as [Validation](/guide/validati
 - The block has both `src` and a code block.
 - A prop isn't one of the above.
 
-Each names its block and the fix, and has its own rule in [Doctor](/doctor/). A cast it can't read renders nothing.
+Each names its block and the fix, and has its own rule in [Doctor](/doctor). A cast it can't read renders nothing.
 
 ### Package
 
-[comark-ui](/getting-started/) installs and registers `comark-cast`. To use it alone, install it and pass the renderer's `components`:
+[comark-ui](/getting-started) installs and registers `comark-cast`. To use it alone, install it and pass the renderer's `components`:
 
 ```sh
 pnpm add comark @comark/html comark-cast
@@ -221,7 +221,7 @@ import cast, { components } from "comark-cast/html";
 const render = createHtmlRenderer({ plugins: [cast({ root: "docs" })], components });
 ```
 
-For Vue, React, or Svelte, import from `comark-cast/vue`, `comark-cast/react`, or `comark-cast/svelte`. The components add the styles on mount. Import `comark-cast/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-cast/vue`, `comark-cast/react`, or `comark-cast/svelte`. The components add the styles on mount. Import `comark-cast/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers) covers using it with other plugins.
 
 ## Theme
 
@@ -231,7 +231,7 @@ The rules sit in a `comark` CSS layer, so any plain rule of yours wins, except o
 
 ### Shared tokens
 
-The frame reads these [shared tokens](/guide/theming/):
+The frame reads these [shared tokens](/guide/theming):
 
 | Token | Used for |
 | --- | --- |

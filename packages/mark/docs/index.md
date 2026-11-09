@@ -148,13 +148,13 @@ import mark, { components } from "comark-mark/html";
 const render = createHtmlRenderer({ plugins: [mark()], components });
 ```
 
-For Vue, React, or Svelte, import from `comark-mark/vue`, `comark-mark/react`, or `comark-mark/svelte`. The components add the styles on mount. When you render on a server, also import `comark-mark/style.css` so the page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-mark/vue`, `comark-mark/react`, or `comark-mark/svelte`. The components add the styles on mount. When you render on a server, also import `comark-mark/style.css` so the page doesn't shift. [Renderers](/guide/renderers) covers using it with other plugins.
 
 Without the components, it still works in any renderer, as plain `mark` and `sup` that the browser paints yellow and raises.
 
 ## Theme
 
-A highlight is a `<mark class="cmk-mark">` tinted with `--cmk-mark`, amber by default, that keeps the page's own text color, so it reads on light and dark pages. With forced colors on, it takes the system's highlight color. A superscript is a `<sup class="cmk-sup">` that doesn't change its line's height. Highlights read one [shared token](/guide/theming/):
+A highlight is a `<mark class="cmk-mark">` tinted with `--cmk-mark`, amber by default, that keeps the page's own text color, so it reads on light and dark pages. With forced colors on, it takes the system's highlight color. A superscript is a `<sup class="cmk-sup">` that doesn't change its line's height. Highlights read one [shared token](/guide/theming):
 
 | Token | Used for |
 | --- | --- |

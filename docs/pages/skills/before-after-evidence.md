@@ -22,8 +22,8 @@ Ask in your own words, such as "Add before and after screenshots of the invite d
 Choose by what you want:
 
 - Proof that a UI change, bug fix, or design change looks right: this skill.
-- A review with several findings, one of them visible: [Review document](/skills/review-document/), with this compare as that finding's evidence.
-- How a screen or flow works, not what changed: [Visual explanation](/skills/visual-explanation/).
+- A review with several findings, one of them visible: [Review document](/skills/review-document), with this compare as that finding's evidence.
+- How a screen or flow works, not what changed: [Visual explanation](/skills/visual-explanation).
 
 ## What your agent needs
 

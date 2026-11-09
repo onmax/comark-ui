@@ -3,7 +3,7 @@ title: Diagnostics
 description: Every code remark-to-comark reports, what it means, and what to do.
 ---
 
-`remark-to-comark check` and the [Vite Doctor extension](/remark-to-comark/vite-doctor/) report these codes. Warnings are work left. Info findings say what each plugin becomes.
+`remark-to-comark check` and the [Vite Doctor extension](/remark-to-comark/vite-doctor) report these codes. Warnings are work left. Info findings say what each plugin becomes.
 
 To teach an agent Comark's blocks and plugins, run `npx skills add onmax/comark-ui`.
 

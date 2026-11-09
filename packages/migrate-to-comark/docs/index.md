@@ -20,9 +20,9 @@ npx migrate-to-comark
 
 | Library | Found through | Migrator |
 | --- | --- | --- |
-| remark | unified, remark and rehype plugins, react-markdown, streamdown, MDX, Astro, Docusaurus, Gatsby, Nextra, Fumadocs, Nuxt Content, Contentlayer, Velite | [remark-to-comark](/remark-to-comark/) |
-| markdown-it | markdown-it and its plugins, VitePress, VuePress, Slidev, Eleventy, Hexo, Marp | [markdown-it-to-comark](/markdown-it-to-comark/) |
-| marked | marked and its extensions, svelte-markdown, ngx-markdown | [marked-to-comark](/marked-to-comark/) |
+| remark | unified, remark and rehype plugins, react-markdown, streamdown, MDX, Astro, Docusaurus, Gatsby, Nextra, Fumadocs, Nuxt Content, Contentlayer, Velite | [remark-to-comark](/remark-to-comark) |
+| markdown-it | markdown-it and its plugins, VitePress, VuePress, Slidev, Eleventy, Hexo, Marp | [markdown-it-to-comark](/markdown-it-to-comark) |
+| marked | marked and its extensions, svelte-markdown, ngx-markdown | [marked-to-comark](/marked-to-comark) |
 
 showdown, Markdoc, markdown-to-jsx, commonmark.js, snarkdown, and markdown-wasm have no migrator yet. The wizard names them and leaves them alone.
 
@@ -32,10 +32,10 @@ The wizard writes only what each migrator's own `rewrite --write` and `content -
 
 Code that renders Markdown switches to Comark last. While any Markdown file its migrator handles still needs a fix by hand, or is left alone as above, the wizard keeps that code on its library and names the files it waits on, since switching it would change how they render. Fix them and run the wizard again.
 
-On the 100 projects remark-to-comark was [tested on](/remark-to-comark/testing/), `npx migrate-to-comark --yes` writes the same files, byte for byte, as running remark-to-comark's `content` and `rewrite` by hand.
+On the 100 projects remark-to-comark was [tested on](/remark-to-comark/testing), `npx migrate-to-comark --yes` writes the same files, byte for byte, as running remark-to-comark's `content` and `rewrite` by hand.
 
 Everything else stays with each migrator: the warnings, what each plugin becomes, and the fixes. The wizard ends with the command that lists them.
 
 ## Usage
 
-[Getting started](/migrate-to-comark/getting-started/) covers the wizard and its flags.
+[Getting started](/migrate-to-comark/getting-started) covers the wizard and its flags.

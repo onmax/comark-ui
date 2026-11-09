@@ -22,10 +22,20 @@ export default defineNuxtConfig({
     },
     categories,
     groups: railGroups.map(({ title, icon }) => ({ title, icon })),
+    // Introduction and Installation sit outside every section, so they join the Guides sidebar here, and the header's
+    // Docs link opens Introduction rather than the landing page.
+    start: {
+      section: "guide",
+      links: [
+        { label: "Introduction", to: "/introduction", icon: "i-lucide-info" },
+        { label: "Installation", to: "/getting-started", icon: "i-lucide-download" },
+        { label: "Playground", to: "/play", icon: "i-lucide-flask-conical" },
+      ],
+    },
     github: { repo: "onmax/comark-ui", dir: "docs/pages" },
     // Comark plugins are functions, so they reach the server through a file.
     parser: "./markdown.ts",
-    // generate runs links.ts, which also checks Worker redirects. ViteHub's duplicate pass glob-matches every raw URL
+    // generate runs links.ts instead. ViteHub's duplicate pass glob-matches every raw URL
     // exclusion against every link, taking longer than CI's build timeout on this site.
     linkChecker: false,
   },

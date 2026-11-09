@@ -28,7 +28,7 @@ Ask "Teach me how ETags prevent lost updates" or "Write a lesson on React keys f
 Choose by what you want:
 
 - One idea, learned and checked in a few minutes: this skill.
-- How a system works, with no check: [Visual explanation](/skills/visual-explanation/).
+- How a system works, with no check: [Visual explanation](/skills/visual-explanation).
 - A course over many sessions that remembers what you've learned: a tutor skill such as Matt Pocock's [teach](https://github.com/mattpocock/skills/tree/main/skills/productivity/teach), which this skill draws on.
 
 Its reader context, how-and-why explanation, evidence handling, and step-by-step diagrams draw on [pstack's teach skill](https://github.com/cursor/plugins/blob/main/pstack/skills/teach/SKILL.md). They're built in, so this skill installs on its own.

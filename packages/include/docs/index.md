@@ -180,7 +180,7 @@ const render = createHtmlRenderer(comarkUi({ include: { root: "content", base: "
 
 ### Issues
 
-The plugin drops an include that fails. Its sentence in `meta.issues` names the include and the fix, as [Validation](/guide/validation/) describes:
+The plugin drops an include that fails. Its sentence in `meta.issues` names the include and the fix, as [Validation](/guide/validation) describes:
 
 ```txt
 include "./duck-log.md": file not found. It resolved to "guide/duck-log.md" under the root; check the path or base.
@@ -199,7 +199,7 @@ It reports:
 - A reader that throws.
 - An include that isn't alone on its line, or is written `::include`.
 
-If a partial leaves a `::block` open, the plugin closes it at the end of the paste and reports it. Each problem has its own rule in [Doctor](/doctor/).
+If a partial leaves a `::block` open, the plugin closes it at the end of the paste and reports it. Each problem has its own rule in [Doctor](/doctor).
 
 ### Package
 

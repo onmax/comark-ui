@@ -70,7 +70,7 @@ The other two plugins draw it from a JSON spec, and the page holds only the draw
 ## At a glance
 
 ::matrix
-| | [comark-charts](/charts/) | [comark-vega](https://github.com/miguelrk/comark-packages/tree/main/packages/comark-vega) | [comark-flint-chart](https://github.com/miguelrk/comark-packages/tree/main/packages/comark-flint-chart) |
+| | [comark-charts](/charts) | [comark-vega](https://github.com/miguelrk/comark-packages/tree/main/packages/comark-vega) | [comark-flint-chart](https://github.com/miguelrk/comark-packages/tree/main/packages/comark-flint-chart) |
 | --- | --- | --- | --- |
 | **Writing** | | | |
 | Source *What goes in the Markdown* | A table | Vega-Lite JSON | Flint JSON |

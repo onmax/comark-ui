@@ -239,12 +239,12 @@ How most packages work, so the bullets below don't repeat it:
   - `docs/markdown.ts` is the parser the module runs on the server, with the plugins in `docs/plugins.ts`. annotate, diff, quiz, and comments have only an HTML renderer, so it renders their blocks to HTML there, and `ComarkHtml.vue` shows it.
   - `docs/app/components/DocsMarkdown.vue` replaces the module's to add comark-ui's Vue components. `docs/app/components/content/` draws the site's own blocks: `::examples`, `::example`, `::correct`, and `::incorrect`.
   - The landing is `docs/pages/index.md`, in `@vite-hub/docs`'s `home` layout, with its styles in `docs/app/assets/landing.css`. Its blocks are content components too: `::landing-hero`, `::packages` (the canvas of cards), `::hero` (the studio), and `::drop`, then `::landing-footer`. `docs/studio.ts` turns `::hero` into the `studio` node while the page parses, and `docs/landing.ts`, run before Nuxt, writes the package list and stars to `docs/.generated/landing.json` and renders a card per example into `docs/public/canvas-cards.json`.
-  - `docs/paths.ts` maps the old site's paths, which end in a slash, to the app's.
+  - Pages have no trailing slash: link `/zoom`, not `/zoom/`. Cloudflare redirects the slash form (`html_handling` in `wrangler.jsonc`), and nothing else redirects: an old host or a moved page is gone.
   - Every `@vite-hub/*` package comes from pkg.pr.new at one vite-hub/vitehub commit, in the catalog. When the module lacks something, fix it in vitehub and pin the PR's or `main`'s pkg.pr.new build, not a patch.
   - Tests that import Nuxt app code from `docs/` need its generated types: run `pnpm --dir docs run prepare` first when `docs/.nuxt/tsconfig.app.json` is missing.
-  - Its Nitro output in `docs/dist` is a Cloudflare Worker (`wrangler.jsonc` at the root) that runs before the static assets.
-  - `docs/links.ts` (`pnpm docs:links`, run by CI after the build) follows internal links and fragments in `docs/dist/public` through the Worker's redirects in `docs/server/utils/site.ts`, so a page that a redirect shadows or a heading that is missing fails.
-  - `docs/server/middleware/site.ts` redirects the old hosts and paths and serves the prerendered file. `docs/server/utils/site.ts` redirects the old per-topic pages to each package's page. `docs/server/routes/badge.svg.ts` is the badge.
+  - Its Nitro output in `docs/dist` is a Cloudflare Worker (`wrangler.jsonc` at the root) that runs before the static assets, so an agent that asks a page for Markdown gets its copy (`docs/server/middleware/assets.ts`).
+  - `docs/links.ts` (`pnpm docs:links`, run by CI after the build) checks internal links and fragments in `docs/dist/public`, so a link with a trailing slash, a missing page, or a missing heading fails.
+  - `docs/server/routes/badge.svg.ts` is the badge.
   - ViteHub adds the team's tools, all limited to the logins in `docs/server/utils/team.ts`: GitHub sign-in (`docs/server/auth.ts`), comments (`docs/server/comments.ts`), and the Console's Markdown editor (`docs/server/content.ts`), which edits the sources in the repository.
 - Pages:
   - Each package has one page, `packages/<name>/docs/index.md`, which `files` keeps out of npm. It is written for comark-ui users in the shape `docs/WRITING.md` gives; read that before you write or restructure any page.

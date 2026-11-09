@@ -6,19 +6,15 @@
   "main": "docs/dist/server/index.mjs",
   "compatibility_date": "2026-10-01",
   "compatibility_flags": ["nodejs_compat"],
-  // The Worker runs first so the old hosts can redirect before an asset answers. Nitro's middleware then serves the
-  // prerendered file through ASSETS (docs/server/middleware/site.ts).
+  // The Worker runs first so an agent that asks for Markdown gets the page's copy. Nitro's middleware then serves the
+  // prerendered file through ASSETS (docs/server/middleware/assets.ts). Pages live at /zoom, with no trailing slash.
   "assets": {
     "directory": "./docs/dist/public",
     "binding": "ASSETS",
     "run_worker_first": true,
-    "html_handling": "force-trailing-slash"
+    "html_handling": "drop-trailing-slash"
   },
-  "routes": [
-    { "pattern": "comark-ui.onmax.me", "custom_domain": true },
-    { "pattern": "comark.onmax.me", "custom_domain": true },
-    { "pattern": "comark-annotate.onmax.me", "custom_domain": true }
-  ],
+  "routes": [{ "pattern": "comark-ui.onmax.me", "custom_domain": true }],
   // Workers Builds runs `wrangler preview` for branches other than main, which needs this block.
   "previews": {}
 }

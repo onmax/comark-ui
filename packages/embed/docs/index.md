@@ -163,7 +163,7 @@ The plugin takes no options. In `comarkUi()`, `embed: false` turns it off.
 
 ### Issues
 
-The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation/) describes:
+The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation) describes:
 
 - A missing `url`.
 - A `url` that isn't `https://`, or that has a user name or password before the host. The block renders nothing.
@@ -173,11 +173,11 @@ The plugin adds every problem to `meta.issues`, as [Validation](/guide/validatio
 - Content inside the block.
 - A prop `::embed` doesn't read.
 
-Each has its own rule in [Doctor](/doctor/).
+Each has its own rule in [Doctor](/doctor).
 
 ### Package
 
-[comark-ui](/getting-started/) brings `comark-embed` and registers it. To use it alone, install it and pass the renderer's `components`:
+[comark-ui](/getting-started) brings `comark-embed` and registers it. To use it alone, install it and pass the renderer's `components`:
 
 ```sh
 pnpm add comark @comark/html comark-embed
@@ -190,7 +190,7 @@ import embed, { components } from "comark-embed/html";
 const render = createHtmlRenderer({ plugins: [embed()], components });
 ```
 
-For Vue, React, or Svelte, import from `comark-embed/vue`, `comark-embed/react`, or `comark-embed/svelte`. The components add the styles when they mount. On a server, import `comark-embed/style.css` with your own styles so the page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-embed/vue`, `comark-embed/react`, or `comark-embed/svelte`. The components add the styles when they mount. On a server, import `comark-embed/style.css` with your own styles so the page doesn't shift. [Renderers](/guide/renderers) covers using it with other plugins.
 
 ## Theme
 

@@ -151,7 +151,7 @@ Tints the icon and the hovered border.
 
 ### Hiding optional fields
 
-Fold rarely used options into a `::collapsible` from [comark-details](/details/), as Nuxt UI's docs do:
+Fold rarely used options into a `::collapsible` from [comark-details](/details), as Nuxt UI's docs do:
 
 ```md
 ::field{name="options" type="object"}
@@ -193,13 +193,13 @@ The parse plugin replaces each field's attributes with the ones it renders from,
 
 ### Issues
 
-The plugin adds these to `meta.issues`, as [Validation](/guide/validation/) describes:
+The plugin adds these to `meta.issues`, as [Validation](/guide/validation) describes:
 
 - A field without a `name`.
 - A prop it doesn't read.
 - A `description` prop on a field with content and no nested fields, which hides the prop.
 
-Each has its own rule in [Doctor](/doctor/).
+Each has its own rule in [Doctor](/doctor).
 
 ### Package
 
@@ -218,11 +218,11 @@ import fields, { components } from "comark-fields/html";
 const render = createHtmlRenderer({ plugins: [fields()], components });
 ```
 
-For Vue, React, or Svelte, import from `comark-fields/vue`, `comark-fields/react`, or `comark-fields/svelte`. The components add the styles on mount. When you render on a server, also import `comark-fields/style.css` so the page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-fields/vue`, `comark-fields/react`, or `comark-fields/svelte`. The components add the styles on mount. When you render on a server, also import `comark-fields/style.css` so the page doesn't shift. [Renderers](/guide/renderers) covers using it with other plugins.
 
 ## Theme
 
-Fields follow the shared tokens in [Theming](/guide/theming/), and one variable of their own.
+Fields follow the shared tokens in [Theming](/guide/theming), and one variable of their own.
 
 ### Shared tokens
 

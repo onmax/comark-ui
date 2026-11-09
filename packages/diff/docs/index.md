@@ -47,7 +47,7 @@ export const MAX_FILTERS = 3;
 - The header groups the label and file path, with added and removed counts alongside.
 - Removed lines are red and added lines green, with the changed words a shade deeper.
 - The line numbers and the `+` and `−` come from CSS, so copying a selection copies only the code.
-- To mark changes inside one block, such as pasted `git diff` output, use a `diff` fence with [Code](/code/#diffs).
+- To mark changes inside one block, such as pasted `git diff` output, use a `diff` fence with [Code](/code#diffs).
 
 ## Usage
 
@@ -187,7 +187,7 @@ The plugin takes no options. In `comarkUi()`, `diff: false` turns it off.
 
 ### Issues
 
-The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation/) describes. Each names its diff by file and says how to fix it:
+The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation) describes. Each names its diff by file and says how to fix it:
 
 - A count of code blocks other than two.
 - Anything inside besides the two blocks.
@@ -199,11 +199,11 @@ The plugin adds every problem to `meta.issues`, as [Validation](/guide/validatio
 - Before and after that are the same.
 - A prop `::diff` doesn't read, or a `:prop` bound to an undefined value.
 
-Each kind has its own rule in [Doctor](/doctor/).
+Each kind has its own rule in [Doctor](/doctor).
 
 ### Package
 
-[comark-ui](/getting-started/) installs and registers `comark-diff`. To use it alone, install it and pass the renderer's `components`:
+[comark-ui](/getting-started) installs and registers `comark-diff`. To use it alone, install it and pass the renderer's `components`:
 
 ```sh
 pnpm add comark @comark/html comark-diff
@@ -216,11 +216,11 @@ import diff, { components } from "comark-diff/html";
 const render = createHtmlRenderer({ plugins: [diff()], components });
 ```
 
-It's HTML only, with no Vue, React, or Svelte components. Add Comark's `shiki` plugin to keep the highlighting. [Renderers](/guide/renderers/) covers using it with other plugins.
+It's HTML only, with no Vue, React, or Svelte components. Add Comark's `shiki` plugin to keep the highlighting. [Renderers](/guide/renderers) covers using it with other plugins.
 
 ## Theme
 
-A diff is a card like shadcn/ui's Card, so it follows the shared tokens in [Theming](/guide/theming/), dark mode included. Removed and added lines keep their own red and green in any theme. The rules sit in a `comark` CSS layer, so any plain rule of yours wins.
+A diff is a card like shadcn/ui's Card, so it follows the shared tokens in [Theming](/guide/theming), dark mode included. Removed and added lines keep their own red and green in any theme. The rules sit in a `comark` CSS layer, so any plain rule of yours wins.
 
 ### Shared tokens
 
@@ -235,7 +235,7 @@ A diff is a card like shadcn/ui's Card, so it follows the shared tokens in [Them
 | `--comark-radius` | The card's corners |
 | `--comark-font` | The header's label |
 
-With Comark's `shiki` plugin, the code's colors are Shiki's. With a light and a dark theme, they switch with the page, as [code blocks](/code/#theme) do.
+With Comark's `shiki` plugin, the code's colors are Shiki's. With a light and a dark theme, they switch with the page, as [code blocks](/code#theme) do.
 
 ### Variables
 

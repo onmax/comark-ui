@@ -3,7 +3,7 @@
 [![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-diff&icon=npm)](https://npmx.dev/package/comark-diff)
 [![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-diff&period=month&icon=npm)](https://npmx.dev/package/comark-diff)
 [![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-diff)
-[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/diff/)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/diff)
 
 A code change in Markdown, shown the way a pull request review shows a suggested change: the file and its counts in a header, removed lines red, added lines green, and the changed words marked within a pair of lines. A [Comark](https://comark.dev) plugin for HTML, with no script.
 
@@ -39,7 +39,7 @@ One diff shows one file and a few lines around the change; it takes no unified d
 
 ## Customize
 
-The styles follow shadcn/ui's Card: they read its CSS variables, such as `--background`, `--border`, and `--accent`, when the page has them, and use its neutral theme otherwise. Set the shared `--comark-*` tokens to theme the diff with the other comark plugins, `--cd-red` and `--cd-green` to recolor the lines, and `--cd-font` for the code's font. The rules sit in a `comark` CSS layer, so any plain rule of your own wins; see the diff's [Theming page](https://comark-ui.onmax.me/diff/#theme).
+The styles follow shadcn/ui's Card: they read its CSS variables, such as `--background`, `--border`, and `--accent`, when the page has them, and use its neutral theme otherwise. Set the shared `--comark-*` tokens to theme the diff with the other comark plugins, `--cd-red` and `--cd-green` to recolor the lines, and `--cd-font` for the code's font. The rules sit in a `comark` CSS layer, so any plain rule of your own wins; see the diff's [Theming page](https://comark-ui.onmax.me/diff#theme).
 
 The icon is [Lucide](https://lucide.dev)'s, under its license (see `LICENSE`).
 

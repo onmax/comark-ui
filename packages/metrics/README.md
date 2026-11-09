@@ -3,7 +3,7 @@
 [![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-metrics&icon=npm)](https://npmx.dev/package/comark-metrics)
 [![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-metrics&period=month&icon=npm)](https://npmx.dev/package/comark-metrics)
 [![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-metrics)
-[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/metrics/)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/metrics)
 
 Before → after numbers with the percent change, colored by whether lower or higher is better; progress bars; and tables of metrics with a change column. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
 

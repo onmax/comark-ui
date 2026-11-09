@@ -3,7 +3,7 @@
 [![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-linter&icon=npm)](https://npmx.dev/package/comark-linter)
 [![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-linter&period=month&icon=npm)](https://npmx.dev/package/comark-linter)
 [![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-linter)
-[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/lint/)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/lint)
 
 Finds unclosed blocks, unknown components, broken links and anchors, local URLs, and plugin issues in [Comark](https://comark.dev) documents. A library, a CLI, an [ESLint](https://eslint.org) plugin, and a [Vite Doctor](https://github.com/onmax/vite-doctor) extension. Every message names the block and says how to fix it.
 
@@ -62,4 +62,4 @@ export default defineDoctorConfig({ extends: ["auto"], extensions: [comark()] })
 | `comark/blocked-url` | `COMARK0012` | A localhost, private, tunnel, or deploy preview URL |
 | `comark/dead-url` | `COMARK0013` | An external URL that answers 404 or 410, or whose host is gone, with `--check-urls` |
 
-Each comark-ui package adds one rule per kind of problem its plugin reports, named in `meta.issueRules`, with a code in its own hundred. [Doctor](https://comark-ui.onmax.me/doctor/) has a page for every rule.
+Each comark-ui package adds one rule per kind of problem its plugin reports, named in `meta.issueRules`, with a code in its own hundred. [Doctor](https://comark-ui.onmax.me/doctor) has a page for every rule.

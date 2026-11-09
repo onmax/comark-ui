@@ -2,11 +2,11 @@
 
 [![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=remark-to-comark&icon=npm)](https://npmx.dev/package/remark-to-comark)
 [![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/remark-to-comark)
-[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/remark-to-comark/)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/remark-to-comark)
 
 Moves a project from [remark](https://github.com/remarkjs/remark) to [Comark](https://comark.dev). It finds every remark setup in the code, rewrites the unified chains it can, and escapes the Markdown Comark would read differently. What it can't do, it reports, with the fix and a docs link.
 
-[Docs](https://comark-ui.onmax.me/remark-to-comark/) · [Getting started](https://comark-ui.onmax.me/remark-to-comark/getting-started/) · [Diagnostics](https://comark-ui.onmax.me/remark-to-comark/diagnostics/) · [How it was tested](https://comark-ui.onmax.me/remark-to-comark/testing/)
+[Docs](https://comark-ui.onmax.me/remark-to-comark) · [Getting started](https://comark-ui.onmax.me/remark-to-comark/getting-started) · [Diagnostics](https://comark-ui.onmax.me/remark-to-comark/diagnostics) · [How it was tested](https://comark-ui.onmax.me/remark-to-comark/testing)
 
 ## Try it
 
@@ -42,7 +42,7 @@ It's also 6 to 7 times faster in these measurements. Rendering the same files to
 | 49 installed READMEs of remark, rehype, and unified packages (1,213 KiB) | 1,176 ms | 165 ms | 7.1× |
 | 515 Markdown files in this repository (1,074 KiB) | 982 ms | 159 ms | 6.2× |
 
-remark here is remark-parse, remark-gfm, remark-frontmatter, remark-rehype, and rehype-stringify. Adding rehype-raw, which keeps raw HTML the way `comarkOptions()` does, makes it 11 to 20% slower. [Speed and size](https://comark-ui.onmax.me/remark-to-comark/testing/#speed-and-size) has the full table and the exact commands to select both corpora. Timings and installed README counts vary by machine and installation.
+remark here is remark-parse, remark-gfm, remark-frontmatter, remark-rehype, and rehype-stringify. Adding rehype-raw, which keeps raw HTML the way `comarkOptions()` does, makes it 11 to 20% slower. [Speed and size](https://comark-ui.onmax.me/remark-to-comark/testing#speed-and-size) has the full table and the exact commands to select both corpora. Timings and installed README counts vary by machine and installation.
 
 The cost is size in the browser. Minified, the Comark setup is 118 KiB gzipped and the remark pipeline 48 KiB, or 98 KiB with rehype-raw. Most of the difference is js-yaml, because Comark parses frontmatter into an object where remark-frontmatter keeps a string. [`bench/`](https://github.com/onmax/comark-ui/tree/main/packages/remark-to-comark/bench) has the scripts that measured both.
 
@@ -66,7 +66,7 @@ Without `--write`, `content` and `rewrite` print the change and touch nothing. r
 
 Rewritten code imports `comarkOptions` from `remark-to-comark/setup`, the Comark setup that reads Markdown like remark-parse with remark-gfm, without the rest of the package. `remark-to-comark/plugins` has Comark versions of rehype-slug, rehype-autolink-headings, rehype-external-links, rehype-unwrap-images, remark-squeeze-paragraphs, remark-reading-time, and Docusaurus' npm2yarn, each tested against the original. For other plugins, [RTC0102](https://comark-ui.onmax.me/remark-to-comark/diagnostics#rtc0102) names the [comark-ui](https://comark-ui.onmax.me) package that does the same job.
 
-The same findings run as a [Vite Doctor](https://comark-ui.onmax.me/remark-to-comark/vite-doctor/) extension, next to comark-linter.
+The same findings run as a [Vite Doctor](https://comark-ui.onmax.me/remark-to-comark/vite-doctor) extension, next to comark-linter.
 
 ## How close it gets
 
