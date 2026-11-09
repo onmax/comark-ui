@@ -121,6 +121,28 @@ Extra filters collapse into **+2 filters**.
   await expect(page.locator(`.cz-item ${plain}`).first()).toHaveCSS("color", "rgb(1, 2, 3)");
 });
 
+test("a box frames its area 6px out on a host that sets every element's box-sizing", async ({
+  page,
+}) => {
+  await open(
+    page,
+    `::screenshot{src="/after.png" alt="Filter toolbar on one row"}
+:::annotation{x=40 y=30 w=20 h=20}
+The filters.
+:::
+::`,
+  );
+  // An unlayered reset beats the comark layer's rules, whatever their specificity.
+  await page.addStyleTag({ content: "*{box-sizing:border-box}" });
+  const image = await page.locator("main .ca-frame img").boundingBox();
+  const mark = await page.locator("main .ca-mark.ca-box").boundingBox();
+  if (!image || !mark) throw new Error("The screenshot or its box didn't render.");
+  expect(mark.x).toBeCloseTo(image.x + image.width * 0.4 - 6, 0);
+  expect(mark.y).toBeCloseTo(image.y + image.height * 0.3 - 6, 0);
+  expect(mark.width).toBeCloseTo(image.width * 0.2 + 12, 0);
+  expect(mark.height).toBeCloseTo(image.height * 0.2 + 12, 0);
+});
+
 test("a side note lines up with its arrow when the screenshot also has a note above it", async ({
   page,
 }) => {

@@ -54,7 +54,9 @@ describe("comark-annotate", () => {
     const { issues, html } = await run(compare);
     expect(issues).toEqual([]);
     expect(html).toContain('<img src="before.png" alt="Old toolbar"');
-    expect(html).toContain('style="left:10%;top:20%;width:30%;height:15%"');
+    expect(html).toContain(
+      'style="left:calc(10% - 6px);top:calc(20% - 6px);width:calc(30% + 12px);height:calc(15% + 12px)"',
+    );
     expect(html).toMatch(
       /<span class="ca-mark ca-check" data-n="2" role="img" aria-label="Annotation 2: /,
     );
@@ -245,9 +247,10 @@ describe("comark-annotate", () => {
     );
     expect(issues).toEqual([]);
     expect(html).toContain('ca-stamp" style="left:3px;top:3px"');
-    expect(styles(html).match(/\.ca-mark\.ca-box\{[^}]+\}/)?.[0]).toBe(
-      ".ca-mark.ca-box{box-sizing:content-box;padding:6px;margin:-6px}",
+    expect(html).toContain(
+      "left:calc(1% - 6px);top:calc(2% - 6px);width:calc(20% + 12px);height:calc(10% + 12px)",
     );
+    expect(styles(html)).not.toMatch(/\.ca-mark\.ca-box\{/);
     expect(styles(html)).not.toContain("--ca-pad");
   });
 
@@ -494,8 +497,12 @@ describe("comark-annotate", () => {
       '::screenshot{src="a.png" alt="A"}\n:::annotation\n```yaml [props]\nx: 10\ny: 20\nw: 30\nh: 15\nside: right\n```\nFrom YAML\n:::\n:::annotation{:x="40" :y="40" :w="10" :h="10"}\nBound\n:::\n::',
     );
     expect(issues).toEqual([]);
-    expect(html).toContain("left:10%;top:20%;width:30%;height:15%");
-    expect(html).toContain("left:40%;top:40%;width:10%;height:10%");
+    expect(html).toContain(
+      "left:calc(10% - 6px);top:calc(20% - 6px);width:calc(30% + 12px);height:calc(15% + 12px)",
+    );
+    expect(html).toContain(
+      "left:calc(40% - 6px);top:calc(40% - 6px);width:calc(10% + 12px);height:calc(10% + 12px)",
+    );
     expect(html).toContain("ca-callout-right");
   });
 
@@ -507,7 +514,9 @@ describe("comark-annotate", () => {
       components,
       data: { box: { x: 30, y: 40 } },
     });
-    expect(html).toContain("left:30%;top:40%;width:10%;height:10%");
+    expect(html).toContain(
+      "left:calc(30% - 6px);top:calc(40% - 6px);width:calc(10% + 12px);height:calc(10% + 12px)",
+    );
   });
 
   it("does not throw when bound position and ink values are revoked proxies", async () => {
@@ -702,7 +711,7 @@ describe("comark-annotate", () => {
     expect(issues).toEqual([
       'screenshot "a.png", annotation 1: `:y` points at frontmatter.pos.yy, which is undefined. Fix the path or set `y` directly.',
     ]);
-    expect(html).toContain("left:30%;");
+    expect(html).toContain("left:calc(30% - 6px);");
   });
 
   it('reports mark="none" without a side note, since nothing would point at the spot', async () => {
