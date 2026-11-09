@@ -184,7 +184,7 @@ Pass options under `chips` in `comarkUi()`, or to `chips()` alone.
 
 The plugin adds every problem to `meta.issues`, as [Validation](/guide/validation/) describes:
 
-- An avatar that answers with an HTTP error, such as an `@user` with no GitHub account.
+- An avatar that answers with a client error, such as a 404 for an `@user` with no GitHub account. A server error leaves the image to the reader's browser without an issue.
 - A download the site rate-limits with HTTP 429. The chip keeps the URL, and the issue says to build again.
 - An `avatar` that is a bare login, such as `avatar="antfu"`. Write `avatar="@antfu"`.
 - A `:chip` whose `href` isn't a web address.
