@@ -13,5 +13,11 @@ export default defineEventHandler(async (event) => {
   const { runtime } = event.req as Request & { runtime?: { cloudflare?: Cloudflare } };
   const assets = runtime?.cloudflare?.env.ASSETS;
   if (!assets || url.pathname === "/badge.svg") return;
-  return fromAssets(event.req, assets);
+  const asset = await fromAssets(event.req, assets);
+  // The playground's preview is a sandboxed frame with no origin, so a font it loads needs CORS. nuxt.config.ts sets the
+  // same header for `nuxi dev`.
+  if (!asset || !url.pathname.startsWith("/play/fonts/")) return asset;
+  const font = new Response(asset.body, asset);
+  font.headers.set("access-control-allow-origin", "*");
+  return font;
 });

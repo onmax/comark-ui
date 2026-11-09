@@ -91,8 +91,8 @@ catalog:
   "@vite-hub/docs": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/docs@2707919d355e02959955d9607436b9e26bc09f3e
   "@vite-hub/realtime": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/realtime@2707919d355e02959955d9607436b9e26bc09f3e
   "@vite-hub/source": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/source@2707919d355e02959955d9607436b9e26bc09f3e
-  # @vite-hub/ui/playground (vite-hub/vitehub#3744) is not on the hosted Console stack yet. Move to it once #3744 merges.
-  "@vite-hub/ui": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/ui@0fe50ee248888266a9b59bfd8949fc3fdae329e9
+  # @vite-hub/ui/playground and /playground-render (vite-hub/vitehub#3744, #3750) are not on the hosted Console stack yet. Move to a release once #3750 merges.
+  "@vite-hub/ui": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/ui@af71f9df43c589af1350de7efe4925b993a93480
   "@vite-hub/workspace": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/workspace@2707919d355e02959955d9607436b9e26bc09f3e
   drizzle-kit: ^0.31.10
   drizzle-orm: 0.45.4
@@ -153,7 +153,7 @@ overrides:
   "@vite-hub/schedule": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/schedule@2707919d355e02959955d9607436b9e26bc09f3e
   "@vite-hub/shell": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/shell@2707919d355e02959955d9607436b9e26bc09f3e
   "@vite-hub/source": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/source@2707919d355e02959955d9607436b9e26bc09f3e
-  "@vite-hub/ui": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/ui@0fe50ee248888266a9b59bfd8949fc3fdae329e9
+  "@vite-hub/ui": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/ui@af71f9df43c589af1350de7efe4925b993a93480
   "@vite-hub/web-container": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/web-container@2707919d355e02959955d9607436b9e26bc09f3e
   "@vite-hub/workflow": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/workflow@2707919d355e02959955d9607436b9e26bc09f3e
   "@vite-hub/workspace": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/workspace@2707919d355e02959955d9607436b9e26bc09f3e

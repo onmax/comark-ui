@@ -98,4 +98,7 @@ export default defineNuxtConfig({
     ],
     prerender: { ignore: excludedLinks, routes: ["/play", "/play/gallery", "/badges"] },
   },
+  // The playground's preview is a sandboxed frame with no origin, so a font it loads needs CORS. On the Worker,
+  // docs/server/middleware/site.ts sets it.
+  routeRules: { "/play/fonts/**": { headers: { "access-control-allow-origin": "*" } } },
 });

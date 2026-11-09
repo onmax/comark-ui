@@ -6,7 +6,7 @@ import { join, relative } from "node:path";
 import { parseMarkdown } from "comark";
 import { defaultConfig, readConfig } from "./config.ts";
 import { decodePlaygroundLink, readPlaygroundHash } from "@vite-hub/ui/playground";
-import { configFile, contentFile, playable, templateOf } from "./play-link.ts";
+import { configFile, contentFile, playable } from "./play-link.ts";
 import { browserPlugins } from "./plugins.ts";
 
 const root = new URL("./dist/public/", import.meta.url).pathname;
@@ -21,12 +21,11 @@ const pages = (dir: string): string[] =>
         : [],
   );
 
-const templates = (
-  JSON.parse(readFileSync(join(root, "play/presets.json"), "utf8")) as {
-    id: string;
-    source: string;
-  }[]
-).map(templateOf);
+const { presets: templates } = JSON.parse(
+  readFileSync(join(root, "play/presets.json"), "utf8"),
+) as {
+  presets: { id: string; files: Record<string, string> }[];
+};
 
 async function problemOf(hash: string) {
   const code = readPlaygroundHash(hash);
@@ -47,8 +46,7 @@ async function problemOf(hash: string) {
 const checked = new Map<string, Promise<string | undefined>>();
 const problems = new Set<string>();
 let links = 0;
-// The preset column is a piece of the playground, not a page.
-for (const file of pages(root).filter((file) => relative(root, file) !== "play/presets.html")) {
+for (const file of pages(root)) {
   const page = `/${relative(root, file)}`.replace(/(\/index)?\.html$/, "") || "/";
   for (const [, hash] of readFileSync(file, "utf8").matchAll(/href="\/play\/?(#[^"]+)"/g)) {
     const state = hash!.replaceAll("&amp;", "&");

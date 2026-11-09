@@ -1,32 +1,38 @@
-/* The playground's styles, from the old site's style.css, with its sidebar's presets column in .tool-index. */
-/* The playground: the editor and its issues on the left, the rendered page on the right. */
+/* The playground's styles. PlaygroundRender from @vite-hub/ui draws the editor, the presets' column, and the preview
+   with its own; these fit it to the page and draw what comark-ui adds: the presets' stills, the package link, and the
+   Theme pane. */
 .play {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  height: 100%;
+  height: calc(100dvh - var(--ui-header-height));
 }
 
-.play-editor {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  border-right: 1px solid var(--line);
+.play .vh-pg {
+  border: 0;
+  border-radius: 0;
 }
 
-.play-bar {
-  display: flex;
-  flex: none;
-  align-items: center;
-  justify-content: space-between;
-  height: 2.75rem;
-  padding: 0 0.5rem;
-  border-bottom: 1px solid var(--line);
+.play .vh-pg:has(> .vh-pg-presets) {
+  grid-template-columns: 15rem minmax(0, 1fr) minmax(0, 1fr);
+}
+
+/* The package the preset documents, which the old site's header showed, and the way to the gallery. */
+.play-npmx,
+.play-gallery {
+  margin-right: 0.25rem;
   color: var(--faint);
-  font-size: 0.8125rem;
+  font: 0.75rem/1.5 var(--mono);
+  text-decoration: none;
+  white-space: nowrap;
 }
 
-.play-share,
+.play-gallery {
+  font-family: var(--sans);
+}
+
+.play-npmx:hover,
+.play-gallery:hover {
+  color: var(--fg);
+}
+
 .play-theme-actions button {
   padding: 0.25rem 0.625rem;
   border: 0;
@@ -41,180 +47,12 @@
     scale 160ms var(--ease-out);
 }
 
-.play-share:hover,
 .play-theme-actions button:hover {
   color: var(--fg);
 }
 
-/* Reset and Copy float in the code's corner, as comark-code's buttons do, and leave the bar to the panes and the
-   link. Their backdrop is the pane's, so code scrolling under them doesn't show through. */
-.play-tools {
-  position: absolute;
-  top: 3.25rem;
-  right: 1rem;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 2px;
-  border-radius: var(--r-sm);
-  background: var(--soft);
-}
-
-/* Square twins of Copy link: the same outline, height, and press. */
-.play-reset,
-.play-copy {
-  display: grid;
-  place-items: center;
-  width: 1.625rem;
-  height: 1.625rem;
-  padding: 0;
-  border: 0;
-  border-radius: var(--r-sm);
-  background: var(--bg);
-  box-shadow: inset 0 0 0 1px var(--line);
-  color: var(--muted);
-  cursor: pointer;
-  transition:
-    color 150ms ease,
-    scale 160ms var(--ease-out);
-}
-
-.play-reset svg,
-.play-copy svg {
-  width: 0.875rem;
-  height: 0.875rem;
-}
-
-.play-reset:hover,
-.play-copy:hover {
-  color: var(--fg);
-}
-
-.play-reset[hidden],
-.play-tools[hidden],
-.play-theme-actions [hidden] {
-  display: none;
-}
-
-.play-confirm {
-  width: min(22rem, 100% - 2rem);
-  padding: 1.25rem;
-  border: 0;
-  border-radius: var(--r-md);
-  background: var(--bg);
-  box-shadow: 0 0 0 1px var(--line);
-  color: var(--muted);
-  transition:
-    opacity 150ms ease-out,
-    scale 150ms ease-out,
-    display 150ms allow-discrete,
-    overlay 150ms allow-discrete;
-}
-
-@starting-style {
-  .play-confirm[open] {
-    opacity: 0;
-    scale: 0.97;
-  }
-}
-
-.play-confirm::backdrop {
-  background: rgb(0 0 0 / 0.3);
-}
-
-.play-confirm h2 {
-  margin: 0 0 0.25rem;
-  padding: 0;
-  border: 0;
-  letter-spacing: normal;
-  color: var(--fg);
-  font: 600 0.9375rem/1.4 var(--sans);
-}
-
-.play-confirm p {
-  margin: 0 0 1rem;
-  font-size: 0.8125rem;
-  text-wrap: pretty;
-}
-
-.play-confirm div {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
-}
-
-.play-confirm button {
-  padding: 0.375rem 0.75rem;
-  border: 0;
-  border-radius: var(--r-sm);
-  background: var(--bg);
-  box-shadow: inset 0 0 0 1px var(--line);
-  color: var(--fg);
-  font: 500 0.8125rem/1.5 var(--sans);
-  cursor: pointer;
-  transition: scale 160ms var(--ease-out);
-}
-
-.play-confirm button[value="reset"] {
-  background: var(--fg);
-  box-shadow: none;
-  color: var(--bg);
-}
-
-.play-confirm button:active {
+.play-theme-actions button:active {
   scale: 0.97;
-}
-
-/* The textarea sits over a colored copy of its text in one grid cell; the copy sets the height and the box scrolls. */
-.play-code {
-  display: grid;
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
-  background: var(--soft);
-}
-
-.play-code > *,
-.play-paint pre {
-  grid-area: 1 / 1;
-}
-
-.play-paint {
-  display: grid;
-  pointer-events: none;
-}
-
-.play-paint pre,
-.play-code textarea {
-  margin: 0;
-  padding: 1rem;
-  overflow: visible;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
-  background: none !important;
-  color: var(--fg);
-  font: 0.8125rem/1.65 var(--mono);
-  tab-size: 2;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
-
-.play-paint code {
-  font: inherit;
-}
-
-.play-code textarea {
-  overflow: hidden;
-  outline: none;
-  color: transparent;
-  caret-color: var(--fg);
-  resize: none;
-}
-
-.play-code textarea::selection {
-  background: color-mix(in oklch, var(--fg) 18%, transparent);
 }
 
 /* The Theme pane: the preview's scheme and preset over a row per token, each a swatch or slider and the value it
@@ -230,10 +68,6 @@
   background: var(--soft);
   color: var(--fg);
   font-size: 0.8125rem;
-}
-
-.play-theme[hidden] {
-  display: none;
 }
 
 .play-theme-bar,
@@ -383,66 +217,25 @@
   resize: vertical;
 }
 
-.play-issues {
-  flex: none;
-  max-height: 30%;
-  margin: 0;
-  padding: 0.75rem 1rem;
-  overflow-y: auto;
-  border-top: 1px solid var(--line);
-  color: oklch(0.55 0.15 50);
-  font-size: 0.8125rem;
-  list-style: none;
-}
-
-.play-issues li + li {
-  margin-top: 0.375rem;
-}
-
-.play-preview {
-  width: 100%;
-  height: 100%;
-  border: 0;
-  background: var(--bg);
-}
-
-@media (max-width: 60rem) {
-  .play {
-    grid-template-rows: 50% 50%;
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .play-editor {
-    border-right: 0;
-    border-bottom: 1px solid var(--line);
-  }
-}
-
-/* The playground's presets: a still of each example over its name, the whole card a link. */
-.tool-index .nav-group {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.tool-index .nav-group .ci {
-  color: var(--faint);
-}
-
-.presets {
-  display: grid;
+/* The presets: a still of each example over its name, two to a row, the whole card a button. */
+.play .vh-pg-group ul {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.5rem;
 }
 
-.preset {
+.play .vh-pg-preset {
   position: relative;
+  display: block;
+  padding: 0;
   border-radius: var(--r-md);
+  background: none;
+  color: var(--muted);
+  font-weight: 400;
   transition: scale 150ms ease;
 }
 
 /* The frame sits over the still and the name's divider, so neither covers its edge. */
-.preset::before {
+.play .vh-pg-preset::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -453,20 +246,30 @@
   transition: box-shadow 150ms ease;
 }
 
-.preset:hover::before {
+.play .vh-pg-preset:hover::before {
   box-shadow: inset 0 0 0 1px var(--faint);
 }
 
-.preset:active {
+.play .vh-pg-preset:active {
   scale: 0.98;
 }
 
-.preset:has(a[aria-current])::before {
+.play .vh-pg-preset[aria-current="true"] {
+  color: var(--fg);
+}
+
+.play .vh-pg-preset[aria-current="true"]::before {
   box-shadow: inset 0 0 0 1.5px var(--fg);
+}
+
+.play .vh-pg-preset:focus-visible {
+  outline: 2px solid var(--fg);
+  outline-offset: 2px;
 }
 
 /* Its size comes from the grid and its height, so the browser can skip laying out a still that's off screen. */
 .preset-thumb {
+  display: block;
   height: 6rem;
   overflow: hidden;
   content-visibility: auto;
@@ -478,8 +281,12 @@
 /* Laid out at a page's width, then scaled to its card: the playground fits each one, and until it runs, they fill
    the card's width. */
 .preset-page {
+  display: block;
   width: 40rem;
   padding: 1.5rem;
+  color: var(--fg);
+  font-size: 1rem;
+  text-align: start;
   transform: scale(0.23);
   transform-origin: 0 0;
 }
@@ -496,83 +303,55 @@
   color: var(--faint);
 }
 
-.tool-index .preset > a {
+.preset-label {
   display: block;
   overflow: hidden;
-  margin: 0;
   padding: 0.3rem 0.625rem 0.375rem;
+  border-top: 1px solid var(--line);
   font-size: 0.75rem;
   text-overflow: ellipsis;
   white-space: nowrap;
-  border-top: 1px solid var(--line);
-  border-radius: 0 0 var(--r-md) var(--r-md);
-  background: none;
 }
 
-/* The link covers the card, so the still opens the preset too. */
-.tool-index .preset > a::after {
-  content: "";
+/* The hidden copy of the preview's page that the Theme pane reads its colors from. */
+.play-theme-probe {
   position: absolute;
-  inset: 0;
-  border-radius: var(--r-md);
+  width: 0;
+  height: 0;
+  border: 0;
+  visibility: hidden;
 }
 
-.tool-index .preset > a:focus-visible {
-  outline: none;
+/* Narrow: the presets are a row of names, without their stills. */
+@media (max-width: 60rem) {
+  .play .vh-pg:has(> .vh-pg-presets) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .play .vh-pg-group ul {
+    display: flex;
+  }
+
+  .play .vh-pg-preset {
+    width: auto;
+  }
+
+  .preset-thumb {
+    display: none;
+  }
+
+  .preset-label {
+    border: 0;
+  }
 }
 
-.preset:has(a:focus-visible) {
-  outline: 2px solid var(--fg);
-  outline-offset: 2px;
-}
-
-/* The copy icon gives way to a check while the Markdown is on the clipboard. */
-.play-share:active,
-.play-theme-actions button:active,
-.play-reset:active,
-.play-copy:active {
-  scale: 0.97;
-}
-
-.play-copy svg {
-  grid-area: 1 / 1;
-  transition:
-    opacity 200ms var(--ease-out),
-    scale 200ms var(--ease-out),
-    filter 200ms var(--ease-out);
-}
-
-.play-copy .check,
-.play-copy.copied svg:not(.check) {
-  opacity: 0;
-  scale: 0.25;
-  filter: blur(2px);
-}
-
-.play-copy.copied .check {
-  opacity: 1;
-  scale: 1;
-  filter: none;
-  color: #16a34a;
-}
-
-/* Touch: every control at least 40px tall, and the editor at 16px so iOS doesn't zoom into it. */
+/* Touch: every control at least 40px tall, and the fields at 16px so iOS doesn't zoom into them. */
 @media (pointer: coarse) {
-  .play-share,
   .play-theme-actions button,
-  .play-confirm button,
   .play-theme input:is([type="text"], [type="color"]) {
     min-height: 2.5rem;
   }
 
-  .play-reset,
-  .play-copy {
-    width: 2.5rem;
-    height: 2.5rem;
-  }
-
-  .play-paint pre,
-  .play-code textarea,
   .play-theme :is(input, textarea) {
     font-size: 1rem;
   }
