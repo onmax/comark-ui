@@ -9,7 +9,7 @@ const PNG = new Uint8Array([137, 80, 78, 71]);
 const requests: string[] = [];
 
 // A web with a favicon for every site but `bare.dev`, an avatar for `onmax`, no account `ghost`, no network for
-// `offline.dev`, and an unavatar.io that has had enough of `busy`.
+// `offline.dev`, a GitHub that times out on `slow`, and an unavatar.io that has had enough of `busy`.
 beforeEach(() => {
   requests.length = 0;
   vi.stubGlobal("fetch", async (input: string) => {
@@ -18,6 +18,7 @@ beforeEach(() => {
     if (input.includes("/ghost") || input.includes("bare.dev"))
       return new Response("Not Found", { status: 404 });
     if (input.includes("/busy")) return new Response("Too Many Requests", { status: 429 });
+    if (input.includes("/slow")) return new Response("Gateway Timeout", { status: 504 });
     return new Response(PNG, { headers: { "content-type": "image/png" } });
   });
 });
@@ -134,6 +135,12 @@ describe("comark-chips", () => {
     expect(await issues("@ghost")).toEqual([
       "`@ghost`: there's no avatar at https://github.com/ghost.png?size=64 (HTTP 404). Check the GitHub login, or set `avatar` to an image URL.",
     ]);
+  });
+
+  it("leaves an avatar to the reader when GitHub fails, without reporting it missing", async () => {
+    const html = await render("@slow");
+    expect(html).toContain('src="https://github.com/slow.png?size=64"');
+    expect(await issues("@slow")).toEqual([]);
   });
 
   it("draws a globe for a site with no favicon, so its chip still reads as a link", async () => {
