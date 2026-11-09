@@ -248,11 +248,11 @@ import zoom, { components } from "comark-zoom/html";
 const render = createHtmlRenderer({ plugins: [zoom()], components });
 ```
 
-For Vue, React, or Svelte, import from `comark-zoom/vue`, `comark-zoom/react`, or `comark-zoom/svelte`. [Renderers](/guide/renderers/) covers server rendering, pages without a renderer, and zoom with other plugins.
+For Vue, React, or Svelte, import from `comark-zoom/vue`, `comark-zoom/react`, or `comark-zoom/svelte`. [Renderers](/guide/renderers) covers server rendering, pages without a renderer, and zoom with other plugins.
 
 ## Theme
 
-The zoomed view uses the shared tokens in [Theming](/guide/theming/), plus two variables for the backdrop. The rules sit in a `comark` CSS layer, so any plain rule of yours wins.
+The zoomed view uses the shared tokens in [Theming](/guide/theming), plus two variables for the backdrop. The rules sit in a `comark` CSS layer, so any plain rule of yours wins.
 
 ### Shared tokens
 
@@ -318,4 +318,4 @@ A dark backdrop that lets the page show through:
 }
 ```
 
-To try it, paste it into Extra CSS in the [playground's Theme pane](/play/#preset=zoom-image).
+To try it, paste it into Extra CSS in the [playground's Theme pane](/play#preset=zoom-image).

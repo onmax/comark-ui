@@ -164,14 +164,14 @@ A `now`, `threshold`, `locale`, or `timeZone` the runtime can't read throws when
 
 ### Issues
 
-The plugin adds these problems to `meta.issues`, as [Validation](/guide/validation/) describes:
+The plugin adds these problems to `meta.issues`, as [Validation](/guide/validation) describes:
 
 - A `:time` with no date.
 - A date that isn't `2026-10-12` or `2026-10-12T14:03:00Z`. The text stays as written.
 - A `threshold` that isn't a number and a unit.
 - A prop `:time` doesn't read.
 
-Each issue names its block and says how to fix it, and each has its own rule in [Doctor](/doctor/):
+Each issue names its block and says how to fix it, and each has its own rule in [Doctor](/doctor):
 
 ```txt
 `:time` 1: "next friday" isn't a date, so it's shown as written. Write it as `2026-10-12` or `2026-10-12T14:03:00Z`.
@@ -194,7 +194,7 @@ import time, { components } from "comark-time/html";
 const render = createHtmlRenderer({ plugins: [time()], components });
 ```
 
-For Vue, React, or Svelte, import from `comark-time/vue`, `comark-time/react`, or `comark-time/svelte`. The components add the styles when they mount. Import `comark-time/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-time/vue`, `comark-time/react`, or `comark-time/svelte`. The components add the styles when they mount. Import `comark-time/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers) covers using it with other plugins.
 
 ## Theme
 
@@ -202,7 +202,7 @@ The tooltip is a card in the style of shadcn/ui's Tooltip, with the shared borde
 
 ### Shared tokens
 
-Times read these [shared tokens](/guide/theming/):
+Times read these [shared tokens](/guide/theming):
 
 | Token | Used for |
 | --- | --- |

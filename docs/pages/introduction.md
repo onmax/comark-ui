@@ -21,19 +21,19 @@ Every block renders to HTML that reads on its own. Tabs, carousels, and zoom add
 
 **Same markup in every renderer**
 
-HTML, Vue, React, and Svelte get the same markup, so one set of styles fits all four. [Renderers](/guide/renderers/) lists which package supports which.
+HTML, Vue, React, and Svelte get the same markup, so one set of styles fits all four. [Renderers](/guide/renderers) lists which package supports which.
 
 **Never throws**
 
-A block written wrong still renders. `meta.issues` gets one sentence that names the block and the fix. [Validation](/guide/validation/) shows how to read them.
+A block written wrong still renders. `meta.issues` gets one sentence that names the block and the fix. [Validation](/guide/validation) shows how to read them.
 
 **Themed by shadcn/ui tokens**
 
-The blocks use [shadcn/ui](https://ui.shadcn.com)'s CSS variables, so they match a shadcn site with no setup. Elsewhere, the `--comark-*` tokens theme every block at once. [Theming](/guide/theming/) lists them.
+The blocks use [shadcn/ui](https://ui.shadcn.com)'s CSS variables, so they match a shadcn site with no setup. Elsewhere, the `--comark-*` tokens theme every block at once. [Theming](/guide/theming) lists them.
 
 **Made for agents**
 
-A skill teaches agents the syntax, and [comark-linter](/lint/) checks what they write before anyone reads it. [Agents](/guide/agents/) sets both up.
+A skill teaches agents the syntax, and [comark-linter](/lint) checks what they write before anyone reads it. [Agents](/guide/agents) sets both up.
 
 ## How it works
 
@@ -55,24 +55,24 @@ Each package is a parse plugin and a set of components.
 | Linter | comark-linter checks documents from a script, the command line, ESLint, or Vite Doctor. |
 | Migrate | migrate-to-comark finds remark, markdown-it, or marked in a project and moves it to Comark with each library's migrator, which reports what it leaves to you. |
 
-Each block's page starts with demos you can open in the [playground](/play/) and edit live.
+Each block's page starts with demos you can open in the [playground](/play) and edit live.
 
 ## Next steps
 
 ::card-group
-:::card{title="Installation" icon="lucide:download" to="/getting-started/"}
+:::card{title="Installation" icon="lucide:download" to="/getting-started"}
 Install comark-ui and render every block with one import.
 :::
 
-:::card{title="Playground" icon="lucide:flask-conical" to="/play/"}
+:::card{title="Playground" icon="lucide:flask-conical" to="/play"}
 Write a document and see it render as you type.
 :::
 
-:::card{title="Review document" icon="lucide:file-check" to="/recipes/review/"}
+:::card{title="Review document" icon="lucide:file-check" to="/recipes/review"}
 Put screenshots, a diff, and notes into one review.
 :::
 
-:::card{title="Agents" icon="lucide:bot" to="/guide/agents/"}
+:::card{title="Agents" icon="lucide:bot" to="/guide/agents"}
 Teach your agent the syntax with the comark-ui skill.
 :::
 ::

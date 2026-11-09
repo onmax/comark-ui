@@ -102,7 +102,7 @@ credits: 'Laid out by Microsoft Research''s <a href="https://github.com/microsof
 - The table stays under the chart, folded into **Data**, so text tools keep the numbers.
 - Vega draws every chart while parsing, so the browser never loads it.
 - A Copy button copies the chart as a PNG, and its menu copies the data as a table for a spreadsheet or as Markdown.
-- [Notes](/charts/notes/) mark a row or a value, or draw a line across the chart at a target.
+- [Notes](/charts/notes) mark a row or a value, or draw a line across the chart at a target.
 - Ten types cover bars, lines, pies, [gantt charts](#gantt-charts), and [sankeys](#sankey). A [Vega-Lite spec](#vega-lite) draws anything else in the same card, colors, and type.
 - Without the plugin, the table still renders as a table.
 
@@ -331,7 +331,7 @@ Use `type="gantt"` with a table of three columns: the bar's name, its start, and
 
 When the table has other numbers too, such as a duration, name the start and end columns with `y="start, end"`.
 
-A column of names, such as a phase, an owner, or a run, gives each name its own color and a legend. A task can then repeat across groups, like one step in two runs. To mark one, name its group in the [note](/charts/notes/#series)'s `series`.
+A column of names, such as a phase, an owner, or a run, gives each name its own color and a legend. A task can then repeat across groups, like one step in two runs. To mark one, name its group in the [note](/charts/notes#series)'s `series`.
 
 > [!NOTE]
 > A column of numbers reads as times, so write numbered groups as names, like `shard 1`.
@@ -378,11 +378,11 @@ A flow comes from the first column unless `x` names another, and goes to the nex
 > [!NOTE]
 > A sankey runs one way, so the plugin reports a flow back into a node it came from, and the chart shows its table. Split such a node in two, such as `pond (spring)` and `pond (summer)`.
 
-The plugin also reports a flow of 0 or less, a flow from a node into itself, two rows with the same pair of nodes, and a middle node that sends out more than it takes in. A sankey has no value axis, so it takes no target line. A [note](/charts/notes/) marks a node by its name in `at`.
+The plugin also reports a flow of 0 or less, a flow from a node into itself, two rows with the same pair of nodes, and a middle node that sends out more than it takes in. A sankey has no value axis, so it takes no target line. A [note](/charts/notes) marks a node by its name in `at`.
 
 ### Notes
 
-Put an `::annotation` after the table to mark a row or a value with a hand-drawn mark and a note, or draw a target across the plot. [Notes](/charts/notes/) lists their props.
+Put an `::annotation` after the table to mark a row or a value with a hand-drawn mark and a note, or draw a target across the plot. [Notes](/charts/notes) lists their props.
 
 ::example
 ```md
@@ -441,7 +441,7 @@ The chart gets the other types' card, colors, and typeface wherever the spec set
 
 ### Copy
 
-Hover or tab to a chart for the Copy button in its top corner. It copies a PNG at twice the chart's size, in the page's colors. Its arrow opens a menu that copies the **Data** table, as a table that Google Sheets, Excel, Notion, and Docs paste as cells, or as Markdown that renders on GitHub. A chart with [notes](/charts/notes/) copies its data, since the PNG would leave the notes out. The button needs the script.
+Hover or tab to a chart for the Copy button in its top corner. It copies a PNG at twice the chart's size, in the page's colors. Its arrow opens a menu that copies the **Data** table, as a table that Google Sheets, Excel, Notion, and Docs paste as cells, or as Markdown that renders on GitHub. A chart with [notes](/charts/notes) copies its data, since the PNG would leave the notes out. The button needs the script.
 
 ## Examples
 
@@ -469,7 +469,7 @@ Two charts of one table look alike anywhere:
 
 ## Accessibility
 
-Each chart's SVG is an image named by its `title`, or else by what it draws, such as "bar chart of ducks by team". Charts have no tooltips. The **Data** table under the chart holds every number for a screen reader. A chart with marks zooms like a [screenshot](/annotate/components/screenshot/#accessibility).
+Each chart's SVG is an image named by its `title`, or else by what it draws, such as "bar chart of ducks by team". Charts have no tooltips. The **Data** table under the chart holds every number for a screen reader. A chart with marks zooms like a [screenshot](/annotate/components/screenshot#accessibility).
 
 The Copy button is named "Copy the chart as an image", or "Copy the chart's data" on a chart with notes. The arrow beside it is "More ways to copy", a button that opens a `menu` of `menuitem`s. A status line beside them announces "Copied as image", "Copied as table", "Copied as Markdown", or "Couldn't copy here". The bar shows while the chart has focus, so a keyboard reaches it too.
 
@@ -527,7 +527,7 @@ The plugin adds these problems to `meta.issues`. Each issue names its chart by i
 - A gantt without one start and one end column, a row missing its start or its end, a bar that ends before it starts, and two columns of names to color by.
 - A Vega-Lite spec that isn't one JSON object, has `data`, reads a field that's neither a column nor made by a transform, or that Vega-Lite can't draw, and a spec chart with `type`, `x`, `y`, or an `::annotation`.
 
-[Notes](/charts/notes/#issues) have their own checks.
+[Notes](/charts/notes#issues) have their own checks.
 
 Rendering never throws. A chart with a problem draws what it can:
 
@@ -541,7 +541,7 @@ Rendering never throws. A chart with a problem draws what it can:
 - A Vega-Lite spec loses its links.
 - A chart with nothing to draw shows its content as it is.
 
-[comark-linter](/lint/) reports the same issues with their line numbers. Each one has its own rule in [Doctor](/doctor/).
+[comark-linter](/lint) reports the same issues with their line numbers. Each one has its own rule in [Doctor](/doctor).
 
 ### Renderers
 
@@ -560,7 +560,7 @@ Marks come from comark-annotate, which renders only to HTML, so the other render
 
 ### Package
 
-[comark-ui](/getting-started/) brings `comark-charts` and registers it. To use it alone, install it and pass the renderer's `components`:
+[comark-ui](/getting-started) brings `comark-charts` and registers it. To use it alone, install it and pass the renderer's `components`:
 
 ```sh
 pnpm add comark @comark/html comark-charts
@@ -583,7 +583,7 @@ A chart is a card in the style of [shadcn/ui](https://ui.shadcn.com), so it swit
 
 ### Shared tokens
 
-Charts read these [shared tokens](/guide/theming/), and their series read Nuxt UI's or shadcn/ui's chart colors:
+Charts read these [shared tokens](/guide/theming), and their series read Nuxt UI's or shadcn/ui's chart colors:
 
 | Token | Falls back to | Used for |
 | --- | --- | --- |
@@ -606,7 +606,7 @@ Without either, series use six colors that read on light and dark pages: blue, o
 | --- | --- | --- |
 | `--cch-padding` | `1.5rem` | The space inside the card's sides. The **Data** footer runs to the card's edges, so it follows. |
 
-Marks on a chart use comark-annotate's styles, and its [variables](/annotate/#variables) for their colors.
+Marks on a chart use comark-annotate's styles, and its [variables](/annotate#variables) for their colors.
 
 ### Classes
 

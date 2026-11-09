@@ -3,7 +3,7 @@
 [![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-chips&icon=npm)](https://npmx.dev/package/comark-chips)
 [![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-chips&period=month&icon=npm)](https://npmx.dev/package/comark-chips)
 [![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-chips)
-[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/chips/)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/chips)
 
 Links and `@user` mentions as chips with the site's favicon or the person's avatar, as on [antfu.me](https://antfu.me). A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
 
@@ -40,7 +40,7 @@ The images are downloaded while parsing and inlined as data URIs, so the page as
 
 ## Options
 
-`chips({ download: false })` keeps the image URLs instead of downloading them; use it where parsing runs in a browser. `favicon: (host) => url` and `avatar: (login) => url` change where the images come from, such as `https://unavatar.io/github/${login}`. `cache: ".comark/chips"` keeps the images in a folder you can commit, and `cache: false` keeps them in memory only. The [docs](https://comark-ui.onmax.me/chips/#cache-images-in-ci) cover caching in CI.
+`chips({ download: false })` keeps the image URLs instead of downloading them; use it where parsing runs in a browser. `favicon: (host) => url` and `avatar: (login) => url` change where the images come from, such as `https://unavatar.io/github/${login}`. `cache: ".comark/chips"` keeps the images in a folder you can commit, and `cache: false` keeps them in memory only. The [docs](https://comark-ui.onmax.me/chips#cache-images-in-ci) cover caching in CI.
 
 ## Renderers
 
@@ -55,6 +55,6 @@ Each entry exports the parse plugin as `default` and the renderer's `components`
 
 ## Customize
 
-Chips follow shadcn/ui's Badge and the shared `--comark-*` tokens. A chip is an `a.cp` with `data-kind="favicon"` or `data-kind="avatar"`, holding an `img.cp-img`. The rules sit in a `comark` CSS layer, so any plain rule of your own wins. `--cp-background`, `--cp-ring`, `--cp-radius`, and the other `--cp-*` variables change the fill, the ring, and the corners; see the chips' [Theming page](https://comark-ui.onmax.me/chips/#theme).
+Chips follow shadcn/ui's Badge and the shared `--comark-*` tokens. A chip is an `a.cp` with `data-kind="favicon"` or `data-kind="avatar"`, holding an `img.cp-img`. The rules sit in a `comark` CSS layer, so any plain rule of your own wins. `--cp-background`, `--cp-ring`, `--cp-radius`, and the other `--cp-*` variables change the fill, the ring, and the corners; see the chips' [Theming page](https://comark-ui.onmax.me/chips#theme).
 
-Docs and live demos: [comark-ui.onmax.me/chips](https://comark-ui.onmax.me/chips/).
+Docs and live demos: [comark-ui.onmax.me/chips](https://comark-ui.onmax.me/chips).

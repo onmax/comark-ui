@@ -62,7 +62,7 @@ Team goal: 45 min.
 
 ## Features
 
-- Notes use [comark-annotate](/annotate/)'s marks and checks, and comark-charts installs it.
+- Notes use [comark-annotate](/annotate)'s marks and checks, and comark-charts installs it.
 - The mark wraps the shape drawn for its value, such as a bar, a point, a slice, or a step.
 - Marks stay on their data when the numbers change.
 - Notes are numbered under the chart, as under a screenshot.
@@ -87,7 +87,7 @@ Bought in bulk after the Tuesday incident.
 ::
 
 > [!NOTE]
-> Only the HTML renderer draws marks, as [Renderers](/charts/#renderers) explains.
+> Only the HTML renderer draws marks, as [Renderers](/charts#renderers) explains.
 
 ### Series
 
@@ -108,11 +108,11 @@ The office flooded in March.
 ```
 ::
 
-On a [gantt chart](/charts/#gantt-charts), `series` names the bar's group instead, for a task that repeats across groups. On a [sankey](/charts/#sankey), `at` names a node from either column, and there's no `series`.
+On a [gantt chart](/charts#gantt-charts), `series` names the bar's group instead, for a task that repeats across groups. On a [sankey](/charts#sankey), `at` names a node from either column, and there's no `series`.
 
 ### Mark, color, and side
 
-Use the `mark`, `color`, and `side` props as on a [screenshot's annotation](/annotate/components/annotation/). A side note sits in the margin with an arrow instead of in the list.
+Use the `mark`, `color`, and `side` props as on a [screenshot's annotation](/annotate/components/annotation). A side note sits in the margin with an arrow instead of in the list.
 
 ::example
 ```md
@@ -153,7 +153,7 @@ The line runs across an upright chart and down a sideways one. The value axis st
 > [!NOTE]
 > A line crosses every row and series, so it takes no `at` or `series`. Pies, gantt charts, and sankeys have no value axis, so the plugin reports a line on them.
 
-On a [screenshot](/annotate/components/annotation/#mark), `line` instead draws a stroke through the middle of its box.
+On a [screenshot](/annotate/components/annotation#mark), `line` instead draws a stroke through the middle of its box.
 
 ## API
 
@@ -178,6 +178,6 @@ The plugin adds these problems to `meta.issues`:
 - A line has no number in `value`, or sits on a chart without a value axis.
 - A line has `at` or `series`, or a mark that isn't a line has `value`.
 - An unknown prop.
-- The mark, color, side, and note have the problems comark-annotate checks on [screenshots](/annotate/components/annotation/#issues).
+- The mark, color, side, and note have the problems comark-annotate checks on [screenshots](/annotate/components/annotation#issues).
 
-The chart draws without any mark the plugin can't place. Each problem has its own rule in [Doctor](/doctor/).
+The chart draws without any mark the plugin can't place. Each problem has its own rule in [Doctor](/doctor).

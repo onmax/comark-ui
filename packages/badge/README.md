@@ -3,7 +3,7 @@
 [![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-badge&icon=npm)](https://npmx.dev/package/comark-badge)
 [![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-badge&period=month&icon=npm)](https://npmx.dev/package/comark-badge)
 [![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-badge)
-[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/badge/)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/badge)
 
 Badges for versions and statuses, inline as `:badge[deprecated]{color="warning"}` or as Nuxt UI's block `::badge`, in Nuxt UI's seven colors. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
 
@@ -43,7 +43,7 @@ Each color reads a shared token, such as `--comark-primary`, which follows the p
 
 ## SVG badges and builder
 
-Use the [builder](https://comark-ui.onmax.me/badges/) to preview, share, and export badges as SVG, Markdown, or Comark. Choose the default, npmx, Nuxt, flat, or for-the-badge preset, with automatic light/dark colors and built-in logos.
+Use the [builder](https://comark-ui.onmax.me/badges) to preview, share, and export badges as SVG, Markdown, or Comark. Choose the default, npmx, Nuxt, flat, or for-the-badge preset, with automatic light/dark colors and built-in logos.
 
 ```md
 :badge[Comark UI]{label="built with" icon="package" color="success"}
@@ -56,4 +56,4 @@ Use the [builder](https://comark-ui.onmax.me/badges/) to preview, share, and exp
 
 Static badges embed their SVG locally. Live badges fetch their data while parsing and embed it too, so a page loads no badge. With `download: false`, or when the data is unavailable, they load from `https://comark-ui.onmax.me/badge.svg`, configurable with `badge({ endpoint })` or `comarkUi({ badge: { endpoint } })`. Public npm and GitHub Actions data is cached; unavailable data displays `unavailable`. Downloads are snapshots.
 
-`comark-badge/svg` exports the shared option reader and SVG generator. `comark-badge/server` exports `createBadgeHandler()` for hosting the GET/HEAD image endpoint. See [Badge](https://comark-ui.onmax.me/badge/) for options, caching, and deployment details.
+`comark-badge/svg` exports the shared option reader and SVG generator. `comark-badge/server` exports `createBadgeHandler()` for hosting the GET/HEAD image endpoint. See [Badge](https://comark-ui.onmax.me/badge) for options, caching, and deployment details.

@@ -33,7 +33,7 @@ Click either screenshot. The zoomed view holds both, and its arrows, the strip a
 
 ## When to use it
 
-A screenshot zooms on its own, with its notes beside it. Use a group for screenshots that belong together but have text between them, such as the steps of a bug report. For two screenshots of one view side by side, use [`::compare`](/annotate/components/compare/), which already zooms as one gallery.
+A screenshot zooms on its own, with its notes beside it. Use a group for screenshots that belong together but have text between them, such as the steps of a bug report. For two screenshots of one view side by side, use [`::compare`](/annotate/components/compare), which already zooms as one gallery.
 
 ## How it works
 

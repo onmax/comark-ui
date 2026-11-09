@@ -42,16 +42,16 @@ tags: [map, performance]
 
 Each block answers the reviewer's next question, top to bottom:
 
-1. The frontmatter holds the status, pull request, author, and tags. [comark-properties](/properties/) shows them in a box at the top, and your scripts read the same keys.
-2. A sentence says what changed, with an icon from [comark-icon](/icon/) to set it apart from the evidence.
-3. A `::stats` table from [comark-metrics](/metrics/) shows the numbers that moved, each with its change and whether it got better.
-4. A `::tests` block from [comark-tests](/tests/) reads your runner's JUnit report, so the counts match the run.
-5. An open suggestion goes in CriticMarkup from [comark-critic](/critic/), with the reason as a comment.
+1. The frontmatter holds the status, pull request, author, and tags. [comark-properties](/properties) shows them in a box at the top, and your scripts read the same keys.
+2. A sentence says what changed, with an icon from [comark-icon](/icon) to set it apart from the evidence.
+3. A `::stats` table from [comark-metrics](/metrics) shows the numbers that moved, each with its change and whether it got better.
+4. A `::tests` block from [comark-tests](/tests) reads your runner's JUnit report, so the counts match the run.
+5. An open suggestion goes in CriticMarkup from [comark-critic](/critic), with the reason as a comment.
 
 ## Setup
 
-Register the plugins in one renderer, as [Renderers](/guide/renderers/#several-plugins) shows. For a report on disk, point `::tests{src}` at it instead of pasting it, as [comark-tests](/tests/#usage) shows.
+Register the plugins in one renderer, as [Renderers](/guide/renderers#several-plugins) shows. For a report on disk, point `::tests{src}` at it instead of pasting it, as [comark-tests](/tests#usage) shows.
 
 ## Check it
 
-Run [comark-linter](/lint/) on the file before you post it. It reports an unreadable delta, a report that isn't JUnit, and an open suggestion, each with its block and the fix.
+Run [comark-linter](/lint) on the file before you post it. It reports an unreadable delta, a report that isn't JUnit, and an open suggestion, each with its block and the fix.

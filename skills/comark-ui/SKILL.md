@@ -17,7 +17,7 @@ pnpm add comark @comark/html comark-ui
 
 Run the comark CLIs with the [global Vite+ CLI](https://viteplus.dev/guide/global-cli): `vp dlx` for a package the project doesn't install, `vp exec` for one it does. Without Vite+, `pnpm dlx` and `pnpm exec` take the same arguments.
 
-If pnpm reports `ERR_PNPM_TRUST_DOWNGRADE`, read [pnpm trust errors](https://comark-ui.onmax.me/getting-started/#pnpm-trust-errors) for the publishing history and exact-version exceptions. Apply an exception only when the user's instructions authorize the policy change.
+If pnpm reports `ERR_PNPM_TRUST_DOWNGRADE`, read [pnpm trust errors](https://comark-ui.onmax.me/getting-started#pnpm-trust-errors) for the publishing history and exact-version exceptions. Apply an exception only when the user's instructions authorize the policy change.
 
 ```ts
 import { createHtmlRenderer } from "@comark/html";
@@ -45,7 +45,7 @@ Each reference ends with a Register section that says how its package registers 
 
 Either way, the HTML renderer inlines the styles once per document, and the Vue, React, and Svelte components add them on mount. On a server-rendered page, import each package's `style.css`, such as `comark-cards/style.css`, so the page doesn't shift.
 
-The `--comark-*` tokens theme every plugin at once; https://comark-ui.onmax.me/guide/theming/ lists them. In a Nuxt UI app the plugins follow its `--ui-*` variables with no setup. For a page rendered outside the app, such as review evidence, put the CSS from `nuxtUiTheme({ colors: appConfig.ui?.colors, css: mainCss })` (from `comark-ui/nuxt-ui`) in a `<style>`, so the page matches the app.
+The `--comark-*` tokens theme every plugin at once; https://comark-ui.onmax.me/guide/theming lists them. In a Nuxt UI app the plugins follow its `--ui-*` variables with no setup. For a page rendered outside the app, such as review evidence, put the CSS from `nuxtUiTheme({ colors: appConfig.ui?.colors, css: mainCss })` (from `comark-ui/nuxt-ui`) in a `<style>`, so the page matches the app.
 
 To move a project to Comark, start with `migrate-to-comark`, which finds its Markdown libraries and runs the migrator for each; see the [migrate-to-comark reference](references/migrate-to-comark.md). A project that renders Markdown with remark moves to Comark with `remark-to-comark`; the [remark-to-comark reference](references/remark-to-comark.md) walks through it. One that renders with markdown-it moves with `markdown-it-to-comark`; see the [markdown-it-to-comark reference](references/markdown-it-to-comark.md). A project on marked moves with `marked-to-comark`; see the [marked-to-comark reference](references/marked-to-comark.md).
 

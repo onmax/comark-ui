@@ -140,7 +140,7 @@ The script saves the choice in `localStorage` under `comark-tabs:` plus the key,
 
 ### Icon
 
-Use the `icon` prop to draw an icon before a tab's label. It takes an [Iconify](https://icones.js.org) name, such as `lucide:apple` or `logos:pnpm`, or an image URL. [comark-icon](/icon/) resolves and draws it while parsing. It shows without the script and looks and sizes like an `:icon`.
+Use the `icon` prop to draw an icon before a tab's label. It takes an [Iconify](https://icones.js.org) name, such as `lucide:apple` or `logos:pnpm`, or an image URL. [comark-icon](/icon) resolves and draws it while parsing. It shows without the script and looks and sizes like an `:icon`.
 
 ::example
 ```md
@@ -181,7 +181,7 @@ npm install comark-tabs
 
 ### Magic code transitions
 
-When you switch tabs in a code group, the tokens the two snippets share move into place, and the rest fade in and out. It uses the same token matching as [Magic Move](/magic-move/), and keeps Shiki's highlighting and comark-code's line marks and buttons.
+When you switch tabs in a code group, the tokens the two snippets share move into place, and the rest fade in and out. It uses the same token matching as [Magic Move](/magic-move), and keeps Shiki's highlighting and comark-code's line marks and buttons.
 
 The group only moves when the snippets are mostly alike: the two tabs must share at least half the tokens of the longer one. Snippets with little in common, such as the same task in two languages, switch at once, as plain tabs do. The check runs on every switch, so in one group a move between two similar tabs can animate while a move to an unlike one doesn't.
 
@@ -261,11 +261,11 @@ const plugins = [
 ];
 ```
 
-Size them with `--comark-icon-size`, and style them as [comark-icon's theme](/icon/#theme) describes.
+Size them with `--comark-icon-size`, and style them as [comark-icon's theme](/icon#theme) describes.
 
 ### Zoom images in tabs
 
-Images in tabs zoom with [comark-zoom](/zoom/). A gallery or zoom group pages only through what's shown, so it skips images in closed tabs.
+Images in tabs zoom with [comark-zoom](/zoom). A gallery or zoom group pages only through what's shown, so it skips images in closed tabs.
 
 ## Accessibility
 
@@ -302,7 +302,7 @@ On a right-to-left page, the arrow keys follow the reading direction. The keys d
 | Prop | Default | Description |
 | --- | --- | --- |
 | `label` | — | The tab's name. Required. Labels in one block must differ. |
-| `icon` | — | An [Iconify](https://icones.js.org) name such as `lucide:apple`, or an image URL, drawn by [comark-icon](/icon/) before the label. |
+| `icon` | — | An [Iconify](https://icones.js.org) name such as `lucide:apple`, or an image URL, drawn by [comark-icon](/icon) before the label. |
 
 #### Code group
 
@@ -325,7 +325,7 @@ Pass options under `tabs` in `comarkUi()`, or to `tabs()` when you use it alone.
 
 ### Issues
 
-The plugin adds a problem with any block to `meta.issues`, as [Validation](/guide/validation/) describes:
+The plugin adds a problem with any block to `meta.issues`, as [Validation](/guide/validation) describes:
 
 ```txt
 `::code-group` 1, block 2: a code block needs a label. Put it in brackets after the language: ```bash [npm].
@@ -342,7 +342,7 @@ It reports:
 - A `:::tabs-item` outside `::tabs`, which renders as plain content.
 - A prop the block doesn't read.
 
-Each one has its own rule in [Doctor](/doctor/). Rendering never throws.
+Each one has its own rule in [Doctor](/doctor). Rendering never throws.
 
 ### Package
 
@@ -359,13 +359,13 @@ import tabs, { components } from "comark-tabs/html";
 const render = createHtmlRenderer({ plugins: [tabs()], components });
 ```
 
-For Vue, React, or Svelte, import from `comark-tabs/vue`, `comark-tabs/react`, or `comark-tabs/svelte`. Svelte needs 5.20 or later. [Renderers](/guide/renderers/) covers server rendering and using it with other plugins.
+For Vue, React, or Svelte, import from `comark-tabs/vue`, `comark-tabs/react`, or `comark-tabs/svelte`. Svelte needs 5.20 or later. [Renderers](/guide/renderers) covers server rendering and using it with other plugins.
 
 When you render on a server, import `comark-tabs/style.css` with your own styles so the tabs are styled before the components mount.
 
 ## Theme
 
-The tab strip is a shadcn/ui-style segmented control that follows the shared tokens in [Theming](/guide/theming/). The rules sit in a `comark` CSS layer, so any plain rule of yours wins.
+The tab strip is a shadcn/ui-style segmented control that follows the shared tokens in [Theming](/guide/theming). The rules sit in a `comark` CSS layer, so any plain rule of yours wins.
 
 ### Shared tokens
 
@@ -392,13 +392,13 @@ Set these on `.ct` or any ancestor, such as `:root`:
 | `--ct-gap` | `0.75rem` | The space between the strip and the open panel, except in a code group, whose block hangs from its strip |
 | `--ct-font-size` | `0.8125rem` | The labels and captions |
 
-Size icons in tabs with comark-icon's `--comark-icon-size`, as [its theming](/icon/#variables) describes.
+Size icons in tabs with comark-icon's `--comark-icon-size`, as [its theming](/icon#variables) describes.
 
 ### Classes and attributes
 
 | Selector | Is |
 | --- | --- |
-| `.ct` | The block, with `data-tabs-code` and comark-code's [`data-code-header`](/code/#your-own-header) when it's a code group, and `data-tabs-sync` when it has a `sync` key |
+| `.ct` | The block, with `data-tabs-code` and comark-code's [`data-code-header`](/code#your-own-header) when it's a code group, and `data-tabs-sync` when it has a `sync` key |
 | `.ct-list` | The strip |
 | `.ct-tab` | Each tab, with `aria-selected="true"` on the open one |
 | `.ct-panel` | Each panel, with `data-inactive` while it's closed |
@@ -418,4 +418,4 @@ An open tab in the page's brand color:
 }
 ```
 
-To try it, paste it into Extra CSS in the [playground's Theme pane](/play/#preset=tabs-tabs).
+To try it, paste it into Extra CSS in the [playground's Theme pane](/play#preset=tabs-tabs).

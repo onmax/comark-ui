@@ -1,6 +1,5 @@
 <script setup lang="ts">
 // `::drop`: the landing's band for Drop, its pitch beside the list in it, drawn as numbered steps.
-import { site } from "../../../paths.ts";
 </script>
 
 <template>
@@ -16,7 +15,7 @@ import { site } from "../../../paths.ts";
         label="Try Drop"
       />
       <UButton
-        :to="site('/recipes/share/')"
+        to="/recipes/share"
         color="neutral"
         variant="outline"
         size="lg"

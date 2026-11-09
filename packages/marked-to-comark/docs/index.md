@@ -14,14 +14,14 @@ marked-to-comark moves a project from marked to Comark. It changes only what mar
 
 ## Features
 
-- `check` lists every marked setup it finds, with a [fix](/marked-to-comark/diagnostics/) for each problem.
+- `check` lists every marked setup it finds, with a [fix](/marked-to-comark/diagnostics) for each problem.
 - `rewrite` swaps `marked.parse(md)` for Comark's `renderHtml` when every option and extension carries over.
 - `content` escapes the Markdown Comark would read differently.
 - It finds the shared `marked`, `new Marked()` instances, `marked.use()` and `setOptions()`, and the calls in JavaScript, TypeScript, Vue, Svelte, and Astro files.
 - It reads the marked version each package declares, so heading ids, tabs, and tables from older versions carry over.
-- It also runs in [Vite Doctor](/marked-to-comark/vite-doctor/).
+- It also runs in [Vite Doctor](/marked-to-comark/vite-doctor).
 
-Tested on [100 projects](/marked-to-comark/testing/).
+Tested on [100 projects](/marked-to-comark/testing).
 
 ## Why Comark
 
@@ -35,7 +35,7 @@ Try the check without installing anything. It only reads the project:
 pnpm dlx marked-to-comark check .
 ```
 
-The whole migration is four commands. [Getting started](/marked-to-comark/getting-started/) explains each one.
+The whole migration is four commands. [Getting started](/marked-to-comark/getting-started) explains each one.
 
 ```sh
 pnpm marked-to-comark check .

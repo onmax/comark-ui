@@ -92,14 +92,14 @@ Codes use error correction level M and a quiet zone of two modules.
 
 ### Issues
 
-The plugin adds these to `meta.issues`, as [Validation](/guide/validation/) describes:
+The plugin adds these to `meta.issues`, as [Validation](/guide/validation) describes:
 
 - A `:qr` with no `value`.
 - A `value` too long to encode.
 - Text in its brackets.
 - A prop it doesn't read.
 
-Each names its block and the fix, and has its own rule in [Doctor](/doctor/).
+Each names its block and the fix, and has its own rule in [Doctor](/doctor).
 
 ### Package
 
@@ -118,7 +118,7 @@ import qr, { components } from "comark-qr/html";
 const render = createHtmlRenderer({ plugins: [qr()], components });
 ```
 
-For Vue, React, or Svelte, import from `comark-qr/vue`, `comark-qr/react`, or `comark-qr/svelte`. The components add the styles on mount. On a server-rendered page, also import `comark-qr/style.css` so it doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-qr/vue`, `comark-qr/react`, or `comark-qr/svelte`. The components add the styles on mount. On a server-rendered page, also import `comark-qr/style.css` so it doesn't shift. [Renderers](/guide/renderers) covers using it with other plugins.
 
 ## Theme
 

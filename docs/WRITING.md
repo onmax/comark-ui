@@ -15,7 +15,7 @@ The sections, in this order. Leave out a section the block has nothing for.
 7. **`## API`**:
    - `### Props` as `| Prop | Default | Description |`. List the values in the description, and write `—` when there is no default. With several components, one table each, under the component's name.
    - `### Options`, `### Events`, `### Slots`, `### Functions` in the same shape, when the block has them.
-   - `### Issues`: the problems it adds to `meta.issues`, as a list, and a link to [Doctor](/doctor/).
+   - `### Issues`: the problems it adds to `meta.issues`, as a list, and a link to [Doctor](/doctor).
    - `### Package`: installing and registering it alone. It stays last.
 8. **`## Theme`**: shared tokens, variables, classes, and a worked example, as they are today.
 

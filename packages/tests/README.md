@@ -3,7 +3,7 @@
 [![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-tests&icon=npm)](https://npmx.dev/package/comark-tests)
 [![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-tests&period=month&icon=npm)](https://npmx.dev/package/comark-tests)
 [![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-tests)
-[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/tests/)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/tests)
 
 Test results from a JUnit XML report: how many tests passed, failed, and were skipped, how long they took, and each failure as a `<details>` with its message and stack. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
 

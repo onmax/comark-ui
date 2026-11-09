@@ -63,11 +63,11 @@ The `--comark-*` tokens theme every plugin at once. Each wins over the Nuxt UI a
 }
 ```
 
-The [playground's Theme pane](/play/) shows them in light and dark and copies the CSS for what you change.
+The [playground's Theme pane](/play) shows them in light and dark and copies the CSS for what you change.
 
 To theme one part, set the tokens on its root: `.ca` for annotate, `.cc` for a carousel, `.cch` for charts, `.cp` for chips, `.ck` for code headers, `.cd` for diffs, `.ce` and `.ce-card` for embeds, `.cgc` for callouts, `.ct` for tabs, and `.cz-dialog` for the zoomed view.
 
-The same tokens color the text around the blocks. [Typeset](/guide/typeset/) lists its own variables for size, spacing, and fonts.
+The same tokens color the text around the blocks. [Typeset](/guide/typeset) lists its own variables for size, spacing, and fonts.
 
 ## Your own rules
 
@@ -135,4 +135,4 @@ The CSS sets light mode on `:root` and `.light`, and dark mode on `.dark`. With 
 
 ## Each plugin's own
 
-Each package's page lists its own variables and class names: [annotate](/annotate/#theme), [carousel](/carousel/#theme), [charts](/charts/#theme), [chips](/chips/#theme), [code](/code/#theme), [diff](/diff/#theme), [embed](/embed/#theme), [github](/github/#theme), [icon](/icon/#theme), [tabs](/tabs/#theme), and [zoom](/zoom/#theme).
+Each package's page lists its own variables and class names: [annotate](/annotate#theme), [carousel](/carousel#theme), [charts](/charts#theme), [chips](/chips#theme), [code](/code#theme), [diff](/diff#theme), [embed](/embed#theme), [github](/github#theme), [icon](/icon#theme), [tabs](/tabs#theme), and [zoom](/zoom#theme).

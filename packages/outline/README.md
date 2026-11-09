@@ -3,7 +3,7 @@
 [![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-outline&icon=npm)](https://npmx.dev/package/comark-outline)
 [![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-outline&period=month&icon=npm)](https://npmx.dev/package/comark-outline)
 [![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-outline)
-[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/outline/)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/outline)
 
 A table of contents in the body of a page: `::toc` becomes a nested list of links to the page's headings. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
 
@@ -25,7 +25,7 @@ const render = createHtmlRenderer({ plugins: [toc()], components });
 
 `::toc` lists h2 headings down to `depth` (default 3), each under the closest heading above it, and links to the ids Comark gives them. `[[toc]]` isn't read, since Comark parses `[[...]]` as a span.
 
-`toc({ rail: true })` also adds an "On this page" outline beside the text, with a small script that marks the section being read and makes way for wide blocks. The [docs](https://comark-ui.onmax.me/outline/#side-outline) give the page variables it reads and sets.
+`toc({ rail: true })` also adds an "On this page" outline beside the text, with a small script that marks the section being read and makes way for wide blocks. The [docs](https://comark-ui.onmax.me/outline#side-outline) give the page variables it reads and sets.
 
 The plugin adds every problem to `meta.issues`: a `depth` outside 2 to 6, content inside the block, and a page with no headings to list. Each issue names its block and says how to fix it.
 

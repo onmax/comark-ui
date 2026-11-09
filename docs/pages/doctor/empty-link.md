@@ -2,12 +2,12 @@ A link with nothing between its brackets renders as an empty `<a>`: readers can'
 
 ::incorrect
 ```md
-The census is [](/census/).
+The census is [](/census).
 ```
 ::
 
 ::correct
 ```md
-The [census](/census/) is out.
+The [census](/census) is out.
 ```
 ::

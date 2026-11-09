@@ -11,12 +11,12 @@ tagline: Each skill teaches your agent one kind of document, what goes in it and
 
 ## Which one
 
-- A visible change needs proof on a pull request: [Before/after evidence](/skills/before-after-evidence/).
-- A review is done, and someone has to decide what to do: [Review document](/skills/review-document/).
-- Someone has to choose between options or approve a plan, from your research: [Report](/skills/report/).
-- Someone asked how a system, a flow, or a change works: [Visual explanation](/skills/visual-explanation/).
-- Someone needs to learn one concept and prove it: [Teach lesson](/skills/teach-lesson/).
-- Your agent needs a block's syntax, not a whole document: the [comark-ui skill](/guide/agents/).
+- A visible change needs proof on a pull request: [Before/after evidence](/skills/before-after-evidence).
+- A review is done, and someone has to decide what to do: [Review document](/skills/review-document).
+- Someone has to choose between options or approve a plan, from your research: [Report](/skills/report).
+- Someone asked how a system, a flow, or a change works: [Visual explanation](/skills/visual-explanation).
+- Someone needs to learn one concept and prove it: [Teach lesson](/skills/teach-lesson).
+- Your agent needs a block's syntax, not a whole document: the [comark-ui skill](/guide/agents).
 - A diff needs reviewing: your review process. These skills write documents. They don't find problems.
 - The document needs a link, comments, or saved answers: your host, such as [Drop](https://drop.vitehub.dev/?utm_source=comark-ui&utm_medium=skills).
 

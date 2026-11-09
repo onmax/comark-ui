@@ -3,7 +3,7 @@
 [![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-sources&icon=npm)](https://npmx.dev/package/comark-sources)
 [![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-sources&period=month&icon=npm)](https://npmx.dev/package/comark-sources)
 [![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-sources)
-[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/sources/)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/sources)
 
 Numbered `:cite[2]` citations that link to a `::sources` list of links, each with a link back. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
 

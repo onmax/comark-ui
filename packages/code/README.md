@@ -3,7 +3,7 @@
 [![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-code&icon=npm)](https://npmx.dev/package/comark-code)
 [![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-code&period=month&icon=npm)](https://npmx.dev/package/comark-code)
 [![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-code)
-[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/code/)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/code)
 
 Copy and Wrap buttons on every Markdown code block, plus buttons of your own, such as Run, that hand the block's code to your app. Without a script the block shows as it would without the plugin. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
 
@@ -77,4 +77,4 @@ const stop = onCodeAction("run", ({ code, language }) => terminal.run(code));
 
 Each entry exports the parse plugin as `default` and the renderer's `components`.
 
-The buttons read shadcn's CSS variables, such as `--background` and `--border`, when the page has them, and use its neutral theme otherwise. Set the `--comark-*` tokens to theme every comark plugin at once. The rules sit in a `comark` CSS layer, so any plain rule of your own wins, except the two that make room for the header and wrap lines. `--ck-inset` sets how far the buttons sit from the corner and `--ck-button-size` sizes them, and the header grows to fit. `--ck-title-font` sets the title's font; see the code's [Theming page](https://comark-ui.onmax.me/code/#theme).
+The buttons read shadcn's CSS variables, such as `--background` and `--border`, when the page has them, and use its neutral theme otherwise. Set the `--comark-*` tokens to theme every comark plugin at once. The rules sit in a `comark` CSS layer, so any plain rule of your own wins, except the two that make room for the header and wrap lines. `--ck-inset` sets how far the buttons sit from the corner and `--ck-button-size` sizes them, and the header grows to fit. `--ck-title-font` sets the title's font; see the code's [Theming page](https://comark-ui.onmax.me/code#theme).

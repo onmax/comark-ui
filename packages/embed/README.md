@@ -3,7 +3,7 @@
 [![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=comark-embed&icon=npm)](https://npmx.dev/package/comark-embed)
 [![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=comark-embed&period=month&icon=npm)](https://npmx.dev/package/comark-embed)
 [![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-embed)
-[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/embed/)
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/embed)
 
 Video, audio, and live code from a link: YouTube, Vimeo, Loom, Spotify, CodePen, StackBlitz, Figma, and X players, read from the link alone with no network fetch. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
 
@@ -54,4 +54,4 @@ The plugin adds every problem to `meta.issues`, so a host can reject a document 
 
 Each entry exports the parse plugin as `default` and the renderer's `components`. The Vue, React, and Svelte components add the styles when they mount; import `comark-embed/style.css` with your styles so a server-rendered page doesn't shift.
 
-The styles follow shadcn/ui: they read its CSS variables, such as `--background` and `--border`, when the page has them, and use its neutral theme otherwise. Set the shared `--comark-*` tokens to theme every plugin at once; the rules sit in a `comark` CSS layer, so any plain rule of your own wins. Override `--ce-app-height` to change the height of CodePen, StackBlitz, and Figma; see the embed's [Theming page](https://comark-ui.onmax.me/embed/#theme).
+The styles follow shadcn/ui: they read its CSS variables, such as `--background` and `--border`, when the page has them, and use its neutral theme otherwise. Set the shared `--comark-*` tokens to theme every plugin at once; the rules sit in a `comark` CSS layer, so any plain rule of your own wins. Override `--ce-app-height` to change the height of CodePen, StackBlitz, and Figma; see the embed's [Theming page](https://comark-ui.onmax.me/embed#theme).

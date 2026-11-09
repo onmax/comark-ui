@@ -216,16 +216,16 @@ Options go under `github` in `comarkUi()`, keyed by plugin, such as `comarkUi({ 
 
 ### Issues
 
-The plugins add these problems to `meta.issues`, as [Validation](/guide/validation/) describes:
+The plugins add these problems to `meta.issues`, as [Validation](/guide/validation) describes:
 
 - A quote marked with a type other than GitHub's five, such as `[!INFO]`. It stays a plain quote.
 - A `repo` that isn't `owner/name`. Until it's fixed, `#123` stays text.
 
-Each has its own rule in [Doctor](/doctor/).
+Each has its own rule in [Doctor](/doctor).
 
 ### Package
 
-[comark-ui](/getting-started/) brings `comark-github` and registers its three plugins. To use it alone, install it, register the plugins you want, and pass the renderer's `components`:
+[comark-ui](/getting-started) brings `comark-github` and registers its three plugins. To use it alone, install it, register the plugins you want, and pass the renderer's `components`:
 
 ```sh
 pnpm add comark @comark/html comark-github
@@ -243,7 +243,7 @@ const render = createHtmlRenderer({
 
 `callouts()` replaces Comark's built-in alert plugin, and `html()` replaces its html plugin.
 
-For Vue, React, or Svelte, import from `comark-github/vue`, `comark-github/react`, or `comark-github/svelte`. The callout components add the styles when they mount. On a server, import `comark-github/style.css` with your own styles so the page doesn't shift. [Renderers](/guide/renderers/) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-github/vue`, `comark-github/react`, or `comark-github/svelte`. The callout components add the styles when they mount. On a server, import `comark-github/style.css` with your own styles so the page doesn't shift. [Renderers](/guide/renderers) covers using it with other plugins.
 
 ## Theme
 

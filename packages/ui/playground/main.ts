@@ -39,7 +39,7 @@ When does the release go out?
   > Monday is for the retro.
 ::
 
-[^docs]: The [editor guide](https://comark-ui.onmax.me/guide/editor/) lists what the editor keeps.
+[^docs]: The [editor guide](https://comark-ui.onmax.me/guide/editor) lists what the editor keeps.
 
 | Package | Size |
 | :-- | --: |
