@@ -10,7 +10,17 @@ export default defineNuxtConfig({
   telemetry: false,
   // vite-hub/nuxt first: @vite-hub/docs turns its Comments on.
   css: ["~/assets/landing.css"],
-  modules: ["vite-hub/nuxt", "@vite-hub/docs/nuxt", "~~/modules/wrangler-output"],
+  modules: [
+    "vite-hub/nuxt",
+    "@vite-hub/docs/nuxt",
+    "~~/modules/comark-styles",
+    "~~/modules/wrangler-output",
+  ],
+  // Every prerendered page has a payload, so prefetching each link the reader can see loaded megabytes of them: the
+  // sidebar alone lists every page. A link prefetches when the reader points at it or focuses it instead.
+  experimental: {
+    defaults: { nuxtLink: { prefetchOn: { visibility: false, interaction: true } } },
+  },
   // docs/content.ts writes content/ from docs/pages and each package's docs/.
   docs: {
     base: "/",
