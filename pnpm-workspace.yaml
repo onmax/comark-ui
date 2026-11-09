@@ -43,6 +43,7 @@ catalog:
   markdown-it-cjk-friendly: ^3.0.0
   pkg-pr-new: ^0.0.92
   publint: ^0.3.25
+  autoprefixer: ^10.6.2
   postcss: ^8.5.31
   # Nuxt minifies with cssnano 8, which runs postcss-calc 10.
   postcss-calc: ^10.1.1
@@ -61,7 +62,6 @@ catalog:
   "@tiptap/starter-kit": ^3.31.4
   "@tiptap/vue-3": ^3.31.4
   "@tiptap/y-tiptap": ^3.0.9
-  autoprefixer: ^10.6.1
   lightningcss: ^1.33.0
   yjs: ^13.6.33
   nuxt-agent-discovery: ^0.8.0
@@ -106,6 +106,8 @@ catalog:
   lru-cache: ^11.5.3
 
 overrides:
+  # Content and the docs renderer share the preset built in this workspace.
+  comark-ui: workspace:*
   # Nuxt's Nitro and the one ViteHub depends on must be one copy.
   nitro: "catalog:"
   # Nuxt UI 4.12 asks for @nuxt/fonts 0.14, which fills its font files in Nitro 2's rollup:before hook. Nitro 3 never

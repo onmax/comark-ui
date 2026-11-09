@@ -2,7 +2,7 @@
 // Replaces the shell's DocsMarkdown to add comark-ui's components. The shell passes its own (`pre`) on top.
 import { MarkdownDocument } from "@comark/vue";
 import contentComponents from "#docs/components";
-import comarkUi from "comark-ui/vue";
+import { components } from "comark-ui/vue";
 import ComarkHtml from "./ComarkHtml.vue";
 
 import type { Component } from "vue";
@@ -10,7 +10,6 @@ import type { DocsDocument } from "@vite-hub/docs";
 
 const props = defineProps<{ document: DocsDocument; components?: Record<string, Component> }>();
 
-const { components } = comarkUi();
 const comarkUiComponents: Record<string, Component> = { ...components, "comark-html": ComarkHtml };
 const componentsManifest = (tag: string) => contentComponents[tag]?.();
 </script>

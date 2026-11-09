@@ -34,6 +34,7 @@
     "@iconify-json/lucide": "catalog:",
     "@playwright/test": "catalog:",
     "@types/node": "catalog:",
+    "autoprefixer": "catalog:",
     "comark": "catalog:",
     "comark-linter": "workspace:*",
     "geist": "catalog:",

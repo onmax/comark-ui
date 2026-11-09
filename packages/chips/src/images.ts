@@ -24,6 +24,8 @@ async function download(url: string) {
   const response = await fetch(url, { signal: AbortSignal.timeout(10_000) });
   let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
   try {
+    // A server error says nothing about whether the image exists, so it fails like a dropped connection.
+    if (response.status >= 500) throw new Error(`HTTP ${response.status}`);
     if (!response.ok) throw new Missing(response.status);
     const type = response.headers.get("content-type")?.split(";", 1)[0]?.trim() ?? "";
     if (!type.startsWith("image/") || Number(response.headers.get("content-length")) > LIMIT)
@@ -103,9 +105,9 @@ async function write(folder: string, stored: Stored) {
 }
 
 /**
- * Downloads each URL and inlines it as a data URI. A URL that answers with an HTTP error maps to its status. Any other
- * failure, such as no network, a browser's CORS rules, or a large image, keeps the URL, so the reader's browser
- * loads it instead. With a `cache` folder, images are stored there between builds, and one that can't be downloaded
+ * Downloads each URL and inlines it as a data URI. A URL that answers with a client error (4xx) maps to its status. Any
+ * other failure, such as no network, a server error, a browser's CORS rules, or a large image, keeps the URL, so the
+ * reader's browser loads it instead. With a `cache` folder, images are stored there between builds, and one that can't be downloaded
  * again keeps its stored copy.
  */
 export async function inline(
