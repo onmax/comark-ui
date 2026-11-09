@@ -183,5 +183,7 @@ allowBuilds:
 
 # Temporary dependency backports. See patches/README.md for upstream PRs and removal conditions.
 patchedDependencies:
+  # Docs opens Introduction and start link pages get the sidebar (vite-hub/vitehub#3733).
+  "@vite-hub/docs@0.0.0-preview-2707919": patches/@vite-hub__docs@0.0.0-preview-2707919.patch
   # Workers builds resolve the `workerd` condition, which 5.0.1 lacks (crouchcd/pkce-challenge#50, merged, unreleased).
   pkce-challenge@5.0.1: patches/pkce-challenge@5.0.1.patch
