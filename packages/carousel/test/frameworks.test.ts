@@ -18,7 +18,7 @@ const parse = () =>
   parseMarkdown('::carousel{title="Tour"}\nOne **bold**\n\nTwo\n::', { plugins: [carousel()] });
 const expectCarousel = (html: string) => {
   expect(html).toMatch(
-    /<div class="cc" data-comark-frame(="")? data-zoom-gallery(="")? role="region" aria-roledescription="carousel" aria-label="Tour">/,
+    /<div class="cc"( data-comark-mounts(="")?)? data-comark-frame(="")? data-zoom-gallery(="")? role="region" aria-roledescription="carousel" aria-label="Tour">/,
   );
   expect(html.match(/class="cc-slide"/g)).toHaveLength(2);
   expect(html).toMatch(/aria-label="2 of 2" data-zoom(="")? tabindex="0" data-zoom-title="Tour"/);
@@ -52,7 +52,7 @@ describe("comark-carousel renderers", () => {
       // Up to the HTML renderer's inline styles and script, whose source mentions attributes of its own.
       const [html = ""] = (await render(value)).split("<style");
       expect(html, name).toMatch(
-        /<div class="cc" data-comark-frame(="")? data-carousel-columns="2" role="region" aria-roledescription="carousel" aria-label="Carousel">/,
+        /<div class="cc"( data-comark-mounts(="")?)? data-comark-frame(="")? data-carousel-columns="2" role="region" aria-roledescription="carousel" aria-label="Carousel">/,
       );
       expect(html, name).toContain(
         '<div class="cc-slide" role="group" aria-roledescription="slide" aria-label="3 of 3">',

@@ -73,6 +73,7 @@ export function Carousel({ count, columns, title, zoom, children }: CarouselProp
     "div",
     {
       className: "cc",
+      "data-comark-mounts": "",
       "data-comark-frame": "",
       "data-carousel-columns": perView > 1 ? String(perView) : undefined,
       "data-carousel-fits": total <= perView ? "" : undefined,

@@ -5,7 +5,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { parseMarkdown } from "comark";
 import { defaultConfig, readConfig } from "./config.ts";
-import { decodePlaygroundLink, readPlaygroundHash } from "@vite-hub/ui/playground";
+import { decodePlaygroundLink, readPlaygroundHash } from "@vite-hub/ui-playground/playground";
 import { configFile, contentFile, playable, templateOf } from "./play-link.ts";
 import { browserPlugins } from "./plugins.ts";
 

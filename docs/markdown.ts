@@ -1,4 +1,7 @@
 // The Comark plugins that @vite-hub/docs parses every page with, on the server: for the page route, search, and drafts.
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
+import { pathToFileURL } from "node:url";
 import { renderHtmlFromDocument } from "@comark/html";
 import { defineComarkPlugin, type ElementNode, type Node } from "comark";
 import { textContent } from "comark/utils";
@@ -7,6 +10,7 @@ import { createDocsParser, type DocsParserOptions } from "@vite-hub/docs/server"
 import { playable, playLink } from "./play-link.ts";
 import { browserPlugins, components as html } from "./plugins.ts";
 import { studioPlugin } from "./studio.ts";
+import { sizeOf } from "../packages/zoom/src/size.ts";
 
 const isElement = (node: Node): node is ElementNode =>
   Array.isArray(node) && typeof node[0] === "string";
@@ -41,10 +45,45 @@ const bridge = defineComarkPlugin(() => {
   return { name: "docs-html-only", post: (state) => visit(state.tree.nodes) };
 });
 
+// comark-zoom can't measure an image of the site's own, such as `/before.png`, from its path, so the image took its room
+// only once it loaded and pushed the page down. Its size is read from docs/public instead. Nitro bundles this file, so
+// the folder is found from the working directory, where the docs scripts run. The Worker that parses drafts has no
+// files, so a draft's image keeps no size.
+const localSize = async (src: string) =>
+  sizeOf(
+    await readFile(
+      new URL(`.${src.split(/[?#]/)[0]}`, pathToFileURL(join(process.cwd(), "public/"))),
+    ),
+  );
+const sizes = defineComarkPlugin(() => {
+  const visit = async (nodes: Node[]): Promise<void> => {
+    for (const node of nodes) {
+      if (!isElement(node)) continue;
+      const { src, width, height } = node[1];
+      if (
+        node[0] === "img" &&
+        typeof src === "string" &&
+        /^\/(?!\/)/.test(src) &&
+        !(width && height)
+      ) {
+        const size = await localSize(src).catch(() => undefined);
+        if (size) Object.assign(node[1], size);
+      }
+      // SAFETY: an element node is [tag, attributes, ...children].
+      await visit(node.slice(2) as Node[]);
+    }
+  };
+  return { name: "docs-image-sizes", post: (state) => visit(state.tree.nodes) };
+});
+
 // The pages measure `:time` from one moment, in English and UTC, so their examples read the same wherever the site is built.
 const timeNow = { now: "2026-11-04T12:00:00Z", timeZone: "UTC", locale: "en" };
 // The docs shell styles prose. Scoped preset styles are lost when zoom copies a block into its dialog.
-const blocks = () => [...browserPlugins({ "comark-time": timeNow }, { typeset: false }), bridge()];
+const blocks = () => [
+  sizes(),
+  ...browserPlugins({ "comark-time": timeNow }, { typeset: false }),
+  bridge(),
+];
 
 // `:::example` shows its fenced Markdown twice, rendered and as code. The rendered copy is parsed here so the page
 // reaches the browser as nodes, and the playground link, which deflates the Markdown, is written here too.

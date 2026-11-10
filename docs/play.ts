@@ -13,7 +13,7 @@ import {
   playgroundUrl,
   readPlaygroundHash,
   type PlaygroundFiles,
-} from "@vite-hub/ui/playground";
+} from "@vite-hub/ui-playground/playground";
 import { configFile, contentFile, presetCode, templateOf, themeFile } from "./play-link.ts";
 import { errorText } from "../shared/text.ts";
 

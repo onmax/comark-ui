@@ -43,6 +43,7 @@ export const Tabs = /* @__PURE__ */ defineComponent({
         "div",
         {
           class: "ct",
+          "data-comark-mounts": "",
           "data-comark-frame": "",
           "data-tabs-code": props.code ? "" : undefined,
           "data-code-header": props.code ? "" : undefined,

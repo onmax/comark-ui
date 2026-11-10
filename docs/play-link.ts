@@ -6,7 +6,7 @@ import {
   encodePlaygroundLink,
   playgroundUrl,
   type PlaygroundTemplate,
-} from "@vite-hub/ui/playground";
+} from "@vite-hub/ui-playground/playground";
 
 export const contentFile = "content.md";
 export const configFile = "config.json";

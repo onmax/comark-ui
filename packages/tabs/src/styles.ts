@@ -1,4 +1,5 @@
 import { theme } from "comark-zoom/theme";
+import { scripted } from "../../../shared/scripted.ts";
 
 /**
  * The tab styles: a segmented control in the style of shadcn/ui, on the shared `--comark-*` tokens, with `--ct-surface`,
@@ -15,8 +16,6 @@ export const css = `@layer comark{${[
   // A sliding surface passes under the other tabs' labels, so every surface sits below every label.
   ".ct-list{isolation:isolate}",
   ".ct-list,.ct[data-tabs-code]>.ct-panel>.ct-caption{background:var(--ct-surface,color-mix(in srgb,var(--_comark-accent) 50%,transparent));box-shadow:inset 0 0 0 1px var(--_comark-border)}",
-  "[data-tabs-ready] .ct-list{display:flex}",
-  "[data-tabs-ready] .ct-caption,[data-tabs-ready] .ct-panel[data-inactive]{display:none}",
   ".ct-tab{display:inline-flex;flex:none;align-items:center;gap:.375rem;padding:.25rem .625rem;border:0;border-radius:calc(var(--_comark-radius) - 2px);background:none;color:var(--_comark-muted);font:500 var(--ct-font-size,.8125rem)/1.25rem var(--_comark-font);white-space:nowrap;cursor:pointer;touch-action:manipulation;position:relative;transition:color .15s}",
   '.ct-tab::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;transform-origin:0 0;pointer-events:none}',
   ".ct-tab:hover{color:var(--_comark-foreground)}",
@@ -38,7 +37,6 @@ export const css = `@layer comark{${[
   ".ct-ghost{position:absolute;white-space:pre;pointer-events:none}",
   ".ct[data-tabs-magic][data-moving]{clip-path:inset(0)}",
   ".ct-panel{border-radius:var(--_comark-radius)}",
-  "[data-tabs-ready] .ct-panel{margin-top:var(--ct-gap,.75rem)}",
   ".ct-caption{display:flex;align-items:center;gap:.375rem;margin:1.5rem 0 .5rem;color:var(--_comark-muted);font:500 var(--ct-font-size,.8125rem)/1.25rem var(--_comark-font)}",
   ".ct-list+.ct-panel>.ct-caption{margin-top:0}",
   ".ct-caption+*{margin-top:0}",
@@ -46,13 +44,20 @@ export const css = `@layer comark{${[
   // A code group is one card: the strip, or each caption without the script, is the header its code block hangs from.
   // comark-code measures its buttons; their space stays outside the scrolling strip.
   ".ct[data-tabs-code]{position:relative;--ck-header:calc(2.5rem - 1px)}",
-  "[data-tabs-ready] .ct[data-tabs-code]::before{content:'';position:absolute;inset:0 0 auto;height:calc(var(--ck-header) + 1px);border-radius:var(--_comark-radius) var(--_comark-radius) 0 0;background:var(--ct-surface,color-mix(in srgb,var(--_comark-accent) 50%,transparent));box-shadow:inset 0 0 0 1px var(--_comark-border);pointer-events:none}",
   ".ct[data-tabs-code]>.ct-list{box-sizing:border-box;width:calc(100% - var(--ck-controls,3.75rem));padding:.375rem;background:none;box-shadow:none}",
   ".ct[data-tabs-code]>.ct-list,.ct[data-tabs-code]>.ct-panel>.ct-caption{border-radius:var(--_comark-radius) var(--_comark-radius) 0 0}",
   ".ct[data-tabs-code]>.ct-panel>.ct-caption{margin-bottom:-1px;padding:.625rem 1rem}",
-  "[data-tabs-ready] .ct[data-tabs-code]>.ct-panel{margin-top:-1px}",
   ".ct[data-tabs-code]>.ct-panel{border-radius:0 0 var(--_comark-radius) var(--_comark-radius)}",
-  "@media (pointer:coarse){.ct-tab{padding-block:.5rem}[data-tabs-ready] .ct[data-tabs-code]{--ck-header:calc(3rem - 1px)}}",
+  "@media (pointer:coarse){.ct-tab{padding-block:.5rem}}",
+  // With the script, one panel shows under the strip. A code group's strip joins its code block to make one header.
+  scripted("data-tabs-ready", ".ct", [
+    "& .ct-list{display:flex}",
+    "& .ct-caption,& .ct-panel[data-inactive]{display:none}",
+    "& .ct-panel{margin-top:var(--ct-gap,.75rem)}",
+    "&[data-tabs-code]::before{content:'';position:absolute;inset:0 0 auto;height:calc(var(--ck-header) + 1px);border-radius:var(--_comark-radius) var(--_comark-radius) 0 0;background:var(--ct-surface,color-mix(in srgb,var(--_comark-accent) 50%,transparent));box-shadow:inset 0 0 0 1px var(--_comark-border);pointer-events:none}",
+    "&[data-tabs-code]>.ct-panel{margin-top:-1px}",
+    "@media (pointer:coarse){&[data-tabs-code]{--ck-header:calc(3rem - 1px)}}",
+  ]),
 ].join("")}}${
   // The host styles its code blocks with plain rules, which beat any layered one. comark-code wraps each block in `.ck`.
   ".ct[data-tabs-code]>.ct-panel>pre,.ct[data-tabs-code]>.ct-panel>.ck>pre{margin:0;border-radius:0 0 var(--_comark-radius) var(--_comark-radius)}"

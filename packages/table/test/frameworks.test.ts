@@ -17,9 +17,11 @@ import { components as vueComponents } from "../src/vue.ts";
 const markdown =
   '::table{sort}\n```csv\nName,Size\n"zoom & tabs",3\nchips,[9]{tone="error"}\n```\n::';
 // Drops what differs only in serialization: comments, whitespace between tags, the HTML renderer's inline script and
-// styles, and how React writes a style.
+// styles, and how React writes a style. It drops the mark a component's root carries too, which lets its styles lay
+// out the server render before the script starts.
 const normalize = (html: string) =>
   html
+    .replace(/ data-comark-mounts(="")?/g, "")
     .replace(/<!--.*?-->/g, "")
     .replace(/<(style|script)[^>]*>.*?<\/\1>/gs, "")
     .replace(/style="text-align:\s*right;?"/g, 'style="text-align:right"')

@@ -25,9 +25,11 @@ const renderers = {
     renderReact(createElement(ReactDocument, { value, components: reactComponents })),
 };
 // Drops what differs only in serialization: comments, whitespace, empty attribute values, the HTML renderer's inline
-// styles and script, and the ids, which each framework makes its own way.
+// styles and script, and the ids, which each framework makes its own way. It drops the mark a component's root carries
+// too, which lets its styles lay out the server render before the script starts.
 const normalize = (html: string) =>
   html
+    .replace(/ data-comark-mounts(="")?/g, "")
     .replace(/<style[^>]*>.*?<\/style>|<script>.*?<\/script>/gs, "")
     .replace(/<!--.*?-->/g, "")
     .replace(/(id|aria-controls|aria-labelledby)="[^"]*?-(tab|panel)-(\d)"/g, '$1="$2-$3"')
