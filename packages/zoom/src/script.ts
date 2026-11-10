@@ -456,16 +456,10 @@ export function script(css: string): () => void {
       });
       return;
     }
-    const all = [...document.querySelectorAll<HTMLElement>(SELECTOR)].filter(zoomable);
-    const at = current.items.map((item) => all.indexOf(item)).filter((index) => index >= 0);
-    if (!at.length) return;
-    let next: HTMLElement | undefined;
-    for (
-      let index = (step > 0 ? Math.max(...at) : Math.min(...at)) + step;
-      !next && all[index];
-      index += step
-    )
-      if (!current.items.includes(all[index]!)) next = all[index];
+    const all = figures();
+    const at = all.indexOf(current.items[0]!);
+    if (at < 0) return;
+    const next = all[at + step];
     if (!next) return;
     for (const item of current.items) item.style.visibility = "";
     current.items = groupOf(next);

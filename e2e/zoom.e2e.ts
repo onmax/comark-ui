@@ -572,6 +572,51 @@ for (const tall of [true, false]) {
   });
 }
 
+test("figure navigation counts interleaved named groups at their first item", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  const item = (title: string, group = "") =>
+    `::zoom{title="${title}"${group ? ` group="${group}"` : ""}}\n${title}\n::`;
+  await fixture(
+    page,
+    await render(
+      [
+        item("First A", "a"),
+        item("First B", "b"),
+        item("Middle"),
+        item("Second A", "a"),
+        item("Second B", "b"),
+        item("Last"),
+      ].join("\n\n"),
+    ),
+  );
+  const place = page.locator(".cz-place");
+  const title = page.locator(".cz-title");
+  await page.locator("main [data-zoom]").first().click();
+  await expect(place).toHaveText("Figure 1 of 4");
+  await page.keyboard.press("ArrowUp");
+  await expect(title).toHaveText("First A");
+  await page.keyboard.press("ArrowRight");
+  await expect(title).toHaveText("Second A");
+  await expect(place).toHaveText("Figure 1 of 4");
+
+  for (const [index, name] of ["First B", "Middle", "Last"].entries()) {
+    await page.keyboard.press("ArrowDown");
+    await expect(title).toHaveText(name);
+    await expect(place).toHaveText(`Figure ${index + 2} of 4`);
+  }
+  await page.keyboard.press("ArrowDown");
+  await expect(title).toHaveText("Last");
+
+  for (const [index, name] of ["Middle", "First B", "First A"].entries()) {
+    await page.keyboard.press("ArrowUp");
+    await expect(title).toHaveText(name);
+    await expect(place).toHaveText(`Figure ${3 - index} of 4`);
+  }
+  await page.keyboard.press("Escape");
+  await expect(page.locator(".cz-dialog")).toHaveCount(0);
+  await expect(page.locator("main [data-zoom]").first()).toBeFocused();
+});
+
 test("Up and Down move between the page's figures, scroll a tall one first, and leave a slider its keys", async ({
   page,
 }) => {
