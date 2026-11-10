@@ -21,9 +21,9 @@ export const css = `@layer comark{${[
   `.cp[data-kind="favicon"]:not(:has(.cp-img))::before{content:'';display:inline-block;width:1em;height:1em;margin:0 .3125em 0 0;background:color-mix(in oklab,currentColor 55%,transparent);-webkit-mask:${globe} center/contain no-repeat;mask:${globe} center/contain no-repeat;vertical-align:-.125em}`,
   ".cp:hover{background:var(--_cp-hover)}",
   ".cp:focus-visible{outline:2px solid var(--_comark-ring);outline-offset:2px}",
-  ".cp-img{display:inline-block;width:min(var(--cp-image-size,1em),1em);height:min(var(--cp-image-size,1em),1em);margin:0 .3125em 0 0;border-radius:calc(var(--_comark-radius) - 7px);outline:1px solid color-mix(in oklab,var(--_comark-foreground) 10%,transparent);outline-offset:-1px;vertical-align:-.125em;object-fit:cover}",
+  ".cp-img{display:inline-block;width:min(var(--cp-image-size,1em),1em);height:min(var(--cp-image-size,1em),1em);margin:0 .3125em 0 0;border-radius:calc(var(--_comark-radius) - 7px);vertical-align:-.125em;object-fit:cover}",
   '.cp[data-kind="avatar"]{padding:0;background:none;box-shadow:none;text-decoration:underline;text-decoration-color:transparent;text-underline-offset:.2em;transition:text-decoration-color .15s ease-out}',
   '.cp[data-kind="avatar"]:hover{background:none;text-decoration-color:currentColor}',
-  '.cp[data-kind="avatar"] .cp-img{border-radius:50%;outline:none}',
+  '.cp[data-kind="avatar"] .cp-img{border-radius:50%}',
   '@media (prefers-reduced-motion:reduce){.cp,.cp[data-kind="avatar"]{transition:none}}',
 ].join("")}}`;
