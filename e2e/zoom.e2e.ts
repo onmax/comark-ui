@@ -571,3 +571,127 @@ for (const tall of [true, false]) {
     }
   });
 }
+
+test("figure navigation counts interleaved named groups at their first item", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  const item = (title: string, group = "") =>
+    `::zoom{title="${title}"${group ? ` group="${group}"` : ""}}\n${title}\n::`;
+  await fixture(
+    page,
+    await render(
+      [
+        item("First A", "a"),
+        item("First B", "b"),
+        item("Middle"),
+        item("Second A", "a"),
+        item("Second B", "b"),
+        item("Last"),
+      ].join("\n\n"),
+    ),
+  );
+  const place = page.locator(".cz-place");
+  const title = page.locator(".cz-title");
+  await page.locator("main [data-zoom]").first().click();
+  await expect(place).toHaveText("Figure 1 of 4");
+  await page.keyboard.press("ArrowUp");
+  await expect(title).toHaveText("First A");
+  await page.keyboard.press("ArrowRight");
+  await expect(title).toHaveText("Second A");
+  await expect(place).toHaveText("Figure 1 of 4");
+
+  for (const [index, name] of ["First B", "Middle", "Last"].entries()) {
+    await page.keyboard.press("ArrowDown");
+    await expect(title).toHaveText(name);
+    await expect(place).toHaveText(`Figure ${index + 2} of 4`);
+  }
+  await page.keyboard.press("ArrowDown");
+  await expect(title).toHaveText("Last");
+
+  for (const [index, name] of ["Middle", "First B", "First A"].entries()) {
+    await page.keyboard.press("ArrowUp");
+    await expect(title).toHaveText(name);
+    await expect(place).toHaveText(`Figure ${3 - index} of 4`);
+  }
+  await page.keyboard.press("Escape");
+  await expect(page.locator(".cz-dialog")).toHaveCount(0);
+  await expect(page.locator("main [data-zoom]").first()).toBeFocused();
+});
+
+test("Up and Down move between the page's figures, scroll a tall one first, and leave a slider its keys", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.route("**/tall.svg", (route) =>
+    route.fulfill({
+      contentType: "image/svg+xml",
+      body: '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="4800"><rect width="1200" height="4800" fill="#ddd"/></svg>',
+    }),
+  );
+  const pair = (mode = "") => `::compare{${mode}}
+:::screenshot{src="/before.png" alt="Before" viewport="640x250"}
+:::
+
+:::screenshot{src="/after.png" alt="After" viewport="640x250"}
+:::
+::`;
+  const filler = "Pigeons home from far away. ".repeat(200);
+  await fixture(
+    page,
+    await render(
+      [
+        image,
+        filler,
+        pair(),
+        filler,
+        pair('mode="slider"'),
+        filler,
+        "![Full page](/tall.svg)",
+      ].join("\n\n"),
+    ),
+  );
+  const dialog = page.locator(".cz-dialog");
+  const place = page.locator(".cz-place");
+  await page.locator("main img[data-zoom]").first().click();
+  await expect(place).toHaveText("Figure 1 of 4");
+
+  await page.keyboard.press("ArrowDown");
+  await expect(place).toHaveText("Figure 2 of 4");
+  await expect(page.locator(".cz-count")).toHaveText("1 / 2");
+  await expect(page.locator(".cz-title")).toHaveText("Before");
+  await expect(page.locator(".cz-thumb")).toHaveCount(2);
+  await expect(page.locator(".cz-nav")).toHaveCount(2);
+  await page.keyboard.press("ArrowRight");
+  await expect(page.locator(".cz-title")).toHaveText("After");
+
+  // A slider keeps Up and Down for its divider.
+  await page.keyboard.press("ArrowDown");
+  await expect(place).toHaveText("Figure 3 of 4");
+  const handle = page.locator(".cz-item .ca-handle");
+  await handle.focus();
+  await page.keyboard.press("ArrowUp");
+  await expect(handle).toHaveAttribute("aria-valuenow", "55");
+  await expect(place).toHaveText("Figure 3 of 4");
+  await dialog.focus();
+
+  // A tall figure scrolls to its end before Down moves on, and the last figure doesn't wrap.
+  await page.keyboard.press("ArrowDown");
+  await expect(place).toHaveText("Figure 4 of 4");
+  await expect(page.locator(".cz-nav")).toHaveCount(0);
+  const stage = page.locator(".cz-stage");
+  await page.keyboard.press("ArrowDown");
+  await expect.poll(() => stage.evaluate((node) => node.scrollTop)).toBeGreaterThan(0);
+  await stage.evaluate((node) => (node.scrollTop = node.scrollHeight));
+  await page.keyboard.press("ArrowDown");
+  await expect(place).toHaveText("Figure 4 of 4");
+
+  await stage.evaluate((node) => (node.scrollTop = 0));
+  // Back up to the first comparison, then close: the page has scrolled to it and focus lands on it.
+  await page.keyboard.press("ArrowUp");
+  await expect(place).toHaveText("Figure 3 of 4");
+  await page.keyboard.press("ArrowUp");
+  await expect(place).toHaveText("Figure 2 of 4");
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  const first = page.locator("main [data-zoom-gallery] [data-zoom]").first();
+  await expect(first).toBeInViewport();
+});

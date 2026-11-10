@@ -168,6 +168,7 @@ Each item is a tab stop that opens a modal dialog, labelled by its title. Focus 
 | `Enter`, `Space` | Opens the focused item. |
 | `Escape` | Closes the zoomed view. |
 | `ArrowLeft`, `ArrowRight` | Moves to the previous or next item in a group. |
+| `ArrowUp`, `ArrowDown` | Scrolls a tall item, then moves to the previous or next figure on the page, at its first item. A figure is a group or an item on its own. The page scrolls beneath, so closing lands on the figure shown. A slider keeps these keys while it has focus. |
 | `Tab`, `Shift+Tab` | Moves focus between the dialog's buttons and thumbnails, and wraps around inside the dialog. |
 
 ## API
@@ -287,7 +288,7 @@ The zoomed view sits at the end of `body`, so set these on `:root`, `body`, or `
 | `[data-zoom]` | An item on the page that zooms |
 | `.cz-dialog` | The zoomed view, with `data-aside` when it shows a caption beside the item |
 | `.cz-backdrop` | The layer behind everything else |
-| `.cz-header`, `.cz-title`, `.cz-count`, `.cz-close` | The top row: title, position in a group, and the close button |
+| `.cz-header`, `.cz-title`, `.cz-count`, `.cz-place`, `.cz-close` | The top row: title, position in a group, position among the page's figures (hidden on touch screens), and the close button |
 | `.cz-stage`, `.cz-item` | The area the item zooms into, and the zoomed copy |
 | `.cz-prev`, `.cz-next` | The arrows of a group, both `.cz-nav` |
 | `.cz-aside` | The caption beside the item, from `data-zoom-aside` |
