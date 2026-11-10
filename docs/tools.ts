@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync, existsSync } from "node:fs";
 import { renderHtmlFromDocument } from "@comark/html";
 import { icons as lucide } from "@iconify-json/lucide";
-import { playgroundUrl } from "@vite-hub/ui/playground";
+import { playgroundUrl } from "@vite-hub/ui-playground/playground";
 import { parseMarkdown } from "comark";
 import { parse } from "yaml";
 import { build } from "vite";

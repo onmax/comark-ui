@@ -1,12 +1,12 @@
 // The playground's state is files: the Markdown in `content.md`, the options in `config.json`, and the Theme pane's
-// `theme.json`. A link carries them in the hash through @vite-hub/ui/playground, so nothing is stored anywhere. A
-// preset is a template with the default config and theme, so a link to it holds only its id and what changed. The
-// pages' examples, the playground, and the gallery all write links, in the browser or on the server.
+// `theme.json`. A link carries them in the hash through @vite-hub/ui-playground/playground, so nothing is stored
+// anywhere. A preset is a template with the default config and theme, so a link to it holds only its id and what
+// changed. The pages' examples, the playground, and the gallery all write links, in the browser or on the server.
 import {
   encodePlaygroundLink,
   playgroundUrl,
   type PlaygroundTemplate,
-} from "@vite-hub/ui/playground";
+} from "@vite-hub/ui-playground/playground";
 import { defaultConfig } from "./config.ts";
 import { defaultThemeText } from "./play-theme.ts";
 

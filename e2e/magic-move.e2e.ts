@@ -29,6 +29,23 @@ const moving = (page: Page) =>
     return kinds;
   });
 
+test("a step's code block joins the tabs, even when the host's code block rules load later", async ({
+  page,
+}) => {
+  await open(page);
+  await page.locator("body").evaluate((body) => {
+    body.classList.add("host");
+    body.append(
+      Object.assign(document.createElement("style"), {
+        textContent: ".host pre{margin:1.25rem 0;border-radius:10px}",
+      }),
+    );
+  });
+  const code = page.locator(".cmv-step:not([data-inactive])>pre");
+  await expect(code).toHaveCSS("margin-top", "0px");
+  await expect(code).toHaveCSS("border-top-left-radius", "0px");
+});
+
 test("without the script, every step reads in turn under its label", async ({ page }) => {
   await open(page, { script: false });
   for (const name of ["Start", "Extract", "Name"]) await expect(step(page, name)).toBeVisible();

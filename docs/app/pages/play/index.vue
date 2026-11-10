@@ -1,9 +1,9 @@
 <script setup lang="ts">
-// The playground: PlaygroundRender from @vite-hub/ui with comark-ui's presets, a pane each for the Markdown, the config,
-// and the theme, and the preview. docs/tools.ts writes the presets with their stills; docs/play.ts renders them.
+// PlaygroundRender runs the presets, the Markdown, Config, and Theme panes, and the preview. docs/tools.ts writes the
+// presets with their stills; docs/play.ts renders them.
 import "~/assets/tools.css";
 import "~/assets/play.css";
-import { PlaygroundRender } from "@vite-hub/ui/playground-render";
+import { PlaygroundRender } from "@vite-hub/ui-playground/playground-render";
 import { configFile, contentFile, themeFile } from "~~/play-link.ts";
 import type { Preset } from "~~/play.ts";
 

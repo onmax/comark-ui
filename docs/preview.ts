@@ -1,4 +1,4 @@
-import type { PlaygroundFiles } from "@vite-hub/ui/playground-render";
+import type { PlaygroundFiles } from "@vite-hub/ui-playground/playground-render";
 import { themeFile } from "./play-link.ts";
 import { readTheme, schemeCss, schemeOf, themeCss } from "./play-theme.ts";
 

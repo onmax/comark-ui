@@ -14,7 +14,7 @@ export const DataTable = defineComponent({
     onMounted(() => (stop = start(css)));
     onBeforeUnmount(() => stop());
     return () =>
-      h("div", { class: "ctb" }, [
+      h("div", { class: "ctb", "data-comark-mounts": "" }, [
         props.copy ? h("div", { class: "ctb-bar", innerHTML: bar() }) : null,
         h("div", { class: "ctb-scroll" }, slots.default?.()),
       ]);

@@ -7,7 +7,7 @@
   onMount(() => start(css));
 </script>
 
-<div class="ctb">
+<div class="ctb" data-comark-mounts="">
   {#if copy}
     <!-- Static markup, the same string every renderer uses. -->
     <div class="ctb-bar">{@html bar()}</div>

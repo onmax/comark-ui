@@ -38,6 +38,7 @@
     "@vite-hub/schedule": "catalog:",
     "@vite-hub/shell": "catalog:",
     "@vite-hub/ui": "catalog:",
+    "@vite-hub/ui-playground": "catalog:",
     "@vite-hub/workflow": "catalog:",
     "@vite-hub/workspace": "catalog:",
     "agents": "^0.33.0",
