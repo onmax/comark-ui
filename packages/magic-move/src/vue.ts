@@ -35,28 +35,32 @@ export const MagicMove = /* @__PURE__ */ defineComponent({
     onMounted(() => (stop = start(css)));
     onBeforeUnmount(() => stop?.());
     return () =>
-      h("div", { class: "cmv", "data-comark-frame": "", "data-code-header": "" }, [
-        h(
-          "div",
-          { class: "cmv-list", role: "tablist", "aria-label": props.title || undefined },
-          props.labels.map((label, at) =>
-            h(
-              "button",
-              {
-                type: "button",
-                class: "cmv-tab",
-                role: "tab",
-                id: `${id()}-tab-${at + 1}`,
-                "aria-controls": `${id()}-panel-${at + 1}`,
-                "aria-selected": String(at === 0),
-                tabindex: at === 0 ? "0" : "-1",
-              },
-              String(label),
+      h(
+        "div",
+        { class: "cmv", "data-comark-frame": "", "data-code-header": "", "data-comark-mounts": "" },
+        [
+          h(
+            "div",
+            { class: "cmv-list", role: "tablist", "aria-label": props.title || undefined },
+            props.labels.map((label, at) =>
+              h(
+                "button",
+                {
+                  type: "button",
+                  class: "cmv-tab",
+                  role: "tab",
+                  id: `${id()}-tab-${at + 1}`,
+                  "aria-controls": `${id()}-panel-${at + 1}`,
+                  "aria-selected": String(at === 0),
+                  tabindex: at === 0 ? "0" : "-1",
+                },
+                String(label),
+              ),
             ),
           ),
-        ),
-        h("div", { class: "cmv-stage" }, slots.default?.()),
-      ]);
+          h("div", { class: "cmv-stage" }, slots.default?.()),
+        ],
+      );
   },
 });
 

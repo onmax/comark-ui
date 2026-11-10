@@ -1,4 +1,5 @@
 import { theme } from "comark-zoom/theme";
+import { scripted } from "../../../shared/scripted.ts";
 
 /**
  * The magic move styles: a code group whose tabs are the steps, on the shared `--comark-*` tokens, with `--cmv-surface`
@@ -12,13 +13,10 @@ export const css = `@layer comark{${[
   // them hide.
   // comark-code measures its buttons; their space stays outside the scrolling strip.
   ".cmv{position:relative;--ck-header:calc(2.5rem - 1px)}",
-  "[data-magic-move-ready] .cmv::before{content:'';position:absolute;inset:0 0 auto;height:calc(var(--ck-header) + 1px);border-radius:var(--_comark-radius) var(--_comark-radius) 0 0;background:var(--cmv-surface,color-mix(in srgb,var(--_comark-accent) 50%,transparent));box-shadow:inset 0 0 0 1px var(--_comark-border);pointer-events:none}",
   ".cmv-list{display:none;box-sizing:border-box;width:calc(100% - var(--ck-controls,3.75rem));gap:2px;padding:.375rem;overflow-x:auto;scrollbar-width:none;border-radius:var(--_comark-radius) var(--_comark-radius) 0 0}",
   ".cmv-list::-webkit-scrollbar{display:none}",
   ".cmv-list,.cmv-caption{background:var(--cmv-surface,color-mix(in srgb,var(--_comark-accent) 50%,transparent));box-shadow:inset 0 0 0 1px var(--_comark-border)}",
   ".cmv-list{background:none;box-shadow:none}",
-  "[data-magic-move-ready] .cmv-list{display:flex}",
-  "[data-magic-move-ready] .cmv-caption,[data-magic-move-ready] .cmv-step[data-inactive]{display:none}",
   ".cmv-tab{display:inline-flex;flex:none;align-items:center;padding:.25rem .625rem;border:0;border-radius:calc(var(--_comark-radius) - 2px);background:none;color:var(--_comark-muted);font:500 .8125rem/1.25rem var(--_comark-font);white-space:nowrap;cursor:pointer;touch-action:manipulation;transition:color .15s,background-color .15s}",
   ".cmv-tab:hover{color:var(--_comark-foreground)}",
   // Forced colors drop the surface, and the transparent outline shows instead.
@@ -30,15 +28,23 @@ export const css = `@layer comark{${[
   ".cmv-tab:focus-visible{outline:2px solid var(--_comark-ring);outline-offset:-2px}",
   ".cmv-step:focus-visible{outline:2px solid var(--_comark-ring);outline-offset:2px}",
   ".cmv-stage{position:relative;display:grid;gap:var(--cmv-gap,1rem)}",
-  "[data-magic-move-ready] .cmv-stage{margin-top:-1px}",
   // The clip keeps the step's buttons, which sit in the header above the stage.
   ".cmv-stage[data-moving]{clip-path:inset(calc(-1 * var(--ck-header)) 0 0)}",
   ".cmv-caption{margin-bottom:-1px;padding:.625rem 1rem;border-radius:var(--_comark-radius) var(--_comark-radius) 0 0;color:var(--_comark-muted);font:500 .8125rem/1.25rem var(--_comark-font)}",
   // Transforms skip inline boxes, so each piece the script cuts is an inline block.
   ".cmv-t{display:inline-block}",
   ".cmv-ghost{position:absolute;white-space:pre;pointer-events:none}",
-  "@media (pointer:coarse){.cmv-tab{padding-block:.5rem}[data-magic-move-ready] .cmv{--ck-header:calc(3rem - 1px)}}",
+  "@media (pointer:coarse){.cmv-tab{padding-block:.5rem}}",
+  // With the script, one step shows under the tabs, which join the step's code block to make one header.
+  scripted("data-magic-move-ready", ".cmv", [
+    "&::before{content:'';position:absolute;inset:0 0 auto;height:calc(var(--ck-header) + 1px);border-radius:var(--_comark-radius) var(--_comark-radius) 0 0;background:var(--cmv-surface,color-mix(in srgb,var(--_comark-accent) 50%,transparent));box-shadow:inset 0 0 0 1px var(--_comark-border);pointer-events:none}",
+    "& .cmv-list{display:flex}",
+    "& .cmv-caption,& .cmv-step[data-inactive]{display:none}",
+    "& .cmv-stage{margin-top:-1px}",
+    "@media (pointer:coarse){&{--ck-header:calc(3rem - 1px)}}",
+  ]),
 ].join("")}}${
   // The host styles its code blocks with plain rules, which beat any layered one. comark-code wraps each block in `.ck`.
-  ".cmv-step>pre,.cmv-step>.ck,.cmv-step>.ck>pre{margin:0}.cmv-step>pre,.cmv-step>.ck>pre{border-radius:0 0 var(--_comark-radius) var(--_comark-radius)}"
+  // Three classes outrank a host's two, such as `.content .ck`, whichever stylesheet loads last.
+  ".cmv-stage>.cmv-step>pre,.cmv-stage>.cmv-step>.ck,.cmv-stage>.cmv-step>.ck>pre{margin:0}.cmv-stage>.cmv-step>pre,.cmv-stage>.cmv-step>.ck>pre{border-radius:0 0 var(--_comark-radius) var(--_comark-radius)}"
 }`;

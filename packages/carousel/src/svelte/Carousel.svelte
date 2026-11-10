@@ -17,6 +17,7 @@
 
 <div
   class="cc"
+  data-comark-mounts=""
   data-comark-frame=""
   data-carousel-columns={perView > 1 ? String(perView) : undefined}
   data-carousel-fits={total <= perView ? "" : undefined}

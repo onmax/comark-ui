@@ -25,7 +25,12 @@ export function MagicMove({
     { value: id },
     createElement(
       "div",
-      { className: "cmv", "data-comark-frame": "", "data-code-header": "" },
+      {
+        className: "cmv",
+        "data-comark-frame": "",
+        "data-code-header": "",
+        "data-comark-mounts": "",
+      },
       createElement(
         "div",
         { className: "cmv-list", role: "tablist", "aria-label": title || undefined },
