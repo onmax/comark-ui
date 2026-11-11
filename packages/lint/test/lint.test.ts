@@ -555,7 +555,17 @@ describe("lint-comark CLI", () => {
       join(dir, "lint-comark.config.mjs"),
       `export default { components: ["pigeon-coop"] };\n`,
     );
-    await expect(cli(join(dir, "pigeon-coop.md"))).rejects.toMatchObject({ code: 1 });
+    await writeFile(join(dir, "typo.md"), `::screnshot\n::\n`);
+    // A name that is no typo of a known one gets the config line to write; a typo gets only its guess.
+    await expect(cli(join(dir, "pigeon-coop.md"))).rejects.toMatchObject({
+      code: 1,
+      stdout: expect.stringMatching(
+        /\n\nIf your renderer draws "pigeon-coop" itself, name it in comark-lint\.config\.mjs:\n {2}export default \{ components: \["pigeon-coop"\] \}\n$/,
+      ),
+    });
+    await expect(cli(join(dir, "typo.md"))).rejects.toMatchObject({
+      stdout: expect.not.stringContaining("If your renderer draws"),
+    });
     expect(
       (await cli(join(dir, "pigeon-coop.md"), "--config", join(dir, "lint-comark.config.mjs")))
         .stdout,

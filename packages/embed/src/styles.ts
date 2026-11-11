@@ -2,8 +2,9 @@ import { theme } from "comark-zoom/theme";
 
 /**
  * Players in a bordered frame the page's width, with the link under them, and link cards in the style of shadcn/ui's
- * Item, on the shared `--comark-*` tokens. Override `--ce-app-height` for CodePen, StackBlitz, and Figma,
- * `--ce-short-width` for a YouTube Short, and `--ce-post-width` and `--ce-post-height` for an X post. The rules sit in the `comark` layer, so any unlayered rule of the host's wins.
+ * Item, on the shared `--comark-*` tokens. Override `--ce-app-height` for CodePen, StackBlitz, Figma, and your own
+ * players (a block's `height` sets it on its figure), `--ce-short-width` for a YouTube Short, and `--ce-post-width` and
+ * `--ce-post-height` for an X post. The rules sit in the `comark` layer, so any unlayered rule of the host's wins.
  */
 export const css = `@layer comark{${[
   theme(".ce,.ce-card"),

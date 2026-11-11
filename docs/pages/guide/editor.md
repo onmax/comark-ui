@@ -64,6 +64,81 @@ function bold() {
 
 Call it inside a Vue setup scope. It destroys the editor when the scope ends. Edits update the Markdown ref, and changing the ref reloads the document.
 
+## Components
+
+The Vue bindings draw every block and inline component with a shared view. A block shows its name and props in a bar above its content, and an inline component a tag after its text. Slots stay editable in place under their `#name`.
+
+Click the props in the bar, or the tag, to open the props panel. It edits the component's props through Tiptap transactions on the node, so the schema and the Markdown the codec writes don't change, and the view works in a collaborative room.
+
+### Describe your components
+
+Use the `components` option to give a component a label, an icon, and typed props. The panel draws a field for each one, and lists any other prop the document sets as a name and a value.
+
+```ts
+import { useComarkEditor, type ComponentInfo } from "comark-ui/editor/vue";
+
+const components: Record<string, ComponentInfo> = {
+  chart: {
+    label: "Chart",
+    icon: "i-lucide-chart-bar",
+    props: {
+      type: { options: ["bar", "stacked", "line"], default: "bar" },
+      title: {},
+      labels: { type: "boolean", description: "Prints the numbers on the chart." },
+    },
+  },
+};
+
+const { editor } = useComarkEditor(markdown, { components });
+```
+
+A component you don't list shows its name, and the panel edits its props as text. It writes text under `name` and every other value under `:name`, as Comark reads it back:
+
+| `type` | Field | Written as |
+| --- | --- | --- |
+| `string`, the default | A text input, or a select with `options` | `title="Done"` |
+| `number` | A number input | `:max="5"` |
+| `boolean` | A checkbox. Unchecked removes the prop, unless its `default` is `true`. | `labels` |
+| `json` | A text area, applied when the JSON parses | `:rows='[1,2]'` |
+
+Any other `type`, such as `image`, edits as text until a `field` draws it. `default` shows in an empty field and is never written. `icon` takes a class, such as an UnoCSS icon's, or a Vue component.
+
+### Draw your own fields
+
+Use the `field` option to draw a prop's field, such as a media picker. It gets the `component` and prop `name`, the prop's entry in `prop`, its `value`, `editable`, the `id` its label points at, and `update(value)`, which sets the prop. `update(undefined)` removes it. Return `undefined` to keep the panel's own field.
+
+```ts
+import { h } from "vue";
+
+useComarkEditor(markdown, {
+  components: { card: { props: { image: { type: "image" } } } },
+  field: (field) =>
+    field.prop.type === "image"
+      ? h(MediaPicker, {
+          id: field.id,
+          value: field.value,
+          disabled: !field.editable,
+          "onUpdate:value": field.update,
+        })
+      : undefined,
+});
+```
+
+`ComarkEditor` takes `components` as a prop and `field` as a slot: `<template #field="field">`. Pass `components: false` to draw components as bare elements.
+
+### Use the view in your own editor
+
+`componentView(options)` from `comark-ui/editor/vue` returns the Tiptap node view, with the same `components` and `field`. Pass it to `ComarkKit`, or to a collaboration codec's `kit`, in the browser only:
+
+```ts
+import { createEditorCodec } from "comark-ui/editor";
+import { componentView } from "comark-ui/editor/vue";
+
+const codec = createEditorCodec({ kit: { componentView: componentView({ components }) } });
+```
+
+The server's codec leaves it out and builds the same schema. Mount the editor with `EditorContent` from `@tiptap/vue-3`, since Tiptap draws a Vue node view only there. The view adds its styles to the page with the first component, on the `--comark-*` [theme tokens](/guide/theming), in light and dark. Its classes start with `cev-`.
+
 ## Markdown conversion
 
 `fromMarkdown(markdown)` and `toMarkdown(doc, options)` from `comark-ui/editor` convert between Markdown and Tiptap JSON without a DOM, so they run on a server too.
@@ -81,9 +156,9 @@ if (!lossy) {
 
 ### Check before editing
 
-`checkMarkdown(markdown, { plugins })` checks that the editor can read and write the document without losing structure or changing the rendered text. It returns `{ editable: true, markdown }` with the normalized Markdown, or `{ editable: false }`. If the frontmatter is the problem, `reason` says which: the block is empty, holds YAML comments, isn't `key: value` lines, isn't valid YAML, or has a `__proto__` key at any depth that a room's fields would drop.
+`checkMarkdown(markdown, { plugins, registerDefaultPlugins })` checks that the editor can read and write the document without changing what your page renders: it parses the document before and after a save with your parser options and compares the trees. It returns `{ editable: true, markdown }` with the normalized Markdown, or `{ editable: false }`. If the frontmatter is the problem, `reason` says which: the block is empty, holds YAML comments, isn't `key: value` lines, isn't valid YAML, or has a `__proto__` key at any depth that a room's fields would drop.
 
-Pass the plugins you render with, or the check misses syntax only they read. The Vue bindings run it and open a failing document read-only. A passing check doesn't promise byte-for-byte output.
+Pass the options you render with, or the check misses syntax only your plugins read. If your parser sets `registerDefaultPlugins: false`, pass that too: the editor then reads bare URLs and HTML as your page does, as text unless your plugins include Comark's `linkify` or `html`, so a save doesn't turn a bare URL into a link. Ids that plugins such as comark-tabs derive from a hash of the source don't count. The Vue bindings run the check and open a failing document read-only. A passing check doesn't promise byte-for-byte output.
 
 ### What the editor keeps
 
@@ -104,7 +179,7 @@ Without changing the document, the first save pads table cells, quotes attribute
 
 Pass `[ComarkKit]` as the extensions of your own Tiptap editor, and StarterKit options through `ComarkKit.configure({ starterKit: { ... } })`. Underline stays off, since Comark has no underline syntax.
 
-The component nodes keep a block's structure and editable content. Add your own Tiptap node views to draw it as your app does.
+The component nodes keep a block's structure and editable content. Pass a node view in `componentView`, such as [the Vue bindings' view](#components), to draw them.
 
 `ComarkImage` plays video and audio URLs it recognizes by extension in native players, and keeps images inline. `ComarkKit` includes it and the other exported nodes: `ComarkBlock`, `ComarkInline`, `ComarkSlot`, `ComarkComment`, `FootnoteReference`, `InlineFootnote`, `FootnoteDefinition`, `DefinitionList`, `DefinitionTerm`, `DefinitionDescription`, and `CriticComment`, and the marks `CriticInsertion`, `CriticDeletion`, and `CriticHighlight`.
 
@@ -146,7 +221,7 @@ The placeholder is a local decoration, so a collaborative document never holds a
 
 ## Collaborative rooms
 
-`createEditorCodec({ plugins, kit })` from `comark-ui/editor` shares the schema and Markdown conversion between a server and its editors. The codec fits ViteHub Realtime's `editor` option.
+`createEditorCodec({ plugins, registerDefaultPlugins, kit })` from `comark-ui/editor` shares the schema and Markdown conversion between a server and its editors. The codec fits ViteHub Realtime's `editor` option.
 
 A room holds a document in two parts. The body is the editor's document, bound through Tiptap's collaboration extension. The frontmatter is the room's fields, a map such as a `Y.Map` with one value per key. Text edits never touch the fields. When two people change different keys at once, both changes stay. On the same key, one value wins in every editor.
 
@@ -163,7 +238,7 @@ if (result.writable) {
 }
 ```
 
-Pass your renderer's plugins for the same check as `checkMarkdown()`. The codec gives the document format, and your host supplies room storage, transport, and a collaboration extension.
+Pass your parser's `plugins` and `registerDefaultPlugins`, so the room reads a document as your page does and `verify()` runs the same check as `checkMarkdown()`. The codec gives the document format, and your host supplies room storage, transport, and a collaboration extension.
 
 | Method | Returns |
 | --- | --- |
@@ -185,8 +260,11 @@ Build a room's [Properties](/properties) rows from its fields with `rowsOf(field
 | Option | Used by | Description |
 | --- | --- | --- |
 | `extensions` | Component and composable | Extra Tiptap extensions added after `ComarkKit`, such as `Upload`. |
-| `plugins` | Component and composable | Parse plugins that check the document before editing. |
-| `kit` | Composable | `ComarkKitOptions`, including StarterKit configuration. |
+| `plugins` | Component and composable | The parse plugins your page renders with, for the check before editing. |
+| `registerDefaultPlugins` | Component and composable | `false` when your parser leaves out Comark's defaults, so the editor reads bare URLs and HTML as your page does. |
+| `kit` | Composable | `ComarkKitOptions`, including StarterKit configuration and a `componentView` that replaces the view. |
+| `components` | Component and composable | A `ComponentInfo` per component name, for the [component view](#components), or `false` to draw components as bare elements. Read once, when the editor is created. |
+| `field` | Composable | Draws a typed prop's field. `ComarkEditor` takes it as the `#field` slot. |
 | `modelValue` | Component | The Markdown string, bound with `v-model`. Changes emit `update:modelValue`. |
 | `properties` | Component | `PropertiesOptions` for the read-only rows above the text, or `false` to hide them. Default `true`. |
 

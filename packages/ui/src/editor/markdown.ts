@@ -1,9 +1,12 @@
 import type { JSONContent } from "@tiptap/core";
 import type { ComarkPlugin, ElementNode, ElementNodeAttributes, Node as AstNode } from "comark";
-import { parseMarkdown } from "comark";
+import { defineComarkPlugin, parseMarkdown } from "comark";
+import attributes from "comark/plugins/attributes";
+import components from "comark/plugins/components";
+import frontmatterPlugin from "comark/plugins/frontmatter";
+import taskList from "comark/plugins/task-list";
 import { parseFrontmatter } from "comark/parse";
 import { renderFrontmatter, renderMarkdown } from "comark/render";
-import { textContent } from "comark/utils";
 import {
   between,
   blockComponent,
@@ -18,7 +21,7 @@ import {
   writeOptions,
 } from "./handlers.ts";
 import { SHORTHAND, SUBSTITUTION, syntax } from "./syntax.ts";
-import { scalar } from "../../../../shared/text.ts";
+import { hash, scalar } from "../../../../shared/text.ts";
 
 type Props = ElementNodeAttributes;
 type Mark = { type: string; attrs?: Record<string, unknown> };
@@ -27,6 +30,38 @@ type Mark = { type: string; attrs?: Record<string, unknown> };
 // (`:badge`). Only the heading ids an author wrote are kept: an id derived from the text would go stale on an edit.
 const parseOptions = { autoUnwrap: false, headingIds: false } as const;
 const readOptions = { ...parseOptions, plugins: syntax };
+
+/**
+ * How the page parses Markdown: the plugins it renders with, and `registerDefaultPlugins: false` when it leaves out
+ * Comark's defaults. The editor reads and checks a document the same way, so a bare URL the page shows as text stays
+ * text, rather than becoming a link that a save writes as `<url>`.
+ */
+export interface PageParser {
+  plugins?: readonly ComarkPlugin<any, any>[];
+  registerDefaultPlugins?: boolean;
+}
+
+// Comark's defaults that change only how text reads. The editor follows the page on each; it always reads the rest,
+// which hold the components, tasks, and frontmatter its schema models.
+const followed = ["linkify", "html"];
+
+function readOptionsFor({ plugins = [], registerDefaultPlugins }: PageParser) {
+  if (registerDefaultPlugins !== false) return readOptions;
+  const page = (name: string) => plugins.filter((plugin) => plugin.name === name);
+  return {
+    ...parseOptions,
+    registerDefaultPlugins: false,
+    plugins: [
+      ...page(followed[0]!),
+      frontmatterPlugin(),
+      ...page(followed[1]!),
+      taskList(),
+      components(),
+      attributes(),
+      ...syntax,
+    ],
+  };
+}
 
 const marks = new Map([
   ["strong", "bold"],
@@ -661,9 +696,12 @@ export interface EditorDocument {
   lossy: boolean;
 }
 
-/** Reads Markdown into the editor's document. */
-export async function fromMarkdown(markdown: string): Promise<EditorDocument> {
-  const tree = await parseMarkdown(markdown, readOptions);
+/** Reads Markdown into the editor's document, as a page that parses it with `page` reads it. */
+export async function fromMarkdown(
+  markdown: string,
+  page: PageParser = {},
+): Promise<EditorDocument> {
+  const tree = await parseMarkdown(markdown, readOptionsFor(page));
   const reading: Reading = { lossy: false };
   const content = readBlocks(tree.nodes, reading);
   return {
@@ -796,33 +834,50 @@ export type MarkdownCheck =
     };
 
 /**
- * Whether the editor can open this Markdown and save it without changing what readers see. Pass the parse plugins the
- * page renders with, so syntax only they read, such as footnote definitions, counts too.
+ * Whether the editor can open this Markdown and save it without changing what readers see. Pass how the page parses
+ * it, so syntax only its plugins read, such as footnote definitions, counts too, and the page's tree before and after a
+ * save must match.
  */
 export async function checkMarkdown(
   markdown: string,
-  options: { plugins?: readonly ComarkPlugin<any, any>[] } = {},
+  page: PageParser = {},
 ): Promise<MarkdownCheck> {
   const frontmatter = readFrontmatter(markdown);
   if (frontmatter.kind === "lost") return { editable: false, reason: frontmatter.problem };
-  const first = await fromMarkdown(markdown);
+  const first = await fromMarkdown(markdown, page);
   if (first.lossy) return { editable: false };
   const written = await toMarkdown(first.doc, first);
-  const again = await fromMarkdown(written);
+  const again = await fromMarkdown(written, page);
   if (again.lossy || !equal(first.doc, again.doc) || !equal(first.frontmatter, again.frontmatter))
     return { editable: false };
-  // Only the text: plugins such as comark-tabs derive ids from a hash of the source, which any rewrite changes.
-  const { plugins = [] } = options;
-  if (plugins.length) {
-    const read = async (source: string) => {
-      const tree = await parseMarkdown(source, { ...parseOptions, plugins: [...plugins] });
-      return tree.nodes
-        .map((child) => textContent(child))
-        .join("")
-        .replace(/\s+/g, " ")
-        .trim();
-    };
-    if ((await read(markdown)) !== (await read(written))) return { editable: false };
+  if (page.plugins?.length || page.registerDefaultPlugins === false) {
+    const [before, after] = await Promise.all([readPage(markdown, page), readPage(written, page)]);
+    if (!equal(before, after)) return { editable: false };
   }
   return { editable: true, markdown: written };
+}
+
+/**
+ * The page's tree, with the key that plugins such as comark-tabs derive their ids from, a hash of the source, masked:
+ * any rewrite changes it, and readers don't see it.
+ */
+async function readPage(markdown: string, { plugins = [], registerDefaultPlugins }: PageParser) {
+  let key: string | undefined;
+  const sourceKey = defineComarkPlugin(() => ({
+    name: "editor-source-key",
+    // After the frontmatter plugin's `pre` takes the frontmatter off, as the plugins that derive ids read it.
+    post(state) {
+      key = hash(state.markdown);
+    },
+  }));
+  const tree = await parseMarkdown(markdown, {
+    registerDefaultPlugins,
+    plugins: [sourceKey(), ...plugins],
+  });
+  const read = JSON.stringify(
+    { nodes: tree.nodes, frontmatter: tree.frontmatter },
+    (_, value: unknown) => (key && typeof value === "string" ? value.replaceAll(key, "#") : value),
+  );
+  // SAFETY: JSON.parse returns what JSON.stringify wrote, a tree of plain values.
+  return JSON.parse(read) as unknown;
 }
