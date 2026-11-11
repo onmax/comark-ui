@@ -85,5 +85,21 @@ else {
   for (const { file, line, column, rule, message, fix } of results)
     console.log(`${file}:${line}:${column ?? 1} ${rule} ${message} ${fix}`);
   if (!results.length && !failed) console.log("No problems.");
+  // A name that is no typo of a known one may be a block the host draws itself, which only the config can tell.
+  const unknown = new Set(
+    results.flatMap(({ rule, message, fix }) =>
+      rule === "comark/unknown-component" && !fix.startsWith("Did you mean")
+        ? (/^`:+([\w-]+)`/.exec(message)?.slice(1) ?? [])
+        : [],
+    ),
+  );
+  if (unknown.size) {
+    const names = [...unknown].map((name) => `"${name}"`).join(", ");
+    console.log(
+      configFile
+        ? `\nIf your renderer draws ${names} itself, add ${unknown.size === 1 ? "it" : "them"} to components in ${configFile}.`
+        : `\nIf your renderer draws ${names} itself, name ${unknown.size === 1 ? "it" : "them"} in comark-lint.config.mjs:\n  export default { components: [${names}] }`,
+    );
+  }
 }
 process.exit(failed ? 2 : results.length ? 1 : 0);
