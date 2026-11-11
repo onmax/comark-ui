@@ -20,15 +20,18 @@ import {
   ComarkKit,
   type ComarkKitOptions,
   fromMarkdown,
+  type PageParser,
   toMarkdown,
 } from "./editor.ts";
 
-export interface UseComarkEditorOptions {
+/**
+ * Pass how the page parses Markdown, `plugins` and `registerDefaultPlugins` as given to Comark's parser, so the editor
+ * reads a document as readers see it, and opens read-only one a save would change for them.
+ */
+export interface UseComarkEditorOptions extends PageParser {
   /** Added after ComarkKit, such as a placeholder. */
   extensions?: AnyExtension[];
   kit?: ComarkKitOptions;
-  /** The parse plugins the page renders with, so a document only they read is opened read-only. */
-  plugins?: readonly ComarkPlugin<any, any>[];
 }
 
 /**
@@ -58,9 +61,13 @@ export function useComarkEditor(markdown: Ref<string>, options: UseComarkEditorO
   async function load(source: string) {
     const run = ++loads;
     ++saves; // An external load supersedes serialization of the previous editor state.
+    const page = {
+      plugins: options.plugins,
+      registerDefaultPlugins: options.registerDefaultPlugins,
+    };
     const [check, read] = await Promise.all([
-      checkMarkdown(source, { plugins: options.plugins }),
-      fromMarkdown(source),
+      checkMarkdown(source, page),
+      fromMarkdown(source, page),
     ]);
     if (run !== loads) return;
     frontmatter.value = read.frontmatter;
@@ -114,6 +121,7 @@ export const ComarkEditor = defineComponent({
     extensions: { type: Array as PropType<AnyExtension[]>, default: undefined },
     // SAFETY: Vue's runtime constructor cannot express the array's element type.
     plugins: { type: Array as PropType<ComarkPlugin<any, any>[]>, default: undefined },
+    registerDefaultPlugins: { type: Boolean, default: undefined },
   },
   emits: ["update:modelValue"],
   setup(props, { attrs, emit }) {
@@ -128,6 +136,7 @@ export const ComarkEditor = defineComponent({
     const { editor, frontmatter } = useComarkEditor(markdown, {
       extensions: props.extensions,
       plugins: props.plugins,
+      registerDefaultPlugins: props.registerDefaultPlugins,
     });
     return () => {
       if (!editor.value) return null;
