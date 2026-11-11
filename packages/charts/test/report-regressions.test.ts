@@ -1,6 +1,7 @@
 import { createHtmlRenderer, renderHtmlFromDocument } from "@comark/html";
 import { parseMarkdown } from "comark";
 import { describe, expect, it } from "vite-plus/test";
+import { guess } from "../src/draw.ts";
 import charts, { components } from "../src/html.ts";
 
 const render = createHtmlRenderer({ plugins: [charts()], components });
@@ -92,6 +93,29 @@ describe("report chart regressions", () => {
     expect(html).not.toContain("Target");
   });
 
+  it("keeps plotting space and a fitting legend for long line-series names", async () => {
+    const prefix = "apps/dashboard/src/features/organization/settings/billing/components/";
+    const names = [
+      `${prefix}SubscriptionPlanComparisonTable.integration.test.ts`,
+      `${prefix}SubscriptionPlanComparisonTable.unit.test.ts`,
+    ];
+    const document = await parseMarkdown(
+      chart(`| x | ${names.join(" | ")} |\n| --- | ---: | ---: |\n| a | 1 | 2 |\n| b | 3 | 4 |`, '{type="line"}'),
+      { plugins: [charts()] },
+    );
+    expect(document.meta.issues ?? []).toEqual([]);
+    const html = await renderHtmlFromDocument(document, { components });
+    const paths = [...html.matchAll(/<g class="mark-line role-mark[^"]*">(<path[^>]+\/>)/g)];
+    expect(paths).toHaveLength(2);
+    for (const [, path] of paths) {
+      const xs = [...attribute(path!, "d").matchAll(/[ML]([-\d.]+),/g)].map(([, x]) => Number(x));
+      expect(Math.max(...xs) - Math.min(...xs)).toBeGreaterThan(300);
+    }
+    expect(html).toContain('viewBox="0 0 744 ');
+    expect(html).toContain("role-legend");
+    for (const name of names) expect(html).toContain(`>${name}</th>`);
+  });
+
   it("formats waterfall totals, signed changes, and ticks with compact units", async () => {
     const html = await render(
       chart(
@@ -115,6 +139,32 @@ describe("report chart regressions", () => {
     );
     expect(html).not.toMatch(/class="mark-text role-mark/);
     expect(texts(html)).toContain("10k requests/sec");
+  });
+
+  it.each([3, 7])("fits waterfall values to the rendered spacing with %s steps", async (steps) => {
+    const changes = Array.from({ length: steps - 2 }, (_, index) =>
+      `| change-with-a-long-name-${index + 1} | 1000 |`,
+    );
+    const document = await parseMarkdown(
+      chart(
+        `| step | value |\n| --- | ---: |\n| start | 1000000 |\n${changes.join("\n")}\n| end | ${1000000 + changes.length * 1000} |`,
+        '{type="waterfall" labels unit="requests/s"}',
+      ),
+      { plugins: [charts()] },
+    );
+    expect(document.meta.issues ?? []).toEqual([]);
+    const html = await renderHtmlFromDocument(document, { components });
+    const labels = [...html.matchAll(/<g class="mark-text role-mark[^"]*">([\s\S]*?)<\/g>/g)]
+      .flatMap(([, group]) => [...group!.matchAll(/<text [^>]*>[^<]+<\/text>/g)])
+      .map(([tag]) => ({ x: position(tag)[0]!, width: guess(texts(tag)[0]!, 12) }))
+      .sort((a, b) => a.x - b.x);
+    for (let index = 1; index < labels.length; index++) {
+      const previous = labels[index - 1]!;
+      const current = labels[index]!;
+      expect(current.x - previous.x).toBeGreaterThanOrEqual((current.width + previous.width) / 2 + 6);
+    }
+    expect(labels).toHaveLength(steps === 3 ? steps : 0);
+    expect(html).toMatch(/<td[^>]*>1000000<\/td>/);
   });
 
   it("leaves heatmap labels that cannot fit to the data table", async () => {

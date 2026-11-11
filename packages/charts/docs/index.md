@@ -295,7 +295,7 @@ Use the `x` prop to pick the column along the x axis. It defaults to the first c
 
 ### Series
 
-Use the `y` prop to pick the columns to draw, separated by commas. It defaults to every column but `x`. A line chart of two to eight series names each line where it ends, in its color. Other charts of two or more series get a legend over the plot, as do a pie's slices and a gantt's groups.
+Use the `y` prop to pick the columns to draw, separated by commas. It defaults to every column but `x`. A line chart of two to eight series names each line where it ends, in its color. Long names use a legend over the plot to leave room for the lines. Other charts of two or more series get a legend too, as do a pie's slices and a gantt's groups.
 
 ::example
 ```md

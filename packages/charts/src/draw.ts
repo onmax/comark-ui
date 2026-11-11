@@ -149,12 +149,18 @@ function legendColumns(chart: Chart, room = PLOT) {
   return Math.max(1, Math.min(names.length, Math.floor(room / widest)));
 }
 
+const NAME_LIMIT = 200;
+
 /**
  * Whether a line chart names its series at their ends, in their colors, rather than in a legend over the plot: a
- * reader finds a line by its name where it ends, without matching swatches. Past eight the names would stack.
+ * reader finds a line by its name where it ends, without matching swatches. Past eight the names would stack;
+ * long names use the width-limited legend so their padding cannot consume the plot.
  */
 const endLabeled = (chart: Chart) =>
-  chart.type === "line" && chart.series.length > 1 && chart.series.length <= 8;
+  chart.type === "line" &&
+  chart.series.length > 1 &&
+  chart.series.length <= 8 &&
+  chart.series.every((name) => guess(name, 12) <= NAME_LIMIT);
 
 // A line marks each of its points while they're few enough to stay apart.
 const MOST_POINTS = 40;
@@ -1457,7 +1463,7 @@ export async function draw(chart: Chart): Promise<{ svg: string; boxes: Map<numb
       columns: legendColumns(chart, layout(chart).width),
       columnPadding: 20,
       rowPadding: 12,
-      labelLimit: 200,
+      labelLimit: NAME_LIMIT,
     },
     // An area is outlined along its top, so overlapping series stay readable through the translucent fill.
     area: { ...spec.config?.area, line: { strokeWidth: 2 } },
@@ -1504,7 +1510,11 @@ export async function draw(chart: Chart): Promise<{ svg: string; boxes: Map<numb
         : undefined;
     if (time) time.scale = { ...("scale" in time && time.scale), padding: 24 };
     if (color && "legend" in color && color.legend)
-      color.legend = { ...color.legend, columns: legendColumns(chart, layout(chart).width) };
+      color.legend = {
+        ...color.legend,
+        columns: legendColumns(chart, layout(chart).width),
+        labelLimit: NAME_LIMIT,
+      };
     // Lines named at their ends need no legend to name them again.
     if (color && endLabeled(chart)) unit.encoding.color = { ...color, legend: null };
     // A point on every value shows where the table has a number and where the line only joins two. Flint dots only a
@@ -1638,6 +1648,7 @@ export async function draw(chart: Chart): Promise<{ svg: string; boxes: Map<numb
   // Flint prints each step's running total over it and its change inside it, in white on the step, so a total reads
   // twice and a short step loses its change. One number per step reads instead, outside it: a total's value, or a
   // step's change.
+  let waterfallLabelWidth = 0;
   if (waterfall && "layer" in spec) {
     const isText = (layer: (typeof spec.layer)[number]) =>
       "mark" in layer && layer.mark instanceof Object && layer.mark.type === "text";
@@ -1659,6 +1670,7 @@ export async function draw(chart: Chart): Promise<{ svg: string; boxes: Map<numb
       }),
     );
     const numbers = !!chart.labels && widest + 6 <= step;
+    if (numbers) waterfallLabelWidth = widest + 6;
     spec.layer = spec.layer.filter((layer) => !isText(layer) || (numbers && !inside(layer)));
     // Flint pads the value axis for the labels from levels that add the end total to the sum it closes, so it runs
     // to twice the top and below zero. The levels here stop at the end total, and only a side with a label is padded.
@@ -1720,6 +1732,23 @@ export async function draw(chart: Chart): Promise<{ svg: string; boxes: Map<numb
   if (widen(chart, compiled, view)) {
     view.finalize();
     ({ view, svg } = await render(compiled));
+  }
+  // The total width only gives an upper bound on a step. Check the final centers after fit-x has reserved the
+  // axes and the band scale has applied its inner and outer padding, before keeping any waterfall numbers.
+  if (waterfallLabelWidth) {
+    const x = view.scale("x");
+    const positions: number[] = x
+      .domain()
+      .map((value: unknown) => Number(x(value)))
+      .sort((a: number, b: number) => a - b);
+    const spacing = Math.min(
+      ...positions.slice(1).map((position, index) => position - positions[index]!),
+    );
+    if (waterfallLabelWidth > spacing) {
+      compiled.marks = compiled.marks?.filter((mark) => mark.type !== "text");
+      view.finalize();
+      ({ view, svg } = await render(compiled));
+    }
   }
   // Waterfalls, dumbbells, and gantts print their own numbers in their layers.
   const labels =
