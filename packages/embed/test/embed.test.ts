@@ -233,6 +233,53 @@ describe("comark-embed", () => {
     }
   });
 
+  it("sets a tool player's height, and keeps a card's without a word", async () => {
+    expect(await render(block("https://codepen.io/onmax/pen/abcdEF", " height=320"))).toContain(
+      '<figure class="ce" data-comark-frame data-provider="codepen" data-size="app" style="--ce-app-height:320px">',
+    );
+    // A host may play the link a card stands for, so the doc lints clean where the plugin has no player for it.
+    const card = block("https://drop.example/d/k7f2q9m4x8wd", ' title="Rebuild" height=420');
+    expect(await render(card)).not.toContain("420");
+    expect(await issues(card)).toEqual([]);
+    expect(await issues(block("https://youtu.be/dQw4w9WgXcQ", " height=480"))).toEqual([
+      "`::embed` 1: the YouTube video player sizes itself, so `height` does nothing. Remove it.",
+    ]);
+    expect(await render(block("https://youtu.be/dQw4w9WgXcQ", " height=480"))).not.toContain(
+      "--ce-app-height:480px",
+    );
+    for (const height of ['"30rem"', "0", "-5"])
+      expect(
+        await issues(block("https://codepen.io/onmax/pen/abcdEF", ` height=${height}`)),
+        height,
+      ).toEqual(["`::embed` 1: `height` must be a whole number of pixels, such as `height=480`."]);
+  });
+
+  it("plays the links a host's own `player` knows, before the built-in providers", async () => {
+    const player = (url: URL) => {
+      const key = /^\/d\/(\w{12})/.exec(url.pathname)?.[1];
+      return key
+        ? {
+            provider: "drop",
+            src: `https://drop.example/f/${key}`,
+            label: "Drop",
+            size: "app" as const,
+          }
+        : undefined;
+    };
+    const own = createHtmlRenderer({ plugins: [embed({ player })], components });
+    const html = await own(block("https://drop.example/d/k7f2q9m4x8wd", " height=420"));
+    expect(html).toContain(
+      '<figure class="ce" data-comark-frame data-provider="drop" data-size="app" style="--ce-app-height:420px"><div class="ce-frame"><iframe src="https://drop.example/f/k7f2q9m4x8wd" title="Drop"',
+    );
+    // A player of its own needs no title, and the built-in providers still read every other link.
+    const parsed = await parseMarkdown(
+      `${block("https://drop.example/d/k7f2q9m4x8wd")}\n\n${block("https://youtu.be/dQw4w9WgXcQ")}`,
+      { plugins: [embed({ player })] },
+    );
+    expect(parsed.meta.issues).toEqual([]);
+    expect(await own(block("https://youtu.be/dQw4w9WgXcQ"))).toContain('data-provider="youtube"');
+  });
+
   it("reads bound props and drops {#id .class}", async () => {
     const html = await render(
       '---\nvideo: https://youtu.be/dQw4w9WgXcQ\n---\n::embed{:url="frontmatter.video" #demo .wide}\n::',

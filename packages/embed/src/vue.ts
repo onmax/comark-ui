@@ -2,7 +2,7 @@ import { defineComponent, h, onBeforeUnmount, onMounted, watchEffect } from "vue
 import { addStyles, allow, icons, referrerPolicy, start } from "./client.ts";
 
 export { default } from "./index.ts";
-export type { EmbedAttributes, EmbedMeta, Size } from "./index.ts";
+export type { EmbedAttributes, EmbedMeta, EmbedOptions, Player, Size } from "./index.ts";
 
 const icon = (d: string) =>
   h(
@@ -30,6 +30,7 @@ export const Embed = defineComponent({
     src: String,
     label: String,
     size: String,
+    height: Number,
     href: String,
     title: String,
     host: String,
@@ -59,6 +60,7 @@ export const Embed = defineComponent({
           "data-comark-frame": "",
           "data-provider": props.provider,
           "data-size": props.size,
+          ...(props.height && { style: { "--ce-app-height": `${props.height}px` } }),
         },
         [
           h("div", { class: "ce-frame" }, [

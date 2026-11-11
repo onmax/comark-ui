@@ -14,6 +14,7 @@ comark-embed turns `::embed` into the provider's player, with the link under it,
 | `url` | Required. An `https://` link; any other renders nothing. |
 | `title` | Names the player for screen readers and is the text of the link under it. Without it, the link shows the host. |
 | `start` | Whole seconds into a YouTube or Vimeo video. A YouTube link's own `t=`, like `t=1m30s`, works too. |
+| `height` | Whole pixels for a CodePen, StackBlitz, or Figma player, or a host's own, such as a drop in Drop. Other players size themselves, and a link card ignores it. |
 
 Close the block with `::` on the next line. It drops anything inside and reports it.
 
@@ -38,4 +39,4 @@ Any other `https://` link renders as a card with its `title` and host. A provide
 ## Register
 
 - In `comark-ui`: on.
-- Alone: `pnpm add comark @comark/html comark-embed`, then `createHtmlRenderer({ plugins: [embed()], components })` with both from `comark-embed/html`. It takes no options. Only an X post needs a script, which the HTML renderer inlines and the components start on mount. `comark-embed/vue`, `/react`, and `/svelte` render it too.
+- Alone: `pnpm add comark @comark/html comark-embed`, then `createHtmlRenderer({ plugins: [embed()], components })` with both from `comark-embed/html`. Its `player` option plays a host's own links before the built-in providers. Only an X post needs a script, which the HTML renderer inlines and the components start on mount. `comark-embed/vue`, `/react`, and `/svelte` render it too.

@@ -76,6 +76,20 @@ Use the `start` prop to start a YouTube or Vimeo video some seconds in. A YouTub
 > [!NOTE]
 > `start` takes whole seconds, and only YouTube and Vimeo players can seek.
 
+### Height
+
+Use the `height` prop to set how tall a CodePen, StackBlitz, or Figma player is, in pixels.
+
+::example
+```md
+::embed{url="https://stackblitz.com/edit/typescript?file=index.ts" title="The pigeon tracker starts from this TypeScript starter" height=320}
+::
+```
+::
+
+> [!NOTE]
+> `height` takes whole pixels. A video, Spotify, or X player sizes itself, and a link card ignores it, so a doc written for a host with more players, such as Drop, still lints clean.
+
 ### Link card
 
 Use a link with no player to get a card with its `title` and host. Cards don't fetch the page's title yet, so give each one a `title`.
@@ -128,6 +142,24 @@ Use a link to a post on `x.com` or `twitter.com`. X's own player grows to the po
 > [!NOTE]
 > X's player is always light, like the other players, whatever the page's theme.
 
+### Your own players
+
+Use the `player` option to play links your own site hosts, such as its screen recordings. It gets each link before the built-in providers and returns a player for the links it knows.
+
+```ts
+import embed from "comark-embed";
+
+embed({
+  player(url) {
+    const id = /^\/c\/(\w+)$/.exec(url.pathname)?.[1];
+    if (url.hostname !== "clips.example.com" || !id) return;
+    return { provider: "clips", src: `https://clips.example.com/embed/${id}`, label: "Clip", size: "video" };
+  },
+});
+```
+
+In comark-ui, pass it as `comarkUi({ embed: { player } })`. Where the plugin runs without it, as in comark-lint, the same link is a card, so give it a `title`.
+
 ## Accessibility
 
 Each player is an iframe named by its `title`. Without one, a screen reader hears the provider's name for it, such as "YouTube video" or "Spotify track". The link under it reads as the figure's caption. Players load when they scroll near, and the keys inside a player are the provider's.
@@ -141,6 +173,7 @@ Each player is an iframe named by its `title`. Without one, a screen reader hear
 | `url` | — | Required. An `https://` link to a player or any page. |
 | `title` | Provider label for the player, host for the link or card | Names the player for screen readers, and is the text of the link under it or the card's title. |
 | `start` | — | Whole seconds into a YouTube or Vimeo video to start at. |
+| `height` | `30rem`, from `--ce-app-height` | Whole pixels. How tall a CodePen, StackBlitz, Figma, or your own `app` player is. Other players size themselves, and a card ignores it. |
 
 ### Providers
 
@@ -159,7 +192,11 @@ The plugin checks the path as well as the host. A provider link with a path it c
 
 ### Options
 
-The plugin takes no options. In `comarkUi()`, `embed: false` turns it off.
+| Option | Default | Description |
+| --- | --- | --- |
+| `player` | — | `(url: URL) => Player \| undefined`. Your own players, read before the built-in providers. Return `{ provider, src, label, size }` for a link you know, and nothing for the rest. `size` is `video`, `short`, `compact`, `list`, `app`, or `post`. |
+
+In `comarkUi()`, `embed: false` turns it off.
 
 ### Issues
 
@@ -170,6 +207,7 @@ The plugin adds every problem to `meta.issues`, as [Validation](/guide/validatio
 - A provider's link it can't read an ID from. The block renders as a card.
 - A card without a `title`.
 - A `start` that isn't whole seconds, or that is set on a player that can't seek.
+- A `height` that isn't whole pixels, or that is set on a player that sizes itself.
 - Content inside the block.
 - A prop `::embed` doesn't read.
 
@@ -215,7 +253,7 @@ Set them on `.ce`:
 
 | Variable | Default | Used for |
 | --- | --- | --- |
-| `--ce-app-height` | `30rem` | The height of CodePen, StackBlitz, and Figma |
+| `--ce-app-height` | `30rem` | The height of CodePen, StackBlitz, Figma, and your own `app` players. A block's `height` sets it on its figure. |
 | `--ce-short-width` | `20rem` | The widest a YouTube Short gets, centered |
 | `--ce-post-width` | `550px` | The widest an X post gets, centered |
 | `--ce-post-height` | `30rem` | An X post's height until its player reports its own |

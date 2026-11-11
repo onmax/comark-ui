@@ -29,4 +29,12 @@ export default {
     title: "Link a provider's page it can read an ID from",
   },
   "comark/embed/unknown-prop": { code: "COMARK0809", title: "Use only `::embed`'s props" },
+  "comark/embed/invalid-height": {
+    code: "COMARK0810",
+    title: "Write `height` as whole pixels",
+  },
+  "comark/embed/height-unsupported": {
+    code: "COMARK0811",
+    title: "Set `height` only on players without a height of their own",
+  },
 } satisfies Record<`comark/embed/${string}`, RuleInfo>;

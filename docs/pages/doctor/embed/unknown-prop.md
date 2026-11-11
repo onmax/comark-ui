@@ -1,4 +1,4 @@
-`::embed` reads `url`, `title`, and `start`, and ignores every other prop. A misspelled `title` leaves the player unnamed for screen readers.
+`::embed` reads `url`, `title`, `start`, and `height`, and ignores every other prop. A misspelled `title` leaves the player unnamed for screen readers.
 
 ::incorrect
 ```md
