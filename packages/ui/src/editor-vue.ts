@@ -5,8 +5,11 @@ import { rowsOf, type PropertiesOptions } from "comark-properties";
 import { Properties } from "comark-properties/vue";
 import { childrenOf, isElement } from "../../../shared/nodes.ts";
 import {
+  Comment,
   defineComponent,
+  Fragment,
   h,
+  isVNode,
   type VNode,
   type VNodeChild,
   onScopeDispose,
@@ -118,6 +121,15 @@ function vnode(node: Node): VNode | string | null {
   return h(node[0], node[1], childrenOf(node).map(vnode));
 }
 
+// Match Vue's slot fallback: comments and empty fragments leave the built-in field in place.
+const renders = (nodes: unknown): boolean =>
+  Array.isArray(nodes) &&
+  nodes.some(
+    (node) =>
+      !isVNode(node) ||
+      (node.type !== Comment && (node.type !== Fragment || renders(node.children))),
+  );
+
 /**
  * `useComarkEditor` as a component: `<ComarkEditor v-model="markdown" />`. The frontmatter keys that comark-properties
  * shows on the page show above the text the same way, read-only. Pass its options in `properties`, or `false` to hide them.
@@ -162,7 +174,7 @@ export const ComarkEditor = defineComponent({
       components: props.components,
       field: (field) => {
         const nodes = slots.field?.(field);
-        return nodes?.length ? nodes : undefined;
+        return renders(nodes) ? nodes : undefined;
       },
       registerDefaultPlugins: props.registerDefaultPlugins,
     });

@@ -84,7 +84,7 @@ function readProp(props: Props, name: string, type: string): unknown {
   if (type === "boolean") return parsed === true || parsed === "true";
   if (type === "number") return Number(parsed);
   if (type === "json") return parsed;
-  return isString(bound) ? bound : JSON.stringify(bound);
+  return isString(parsed) ? parsed : JSON.stringify(parsed);
 }
 
 const isString = (value: unknown): value is string => String(value) === value;
@@ -159,6 +159,8 @@ const ComponentView = defineComponent({
     // `isEditable` isn't reactive, so the panel reads it each time it opens.
     const editable = ref(props.editor.isEditable);
     const adding = ref({ key: "", value: "" });
+    // JSON commits on change, so document transactions must leave even an incomplete draft intact.
+    const drafts = ref(new Map<string, string>());
 
     const reposition = () => {
       if (panel.value && button.value && panel.value.matches(":popover-open"))
@@ -249,16 +251,20 @@ const ComponentView = defineComponent({
             id: fieldId,
             class: "cev-code",
             rows: 3,
-            value: value === undefined ? "" : JSON.stringify(value),
+            value: drafts.value.get(prop) ?? (value === undefined ? "" : JSON.stringify(value)),
             placeholder,
             disabled: !can,
             spellcheck: false,
+            onInput: (event: Event) => {
+              if (event.target instanceof HTMLTextAreaElement)
+                drafts.value.set(prop, event.target.value);
+            },
             onChange: (event: Event) => {
               const target = event.target;
               if (!(target instanceof HTMLTextAreaElement)) return;
-              if (!target.value.trim()) return update(undefined);
               try {
-                update(JSON.parse(target.value));
+                update(target.value.trim() ? JSON.parse(target.value) : undefined);
+                drafts.value.delete(prop);
                 target.removeAttribute("aria-invalid");
               } catch {
                 target.setAttribute("aria-invalid", "true");

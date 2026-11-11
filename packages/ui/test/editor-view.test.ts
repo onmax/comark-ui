@@ -2,7 +2,7 @@
 import { getSchema } from "@tiptap/core";
 import { EditorContent } from "@tiptap/vue-3";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
-import { createApp, defineComponent, h, nextTick, ref } from "vue";
+import { compile, createApp, defineComponent, h, nextTick, ref } from "vue";
 import { ComarkKit, toMarkdown } from "../src/editor.ts";
 import {
   ComarkEditor,
@@ -80,7 +80,11 @@ function field<T extends HTMLElement>(panel: HTMLElement, label: string) {
   return control;
 }
 
-function type(control: HTMLInputElement | HTMLSelectElement, value: string, event = "input") {
+function type(
+  control: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement,
+  value: string,
+  event = "input",
+) {
   control.value = value;
   control.dispatchEvent(new Event(event, { bubbles: true }));
 }
@@ -158,6 +162,82 @@ describe("componentView", () => {
     panelOf(host, "badge").querySelector<HTMLButtonElement>("[aria-label='Remove color']")!.click();
     await vi.waitFor(() => expect(markdown.value).toContain(':badge[New]{:count="3"}'));
   });
+
+  it("decodes bound string values for text, option, and host fields", async () => {
+    const fields: ComponentField[] = [];
+    const { editor, markdown, host } = await mount(
+      `::card{:title='"hello"' :kind='"hello"' :image='"media.png"' :count="2" :enabled="true"}\nBody\n::\n`,
+      {
+        components: {
+          card: {
+            props: {
+              title: {},
+              kind: { options: ["hello", "bye"] },
+              image: { type: "image" },
+              count: { type: "number" },
+              enabled: { type: "boolean" },
+            },
+          },
+        },
+        field: (field) => {
+          fields.push(field);
+          return undefined;
+        },
+      },
+    );
+    expect(editor.isEditable).toBe(true);
+    const panel = panelOf(host, "card");
+    expect(field<HTMLInputElement>(panel, "title").value).toBe("hello");
+    expect(field<HTMLSelectElement>(panel, "kind").value).toBe("hello");
+    expect(field<HTMLInputElement>(panel, "image").value).toBe("media.png");
+    expect(fields.find((field) => field.name === "image")?.value).toBe("media.png");
+    expect(field<HTMLInputElement>(panel, "count").value).toBe("2");
+    expect(field<HTMLInputElement>(panel, "enabled").checked).toBe(true);
+
+    type(field<HTMLInputElement>(panel, "title"), "hello!");
+    type(field<HTMLSelectElement>(panel, "kind"), "bye", "change");
+    await vi.waitFor(() => expect(markdown.value).toContain('title="hello!" kind="bye"'));
+  });
+
+  it.each(["[3,4]", "[3,"])(
+    "keeps the pending JSON draft %s through content and prop transactions",
+    async (draft) => {
+      const { editor, markdown, host } = await mount(
+        '::card{:rows="[1,2]" title="Before"}\nBody\n::\n',
+        {
+          components: { card: { props: { rows: { type: "json" }, title: {} } } },
+        },
+      );
+      const panel = panelOf(host, "card");
+      const rows = field<HTMLTextAreaElement>(panel, "rows");
+      const storedRows = editor.state.doc.firstChild!.attrs.props[":rows"];
+      expect(rows.value).toBe("[1,2]");
+      rows.focus();
+      type(rows, draft);
+      let end = 0;
+      editor.state.doc.descendants((node, pos) => {
+        if (node.isText && node.text === "Body") end = pos + node.nodeSize;
+      });
+      editor.view.dispatch(editor.state.tr.insertText("!", end));
+      await vi.waitFor(() => expect(markdown.value).toContain("Body!"));
+      expect(document.activeElement).toBe(rows);
+      expect(rows.value).toBe(draft);
+
+      type(field<HTMLInputElement>(panel, "title"), "After");
+      await vi.waitFor(() => expect(markdown.value).toContain("After"));
+      expect(rows.value).toBe(draft);
+      if (draft === "[3,") {
+        rows.dispatchEvent(new Event("change", { bubbles: true }));
+        expect(rows.getAttribute("aria-invalid")).toBe("true");
+        expect(editor.state.doc.firstChild!.attrs.props[":rows"]).toEqual(storedRows);
+      }
+      type(rows, "[3,4]");
+      rows.dispatchEvent(new Event("change", { bubbles: true }));
+      await vi.waitFor(() => expect(markdown.value).toContain(':rows="[3,4]" title="After"'));
+      expect(markdown.value).toContain("Body!");
+      expect(rows.hasAttribute("aria-invalid")).toBe(false);
+    },
+  );
 
   it("lets a host draw a prop's field", async () => {
     const fields: ComponentField[] = [];
@@ -246,4 +326,42 @@ describe("componentView", () => {
     const { host } = await mount(nested, { components: false }, "[data-comark-block]");
     expect(host.querySelector(".cev-block")).toBeNull();
   });
+
+  it.each(["comment", "fragment"])(
+    "keeps built-in fields for a conditional slot's empty %s",
+    async (empty) => {
+      const markdown = ref('::card{title="Title"}\nBody\n::\n');
+      const host = document.createElement("div");
+      document.body.append(host);
+      const picker = `<button v-if="field.prop.type === 'image'" :id="field.id" class="pick" @click="field.update('media.png')">Pick</button>`;
+      const app = createApp(
+        defineComponent({
+          components: { ComarkEditor },
+          setup: () => ({
+            markdown,
+            components: {
+              card: {
+                props: { title: {}, enabled: { type: "boolean" }, image: { type: "image" } },
+              },
+            },
+          }),
+          render: compile(
+            `<ComarkEditor v-model="markdown" :components="components"><template #field="field">${empty === "fragment" ? `<template v-for="item in [1]" :key="item">${picker}</template>` : picker}</template></ComarkEditor>`,
+          ),
+        }),
+      );
+      app.mount(host);
+      unmounts.push(() => {
+        app.unmount();
+        host.remove();
+      });
+      await vi.waitFor(() => expect(host.querySelector(".pick")).not.toBeNull());
+      const panel = panelOf(host, "card");
+      expect(field<HTMLInputElement>(panel, "title").value).toBe("Title");
+      expect(field<HTMLInputElement>(panel, "enabled").type).toBe("checkbox");
+      type(field<HTMLInputElement>(panel, "title"), "Renamed");
+      field<HTMLButtonElement>(panel, "image").click();
+      await vi.waitFor(() => expect(markdown.value).toContain('title="Renamed" image="media.png"'));
+    },
+  );
 });
