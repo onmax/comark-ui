@@ -100,7 +100,10 @@ describe("report chart regressions", () => {
       `${prefix}SubscriptionPlanComparisonTable.unit.test.ts`,
     ];
     const document = await parseMarkdown(
-      chart(`| x | ${names.join(" | ")} |\n| --- | ---: | ---: |\n| a | 1 | 2 |\n| b | 3 | 4 |`, '{type="line"}'),
+      chart(
+        `| x | ${names.join(" | ")} |\n| --- | ---: | ---: |\n| a | 1 | 2 |\n| b | 3 | 4 |`,
+        '{type="line"}',
+      ),
       { plugins: [charts()] },
     );
     expect(document.meta.issues ?? []).toEqual([]);
@@ -142,8 +145,9 @@ describe("report chart regressions", () => {
   });
 
   it.each([3, 7])("fits waterfall values to the rendered spacing with %s steps", async (steps) => {
-    const changes = Array.from({ length: steps - 2 }, (_, index) =>
-      `| change-with-a-long-name-${index + 1} | 1000 |`,
+    const changes = Array.from(
+      { length: steps - 2 },
+      (_, index) => `| change-with-a-long-name-${index + 1} | 1000 |`,
     );
     const document = await parseMarkdown(
       chart(
@@ -161,7 +165,9 @@ describe("report chart regressions", () => {
     for (let index = 1; index < labels.length; index++) {
       const previous = labels[index - 1]!;
       const current = labels[index]!;
-      expect(current.x - previous.x).toBeGreaterThanOrEqual((current.width + previous.width) / 2 + 6);
+      expect(current.x - previous.x).toBeGreaterThanOrEqual(
+        (current.width + previous.width) / 2 + 6,
+      );
     }
     expect(labels).toHaveLength(steps === 3 ? steps : 0);
     expect(html).toMatch(/<td[^>]*>1000000<\/td>/);
