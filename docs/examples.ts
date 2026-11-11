@@ -32,7 +32,7 @@ export const pageOrder = [
   "eslint",
   "vite-doctor",
 ];
-export const recipeOrder = ["review", "pull-request", "share", "zoom", "carousel"];
+export const recipeOrder = ["review", "pull-request", "share", "data-report", "zoom", "carousel"];
 // Third-party plugins the preset registers, by slug and npm name. They sit in the rail like a package, but have no
 // folder in packages/, so their pages sit in docs/pages/<slug>/.
 export const thirdParty: Record<string, string> = { mermaid: "comark-pele" };
