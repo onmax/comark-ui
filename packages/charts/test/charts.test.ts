@@ -876,6 +876,19 @@ No such run.
     expect(await issues(chart(sizes, '{type="stacked" labels}'))).toEqual([]);
   });
 
+  it("prints every bar's number however many come before it", async () => {
+    const rows = Array.from({ length: 30 }, (_, index) => `| file ${index + 1} | ${index + 1} |`);
+    const html = await render(
+      chart(`| file | lines |\n| --- | --: |\n${rows.join("\n")}`, "{horizontal labels}"),
+    );
+    const printed = [...html.matchAll(/<text [^>]*font-weight="500"[^>]*>(\d+)<\/text>/g)].map(
+      ([, text]) => Number(text),
+    );
+    expect(printed.sort((a, b) => a - b)).toEqual(
+      Array.from({ length: 30 }, (_, index) => index + 1),
+    );
+  });
+
   it("keeps each series in its column's place and color when its first cell is empty", async () => {
     const legend = async (first: string) => {
       const html = await render(

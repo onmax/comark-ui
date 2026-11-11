@@ -599,8 +599,9 @@ function valueLabels(chart: Chart, view: vega.View): Label[] {
   });
   const HEIGHT = 12;
   const GAP = 6;
-  // Values keep this far from each other and from the axes' labels.
-  const MARGIN = 3;
+  // Values keep this far from each other and from the axes' labels, by their guessed widths, which run a little under
+  // the drawn ones.
+  const MARGIN = 6;
   const taken: Box[] = [];
   walk(view, (item, dx, dy) => {
     const { bounds } = item;
@@ -641,7 +642,7 @@ function valueLabels(chart: Chart, view: vega.View): Label[] {
       box.y - margin < other.y + other.h &&
       other.y < box.y + box.h + margin;
     if (
-      taken.some(covers) ||
+      taken.some((other) => covers(other)) ||
       (!inside &&
         bars.some((other) =>
           covers({ x: other.x1, y: other.y1, w: other.x2 - other.x1, h: other.y2 - other.y1 }, 0),
