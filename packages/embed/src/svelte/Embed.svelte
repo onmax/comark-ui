@@ -8,6 +8,7 @@
     src = undefined,
     label = undefined,
     size = undefined,
+    height = undefined,
     href = undefined,
     title = undefined,
     host = undefined,
@@ -17,7 +18,7 @@
 </script>
 
 {#if href && src}
-  <figure class="ce" data-comark-frame="" data-provider={provider} data-size={size}>
+  <figure class="ce" data-comark-frame="" data-provider={provider} data-size={size} style={height ? `--ce-app-height:${height}px` : undefined}>
     <div class="ce-frame">
       {#key src}
         <iframe {src} title={label} loading="lazy" {allow} allowfullscreen referrerpolicy={referrerPolicy}></iframe>

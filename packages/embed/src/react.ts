@@ -1,9 +1,9 @@
-import { createElement, useEffect } from "react";
+import { type CSSProperties, createElement, useEffect } from "react";
 import { addStyles, allow, icons, referrerPolicy, start } from "./client.ts";
 import type { EmbedAttributes } from "./index.ts";
 
 export { default } from "./index.ts";
-export type { EmbedAttributes, EmbedMeta, Size } from "./index.ts";
+export type { EmbedAttributes, EmbedMeta, EmbedOptions, Player, Size } from "./index.ts";
 
 const icon = (d: string) =>
   createElement(
@@ -23,7 +23,7 @@ const icon = (d: string) =>
   );
 
 /** `::embed` for `@comark/react`. */
-export function Embed({ provider, src, label, size, href, title, host }: EmbedAttributes) {
+export function Embed({ provider, src, label, size, height, href, title, host }: EmbedAttributes) {
   useEffect(() => {
     addStyles();
     return provider === "x" ? start() : undefined;
@@ -40,7 +40,14 @@ export function Embed({ provider, src, label, size, href, title, host }: EmbedAt
     );
   return createElement(
     "figure",
-    { className: "ce", "data-comark-frame": "", "data-provider": provider, "data-size": size },
+    {
+      className: "ce",
+      "data-comark-frame": "",
+      "data-provider": provider,
+      "data-size": size,
+      // SAFETY: React writes a custom property as given; CSSProperties lists only the standard ones.
+      style: height ? ({ "--ce-app-height": `${height}px` } as CSSProperties) : undefined,
+    },
     createElement(
       "div",
       { className: "ce-frame" },
