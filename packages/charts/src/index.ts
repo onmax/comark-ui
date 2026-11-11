@@ -6,7 +6,7 @@ import type { Issue } from "./read.ts";
 import { readChart } from "./read.ts";
 import { attr } from "../../../shared/html.ts";
 import { childrenOf, isElement } from "../../../shared/nodes.ts";
-import { errorText } from "../../../shared/text.ts";
+import { errorText, hash } from "../../../shared/text.ts";
 
 export type { Chart, ChartType, FlowChart, SpecChart, XKind } from "./read.ts";
 
@@ -93,6 +93,7 @@ export default /* @__PURE__ */ defineComarkPlugin<ChartsOptions | void, ChartsMe
           : chart.type === "sankey"
             ? await (await import("./sankey.ts")).drawSankey(chart)
             : await (await import("./draw.ts")).draw(chart);
+        drawn.svg = stableIds(drawn.svg);
       } catch (error) {
         const fix = spec
           ? "Check its Vega-Lite spec against https://vega.github.io/vega-lite/docs/"
@@ -127,3 +128,22 @@ export default /* @__PURE__ */ defineComarkPlugin<ChartsOptions | void, ChartsMe
     };
   },
 }));
+
+/**
+ * Vega numbers its clip paths with a counter that runs on across renders, so the same chart drew new ids each time.
+ * Ids from a hash of the drawing stay apart between charts on a page and the same between renders.
+ */
+function stableIds(svg: string): string {
+  const ids = [...new Set([...svg.matchAll(/ id="([^"]+)"/g)].map((match) => match[1]!))];
+  if (!ids.length) return svg;
+  const swap = (text: string, rename: (id: string, at: number) => string) =>
+    ids.reduce(
+      (out, id, at) =>
+        out
+          .replaceAll(` id="${id}"`, ` id="${rename(id, at)}"`)
+          .replaceAll(`url(#${id})`, `url(#${rename(id, at)})`),
+      text,
+    );
+  const prefix = `cch-${hash(swap(svg, () => ""))}`;
+  return swap(svg, (_, at) => `${prefix}-${at}`);
+}
