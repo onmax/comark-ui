@@ -27,7 +27,7 @@ export const css = `@layer comark{${[
   // One strip of figures, as a dashboard's header: hairlines between the tiles, the number over its name. The strip's
   // color shows through the 1px gaps as the lines, and the tiles grow to fill a row that wraps, so no gap is left.
   ".cmt-tiles{display:flex;flex-wrap:wrap;gap:1px;margin:1.5rem 0;overflow:hidden;border:1px solid var(--_comark-border);border-radius:var(--_comark-radius);background:var(--_comark-border);font-family:var(--_comark-font)}",
-  ".cmt-tile{box-sizing:border-box;display:flex;flex:1 1 8rem;flex-direction:column;align-items:flex-start;gap:.125rem;min-width:0;padding:.75rem 1rem;background:var(--_comark-background)}",
+  ".cmt-tile{box-sizing:border-box;display:flex;flex:1 1 7rem;flex-direction:column;align-items:flex-start;gap:.125rem;min-width:0;padding:.75rem 1rem;background:var(--_comark-background)}",
   ".cmt-tile>*{margin:0}",
   ".cmt-tile>dt{order:1;color:var(--_comark-muted);font-size:.75rem;font-weight:400;line-height:1rem}",
   ".cmt-value{color:var(--_comark-foreground);font-size:1.5rem;font-weight:500;line-height:1.2;letter-spacing:-.02em;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}",

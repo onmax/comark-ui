@@ -21,6 +21,11 @@ export const css = `@layer comark{${[
   // typeset may center captions and mute them, as it does an image's.
   ".cch>figcaption{margin:0 0 1rem;color:var(--_comark-foreground);font-weight:500;font-size:.9375rem;line-height:1.375rem;text-align:start}",
   ".cch>figcaption:has(+.cch-description){margin-bottom:.125rem}",
+  // Right under a heading, the heading already opens the section, so the chart drops its hairline. A heading may come
+  // wrapped with its anchor link, and the first chart of an HTML document after its styles and script.
+  [".cch", "style+script+.cch"]
+    .map((chart) => `:is(h1,h2,h3,h4,h5,h6,:has(>:is(h1,h2,h3,h4,h5,h6)))+${chart}`)
+    .join(",") + "{border-top:0;padding-top:0;margin-top:1rem}",
   ".cch-description{max-width:46rem;margin:0 0 1rem;color:var(--_comark-muted);font-size:.8125rem;line-height:1.25rem}",
   // Every chart keeps the size its text was set for, and a narrower column shrinks it to fit, as it does a screenshot,
   // since marks sit at percentages of the SVG. Only the chart's own SVG: a mark's circle and arrow are SVGs too, and
