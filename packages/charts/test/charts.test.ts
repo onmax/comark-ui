@@ -183,7 +183,7 @@ ${sizes.trim()}
     expect(waterfall).toContain(">increase</text>");
     expect(waterfall).toContain(">decrease</text>");
     // With `labels`, each step prints its change and each total its value, once.
-    for (const value of ["412", "+38", "\u221224", "426"])
+    for (const value of ["412", "+38", "-24", "426"])
       expect(waterfall.split(`>${value}</text>`)).toHaveLength(2);
   });
 

@@ -415,6 +415,7 @@ export function readChart(
     type = "bar";
   }
   if (type === "waterfall") readTotal(name, points, issues);
+  const scale = readScale(name, type, xKind, points, attrs, issues);
   return {
     type,
     title: text(attrs.title),
@@ -422,9 +423,19 @@ export function readChart(
     xKind,
     series,
     rows: points.map((row) => ({ x: row.x, values: row.values.slice(0, series.length) })),
-    marks: readMarks(name, type, x, annotations, points, series, issues),
+    marks: readMarks(
+      name,
+      type,
+      x,
+      annotations,
+      points,
+      series,
+      issues,
+      undefined,
+      scale.log === "y" || scale.log === "both",
+    ),
     ...readFlags(name, type, attrs, issues),
-    ...readScale(name, type, xKind, points, attrs, issues),
+    ...scale,
   };
 }
 
@@ -469,7 +480,7 @@ function readUnitAndLog(
   if (raw === undefined) return unit ? { unit } : {};
   const value = text(raw);
   if (value === "false") return unit ? { unit } : {};
-  const log = value === "" || value === "true" ? "y" : value;
+  let log = value === "" || value === "true" ? "y" : value;
   const scale = (log: "x" | "y" | "both") => ({ ...(unit && { unit }), log });
   if (log !== "x" && log !== "y" && log !== "both") {
     issues.push({
@@ -490,7 +501,8 @@ function readUnitAndLog(
       rule: "comark/charts/invalid-log",
       message: `${name}: \`log="${log}"\` puts the x column on a log scale, and only a line or a scatter plot over numbers has one. Use \`log\` alone for the numbers' axis.`,
     });
-    return log === "both" ? scale("y") : unit ? { unit } : {};
+    if (log === "x") return unit ? { unit } : {};
+    log = "y";
   }
   const values = points.flatMap((point) => point.values.filter((cell) => cell !== undefined));
   const xs = points.map((point) => readNumber(point.x) ?? 0);
@@ -616,6 +628,7 @@ function readMarks(
   series: string[],
   issues: Issue[],
   groups?: { column?: string; names: string[] },
+  log = false,
 ): ChartMark[] {
   const marks: ChartMark[] = [];
   let stamp = 1;
@@ -653,6 +666,11 @@ function readMarks(
           rule: "comark/charts/invalid-line",
           message: `\`value="${valueText}"\` isn't a number. Write the number alone, such as \`200\` or \`1,200\`, in the unit of the chart's numbers.`,
         });
+      else if (log && value <= 0)
+        found.push({
+          rule: "comark/charts/invalid-line",
+          message: `\`value="${valueText}"\` has no place on a log scale. Use a value above 0, or remove \`log\` from the chart.`,
+        });
       const extra = [at && "`at`", seriesName && "`series`"].filter(Boolean).join(" and ");
       if (axis && extra)
         found.push({
@@ -662,7 +680,7 @@ function readMarks(
       issues.push(
         ...found.map((problem) => ({ ...problem, message: `${where}: ${problem.message}` })),
       );
-      if (axis && value !== undefined)
+      if (axis && value !== undefined && (!log || value > 0))
         marks.push({ ...mark, n: index + 1, number: mark.side ? undefined : stamp++, value });
       continue;
     }

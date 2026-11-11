@@ -386,6 +386,7 @@ interface SceneItem {
   bounds?: { x1: number; y1: number; x2: number; y2: number };
   datum?: { row?: unknown; series?: unknown; y?: unknown; value?: unknown };
   fill?: string;
+  stroke?: string;
   mark?: { marktype?: string; role?: string };
   items?: SceneItem[];
 }
@@ -516,6 +517,7 @@ export function compact(value: number, unit?: string) {
  * would crowd the axis, so each grid line marks a round number.
  */
 function logTicks(low: number, high: number) {
+  if (!(low > 0) || !Number.isFinite(high)) return [];
   const steps = (factors: number[]) => {
     const values: number[] = [];
     for (let power = Math.floor(Math.log10(low)); power <= Math.ceil(Math.log10(high)); power++)
@@ -693,22 +695,26 @@ const END_GAP = 20;
  * pushed apart where two ends sit closer than a line of text, and kept inside the plot's height.
  */
 function endLabels(chart: Chart, view: vega.View): EndLabel[] {
-  const last = new Map<string, { x: number; y: number; row: number }>();
+  const last = new Map<string, { x: number; y: number; fill: string }>();
   walk(view, (item, dx, dy) => {
     const { datum } = item;
-    if (item.mark?.marktype !== "line" || !datum || item.x === undefined || item.y === undefined)
+    if (
+      item.mark?.marktype !== "line" ||
+      !datum ||
+      item.x === undefined ||
+      item.y === undefined ||
+      !item.stroke
+    )
       return;
     const series = String(datum.series);
-    const row = Number(datum.row);
     const seen = last.get(series);
-    if (!seen || row > seen.row) last.set(series, { x: item.x + dx, y: item.y + dy, row });
+    const x = item.x + dx;
+    if (!seen || x > seen.x) last.set(series, { x, y: item.y + dy, fill: item.stroke });
   });
   const right = view.width() + 10;
-  const ends = chart.series.flatMap((series, index) => {
+  const ends = chart.series.flatMap((series) => {
     const end = last.get(series);
-    return end
-      ? [{ series, x0: end.x, y0: end.y, y: end.y, fill: SERIES[index % SERIES.length]! }]
-      : [];
+    return end ? [{ series, x0: end.x, y0: end.y, y: end.y, fill: end.fill }] : [];
   });
   ends.sort((a, b) => a.y - b.y);
   for (let index = 1; index < ends.length; index++)
@@ -1234,12 +1240,13 @@ async function heatmap(chart: Chart): Promise<{ svg: string; boxes: Map<number, 
     chart.series.map((series, index) => {
       const value = row.values[index];
       const strength = value === undefined ? 0 : share(value);
+      const text = value === undefined ? "–" : chart.labels ? compact(value, chart.unit) : "";
       return {
         x: row.x,
         series,
         y: value ?? null,
         row: number,
-        text: value === undefined ? "–" : chart.labels ? compact(value, chart.unit) : "",
+        text: guess(text, 12) + 6 <= cell * 0.94 ? text : "",
         opacity: value === undefined ? 1 : rated ? 1 : 0.12 + 0.88 * strength,
         fill:
           value === undefined
@@ -1495,7 +1502,7 @@ export async function draw(chart: Chart): Promise<{ svg: string; boxes: Map<numb
     for (const channel of [x, y]) {
       if (!channel || !("field" in channel) || !("type" in channel)) continue;
       if (channel.type !== "quantitative" || ("axis" in channel && channel.axis === null)) continue;
-      const numbers = channel.field === "y";
+      const numbers = channel.field === "y" || (waterfall && channel === y);
       if (!numbers && channel.field !== "x") continue;
       const axis = "axis" in channel && channel.axis ? channel.axis : {};
       if (!("labelExpr" in axis))
@@ -1574,7 +1581,7 @@ export async function draw(chart: Chart): Promise<{ svg: string; boxes: Map<numb
         const value = row.values[0] ?? 0;
         const signed =
           index > 0 && !(index === values.length - 1 && finalIsTotal) && value > 0 ? "+" : "";
-        return guess(`${signed}${Math.round(value).toLocaleString("en-US")}`, 12);
+        return guess(`${signed}${compact(value, chart.unit)}`, 12);
       }),
     );
     const numbers = !!chart.labels && widest + 6 <= step;
@@ -1604,7 +1611,11 @@ export async function draw(chart: Chart): Promise<{ svg: string; boxes: Map<numb
         // Flint's inner delta layer has an encoding-level color, which takes
         // precedence over mark.fill. Remove it so all values use the theme ink.
         delete layer.encoding.color;
-        layer.encoding.text = { field: "__wf_delta_text", type: "nominal" };
+        layer.encoding.text = {
+          value: {
+            expr: `(datum.__wf_color === 'increase' ? '+' : '') + (${compactExpr("datum.y", chart.unit)})`,
+          },
+        };
       }
     }
   }
