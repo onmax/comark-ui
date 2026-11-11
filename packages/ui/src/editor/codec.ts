@@ -1,9 +1,9 @@
 import type { AnyExtension, JSONContent } from "@tiptap/core";
-import type { ComarkPlugin } from "comark";
 import { ComarkKit, type ComarkKitOptions } from "./kit.ts";
 import {
   checkMarkdown,
   fromMarkdown,
+  type PageParser,
   readFrontmatter,
   type SplitMarkdown,
   toMarkdown,
@@ -40,13 +40,19 @@ export interface EditorCodec {
   ): Promise<{ writable: boolean; canonical?: string; issues?: { message: string }[] }>;
 }
 
-export interface EditorCodecOptions {
+/**
+ * Pass how the page parses Markdown, `plugins` and `registerDefaultPlugins` as given to Comark's parser, so the room
+ * reads a document as readers see it, and a document a save would change for them opens read-only.
+ */
+export interface EditorCodecOptions extends PageParser {
   kit?: ComarkKitOptions;
-  /** The parse plugins the page renders with, so a document only they read opens read-only. */
-  plugins?: readonly ComarkPlugin<any, any>[];
 }
 
 export function createEditorCodec(options: EditorCodecOptions = {}): EditorCodec {
+  const page: PageParser = {
+    plugins: options.plugins,
+    registerDefaultPlugins: options.registerDefaultPlugins,
+  };
   // Yjs keeps the history, and each collaborator's trailing paragraph would pile up in the shared document.
   const kit = ComarkKit.configure({
     ...options.kit,
@@ -58,7 +64,10 @@ export function createEditorCodec(options: EditorCodecOptions = {}): EditorCodec
       // Comark throws on invalid YAML. `verify()` keeps such a room read-only, and it still opens with the text below.
       const frontmatter = readFrontmatter(markdown);
       return (
-        await fromMarkdown(frontmatter.kind === "lost" ? (frontmatter.body ?? markdown) : markdown)
+        await fromMarkdown(
+          frontmatter.kind === "lost" ? (frontmatter.body ?? markdown) : markdown,
+          page,
+        )
       ).doc;
     },
     toMarkdown: (doc) => toMarkdown(doc),
@@ -78,7 +87,7 @@ export function createEditorCodec(options: EditorCodecOptions = {}): EditorCodec
             : "The frontmatter is in the room's body, where a save would drop it; open the room with the codec's `split()` so it stays in the room's fields.";
         return { writable: false, issues: [{ message }] };
       }
-      const check = await checkMarkdown(markdown, { plugins: options.plugins });
+      const check = await checkMarkdown(markdown, page);
       return check.editable ? { writable: true, canonical: check.markdown } : { writable: false };
     },
   };
