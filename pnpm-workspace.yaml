@@ -64,6 +64,7 @@ catalog:
   "@tiptap/y-tiptap": ^3.0.9
   lightningcss: ^1.33.0
   yjs: ^13.6.33
+  happy-dom: ^21.0.4
   nuxt-agent-discovery: ^0.8.0
   valibot: ^1.4.2
   better-auth: 1.7.15

@@ -14,7 +14,8 @@ vi.mock("../src/editor.ts", () => ({
   fromMarkdown: async (source: string) => ({ doc: { source }, frontmatter: { status: source } }),
   toMarkdown: mocks.serialize,
 }));
-vi.mock("@tiptap/vue-3", () => ({
+vi.mock("@tiptap/vue-3", async (importOriginal) => ({
+  ...(await importOriginal<object>()),
   EditorContent: {},
   Editor: class {
     commands = { setContent: mocks.setContent };
