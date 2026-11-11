@@ -121,6 +121,7 @@
     "@types/react-dom": "catalog:",
     "autoprefixer": "catalog:",
     "comark": "catalog:",
+    "happy-dom": "catalog:",
     "lightningcss": "catalog:",
     "postcss": "catalog:",
     "react": "catalog:",

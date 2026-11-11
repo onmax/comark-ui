@@ -8,13 +8,16 @@ import {
   defineComponent,
   h,
   type VNode,
+  type VNodeChild,
   onScopeDispose,
   type PropType,
   type Ref,
   ref,
   shallowRef,
+  type SlotsType,
   watch,
 } from "vue";
+import { type ComponentField, type ComponentInfo, componentView } from "./editor/component-view.ts";
 import {
   checkMarkdown,
   ComarkKit,
@@ -29,6 +32,13 @@ export interface UseComarkEditorOptions {
   kit?: ComarkKitOptions;
   /** The parse plugins the page renders with, so a document only they read is opened read-only. */
   plugins?: readonly ComarkPlugin<any, any>[];
+  /**
+   * What the component view shows for each component name, with the props it edits as typed fields, or `false` to
+   * draw components as bare elements. A `componentView` in `kit` replaces the view.
+   */
+  components?: Record<string, ComponentInfo> | false;
+  /** Draws a typed prop's field, such as a media picker. Return `undefined` for the view's own field. */
+  field?: (field: ComponentField) => VNodeChild | undefined;
 }
 
 /**
@@ -70,8 +80,13 @@ export function useComarkEditor(markdown: Ref<string>, options: UseComarkEditorO
       editor.value.setEditable(check.editable, false);
       return;
     }
+    const { components = {}, field } = options;
+    const view = components === false ? undefined : componentView({ components, field });
     editor.value = new Editor({
-      extensions: [ComarkKit.configure(options.kit), ...(options.extensions ?? [])],
+      extensions: [
+        ComarkKit.configure({ componentView: view, ...options.kit }),
+        ...(options.extensions ?? []),
+      ],
       content: read.doc,
       editable: check.editable,
       onUpdate: () => void save(),
@@ -99,6 +114,7 @@ function vnode(node: Node): VNode | string | null {
 /**
  * `useComarkEditor` as a component: `<ComarkEditor v-model="markdown" />`. The frontmatter keys that comark-properties
  * shows on the page show above the text the same way, read-only. Pass its options in `properties`, or `false` to hide them.
+ * `components` and the `#field` slot set up the component view, as the composable's `components` and `field` do.
  */
 export const ComarkEditor = defineComponent({
   name: "ComarkEditor",
@@ -114,9 +130,16 @@ export const ComarkEditor = defineComponent({
     extensions: { type: Array as PropType<AnyExtension[]>, default: undefined },
     // SAFETY: Vue's runtime constructor cannot express the array's element type.
     plugins: { type: Array as PropType<ComarkPlugin<any, any>[]>, default: undefined },
+    components: {
+      // SAFETY: Vue's runtime constructor cannot express the record's value type.
+      type: [Object, Boolean] as PropType<Record<string, ComponentInfo> | false>,
+      default: undefined,
+    },
   },
   emits: ["update:modelValue"],
-  setup(props, { attrs, emit }) {
+  // SAFETY: Vue's runtime constructor cannot express the slots' types.
+  slots: Object as SlotsType<{ field: ComponentField }>,
+  setup(props, { attrs, emit, slots }) {
     const markdown = ref(props.modelValue);
     watch(
       () => props.modelValue,
@@ -128,6 +151,11 @@ export const ComarkEditor = defineComponent({
     const { editor, frontmatter } = useComarkEditor(markdown, {
       extensions: props.extensions,
       plugins: props.plugins,
+      components: props.components,
+      field: (field) => {
+        const nodes = slots.field?.(field);
+        return nodes?.length ? nodes : undefined;
+      },
     });
     return () => {
       if (!editor.value) return null;
@@ -139,3 +167,12 @@ export const ComarkEditor = defineComponent({
     };
   },
 });
+
+export {
+  componentView,
+  componentViewCss,
+  type ComponentField,
+  type ComponentInfo,
+  type ComponentProp,
+  type ComponentViewOptions,
+} from "./editor/component-view.ts";
