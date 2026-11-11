@@ -425,7 +425,7 @@ The first slice.
 :::
 ::`;
     const html = await annotated(markdown);
-    expect(html).toContain('viewBox="0 0 624 397"');
+    expect(html).toContain('viewBox="0 0 544 397"');
     expect(html).toContain('ca-stamp" style="left:0;top:0;translate:-50% -50%"');
   });
 

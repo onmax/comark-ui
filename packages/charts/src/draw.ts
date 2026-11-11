@@ -159,9 +159,10 @@ const endLabeled = (chart: Chart) =>
 // A line marks each of its points while they're few enough to stay apart.
 const MOST_POINTS = 40;
 
-// A plot's widest, and the room it shares with its labels in a report's column of about 720px.
-const PLOT = 600;
-const ROOM = 680;
+// A plot's widest, and the room it shares with its labels. A wider plot lays more dated steps flat, and their first
+// label then meets the value axis's 0 in the corner.
+const PLOT = 520;
+const ROOM = 600;
 
 // The most bars an upright plot holds at a readable width.
 const MOST_UPRIGHT = 40;
@@ -181,7 +182,7 @@ function layout(chart: Chart) {
   const flip =
     type === "dumbbell" ||
     ((type === "bar" || type === "stacked") && (!!chart.horizontal || bars > MOST_UPRIGHT));
-  // A report's column is about 720px. Labels sit beside the plot, so the plot gets what the widest of them leaves: names on
+  // The plot leaves about 670px for the chart. Labels sit beside the plot, so the plot gets what the widest of them leaves: names on
   // a sideways chart, and values on an upright one.
   const numbers = chart.rows.flatMap((row) => row.values.filter((value) => value !== undefined));
   const valueLabel =
@@ -684,8 +685,8 @@ interface EndLabel {
   series: string;
 }
 
-// Names at the ends of lines keep at least a line of 12px text apart.
-const END_GAP = 14;
+// Names at the ends of lines keep a 12px line's box and a few pixels apart, so stacked names never touch.
+const END_GAP = 20;
 
 /**
  * Where each line's name goes, in the root group's frame: past the plot's right edge at the height its line ends,
@@ -1385,8 +1386,7 @@ export async function draw(chart: Chart): Promise<{ svg: string; boxes: Map<numb
               labelLimit: 160,
               labelExpr,
             }
-          : // Turned a little rather than on end, so a label still reads left to right, ending under its step.
-            { labelAngle: -35, labelAlign: "right", labelBaseline: "top", labelLimit: 140 })),
+          : { labelLimit: 140 })),
     },
     axisY: {
       ...spec.config?.axisY,
