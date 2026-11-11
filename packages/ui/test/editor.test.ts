@@ -2,7 +2,9 @@ import { readdirSync, readFileSync } from "node:fs";
 import { getSchema } from "@tiptap/core";
 import { Node } from "@tiptap/pm/model";
 import { prosemirrorJSONToYDoc, yDocToProsemirrorJSON } from "@tiptap/y-tiptap";
-import { defineComarkPlugin, type MarkdownExitPlugin } from "comark";
+import { defineComarkPlugin, type MarkdownExitPlugin, parseMarkdown } from "comark";
+import rawHtml from "comark/plugins/html";
+import tabs from "comark-tabs";
 import { describe, expect, it } from "vite-plus/test";
 import { loadExamples } from "../../../docs/examples.ts";
 import html from "../src/html.ts";
@@ -217,6 +219,25 @@ describe("checkMarkdown", () => {
     });
   });
 
+  it("keeps numeric frontmatter equal to the source hash without throwing", async () => {
+    const markdown = "---\ncount: 1028322\n---\n\nDocument 3742\n";
+    for (const page of [{ plugins: [tabs()] }, html(offline)]) {
+      expect(await checkMarkdown(markdown, page)).toEqual({ editable: true, markdown });
+    }
+  });
+
+  it("compares safe HTML using the page's paragraph unwrapping", async () => {
+    const markdown = "<div>\n\n**text**\n\n</div>\n";
+    const page = { plugins: [rawHtml()] };
+    const first = await fromMarkdown(markdown, page);
+    const written = await toMarkdown(first.doc, first);
+    const before = await parseMarkdown(markdown, page);
+    const after = await parseMarkdown(written, page);
+    expect(after.nodes).toEqual(before.nodes);
+    expect(await checkMarkdown(markdown, page)).toEqual({ editable: true, markdown: written });
+    expect(await createEditorCodec(page).verify(markdown)).toMatchObject({ writable: true });
+  });
+
   it("refuses a comment inside a paragraph, which has nowhere to live", async () => {
     expect(await checkMarkdown("Text <!-- hidden --> more\n")).toEqual({ editable: false });
   });
@@ -237,6 +258,27 @@ describe("checkMarkdown", () => {
     const markdown = "H~2~O\n";
     expect((await checkMarkdown(markdown)).editable).toBe(true);
     expect(await checkMarkdown(markdown, { plugins: [subscript()] })).toEqual({ editable: false });
+  });
+
+  // A page that leaves out Comark's defaults shows a bare URL as text and `<kbd>` as text, so the editor reads them so.
+  it("reads a document as a page without Comark's defaults does", async () => {
+    const page = { registerDefaultPlugins: false, plugins: [] };
+    expect(await checkMarkdown("See https://example.com today.\n", page)).toEqual({
+      editable: true,
+      markdown: "See https://example.com today.\n",
+    });
+    expect((await checkMarkdown("See https://example.com today.\n")).editable).toBe(true);
+    const kbd = await checkMarkdown("Press <kbd>K</kbd>.\n", page);
+    expect(kbd.editable && kbd.markdown).toBe("Press \\<kbd>K\\</kbd>.\n");
+  });
+
+  // The text stays, but the title the editor writes as `{title}` is text on a page without the attributes plugin.
+  it("refuses a save that changes the page's tree but not its text", async () => {
+    const markdown = '[a](https://example.com "Title")\n';
+    expect((await checkMarkdown(markdown)).editable).toBe(true);
+    expect(await checkMarkdown(markdown, { registerDefaultPlugins: false })).toEqual({
+      editable: false,
+    });
   });
 });
 
@@ -268,6 +310,8 @@ describe("the docs examples", async () => {
     ),
   ];
   const { plugins } = html(offline);
+  // The editor reads TeX as text, so `}{2}` reads as attributes and a save drops it; these open read-only.
+  const lossy = new Set(["math-inline-and-display", "math-aligned-steps"]);
 
   it.each(documents)("%s", async (_, source) => {
     const { doc } = await fromMarkdown(source);
@@ -276,7 +320,7 @@ describe("the docs examples", async () => {
     const synced = yDocToProsemirrorJSON(prosemirrorJSONToYDoc(schema, doc));
     expect(Node.fromJSON(schema, synced).eq(node)).toBe(true);
     const check = await checkMarkdown(source, { plugins });
-    expect(check.editable).toBe(true);
+    expect(check.editable).toBe(!lossy.has(_));
     if (check.editable) expect(await checkMarkdown(check.markdown, { plugins })).toEqual(check);
   });
 });
@@ -287,6 +331,16 @@ describe("createEditorCodec", () => {
   it("reads and writes a room's body", async () => {
     const doc = await codec.fromMarkdown("# Title\n\n- [x] Done\n");
     expect(await codec.toMarkdown(doc)).toBe("# Title\n\n- [x] Done\n");
+  });
+
+  it("reads a room's body as the page parses it", async () => {
+    const page = createEditorCodec({ registerDefaultPlugins: false });
+    const body = 'See https://example.com, and :badge[New]{color="green"}.\n\n- [ ] Task\n';
+    expect(await page.toMarkdown(await page.fromMarkdown(body))).toBe(body);
+    expect(await page.verify(body)).toEqual({ writable: true, canonical: body });
+    expect(await codec.toMarkdown(await codec.fromMarkdown(body))).toBe(
+      'See <https://example.com>, and :badge[New]{color="green"}.\n\n- [ ] Task\n',
+    );
   });
 
   it("lets a room save what it writes back unchanged, and says what the first save writes", async () => {

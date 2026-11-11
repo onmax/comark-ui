@@ -47,6 +47,86 @@ function expectLineNames(html: string, namesByHeight: string[]) {
 }
 
 describe("report chart regressions", () => {
+  it.each([
+    ["upright", ""],
+    ["horizontal", "{horizontal}"],
+  ])(
+    "includes a series' outside bar value in its annotation with %s bars",
+    async (_kind, props) => {
+      for (const sign of [1, -1]) {
+        const value = String(sign * 400);
+        const document = await parseMarkdown(
+          chart(
+            `| task | before | after |\n| --- | --: | --: |\n| alpha | ${sign * 200} | ${sign * 130} |\n| beta | ${value} | ${sign * 260} |\n:::annotation{at="beta" series="before" mark="box"}\nBefore's value.\n:::`,
+            props,
+          ),
+          { plugins: [charts()] },
+        );
+        expect(document.meta.issues ?? []).toEqual([]);
+        const html = await renderHtmlFromDocument(document, { components });
+        const svg = html.match(/<svg[\s\S]*?<\/svg>/)![0];
+        const [width, height] = attribute(svg, "viewBox").split(" ").slice(2).map(Number);
+        const mark =
+          /class="ca-mark ca-box"[^>]*left:([\d.]+)%;top:([\d.]+)%;width:([\d.]+)%;height:([\d.]+)%/.exec(
+            html,
+          )!;
+        expect(mark).not.toBeNull();
+        const [left, top, w, h] = mark.slice(1).map(Number);
+        const groups = [{ x: 0, y: 0 }];
+        let label: { x: number; y: number } | undefined;
+        for (const [tag, close, name, text] of svg.matchAll(/<(\/?)(\w+)[^>]*>([^<]*)/g)) {
+          const [dx = 0, dy = 0] = (/translate\(([-\d.]+),([-\d.]+)\)/.exec(tag) ?? [])
+            .slice(1)
+            .map(Number);
+          const { x, y } = groups.at(-1)!;
+          if (name === "g" && close) groups.pop();
+          else if (name === "g") groups.push({ x: x + dx, y: y + dy });
+          else if (name === "text" && text === value && attribute(tag, "font-weight") === "500")
+            label = { x: x + dx, y: y + dy };
+        }
+        expect(label).toBeDefined();
+        const half = guess(value, 11) / 2;
+        expect((left! / 100) * width!).toBeLessThan(label!.x - half);
+        expect(((left! + w!) / 100) * width!).toBeGreaterThan(label!.x + half);
+        expect((top! / 100) * height!).toBeLessThan(label!.y - 5);
+        expect(((top! + h!) / 100) * height!).toBeGreaterThan(label!.y + 5);
+      }
+    },
+  );
+
+  it.each([
+    ["upright", '{type="stacked"}'],
+    ["horizontal", '{type="stacked" horizontal}'],
+  ])("totals the rendered stacks for equivalent timestamps with %s bars", async (_kind, props) => {
+    for (const [first, second, totals] of [
+      ["10 | 20", "30 | 40", ["100"]],
+      ["-10 | -20", "-30 | -40", ["-100"]],
+      ["10 | -20", "30 | -40", ["-60", "40"]],
+    ] as const) {
+      // At the domain's negative end, totals meet the category labels and are suppressed. A larger control stack
+      // leaves room to check the negative aggregate as well, without changing the collision rule.
+      for (const room of [false, true]) {
+        const extra = room ? "\n| 2026-10-13T00:00Z | -200 | -200 |" : "";
+        const document = await parseMarkdown(
+          chart(
+            `| time | a | b |\n| --- | --: | --: |\n| 2026-10-12T00:00Z | ${first} |\n| 2026-10-12T02:00+02:00 | ${second} |${extra}`,
+            props,
+          ),
+          { plugins: [charts()] },
+        );
+        expect(document.meta.issues ?? []).toEqual([]);
+        const html = await renderHtmlFromDocument(document, { components });
+        const outside = [...html.matchAll(/<text [^>]*font-weight="500"[^>]*>[^<]+<\/text>/g)]
+          .map(([tag]) => tag)
+          .filter((tag) => attribute(tag, "fill") === "#0a0a0a")
+          .map((tag) => />([^<]+)<\/text>/.exec(tag)![1]);
+        expect(outside.sort()).toEqual(
+          totals.filter((total) => room || !total.startsWith("-")).sort(),
+        );
+      }
+    }
+  });
+
   it("validates the effective log axis after a categorical x fallback", async () => {
     const markdown = chart(
       "| x | y |\n| --- | ---: |\n| a | 0 |\n| b | 10 |",
