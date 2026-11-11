@@ -656,7 +656,7 @@ function valueLabels(chart: Chart, view: vega.View): Label[] {
       text,
       fill: inside ? INK.background : INK.foreground,
       row: bar.row,
-      series: inside ? bar.series : undefined,
+      series: bar.series,
     });
   };
   if (!stacked) {
@@ -669,7 +669,8 @@ function valueLabels(chart: Chart, view: vega.View): Label[] {
   for (const bar of bars) {
     if (bar.value === 0) continue;
     place(bar, true);
-    const key = `${String(bar.row)}\u0000${bar.value >= 0}`;
+    // Use the rendered lane, since different timestamp spellings can share one position and stack together.
+    const key = `${flip ? bar.y1 : bar.x1}\u0000${flip ? bar.y2 : bar.x2}\u0000${bar.value >= 0}`;
     const stack = stacks.get(key);
     stacks.set(
       key,
@@ -682,7 +683,7 @@ function valueLabels(chart: Chart, view: vega.View): Label[] {
             x2: Math.max(stack.x2, bar.x2),
             y2: Math.max(stack.y2, bar.y2),
           }
-        : { ...bar },
+        : { ...bar, series: undefined },
     );
   }
   for (const stack of stacks.values()) place(stack, false);
