@@ -108,7 +108,8 @@ describe("report chart regressions", () => {
   it("includes the unit when deciding whether waterfall labels fit", async () => {
     const html = await render(
       chart(
-        "| step | value |\n| --- | ---: |\n| start | 10000 |\n| add | 2000 |\n| end | 12000 |",
+        // Eight steps leave each about 80px: room for "10k", not for "10k requests/sec".
+        "| step | value |\n| --- | ---: |\n| start | 10000 |\n| a | 2000 |\n| b | 1000 |\n| c | -500 |\n| d | 1500 |\n| e | 1000 |\n| f | -1000 |\n| end | 14000 |",
         '{type="waterfall" labels unit="requests/sec"}',
       ),
     );

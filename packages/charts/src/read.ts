@@ -480,15 +480,16 @@ function readUnitAndLog(
   if (raw === undefined) return unit ? { unit } : {};
   const value = text(raw);
   if (value === "false") return unit ? { unit } : {};
-  let log = value === "" || value === "true" ? "y" : value;
+  const asked = value === "" || value === "true" ? "y" : value;
   const scale = (log: "x" | "y" | "both") => ({ ...(unit && { unit }), log });
-  if (log !== "x" && log !== "y" && log !== "both") {
+  if (asked !== "x" && asked !== "y" && asked !== "both") {
     issues.push({
       rule: "comark/charts/invalid-log",
       message: `${name}: \`log="${value}"\` isn't an axis. Write \`log\` alone for the numbers' axis, \`log="x"\` for the x column's, or \`log="both"\`.`,
     });
     return unit ? { unit } : {};
   }
+  let log: "x" | "y" | "both" = asked;
   if (!LOGGED.has(type)) {
     issues.push({
       rule: "comark/charts/invalid-log",
