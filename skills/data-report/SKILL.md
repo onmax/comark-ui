@@ -48,12 +48,13 @@ Done when every number in a finding appears in a chart or table of the section i
 
 ## 6. Build and check it
 
-Build the page with this skill's [scripts/build.mjs](scripts/build.mjs), from a folder of its own:
+Copy this skill's [scripts/build.mjs](scripts/build.mjs) beside `report.md`. From that directory, build the page in a folder of its own:
 
 ```sh
 mkdir -p tmp/report && cd tmp/report
 echo '{ "private": true, "type": "module" }' > package.json
 pnpm add --ignore-workspace comark @comark/html comark-ui playwright
+pnpm exec playwright install chromium
 node ../../build.mjs ../../report.md report.html --shots shots
 ```
 

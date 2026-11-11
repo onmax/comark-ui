@@ -82,7 +82,7 @@ a{color:inherit}
 .dr-layout{display:grid;grid-template-columns:minmax(0,1fr) var(--dr-side);min-height:calc(100vh - var(--dr-top))}
 .dr-main{min-width:0;padding:1.75rem 2rem 4rem}
 .dr-main>.dr-body{max-width:52rem}
-.dr-body>:is(h2,h3){scroll-margin-top:calc(var(--dr-top) + 1rem)}
+.dr-body :is(h2,h3)[id]{scroll-margin-top:calc(var(--dr-top) + 1rem)}
 .dr-side{position:sticky;top:var(--dr-top);height:calc(100vh - var(--dr-top));overflow-y:auto;padding:1.75rem 1.25rem;border-left:1px solid var(--comark-border);font-size:13px}
 .dr-side h2{margin:0 0 .5rem;color:var(--comark-foreground);font-size:13px;font-weight:600}
 .dr-side ol{margin:0 0 1.75rem;padding:0;list-style:none}
@@ -112,7 +112,9 @@ const script = `(() => {
     localStorage.setItem("dr-theme", dark ? "light" : "dark");
   });
   const links = [...document.querySelectorAll(".dr-nav a, .dr-side ol a")];
-  const headings = [...document.querySelectorAll(".dr-body > :is(h2, h3)[id]")];
+  const headings = [...document.querySelectorAll(".dr-side ol a")]
+    .map((link) => document.getElementById(link.getAttribute("href").slice(1)))
+    .filter(Boolean);
   const mark = () => {
     let current = headings[0];
     for (const heading of headings) if (heading.getBoundingClientRect().top < 120) current = heading;
