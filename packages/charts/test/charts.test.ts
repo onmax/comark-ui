@@ -90,6 +90,16 @@ ${sizes.trim()}
     expect(await issues(chart(sizes))).toEqual([]);
   });
 
+  // Vega's clip path ids came from a counter, so the same chart rendered twice drew different SVG.
+  it("draws the same SVG each time, with ids apart between charts", async () => {
+    const page = `${chart(months, '{type="stacked"}')}\n\n${chart(months, '{type="stacked" horizontal}')}`;
+    const html = await render(page);
+    expect(await render(page)).toBe(html);
+    const ids = [...html.matchAll(/ id="([^"]+)"/g)].map((match) => match[1]);
+    expect(ids.length).toBeGreaterThan(1);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
   it("copies a chart as an image by default, and its data as a table or Markdown from the menu", async () => {
     const html = await render(chart(sizes));
     expect(html).toContain(

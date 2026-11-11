@@ -6,6 +6,7 @@ import type { TopLevelSpec } from "vega-lite";
 import type { Field } from "vega-lite/types_unstable/channeldef.js";
 import type { LayerSpec, UnitSpec } from "vega-lite/types_unstable/spec/index.js";
 import { compile } from "vega-lite";
+import { hash } from "../../../shared/text.ts";
 import { INK, SERIES } from "./colors.ts";
 import type { Chart, FlowChart, SpecChart, XKind } from "./read.ts";
 
@@ -1009,14 +1010,35 @@ export async function render(compiled: vega.Spec, loader?: vega.Loader) {
   // Vega gives every group a role for screen readers, which the one `role="img"` hides anyway, an empty foreground
   // path, and float noise such as `10.000000000000021`. Only tags change, since text holds the table's own numbers,
   // and Vega escapes `>` in attributes.
-  const svg = (await view.toSVG())
-    .replace(/<path class="foreground"[^>]* d=""[^>]*\/>/g, "")
-    .replace(/<[^>]+>/g, (tag) =>
-      tag
-        .replace(/ (?:role|aria-roledescription|aria-hidden)="[^"]*"/g, "")
-        .replace(/(\.\d\d)\d+/g, "$1"),
-    );
+  const svg = stableIds(
+    (await view.toSVG())
+      .replace(/<path class="foreground"[^>]* d=""[^>]*\/>/g, "")
+      .replace(/<[^>]+>/g, (tag) =>
+        tag
+          .replace(/ (?:role|aria-roledescription|aria-hidden)="[^"]*"/g, "")
+          .replace(/(\.\d\d)\d+/g, "$1"),
+      ),
+  );
   return { view, svg };
+}
+
+/**
+ * Vega numbers its clip paths with a counter that runs on across renders, so the same chart drew new ids each time.
+ * Ids from a hash of the drawing stay apart between charts on a page and the same between renders.
+ */
+function stableIds(svg: string): string {
+  const ids = [...new Set([...svg.matchAll(/ id="([^"]+)"/g)].map((match) => match[1]!))];
+  if (!ids.length) return svg;
+  const swap = (text: string, rename: (id: string, at: number) => string) =>
+    ids.reduce(
+      (out, id, at) =>
+        out
+          .replaceAll(` id="${id}"`, ` id="${rename(id, at)}"`)
+          .replaceAll(`url(#${id})`, `url(#${rename(id, at)})`),
+      text,
+    );
+  const prefix = `cch-${hash(swap(svg, () => ""))}`;
+  return swap(svg, (_, at) => `${prefix}-${at}`);
 }
 
 /**
