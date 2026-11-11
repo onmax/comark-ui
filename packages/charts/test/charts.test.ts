@@ -842,10 +842,25 @@ No such run.
     );
     expect(value(stacked, "110")).toBe("#ffffff");
     expect(value(stacked, "40")).toBe("#ffffff");
-    // The first series stacks on top. A thin segment at the end of its stack goes past it; one at the bottom has
-    // nowhere to go.
-    expect(value(stacked, "1")).toBe("#0a0a0a");
+    // Past each stack goes its total. A segment too thin for its value has no label, wherever it sits, and an empty
+    // one never has.
+    expect(value(stacked, "151")).toBe("#0a0a0a");
+    expect(value(stacked, "162")).toBe("#0a0a0a");
+    expect(value(stacked, "1")).toBeUndefined();
     expect(value(stacked, "2")).toBeUndefined();
+    const empty = await render(
+      chart(
+        `
+| week | feat | release |
+| --- | --: | --: |
+| Oct 12 | 0 | 2 |
+| Oct 19 | 87 | 19 |`,
+        '{type="stacked" labels}',
+      ),
+    );
+    expect(value(empty, "0")).toBeUndefined();
+    expect(value(empty, "2")).toBe("#0a0a0a");
+    expect(value(empty, "106")).toBe("#0a0a0a");
     const sideways = await render(
       chart(
         `
@@ -859,6 +874,24 @@ No such run.
     expect(value(sideways, "1.28k")).toBe("#0a0a0a");
     expect(value(sideways, "3")).toBe("#0a0a0a");
     expect(await issues(chart(sizes, '{type="stacked" labels}'))).toEqual([]);
+  });
+
+  it("keeps each series in its column's place and color when its first cell is empty", async () => {
+    const legend = async (first: string) => {
+      const html = await render(
+        chart(
+          `| week | feat | fix | docs |\n| --- | --: | --: | --: |\n| a | ${first} | 3 | 4 |\n| b | 5 | 3 | 4 |`,
+          '{type="stacked"}',
+        ),
+      );
+      const start = html.indexOf("role-legend");
+      return [...html.slice(start, start + 3000).matchAll(/fill="(#[0-9a-f]+)"|>(\w+)<\/text>/g)]
+        .map(([, fill, name]) => fill ?? name)
+        .join(" ");
+    };
+    const full = await legend("1");
+    expect(full).toMatch(/feat.*fix.*docs/);
+    expect(await legend("")).toBe(full);
   });
 
   it("reports `labels` and `horizontal` on a chart that doesn't take them", async () => {
@@ -1192,6 +1225,7 @@ Salary.
             chart(costs, '{type="stacked" log}'),
             chart(sizes, '{log="x"}'),
             chart(`| x | y |\n| --- | --: |\n| a | 0 |\n| b | 4 |`, "{log}"),
+            chart(months, '{type="dumbbell" log}'),
           ].join("\n\n"),
         ),
       ).toEqual([
@@ -1199,6 +1233,7 @@ Salary.
         '`::chart` 2: a stacked bar chart can\'t use a log scale, since its parts add up from zero. Remove `log`, or use `type="bar"` or `type="line"`.',
         '`::chart` 3: `log="x"` puts the x column on a log scale, and only a line or a scatter plot over numbers has one. Use `log` alone for the numbers\' axis.',
         "`::chart` 4: a log scale has no place for 0, since it only holds numbers above 0. Remove `log`, or leave the cell empty.",
+        '`::chart` 5: a dumbbell can\'t use a log scale. Remove `log`, or use `type="bar"` or `type="line"`.',
       ]);
     });
 

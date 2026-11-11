@@ -395,7 +395,7 @@ Bars, stacked bars, and heatmaps print their numbers. Write `labels=false` to le
 Where the numbers print depends on the type:
 
 - **Bars** print each value just past the bar's end, in the text's color, and drop the value axis. A value that would cover another bar's appears only in the **Data** table.
-- **Stacked bars** write each value in white inside its segment. A value that doesn't fit goes just past the stack's end, but only the outermost part can do that, so the others appear only in the **Data** table.
+- **Stacked bars** write each stack's total just past its end, and each value in white inside its segment where it fits. A segment too thin for its value leaves it to the **Data** table.
 - **Waterfalls** print each step's change and each total's value beside it, when the numbers fit their steps.
 - **Dumbbells** print each row's least and most values beside its outer dots, when the plot has room.
 - **Gantts** print how long each bar lasts past its end.

@@ -442,6 +442,7 @@ export function readChart(
 // A log scale spreads numbers that span orders of magnitude, such as costs or timings, along a line or a scatter
 // plot's axes and a bar chart's values. Stacks, areas, and pies add up, and a log scale has no zero to add from.
 const LOGGED = new Set<ChartType>(["line", "scatter", "bar"]);
+const SUMMED = new Set<ChartType>(["area", "stacked", "pie", "waterfall"]);
 
 /** Reads `better`, `unit`, and `log`, and checks that a log scale has only positive numbers to place. */
 function readScale(
@@ -493,7 +494,7 @@ function readUnitAndLog(
   if (!LOGGED.has(type)) {
     issues.push({
       rule: "comark/charts/invalid-log",
-      message: `${name}: ${A[type]} can't use a log scale, since its parts add up from zero. Remove \`log\`, or use \`type="bar"\` or \`type="line"\`.`,
+      message: `${name}: ${A[type]} can't use a log scale${SUMMED.has(type) ? ", since its parts add up from zero" : ""}. Remove \`log\`, or use \`type="bar"\` or \`type="line"\`.`,
     });
     return unit ? { unit } : {};
   }

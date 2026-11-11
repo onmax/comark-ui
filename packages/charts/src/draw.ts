@@ -567,9 +567,9 @@ interface Label {
 }
 
 /**
- * Where each bar's value goes, in the root group's frame: inside its bar or segment where it fits, else just past the
- * bar's end. A segment in the middle of a stack has no end to sit past, so one too thin for its value leaves it to the
- * data table, as does a value that would cover another bar or label.
+ * Where each bar's value goes, in the root group's frame: just past a bar's end, or for a stack, its total past its end
+ * and each segment's value inside it where it fits. A segment too thin for its value leaves it to the data table, as
+ * does a value that would cover another bar or label.
  */
 function valueLabels(chart: Chart, view: vega.View): Label[] {
   const { flip } = layout(chart);
@@ -613,37 +613,27 @@ function valueLabels(chart: Chart, view: vega.View): Label[] {
       });
   });
   const labels: Label[] = [];
-  for (const bar of bars) {
+  type Bar = (typeof bars)[number];
+  // `inside` prints a stacked segment's number in white in its middle, or nothing when it doesn't fit. Otherwise
+  // the number goes past the bar's end, as a dashboard does.
+  const place = (bar: Bar, inside: boolean) => {
     const text = compact(bar.value, chart.unit);
     const width = guess(text, 11);
     const up = bar.value >= 0;
     const [long, thick] = flip
       ? [bar.x2 - bar.x1, bar.y2 - bar.y1]
       : [bar.y2 - bar.y1, bar.x2 - bar.x1];
-    // A stacked segment prints its number inside it; a bar prints its own past its end, as a dashboard does.
-    const fits =
-      stacked &&
-      (flip
+    if (
+      inside &&
+      !(flip
         ? long >= width + 2 * GAP && thick >= HEIGHT + 4
-        : long >= HEIGHT + 2 * GAP && thick >= width + 8);
-    const beyond = (other: typeof bar) =>
-      flip
-        ? up
-          ? other.x2 > bar.x2
-          : other.x1 < bar.x1
-        : up
-          ? other.y1 < bar.y1
-          : other.y2 > bar.y2;
-    const last =
-      !stacked ||
-      !bars.some((other) => other.row === bar.row && other.value >= 0 === up && beyond(other));
-    if (!fits && !last) continue;
+        : long >= HEIGHT + 2 * GAP && thick >= width + 8)
+    )
+      return;
     const [cx, cy] = [(bar.x1 + bar.x2) / 2, (bar.y1 + bar.y2) / 2];
-    // Inside, a bar's value sits at its end, and a segment's in its middle. Past the end it's a gap beyond it.
-    const middle = fits && stacked;
-    const out = (fits ? -1 : 1) * (up ? 1 : -1);
-    const x = !flip || middle ? cx : (up ? bar.x2 : bar.x1) + out * (GAP + width / 2);
-    const y = flip || middle ? cy : (up ? bar.y1 : bar.y2) - out * (GAP + HEIGHT / 2);
+    const out = up ? 1 : -1;
+    const x = !flip || inside ? cx : (up ? bar.x2 : bar.x1) + out * (GAP + width / 2);
+    const y = flip || inside ? cy : (up ? bar.y1 : bar.y2) - out * (GAP + HEIGHT / 2);
     const box = { x: x - width / 2, y: y - HEIGHT / 2, w: width, h: HEIGHT };
     const covers = (other: Box, margin = MARGIN) =>
       box.x - margin < other.x + other.w &&
@@ -652,26 +642,60 @@ function valueLabels(chart: Chart, view: vega.View): Label[] {
       other.y < box.y + box.h + margin;
     if (
       taken.some(covers) ||
-      (!fits &&
-        bars.some(
-          (other) =>
-            other !== bar &&
-            covers({ x: other.x1, y: other.y1, w: other.x2 - other.x1, h: other.y2 - other.y1 }, 0),
+      (!inside &&
+        bars.some((other) =>
+          covers({ x: other.x1, y: other.y1, w: other.x2 - other.x1, h: other.y2 - other.y1 }, 0),
         ))
     )
-      continue;
+      return;
     taken.push(box);
     labels.push({
       x,
       y,
       text,
-      fill: fits ? INK.background : INK.foreground,
+      fill: inside ? INK.background : INK.foreground,
       row: bar.row,
-      series: bar.series,
+      series: inside ? bar.series : undefined,
     });
+  };
+  if (!stacked) {
+    for (const bar of bars) place(bar, false);
+    return labels;
   }
+  // A number past a stack reads as its total, so that's what goes there: the sum of its segments on that side of
+  // zero. A segment's own number goes only inside it, and an empty segment has none.
+  const stacks = new Map<string, Bar>();
+  for (const bar of bars) {
+    if (bar.value === 0) continue;
+    place(bar, true);
+    const key = `${String(bar.row)}\u0000${bar.value >= 0}`;
+    const stack = stacks.get(key);
+    stacks.set(
+      key,
+      stack
+        ? {
+            ...stack,
+            value: stack.value + bar.value,
+            x1: Math.min(stack.x1, bar.x1),
+            y1: Math.min(stack.y1, bar.y1),
+            x2: Math.max(stack.x2, bar.x2),
+            y2: Math.max(stack.y2, bar.y2),
+          }
+        : { ...bar },
+    );
+  }
+  for (const stack of stacks.values()) place(stack, false);
   return labels;
 }
+
+// Charts whose series are the table's columns, one color each.
+const COLUMNS = new Set<Chart["type"]>(["bar", "stacked", "line", "area", "scatter", "dumbbell"]);
+
+const sum = (values: (number | undefined)[], side: (value: number) => boolean) =>
+  values.reduce<number>(
+    (total, value) => (value !== undefined && side(value) ? total + value : total),
+    0,
+  );
 
 // The labels draw as one text mark over the chart, in the type Flint sets its own values in.
 const LABELS: vega.Mark = {
@@ -1364,9 +1388,10 @@ export async function draw(chart: Chart): Promise<{ svg: string; boxes: Map<numb
         ? flip
           ? Math.max(
               ...chart.rows.flatMap((row) =>
-                row.values.map((value) =>
-                  value === undefined ? 0 : guess(compact(value, chart.unit), 11),
-                ),
+                (chart.type === "stacked"
+                  ? [sum(row.values, (value) => value > 0), sum(row.values, (value) => value < 0)]
+                  : row.values
+                ).map((value) => (value ? guess(compact(value, chart.unit), 11) : 0)),
               ),
             ) + 8
           : 20
@@ -1509,6 +1534,10 @@ export async function draw(chart: Chart): Promise<{ svg: string; boxes: Map<numb
         ? x
         : undefined;
     if (time) time.scale = { ...("scale" in time && time.scale), padding: 24 };
+    // Flint takes the series in the order they first appear, so an empty first cell would move its series, and its
+    // color, to the end. A series keeps its column's place and color whatever its cells hold.
+    if (color && "field" in color && color.field === "series" && COLUMNS.has(chart.type))
+      color.scale = { ...("scale" in color && color.scale), domain: chart.series };
     if (color && "legend" in color && color.legend)
       color.legend = {
         ...color.legend,
