@@ -1,0 +1,3 @@
+interface:
+  display_name: "Data report"
+  short_description: "Turn a dataset into an analytics page of charts with a sidebar"

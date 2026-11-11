@@ -248,6 +248,7 @@ describe("the docs examples", async () => {
   const examples = await loadExamples(packages);
   const skills = [
     "before-after-evidence",
+    "data-report",
     "report",
     "review-document",
     "teach-lesson",
