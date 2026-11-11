@@ -70,21 +70,22 @@ const theme: ThemeSpec = {
     },
     accent: SERIES[1],
   },
-  // shadcn/ui's charts: no axis lines or ticks, faint horizontal grid lines, rounded bars, smooth lines without dots, and
-  // 12px labels.
+  // A report's charts: no axis lines or ticks, faint dotted grid lines, bars barely rounded, straight lines between the
+  // points they join, and 12px labels.
   structure: {
     axis: {
       categorical: { line: "omit", ticks: "omit" },
       measure: { line: "omit", ticks: "omit" },
     },
-    grid: { measure: "quiet", category: "omit", style: "solid", zero: "omit" },
+    grid: { measure: "quiet", category: "omit", style: "dotted", dash: [2, 3], zero: "omit" },
     frame: "omit",
     baseline: "omit",
   },
   marks: {
-    cornerRadius: 4,
+    cornerRadius: 2,
     strokeWeight: 2,
-    interpolation: "monotone",
+    // A smoothed line passes through values the table doesn't hold, and overshoots between steep steps.
+    interpolation: "linear",
     fillOpacity: 0.4,
     point: { presence: "omit" },
   },
@@ -135,7 +136,7 @@ function clip(lines: string[], room: number) {
 }
 
 // A top legend is one row unless told otherwise, so it wraps into as many columns as fit the card.
-function legendColumns(chart: Chart, room = 520) {
+function legendColumns(chart: Chart, room = PLOT) {
   const names =
     chart.type === "pie"
       ? chart.rows.map((row) => row.x)
@@ -148,6 +149,20 @@ function legendColumns(chart: Chart, room = 520) {
   return Math.max(1, Math.min(names.length, Math.floor(room / widest)));
 }
 
+/**
+ * Whether a line chart names its series at their ends, in their colors, rather than in a legend over the plot: a
+ * reader finds a line by its name where it ends, without matching swatches. Past eight the names would stack.
+ */
+const endLabeled = (chart: Chart) =>
+  chart.type === "line" && chart.series.length > 1 && chart.series.length <= 8;
+
+// A line marks each of its points while they're few enough to stay apart.
+const MOST_POINTS = 40;
+
+// A plot's widest, and the room it shares with its labels in a report's column of about 720px.
+const PLOT = 600;
+const ROOM = 680;
+
 // The most bars an upright plot holds at a readable width.
 const MOST_UPRIGHT = 40;
 
@@ -159,20 +174,23 @@ function layout(chart: Chart) {
     return {
       flip: true,
       bars: chart.rows.length,
-      width: Math.round(Math.max(200, Math.min(520, 600 - (7 * longest(chart) + 40)))),
+      width: Math.round(Math.max(200, Math.min(PLOT, ROOM - (7 * longest(chart) + 40)))),
     };
   const bars = chart.rows.length * (type === "bar" ? chart.series.length : 1);
   // Bars stand upright unless `horizontal` turns them, or there are more than a plot's width holds, which would drop some.
   const flip =
     type === "dumbbell" ||
     ((type === "bar" || type === "stacked") && (!!chart.horizontal || bars > MOST_UPRIGHT));
-  // The card leaves about 670px. Labels sit beside the plot, so the plot gets what the widest of them leaves: names on
+  // A report's column is about 720px. Labels sit beside the plot, so the plot gets what the widest of them leaves: names on
   // a sideways chart, and values on an upright one.
   const numbers = chart.rows.flatMap((row) => row.values.filter((value) => value !== undefined));
   const valueLabel =
-    Math.max(...numbers.map((value) => Math.round(value).toLocaleString("en-US").length)) * 7;
-  const labels = flip ? 7 * longest(chart) + 40 : valueLabel + 40;
-  const width = Math.round(Math.max(200, Math.min(520, 600 - labels)));
+    Math.max(...numbers.map((value) => compact(Math.round(value), chart.unit).length)) * 7;
+  const ends = endLabeled(chart)
+    ? Math.max(...chart.series.map((name) => guess(name, 12))) + 24
+    : 0;
+  const labels = flip ? 7 * longest(chart) + 40 : valueLabel + 40 + ends;
+  const width = Math.round(Math.max(200, Math.min(PLOT, ROOM - labels)));
   return { flip, bars, width };
 }
 
@@ -211,6 +229,8 @@ function input(chart: Chart): ChartAssemblyInput {
     dumbbell: "Ranged Dot Plot",
     waterfall: "Waterfall Chart",
     pie: "Pie Chart",
+    // Drawn apart from Flint, by `heatmap()`.
+    heatmap: "Heatmap",
   }[type];
   return {
     data: { values },
@@ -464,6 +484,62 @@ export function boxes(
 export const format = (value: number) =>
   value.toLocaleString("en-US", { maximumFractionDigits: 12 });
 
+// A currency sign reads before its number, a percent or a times sign right after it, and a word after a space.
+function affixes(unit = ""): [string, string] {
+  if (/^\p{Sc}$/u.test(unit)) return [unit, ""];
+  if (unit === "%" || unit === "×" || unit === "x") return ["", unit];
+  return ["", unit && ` ${unit}`];
+}
+
+// Numbers from a thousand up read as their first three digits and a letter, as `22.2k` or `1.4M`: a reader compares
+// magnitudes on a chart, and the table under it keeps every digit.
+const SHORT: [number, string][] = [
+  [1e9, "B"],
+  [1e6, "M"],
+  [1e3, "k"],
+];
+
+/** A number as a chart prints it: shortened from a thousand up, with its unit. */
+export function compact(value: number, unit?: string) {
+  const [before, after] = affixes(unit);
+  const size = Math.abs(value);
+  const short = SHORT.find(([from]) => size >= from);
+  const body = short
+    ? `${format(Number((size / short[0]).toPrecision(3)))}${short[1]}`
+    : format(size);
+  return `${value < 0 ? "-" : ""}${before}${body}${after}`;
+}
+
+/**
+ * Ticks for a log scale: 1, 2, and 5 in every power of ten the numbers span, or the powers of ten alone when those
+ * would crowd the axis, so each grid line marks a round number.
+ */
+function logTicks(low: number, high: number) {
+  const steps = (factors: number[]) => {
+    const values: number[] = [];
+    for (let power = Math.floor(Math.log10(low)); power <= Math.ceil(Math.log10(high)); power++)
+      for (const factor of factors) {
+        const value = Number((factor * 10 ** power).toPrecision(12));
+        if (value >= low && value <= high) values.push(value);
+      }
+    return values;
+  };
+  const fine = steps([1, 2, 5]);
+  return fine.length <= 8 ? fine : steps([1]);
+}
+
+/** The same as `compact`, as a Vega expression over `value`, for the labels Vega prints itself, such as an axis's. */
+function compactExpr(value: string, unit?: string) {
+  const [before, after] = affixes(unit);
+  const size = `abs(${value})`;
+  const body = SHORT.reduceRight(
+    (rest, [from, letter]) =>
+      `${size} >= ${from} ? format(${size} / ${from}, ".3~r") + "${letter}" : ${rest}`,
+    `format(${size}, ",.12~r")`,
+  );
+  return `(${value} < 0 ? "-" : "") + ${JSON.stringify(before)} + (${body}) + ${JSON.stringify(after)}`;
+}
+
 interface Label {
   x: number;
   y: number;
@@ -521,7 +597,7 @@ function valueLabels(chart: Chart, view: vega.View): Label[] {
   });
   const labels: Label[] = [];
   for (const bar of bars) {
-    const text = format(bar.value);
+    const text = compact(bar.value, chart.unit);
     const width = guess(text, 12);
     const up = bar.value >= 0;
     const [long, thick] = flip
@@ -596,6 +672,93 @@ const LABELS: vega.Mark = {
     },
   },
 };
+
+interface EndLabel {
+  x: number;
+  y: number;
+  /** Where the line ends, which a short leader joins to the name when the name moved off its height. */
+  x0: number;
+  y0: number;
+  text: string;
+  fill: string;
+  series: string;
+}
+
+// Names at the ends of lines keep at least a line of 12px text apart.
+const END_GAP = 14;
+
+/**
+ * Where each line's name goes, in the root group's frame: past the plot's right edge at the height its line ends,
+ * pushed apart where two ends sit closer than a line of text, and kept inside the plot's height.
+ */
+function endLabels(chart: Chart, view: vega.View): EndLabel[] {
+  const last = new Map<string, { x: number; y: number; row: number }>();
+  walk(view, (item, dx, dy) => {
+    const { datum } = item;
+    if (item.mark?.marktype !== "line" || !datum || item.x === undefined || item.y === undefined)
+      return;
+    const series = String(datum.series);
+    const row = Number(datum.row);
+    const seen = last.get(series);
+    if (!seen || row > seen.row) last.set(series, { x: item.x + dx, y: item.y + dy, row });
+  });
+  const right = view.width() + 10;
+  const ends = chart.series.flatMap((series, index) => {
+    const end = last.get(series);
+    return end
+      ? [{ series, x0: end.x, y0: end.y, y: end.y, fill: SERIES[index % SERIES.length]! }]
+      : [];
+  });
+  ends.sort((a, b) => a.y - b.y);
+  for (let index = 1; index < ends.length; index++)
+    ends[index]!.y = Math.max(ends[index]!.y, ends[index - 1]!.y + END_GAP);
+  // Pushed past the bottom, the stack moves back up as a whole.
+  const over = (ends.at(-1)?.y ?? 0) - view.height();
+  if (over > 0)
+    for (let index = ends.length - 1; index >= 0; index--) {
+      const floor = index === ends.length - 1 ? view.height() : ends[index + 1]!.y - END_GAP;
+      ends[index]!.y = Math.min(ends[index]!.y, floor);
+    }
+  return ends.map((end) => ({ ...end, x: right, text: end.series }));
+}
+
+// A name in its line's color, and a faint leader from where the line ends.
+const END_LABELS: vega.Mark[] = [
+  {
+    type: "rule",
+    from: { data: "cch_ends" },
+    aria: false,
+    encode: {
+      enter: {
+        x: { signal: "datum.x0 + 4" },
+        y: { field: "y0" },
+        x2: { signal: "datum.x - 4" },
+        y2: { field: "y" },
+        stroke: { field: "fill" },
+        strokeOpacity: { value: 0.5 },
+        strokeWidth: { value: 1 },
+      },
+    },
+  },
+  {
+    type: "text",
+    from: { data: "cch_ends" },
+    aria: false,
+    encode: {
+      enter: {
+        x: { field: "x" },
+        y: { field: "y" },
+        text: { field: "text" },
+        fill: { field: "fill" },
+        align: { value: "left" },
+        baseline: { value: "middle" },
+        font: { value: "sans-serif" },
+        fontSize: { value: 12 },
+        fontWeight: { value: 500 },
+      },
+    },
+  },
+];
 
 interface Stub {
   x: number;
@@ -730,8 +893,8 @@ function dumbbell(chart: Chart, spec: TopLevelSpec) {
       return {
         least,
         most,
-        left: (guess(format(least), 12) + 24) / width,
-        right: most > least ? (guess(format(most), 12) + 24) / width : 0,
+        left: (guess(compact(least, chart.unit), 12) + 24) / width,
+        right: most > least ? (guess(compact(most, chart.unit), 12) + 24) / width : 0,
       };
     });
   // On a plot too narrow for the text, padding for it would squeeze the dots into a sliver, so where the text would
@@ -752,7 +915,7 @@ function dumbbell(chart: Chart, spec: TopLevelSpec) {
   }
   x.scale = { domain: [low, high], nice: false, zero: false };
   // Vega thins given values down to the tick count Flint sets, so the count is the values'.
-  const grid = { grid: true, gridColor: INK.grid, gridWidth: 1 };
+  const grid = { grid: true, gridColor: INK.grid, gridWidth: 1, gridDash: [2, 3] };
   x.axis = {
     ...("axis" in x && x.axis),
     ...grid,
@@ -797,6 +960,10 @@ function dumbbell(chart: Chart, spec: TopLevelSpec) {
       // Series that tie at a row's end share one dot, so the row prints that value once.
       { window: [{ op: "row_number" as const, as: "nth" }], groupby: [rowField] },
       { filter: "datum.nth === 1" },
+      {
+        calculate: compactExpr(`datum[${JSON.stringify(valueField)}]`, chart.unit),
+        as: "cch_text",
+      },
     ],
     mark: {
       type: "text" as const,
@@ -806,7 +973,7 @@ function dumbbell(chart: Chart, spec: TopLevelSpec) {
       fontSize: 12,
       fill: INK.muted,
     },
-    encoding: { text: { field: valueField, type: "quantitative" as const, format: ",.12~g" } },
+    encoding: { text: { field: "cch_text", type: "nominal" as const } },
   });
   if (printed) spec.layer.push(label("lo"), label("hi"));
 }
@@ -951,6 +1118,7 @@ function gantt(chart: Chart, spec: TopLevelSpec) {
       grid: true,
       gridColor: INK.grid,
       gridWidth: 1,
+      gridDash: [2, 3],
       // The theme hides the value axis where values sit on the marks, but a duration doesn't say when a bar starts.
       labels: true,
       labelFlush: false,
@@ -1023,7 +1191,132 @@ export async function render(compiled: vega.Spec, loader?: vega.Loader) {
  * Draws a chart to an SVG string at the size Flint laid it out for, so its text reads at the size it was set, and
  * finds where each of its marks sits.
  */
+// A heatmap's cells: this tall, as wide as the room allows between these, and red, amber, and green when the numbers
+// rate something. Those three aren't series colors, so the stylesheet leaves them as they are in both themes, and the
+// numbers on them stay dark.
+const CELL = { height: 26, least: 30, most: 64 };
+const RATING = ["#d9605c", "#d9a74a", "#4fa66a"];
+const ON_RATING = "#141414";
+
+/** A rating's color, from red at 0 through amber at a half to green at 1, mixed in sRGB as a hex Vega can draw. */
+function rating(share: number) {
+  const [from, to, at] =
+    share < 0.5 ? [RATING[0]!, RATING[1]!, share * 2] : [RATING[1]!, RATING[2]!, share * 2 - 1];
+  const channel = (hex: string, index: number) =>
+    Number.parseInt(hex.slice(1 + index * 2, 3 + index * 2), 16);
+  return `#${[0, 1, 2]
+    .map((index) =>
+      Math.round(channel(from, index) + (channel(to, index) - channel(from, index)) * at)
+        .toString(16)
+        .padStart(2, "0"),
+    )
+    .join("")}`;
+}
+
+/**
+ * A heatmap, as a report lays out one table against another: a row per table row, a column per series, each cell
+ * shaded by its number from the faintest to the full first series color, the columns' names over them, and every number
+ * printed in its cell.
+ */
+async function heatmap(chart: Chart): Promise<{ svg: string; boxes: Map<number, Box> }> {
+  const numbers = chart.rows.flatMap((row) => row.values.filter((value) => value !== undefined));
+  const [low, high] = [Math.min(...numbers), Math.max(...numbers)];
+  const share = (value: number) => (high === low ? 1 : (value - low) / (high - low));
+  const names = Math.max(...chart.rows.map((row) => guess(row.x, 12))) + 16;
+  const cell = Math.round(
+    Math.max(CELL.least, Math.min(CELL.most, (ROOM - names) / chart.series.length)),
+  );
+  // A column's name turns to read upward when it's wider than its column, as a matrix's headers do.
+  const turned = chart.series.some((name) => guess(name, 12) > cell - 6);
+  const rated = chart.better !== undefined;
+  const values = chart.rows.flatMap((row, number) =>
+    chart.series.map((series, index) => {
+      const value = row.values[index];
+      const strength = value === undefined ? 0 : share(value);
+      return {
+        x: row.x,
+        series,
+        y: value ?? null,
+        row: number,
+        text: value === undefined ? "–" : chart.labels ? compact(value, chart.unit) : "",
+        opacity: value === undefined ? 1 : rated ? 1 : 0.12 + 0.88 * strength,
+        fill:
+          value === undefined
+            ? INK.border
+            : rated
+              ? rating(chart.better === "lower" ? 1 - strength : strength)
+              : SERIES[0],
+        ink:
+          value === undefined
+            ? INK.muted
+            : rated
+              ? ON_RATING
+              : strength > 0.55
+                ? INK.background
+                : INK.foreground,
+      };
+    }),
+  );
+  const fill = { field: "fill", type: "nominal" as const, scale: null, legend: null };
+  const spec: TopLevelSpec = {
+    background: "transparent",
+    padding: PADDING,
+    data: { values },
+    width: cell * chart.series.length,
+    height: CELL.height * chart.rows.length,
+    encoding: {
+      x: {
+        field: "series",
+        type: "nominal",
+        sort: chart.series,
+        scale: { paddingInner: 0.06, paddingOuter: 0 },
+        axis: {
+          orient: "top",
+          title: null,
+          labelAngle: turned ? -40 : 0,
+          labelAlign: turned ? "left" : "center",
+          labelBaseline: turned ? "middle" : "bottom",
+          labelLimit: 180,
+          labelPadding: 6,
+          labelColor: INK.foreground,
+        },
+      },
+      y: {
+        field: "x",
+        type: "nominal",
+        sort: chart.rows.map((row) => row.x),
+        scale: { paddingInner: 0.08, paddingOuter: 0 },
+        axis: { title: null, labelLimit: 200, labelPadding: 8, labelColor: INK.foreground },
+      },
+    },
+    layer: [
+      {
+        mark: { type: "rect", cornerRadius: 2 },
+        encoding: { fill, opacity: { field: "opacity", type: "quantitative", scale: null } },
+      },
+      {
+        mark: { type: "text", fontSize: 12, fontWeight: 500 },
+        encoding: {
+          text: { field: "text" },
+          fill: { field: "ink", type: "nominal", scale: null, legend: null },
+        },
+      },
+    ],
+    config: {
+      ...SPEC_CONFIG,
+      range: { category: [...SERIES] },
+      axis: { ...SPEC_CONFIG.axis, grid: false, gridDash: [] },
+    },
+  };
+  const { view, svg } = await render(compile(spec, { logger: quiet }).spec);
+  const [, width = "0", height = "0"] = /viewBox="0 0 ([\d.]+) ([\d.]+)"/.exec(svg) ?? [];
+  const found = boxes(chart, view, Number(width), Number(height));
+  view.finalize();
+  return { svg, boxes: found };
+}
+
 export async function draw(chart: Chart): Promise<{ svg: string; boxes: Map<number, Box> }> {
+  if (chart.type === "heatmap") return heatmap(chart);
   // SAFETY: Flint declares its output `any`; it is a Vega-Lite spec, and compile() checks it at runtime.
   const spec: TopLevelSpec = assembleVegaLite(input(chart));
   spec.background = "transparent";
@@ -1049,7 +1342,9 @@ export async function draw(chart: Chart): Promise<{ svg: string; boxes: Map<numb
     Number(Reflect.get(Object(planned), "step")) ||
     (Number(planned) || layout(chart).width) / chart.rows.length;
   const upright =
-    waterfall || ((chart.type === "bar" || chart.type === "stacked") && !layout(chart).flip);
+    waterfall ||
+    ((chart.type === "bar" || chart.type === "stacked") && !layout(chart).flip) ||
+    ((chart.type === "line" || chart.type === "area") && chart.xKind === "name");
   // A step's words wrap onto up to three lines under it, the third cut short, and its labels turn sideways only when
   // a single word is wider than its step.
   const wrapped = chart.rows.map((row) => clip(wrap(row.x, step - 12), step - 12));
@@ -1090,13 +1385,14 @@ export async function draw(chart: Chart): Promise<{ svg: string; boxes: Map<numb
               labelLimit: 160,
               labelExpr,
             }
-          : { labelLimit: 140 })),
+          : // Turned a little rather than on end, so a label still reads left to right, ending under its step.
+            { labelAngle: -35, labelAlign: "right", labelBaseline: "top", labelLimit: 140 })),
     },
     axisY: {
       ...spec.config?.axisY,
       ...TYPE,
       labelPadding: 8,
-      ...(waterfall && { labels: true, grid: true, gridColor: INK.border }),
+      ...(waterfall && { labels: true, grid: true, gridColor: INK.border, gridDash: [2, 3] }),
     },
     // Vega guesses text widths without a font, short for CJK and emoji, so legend entries get room to spare.
     legend: {
@@ -1153,6 +1449,29 @@ export async function draw(chart: Chart): Promise<{ svg: string; boxes: Map<numb
     if (time) time.scale = { ...("scale" in time && time.scale), padding: 24 };
     if (color && "legend" in color && color.legend)
       color.legend = { ...color.legend, columns: legendColumns(chart, layout(chart).width) };
+    // Lines named at their ends need no legend to name them again.
+    if (color && endLabeled(chart)) unit.encoding.color = { ...color, legend: null };
+    // A point on every value shows where the table has a number and where the line only joins two. Flint dots only a
+    // line's ends, ringed in the page's color, which on a dark page shrinks them to specks.
+    if (chart.type === "line" && "mark" in unit) {
+      const mark = unit.mark instanceof Object ? unit.mark : { type: unit.mark };
+      if (mark.type === "line")
+        unit.mark = {
+          ...mark,
+          type: "line",
+          point:
+            chart.rows.length <= MOST_POINTS ? { filled: true, size: 40, strokeWidth: 0 } : false,
+        };
+      else if (mark.type === "point" && !("opacity" in mark && mark.opacity === 0))
+        unit.mark = { ...mark, type: "point", size: 40, strokeWidth: 0 };
+    }
+    // Bars as thin as a line of text with room between them, so a long list reads row by row, and upright bars about
+    // as wide as the gaps between them.
+    if ((chart.type === "bar" || chart.type === "stacked") && "mark" in unit) {
+      const band = layout(chart).flip ? y : x;
+      if (band && "field" in band && band.field === "x")
+        band.scale = { ...("scale" in band && band.scale), paddingInner: 0.35, paddingOuter: 0.2 };
+    }
     for (const channel of [x, y])
       if (channel && "axis" in channel && channel.axis)
         channel.axis = {
@@ -1171,6 +1490,51 @@ export async function draw(chart: Chart): Promise<{ svg: string; boxes: Map<numb
             }),
           }),
         };
+    // Numbers on an axis read as they do on the bars: short past a thousand, with their unit. Only the numbers' axis
+    // carries the unit, since the x column's header names its own.
+    for (const channel of [x, y]) {
+      if (!channel || !("field" in channel) || !("type" in channel)) continue;
+      if (channel.type !== "quantitative" || ("axis" in channel && channel.axis === null)) continue;
+      const numbers = channel.field === "y";
+      if (!numbers && channel.field !== "x") continue;
+      const axis = "axis" in channel && channel.axis ? channel.axis : {};
+      if (!("labelExpr" in axis))
+        channel.axis = {
+          ...axis,
+          labelExpr: compactExpr("datum.value", numbers ? chart.unit : undefined),
+        };
+      // A log scale spreads numbers across orders of magnitude, its ticks at the powers of ten.
+      const logged = chart.log === "both" || (numbers ? chart.log === "y" : chart.log === "x");
+      if (logged) {
+        const span = numbers
+          ? chart.rows.flatMap((row) => row.values.filter((value) => value !== undefined))
+          : chart.rows.map((row) => Number(row.x.replaceAll(",", "")));
+        const [low, high] = [Math.min(...span), Math.max(...span)];
+        // Flint pins a scatter plot's axes at 0, which a log scale has no place for.
+        const {
+          domainMin: _min,
+          domainMax: _max,
+          ...scale
+        } = "scale" in channel && channel.scale ? channel.scale : {};
+        channel.scale = {
+          ...scale,
+          type: "log",
+          nice: false,
+          zero: false,
+          domain: [low / 1.25, high * 1.25],
+        };
+        // The ticks are chosen to stand apart, so Vega mustn't thin them further.
+        channel.axis = {
+          ...channel.axis,
+          values: logTicks(low / 1.25, high * 1.25),
+          labelOverlap: false,
+        };
+      }
+    }
+    // With every bar printing its number, Flint hides the value axis but keeps its title, which then names nothing.
+    if (chart.labels && (chart.type === "bar" || chart.type === "stacked"))
+      for (const channel of [x, y])
+        if (channel && "field" in channel && channel.field === "y") channel.title = null;
     // Vega-Lite rounds a stack as a whole, which costs a clipped group per bar, so bars that stack nothing don't stack.
     // Rows that repeat an `x`, which the plugin reports, still stack rather than hide one behind the other.
     if (chart.type === "bar" && new Set(chart.rows.map((row) => row.x)).size === chart.rows.length)
@@ -1259,6 +1623,12 @@ export async function draw(chart: Chart): Promise<{ svg: string; boxes: Map<numb
   if (chart.type === "gantt") gantt(chart, spec);
   if (chart.labels && "layer" in spec)
     spec.layer = spec.layer.filter((layer) => !("__themeSynthetic" in layer));
+  // A sideways bar gets a row about twice a line of text tall, and grouped bars a lane each, rather than the share of a
+  // fixed height Flint gives them.
+  if ((chart.type === "bar" || chart.type === "stacked") && layout(chart).flip) {
+    const lanes = chart.type === "bar" ? chart.series.length : 1;
+    Reflect.set(spec, "height", { step: lanes > 1 ? lanes * 14 + 12 : 26 });
+  }
   // Lines and labels are placed from the drawn chart, so a chart with them is drawn again with them in place.
   const compiled = compile(spec, { logger: quiet }).spec;
   let { view, svg } = await render(compiled);
@@ -1272,16 +1642,19 @@ export async function draw(chart: Chart): Promise<{ svg: string; boxes: Map<numb
       ? valueLabels(chart, view)
       : [];
   const zeros = zeroBars(chart, view);
-  if (labels.length || zeros.length) {
+  const ends = endLabeled(chart) ? endLabels(chart, view) : [];
+  if (labels.length || zeros.length || ends.length) {
     compiled.data = [
       ...(compiled.data ?? []),
       ...(zeros.length ? [{ name: "cch_zeros", values: zeros }] : []),
       ...(labels.length ? [{ name: "cch_labels", values: labels }] : []),
+      ...(ends.length ? [{ name: "cch_ends", values: ends }] : []),
     ];
     compiled.marks = [
       ...(compiled.marks ?? []),
       ...(zeros.length ? [ZEROS] : []),
       ...(labels.length ? [LABELS] : []),
+      ...(ends.length ? END_LABELS : []),
     ];
     view.finalize();
     ({ view, svg } = await render(compiled));
@@ -1299,13 +1672,14 @@ const SPEC_CONFIG = {
   view: { stroke: null },
   range: { category: [...SERIES] },
   mark: { color: SERIES[0] },
-  bar: { cornerRadiusEnd: 4 },
+  bar: { cornerRadiusEnd: 2 },
   line: { strokeWidth: 2 },
   axis: {
     domain: false,
     ticks: false,
     grid: true,
     gridColor: INK.border,
+    gridDash: [2, 3],
     labelColor: INK.muted,
     titleColor: INK.muted,
     labelFontSize: 12,

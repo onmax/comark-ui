@@ -69,7 +69,7 @@ ${sizes.trim()}
     expect(document.meta.issues).toEqual([]);
     expect(document.meta.issueRules).toEqual({});
     const html = await renderHtmlFromDocument(document, { components });
-    expect(html).toContain('<figure class="cch" data-comark-frame data-type="vega-lite">');
+    expect(html).toContain('<figure class="cch" data-type="vega-lite">');
     expect(html).toContain('<svg role="img" aria-label="Bundle size"');
     expect(html).toContain("<td>annotate</td>");
   });
@@ -77,11 +77,11 @@ ${sizes.trim()}
   it("draws an SVG over the table it came from, and inlines the styles once", async () => {
     const html = await render(`${chart(sizes, '{title="Bundle size"}')}\n\n${chart(months)}`);
     expect(html).toContain(
-      '<figure class="cch" data-comark-frame data-type="bar"><figcaption>Bundle size</figcaption><div class="cch-plot"><svg role="img" aria-label="Bundle size" xmlns="http://www.w3.org/2000/svg"',
+      '<figure class="cch" data-type="bar"><figcaption>Bundle size</figcaption><div class="cch-plot"><svg role="img" aria-label="Bundle size" xmlns="http://www.w3.org/2000/svg"',
     );
     // Bars are the default, whatever x holds.
     expect(html).toContain(
-      '<figure class="cch" data-comark-frame data-type="bar"><div class="cch-plot"><svg role="img" aria-label="bar chart of before, after by month"',
+      '<figure class="cch" data-type="bar"><div class="cch-plot"><svg role="img" aria-label="bar chart of before, after by month"',
     );
     expect(html).toContain('<details class="cch-data"><summary>Data</summary><table>');
     expect(html).toContain("<td>annotate</td>");
@@ -100,13 +100,17 @@ ${sizes.trim()}
     ).toEqual(["table", "markdown"]);
   });
 
-  it("takes the card's side padding from --cch-padding, which the Data footer spans too", async () => {
-    const html = await render(chart(sizes));
-    expect(html).toContain(":where(.cch){--cch-padding:1.5rem}");
-    expect(html).toMatch(/\.cch\{[^}]*padding:1\.25rem var\(--cch-padding\) 0;/);
-    expect(html).toMatch(
-      /\.cch-data\{margin:1rem calc\(-1 \* var\(--cch-padding\)\) 0;padding:\.75rem var\(--cch-padding\);/,
+  it("draws a section under a hairline, with its title and what to read in it at the start", async () => {
+    const html = await render(
+      chart(sizes, '{title="Bundle size" description="The two packages most pages load."}'),
     );
+    expect(html).toContain(
+      '<figure class="cch" data-type="bar"><figcaption>Bundle size</figcaption><p class="cch-description">The two packages most pages load.</p><div class="cch-plot">',
+    );
+    expect(html).toContain(":where(.cch){--cch-padding:0}");
+    expect(html).toMatch(/\.cch\{[^}]*border-top:1px solid var\(--_comark-border\)/);
+    expect(html).not.toContain("data-comark-frame");
+    expect(await issues(chart(sizes, '{description="Read the first bar."}'))).toEqual([]);
   });
 
   it("labels the chart with the table's own headers, dots and all", async () => {
@@ -206,10 +210,10 @@ ${sizes.trim()}
       "300",
       "600",
       "900",
-      "1,200",
-      "1,500",
-      "1,800",
-      "2,100",
+      "1.2k",
+      "1.5k",
+      "1.8k",
+      "2.1k",
     ]);
     expect(names).toContain(">standup</text>");
     // A grid line at every tick and a guide along every row.
@@ -220,7 +224,7 @@ ${sizes.trim()}
       .flatMap(([, inside]) => [...inside!.matchAll(/<text[^>]*>([^<]+)<\/text>/g)])
       .map(([, text]) => text);
     expect(printed.sort()).toEqual(
-      ["1,320", "1,450", "160", "2,100", "380", "540", "820", "980"].sort(),
+      ["1.32k", "1.45k", "160", "2.1k", "380", "540", "820", "980"].sort(),
     );
   });
 
@@ -421,7 +425,7 @@ The first slice.
 :::
 ::`;
     const html = await annotated(markdown);
-    expect(html).toContain('viewBox="0 0 544 397"');
+    expect(html).toContain('viewBox="0 0 624 397"');
     expect(html).toContain('ca-stamp" style="left:0;top:0;translate:-50% -50%"');
   });
 
@@ -542,8 +546,8 @@ ${sizes.trim()}
       chart(months, '{type="waterfall"}'),
     ].join("\n\n");
     expect(await issues(markdown)).toEqual([
-      "`::chart` 1: `colour` isn't a prop of `::chart`. Valid props: type, x, y, title, labels, horizontal.",
-      '`::chart` 1: `type="donut"` isn\'t a chart type. Use `bar`, `stacked`, `line`, `area`, `scatter`, `dumbbell`, `waterfall`, `pie`, `gantt` or `sankey`.',
+      "`::chart` 1: `colour` isn't a prop of `::chart`. Valid props: type, x, y, title, description, unit, log, better, labels, horizontal.",
+      '`::chart` 1: `type="donut"` isn\'t a chart type. Use `bar`, `stacked`, `line`, `area`, `scatter`, `dumbbell`, `waterfall`, `pie`, `heatmap`, `gantt` or `sankey`.',
       '`::chart` 2: `y` names column `befor`, but its table has `month`, `before` and `after`. Separate several with commas, as in `y="before, after"`.',
       "`::chart` 3: row 1 has `41 kB` in `size`, which isn't a number. Write the number alone, such as `1200` or `1,200`, and put the unit in the header, such as `size (ms)`.",
       '`::chart` 4: a pie shows one column of numbers, and this one has `before` and `after`. Name one with `y`, or use `type="bar"`.',
@@ -616,7 +620,7 @@ ${sizes.trim()}
     const html = await render(chart(build, '{type="gantt" labels}'));
     expect(await issues(chart(build, '{type="gantt" labels}'))).toEqual([]);
     expect(html).toContain(
-      '<figure class="cch" data-comark-frame data-type="gantt"><div class="cch-plot"><svg role="img" aria-label="gantt chart of step, from start to end"',
+      '<figure class="cch" data-type="gantt"><div class="cch-plot"><svg role="img" aria-label="gantt chart of step, from start to end"',
     );
     const { ticks, names } = axes(html);
     expect(names).toEqual([
@@ -851,7 +855,7 @@ No such run.
         "{horizontal labels}",
       ),
     );
-    expect(value(sideways, "1,284")).toBe("#ffffff");
+    expect(value(sideways, "1.28k")).toBe("#ffffff");
     expect(value(sideways, "3")).toBe("#0a0a0a");
     expect(await issues(chart(sizes, '{type="stacked" labels}'))).toEqual([]);
   });
@@ -1004,7 +1008,7 @@ No such run.
     expect(await issues(chart(budget, '{type="sankey" labels}'))).toEqual([]);
     const html = await render(chart(budget, '{type="sankey" labels}'));
     expect(html).toContain(
-      '<figure class="cch" data-comark-frame data-type="sankey"><div class="cch-plot"><svg role="img" aria-label="sankey chart of amount from from to to"',
+      '<figure class="cch" data-type="sankey"><div class="cch-plot"><svg role="img" aria-label="sankey chart of amount from from to to"',
     );
     // Each node takes its place from the row that first names it.
     expect(words(html)).toEqual([
@@ -1138,5 +1142,104 @@ Salary.
     const html = await render(chart(months, '{x="day"}'));
     expect(html).not.toContain("cch");
     expect(html).toContain("<td>2026-04</td>");
+  });
+
+  describe("reports", () => {
+    // The texts a chart prints, in the order the SVG draws them.
+    const texts = (html: string) =>
+      [...html.matchAll(/<text [^>]*>([^<]+)<\/text>/g)].map(([, text]) => text);
+
+    it("prints each bar's number unless `labels=false`, short past a thousand and with its `unit`", async () => {
+      const costs = `
+| model | cost |
+| --- | --: |
+| small | 63 |
+| large | 22,200 |`;
+      expect(texts(await render(chart(costs, '{unit="$"}')))).toEqual(
+        expect.arrayContaining(["$63", "$22.2k"]),
+      );
+      expect(texts(await render(chart(costs, '{unit="ms" labels=false}')))).toEqual(
+        expect.arrayContaining(["20k ms"]),
+      );
+      expect(texts(await render(chart(costs, '{unit="ms" labels=false}')))).not.toContain(
+        "22.2k ms",
+      );
+      expect(await issues(chart(costs, '{unit="$"}'))).toEqual([]);
+    });
+
+    it("names each line where it ends, in its color, rather than in a legend", async () => {
+      const html = await render(chart(months, '{type="line"}'));
+      expect(html).toMatch(/<text [^>]*fill="#4d97de"[^>]*>before<\/text>/);
+      expect(html).toMatch(/<text [^>]*fill="#bb8558"[^>]*>after<\/text>/);
+      expect(html).not.toContain("role-legend");
+    });
+
+    it("puts the numbers or the x column on a log scale, ticking at 1, 2, and 5", async () => {
+      const costs = `
+| cost per task | score |
+| --: | --: |
+| 0.005 | 10 |
+| 0.2 | 28 |
+| 20 | 65 |`;
+      const html = await render(chart(costs, '{type="scatter" log="x"}'));
+      expect(texts(html)).toEqual(expect.arrayContaining(["0.01", "0.1", "1", "10"]));
+      expect(await issues(chart(costs, '{type="scatter" log="x"}'))).toEqual([]);
+      expect(
+        await issues(
+          [
+            chart(costs, '{type="scatter" log="z"}'),
+            chart(costs, '{type="stacked" log}'),
+            chart(sizes, '{log="x"}'),
+            chart(`| x | y |\n| --- | --: |\n| a | 0 |\n| b | 4 |`, "{log}"),
+          ].join("\n\n"),
+        ),
+      ).toEqual([
+        '`::chart` 1: `log="z"` isn\'t an axis. Write `log` alone for the numbers\' axis, `log="x"` for the x column\'s, or `log="both"`.',
+        '`::chart` 2: a stacked bar chart can\'t use a log scale, since its parts add up from zero. Remove `log`, or use `type="bar"` or `type="line"`.',
+        '`::chart` 3: `log="x"` puts the x column on a log scale, and only a line or a scatter plot over numbers has one. Use `log` alone for the numbers\' axis.',
+        "`::chart` 4: a log scale has no place for 0, since it only holds numbers above 0. Remove `log`, or leave the cell empty.",
+      ]);
+    });
+
+    it("draws a heatmap: a cell per row and column, shaded by its number and printing it", async () => {
+      const matrix = `
+| customer | bugs | forecast |
+| --- | --: | --: |
+| Northwind | 14 | 6 |
+| Fabrikam | 5 | |`;
+      const html = await render(chart(matrix, '{type="heatmap"}'));
+      expect(html).toContain('data-type="heatmap"');
+      expect(texts(html)).toEqual(
+        expect.arrayContaining(["bugs", "forecast", "Northwind", "Fabrikam", "14", "6", "5", "–"]),
+      );
+      // The largest number is the full first series color, and the smallest the faintest.
+      expect(html).toMatch(/fill="#4d97de" opacity="1"/);
+      expect(html).toMatch(/fill="#4d97de" opacity="0\.12"/);
+      expect(await issues(chart(matrix, '{type="heatmap"}'))).toEqual([]);
+    });
+
+    it("rates a heatmap's cells red to green with `better`", async () => {
+      const scores = `
+| agent | score |
+| --- | --: |
+| one | 9 |
+| two | 2 |`;
+      const higher = await render(chart(scores, '{type="heatmap" better="higher"}'));
+      expect(higher).toMatch(/fill="#4fa66a"/);
+      expect(higher).toMatch(/fill="#d9605c"/);
+      const lower = await render(chart(scores, '{type="heatmap" better="lower"}'));
+      expect(lower.indexOf('fill="#d9605c"')).toBeLessThan(lower.indexOf('fill="#4fa66a"'));
+      expect(
+        await issues(
+          [
+            chart(scores, '{type="heatmap" better="more"}'),
+            chart(scores, '{better="higher"}'),
+          ].join("\n\n"),
+        ),
+      ).toEqual([
+        '`::chart` 1: `better="more"` isn\'t a direction. Use `better="higher"` or `better="lower"`.',
+        '`::chart` 2: `better` colors a heatmap\'s cells from bad to good, and a bar chart has no cells. Remove it, or use `type="heatmap"`.',
+      ]);
+    });
   });
 });

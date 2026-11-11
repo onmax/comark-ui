@@ -1,7 +1,7 @@
 ---
 title: Charts
 description: Charts from a Markdown table, drawn to SVG while parsing.
-keywords: graph, plot, bar chart, line chart, pie chart, scatter plot, area chart, gantt, timeline, roadmap, schedule, sankey, flow diagram, alluvial, cashflow, box plot, heatmap, benchmark, data visualization, dataviz, Vega, Vega-Lite
+keywords: graph, plot, report, dashboard, bar chart, line chart, pie chart, scatter plot, area chart, gantt, timeline, roadmap, schedule, sankey, flow diagram, alluvial, cashflow, box plot, heatmap, benchmark, data visualization, dataviz, Vega, Vega-Lite
 tagline: A chart drawn to SVG from a Markdown table, with the table kept under it.
 group: Charts and diagrams
 icon: chart-column
@@ -103,7 +103,8 @@ credits: 'Laid out by Microsoft Research''s <a href="https://github.com/microsof
 - Vega draws every chart while parsing, so the browser never loads it.
 - A Copy button copies the chart as a PNG, and its menu copies the data as a table for a spreadsheet or as Markdown.
 - [Notes](/charts/notes) mark a row or a value, or draw a line across the chart at a target.
-- Ten types cover bars, lines, pies, [gantt charts](#gantt-charts), and [sankeys](#sankey). A [Vega-Lite spec](#vega-lite) draws anything else in the same card, colors, and type.
+- Eleven types cover bars, lines, pies, [heatmaps](#heatmap), [gantt charts](#gantt-charts), and [sankeys](#sankey). A [Vega-Lite spec](#vega-lite) draws anything else in the same frame, colors, and type.
+- Charts read like a report's: a section under a hairline with its title and what to read in it, values on the bars, lines named where they end, [units](#unit) such as `$22.2k`, and [log scales](#log-scale) for numbers that span orders of magnitude.
 - Without the plugin, the table still renders as a table.
 
 ## Usage
@@ -136,6 +137,7 @@ Use the `type` prop to pick the chart. It defaults to `bar`, whatever the table 
 | `dumbbell` | Before and after for several metrics. | Metric names, then two or more columns, such as `before` and `after`. |
 | `waterfall` | How changes add up to a total. | The starting total, then each change, negative for a drop, then the end total, all in one column. |
 | `pie` | Shares of one whole. | Names, then one column of numbers that aren't negative. |
+| `heatmap` | One table against another, such as questions per customer and type, or scores per agent and section. | Names, then one column per column of cells. See [Heatmap](#heatmap). |
 | `gantt` | Steps or tasks over time, such as a build, a deploy, or a plan. | One row per bar: its name, its start, and its end, as numbers or dates. See [Gantt charts](#gantt-charts). |
 | `sankey` | Where an amount goes: a budget, a cashflow, a bundle's bytes. | One row per flow: where it comes from, where it goes, and how much. See [Sankey](#sankey). |
 
@@ -239,7 +241,7 @@ Use the `x` prop to pick the column along the x axis. It defaults to the first c
 
 ### Series
 
-Use the `y` prop to pick the columns to draw, separated by commas. It defaults to every column but `x`. Two or more series get a legend over the plot, as do a pie's slices and a gantt's groups.
+Use the `y` prop to pick the columns to draw, separated by commas. It defaults to every column but `x`. A line chart of two to eight series names each line where it ends, in its color. Other charts of two or more series get a legend over the plot, as do a pie's slices and a gantt's groups.
 
 ::example
 ```md
@@ -256,15 +258,49 @@ Use the `y` prop to pick the columns to draw, separated by commas. It defaults t
 
 ### Title
 
-Use the `title` prop to caption the chart. It's also the chart's name for screen readers.
+Use the `title` prop to caption the chart. It's also the chart's name for screen readers. Use the `description` prop to say what to read in it, in a line under the title.
 
 ::example
 ```md
-::chart{title="Rubber ducks bought, by team"}
+::chart{title="Rubber ducks bought, by team" description="Backend bought twice as many after the Tuesday incident."}
 | team | ducks |
 | --- | --: |
 | backend | 41 |
 | frontend | 18 |
+::
+```
+::
+
+### Unit
+
+Use the `unit` prop to print the chart's numbers with their unit, on the bars and the value axis. A currency sign goes before the number, `%` right after it, and anything else after a space. From a thousand up, numbers print as their first three digits and a letter, such as `$22.2k` or `1.4M`. The **Data** table keeps every digit.
+
+::example
+```md
+::chart{unit="$" title="Total cost of a full benchmark run"}
+| model | low | high |
+| --- | --: | --: |
+| small | 40 | 121 |
+| medium | 980 | 4,800 |
+| large | 2,900 | 22,200 |
+::
+```
+::
+
+### Log scale
+
+Use the `log` prop to put numbers that span orders of magnitude, such as costs or response times, on a log scale. Write `log` alone for the numbers' axis, `log="x"` for the x column of a line or a scatter plot over numbers, or `log="both"`. The axis ticks at 1, 2, and 5 in each power of ten, or at the powers of ten alone when those would crowd it. Lines, scatter plots, and bar charts take it, and every number on a log axis must be above 0.
+
+::example
+```md
+::chart{type="line" log="x" title="Score against cost per task ($)"}
+| cost | small | large |
+| --: | --: | --: |
+| 0.005 | 10 | |
+| 0.05 | 19 | |
+| 0.2 | 28 | |
+| 2 | | 55 |
+| 20 | | 65 |
 ::
 ```
 ::
@@ -289,11 +325,11 @@ Upright bars wrap a long name onto up to three lines, and cut it short past that
 
 ### Labels
 
-Use the `labels` prop to print the numbers on the chart. Write it alone, with no value. Without it, the value axis and the **Data** table carry the numbers.
+Bars, stacked bars, and heatmaps print their numbers. Write `labels=false` to leave them to the value axis and the **Data** table. On other types, use the `labels` prop to print the numbers, written alone, with no value.
 
 ::example
 ```md
-::chart{type="stacked" labels title="Standup by topic (min)"}
+::chart{type="stacked" title="Standup by topic (min)"}
 | day | work | weekend | pigeons |
 | --- | --: | --: | --: |
 | Monday | 4 | 11 | 2 |
@@ -314,6 +350,36 @@ A `bar` worth zero draws as a thin, faded stroke in its series' color at the bas
 
 > [!NOTE]
 > Lines, areas, scatter plots, and pies have nothing to print on, so the plugin reports `labels` on them.
+
+### Heatmap
+
+A `heatmap` draws a cell for each row and column of its table, shaded from the faintest to the full first series color by its number, with the number printed in it. The columns' names sit over the cells, turned to read upward when they're wider than a cell. An empty cell draws gray, with a dash.
+
+::example
+```md
+::chart{type="heatmap" title="Questions per customer and type"}
+| customer | bug | forecast | purchasing | alerts |
+| --- | --: | --: | --: | --: |
+| Northwind | 14 | 6 | 9 | 4 |
+| Contoso | 8 | 9 | 5 | 6 |
+| Fabrikam | 5 | 7 | 3 | |
+::
+```
+::
+
+Use the `better` prop when the numbers rate something, such as scores or pass rates: `better="higher"` colors the cells from red at the lowest number through amber to green at the highest, and `better="lower"` the other way round.
+
+::example
+```md
+::chart{type="heatmap" better="higher" title="Score per section, out of 10"}
+| agent | features | data | auth | validation |
+| --- | --: | --: | --: | --: |
+| first | 10 | 10 | 10 | 6.2 |
+| second | 10 | 9 | 9.6 | 4.6 |
+| third | 1.9 | 7.6 | 6.7 | 0 |
+::
+```
+::
 
 ### Gantt charts
 
@@ -437,7 +503,7 @@ Leave `data` out of the spec, and name the columns in its `encoding`. The spec c
 ````
 ::
 
-The chart gets the other types' card, colors, and typeface wherever the spec sets none, and the spec's own `config` wins over them. A spec chart takes only `title` from the props, and no notes. Draw notes with a `text` or `rule` layer in the spec.
+The chart gets the other types' frame, colors, and typeface wherever the spec sets none, and the spec's own `config` wins over them. A spec chart takes only `title` and `description` from the props, and no notes. Draw notes with a `text` or `rule` layer in the spec.
 
 ### Copy
 
@@ -490,11 +556,15 @@ The Copy button is named "Copy the chart as an image", or "Copy the chart's data
 
 | Prop | Default | Description |
 | --- | --- | --- |
-| `type` | `bar` | `bar`, `stacked`, `line`, `area`, `scatter`, `dumbbell`, `waterfall`, `pie`, `gantt`, or `sankey`. |
+| `type` | `bar` | `bar`, `stacked`, `line`, `area`, `scatter`, `dumbbell`, `waterfall`, `pie`, `heatmap`, `gantt`, or `sankey`. |
 | `x` | The first column | The column along the x axis. |
 | `y` | Every column but `x` | The columns to draw, separated by commas. |
 | `title` | — | The chart's caption, and its name for screen readers. |
-| `labels` | Off | Prints the numbers on the chart, as [Labels](#labels) shows. Takes no value. Lines, areas, scatter plots, and pies don't take it. |
+| `description` | — | What to read in the chart, in a line under its title. |
+| `unit` | — | The numbers' unit, as [Unit](#unit) shows: `$` before them, `%` or `ms` after. Gantts and sankeys don't take it. |
+| `log` | Off | Puts an axis on a log scale, as [Log scale](#log-scale) shows: alone for the numbers' axis, `x`, or `both`. Lines, scatter plots, and bar charts take it. |
+| `better` | — | `higher` or `lower`: colors a heatmap's cells from red to green, as [Heatmap](#heatmap) shows. |
+| `labels` | On for bars, stacked bars, and heatmaps | Prints the numbers on the chart, as [Labels](#labels) shows. Write `labels=false` to turn it off. Lines, areas, scatter plots, and pies don't take it. |
 | `horizontal` | Off, or on past 40 bars | Turns bars sideways. Takes no value. Only `bar` and `stacked` charts take it. Dumbbells and gantts always run sideways. |
 
 ### Options
@@ -521,6 +591,7 @@ The plugin adds these problems to `meta.issues`. Each issue names its chart by i
 - Content besides the table and its annotations.
 - Data that doesn't fit the type, such as a line or an area of one row, a scatter without numbers on x, a dumbbell with one column, a pie or a waterfall with several, and a pie with a negative number or nothing but zeros.
 - `labels` or `horizontal` with a value, or on a type that doesn't take it.
+- `log` on a type or an axis that can't take it, or over a number that isn't above 0, `better` that isn't `higher` or `lower` or on a chart that isn't a heatmap, and `unit`, `log`, or `better` on a gantt or a sankey.
 - A waterfall whose last row isn't its first plus every change.
 - A chart that couldn't be drawn, which shows its table alone.
 - A sankey without a column to flow from, one to flow to, and one of amounts, a flow of 0 or less or into its own node, a loop, and a node that sends out more than it takes in.
@@ -534,7 +605,7 @@ Rendering never throws. A chart with a problem draws what it can:
 - A cell that isn't a number is left out.
 - A type that doesn't fit draws bars.
 - A waterfall whose end total doesn't add up still draws its last row as a total.
-- `labels` or `horizontal` on a type that doesn't take it is ignored.
+- `labels`, `horizontal`, `log`, or `better` where it doesn't apply is ignored.
 - A pie or a waterfall draws only its first column.
 - A gantt row without a start or an end isn't drawn, and a gantt colors by its first column of names.
 - A sankey leaves out a flow it can't draw, and a sankey with a loop shows its table.
@@ -579,7 +650,7 @@ The comark-ui agent skill knows the table shape for each chart type and how to c
 
 ## Theme
 
-A chart is a card in the style of [shadcn/ui](https://ui.shadcn.com), so it switches with the page's dark mode. The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
+A chart is a section of a report, as a dashboard lays out its charts: a hairline over it, its title and description at the start, the chart, and its data folded under it, with no card around it. It switches with the page's dark mode. The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
 
 ### Shared tokens
 
@@ -588,36 +659,40 @@ Charts read these [shared tokens](/guide/theming), and their series read Nuxt UI
 | Token | Falls back to | Used for |
 | --- | --- | --- |
 | `--comark-foreground` | `--ui-text-highlighted`, `--foreground` | Values, the caption, the data table |
-| `--comark-muted` | `--ui-text-muted`, `--muted-foreground` | Axis labels, the **Data** toggle, waterfall totals, the copy buttons' icons and the menu's hints |
-| `--comark-border` | `--ui-border`, `--border` | The card, grid lines, the data table's rules, and the copy buttons' and the menu's outline |
-| `--comark-background` | `--ui-bg`, `--background` | The card, the edges between slices and around points, the copy buttons, the menu, and a copied PNG's background |
+| `--comark-muted` | `--ui-text-muted`, `--muted-foreground` | Axis labels, the description, the **Data** toggle, waterfall totals, the copy buttons' icons and the menu's hints |
+| `--comark-border` | `--ui-border`, `--border` | The hairline over the chart, dotted grid lines, a heatmap's empty cells, the data table's rules, and the copy buttons' and the menu's outline |
+| `--comark-background` | `--ui-bg`, `--background` | The edges between slices, the copy buttons, the menu, and a copied PNG's background |
 | `--comark-accent` | `--ui-bg-elevated`, `--accent` | A hovered copy button or menu item, and the arrow while its menu is open |
 | `--comark-ring` | `--ui-primary`, `--ring` | The focus ring on the **Data** toggle and the copy buttons |
-| `--comark-radius` | twice `--ui-radius`, `--radius` | The card's, the copy buttons', and the menu's corners |
+| `--comark-radius` | twice `--ui-radius`, `--radius` | The copy buttons' and the menu's corners |
 | `--comark-shadow` | A soft shadow, deeper in dark mode | The menu |
 | `--comark-font` | `--font-sans` | All text |
 | `--comark-chart-1` to `-6` | `--ui-chart-1` to `-6`, `--chart-1` to `-6` | Series, in column order |
 
-Without either, series use six colors that read on light and dark pages: blue, orange, green, purple, rose, and yellow. A waterfall's increases and decreases are series 3 and 5.
+Without either, series use twelve muted colors at one lightness, each at 3:1 on white and 6:1 on black: blue, tan, teal, violet, rose, amber, sky, green, pink, slate, olive, and indigo. A waterfall's increases and decreases are series 3 and 5, and a heatmap shades series 1. A heatmap with `better` uses its own red, amber, and green, which stay the same in both themes.
 
 ### Variables
 
 | Variable | Default | Used for |
 | --- | --- | --- |
-| `--cch-padding` | `1.5rem` | The space inside the card's sides. The **Data** footer runs to the card's edges, so it follows. |
+| `--cch-padding` | `0` | The space inside the chart's sides. Set it, with a border, to frame a chart as a card. |
 
 Marks on a chart use comark-annotate's styles, and its [variables](/annotate#variables) for their colors.
 
 ### Classes
 
-A chart is a `figure.cch` with `data-type`, such as `data-type="bar"`, holding a `figcaption`, the SVG in `.cch-plot`, and the table in `details.cch-data` as its footer. A chart with marks adds `.cch-marked` to `.cch-plot`. `.cch-bar`, over the card's top corner, holds `.cch-status` and `.cch-copy`. `.cch-copy` holds the Copy button `.cch-copy-main`, the arrow `.cch-copy-more`, and the menu `.cch-menu`, whose items are `button[data-chart-copy]`.
+A chart is a `figure.cch` with `data-type`, such as `data-type="bar"`, holding a `figcaption`, the description in `p.cch-description`, the SVG in `.cch-plot`, and the table in `details.cch-data` as its footer. A chart with marks adds `.cch-marked` to `.cch-plot`. `.cch-bar`, over the chart's top corner, holds `.cch-status` and `.cch-copy`. `.cch-copy` holds the Copy button `.cch-copy-main`, the arrow `.cch-copy-more`, and the menu `.cch-menu`, whose items are `button[data-chart-copy]`.
 
 ```css
 :root {
   --comark-chart-1: oklch(0.65 0.2 250);
 }
 
+/* A chart framed as a card. */
 .cch {
-  --cch-padding: 1rem;
+  --cch-padding: 1.5rem;
+  padding-bottom: 1rem;
+  border: 1px solid var(--comark-border, #e5e5e5);
+  border-radius: 0.75rem;
 }
 ```

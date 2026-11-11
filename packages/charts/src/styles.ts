@@ -13,20 +13,23 @@ const swap = (hex: string, color: string, props = ["fill", "stroke"]) =>
 export const css = `@layer comark{${[
   disclosureMotion(".cch-data"),
   theme(".cch", "shadow"),
-  // The Data footer runs to the card's edges, so it spans the same side padding the card has.
-  ":where(.cch){--cch-padding:1.5rem}",
-  // A card, as shadcn/ui frames its charts: the title on top, the chart, and the data as its footer.
-  ".cch{margin:1.5rem 0;padding:1.25rem var(--cch-padding) 0;border:1px solid var(--_comark-border);border-radius:var(--_comark-radius);background:var(--_comark-background);color:var(--_comark-foreground);font-family:var(--_comark-font)}",
-  // Only the card's own caption: a marked chart's notes sit in comark-annotate's figcaption inside it.
-  ".cch>figcaption{margin-bottom:1rem;font-weight:600;font-size:1rem;line-height:1.5rem}",
+  // A section of a report, as a dashboard lays its charts out: a hairline over it, the title and what to read in it
+  // at the start, the chart, and the data folded under it. No card, so charts sit in a column or a grid like text.
+  ":where(.cch){--cch-padding:0}",
+  ".cch{margin:2rem 0;padding:1rem var(--cch-padding) 0;border-top:1px solid var(--_comark-border);color:var(--_comark-foreground);font-family:var(--_comark-font)}",
+  // Only the chart's own caption: a marked chart's notes sit in comark-annotate's figcaption inside it. A page's
+  // typeset may center captions and mute them, as it does an image's.
+  ".cch>figcaption{margin:0 0 1rem;color:var(--_comark-foreground);font-weight:500;font-size:.9375rem;line-height:1.375rem;text-align:start}",
+  ".cch>figcaption:has(+.cch-description){margin-bottom:.125rem}",
+  ".cch-description{max-width:46rem;margin:0 0 1rem;color:var(--_comark-muted);font-size:.8125rem;line-height:1.25rem}",
   // Every chart keeps the size its text was set for, and a narrower column shrinks it to fit, as it does a screenshot,
   // since marks sit at percentages of the SVG. Only the chart's own SVG: a mark's circle and arrow are SVGs too, and
-  // `height:auto` would stretch them to their viewBox. A chart narrower than its card sits in the middle.
-  ":is(.cch-plot,.cch-marked .ca-frame)>svg{display:block;max-width:100%;height:auto;margin-inline:auto}",
+  // `height:auto` would stretch them to their viewBox. A chart narrower than the column starts where its title does.
+  ":is(.cch-plot,.cch-marked .ca-frame)>svg{display:block;max-width:100%;height:auto;margin-inline:0 auto}",
   ".cch-plot text{font-family:var(--_comark-font)}",
-  // comark-annotate pins side notes to its stage's edges, so the stage is what sits in the middle, with the notes'
-  // gutters beside the chart rather than at the card's edges.
-  ".cch-marked .ca-stage{box-sizing:border-box;width:fit-content;max-width:100%;margin-inline:auto}",
+  // comark-annotate pins side notes to its stage's edges, so the stage is what's placed, with the notes' gutters
+  // beside the chart rather than at the column's edges.
+  ".cch-marked .ca-stage{box-sizing:border-box;width:fit-content;max-width:100%;margin-inline:0 auto}",
   ".cch-marked .ca-frame{width:fit-content;max-width:100%}",
   // A narrow column outlines a mark that draws nothing, which on a screenshot shows its area; on a chart it marks a
   // point, so it would be a broken ring under the letter, which marks the point alone.
@@ -47,10 +50,10 @@ export const css = `@layer comark{${[
       `var(--comark-chart-${index + 1},var(--ui-chart-${index + 1},var(--chart-${index + 1},${hex})))`,
     ),
   ),
-  // The Copy bar sits over the card's top corner and shows on hover or focus, as a screenshot's Copy button does, so
+  // The Copy bar sits over the section's top corner and shows on hover or focus, as a screenshot's Copy button does, so
   // a chart keeps its height. A screen with no hover always shows it.
   ".cch{position:relative}",
-  ".cch-bar{position:absolute;top:.75rem;right:.75rem;z-index:1;display:flex;align-items:center;gap:.25rem;font:500 .75rem/1rem var(--_comark-font);opacity:0;transition:opacity .15s}",
+  ".cch-bar{position:absolute;top:.75rem;right:0;z-index:1;display:flex;align-items:center;gap:.25rem;font:500 .75rem/1rem var(--_comark-font);opacity:0;transition:opacity .15s}",
   "html:not([data-charts-ready]) .cch-bar{display:none}",
   ".cch:is(:hover,:focus-within)>.cch-bar,.cch-bar:has([aria-expanded=true],.cch-status:not(:empty)){opacity:1}",
   "@media (hover:none){.cch-bar{opacity:1}}",
@@ -72,7 +75,7 @@ export const css = `@layer comark{${[
   ".cch-menu svg{margin-top:.125rem}",
   ".cch-menu b{display:block;font-weight:500}",
   ".cch-menu small{display:block;color:var(--_comark-muted);font-size:.75rem;font-weight:400;line-height:1rem}",
-  ".cch-data{margin:1rem calc(-1 * var(--cch-padding)) 0;padding:.75rem var(--cch-padding);border-top:1px solid var(--_comark-border);color:var(--_comark-muted);font-size:.875rem;line-height:1.25rem}",
+  ".cch-data{margin:.5rem 0 0;color:var(--_comark-muted);font-size:.8125rem;line-height:1.25rem}",
   ".cch-data summary{width:fit-content;cursor:pointer}",
   ".cch>table{margin-bottom:1.25rem}",
   ".cch-data summary:focus-visible{border-radius:calc(var(--_comark-radius) - 4px);outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--_comark-ring) 50%,transparent)}",
