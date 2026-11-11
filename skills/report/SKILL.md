@@ -75,6 +75,8 @@ Done when the page follows this order and nothing the reader decides on is folde
 
    These commands use the [global Vite+ CLI](https://viteplus.dev/guide/global-cli). Without it, `pnpm dlx` takes the same arguments.
 
+   A host can render blocks of its own, such as Drop's `::drop`, which shows another drop inside the page. Lint reports each as an unknown component, so name them in a `comark-lint.config.mjs` in the folder you lint from: `export default { components: ["drop"] }`.
+
 2. Render it as [references/blocks.md](references/blocks.md#render-it-locally) shows, and read every screenshot, closed and open. Labels must not overlap, each chart must say what its sentence says, table cells must stay short, and diagram text must read at the size of the body text. A wide flowchart renders small: switch it to `TB`, shorten its labels, or split it past about ten nodes.
 3. Hand it over where the task says. When it goes to a host such as Drop, publish it as the host's skill describes and give the link.
 
