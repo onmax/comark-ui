@@ -47,7 +47,10 @@ function expectLineNames(html: string, namesByHeight: string[]) {
 }
 
 describe("report chart regressions", () => {
-  it.each([["upright", ""], ["horizontal", "{horizontal}"]])(
+  it.each([
+    ["upright", ""],
+    ["horizontal", "{horizontal}"],
+  ])(
     "includes a series' outside bar value in its annotation with %s bars",
     async (_kind, props) => {
       for (const sign of [1, -1]) {
@@ -91,17 +94,22 @@ describe("report chart regressions", () => {
     },
   );
 
-  it.each([["upright", '{type="stacked"}'], ["horizontal", '{type="stacked" horizontal}']])(
-    "totals the rendered stacks for equivalent timestamps with %s bars",
-    async (_kind, props) => {
-      for (const [first, second, totals] of [
-        ["10 | 20", "30 | 40", ["100"]],
-        ["-10 | -20", "-30 | -40", ["-100"]],
-        ["10 | -20", "30 | -40", ["-60", "40"]],
-      ] as const) {
+  it.each([
+    ["upright", '{type="stacked"}'],
+    ["horizontal", '{type="stacked" horizontal}'],
+  ])("totals the rendered stacks for equivalent timestamps with %s bars", async (_kind, props) => {
+    for (const [first, second, totals] of [
+      ["10 | 20", "30 | 40", ["100"]],
+      ["-10 | -20", "-30 | -40", ["-100"]],
+      ["10 | -20", "30 | -40", ["-60", "40"]],
+    ] as const) {
+      // At the domain's negative end, totals meet the category labels and are suppressed. A larger control stack
+      // leaves room to check the negative aggregate as well, without changing the collision rule.
+      for (const room of [false, true]) {
+        const extra = room ? "\n| 2026-10-13T00:00Z | -200 | -200 |" : "";
         const document = await parseMarkdown(
           chart(
-            `| time | a | b |\n| --- | --: | --: |\n| 2026-10-12T00:00Z | ${first} |\n| 2026-10-12T02:00+02:00 | ${second} |`,
+            `| time | a | b |\n| --- | --: | --: |\n| 2026-10-12T00:00Z | ${first} |\n| 2026-10-12T02:00+02:00 | ${second} |${extra}`,
             props,
           ),
           { plugins: [charts()] },
@@ -112,10 +120,12 @@ describe("report chart regressions", () => {
           .map(([tag]) => tag)
           .filter((tag) => attribute(tag, "fill") === "#0a0a0a")
           .map((tag) => />([^<]+)<\/text>/.exec(tag)![1]);
-        expect(outside.sort()).toEqual([...totals].sort());
+        expect(outside.sort()).toEqual(
+          totals.filter((total) => room || !total.startsWith("-")).sort(),
+        );
       }
-    },
-  );
+    }
+  });
 
   it("validates the effective log axis after a categorical x fallback", async () => {
     const markdown = chart(
