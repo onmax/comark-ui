@@ -280,6 +280,29 @@ describe("comark-embed", () => {
     expect(await own(block("https://youtu.be/dQw4w9WgXcQ"))).toContain('data-provider="youtube"');
   });
 
+  it("reports a host `player` that throws and renders the rest of the document", async () => {
+    const player = (url: URL) => {
+      if (url.hostname !== "clips.example.com") return;
+      const id = decodeURIComponent(url.pathname.slice(1));
+      return {
+        provider: "clips",
+        src: `https://clips.example.com/embed/${id}`,
+        label: "Clip",
+        size: "app" as const,
+      };
+    };
+    const markdown = `Before\n\n${block("https://clips.example.com/%", ' title="Clip"')}\n\nAfter`;
+    const html = await createHtmlRenderer({ plugins: [embed({ player })], components })(markdown);
+    expect(html).toContain("<p>Before</p>");
+    expect(html).toContain(
+      '<a class="ce-card" data-comark-frame href="https://clips.example.com/%">',
+    );
+    expect(html).toContain("<p>After</p>");
+    expect((await parseMarkdown(markdown, { plugins: [embed({ player })] })).meta.issues).toEqual([
+      "`::embed` 1: the `player` option threw on https://clips.example.com/%: URI malformed. Return nothing for a link it can't read, so the built-in providers take it.",
+    ]);
+  });
+
   it("reads bound props and drops {#id .class}", async () => {
     const html = await render(
       '---\nvideo: https://youtu.be/dQw4w9WgXcQ\n---\n::embed{:url="frontmatter.video" #demo .wide}\n::',

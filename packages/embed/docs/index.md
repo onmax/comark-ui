@@ -208,6 +208,7 @@ The plugin adds every problem to `meta.issues`, as [Validation](/guide/validatio
 - A card without a `title`.
 - A `start` that isn't whole seconds, or that is set on a player that can't seek.
 - A `height` that isn't whole pixels, or that is set on a player that sizes itself.
+- A `player` option that throws. The block falls back to the built-in providers or a card.
 - Content inside the block.
 - A prop `::embed` doesn't read.
 

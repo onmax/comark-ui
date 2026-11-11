@@ -2,7 +2,7 @@ import type { ElementNode, Node } from "comark";
 import { defineComarkPlugin } from "comark";
 import { resolveAttributes } from "comark/render";
 import { hostOf, providerOf, type Player } from "./providers.ts";
-import { text } from "../../../shared/text.ts";
+import { errorText, text } from "../../../shared/text.ts";
 import { childrenOf, isElement } from "../../../shared/nodes.ts";
 
 export type { Player, Size } from "./providers.ts";
@@ -105,7 +105,15 @@ function embed(
     });
     return {};
   }
-  const own = options.player?.(url);
+  let own: Player | undefined;
+  try {
+    own = options.player?.(url);
+  } catch (error) {
+    issues.push({
+      rule: "comark/embed/player-failed",
+      message: `${name}: the \`player\` option threw on ${url.href}: ${errorText(error)}. Return nothing for a link it can't read, so the built-in providers take it.`,
+    });
+  }
   const provider = own ? undefined : providerOf(url);
   const startText = text(attrs.start);
   const start = wholeNumber(startText);

@@ -37,4 +37,8 @@ export default {
     code: "COMARK0811",
     title: "Set `height` only on players without a height of their own",
   },
+  "comark/embed/player-failed": {
+    code: "COMARK0812",
+    title: "Return nothing from `player` for a link it can't read",
+  },
 } satisfies Record<`comark/embed/${string}`, RuleInfo>;
