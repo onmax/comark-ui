@@ -12,9 +12,9 @@ For a page someone decides from, such as options or a plan, use `report`. This s
 
 ## 1. Profile the data
 
-Load the data in a script, in whatever reads it fastest: Python with pandas or DuckDB, SQL, or Node. Print the row count, each column's type, the date range, the distinct values of each category with their counts, and the empty cells per column.
+Load the data in a script, in whatever reads it and is installed: Python (its standard library is enough), pandas or DuckDB, SQL, or Node. Print the row count, each column's type, the date range, the distinct values of each category with their counts, and the empty cells per column.
 
-Done when you can say in one line what one row is, such as "one customer message", and you've listed the **dimensions** (categories, dates, people) and the **measures** (counts, durations, costs, scores).
+Done when you can say in one line what one row is, such as "one customer message", one line per source when there are several, and you've listed the **dimensions** (categories, dates, people) and the **measures** (counts, durations, costs, scores).
 
 ## 2. Write the questions
 
@@ -24,7 +24,7 @@ Done when every question names its measure and its dimensions, and none needs a 
 
 ## 3. Compute every number in one script
 
-Write `analyze.py` (or `.ts`, or `.sql`) that reads the raw data and prints each chart's table as Markdown, plus the headline figures and each finding's number. Keep at most seven categories per chart and add the rest up as `other`. Sort by value unless the order means something, such as time or steps.
+Write `analyze.py` (or `.ts`, or `.sql`) that reads the raw data and prints each chart's table as Markdown, the headline figures as the `::stats` table, and each finding's number. Keep at most seven series per chart, and seven bars when the x column holds names; add the rest up as `other`. A time axis keeps every period. Sort by value unless the order means something, such as time or steps.
 
 Done when the script runs from a clean start and prints every table and number the page will use. Rerun it after any change to the data or the questions, and paste its output rather than retyping it.
 
@@ -38,7 +38,7 @@ Done when every question has its chart and each chart follows every house-style 
 
 Follow [references/example.md](references/example.md), a finished report, in this order:
 
-1. **Frontmatter**: `title`, `description` (what the data covers, in one line), then fields about the data, such as `source`, `period`, `rows`, `updated`, and `method`. The sidebar lists every field besides the title and description under "About the data".
+1. **Frontmatter**: `title`, `description` (what the data covers, in one line), then fields about the data, such as `source`, `period`, `rows`, and `updated`, each source's span on its own when they differ. How the numbers were made goes in the Method section, not here. The sidebar lists every field besides the title and description under "About the data".
 2. **Headline strip**: `::stats{tiles}` with four to seven figures, a name and a value each.
 3. **What stands out**: three to five numbered findings. Each puts its number in bold and links to the section whose chart shows it.
 4. **One `##` section per question**, opening with one sentence on what to look at when the chart's description doesn't say it, then its chart.
@@ -58,11 +58,11 @@ pnpm exec playwright install chromium
 node ../../build.mjs ../../report.md report.html --shots shots
 ```
 
-Without its own `package.json`, pnpm walks up to the repository's and can fail on its catalog. The script refuses a report with issues and prints each one with its fix. It writes `report.html`: a top bar with a link per section, the report, and a sidebar with the page's outline and the data's fields, in light and dark with a toggle. `--shots` saves the full page in both themes.
+Without its own `package.json`, pnpm walks up to the repository's and can fail on its catalog. If the build says `description` or `unit` isn't a prop of `::chart`, that comark-ui is older than this skill: install `comark-ui@latest`. The script refuses a report with issues and prints each one with its fix. It writes `report.html`: a top bar with a link per section, the report, and a sidebar with the page's outline and the data's fields, in light and dark with a toggle. `--shots` saves the page in both themes, in slices about two screens tall, with the Data folds closed.
 
-Read both screenshots. Each chart must say what its description says, with no label on another, no empty chart, and the same category in the same color on every chart.
+Read every slice. Each chart must say what its description says, with no label on another, no empty chart, and the same category in the same color on every chart.
 
-Done when the build exits 0 and both screenshots pass that read.
+Done when the build exits 0 and every slice in both themes passes that read.
 
 ## 7. Hand it over
 

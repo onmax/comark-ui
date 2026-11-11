@@ -21,9 +21,9 @@ The first column is x; every other column is a series, named by its header. Cell
 | `title` | What is measured, per what. Also the chart's name for screen readers. |
 | `description` | One sentence under the title: what to see. |
 | `unit` | The numbers' unit: `$` prints before them, `%`, `h`, `ms` after. From a thousand up they print short, as `$22.2k`. Gantts and sankeys don't take it. |
-| `log` | A log scale: alone for the numbers' axis, `log="x"` for the x column of a line or scatter over numbers, `log="both"`. Lines, scatter plots, and bar charts take it, with every number above 0. |
+| `log` | A log scale: alone for the numbers' axis, `log="x"` for the x column of a line or scatter over numbers, `log="both"`. Lines, scatter plots, and bar charts take it, with every number above 0; other types, dumbbells included, refuse it. |
 | `better` | On a heatmap, `higher` or `lower`: cells run red, amber, green. |
-| `horizontal` | Sideways bars, for long names or many rows. Written alone. |
+| `horizontal` | Sideways bars, for long names or many rows. Written alone. Only `bar` and `stacked` take it. |
 | `x`, `y` | The x column, and the series columns separated by commas, when they aren't the first and the rest. |
 | `labels` | Bars, stacked bars, and heatmaps print their numbers; `labels=false` turns it off. On waterfalls, dumbbells, gantts, and sankeys, `labels` alone turns it on. |
 

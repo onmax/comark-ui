@@ -1,13 +1,13 @@
 // Builds a data report's Markdown into one self-contained HTML page: a top bar with the title and a link per
 // section, the report, and a sidebar with the page's outline and where the data comes from. Light and dark follow
-// the reader's system, with a toggle. With --shots it also screenshots the page in both themes.
+// the reader's system, with a toggle. With --shots it also screenshots the page in both themes, in slices.
 //
 // Usage: node build.mjs report.md [report.html] [--shots outDir] [--force]
 // Run it from a folder where comark, @comark/html, and comark-ui are installed, plus playwright for --shots.
 import { createRequire } from "node:module";
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { basename, join, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
 const args = process.argv.slice(2);
@@ -23,8 +23,18 @@ const [input, output = input?.replace(/\.md$/, ".html")] = args.filter((arg) => 
 if (!input)
   throw new Error("Usage: node build.mjs report.md [report.html] [--shots outDir] [--force]");
 
-const require = createRequire(join(process.cwd(), "noop.js"));
-const load = (name) => import(pathToFileURL(require.resolve(name)).href);
+// Packages resolve from this folder, then from the report's.
+const load = (name) => {
+  for (const dir of new Set([process.cwd(), dirname(resolve(input))])) {
+    try {
+      return import(pathToFileURL(createRequire(join(dir, "noop.js")).resolve(name)).href);
+    } catch {}
+  }
+  console.error(
+    `Can't find ${name} from this folder or the report's. Install it here: pnpm add ${name}`,
+  );
+  process.exit(1);
+};
 const { parseMarkdown } = await load("comark");
 const { renderHtmlFromDocument } = await load("@comark/html");
 const { default: comarkUi } = await load("comark-ui/html");
@@ -186,13 +196,19 @@ if (shots !== undefined) {
       colorScheme: theme,
     });
     await page.goto(pathToFileURL(resolve(output)).href);
-    await page.evaluate(() =>
-      document.querySelectorAll("details").forEach((details) => (details.open = true)),
-    );
     await page.waitForTimeout(800);
-    const path = resolve(outDir, `${name}-${theme}.png`);
-    await page.screenshot({ path, fullPage: true });
-    console.log(path);
+    // A whole report is several thousand pixels tall, and an image that tall is read shrunk past its labels, so the
+    // page is saved in slices of about two screens.
+    const height = await page.evaluate(() => document.documentElement.scrollHeight);
+    for (let y = 0, part = 1; y < height; y += 1400, part++) {
+      const path = resolve(outDir, `${name}-${theme}-${part}.png`);
+      await page.screenshot({
+        path,
+        fullPage: true,
+        clip: { x: 0, y, width: 1440, height: Math.min(1400, height - y) },
+      });
+      console.log(path);
+    }
   }
   await browser.close();
 }

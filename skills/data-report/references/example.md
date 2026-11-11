@@ -5,7 +5,6 @@ source: Helpdesk export, one row per customer question
 period: 13 Apr to 25 Oct 2026
 rows: 418 questions, 297 threads
 updated: 26 Oct 2026
-method: Each question classified by type and by the last source its reply needed
 ---
 
 ::stats{tiles}

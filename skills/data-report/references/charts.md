@@ -16,8 +16,8 @@ These hold for every chart on the page:
 - One measure per chart. Two measures, such as questions and reply time, are two charts.
 - At most eight series. Past that, keep the seven largest and add the rest up as `other`.
 - Rows sorted by value, largest first, unless their order means something: time, steps, or a funnel.
-- A category keeps its column position in every chart, so it keeps its color across the page.
-- Bars and heatmaps print their numbers. Leave that on; `labels=false` is for charts so dense the numbers collide.
+- A category keeps its column position in every chart, so it keeps its color across the page. Series take their colors by column: blue, tan, teal, violet, rose, amber, then six more. Put a series that means trouble, such as failures, fifth, so it draws in rose.
+- Bars and heatmaps print their numbers, and stacked bars print each stack's total past its end and each part inside it where it fits. Leave that on; `labels=false` is for charts so dense the numbers collide.
 
 ## How many, per name
 
@@ -130,9 +130,21 @@ Grouped bars for one to three metrics, a dumbbell past that.
 | account | 640 | 510 |
 ::
 
+## How spread out, per name
+
+A dumbbell from the median to the slowest tenth, as two columns. It reads both the typical case and the tail, which an average hides.
+
+::chart{type="dumbbell" unit="h" labels title="Time to merge, median to the slowest tenth" description="Fixes merge within hours; a tenth of features wait a day."}
+| kind | median | p90 |
+| --- | --: | --: |
+| feature | 1.6 | 22 |
+| fix | 0.6 | 4.3 |
+| docs | 0.6 | 2.8 |
+::
+
 ## Money across groups
 
-Grouped bars with `unit="$"`. When the largest bar flattens the rest, add `log`.
+Grouped bars with `unit="$"`. Keep the scale linear even when the largest bar flattens the rest, since bars on a log scale don't compare by length; say the gap in the description instead.
 
 ::chart{unit="$" title="Cost of a full benchmark run" description="High effort costs eight times low on the largest model."}
 | model | low | medium | high |
