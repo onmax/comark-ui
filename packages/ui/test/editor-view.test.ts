@@ -203,8 +203,9 @@ describe("componentView", () => {
     );
   });
 
-  it("takes `components` and the `#field` slot on ComarkEditor", async () => {
-    const markdown = ref(nested);
+  it("takes `components`, parser options, and the `#field` slot on ComarkEditor", async () => {
+    const url = "https://example.com";
+    const markdown = ref(`${nested}\n${url}\n`);
     const host = document.createElement("div");
     document.body.append(host);
     const app = createApp(
@@ -216,6 +217,7 @@ describe("componentView", () => {
               modelValue: markdown.value,
               "onUpdate:modelValue": (value: string) => (markdown.value = value),
               components: { card: { props: { icon: { type: "image" } } } },
+              registerDefaultPlugins: false,
             },
             {
               field: (field: ComponentField) =>
@@ -234,8 +236,10 @@ describe("componentView", () => {
       host.remove();
     });
     await vi.waitFor(() => expect(host.querySelector(".pick")).not.toBeNull());
+    expect(host.querySelector(`a[href="${url}"]`)).toBeNull();
     host.querySelector<HTMLButtonElement>(".pick")!.click();
     await vi.waitFor(() => expect(markdown.value).toContain('icon="lucide:rocket"'));
+    expect(markdown.value).toContain(`\n\n${url}\n`);
   });
 
   it("leaves components bare with `components: false`", async () => {

@@ -23,15 +23,18 @@ import {
   ComarkKit,
   type ComarkKitOptions,
   fromMarkdown,
+  type PageParser,
   toMarkdown,
 } from "./editor.ts";
 
-export interface UseComarkEditorOptions {
+/**
+ * Pass how the page parses Markdown, `plugins` and `registerDefaultPlugins` as given to Comark's parser, so the editor
+ * reads a document as readers see it, and opens read-only one a save would change for them.
+ */
+export interface UseComarkEditorOptions extends PageParser {
   /** Added after ComarkKit, such as a placeholder. */
   extensions?: AnyExtension[];
   kit?: ComarkKitOptions;
-  /** The parse plugins the page renders with, so a document only they read is opened read-only. */
-  plugins?: readonly ComarkPlugin<any, any>[];
   /**
    * What the component view shows for each component name, with the props it edits as typed fields, or `false` to
    * draw components as bare elements. A `componentView` in `kit` replaces the view.
@@ -68,9 +71,13 @@ export function useComarkEditor(markdown: Ref<string>, options: UseComarkEditorO
   async function load(source: string) {
     const run = ++loads;
     ++saves; // An external load supersedes serialization of the previous editor state.
+    const page = {
+      plugins: options.plugins,
+      registerDefaultPlugins: options.registerDefaultPlugins,
+    };
     const [check, read] = await Promise.all([
-      checkMarkdown(source, { plugins: options.plugins }),
-      fromMarkdown(source),
+      checkMarkdown(source, page),
+      fromMarkdown(source, page),
     ]);
     if (run !== loads) return;
     frontmatter.value = read.frontmatter;
@@ -135,6 +142,7 @@ export const ComarkEditor = defineComponent({
       type: [Object, Boolean] as PropType<Record<string, ComponentInfo> | false>,
       default: undefined,
     },
+    registerDefaultPlugins: { type: Boolean, default: undefined },
   },
   emits: ["update:modelValue"],
   // SAFETY: Vue's runtime constructor cannot express the slots' types.
@@ -156,6 +164,7 @@ export const ComarkEditor = defineComponent({
         const nodes = slots.field?.(field);
         return nodes?.length ? nodes : undefined;
       },
+      registerDefaultPlugins: props.registerDefaultPlugins,
     });
     return () => {
       if (!editor.value) return null;

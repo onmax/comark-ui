@@ -2,6 +2,11 @@
   "extends": ["auto", "vite-doctor/typescript/strict"],
   "suppressions": [
     {
+      "ruleId": "typescript/strict/no-runtime-typeof",
+      "file": "src/editor/markdown.ts",
+      "reason": "JSON.stringify's replacer receives heterogeneous JSON values. Source-key masking must check for strings so numeric frontmatter stays unchanged and property names are never rewritten."
+    },
+    {
       "ruleId": "vue/lifecycle/require-cleanup",
       "file": "src/script.ts",
       "reason": "script.ts is not a Vue component. start() returns a stop function that aborts every listener, and the Mermaid components call it on unmount."

@@ -156,9 +156,9 @@ if (!lossy) {
 
 ### Check before editing
 
-`checkMarkdown(markdown, { plugins })` checks that the editor can read and write the document without losing structure or changing the rendered text. It returns `{ editable: true, markdown }` with the normalized Markdown, or `{ editable: false }`. If the frontmatter is the problem, `reason` says which: the block is empty, holds YAML comments, isn't `key: value` lines, isn't valid YAML, or has a `__proto__` key at any depth that a room's fields would drop.
+`checkMarkdown(markdown, { plugins, registerDefaultPlugins })` checks that the editor can read and write the document without changing what your page renders: it parses the document before and after a save with your parser options and compares the trees. It returns `{ editable: true, markdown }` with the normalized Markdown, or `{ editable: false }`. If the frontmatter is the problem, `reason` says which: the block is empty, holds YAML comments, isn't `key: value` lines, isn't valid YAML, or has a `__proto__` key at any depth that a room's fields would drop.
 
-Pass the plugins you render with, or the check misses syntax only they read. The Vue bindings run it and open a failing document read-only. A passing check doesn't promise byte-for-byte output.
+Pass the options you render with, or the check misses syntax only your plugins read. If your parser sets `registerDefaultPlugins: false`, pass that too: the editor then reads bare URLs and HTML as your page does, as text unless your plugins include Comark's `linkify` or `html`, so a save doesn't turn a bare URL into a link. Ids that plugins such as comark-tabs derive from a hash of the source don't count. The Vue bindings run the check and open a failing document read-only. A passing check doesn't promise byte-for-byte output.
 
 ### What the editor keeps
 
@@ -221,7 +221,7 @@ The placeholder is a local decoration, so a collaborative document never holds a
 
 ## Collaborative rooms
 
-`createEditorCodec({ plugins, kit })` from `comark-ui/editor` shares the schema and Markdown conversion between a server and its editors. The codec fits ViteHub Realtime's `editor` option.
+`createEditorCodec({ plugins, registerDefaultPlugins, kit })` from `comark-ui/editor` shares the schema and Markdown conversion between a server and its editors. The codec fits ViteHub Realtime's `editor` option.
 
 A room holds a document in two parts. The body is the editor's document, bound through Tiptap's collaboration extension. The frontmatter is the room's fields, a map such as a `Y.Map` with one value per key. Text edits never touch the fields. When two people change different keys at once, both changes stay. On the same key, one value wins in every editor.
 
@@ -238,7 +238,7 @@ if (result.writable) {
 }
 ```
 
-Pass your renderer's plugins for the same check as `checkMarkdown()`. The codec gives the document format, and your host supplies room storage, transport, and a collaboration extension.
+Pass your parser's `plugins` and `registerDefaultPlugins`, so the room reads a document as your page does and `verify()` runs the same check as `checkMarkdown()`. The codec gives the document format, and your host supplies room storage, transport, and a collaboration extension.
 
 | Method | Returns |
 | --- | --- |
@@ -260,7 +260,8 @@ Build a room's [Properties](/properties) rows from its fields with `rowsOf(field
 | Option | Used by | Description |
 | --- | --- | --- |
 | `extensions` | Component and composable | Extra Tiptap extensions added after `ComarkKit`, such as `Upload`. |
-| `plugins` | Component and composable | Parse plugins that check the document before editing. |
+| `plugins` | Component and composable | The parse plugins your page renders with, for the check before editing. |
+| `registerDefaultPlugins` | Component and composable | `false` when your parser leaves out Comark's defaults, so the editor reads bare URLs and HTML as your page does. |
 | `kit` | Composable | `ComarkKitOptions`, including StarterKit configuration and a `componentView` that replaces the view. |
 | `components` | Component and composable | A `ComponentInfo` per component name, for the [component view](#components), or `false` to draw components as bare elements. Read once, when the editor is created. |
 | `field` | Composable | Draws a typed prop's field. `ComarkEditor` takes it as the `#field` slot. |
