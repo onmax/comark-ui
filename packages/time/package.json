@@ -1,6 +1,6 @@
 {
   "name": "comark-time",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "description": "Dates as relative time that turn into a date past a threshold, with the full date in a tooltip. A Comark plugin.",
   "keywords": [
     "ago",
