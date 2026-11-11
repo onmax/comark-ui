@@ -83,7 +83,7 @@ const theme: ThemeSpec = {
   },
   marks: {
     cornerRadius: 2,
-    strokeWeight: 2,
+    strokeWeight: 1.5,
     // A smoothed line passes through values the table doesn't hold, and overshoots between steep steps.
     interpolation: "linear",
     fillOpacity: 0.4,
@@ -159,10 +159,18 @@ const endLabeled = (chart: Chart) =>
 // A line marks each of its points while they're few enough to stay apart.
 const MOST_POINTS = 40;
 
-// A plot's widest, and the room it shares with its labels. A wider plot lays more dated steps flat, and their first
-// label then meets the value axis's 0 in the corner.
-const PLOT = 520;
-const ROOM = 600;
+// A plot's widest, and the room it shares with its labels: about a report column's width, which the stylesheet then
+// fills, so a chart spans the column as a dashboard's does.
+const PLOT = 640;
+const ROOM = 720;
+// A plot's height, about half its width, so a trend's slope reads as it does on a dashboard.
+const TALL = 340;
+// Every chart's drawn width, padding included.
+const WIDTH = ROOM + 24;
+
+/** The share of a band left empty so an upright bar is at most `widest` pixels, as on a dashboard, never under `least`. */
+const slim = (chart: Chart, widest: number, least = 0.35) =>
+  Math.min(0.85, Math.max(least, 1 - widest / ((WIDTH - 80) / chart.rows.length)));
 
 // The most bars an upright plot holds at a readable width.
 const MOST_UPRIGHT = 40;
@@ -240,7 +248,7 @@ function input(chart: Chart): ChartAssemblyInput {
     chart_spec: {
       chartType,
       encodings,
-      baseSize: { width, height: 320 },
+      baseSize: { width, height: TALL },
       // Flint grows a crowded chart, but only downward: the width is already what the labels leave. Past the canvas
       // Flint drops rows and says "items omitted", so a sideways chart grows as tall as its bars need.
       canvasSize: { width, height: flip ? Math.max(640, bars * 20 + 200) : 640 },
@@ -601,14 +609,17 @@ function valueLabels(chart: Chart, view: vega.View): Label[] {
   const labels: Label[] = [];
   for (const bar of bars) {
     const text = compact(bar.value, chart.unit);
-    const width = guess(text, 12);
+    const width = guess(text, 11);
     const up = bar.value >= 0;
     const [long, thick] = flip
       ? [bar.x2 - bar.x1, bar.y2 - bar.y1]
       : [bar.y2 - bar.y1, bar.x2 - bar.x1];
-    const fits = flip
-      ? long >= width + 2 * GAP && thick >= HEIGHT + 4
-      : long >= HEIGHT + 2 * GAP && thick >= width + 8;
+    // A stacked segment prints its number inside it; a bar prints its own past its end, as a dashboard does.
+    const fits =
+      stacked &&
+      (flip
+        ? long >= width + 2 * GAP && thick >= HEIGHT + 4
+        : long >= HEIGHT + 2 * GAP && thick >= width + 8);
     const beyond = (other: typeof bar) =>
       flip
         ? up
@@ -670,7 +681,7 @@ const LABELS: vega.Mark = {
       align: { value: "center" },
       baseline: { value: "middle" },
       font: { value: "sans-serif" },
-      fontSize: { value: 12 },
+      fontSize: { value: 11 },
       fontWeight: { value: 500 },
     },
   },
@@ -1333,6 +1344,35 @@ export async function draw(chart: Chart): Promise<{ svg: string; boxes: Map<numb
   spec.padding = chart.marks.some((mark) => mark.mark === "circle")
     ? { ...PADDING, bottom: PADDING.bottom + RING_ROOM }
     : PADDING;
+  // Every chart over axes is drawn exactly as wide, labels and padding included, so the stylesheet scales them all by
+  // the same factor to fill the column, and their text matches from chart to chart. Names at the ends of lines sit
+  // past the plot, in room kept on its right.
+  if (chart.type !== "pie") {
+    const ends = endLabeled(chart)
+      ? Math.max(...chart.series.map((name) => guess(name, 12))) + 24
+      : 0;
+    // A bar's number prints past its end, so the side the bars grow toward keeps room for the widest one.
+    const { flip } = layout(chart);
+    const past =
+      chart.labels && (chart.type === "bar" || chart.type === "stacked")
+        ? flip
+          ? Math.max(
+              ...chart.rows.flatMap((row) =>
+                row.values.map((value) =>
+                  value === undefined ? 0 : guess(compact(value, chart.unit), 11),
+                ),
+              ),
+            ) + 8
+          : 20
+        : 0;
+    spec.padding = {
+      ...spec.padding,
+      right: PADDING.right + ends + (flip ? past : 0),
+      top: PADDING.top + (flip ? 0 : past),
+    };
+    Reflect.set(spec, "width", WIDTH);
+    spec.autosize = { type: "fit-x", contains: "padding" };
+  }
   // With several series no one header names the numbers, and Flint would title the axis with the field, `y`. A
   // waterfall's legend sits where its axis title would, and its layers draw running totals rather than `y`.
   const waterfall = chart.type === "waterfall";
@@ -1366,7 +1406,7 @@ export async function draw(chart: Chart): Promise<{ svg: string; boxes: Map<numb
   );
   // Flint scales its type with the plot, from 13.5px down to 8px when long labels leave the plot narrow, and ignores
   // the theme's sizes, so text is set to shadcn/ui's 12px here. Labels that don't fit are thinned or cut instead.
-  const TYPE = { labelFontSize: 12, titleFontSize: 12 };
+  const TYPE = { labelFontSize: 11, titleFontSize: 11 };
   spec.config = {
     ...spec.config,
     // The SVG is one `role="img"` labeled by its caption, and the table under it is what screen readers and agents
@@ -1399,6 +1439,15 @@ export async function draw(chart: Chart): Promise<{ svg: string; boxes: Map<numb
       ...spec.config?.axisY,
       ...TYPE,
       labelPadding: 8,
+      // The numbers' name reads across, over the top of their axis, where a dashboard puts it.
+      ...(!layout(chart).flip && {
+        titleAngle: 0,
+        titleAnchor: "end",
+        titleAlign: "left",
+        titleBaseline: "bottom",
+        titleX: 0,
+        titleY: -10,
+      }),
       ...(waterfall && { labels: true, grid: true, gridColor: INK.border, gridDash: [2, 3] }),
     },
     // Vega guesses text widths without a font, short for CJK and emoji, so legend entries get room to spare.
@@ -1472,12 +1521,27 @@ export async function draw(chart: Chart): Promise<{ svg: string; boxes: Map<numb
       else if (mark.type === "point" && !("opacity" in mark && mark.opacity === 0))
         unit.mark = { ...mark, type: "point", size: 40, strokeWidth: 0 };
     }
-    // Bars as thin as a line of text with room between them, so a long list reads row by row, and upright bars about
-    // as wide as the gaps between them.
+    // Bars as thin as a line of text with room between them, so a long list reads row by row. Upright bars stay
+    // slim however few there are, as on a dashboard: about 40px, or 22px a bar side by side, with a hair between
+    // bars of one group.
     if ((chart.type === "bar" || chart.type === "stacked") && "mark" in unit) {
-      const band = layout(chart).flip ? y : x;
-      if (band && "field" in band && band.field === "x")
-        band.scale = { ...("scale" in band && band.scale), paddingInner: 0.35, paddingOuter: 0.2 };
+      const { flip } = layout(chart);
+      const band = flip ? y : x;
+      const lanes = chart.type === "bar" ? chart.series.length : 1;
+      const thin = flip ? 0.35 : slim(chart, lanes > 1 ? lanes * 22 : 40);
+      // Bars over dates sit on a time scale, which has no bands: Flint sizes them instead.
+      const dated = band && "type" in band && band.type === "temporal";
+      if (dated && "mark" in unit && unit.mark instanceof Object && "size" in unit.mark)
+        unit.mark = { ...unit.mark, size: Math.min(Number(unit.mark.size), lanes > 1 ? 22 : 40) };
+      else if (band && "field" in band && band.field === "x")
+        band.scale = {
+          ...("scale" in band && band.scale),
+          paddingInner: thin,
+          paddingOuter: thin / 2,
+        };
+      const offset = flip ? unit.encoding.yOffset : unit.encoding.xOffset;
+      if (offset && "field" in offset)
+        offset.scale = { ...("scale" in offset && offset.scale), paddingInner: 0.08 };
     }
     for (const channel of [x, y])
       if (channel && "axis" in channel && channel.axis)
@@ -1486,6 +1550,11 @@ export async function draw(chart: Chart): Promise<{ svg: string; boxes: Map<numb
           labelPadding: 8,
           labelOverlap: "greedy",
           labelSeparation: 6,
+          // A crowded waterfall's names hang straight down from their steps: angled, the first would reach under
+          // the value axis's 0 in the corner of a plot as wide as the column.
+          ...(waterfall &&
+            !flat &&
+            channel === x && { labelAngle: -90, labelAlign: "right", labelBaseline: "middle" }),
           ...(channel === time && {
             labelFlush: false,
             // "Apr 2026" under every month is too wide for its step, so overlap hides some; the year is said once,
@@ -1548,7 +1617,12 @@ export async function draw(chart: Chart): Promise<{ svg: string; boxes: Map<numb
       for (const channel of [x, y])
         if (channel && "field" in channel && channel.field === "y") channel.stack = null;
     if (waterfall && x && "field" in x && x.field === "x")
-      x.scale = { ...("scale" in x && x.scale), paddingOuter: flat ? 0.4 : 1 };
+      x.scale = {
+        ...("scale" in x && x.scale),
+        paddingInner: slim(chart, 48, 0.28),
+        // The first step's label centers under it, clear of the value axis's 0 in the corner, however thin the steps.
+        paddingOuter: flat ? Math.max(0.4, slim(chart, 48, 0.28) / 2 + 0.2) : 1,
+      };
   }
   // Flint colors a waterfall's steps from its palette when the data lacks one kind, so the kinds are pinned.
   if (waterfall && "layer" in spec)
@@ -1684,7 +1758,7 @@ const SPEC_CONFIG = {
   range: { category: [...SERIES] },
   mark: { color: SERIES[0] },
   bar: { cornerRadiusEnd: 2 },
-  line: { strokeWidth: 2 },
+  line: { strokeWidth: 1.5 },
   axis: {
     domain: false,
     ticks: false,
@@ -1693,8 +1767,8 @@ const SPEC_CONFIG = {
     gridDash: [2, 3],
     labelColor: INK.muted,
     titleColor: INK.muted,
-    labelFontSize: 12,
-    titleFontSize: 12,
+    labelFontSize: 11,
+    titleFontSize: 11,
     titleFontWeight: "normal",
     labelPadding: 8,
     titlePadding: 10,

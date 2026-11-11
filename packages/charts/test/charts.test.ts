@@ -274,8 +274,9 @@ ${sizes.trim()}
     expect(html).toContain(`>${label}</text>`);
     // Upright, the default, a long name wraps under its bar instead.
     expect(await render(chart(table))).not.toContain(`>${label}</text>`);
+    // Every chart over axes is drawn as wide, so a page scales them alike.
     const [, width] = /viewBox="0 0 ([\d.]+) /.exec(html) ?? [];
-    expect(Number(width)).toBeLessThanOrEqual(700);
+    expect(Number(width)).toBe(744);
   });
 
   it("draws comark-annotate marks on the row and series an annotation names", async () => {
@@ -425,7 +426,7 @@ The first slice.
 :::
 ::`;
     const html = await annotated(markdown);
-    expect(html).toContain('viewBox="0 0 544 397"');
+    expect(html).toContain('viewBox="0 0 664 417"');
     expect(html).toContain('ca-stamp" style="left:0;top:0;translate:-50% -50%"');
   });
 
@@ -812,7 +813,7 @@ No such run.
     ).toEqual([]);
   });
 
-  it("writes each value inside its bar with `labels`, or past the bar's end where it doesn't fit", async () => {
+  it("writes each bar's value past its end with `labels`, and a stacked segment's inside it where it fits", async () => {
     const value = (html: string, text: string) =>
       new RegExp(`<text [^>]*font-weight="500" fill="(#[0-9a-f]+)">${text}</text>`).exec(html)?.[1];
     const bars = await render(
@@ -826,8 +827,8 @@ No such run.
         "{labels}",
       ),
     );
-    expect(value(bars, "41")).toBe("#ffffff");
-    expect(value(bars, "18")).toBe("#ffffff");
+    expect(value(bars, "41")).toBe("#0a0a0a");
+    expect(value(bars, "18")).toBe("#0a0a0a");
     expect(value(bars, "2")).toBe("#0a0a0a");
     const stacked = await render(
       chart(
@@ -855,7 +856,7 @@ No such run.
         "{horizontal labels}",
       ),
     );
-    expect(value(sideways, "1.28k")).toBe("#ffffff");
+    expect(value(sideways, "1.28k")).toBe("#0a0a0a");
     expect(value(sideways, "3")).toBe("#0a0a0a");
     expect(await issues(chart(sizes, '{type="stacked" labels}'))).toEqual([]);
   });

@@ -27,10 +27,14 @@ export const css = `@layer comark{${[
     .map((chart) => `:is(h1,h2,h3,h4,h5,h6,:has(>:is(h1,h2,h3,h4,h5,h6)))+${chart}`)
     .join(",") + "{border-top:0;padding-top:0;margin-top:1rem}",
   ".cch-description{max-width:46rem;margin:0 0 1rem;color:var(--_comark-muted);font-size:.8125rem;line-height:1.25rem}",
-  // Every chart keeps the size its text was set for, and a narrower column shrinks it to fit, as it does a screenshot,
-  // since marks sit at percentages of the SVG. Only the chart's own SVG: a mark's circle and arrow are SVGs too, and
-  // `height:auto` would stretch them to their viewBox. A chart narrower than the column starts where its title does.
+  // A narrower column shrinks a chart to fit, as it does a screenshot, since marks sit at percentages of the SVG. Only
+  // the chart's own SVG: a mark's circle and arrow are SVGs too, and `height:auto` would stretch them to their viewBox.
+  // A chart narrower than the column starts where its title does.
   ":is(.cch-plot,.cch-marked .ca-frame)>svg{display:block;max-width:100%;height:auto;margin-inline:0 auto}",
+  // A chart over axes spans the column, as a dashboard's do. Each is drawn at one width, so all scale alike and their
+  // text matches. A pie or a heatmap keeps its own size, since its shapes and cells read the same at any width, and so
+  // does a chart with notes, whose stage fits the notes' gutters around it.
+  ".cch:not([data-type=pie],[data-type=heatmap])>.cch-plot:not(.cch-marked)>svg{width:100%}",
   ".cch-plot text{font-family:var(--_comark-font)}",
   // comark-annotate pins side notes to its stage's edges, so the stage is what's placed, with the notes' gutters
   // beside the chart rather than at the column's edges.

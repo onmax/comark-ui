@@ -207,6 +207,60 @@ Use the `type` prop to pick the chart. It defaults to `bar`, whatever the table 
 ```
 :::
 
+:::example{label="Heatmap"}
+```md
+::chart{type="heatmap" title="Questions per customer and type"}
+| customer | bug | forecast | purchasing | alerts |
+| --- | --: | --: | --: | --: |
+| Northwind | 14 | 6 | 9 | 4 |
+| Contoso | 8 | 9 | 5 | 6 |
+| Fabrikam | 5 | 7 | 3 | |
+| Tailspin | 2 | 4 | 6 | 1 |
+::
+```
+:::
+
+:::example{label="Scores"}
+```md
+::chart{type="heatmap" better="higher" title="Judge score per section, out of 10"}
+| agent | score | features | data | auth | validation | security |
+| --- | --: | --: | --: | --: | --: | --: |
+| Fable 5.2 high | 8.6 | 10 | 10 | 10 | 6.2 | 4.3 |
+| Opus 5.5 high | 8.5 | 10 | 9 | 9.6 | 4.6 | 5 |
+| GPT-6.1 Sol xhigh | 7.9 | 9.1 | 8.3 | 10 | 1.5 | 6.4 |
+| GPT-6 Luna low | 4 | 1.9 | 7.6 | 6.7 | 0 | 2.1 |
+::
+```
+:::
+
+:::example{label="Money"}
+```md
+::chart{unit="$" title="Cost of a full benchmark run" description="High effort costs eight times low on the largest model."}
+| model | low | medium | high |
+| --- | --: | --: | --: |
+| small | 9 | 40 | 63 |
+| medium | 980 | 2,000 | 4,800 |
+| large | 2,900 | 11,700 | 22,200 |
+::
+```
+:::
+
+:::example{label="Log scale"}
+```md
+::chart{type="line" log="x" unit="pts" title="Score against cost per task ($)" description="Each line is one model from low to max effort."}
+| cost per task | Luna | Opus | Fable |
+| --: | --: | --: | --: |
+| 0.005 | 10 | | |
+| 0.05 | 19 | | |
+| 0.2 | 28 | | |
+| 1 | | 35 | |
+| 2 | | 48 | 55 |
+| 10 | | 59 | 62 |
+| 20 | | | 65 |
+::
+```
+:::
+
 :::example{label="Pie"}
 ```md
 ::chart{type="pie" title="Why the build failed, according to the team (%)"}
@@ -340,7 +394,8 @@ Bars, stacked bars, and heatmaps print their numbers. Write `labels=false` to le
 
 Where the numbers print depends on the type:
 
-- **Bars and stacked bars** write each value in white inside its bar or segment, and drop the value axis. A value that doesn't fit goes just past the bar's end, but in a stack only the outermost part can do that. Other values that don't fit, or would cover another bar's, appear only in the **Data** table.
+- **Bars** print each value just past the bar's end, in the text's color, and drop the value axis. A value that would cover another bar's appears only in the **Data** table.
+- **Stacked bars** write each value in white inside its segment. A value that doesn't fit goes just past the stack's end, but only the outermost part can do that, so the others appear only in the **Data** table.
 - **Waterfalls** print each step's change and each total's value beside it, when the numbers fit their steps.
 - **Dumbbells** print each row's least and most values beside its outer dots, when the plot has room.
 - **Gantts** print how long each bar lasts past its end.
@@ -527,10 +582,11 @@ To check documents without drawing them, as comark-linter does, pass `charts({ d
 
 ### Fit the column
 
-Two charts of one table look alike anywhere:
+Charts span the column, as a dashboard's do, and look alike anywhere:
 
-- A chart keeps the size its text was set for instead of stretching to the column, so labels read the same in every chart.
-- A narrower column or a printed page shrinks it to fit, like a screenshot.
+- Every chart over axes is drawn 744px wide, labels included, and scales to the column's width. Its text scales with it, so labels read the same size in every chart on a page.
+- Upright bars stay about 40px wide however few there are, or 22px each side by side, so a short table doesn't draw slabs.
+- A pie and a heatmap keep their own size, shrinking only in a narrower column.
 - No row is ever dropped. A long sideways chart grows taller.
 
 ## Accessibility
