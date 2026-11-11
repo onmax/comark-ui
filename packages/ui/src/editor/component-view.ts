@@ -180,8 +180,10 @@ const ComponentView = defineComponent({
       removeEventListener("resize", reposition);
     });
 
-    const setProps = (next: Props | undefined) => {
-      if (props.editor.isEditable) props.updateAttributes({ props: next ?? null });
+    const setProps = (update: (current: Props) => Props | undefined) => {
+      // A host field can keep its callback while a picker is open and other props change.
+      if (props.editor.isEditable)
+        props.updateAttributes({ props: update(props.node.attrs.props ?? {}) ?? null });
     };
 
     return () => {
@@ -204,7 +206,7 @@ const ComponentView = defineComponent({
         const type = spec.type ?? "string";
         const value = readProp(current, prop, type);
         const fieldId = `${id}-${prop}`;
-        const update = (next: unknown) => setProps(writeProp(current, prop, next));
+        const update = (next: unknown) => setProps((current) => writeProp(current, prop, next));
         const custom = options.field?.({
           component: name,
           name: prop,
@@ -292,7 +294,8 @@ const ComponentView = defineComponent({
             id: fieldId,
             value: shown(current[key]),
             disabled: !can,
-            onInput: (event: Event) => setProps({ ...current, [key]: valueOf(event) }),
+            onInput: (event: Event) =>
+              setProps((current) => ({ ...current, [key]: valueOf(event) })),
           }),
           can
             ? h(
@@ -301,7 +304,8 @@ const ComponentView = defineComponent({
                   type: "button",
                   class: "cev-remove",
                   "aria-label": `Remove ${key}`,
-                  onClick: () => setProps(writeProp(current, key.replace(/^:/, ""), undefined)),
+                  onClick: () =>
+                    setProps((current) => writeProp(current, key.replace(/^:/, ""), undefined)),
                 },
                 "×",
               )
@@ -319,8 +323,10 @@ const ComponentView = defineComponent({
                 const key = adding.value.key.trim();
                 if (!/^:?[\w-]+$/.test(key) || key.replace(/^:/, "") === "$") return;
                 const value = adding.value.value;
-                const without = writeProp(current, key.replace(/^:/, ""), undefined) ?? {};
-                setProps({ ...without, [key]: value });
+                setProps((current) => {
+                  const without = writeProp(current, key.replace(/^:/, ""), undefined) ?? {};
+                  return { ...without, [key]: value };
+                });
                 adding.value = { key: "", value: "" };
               },
             },

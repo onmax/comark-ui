@@ -184,6 +184,25 @@ describe("componentView", () => {
     );
   });
 
+  it("keeps intervening prop edits when a host field completes later", async () => {
+    const fields: ComponentField[] = [];
+    const { markdown, host } = await mount(nested, {
+      components: { card: { props: { icon: { type: "image" } } } },
+      field: (field) => {
+        fields.push(field);
+        return undefined;
+      },
+    });
+    const pending = fields[0]!;
+    type(field<HTMLInputElement>(panelOf(host, "card"), "title"), "Renamed");
+    await vi.waitFor(() => expect(markdown.value).toContain('title="Renamed"'));
+
+    pending.update("lucide:rocket");
+    await vi.waitFor(() =>
+      expect(markdown.value).toContain(':::card{title="Renamed" icon="lucide:rocket"}'),
+    );
+  });
+
   it("takes `components` and the `#field` slot on ComarkEditor", async () => {
     const markdown = ref(nested);
     const host = document.createElement("div");
