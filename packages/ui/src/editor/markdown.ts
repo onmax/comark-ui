@@ -875,15 +875,7 @@ async function readPage(markdown: string, { plugins = [], registerDefaultPlugins
     registerDefaultPlugins,
     plugins: [sourceKey(), ...plugins],
   });
-  const mask = (node: unknown): unknown =>
-    typeof node === "string"
-      ? key
-        ? node.replaceAll(key, "#")
-        : node
-      : Array.isArray(node)
-        ? node.map(mask)
-        : node instanceof Object
-          ? Object.fromEntries(Object.entries(node).map(([name, value]) => [name, mask(value)]))
-          : node;
-  return mask({ nodes: tree.nodes, frontmatter: tree.frontmatter });
+  const read = JSON.stringify({ nodes: tree.nodes, frontmatter: tree.frontmatter });
+  // SAFETY: JSON.parse returns what JSON.stringify wrote, a tree of plain values.
+  return JSON.parse(key ? read.replaceAll(key, "#") : read) as unknown;
 }
