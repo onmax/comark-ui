@@ -436,9 +436,9 @@ export function boxes(
   const found = new Map<number, Box>();
   // Vega draws the scene at its origin plus its padding, and origin() leaves the padding out.
   const [x0, y0] = view.origin();
-  const padding = view.padding();
-  const inset = typeof padding === "number" ? { left: padding, top: padding } : padding;
-  const [left, top] = [x0 + (inset.left ?? 0), y0 + (inset.top ?? 0)];
+  // SAFETY: vega-view's padding() getter normalizes every side to a number, even for numeric inputs.
+  const padding = view.padding() as Required<Exclude<vega.Padding, number>>;
+  const [left, top] = [x0 + padding.left, y0 + padding.top];
   for (const mark of chart.marks) {
     let [x1, y1, x2, y2] = [Infinity, Infinity, -Infinity, -Infinity];
     if (mark.value !== undefined && chart.type !== "sankey") {
