@@ -871,11 +871,13 @@ async function readPage(markdown: string, { plugins = [], registerDefaultPlugins
     },
   }));
   const tree = await parseMarkdown(markdown, {
-    ...parseOptions,
     registerDefaultPlugins,
     plugins: [sourceKey(), ...plugins],
   });
-  const read = JSON.stringify({ nodes: tree.nodes, frontmatter: tree.frontmatter });
+  const read = JSON.stringify(
+    { nodes: tree.nodes, frontmatter: tree.frontmatter },
+    (_, value: unknown) => (key && typeof value === "string" ? value.replaceAll(key, "#") : value),
+  );
   // SAFETY: JSON.parse returns what JSON.stringify wrote, a tree of plain values.
-  return JSON.parse(key ? read.replaceAll(key, "#") : read) as unknown;
+  return JSON.parse(read) as unknown;
 }

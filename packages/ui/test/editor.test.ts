@@ -2,7 +2,9 @@ import { readdirSync, readFileSync } from "node:fs";
 import { getSchema } from "@tiptap/core";
 import { Node } from "@tiptap/pm/model";
 import { prosemirrorJSONToYDoc, yDocToProsemirrorJSON } from "@tiptap/y-tiptap";
-import { defineComarkPlugin, type MarkdownExitPlugin } from "comark";
+import { defineComarkPlugin, type MarkdownExitPlugin, parseMarkdown } from "comark";
+import rawHtml from "comark/plugins/html";
+import tabs from "comark-tabs";
 import { describe, expect, it } from "vite-plus/test";
 import { loadExamples } from "../../../docs/examples.ts";
 import html from "../src/html.ts";
@@ -215,6 +217,25 @@ describe("checkMarkdown", () => {
       editable: true,
       markdown: "# Title\n\nText with **bold**.\n",
     });
+  });
+
+  it("keeps numeric frontmatter equal to the source hash without throwing", async () => {
+    const markdown = "---\ncount: 1028322\n---\n\nDocument 3742\n";
+    for (const page of [{ plugins: [tabs()] }, html(offline)]) {
+      expect(await checkMarkdown(markdown, page)).toEqual({ editable: true, markdown });
+    }
+  });
+
+  it("compares safe HTML using the page's paragraph unwrapping", async () => {
+    const markdown = "<div>\n\n**text**\n\n</div>\n";
+    const page = { plugins: [rawHtml()] };
+    const first = await fromMarkdown(markdown, page);
+    const written = await toMarkdown(first.doc, first);
+    const before = await parseMarkdown(markdown, page);
+    const after = await parseMarkdown(written, page);
+    expect(after.nodes).toEqual(before.nodes);
+    expect(await checkMarkdown(markdown, page)).toEqual({ editable: true, markdown: written });
+    expect(await createEditorCodec(page).verify(markdown)).toMatchObject({ writable: true });
   });
 
   it("refuses a comment inside a paragraph, which has nowhere to live", async () => {

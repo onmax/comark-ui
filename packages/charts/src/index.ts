@@ -93,7 +93,7 @@ export default /* @__PURE__ */ defineComarkPlugin<ChartsOptions | void, ChartsMe
           : chart.type === "sankey"
             ? await (await import("./sankey.ts")).drawSankey(chart)
             : await (await import("./draw.ts")).draw(chart);
-        drawn.svg = stableIds(drawn.svg);
+        drawn.svg = stableIds(drawn.svg, number);
       } catch (error) {
         const fix = spec
           ? "Check its Vega-Lite spec against https://vega.github.io/vega-lite/docs/"
@@ -131,9 +131,9 @@ export default /* @__PURE__ */ defineComarkPlugin<ChartsOptions | void, ChartsMe
 
 /**
  * Vega numbers its clip paths with a counter that runs on across renders, so the same chart drew new ids each time.
- * Ids from a hash of the drawing stay apart between charts on a page and the same between renders.
+ * A drawing hash and its document position keep ids apart even for identical charts, and the same between renders.
  */
-function stableIds(svg: string): string {
+function stableIds(svg: string, number: number): string {
   const ids = [...new Set([...svg.matchAll(/ id="([^"]+)"/g)].map((match) => match[1]!))];
   if (!ids.length) return svg;
   const swap = (text: string, rename: (id: string, at: number) => string) =>
@@ -144,6 +144,6 @@ function stableIds(svg: string): string {
           .replaceAll(`url(#${id})`, `url(#${rename(id, at)})`),
       text,
     );
-  const prefix = `cch-${hash(swap(svg, () => ""))}`;
+  const prefix = `cch-${hash(swap(svg, () => ""))}-${number}`;
   return swap(svg, (_, at) => `${prefix}-${at}`);
 }

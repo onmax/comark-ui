@@ -3,6 +3,7 @@ import { createMarkdownParser, parseMarkdown } from "comark";
 import annotate, { components as annotateComponents } from "comark-annotate/html";
 import { describe, expect, it } from "vite-plus/test";
 import charts, { components } from "../src/html.ts";
+import details, { components as detailsComponents } from "../../details/src/html.ts";
 
 const render = createHtmlRenderer({ plugins: [charts()], components });
 // Charts take annotations from comark-annotate.
@@ -98,6 +99,44 @@ ${sizes.trim()}
     const ids = [...html.matchAll(/ id="([^"]+)"/g)].map((match) => match[1]);
     expect(ids.length).toBeGreaterThan(1);
     expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it("gives identical charts separate clip paths when the first is in a closed disclosure", async () => {
+    const render = createHtmlRenderer({
+      plugins: [charts(), details()],
+      components: { ...components, ...detailsComponents },
+    });
+    const plot = chart(`
+| category | value |
+| --- | --- |
+| A | 150 |
+| B | -50 |
+
+\`\`\`vega-lite
+{
+  "width": 200,
+  "height": 120,
+  "mark": { "type": "bar", "clip": true, "cornerRadiusEnd": 0 },
+  "encoding": {
+    "x": { "field": "category", "type": "nominal" },
+    "y": {
+      "field": "value",
+      "type": "quantitative",
+      "scale": { "domain": [0, 100], "nice": false, "clamp": false }
+    }
+  }
+}
+\`\`\``);
+    const page = `::details{summary="Earlier chart"}\n${plot.replace(/^::/gm, ":::")}\n::\n\n${plot}`;
+    const html = await render(page);
+    expect(await render(page)).toBe(html);
+    expect(html).toContain("<details");
+    expect(html).not.toMatch(/<details[^>]*\sopen(?:[\s=>])/);
+    const ids = [...html.matchAll(/<clipPath id="([^"]+)"/g)].map((match) => match[1]!);
+    const references = [...html.matchAll(/clip-path="url\(#([^)]+)\)"/g)].map((match) => match[1]!);
+    expect(ids).toHaveLength(2);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(references).toEqual(ids);
   });
 
   it("copies a chart as an image by default, and its data as a table or Markdown from the menu", async () => {
