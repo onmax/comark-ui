@@ -76,6 +76,15 @@ describe("comark-ui", () => {
     }
   });
 
+  it("keeps a reference that is a chip's label as text, so no link holds another", async () => {
+    const out = await renderHtml(
+      "See [comarkdown/comark#525](https://github.com/comarkdown/comark/issues/525).",
+      { github: { references: { repo: "onmax/comark-ui" } } },
+    );
+    expect(out).toContain('class="cp"');
+    expect(out.match(/<a /g)).toHaveLength(1);
+  });
+
   it("turns a plugin off, with its components", async () => {
     const { plugins, components } = html({ ...offline, zoom: false, github: { callouts: false } });
     expect(Object.keys(components)).not.toContain("zoom");

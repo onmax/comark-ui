@@ -2,7 +2,7 @@ Each named color means one thing: `violet`, the default, points something out, `
 
 ::incorrect
 ```md
-::screenshot{src="/pond.png" alt="The pond map with three ducks"}
+::screenshot{src="/pond.svg" alt="The pond map with three ducks"}
 :::annotation{x=20 y=30 w=15 h=10 color="orange"}
 The duck without a name tag.
 :::
@@ -12,7 +12,7 @@ The duck without a name tag.
 
 ::correct
 ```md
-::screenshot{src="/pond.png" alt="The pond map with three ducks"}
+::screenshot{src="/pond.svg" alt="The pond map with three ducks"}
 :::annotation{x=20 y=30 w=15 h=10 color="amber"}
 The duck without a name tag.
 :::

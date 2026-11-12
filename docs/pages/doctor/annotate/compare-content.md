@@ -5,10 +5,10 @@ A `::compare` lays out its two screenshots and nothing else, so text or other bl
 ::compare
 The pond before and after the fence.
 
-:::screenshot{src="/pond-before.png" alt="The pond with no fence"}
+:::screenshot{src="/pond.svg" alt="The pond with no fence"}
 :::
 
-:::screenshot{src="/pond-after.png" alt="The pond with a fence"}
+:::screenshot{src="/pond-fence.svg" alt="The pond with a fence"}
 :::
 ::
 ```
@@ -19,10 +19,10 @@ The pond before and after the fence.
 The pond before and after the fence.
 
 ::compare
-:::screenshot{src="/pond-before.png" alt="The pond with no fence"}
+:::screenshot{src="/pond.svg" alt="The pond with no fence"}
 :::
 
-:::screenshot{src="/pond-after.png" alt="The pond with a fence"}
+:::screenshot{src="/pond-fence.svg" alt="The pond with a fence"}
 :::
 ::
 ```

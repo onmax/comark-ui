@@ -3,10 +3,10 @@ A compare whose two screenshots are the same image shows no change, which usuall
 ::incorrect
 ```md
 ::compare
-:::screenshot{src="/pond.png" alt="The pond with no fence"}
+:::screenshot{src="/pond.svg" alt="The pond with no fence"}
 :::
 
-:::screenshot{src="/pond.png" alt="The pond with a fence"}
+:::screenshot{src="/pond.svg" alt="The pond with a fence"}
 :::
 ::
 ```
@@ -15,10 +15,10 @@ A compare whose two screenshots are the same image shows no change, which usuall
 ::correct
 ```md
 ::compare
-:::screenshot{src="/pond-before.png" alt="The pond with no fence"}
+:::screenshot{src="/pond.svg" alt="The pond with no fence"}
 :::
 
-:::screenshot{src="/pond-after.png" alt="The pond with a fence"}
+:::screenshot{src="/pond-fence.svg" alt="The pond with a fence"}
 :::
 ::
 ```

@@ -3,10 +3,10 @@
 ::incorrect
 ```md
 ::compare{mode="overlay"}
-:::screenshot{src="/pond-before.png" alt="The pond with no fence"}
+:::screenshot{src="/pond.svg" alt="The pond with no fence"}
 :::
 
-:::screenshot{src="/pond-after.png" alt="The pond with a fence"}
+:::screenshot{src="/pond-fence.svg" alt="The pond with a fence"}
 :::
 ::
 ```
@@ -15,10 +15,10 @@
 ::correct
 ```md
 ::compare{mode="slider"}
-:::screenshot{src="/pond-before.png" alt="The pond with no fence"}
+:::screenshot{src="/pond.svg" alt="The pond with no fence"}
 :::
 
-:::screenshot{src="/pond-after.png" alt="The pond with a fence"}
+:::screenshot{src="/pond-fence.svg" alt="The pond with a fence"}
 :::
 ::
 ```

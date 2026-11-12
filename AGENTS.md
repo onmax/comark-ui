@@ -231,7 +231,6 @@ How most packages work, so the bullets below don't repeat it:
   - `vp dlx skills add onmax/comark-ui` lists them beside comark-ui and installs the ones picked.
   - Each installs alone, so it carries the syntax of the blocks it uses in `references/blocks.md` and links nothing outside its folder. Its `references/example.md` is a finished document.
   - Each has a page in `docs/pages/skills/` that leads with that example rendered.
-- `skills/data-explorer` writes `report.json` instead of Comark: a shared template in `assets/` draws it as an interactive page, and `assets/page.html` is the one page: `scripts/build.mjs` checks `report.json`, fills the page's slots, inlines Vega when comark-ui is installed, and screenshots every tab, and an agent without Node fills the slots by hand. The page loads anything missing from jsDelivr, so `app.js` and `style.css` must keep working from `comark-ui/dist/skills/data-explorer/assets/` on npm. Its page links a live example on Drop instead of rendering one.
 
 ### Docs site
 

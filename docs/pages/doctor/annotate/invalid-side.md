@@ -2,7 +2,7 @@ A side note sits to the left of the image, to its right, above it, or below it, 
 
 ::incorrect
 ```md
-::screenshot{src="/pond.png" alt="The pond map with three ducks"}
+::screenshot{src="/pond.svg" alt="The pond map with three ducks"}
 :::annotation{x=20 y=30 w=15 h=10 side="under"}
 The duck without a name tag.
 :::
@@ -12,7 +12,7 @@ The duck without a name tag.
 
 ::correct
 ```md
-::screenshot{src="/pond.png" alt="The pond map with three ducks"}
+::screenshot{src="/pond.svg" alt="The pond map with three ducks"}
 :::annotation{x=20 y=30 w=15 h=10 side="bottom"}
 The duck without a name tag.
 :::

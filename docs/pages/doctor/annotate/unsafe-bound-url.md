@@ -6,7 +6,7 @@ Comark drops a bound `src` or `href` that resolves to a script URL, such as `jav
 pond: "javascript:alert('quack')"
 ---
 
-::screenshot{src="/pond.png" alt="The pond map with three ducks" :href="frontmatter.pond"}
+::screenshot{src="/pond.svg" alt="The pond map with three ducks" :href="frontmatter.pond"}
 ::
 ```
 ::
@@ -17,7 +17,7 @@ pond: "javascript:alert('quack')"
 pond: "https://pond.example.com/map"
 ---
 
-::screenshot{src="/pond.png" alt="The pond map with three ducks" :href="frontmatter.pond"}
+::screenshot{src="/pond.svg" alt="The pond map with three ducks" :href="frontmatter.pond"}
 ::
 ```
 ::
