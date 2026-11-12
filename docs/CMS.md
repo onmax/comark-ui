@@ -30,7 +30,14 @@ To add another project, add its exact `/api/auth/callback/github` URL in the App
 | `GITHUB_CLIENT_ID` | The App's OAuth client ID |
 | `GITHUB_CLIENT_SECRET` | The App's OAuth client secret |
 | `BETTER_AUTH_SECRET` | A separate stable secret for this project's sessions |
-| `VITEHUB_GITHUB_TOKEN` | This project's Content GitHub Store credential |
+| `VITEHUB_GITHUB_APP_ID` | The App ID, `5510368`. Set it only together with the private key |
+| `VITEHUB_GITHUB_PRIVATE_KEY` | A private key of the App, in PEM |
+| `VITEHUB_GITHUB_INSTALLATION_ID` | The installation on this repository, `176174996`. Optional: it saves one lookup |
+| `VITEHUB_GITHUB_TOKEN` | A token for the Content GitHub Store when the App is not set |
 | `VITEHUB_CONSOLE_KEY_CONSOLE_<8 hex>` | The public key of the Console link, from the Console's setup page |
 
-The OAuth credentials are saved in Bitwarden as **Personal Project CMS GitHub App**. Keep credentials out of source files and build logs. The Content GitHub Store still uses `VITEHUB_GITHUB_TOKEN`; an App installation alone does not configure that Store's authentication.
+The OAuth credentials are saved in Bitwarden as **Personal Project CMS GitHub App**. Keep credentials out of source files and build logs.
+
+The Content GitHub Store signs in as the App installation when the Worker has `VITEHUB_GITHUB_APP_ID` and `VITEHUB_GITHUB_PRIVATE_KEY`. The installation has a rate limit of its own, so agents that use the personal tokens of the same account can't use up the editor's requests, and its commits are made by the App's bot. Without the App, the Store uses `VITEHUB_GITHUB_TOKEN`. `VITEHUB_GITHUB_APP_ID` without a private key makes every Content call fail, so set both or neither. To add a private key, generate one in the App settings and save it in the Bitwarden item first.
+
+Content keeps the GitHub answers that never change (commits, trees, archives) in Workers KV (`vitehub.kv` in `nuxt.config.ts`, the `comark-ui-kv` namespace), so a new isolate reads the Console overview with a few GitHub requests.
