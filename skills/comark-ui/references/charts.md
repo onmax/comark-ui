@@ -20,7 +20,7 @@ On the page, a Copy button over the chart's corner copies it as a PNG, and its m
 - Dates on x read as time when they look like `2026`, `2026-04`, `2026-04-15`, or an ISO date and time.
 - Inside the block, the table comes first, then any marks or Vega-Lite spec. Write explanations above or below the block.
 
-Props, all optional: `type` (below, default `bar` whatever the table holds, so write `type="line"` for a trend), `x` (the x column, default the first), `y` (the columns to draw, comma-separated, default all the others), `title` (the caption and the chart's name for screen readers), `labels` (prints the numbers on bars, waterfall steps, dumbbell rows, sankey nodes, and gantt bars, as in `::chart{type="stacked" labels}`; without it the axis and the data table carry them), and `horizontal` (turns `bar` and `stacked` bars sideways, for long names such as file paths; past 40 bars they turn on their own). Give every chart a `title` that says what it measures and in what unit. Two or more series always get a legend over the plot.
+Props, all optional: `type` (below, default `bar` whatever the table holds, so write `type="line"` for a trend), `x` (the x column, default the first), `y` (the columns to draw, comma-separated, default all the others), `title` (the caption and the chart's name for screen readers), `description` (one line under the title saying what to read in the chart), `unit` (the numbers' unit on bars and the value axis: `$` prints before, as `$22.2k`, `%` or `ms` after; numbers from a thousand up print as three digits and a letter), `log` (a log scale for numbers that span orders of magnitude: alone for the numbers' axis, `log="x"` for a line or scatter over numbers, `log="both"`; every number on it must be above 0), `better` (`higher` or `lower`, on a heatmap: colors its cells red to green), `labels` (bars, stacked bars, and heatmaps print their numbers unless `labels=false`; on waterfalls, dumbbells, sankeys, and gantts write `labels` to print them), and `horizontal` (turns `bar` and `stacked` bars sideways, for long names such as file paths; past 40 bars they turn on their own). Give every chart a `title` that says what it measures and in what unit, and a `description` that says what the reader should see. A line chart of two to eight series names each line at its end; other charts of two or more series get a legend over the plot.
 
 ## Choose the type
 
@@ -35,14 +35,15 @@ Props, all optional: `type` (below, default `bar` whatever the table holds, so w
 | Before and after for several metrics | `dumbbell` | metric names, then a `before` and an `after` column |
 | How changes add up to a total | `waterfall` | the start total, each change (negative for a drop), then the end total, which must be the start plus every change, in one column |
 | Shares of one whole, five or fewer | `pie` | names, then one column of non-negative numbers |
+| One table against another, such as counts per customer and type, or scores per agent and section | `heatmap` | names, then one column per column of cells; add `better="higher"` when the numbers rate something |
 | Steps or tasks over time, such as a build trace, a deploy, or a plan | `gantt` | the task, then a start and an end column, as numbers or dates; a column of names, such as a run or a phase, colors the bars |
 | Where an amount goes, such as a budget, a cashflow, or a bundle's bytes | `sankey` | where each flow comes from, where it goes, and how much; a flow can't loop back, and a node in the middle can't send out more than it takes in |
 
-When none of these fit, such as a box plot or a heatmap, put a Vega-Lite spec after the table in a fenced `vega-lite` block. The table is its data, so leave `data` out of the spec and name the table's headers as fields; marks don't apply.
+When none of these fit, such as a box plot or a histogram, put a Vega-Lite spec after the table in a fenced `vega-lite` block. The table is its data, so leave `data` out of the spec and name the table's headers as fields; marks don't apply.
 
 In a `gantt`, each row is one bar in table order, and a row that ends where it starts is a milestone, drawn as a diamond. Write dates as `2026-04-15` or `2026-04-15T09:30`; a time without a zone is UTC. To compare runs, add a column naming the run and repeat the steps in each.
 
-For a before and after of one or two metrics, grouped `bar` reads best; past three, use `dumbbell`. Keep the rows in the order the reader should read them: charts draw them in table order.
+For a before and after of one or two metrics, grouped `bar` reads best; past three, use `dumbbell`. For costs, timings, or token counts that run from cents to thousands, add `log` rather than letting the largest bar flatten the rest. Keep the rows in the order the reader should read them: charts draw them in table order.
 
 ## Mark what matters
 

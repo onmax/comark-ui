@@ -297,7 +297,7 @@ test("hundreds of worst-case charts draw with no text colliding, clipped, or pas
   expect(problems).toEqual([]);
 });
 
-test("a chart beside a link keeps its own card, light and dark", async ({ page }) => {
+test("a chart beside a link keeps its own hairline, light and dark", async ({ page }) => {
   const render = createHtmlRenderer({
     plugins: [charts(), chips({ download: false })],
     components: { ...components, ...chipsComponents },
@@ -314,13 +314,14 @@ test("a chart beside a link keeps its own card, light and dark", async ({ page }
   await page.goto("/fixture/", { waitUntil: "domcontentloaded" });
   const figure = page.locator("figure.cch");
   await expect(page.locator("main a").first()).toHaveCSS("border-top-left-radius", "6px");
-  for (const [scheme, background] of [
-    ["light", "rgb(255, 255, 255)"],
-    ["dark", "rgb(10, 10, 10)"],
+  for (const [scheme, border] of [
+    ["light", "rgb(229, 229, 229)"],
+    ["dark", "rgba(255, 255, 255, 0.1)"],
   ] as const) {
     await page.emulateMedia({ colorScheme: scheme });
-    await expect(figure).toHaveCSS("background-color", background);
-    await expect(figure).toHaveCSS("border-top-left-radius", "10px");
+    await expect(figure).toHaveCSS("border-top-color", border);
+    await expect(figure).toHaveCSS("border-left-width", "0px");
+    await expect(figure).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   }
 });
 
