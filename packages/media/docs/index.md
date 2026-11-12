@@ -34,6 +34,7 @@ The alert sound the reviewer asked for:
 - Only the first frame and the length load until the reader presses play.
 - The controls match the page. The browser's own show before the script runs and when the file can't play.
 - A settings panel sets the speed, from 0.5× to 2×, and turns looping on or off.
+- The settings panel copies a link to the file at the second the player is at, as a `#t=` media fragment, and a video's frame on screen as a PNG. See [Copying](#copying).
 - On a touch screen, a video's controls spread over the picture, with play in the middle.
 - Starting a player with sound pauses the others. Muted ones play on.
 
@@ -97,6 +98,24 @@ https://github.com/user-attachments/assets/2f3c0e3e-1c4b-4c3a-9a6b-0b1e2f3a4b5c
 
 A link with text of its own, or one inside a sentence, stays a link.
 
+
+## Copying
+
+**Copy link** gives the file's address with `#t=` and the second the player is at, so the link opens the file there. The address comes from the fallback link inside the `<video>` or `<audio>`, so it stays the file's own when a host plays it from a `blob:` URL.
+
+**Copy frame** pauses a video and copies the frame on screen as a PNG. A file from another host needs CORS headers for that, or the panel says it can't.
+
+Both write to the clipboard. A host that can't, or wants to copy another way, listens for `comark-media-copy` on the player or above it and cancels the event:
+
+```ts
+import type { MediaCopyDetail } from "comark-media/client";
+
+document.addEventListener("comark-media-copy", (event: CustomEvent<MediaCopyDetail>) => {
+  event.preventDefault();
+  if (event.detail.kind === "link") share(event.detail.text);
+  else upload(event.detail.image);
+});
+```
 ## Examples
 
 ### Recordings as evidence

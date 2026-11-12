@@ -1,6 +1,24 @@
+/**
+ * What the `comark-media-copy` event carries: the link to the file at the time the player is at (`#t=` seconds, none
+ * at the start), or the frame on screen as a PNG.
+ */
+export type MediaCopyDetail =
+  | { kind: "link"; text: string; time: number }
+  | { kind: "frame"; image: Blob; time: number };
+
 declare global {
   interface Window {
     __comarkMedia?: { users: number; stop: () => void; sync: () => void };
+  }
+  // The event bubbles from the player, so a listener anywhere above it gets a typed `detail`.
+  interface HTMLElementEventMap {
+    "comark-media-copy": CustomEvent<MediaCopyDetail>;
+  }
+  interface DocumentEventMap {
+    "comark-media-copy": CustomEvent<MediaCopyDetail>;
+  }
+  interface WindowEventMap {
+    "comark-media-copy": CustomEvent<MediaCopyDetail>;
   }
   // Safari's, on an iPhone, which has no full screen for any other element.
   interface HTMLVideoElement {
@@ -25,9 +43,14 @@ const option = (name: string, label: string, paths: string, choices: string[][])
     .join("") +
   "</span>";
 
+const linkIcon =
+  '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>';
+const frameIcon =
+  '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.09-3.09a2 2 0 0 0-2.82 0L6 21"/>';
+
 /**
  * A player's controls, the same in every renderer: play, the time, volume, and a settings panel for the speed and
- * looping; a video's add a full screen button. They show once the script runs;
+ * looping, with Copy link (at the time it's at) and a video's Copy frame; a video's add a full screen button. They show once the script runs;
  * until then, and when the file can't play, the browser's own controls show instead.
  */
 export const controls = (kind: "audio" | "video") =>
@@ -52,6 +75,11 @@ export const controls = (kind: "audio" | "video") =>
       ["on", "On"],
     ],
   ) +
+  `<span class="cm-actions"><button type="button" class="cm-copy-link">${icon("link", linkIcon, false)}<span>Copy link</span></button>` +
+  (kind === "video"
+    ? `<button type="button" class="cm-copy-frame">${icon("frame", frameIcon, false)}<span>Copy frame</span></button>`
+    : "") +
+  '<span class="cm-status" role="status"></span></span>' +
   "</span></span>" +
   (kind === "video"
     ? `<button type="button" class="cm-full" aria-label="Full screen">${icon("full", '<path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/>', false)}${icon("exit", '<path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/>', false)}</button>`
@@ -163,6 +191,10 @@ export function start(css: string): () => void {
           ? Number(input.value) === media.playbackRate
           : (input.value === "on") === media.loop;
     }
+    const link = player.querySelector(".cm-copy-link>span");
+    const second = Math.floor(at);
+    if (link && !player.hasAttribute("data-copied"))
+      link.textContent = second ? `Copy link at ${clock(second)}` : "Copy link";
     const seek = player.querySelector<HTMLInputElement>(".cm-seek");
     if (!seek) return;
     seek.max = String(total);
@@ -302,6 +334,93 @@ export function start(css: string): () => void {
       // A refused play leaves the player paused, and a file that can't load shows the browser's controls instead.
       else if (media.paused) media.play().catch(() => {});
       else media.pause();
+    },
+    { signal },
+  );
+
+  // The file's own address is the fallback link's: a host may play the file from a blob: URL of its own.
+  const linkAt = (media: HTMLMediaElement, second: number) => {
+    const href = media.querySelector<HTMLAnchorElement>(":scope>a[href]")?.href || media.currentSrc;
+    const url = href.replace(/#t=[^&]*$/, "").replace(/#$/, "");
+    return second ? `${url}${url.includes("#") ? "&" : "#"}t=${second}` : url;
+  };
+  const frameOf = (video: HTMLVideoElement) =>
+    new Promise<Blob>((resolve, reject) => {
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const context = canvas.getContext("2d");
+      if (!context || !canvas.width) return reject(new Error("No frame yet"));
+      context.drawImage(video, 0, 0);
+      // A file from another host without CORS taints the canvas, and reading it throws.
+      try {
+        canvas.toBlob(
+          (blob) => (blob ? resolve(blob) : reject(new Error("No frame"))),
+          "image/png",
+        );
+      } catch (error) {
+        reject(error);
+      }
+    });
+  const said = new WeakMap<Element, number>();
+  function say(player: HTMLElement, button: Element, text: string) {
+    const status = player.querySelector(".cm-status");
+    if (status) status.textContent = text;
+    const label = button.querySelector("span");
+    const before = label?.textContent ?? "";
+    player.setAttribute("data-copied", "");
+    if (label) label.textContent = text;
+    clearTimeout(said.get(player));
+    said.set(
+      player,
+      window.setTimeout(() => {
+        player.removeAttribute("data-copied");
+        if (status) status.textContent = "";
+        if (label && button.classList.contains("cm-copy-frame")) label.textContent = before;
+        draw(player);
+      }, 1500),
+    );
+  }
+  async function copy(player: HTMLElement, button: Element, media: HTMLMediaElement) {
+    const time = Math.floor(media.currentTime);
+    let detail: MediaCopyDetail;
+    if (button.classList.contains("cm-copy-link"))
+      detail = { kind: "link", text: linkAt(media, time), time };
+    else if (media instanceof HTMLVideoElement) {
+      media.pause();
+      try {
+        detail = { kind: "frame", image: await frameOf(media), time: media.currentTime };
+      } catch {
+        return say(player, button, "Can't copy this video's frames");
+      }
+    } else return;
+    // A host that copies by other means, such as a page in a sandboxed frame, takes the copy by cancelling the event.
+    const event = new CustomEvent("comark-media-copy", { bubbles: true, cancelable: true, detail });
+    if (!player.dispatchEvent(event)) return say(player, button, "Copied");
+    // SAFETY: `clipboard` is missing outside secure contexts, whatever the DOM types say.
+    const clipboard = navigator.clipboard as Clipboard | undefined;
+    const written =
+      detail.kind === "link"
+        ? clipboard?.writeText(detail.text)
+        : "ClipboardItem" in window
+          ? clipboard?.write([new ClipboardItem({ "image/png": detail.image })])
+          : undefined;
+    if (!written) return say(player, button, "Couldn't copy");
+    written.then(
+      () => say(player, button, "Copied"),
+      () => say(player, button, "Couldn't copy"),
+    );
+  }
+  document.addEventListener(
+    "click",
+    (event) => {
+      const button =
+        event.target instanceof Element
+          ? event.target.closest(".cm-copy-link,.cm-copy-frame")
+          : null;
+      const player = playerOf(button);
+      const media = player && mediaOf(player);
+      if (button && player && media) void copy(player, button, media);
     },
     { signal },
   );

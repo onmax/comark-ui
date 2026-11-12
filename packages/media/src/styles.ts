@@ -90,6 +90,13 @@ export const css = `@layer comark{${[
   ".cm-choices input{position:absolute;inset:0;margin:0;opacity:0;cursor:inherit}",
   ".cm-choices label:has(:checked){background:var(--_comark-background);color:var(--_comark-foreground);box-shadow:0 1px 2px rgb(0 0 0/.08)}",
   "@media (hover:hover){.cm-choices label:hover{color:var(--_comark-foreground)}}",
+  // Copy link and Copy frame are a row of their own under the settings, plain like a menu's items.
+  ".cm-actions{grid-column:1/-1;display:flex;flex-direction:column;gap:2px;margin:.125rem -.25rem 0;padding-top:.375rem;border-top:1px solid var(--_comark-border)}",
+  ".cm-actions button{display:flex;align-items:center;gap:.5rem;height:1.75rem;padding:0 .5rem;border:0;border-radius:calc(var(--_comark-radius) - 3px);background:none;color:var(--_comark-foreground);font:inherit;font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap;text-align:start;cursor:pointer}",
+  ".cm-actions svg{color:var(--_comark-muted)}",
+  "@media (hover:hover){.cm-actions button:hover{background:var(--_comark-accent)}}",
+  `.cm-actions button:focus-visible{outline:none;${ring}}`,
+  ".cm-status{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}",
   `.cm-choices label:has(:focus-visible){${ring}}`,
   // Fit the panel to the bar, leaving room for the full screen button beside its desktop anchor. Choices can wrap
   // in a smaller player without shrinking their text; the touch anchor sits at the bar's right edge instead.

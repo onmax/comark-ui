@@ -45,21 +45,22 @@ const serve = (body: Buffer, type: string) => (route: Route) => {
 const open = async (
   page: Page,
   markdown: string,
-  options: { script?: boolean; typeset?: boolean; width?: string } = {},
+  options: { script?: boolean; typeset?: boolean; width?: string; origin?: string } = {},
 ) => {
+  const origin = options.origin ?? "http://media.test";
   await page.route("**/silence.wav*", serve(silence, "audio/wav"));
   await page.route("**/clip.webm", serve(clip, "video/webm"));
   await page.route("**/missing.wav", (route) => route.fulfill({ status: 404 }));
   let html = await render(markdown);
   if (options.script === false) html = html.replace(/<script>[\s\S]*?<\/script>/g, "");
   if (options.typeset) html = `<main><style>${typesetCss}</style>${html}</main>`;
-  await page.route("http://media.test/", (route) =>
+  await page.route(`${origin}/`, (route) =>
     route.fulfill({
       contentType: "text/html",
       body: `<!doctype html><html><body style="width:${options.width ?? "32rem"};margin:2rem">${html}</body></html>`,
     }),
   );
-  await page.goto("http://media.test/", { waitUntil: "domcontentloaded" });
+  await page.goto(`${origin}/`, { waitUntil: "domcontentloaded" });
 };
 
 test("an audio player plays, pauses, and seeks with its own controls", async ({ page }) => {
@@ -532,4 +533,59 @@ test("the browser's player shows without the script, and when the file can't pla
   await expect(missing).toHaveAttribute("data-error");
   await expect(missing.locator("audio")).toBeVisible();
   await expect(missing.locator(".cm-bar")).toBeHidden();
+});
+
+test("Copy link gives the file's address at the second the player is at, and Copy frame the frame as a PNG", async ({
+  page,
+  context,
+}) => {
+  // localhost is a secure context, so the clipboard is there to grant.
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await open(page, "![A gray clip](clip.webm)\n\n![Silence](silence.wav)", {
+    origin: "http://localhost:4790",
+  });
+  const player = page.getByRole("group", { name: "A gray clip" });
+  await expect(player.locator(".cm-time").last()).toHaveText("0:04");
+  await player.getByRole("button", { name: "Settings" }).click();
+  await expect(player.getByRole("button", { name: "Copy link" })).toBeVisible();
+  await expect(page.getByRole("group", { name: "Silence" }).locator(".cm-copy-frame")).toHaveCount(
+    0,
+  );
+
+  await player.locator("video").evaluate((video: HTMLVideoElement) => (video.currentTime = 2.6));
+  const link = player.getByRole("button", { name: "Copy link at 0:02" });
+  await link.click();
+  await expect(player.getByRole("status")).toHaveText("Copied");
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
+    "http://localhost:4790/clip.webm#t=2",
+  );
+
+  // A host that copies by other means takes the copy by cancelling the event.
+  const taken = page.evaluate(
+    () =>
+      new Promise<{ kind: string; type: string; size: number; time: number }>((resolve) =>
+        document.addEventListener(
+          "comark-media-copy",
+          (event) => {
+            event.preventDefault();
+            const { detail } = event;
+            if (detail.kind === "frame")
+              resolve({
+                kind: detail.kind,
+                type: detail.image.type,
+                size: detail.image.size,
+                time: detail.time,
+              });
+          },
+          { once: true },
+        ),
+      ),
+  );
+  await player.getByRole("button", { name: "Copy frame" }).click();
+  const frame = await taken;
+  expect(frame).toMatchObject({ kind: "frame", type: "image/png" });
+  expect(frame.size).toBeGreaterThan(0);
+  expect(frame.time).toBeCloseTo(2.6, 1);
+  await expect(player.getByRole("status")).toHaveText("Copied");
+  await expect(player).not.toHaveAttribute("data-playing");
 });

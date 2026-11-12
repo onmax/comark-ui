@@ -132,6 +132,7 @@ How most packages work, so the bullets below don't repeat it:
   - A video's `width` and `height` are as written, both or neither, or read with comark-zoom's `measure()` unless the `size` option is `false`. Every renderer writes them on the `<video>`, and the 16:9 box its styles reserve applies only without them.
   - The renderers wrap the `<video controls>` or `<audio controls>` in `.cm-video` or `.cm-audio` with a bar of controls, one string from `controls()` in `src/client.ts` that every renderer inlines.
   - The script in `start()` marks each player `data-media-ready` to show the bar and drops a video's own controls. Without the script, and when the file can't play, the browser's controls show. The script is built like carousel's.
+  - The settings panel's Copy link takes the file's address from the fallback `<a>` inside the media element, so a host that plays it from a `blob:` URL still copies the real one. Copy link and Copy frame first send a cancelable `comark-media-copy` event, so a host can copy another way.
 - `packages/metrics` is `comark-metrics`.
   - Its parse plugin works out each `:delta`'s arrow, percent, and verdict, and renames `:progress` to `progress-bar` with its percent, so a raw `<progress>` never reaches a component.
   - It replaces `::stats` with its table plus a Change column of `delta` cells, or with `tiles` with a `stat-tiles` node of `div` tiles holding a `dt` name, a `dd` value, and a `delta`.
