@@ -20,10 +20,17 @@ const command = computed(() => {
   ];
   return `${add} ${packages.value}`;
 });
-// A raised pill on a muted track, as a segmented control.
+// A raised pill on a muted track, as a segmented control. The indicator renders only in the browser. Until then Nuxt
+// UI draws the active tab's pill behind its trigger, so that pill gets the same look. Tailwind finds classes by their
+// full text, so the variant is written out each time.
 const segmented = {
   indicator: "bg-default shadow-xs ring ring-default",
-  trigger: "data-[state=active]:text-highlighted!",
+  trigger: [
+    "data-[state=active]:text-highlighted!",
+    "in-[[data-slot=list]:not(:has([data-slot=indicator]))]:data-[state=active]:before:bg-default",
+    "in-[[data-slot=list]:not(:has([data-slot=indicator]))]:data-[state=active]:before:ring",
+    "in-[[data-slot=list]:not(:has([data-slot=indicator]))]:data-[state=active]:before:ring-default",
+  ].join(" "),
 };
 const copied = ref(false);
 let copiedTimer: ReturnType<typeof setTimeout> | undefined;
