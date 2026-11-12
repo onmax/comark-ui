@@ -2,14 +2,14 @@
 
 ::incorrect
 ```md
-::screenshot{src="/pond.png" alt="The pond map with three ducks" viewport="1440 by 900"}
+::screenshot{src="/pond.svg" alt="The pond map with three ducks" viewport="1440 by 900"}
 ::
 ```
 ::
 
 ::correct
 ```md
-::screenshot{src="/pond.png" alt="The pond map with three ducks" viewport="1440x900"}
+::screenshot{src="/pond.svg" alt="The pond map with three ducks" viewport="1440x900"}
 ::
 ```
 ::

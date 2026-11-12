@@ -2,7 +2,7 @@ A `:ref` to a label that nothing in the document has renders as the bare id in b
 
 ::incorrect
 ```md
-![A pigeon on the deploy dashboard](pigeon.png){#fig-pigeon}
+![A pigeon on the deploy dashboard](/dashboard.png){#fig-pigeon}
 
 See :ref{#fig-pidgeon} for where it sat.
 ```
@@ -10,7 +10,7 @@ See :ref{#fig-pidgeon} for where it sat.
 
 ::correct
 ```md
-![A pigeon on the deploy dashboard](pigeon.png){#fig-pigeon}
+![A pigeon on the deploy dashboard](/dashboard.png){#fig-pigeon}
 
 See :ref{#fig-pigeon} for where it sat.
 ```

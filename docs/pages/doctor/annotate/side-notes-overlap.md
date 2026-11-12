@@ -2,7 +2,7 @@ Notes on one side line up with their marks. When two marks on the same side sit 
 
 ::incorrect
 ```md
-::screenshot{src="/pond.png" alt="The pond map with three ducks"}
+::screenshot{src="/pond.svg" alt="The pond map with three ducks"}
 :::annotation{x=10 y=10 w=10 h=10 side="left"}
 The first duck in line.
 :::
@@ -15,7 +15,7 @@ The second duck in line.
 
 ::correct
 ```md
-::screenshot{src="/pond.png" alt="The pond map with three ducks"}
+::screenshot{src="/pond.svg" alt="The pond map with three ducks"}
 :::annotation{x=10 y=10 w=10 h=10 side="left"}
 The first duck in line.
 :::

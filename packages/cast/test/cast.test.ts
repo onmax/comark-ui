@@ -73,6 +73,11 @@ describe("comark-cast", () => {
     expect(await replay("\u001b[41m  \u001b[0m")).toBe('<span class="cca-b1">  </span>');
   });
 
+  it("keeps a blank first line, which the parser drops after the pre's start tag", async () => {
+    const term = await screen(inline(header, '[0, "o", "\\r\\nok"]'));
+    expect(term).toBe("<span>\n</span>ok");
+  });
+
   it("escapes what it prints", async () => {
     expect(await screen(inline(header, '[0, "o", "<b>&</b>"]'))).toBe("&lt;b&gt;&amp;&lt;/b&gt;");
   });
