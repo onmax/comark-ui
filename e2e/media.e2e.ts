@@ -548,6 +548,9 @@ test("Copy link gives the file's address at the second the player is at, and Cop
   await expect(player.locator(".cm-time").last()).toHaveText("0:04");
   await player.getByRole("button", { name: "Settings" }).click();
   await expect(player.getByRole("button", { name: "Copy link" })).toBeVisible();
+  // Each action keeps its icon beside its label.
+  for (const action of [".cm-copy-link", ".cm-copy-frame"])
+    expect((await player.locator(`${action} svg`).boundingBox())?.width).toBeGreaterThan(10);
   await expect(page.getByRole("group", { name: "Silence" }).locator(".cm-copy-frame")).toHaveCount(
     0,
   );
