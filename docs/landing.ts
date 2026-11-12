@@ -234,7 +234,8 @@ const cards: Demo[] = (await loadExamples(packageOrder)).map((example) => {
   };
 });
 
-// The repository's stars, read once per build. Offline or rate-limited, the button just says GitHub.
+// The repository's stars, read once per build. Offline or rate-limited, the button just says GitHub. The field stays in
+// landing.json as null then, so the type LandingHero.vue reads from it keeps `stars`.
 const stars = await fetch("https://api.github.com/repos/onmax/comark-ui", {
   headers: { accept: "application/vnd.github+json" },
   signal: AbortSignal.timeout(5000),
@@ -250,7 +251,7 @@ for (const demo of deal([...cards, ...extra])) demos.push(await demoCard(demo));
 mkdirSync(new URL(".generated/", docs), { recursive: true });
 writeFileSync(
   new URL(".generated/landing.json", docs),
-  `${JSON.stringify({ packages, stars }, null, 2)}\n`,
+  `${JSON.stringify({ packages, stars: stars ?? null }, null, 2)}\n`,
 );
 writeFileSync(
   new URL("canvas-cards.json", publicDir),
