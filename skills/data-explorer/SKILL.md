@@ -16,16 +16,17 @@ The block reference is [references/blocks.md](references/blocks.md); read it bef
 
 ## Build it
 
-The build checks `report.json`, writes one self-contained `report.html`, and screenshots every tab. Copy this skill's [scripts/](scripts/build.mjs) and [assets/](assets/app.js) folders next to the report, keeping them side by side, then:
+The page is [assets/page.html](assets/page.html) with `report.json`, the template's [assets/style.css](assets/style.css) and [assets/app.js](assets/app.js) in its slots. Fill it the first way your environment allows:
 
-```sh
-mkdir -p tmp/data-explorer && cd tmp/data-explorer
-echo '{ "private": true, "type": "module" }' > package.json
-pnpm add --ignore-workspace comark-ui playwright
-node ../../scripts/build.mjs ../../report.json ../../report.html --shots ../../shots
-```
+1. **With Node**, run the build. It checks `report.json` against every limit and names the fix, fills the page, and screenshots every tab. Copy this skill's `scripts/` and `assets/` folders next to the report, keeping them side by side, then:
 
-Without its own `package.json`, pnpm walks up to the repository's and can fail on its catalog. Vega and Vega-Lite come from comark-ui's install and are inlined into the page, so it opens from disk with no network but for its font. When Playwright has no browser downloaded, the build uses the newest Chromium in `~/.cache/ms-playwright`.
+   ```sh
+   node scripts/build.mjs report.json report.html --shots shots
+   ```
+
+   `--shots` needs `playwright` installed where you run it; without the flag, the build needs nothing installed. Run it from a folder with `comark-ui` installed too (`pnpm add --ignore-workspace comark-ui playwright` in a scratch folder with its own `package.json`) and the page carries Vega inline and opens offline. When Playwright has no browser downloaded, the build uses the newest Chromium in `~/.cache/ms-playwright`.
+
+2. **Without Node**, such as in a chat app's sandbox, fill [assets/page.html](assets/page.html) yourself, with any language: `report.json` goes inside `<script id="report-data">` with every `<` written as `\u003c`, `style.css` inside `<style id="rp-style">`, and `app.js` inside `<script id="rp-app">`. Set the `<title>`. When you can't read a file of this skill, leave its slot empty: the page then loads it from the latest comark-ui on jsDelivr, and loads Vega the same way, so it needs a network connection when it opens. Nothing checks the limits on this path, so compare `report.json` with the limits in [references/blocks.md](references/blocks.md) before you hand it back.
 
 ## Steps
 
@@ -47,8 +48,8 @@ Without its own `package.json`, pnpm walks up to the repository's and can fail o
 6. **Words, last.** Write a short product-like `title` and a `subtitle` (the source and the date range), a `title` per block that names what is measured, and a `note` only where a block would mislead without it or says how to use it ("Click a row to filter"). Definitions, caveats and how you counted go in `method`.
    Done when no block has a sentence the numbers already show.
 
-7. **Build and look.** Run the build and fix every error it prints; each one says how. Then open **every** screenshot, light and dark and phone, and check it like a reader: labels collide or are cut, a block is empty or flat, colors disagree between blocks, a tab without a table or matrix, a fact the blocks don't support. Change the blocks or the prep, not the template.
-   Done when the build exits 0 and you have opened every screenshot of the last build.
+7. **Build and look.** Run the build and fix every error it prints; each one says how. Then open **every** screenshot, light and dark and phone, and check it like a reader. Without Node, open the page in your host's preview if it has one, and check the same things: labels collide or are cut, a block is empty or flat, colors disagree between blocks, a tab without a table or matrix, a fact the blocks don't support. Change the blocks or the prep, not the template.
+   Done when the build exits 0 and you have opened every screenshot of the last build, or, without Node, when `report.json` keeps every limit and you have looked at the page.
 
 8. **Hand back** the path to `report.html`, the screenshot folder, and three lines: what the report answers, the most surprising finding, and anything the data couldn't answer. The page is one file that opens from disk or any static host. When the reader wants to share it, publish it to [Drop](https://drop.vitehub.dev/?utm_source=comark-ui&utm_medium=skills): the link is private, a rebuild on new data becomes a new version at the same URL, and readers can comment on the numbers.
 

@@ -91,7 +91,7 @@ Every block takes `title`, `note`, `wide`, `half`.
 
 - `line`, `area`: `x` (a year, an ISO date, or a category), `y`, optional `series`; or wide rows with `"y": ["fix", "feat"]` and `names`. Lines are named at their end; `endValues: true` adds the last value. `emphasis` draws one series (a total, "All") in the text color and thicker. `points: true` marks every value. `area` stacks with a series; `"stack": "percent"` makes shares.
 - `bar`, `stacked`, `grouped`: `x` the category, `y` the value, optional `series`. `horizontal: true` sorts by value; `limit` keeps the top N; `"stack": "percent"` for shares.
-- `scatter`: `x`, `y`, optional `size`, `series`, `label` (names the top `labelTop` points).
+- `scatter`: `x`, `y`, optional `size`, `series`, `label` (names the top `labelTop` points, moved apart so they don't overlap). `logX`/`logY` keep points at 0 on the axis. A click on a point filters by its `label` or `series` when that field is a list filter's, and otherwise searches for its `label`, which narrows every table to that row.
 - `histogram`: `x` only; `bins` (default 30).
 
 Options for any chart: `format` (`number`, `integer`, `compact`, `percent` for 0–1 values, `money`), `height` (default 240), `highlight` (one series in color, the rest gray), `tones`, `logToggle`, `xTitle`, `yTitle`.

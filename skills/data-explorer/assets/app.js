@@ -702,13 +702,19 @@ function scatterSpec(block, rows, width) {
         legend: {},
       }
     : { value: PALETTE[0] };
-  const pos = (f, log, title) => ({
-    field: field(f),
-    type: "quantitative",
-    title: title ?? f,
-    scale: { zero: false, ...(log ? { type: "log" } : { nice: true }) },
-    axis: { format: D3.compact },
-  });
+  // A log scale can't place 0, so a field with zeros gets symlog, which keeps them on the axis.
+  const pos = (f, log, title) => {
+    const zeros = log && rows.some((r) => r[f] != null && r[f] <= 0);
+    const max = Math.max(...rows.map((r) => r[f] ?? 0));
+    const decades = [0, ...Array.from({ length: 12 }, (_, i) => 10 ** i).filter((v) => v <= max)];
+    return {
+      field: field(f),
+      type: "quantitative",
+      title: title ?? f,
+      scale: { zero: false, ...(log ? { type: zeros ? "symlog" : "log" } : { nice: true }) },
+      axis: { format: D3.compact, ...(zeros ? { values: decades } : {}) },
+    };
+  };
   const enc = { x: pos(block.x, logX, block.xTitle), y: pos(block.y, logY, block.yTitle), color };
   const tooltip = [
     ...(block.label ? [{ field: field(block.label), type: "nominal", title: block.label }] : []),
@@ -719,7 +725,13 @@ function scatterSpec(block, rows, width) {
   ];
   const layers = [
     {
-      mark: { type: "circle", opacity: 0.75, stroke: vars().bg, strokeWidth: 0.5 },
+      mark: {
+        type: "circle",
+        opacity: 0.75,
+        stroke: vars().bg,
+        strokeWidth: 0.5,
+        ...(scatterClick(block) ? { cursor: "pointer" } : {}),
+      },
       encoding: {
         ...enc,
         size: block.size
@@ -734,23 +746,77 @@ function scatterSpec(block, rows, width) {
       },
     },
   ];
-  if (block.label) {
-    const n = block.labelTop ?? (rows.length <= 12 ? rows.length : 6);
-    const ranked = [...rows]
-      .sort((a, b) => (b[block.size ?? block.y] ?? 0) - (a[block.size ?? block.y] ?? 0))
-      .slice(0, n);
-    layers.push({
-      data: { values: ranked },
-      mark: { type: "text", align: "left", dx: 7, baseline: "middle", fontSize: 10.5 },
-      encoding: {
-        x: enc.x,
-        y: enc.y,
-        text: { field: field(block.label) },
-        color: { value: vars().muted },
-      },
-    });
+  // Labels go in pixels once the chart has drawn, so placeLabels can move them apart.
+  if (block.label)
+    for (const side of ["left", "right"])
+      layers.push({
+        data: { name: `labels_${side}` },
+        mark: { type: "text", align: side, baseline: "middle", fontSize: 10.5 },
+        encoding: {
+          x: { field: "px", type: "quantitative", scale: null, axis: null },
+          y: { field: "py", type: "quantitative", scale: null, axis: null },
+          text: { field: "text" },
+          color: { value: vars().muted },
+        },
+      });
+  return {
+    data: { values: rows },
+    datasets: { labels_left: [], labels_right: [] },
+    width,
+    height: block.height ?? 300,
+    layer: layers,
+  };
+}
+
+// What a click on a point does: filter by the label or series when it's a list filter, else search for the label,
+// which narrows every table to that row.
+function scatterClick(block) {
+  const target = [block.label, block.series].find((f) => f && clickable(f));
+  if (target) return (d) => setFilter(target, d[target]);
+  if (!block.label || !report.search) return null;
+  return (d) => {
+    const q = String(d[block.label]);
+    state.q = state.q === q ? "" : q;
+    writeHash();
+    void render();
+  };
+}
+
+// Names the top points, largest first, each just past its circle at the first spot 12 px up or down that clears the
+// names already placed. A name that would run past the right edge goes on the point's left.
+async function placeLabels(view, block, rows) {
+  const xs = view.scale("x");
+  const ys = view.scale("y");
+  const sizes = block.size ? view.scale("size") : null;
+  const width = view.width();
+  const height = view.height();
+  const key = block.size ?? block.y;
+  const n = block.labelTop ?? (rows.length <= 12 ? rows.length : 6);
+  const top = rows
+    .filter((r) => r[block.x] != null && r[block.y] != null)
+    .toSorted((a, b) => (b[key] ?? 0) - (a[key] ?? 0))
+    .slice(0, n);
+  const placed = [];
+  for (const r of top) {
+    const text = String(r[block.label]);
+    const w = text.length * 6 + 2;
+    const px = xs(r[block.x]);
+    const py = ys(r[block.y]);
+    if (!Number.isFinite(px) || !Number.isFinite(py)) continue;
+    const gap = Math.sqrt((sizes ? sizes(r[block.size]) : 36) / Math.PI) + 4;
+    const side = px + gap + w > width ? "right" : "left";
+    const x0 = side === "right" ? px - gap - w : px + gap;
+    const free = (y) =>
+      y >= 6 &&
+      y <= height - 6 &&
+      placed.every((p) => x0 >= p.x0 + p.w || p.x0 >= x0 + w || Math.abs(y - p.py) >= 12);
+    const y = [0, -12, 12, -24, 24, -36, 36].map((d) => py + d).find(free);
+    if (y == null) continue;
+    placed.push({ x0, w, side, px: side === "right" ? px - gap : px + gap, py: y, text });
   }
-  return { data: { values: rows }, width, height: block.height ?? 300, layer: layers };
+  const of = (side) =>
+    placed.filter((p) => p.side === side).map(({ px, py, text }) => ({ px, py, text }));
+  await view.data("labels_left", of("left")).data("labels_right", of("right")).runAsync();
 }
 
 function histogramSpec(block, rows, width) {
@@ -840,6 +906,14 @@ async function drawChart(entry) {
       tooltip: tip,
     });
     await entry.view.runAsync();
+    if (block.chart === "scatter") {
+      if (block.label) await placeLabels(entry.view, block, rows);
+      const click = scatterClick(block);
+      if (click)
+        entry.view.addEventListener("click", (_, item) => {
+          if (item?.mark?.marktype === "symbol" && item.datum) click(item.datum);
+        });
+    }
     el.dataset.state = "ok";
   } catch (error) {
     el.dataset.state = "error";

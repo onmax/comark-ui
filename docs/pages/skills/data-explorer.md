@@ -34,7 +34,7 @@ Ask with the data in hand, such as "What does this export say about who contribu
 
 ## What your agent needs
 
-Node, a browser for the screenshots, and a folder with `comark-ui` and `playwright` installed. The page inlines Vega and Vega-Lite from comark-ui's install, so it needs no network once built but for its font.
+Nothing beyond the skill. With Node, a build script checks the page against its limits and screenshots every tab with `playwright`; with `comark-ui` installed too, the page carries Vega and opens offline. Without Node, as in a chat app, the agent fills the skill's page template itself, and the page loads whatever it couldn't fill, such as Vega, from jsDelivr when it opens.
 
 ## It's working if
 

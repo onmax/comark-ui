@@ -1,7 +1,7 @@
 // node build.mjs report.json report.html [--shots dir]
 // Checks report.json, then writes one self-contained HTML page. With --shots, it opens the page and saves a
 // screenshot of every view in light and dark, plus the first view on a phone, and fails on any chart that broke.
-// Run it from a folder where comark-ui and playwright are installed: Vega comes from comark-ui's install.
+// It needs nothing installed. Where comark-ui is, it inlines Vega so the page works offline; --shots needs playwright.
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { homedir } from "node:os";
@@ -33,7 +33,8 @@ if (result.errors.length) {
   process.exit(1);
 }
 
-// pnpm keeps vega inside comark-charts, so look in the current folder first, then follow comark-ui to it.
+// pnpm keeps vega inside comark-charts, so look in the current folder first, then follow comark-ui to it. Without
+// either, the page loads Vega from jsDelivr when it opens.
 const local = createRequire(join(process.cwd(), "noop.js"));
 function packageDir(name) {
   const tries = [local];
@@ -50,42 +51,44 @@ function packageDir(name) {
       }
     } catch {}
   }
-  console.error(
-    `Can't find ${name}. Run the build from a folder where comark-ui is installed (pnpm add comark-ui playwright).`,
-  );
-  process.exit(1);
+  return null;
 }
-const vega = readFileSync(join(packageDir("vega"), "build/vega.min.js"), "utf8");
-const vegaLite = readFileSync(join(packageDir("vega-lite"), "build/vega-lite.min.js"), "utf8");
-const app = readFileSync(join(assets, "app.js"), "utf8");
-const css = readFileSync(join(assets, "style.css"), "utf8");
 const script = (code) => `<script>${code.replace(/<\/script/gi, "<\\/script")}</script>`;
-const json = JSON.stringify(report).replace(/</g, "\\u003c");
+const vegaDirs = [packageDir("vega"), packageDir("vega-lite")];
+const vega = vegaDirs.every(Boolean)
+  ? [
+      script(readFileSync(join(vegaDirs[0], "build/vega.min.js"), "utf8")),
+      script(readFileSync(join(vegaDirs[1], "build/vega-lite.min.js"), "utf8")),
+    ].join("\n")
+  : null;
+if (!vega)
+  console.log(
+    "note     Vega isn't installed here, so the page loads it from jsDelivr when it opens. Run the build where comark-ui is installed for a page that works offline.",
+  );
+
+// The same page an agent without Node fills by hand: put each part in its slot.
 const esc = (s) =>
   String(s).replace(
     /[&<>"]/g,
     (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c],
   );
-const html = `<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${esc(report.title)}</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap">
-${report.intro ? `<meta name="description" content="${esc(report.intro)}">` : ""}
-<style>${css}</style>
-</head>
-<body>
-<div id="report"></div>
-<script id="report-data" type="application/json">${json}</script>
-${script(vega)}
-${script(vegaLite)}
-${script(`(() => {\n${app}\n})();`)}
-</body>
-</html>
-`;
+// Each slot is an element of the page whose contents are replaced, keeping its tags.
+const fill = (id, text) => [new RegExp(`(<(\\w+) id="${id}"[^>]*>)[\\s\\S]*?(</\\2>)`), text];
+const slots = [
+  [/(<(title)>)[\s\S]*?(<\/title>)/, esc(report.title)],
+  fill("rp-style", `\n${readFileSync(join(assets, "style.css"), "utf8")}`),
+  fill("report-data", JSON.stringify(report).replace(/</g, "\\u003c")),
+  fill(
+    "rp-app",
+    `\n${readFileSync(join(assets, "app.js"), "utf8").replace(/<\/script/gi, "<\\/script")}`,
+  ),
+  ["<!-- vega -->", vega ?? ""],
+];
+let html = readFileSync(join(assets, "page.html"), "utf8");
+for (const [slot, text] of slots) {
+  if (!html.match(slot)) throw new Error(`assets/page.html lost its ${slot} slot.`);
+  html = html.replace(slot, (...m) => (typeof slot === "string" ? text : `${m[1]}${text}${m[3]}`));
+}
 mkdirSync(dirname(resolve(output)), { recursive: true });
 writeFileSync(output, html);
 console.log(
@@ -94,7 +97,16 @@ console.log(
 
 if (shots) {
   mkdirSync(shots, { recursive: true });
-  const playwright = await import(pathToFileURL(local.resolve("playwright")).href);
+  let path;
+  try {
+    path = local.resolve("playwright");
+  } catch {
+    console.log(
+      "error    --shots needs playwright: run the build where it's installed (pnpm add playwright).",
+    );
+    process.exit(1);
+  }
+  const playwright = await import(pathToFileURL(path).href);
   const { chromium } = playwright.chromium ? playwright : playwright.default;
   // Playwright's own browser may be missing; fall back to the newest one in its cache.
   const cache = join(homedir(), ".cache/ms-playwright");
