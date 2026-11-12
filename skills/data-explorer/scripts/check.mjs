@@ -297,6 +297,8 @@ export function check(report) {
     keys(b, kind, at);
     text(b.title, LIMITS.blockTitle, at, "`title`");
     text(b.note, LIMITS.note, at, "`note`", true);
+    if (b.note && !b.title)
+      err(at, "a `note` shows under the block's `title`; add a `title` or drop the `note`.");
     if (kind === "stats" || kind === "facts") {
       const max = kind === "stats" ? 6 : 4;
       if (!b.items?.length) err(at, "add `items`.");
