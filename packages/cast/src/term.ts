@@ -368,7 +368,9 @@ const classOf = (pen: Pen) => {
 export function toNodes(lines: Cell[][]): (string | ElementNode)[] {
   const nodes: (string | ElementNode)[] = [];
   for (const [index, line] of lines.entries()) {
-    if (index) nodes.push("\n");
+    // An HTML parser drops a newline right after `<pre>`, so a blank first line goes in a span, where server HTML keeps
+    // it too.
+    if (index) nodes.push(nodes.length ? "\n" : ["span", {}, "\n"]);
     // Blanks at the end of a line with no background are padding, not output.
     let end = line.length;
     while (
