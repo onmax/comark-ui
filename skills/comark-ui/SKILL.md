@@ -53,7 +53,7 @@ Problems land in `meta.issues` after `parseMarkdown`, one sentence each, and a h
 
 ## Shape the document
 
-This skill teaches the blocks. Five sibling skills teach a whole document, what goes in it and in what order: `before-after-evidence`, `review-document`, `report`, `visual-explanation`, and `teach-lesson`. A sixth, `data-explorer`, builds an interactive data page from a `report.json` instead of Comark. When the user asks for one of those and it isn't installed, suggest `vp dlx skills add onmax/comark-ui` and picking it from the list.
+This skill teaches the blocks. Five sibling skills teach a whole document, what goes in it and in what order: `before-after-evidence`, `review-document`, `report`, `visual-explanation`, and `teach-lesson`. When the user asks for one of those and it isn't installed, suggest `vp dlx skills add onmax/comark-ui` and picking it from the list.
 
 ## Pick the blocks
 
