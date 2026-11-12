@@ -1,4 +1,4 @@
-import { defineEventHandler, getRequestURL } from "nuxt/server";
+import { defineHandler } from "nitro/h3";
 import { fromAssets } from "../utils/assets.ts";
 
 // Nitro 3's Cloudflare entry puts the Worker's env on the request.
@@ -6,9 +6,11 @@ type Cloudflare = { env: { ASSETS?: Parameters<typeof fromAssets>[1] } };
 
 // The Worker runs before the static assets (wrangler.jsonc) so an agent that asks for Markdown gets the page's copy.
 // Anonymous requests still end at a prerendered file; only the paths with none reach Nitro's routes.
-export default defineEventHandler(async (event) => {
+// Not `nuxt/server`'s defineEventHandler: it swaps the request for one that buffers its body, and the Console route,
+// which reads the body of the Request itself, then finds it already read.
+export default defineHandler(async (event) => {
   const { runtime } = event.req as Request & { runtime?: { cloudflare?: Cloudflare } };
   const assets = runtime?.cloudflare?.env.ASSETS;
-  if (!assets || getRequestURL(event).pathname === "/badge.svg") return;
+  if (!assets || new URL(event.req.url).pathname === "/badge.svg") return;
   return fromAssets(event.req, assets);
 });
