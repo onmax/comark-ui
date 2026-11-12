@@ -217,8 +217,8 @@ const AGG = {
   sum: (xs) => xs.reduce((a, b) => a + b, 0),
   count: (xs) => xs.length,
   mean: (xs) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null),
-  max: (xs) => Math.max(...xs),
-  min: (xs) => Math.min(...xs),
+  max: (xs) => (xs.length ? Math.max(...xs) : null),
+  min: (xs) => (xs.length ? Math.min(...xs) : null),
   first: (xs) => xs[0],
   last: (xs) => xs.at(-1),
 };
@@ -342,8 +342,7 @@ const xEncoding = (block, rows, x, kind, width) => {
       title,
       scale: { type: "utc" },
       axis: {
-        format: block.xFormat ?? (rows.some((r) => String(r[x]).length > 7) ? "%b %d" : "%b %Y"),
-        formatType: "utc",
+        labelExpr: `utcFormat(datum.value, ${JSON.stringify(block.xFormat ?? (rows.some((r) => String(r[x]).length > 7) ? "%b %d" : "%b %Y"))})`,
         tickCount: 6,
       },
     };
@@ -388,13 +387,16 @@ function lineSpec(block, input, width) {
   const percent = block.stack === "percent";
   const values = rows.map((r) => r[y]).filter((v) => v != null);
   const keys = series ? [...new Set(rows.map((r) => r[series]))] : [];
-  let top = values.length ? Math.max(...values) : 1;
-  if (stacked) {
-    const sums = new Map();
-    for (const r of rows) sums.set(r[x], (sums.get(r[x]) ?? 0) + (r[y] ?? 0));
-    top = Math.max(...sums.values());
-  }
+  // Stacks put positives above zero and negatives below it, so each side sums apart.
+  const sums = (sign) => {
+    const by = new Map();
+    for (const r of rows) if (sign * (r[y] ?? 0) > 0) by.set(r[x], (by.get(r[x]) ?? 0) + r[y]);
+    return [...by.values()];
+  };
+  const top = Math.max(0, ...(stacked ? sums(1) : values));
+  const bottom = Math.min(0, ...(stacked ? sums(-1) : values));
   const yMax = percent ? 1 : (block.yMax ?? niceMax(top));
+  const yMin = percent || bottom === 0 ? 0 : -niceMax(-bottom);
   const range = series ? seriesColor(block, series, keys) : [];
   const color = series
     ? {
@@ -410,7 +412,7 @@ function lineSpec(block, input, width) {
     type: "quantitative",
     title: block.yTitle ?? null,
     stack: stacked ? (percent ? "normalize" : "zero") : null,
-    scale: log ? { type: "log" } : { domain: [0, yMax], nice: false },
+    scale: log ? { type: "log" } : { domain: [yMin, yMax], nice: false },
     axis: {
       format:
         percent || block.format === "percent"
@@ -455,7 +457,12 @@ function lineSpec(block, input, width) {
     const last = new Map();
     for (const r of rows) if (r[y] != null) last.set(r[series], r);
     const ends = [...last.values()]
-      .map((r) => ({ name: r[series], x: r[x], y: r[y], py: height - (r[y] / yMax) * height }))
+      .map((r) => ({
+        name: r[series],
+        x: r[x],
+        y: r[y],
+        py: height - ((r[y] - yMin) / (yMax - yMin)) * height,
+      }))
       .sort((a, b) => a.py - b.py);
     for (let i = 1; i < ends.length; i++)
       if (ends[i].py - ends[i - 1].py < 12) ends[i].py = ends[i - 1].py + 12;
@@ -465,7 +472,7 @@ function lineSpec(block, input, width) {
       data: {
         values: ends.map((e) => ({
           [x]: e.x,
-          __ly: ((height - e.py) / height) * yMax,
+          __ly: yMin + ((height - e.py) / height) * (yMax - yMin),
           [series]: e.name,
           __label: block.endValues ? `${e.name} ${fmt(e.y, block.format ?? "number")}` : e.name,
         })),
@@ -485,20 +492,44 @@ function lineSpec(block, input, width) {
           field: field(x),
           type: X.type,
           title: block.xTitle ?? x,
-          ...(kind === "temporal" ? { format: "%b %d, %Y", formatType: "utc" } : {}),
+          ...(kind === "temporal" ? { timeUnit: "utcyearmonthdate", format: "%b %d, %Y" } : {}),
         },
-        ...keys.map((k) => ({
-          field: field(k),
+        ...keys.map((k, i) => ({
+          field: percent ? `__share${i}` : field(k),
           type: "quantitative",
+          title: k,
           format: percent || block.format === "percent" ? ".1%" : format,
         })),
       ]
     : [
-        { field: field(x), type: X.type, title: block.xTitle ?? x },
+        {
+          field: field(x),
+          type: X.type,
+          title: block.xTitle ?? x,
+          ...(kind === "temporal" ? { timeUnit: "utcyearmonthdate", format: "%b %d, %Y" } : {}),
+        },
         { field: field(y), type: "quantitative", title: block.yTitle ?? y, format },
       ];
   layers.push({
-    ...(series ? { transform: [{ pivot: series, value: y, groupby: [x] }] } : {}),
+    ...(series
+      ? {
+          transform: [
+            { pivot: series, value: y, groupby: [x] },
+            ...(percent
+              ? [
+                  {
+                    calculate: keys.map((k) => `(datum[${JSON.stringify(k)}] || 0)`).join(" + "),
+                    as: "__total",
+                  },
+                  ...keys.map((k, i) => ({
+                    calculate: `datum.__total ? (datum[${JSON.stringify(k)}] || 0) / datum.__total : 0`,
+                    as: `__share${i}`,
+                  })),
+                ]
+              : []),
+          ],
+        }
+      : {}),
     mark: { type: "rule", color: vars().muted, strokeWidth: 1 },
     encoding: {
       x: X,
@@ -574,9 +605,14 @@ function barSpec(block, input, width) {
       ...(horizontal ? { ticks: false, domain: false } : {}),
     },
   };
-  const top = stacked
-    ? Math.max(...rows.map((r) => totals.get(r[x]) ?? 0))
-    : Math.max(...rows.map((r) => r[y] ?? 0));
+  const side = (sign) => {
+    if (!stacked) return rows.map((r) => r[y] ?? 0);
+    const by = new Map();
+    for (const r of rows) if (sign * (r[y] ?? 0) > 0) by.set(r[x], (by.get(r[x]) ?? 0) + r[y]);
+    return [...by.values()];
+  };
+  const top = Math.max(0, ...side(1));
+  const bottom = Math.min(0, ...side(-1));
   const labels = block.labels !== false && cats.length <= (horizontal ? 40 : 18);
   const value = {
     field: field(y),
@@ -585,7 +621,13 @@ function barSpec(block, input, width) {
     stack: stacked ? (percent ? "normalize" : "zero") : null,
     scale: percent
       ? { domain: [0, 1] }
-      : { domain: [0, niceMax(top * (labels && horizontal ? 1.12 : 1.06))], nice: false },
+      : {
+          domain: [
+            bottom < 0 ? -niceMax(-bottom * 1.06) : 0,
+            niceMax(top * (labels && horizontal ? 1.12 : 1.06)),
+          ],
+          nice: false,
+        },
     axis: horizontal
       ? null
       : { format: percent ? ".0%" : (D3[block.format] ?? (top >= 10000 ? D3.compact : D3.number)) },
@@ -1052,7 +1094,10 @@ function barsBlock(block) {
           { class: "rp-bars-track" },
           h(
             "span",
-            { class: "rp-bars-fill", style: { width: `${((sum * scale) / max) * 100}%` } },
+            {
+              class: "rp-bars-fill",
+              style: { width: `calc((100% - 92px) * ${(sum * scale) / max})` },
+            },
             segments.map((s, i) =>
               h("span", {
                 style: {
@@ -1365,10 +1410,20 @@ function tableBlock(block) {
               class: clickField
                 ? `is-click${state.filters[clickField] === row[clickField] ? " is-on" : ""}`
                 : null,
-              onclick: clickField ? () => setFilter(clickField, row[clickField]) : null,
+              onclick: clickField
+                ? (e) => {
+                    const own = e.target.closest("td")?.dataset.field;
+                    const f = own && clickable(own) ? own : clickField;
+                    setFilter(f, row[f]);
+                  }
+                : null,
             },
             rank && h("td", { class: "rp-rank" }, i + 1),
-            block.columns.map((c) => cell(row, c, ...(stats[c.field] ?? []))),
+            block.columns.map((c) => {
+              const td = cell(row, c, ...(stats[c.field] ?? []));
+              td.dataset.field = c.field;
+              return td;
+            }),
           ),
         ),
       ),
@@ -1478,6 +1533,7 @@ function blockEl(block, id) {
 const root = document.getElementById("report");
 
 function readHash() {
+  resetFilters();
   const [view, query] = location.hash.slice(1).split("?");
   if (views.some((v) => v.id === view)) state.view = view;
   for (const [k, v] of new URLSearchParams(query ?? "")) {
@@ -1508,22 +1564,39 @@ function writeHash() {
   history.replaceState(null, "", `#${state.view}${q ? `?${q}` : ""}`);
 }
 
-for (const f of filters)
-  state.filters[f.field] =
-    kindOf(f) === "tabs"
-      ? (f.default ?? options(f)[0]?.value)
-      : kindOf(f) === "toggle"
-        ? Boolean(f.default)
-        : (f.default ?? null);
+function resetFilters() {
+  state.q = "";
+  for (const f of filters)
+    state.filters[f.field] =
+      kindOf(f) === "tabs"
+        ? (f.default ?? options(f)[0]?.value)
+        : kindOf(f) === "toggle"
+          ? Boolean(f.default)
+          : (f.default ?? null);
+}
 readHash();
+
+const toggle = (f) =>
+  h(
+    "label",
+    { class: "rp-check" },
+    h("input", {
+      type: "checkbox",
+      checked: state.filters[f.field] || null,
+      onchange: (e) => ((state.filters[f.field] = e.target.checked), writeHash(), render()),
+    }),
+    f.label,
+  );
 
 function sidebar() {
   const side = filters.filter((f) => kindOf(f) !== "toggle");
-  if (!side.length && !report.search) return null;
+  const toggles = filters.filter((f) => kindOf(f) === "toggle");
+  if (!side.length && !toggles.length && !report.search) return null;
   return h(
     "aside",
     { class: "rp-side" },
     h("div", { class: "rp-side-title" }, "Filters"),
+    toggles.length > 0 && h("div", { class: "rp-side-toggles" }, toggles.map(toggle)),
     report.search &&
       h(
         "label",
@@ -1674,18 +1747,7 @@ function render() {
     h(
       "div",
       { class: "rp-top-right" },
-      toggles.map((f) =>
-        h(
-          "label",
-          { class: "rp-check" },
-          h("input", {
-            type: "checkbox",
-            checked: state.filters[f.field] || null,
-            onchange: (e) => ((state.filters[f.field] = e.target.checked), writeHash(), render()),
-          }),
-          f.label,
-        ),
-      ),
+      toggles.map(toggle),
       h(
         "div",
         { class: "rp-seg is-theme", role: "group", "aria-label": "Theme" },

@@ -447,6 +447,8 @@ export function check(report) {
     if (!view.id || !/^[a-z0-9-]+$/.test(view.id))
       err(where, "give it an `id` in kebab-case, like `growth`.");
     if (ids.has(view.id)) err(where, `the id \`${view.id}\` is used twice.`);
+    if (view.id === "method" && report.method)
+      err(where, "the id `method` belongs to the Method tab that `method` adds; rename this view.");
     ids.add(view.id);
     if (!view.label) err(where, "add a `label` for its tab.");
     text(view.label, LIMITS.label, where, "`label`");

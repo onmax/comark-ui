@@ -158,6 +158,12 @@ button {
   white-space: nowrap;
   cursor: pointer;
 }
+.rp-side-toggles {
+  display: none;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-bottom: 14px;
+}
 .rp-check input {
   margin: 0;
   accent-color: var(--rp-fg);
@@ -544,7 +550,6 @@ button {
   display: flex;
   height: 12px;
   min-width: 2px;
-  max-width: calc(100% - 92px);
 }
 .rp-bars-fill span {
   flex: none;
@@ -846,8 +851,11 @@ button {
     margin: 0;
   }
   .rp-brand span,
-  .rp-check {
+  .rp-top .rp-check {
     display: none;
+  }
+  .rp-side-toggles {
+    display: flex;
   }
 }
 @media (max-width: 760px) {
