@@ -1,19 +1,19 @@
 ---
-title: Dashboard
-description: An interactive page for exploring data, with tabs, a filter sidebar, stats, charts, matrices and tables, from one report.json.
+title: Data explorer
+description: Your agent explores a dataset and turns what it finds into an interactive page of findings, graphs, matrices and tables, from one report.json.
 icon: layout-dashboard
-keywords: dashboard, analytics, data, report.json, filters, charts, tables, heatmap, vega-lite
-tagline: Your agent turns a dataset into a dashboard you click through, filter and share, drawn by one template so it never looks generated.
+keywords: data, data science, dashboard, analytics, report.json, filters, charts, tables, heatmap, vega-lite
+tagline: Hand your agent a dataset and get back what's in it: the findings, and the graphs and tables behind them, on a page you click through, filter and share.
 ---
 
-::skill{name="dashboard"}
+::skill{name="data-explorer"}
 ::
 
 [Open the example](https://drop.vitehub.dev/d/qmjw7dwepwfa/who-builds-nuxt-dashboard): an agent built it with this skill from the public [Nuxters](https://github.com/nuxt/nuxters) data, in one run.
 
 ## What it does
 
-The agent writes `report.json`: the data rows, the filters, and the blocks on each tab. A shared template draws it, so the agent writes no HTML, CSS or page script. Every dashboard gets the same parts:
+The agent starts from the data, not the page. It writes down the questions you want answered, profiles every field, and computes every number in a prep script, so a rerun on new data rebuilds the page. Then it writes `report.json`: the data rows, the filters, and the blocks on each tab. A shared template draws it, so the agent writes no HTML, CSS or page script. Every page gets the same parts:
 
 - a **top bar** with the tabs and a light and dark theme
 - a **strip of numbers** that stays on every tab, and the **rows behind them** at the bottom
@@ -26,7 +26,7 @@ The result is one HTML file. It opens from disk or any static host, and you can 
 
 ## When to use it
 
-Ask with the data in hand, such as "Build a dashboard of who contributes to our repos" or "Make this CSV explorable by country and month." To be sure, say "Use the dashboard skill."
+Ask with the data in hand, such as "What does this export say about who contributes to our repos?" or "Make this CSV explorable by country and month." To be sure, say "Use the data-explorer skill."
 
 - You explore data and filter it yourself: this skill.
 - You choose between options or approve a plan: [Report](/skills/report).

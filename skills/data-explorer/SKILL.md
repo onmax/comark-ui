@@ -1,16 +1,16 @@
 ---
-name: dashboard
-description: Turns a dataset into an interactive dashboard page with tabs, filters, stats, charts, matrices and tables, from one report.json and a shared template. Use when the reader wants to explore data rather than decide from a write-up.
+name: data-explorer
+description: Explores a dataset and turns what it finds into an interactive page, with findings, graphs, matrices and tables behind tabs and filters, from one report.json and a shared template. Use when someone hands over data, such as a CSV, a JSON export or an API, and wants to see what's in it.
 license: MIT
 ---
 
-# Dashboard
+# Data explorer
 
-A dashboard is one `report.json`: the data rows, the filters, and the blocks on each tab. This skill's template draws it as an _instrument_, the way an analytics tool looks: a top bar with the tabs, a strip of numbers that stays on every tab, flat sections of charts and tables, the rows behind the numbers at the bottom, and a filter sidebar on the right where every name keeps one color across the page. You decide **what to show**; the template owns **how it looks**. You write no HTML, CSS or page script.
+A data explorer is one `report.json`: the data rows, the filters, and the blocks on each tab. This skill's template draws it as an _instrument_, the way an analytics tool looks: a top bar with the tabs, a strip of numbers that stays on every tab, flat sections of charts and tables, the rows behind the numbers at the bottom, and a filter sidebar on the right where every name keeps one color across the page. You decide **what to show**; the template owns **how it looks**. You write no HTML, CSS or page script.
 
 Words are the scarcest thing on the page. A reader scans numbers, colors and bars; prose goes in `method`. The build rejects text past its limit.
 
-When the reader has to choose between options or approve a plan, write a `report` instead: a page with the answer first. A dashboard is for data someone explores.
+When the reader has to choose between options or approve a plan, write a `report` instead: a page with the answer first. A data explorer is for data someone explores.
 
 The block reference is [references/blocks.md](references/blocks.md); read it before step 4.
 
@@ -19,7 +19,7 @@ The block reference is [references/blocks.md](references/blocks.md); read it bef
 The build checks `report.json`, writes one self-contained `report.html`, and screenshots every tab. Copy this skill's [scripts/](scripts/build.mjs) and [assets/](assets/app.js) folders next to the report, keeping them side by side, then:
 
 ```sh
-mkdir -p tmp/dashboard && cd tmp/dashboard
+mkdir -p tmp/data-explorer && cd tmp/data-explorer
 echo '{ "private": true, "type": "module" }' > package.json
 pnpm add --ignore-workspace comark-ui playwright
 node ../../scripts/build.mjs ../../report.json ../../report.html --shots ../../shots
