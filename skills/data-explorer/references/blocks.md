@@ -82,7 +82,7 @@ Every value of a `list` filter gets one color, used by the sidebar, `entity` col
 
 ## Blocks
 
-Every block takes `title` and `note`, and every block but `stats` and `facts` takes `wide` and `half`.
+Every block takes `title` and `note` (a `note` needs a `title`), and every block but `stats` and `facts` takes `wide` and `half`.
 
 **stats** (in `top`): `items` of `{ label, value, format, unit, delta, deltaFormat, good, hint }`. `value` and `delta` are a number, or `{ "data", "field", "agg", "where" }` computed on the filtered rows; `agg` is `sum` (default), `count` (counts the rows when there's no `field`), `mean`, `min`, `max`, `first`, `last`. A trailing unit (`%`, `K`, `h`) prints small. `format: "percent"` takes a 0–1 value. `delta` prints signed, green when up unless `"good": "down"`, as a percent of a 0–1 change unless `deltaFormat` says otherwise (`number`, `integer`, `compact`, `money`).
 
@@ -95,7 +95,7 @@ Every block takes `title` and `note`, and every block but `stats` and `facts` ta
 **chart**: `chart` is one of:
 
 - `line`, `area`: `x` (a year, an ISO date, or a category), `y`, optional `series`; or wide rows with `"y": ["fix", "feat"]` and `names`. Lines are named at their end; `endValues: true` adds the last value. `emphasis` draws one series (a total, "All") in the text color and thicker. `points: true` marks every value. `area` stacks with a series; `"stack": "percent"` on an `area` makes shares.
-- `bar`, `stacked`, `grouped`: `x` the category, `y` the value, optional `series`. `horizontal: true` sorts by value; `limit` keeps the top N; `"stack": "percent"` for shares.
+- `bar`, `stacked`, `grouped`: `x` the category, `y` the value, optional `series`. `horizontal: true` sorts by value; `limit` keeps the top N; `"stack": "percent"` turns stacked bars (`stacked`, or `bar` with a `series`) into shares.
 - `scatter`: `x`, `y`, optional `size`, `series`, `label` (names the top `labelTop` points, moved apart so they don't overlap). `logX`/`logY` keep points at 0 on the axis. A click on a point filters by its `label` or `series` when that field is a list filter's, and otherwise, when the report has `search`, searches for its `label`, which narrows every table to that row.
 - `histogram`: `x` only; `bins` (default 30). With `logToggle` on log, values at or below 0 are left out.
 

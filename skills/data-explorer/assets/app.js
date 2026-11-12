@@ -601,7 +601,7 @@ function barSpec(block, input, width) {
       labelAngle: angle,
       labelAlign: angle ? "right" : "center",
       ...(kind === "temporal-ordinal"
-        ? { labelExpr: "utcFormat(toDate(datum.value), '%b %y')" }
+        ? { labelExpr: "datum.value == null ? '' : utcFormat(toDate(datum.value), '%b %y')" }
         : {}),
       ...(horizontal ? { ticks: false, domain: false } : {}),
     },
