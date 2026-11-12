@@ -52,7 +52,7 @@
 | stat `hint` | 32 characters |
 | tabs 7, blocks per tab 8, series per chart 12, table columns 9, `top` 2 blocks, `bottom` 1 block |
 | `stats` 6 items, `facts` 4 items |
-| `bars` 30 rows, bar charts 40 bars, matrix 24 columns, unless `limit` keeps fewer |
+| `bars` 30 rows and bar charts 40 bars, unless `limit` keeps fewer; matrix 24 columns, or swap `x` and `y` |
 | data 3 MB in all |
 
 A view `id` is kebab-case, and `method` is taken by the Method tab. A key the reference doesn't list is an error. Notes, fact `text`, tab `summary`, `intro` and `method` take `**bold**`, `` `code` `` and links; titles and labels print as written.
@@ -82,7 +82,7 @@ Every value of a `list` filter gets one color, used by the sidebar, `entity` col
 
 ## Blocks
 
-Every block takes `title`, `note`, `wide`, `half`.
+Every block takes `title` and `note`, and every block but `stats` and `facts` takes `wide` and `half`.
 
 **stats** (in `top`): `items` of `{ label, value, format, unit, delta, deltaFormat, good, hint }`. `value` and `delta` are a number, or `{ "data", "field", "agg", "where" }` computed on the filtered rows; `agg` is `sum` (default), `count` (counts the rows when there's no `field`), `mean`, `min`, `max`, `first`, `last`. A trailing unit (`%`, `K`, `h`) prints small. `format: "percent"` takes a 0–1 value. `delta` prints signed, green when up unless `"good": "down"`, as a percent of a 0–1 change unless `deltaFormat` says otherwise (`number`, `integer`, `compact`, `money`).
 

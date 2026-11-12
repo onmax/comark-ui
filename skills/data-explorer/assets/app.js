@@ -385,7 +385,7 @@ function lineSpec(block, input, width) {
   const log = state.scale[block.__id] === "log" || block.logY;
   const area = block.chart === "area";
   const stacked = area && series && block.stack !== false;
-  const percent = block.stack === "percent";
+  const percent = Boolean(stacked) && block.stack === "percent";
   const values = rows.map((r) => r[y]).filter((v) => v != null);
   const keys = series ? [...new Set(rows.map((r) => r[series]))] : [];
   // Stacks put positives above zero and negatives below it, so each side sums apart.
@@ -568,7 +568,7 @@ function barSpec(block, input, width) {
   const x = block.x;
   const horizontal = block.horizontal ?? false;
   const stacked = block.chart === "stacked" || (series && block.chart !== "grouped");
-  const percent = block.stack === "percent";
+  const percent = Boolean(stacked) && block.stack === "percent";
   const format = D3[block.format] ?? D3.number;
   let rows = all;
   const totals = new Map();
