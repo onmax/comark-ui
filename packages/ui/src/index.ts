@@ -11,6 +11,7 @@ import critic, { type CriticOptions } from "comark-critic";
 import deflist from "comark-deflist";
 import type { DetailsOptions } from "comark-details";
 import type { DiagramsOptions } from "comark-diagrams";
+import type { EmbedOptions } from "comark-embed";
 import figure, { type FigureOptions } from "comark-figure";
 import type { FileTreeOptions } from "comark-file-tree";
 import footnotes, { type FootnotesOptions } from "comark-footnotes";
@@ -81,7 +82,8 @@ export type PresetOptions = {
   mermaid?: MermaidOptions | boolean;
   /** HTML only: Vue, React, and Svelte have no diff components. */
   diff?: boolean;
-  embed?: boolean;
+  /** `{ player }` plays a host's own links, such as its recordings, before the built-in providers. */
+  embed?: EmbedOptions | boolean;
   footnotes?: FootnotesOptions | boolean;
   github?:
     | {
@@ -155,7 +157,7 @@ export type Renderer<C> = {
   diagrams: Part<C, DiagramsOptions>;
   mermaid: Part<C, PeleConfig>;
   diff?: Part<C>;
-  embed: Part<C>;
+  embed: Part<C, EmbedOptions>;
   github: {
     callouts: (options?: CalloutsOptions) => AnyPlugin;
     references: (options?: ReferencesOptions) => AnyPlugin;

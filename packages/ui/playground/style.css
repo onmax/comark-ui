@@ -1,3 +1,34 @@
+:root {
+  color-scheme: light dark;
+  --bg: #fff;
+  --fg: #18181b;
+  --soft: #52525b;
+  --muted: #71717a;
+  --border: #e4e4e7;
+  --subtle: #fafafa;
+  --code: #f4f4f5;
+  --quote: #d4d4d8;
+  --link: #2563eb;
+  --ins: #dcfce7;
+  --del: #fee2e2;
+  --mark: #fef9c3;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0a0a0a;
+    --fg: #fafafa;
+    --soft: #d4d4d8;
+    --muted: #a1a1aa;
+    --border: #27272a;
+    --subtle: #111113;
+    --code: #18181b;
+    --quote: #3f3f46;
+    --link: #60a5fa;
+    --ins: #14532d;
+    --del: #7f1d1d;
+    --mark: #713f12;
+  }
+}
 * {
   box-sizing: border-box;
 }
@@ -9,7 +40,8 @@ body {
   font:
     15px/1.6 system-ui,
     sans-serif;
-  color: #18181b;
+  color: var(--fg);
+  background: var(--bg);
 }
 main {
   display: grid;
@@ -18,14 +50,14 @@ main {
 }
 textarea {
   border: 0;
-  border-right: 1px solid #e4e4e7;
+  border-right: 1px solid var(--border);
   padding: 24px;
   font:
     13px/1.6 ui-monospace,
     monospace;
   resize: none;
   outline: none;
-  background: #fafafa;
+  background: var(--subtle);
 }
 .pane {
   overflow: auto;
@@ -41,29 +73,29 @@ textarea {
   font: inherit;
   font-size: 13px;
   padding: 4px 10px;
-  border: 1px solid #e4e4e7;
+  border: 1px solid var(--border);
   border-radius: 6px;
-  background: #fff;
+  background: var(--bg);
   cursor: pointer;
 }
 .status {
   font-size: 12px;
-  color: #71717a;
+  color: var(--muted);
   margin-bottom: 12px;
 }
 .ProseMirror {
   outline: none;
 }
 .ProseMirror pre {
-  background: #f4f4f5;
+  background: var(--code);
   padding: 12px;
   border-radius: 6px;
 }
 .ProseMirror blockquote {
-  border-left: 3px solid #d4d4d8;
+  border-left: 3px solid var(--quote);
   margin: 0;
   padding-left: 12px;
-  color: #52525b;
+  color: var(--soft);
 }
 .ProseMirror img {
   max-width: 100%;
@@ -73,7 +105,7 @@ textarea {
 }
 .ProseMirror td,
 .ProseMirror th {
-  border: 1px solid #e4e4e7;
+  border: 1px solid var(--border);
   padding: 4px 8px;
 }
 .ProseMirror ul[data-type="taskList"] {
@@ -84,41 +116,15 @@ textarea {
   display: flex;
   gap: 8px;
 }
-[data-comark-block] {
-  border: 1px dashed #a1a1aa;
-  border-radius: 6px;
-  padding: 4px 12px;
-  margin: 8px 0;
-  position: relative;
-}
-[data-comark-block]::before {
-  content: "::" attr(data-comark-block);
-  font:
-    11px ui-monospace,
-    monospace;
-  color: #71717a;
-}
-[data-comark-slot]::before {
-  content: "#" attr(data-comark-slot);
-  font:
-    11px ui-monospace,
-    monospace;
-  color: #a1a1aa;
-}
-[data-comark-inline] {
-  border: 1px solid #d4d4d8;
-  border-radius: 4px;
-  padding: 0 4px;
-}
 [data-footnote-reference] {
-  color: #2563eb;
+  color: var(--link);
 }
 [data-footnote-reference]::before {
   content: "^";
 }
 [data-inline-footnote] {
   font-size: 0.85em;
-  color: #52525b;
+  color: var(--soft);
 }
 [data-inline-footnote]::before {
   content: "^[";
@@ -127,7 +133,7 @@ textarea {
   content: "]";
 }
 [data-footnote-definition] {
-  border-top: 1px solid #e4e4e7;
+  border-top: 1px solid var(--border);
   font-size: 0.9em;
 }
 [data-footnote-definition]::before {
@@ -135,21 +141,21 @@ textarea {
   font:
     11px ui-monospace,
     monospace;
-  color: #71717a;
+  color: var(--muted);
 }
 .ProseMirror ins {
-  background: #dcfce7;
+  background: var(--ins);
   text-decoration: none;
 }
 .ProseMirror del[data-critic] {
-  background: #fee2e2;
+  background: var(--del);
 }
 .ProseMirror mark {
-  background: #fef9c3;
+  background: var(--mark);
 }
 [data-critic-comment] {
   font-style: italic;
-  color: #71717a;
+  color: var(--muted);
 }
 [data-critic-comment]::before {
   content: "💬 ";
@@ -167,7 +173,7 @@ header {
   justify-content: space-between;
   gap: 12px 24px;
   padding: 16px 24px;
-  border-bottom: 1px solid #e4e4e7;
+  border-bottom: 1px solid var(--border);
 }
 h1,
 h2,
@@ -183,7 +189,7 @@ h2,
   font-weight: 600;
 }
 header p {
-  color: #52525b;
+  color: var(--soft);
   font-size: 13px;
 }
 nav {
@@ -206,8 +212,8 @@ a {
 }
 .source label {
   padding: 12px 24px;
-  background: #fafafa;
-  border-right: 1px solid #e4e4e7;
+  background: var(--subtle);
+  border-right: 1px solid var(--border);
 }
 textarea {
   width: 100%;
@@ -216,7 +222,7 @@ textarea {
 }
 textarea:focus-visible,
 .ProseMirror:focus-visible {
-  outline: 2px solid #2563eb;
+  outline: 2px solid var(--link);
   outline-offset: -2px;
 }
 .ProseMirror video,
@@ -232,7 +238,7 @@ textarea:focus-visible,
     min-height: 580px;
   }
   textarea {
-    border-bottom: 1px solid #e4e4e7;
+    border-bottom: 1px solid var(--border);
     font-size: 16px;
   }
   .pane {

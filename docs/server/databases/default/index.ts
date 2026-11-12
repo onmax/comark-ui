@@ -80,8 +80,9 @@ export const verification = sqliteTable(
   (table) => [index("verification_identifier_idx").on(table.identifier)],
 );
 
-// The tables of consoleMcpOAuth() (server/auth.ts): the JWT signing keys and the OAuth clients, tokens and consents with
-// which console.vitehub.dev signs in.
+// The tables of consoleMcpOAuth(), with which console.vitehub.dev signed in here before the Console signed its own calls.
+// Nothing uses them now. They stay until the Console's signed calls have run in production, so the Worker before them
+// can still be rolled back to; a later migration drops them.
 export const {
   jwks,
   oauthAccessToken,

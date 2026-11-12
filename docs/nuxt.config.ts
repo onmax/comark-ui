@@ -15,6 +15,7 @@ export default defineNuxtConfig({
     "vite-hub/nuxt",
     "@vite-hub/docs/nuxt",
     "~~/modules/comark-styles",
+    "~~/modules/docs-theme-source",
     "~~/modules/wrangler-output",
   ],
   // Every prerendered page has a payload, so prefetching each link the reader can see loaded megabytes of them: the
@@ -64,20 +65,14 @@ export default defineNuxtConfig({
     auth: true,
     // A Durable Object holds each page's room: who else is on it and where their cursor is, for comments and the editor.
     realtime: { authority: "cloudflare" },
-    // The editor is the Console's Content section: the team signs in with the site's own session (server/auth.ts).
-    // console.vitehub.dev opens the same project: it signs in with OAuth against this site (consoleMcpOAuth() in
-    // server/auth.ts), so the resource must be fixed. The site still serves the Console pages itself (`embed`), because
-    // the editor's preview, live editing and the page pill's Content button need the site's own origin.
+    // The editor is the Content section of the ViteHub Console (console.vitehub.dev). The site serves only
+    // /_vitehub/rpc, which takes calls the Console signs with the key in a VITEHUB_CONSOLE_KEY_<NAME> binding, and
+    // console-authorize.ts checks the person who calls.
     console: {
-      auth: "app",
       authorize: fileURLToPath(new URL("./server/console-authorize.ts", import.meta.url)),
-      embed: true,
-      mcp: { resource: "https://comark-ui.onmax.me/_vitehub/mcp" },
     },
-  },
-  // `nuxt dev` has no GitHub OAuth app: the Console runs every call as the loopback user `local`, which team.ts accepts.
-  $development: { vitehub: { console: { auth: false } } },
-  vite: {
+    // Signatures name the origin they were made for, and the Worker checks them against this one.
+    publicUrl: "https://comark-ui.onmax.me",
     env: {
       server: {
         auth: {
@@ -91,12 +86,15 @@ export default defineNuxtConfig({
       },
     },
   },
-  // The agent skill at the repository's root, under /.well-known/skills/. robots.txt keeps crawlers out of the Console,
-  // its sign-in page, and the API.
+  // `nuxt dev` takes Console calls without a signature, from this machine only, as the user `local`, whom team.ts
+  // accepts.
+  $development: { vitehub: { console: { auth: false } } },
+  // The agent skill at the repository's root, under /.well-known/skills/. robots.txt keeps crawlers out of the Console's
+  // route, the sign-in, and the API.
   agentDiscovery: {
     siteUrl: "https://comark-ui.onmax.me",
     skills: { dir: "../skills" },
-    robots: { disallow: ["/_vitehub", "/api"] },
+    robots: { disallow: ["/_vitehub", "/api", "/sign-in"] },
   },
   nitro: {
     // The root wrangler.jsonc holds what ViteHub doesn't generate (name, routes, previews). Nitro merges it with ViteHub's

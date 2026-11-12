@@ -18,18 +18,19 @@ const markdown = [
   '::embed{url="https://youtu.be/dQw4w9WgXcQ?t=90" title="Launch & demo" #id .class}\n::',
   '::embed{url="https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC"}\n::',
   '::embed{url="https://x.com/_onmax/status/2116191062418997278"}\n::',
+  '::embed{url="https://codepen.io/onmax/pen/abcdEF" height=320}\n::',
   '::embed{url="https://example.com/docs" title="Setup guide"}\n::',
   '::embed{url="javascript:alert(1)"}\n::',
   "After",
 ].join("\n\n");
 // Drops what differs only in serialization: comments, whitespace between tags, the HTML renderer's inline styles and
-// script, and
-// how React writes attribute names, which HTML reads without case.
+// script, how each framework ends a style, and how React writes attribute names, which HTML reads without case.
 const normalize = (html: string) =>
   html
     .replace(/ data-comark-frame=""/g, " data-comark-frame")
     .replace(/<!--.*?-->/g, "")
     .replace(/<style[^>]*>.*?<\/style>|<script>[\s\S]*?<\/script>/g, "")
+    .replace(/;"/g, '"')
     .replace(
       / (allowfullscreen|referrerpolicy)(?:="")?/gi,
       (_, name: string) => ` ${name.toLowerCase()}`,
@@ -49,7 +50,8 @@ describe("comark-embed renderers", async () => {
   const expected = normalize(await renderHtmlFromDocument(value, { components: htmlComponents }));
 
   it("renders a player, a card, and nothing for an unsafe link in HTML", () => {
-    expect(expected.match(/<figure class="ce" data-comark-frame/g)).toHaveLength(3);
+    expect(expected.match(/<figure class="ce" data-comark-frame/g)).toHaveLength(4);
+    expect(expected).toContain('data-size="app" style="--ce-app-height:320px"');
     expect(expected).toContain(
       '<a class="ce-card" data-comark-frame href="https://example.com/docs">',
     );

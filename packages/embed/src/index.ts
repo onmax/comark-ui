@@ -1,11 +1,19 @@
 import type { ElementNode, Node } from "comark";
 import { defineComarkPlugin } from "comark";
 import { resolveAttributes } from "comark/render";
-import { hostOf, providerOf } from "./providers.ts";
-import { text } from "../../../shared/text.ts";
+import { hostOf, providerOf, type Player } from "./providers.ts";
+import { errorText, text } from "../../../shared/text.ts";
 import { childrenOf, isElement } from "../../../shared/nodes.ts";
 
-export type { Size } from "./providers.ts";
+export type { Player, Size } from "./providers.ts";
+
+export type EmbedOptions = {
+  /**
+   * Your own players, read before the built-in providers: return a `Player` for a link you know, and nothing for the
+   * rest. A host's own drops or recordings are players here and link cards wherever the plugin runs without it.
+   */
+  player?: (url: URL) => Player | undefined;
+};
 
 export type EmbedMeta = {
   /** One readable sentence per problem with an `::embed`. Empty when the document has none. Other plugins add theirs too. */
@@ -26,6 +34,8 @@ export type EmbedAttributes = {
   src?: string;
   label?: string;
   size?: string;
+  /** A tool player's height in pixels, from the block's `height`. */
+  height?: number;
   href?: string;
   title?: string;
   host?: string;
@@ -36,7 +46,7 @@ type Data = Parameters<typeof resolveAttributes>[1];
 // Comments render nothing, so they aren't content an embed would drop.
 const isContent = (node: Node) => (Array.isArray(node) ? node[0] !== null : node.trim() !== "");
 
-const PROPS = ["url", "title", "start"];
+const PROPS = ["url", "title", "start", "height"];
 
 function readUrl(value: string) {
   try {
@@ -47,7 +57,16 @@ function readUrl(value: string) {
   }
 }
 
-function embed(node: ElementNode, number: number, data: Data, issues: Issue[]): EmbedAttributes {
+const wholeNumber = (value: string) =>
+  /^\d+$/.test(value) && Number.isSafeInteger(Number(value)) ? Number(value) : undefined;
+
+function embed(
+  node: ElementNode,
+  number: number,
+  data: Data,
+  issues: Issue[],
+  options: EmbedOptions,
+): EmbedAttributes {
   const name = `\`::embed\` ${number}`;
   const attrs = resolveAttributes(node[1], data, { parseJson: true });
   if (childrenOf(node).some(isContent))
@@ -60,7 +79,7 @@ function embed(node: ElementNode, number: number, data: Data, issues: Issue[]): 
     if (!PROPS.includes(prop) && prop !== "id" && prop !== "class")
       issues.push({
         rule: "comark/embed/unknown-prop",
-        message: `${name}: \`${prop}\` isn't a prop of \`::embed\`, so it's ignored. Use \`url\`, \`title\`, or \`start\`.`,
+        message: `${name}: \`${prop}\` isn't a prop of \`::embed\`, so it's ignored. Use \`url\`, \`title\`, \`start\`, or \`height\`.`,
       });
   }
   const raw = text(attrs.url);
@@ -86,12 +105,18 @@ function embed(node: ElementNode, number: number, data: Data, issues: Issue[]): 
     });
     return {};
   }
-  const provider = providerOf(url);
+  let own: Player | undefined;
+  try {
+    own = options.player?.(url);
+  } catch (error) {
+    issues.push({
+      rule: "comark/embed/player-failed",
+      message: `${name}: the \`player\` option threw on ${url.href}: ${errorText(error)}. Return nothing for a link it can't read, so the built-in providers take it.`,
+    });
+  }
+  const provider = own ? undefined : providerOf(url);
   const startText = text(attrs.start);
-  const start =
-    /^\d+$/.test(startText) && Number.isSafeInteger(Number(startText))
-      ? Number(startText)
-      : undefined;
+  const start = wholeNumber(startText);
   if (startText && start === undefined)
     issues.push({
       rule: "comark/embed/invalid-start",
@@ -102,9 +127,31 @@ function embed(node: ElementNode, number: number, data: Data, issues: Issue[]): 
       rule: "comark/embed/start-unsupported",
       message: `${name}: \`start\` only works for YouTube and Vimeo videos. Remove it.`,
     });
+  const heightText = text(attrs.height);
+  const height = wholeNumber(heightText) || undefined;
+  if (heightText && !height)
+    issues.push({
+      rule: "comark/embed/invalid-height",
+      message: `${name}: \`height\` must be a whole number of pixels, such as \`height=480\`.`,
+    });
   const host = hostOf(url);
   const title = text(attrs.title);
   const card = { href: url.href, title: title || host, host };
+  const play = (player: Player): EmbedAttributes => {
+    if (height && player.size !== "app")
+      issues.push({
+        rule: "comark/embed/height-unsupported",
+        message: `${name}: the ${player.label} player sizes itself, so \`height\` does nothing. Remove it.`,
+      });
+    return {
+      ...player,
+      label: title || player.label,
+      ...(height && player.size === "app" && { height }),
+      ...card,
+    };
+  };
+  if (own) return play(own);
+  // A card keeps no `height` and reports none, so a doc written for a host with more players lints clean elsewhere.
   if (!provider) {
     if (!title)
       issues.push({
@@ -121,14 +168,15 @@ function embed(node: ElementNode, number: number, data: Data, issues: Issue[]): 
     });
     return card;
   }
-  return { ...player, label: title || player.label, ...card };
+  return play(player);
 }
 
 /**
  * Turns `::embed{url="..."}` into a player for YouTube, Vimeo, Loom, Spotify, CodePen, StackBlitz, Figma, and X links,
- * read from the link alone, or a link card for any other https link. Problems are added to `meta.issues`.
+ * and for the links `player` knows, read from the link alone, or a link card for any other https link. Problems are
+ * added to `meta.issues`.
  */
-export default defineComarkPlugin<void, EmbedMeta>(() => ({
+export default defineComarkPlugin<EmbedOptions | undefined, EmbedMeta>((options = {}) => ({
   name: "comark-embed",
   post(state) {
     const { tree } = state;
@@ -143,7 +191,7 @@ export default defineComarkPlugin<void, EmbedMeta>(() => ({
           continue;
         }
         // Only the normalized attributes, so no renderer reads the raw link, an `{#id .class}`, or the dropped content.
-        node.splice(1, node.length - 1, embed(node, ++count, data, issues));
+        node.splice(1, node.length - 1, embed(node, ++count, data, issues, options));
       }
     };
     walk(tree.nodes);
