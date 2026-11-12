@@ -2,7 +2,7 @@
 import { EditorContent } from "@tiptap/vue-3";
 import { createApp, defineComponent, h, ref, watch } from "vue";
 import { Upload } from "../src/editor.ts";
-import { useComarkEditor } from "../src/editor-vue.ts";
+import { type ComponentInfo, useComarkEditor } from "../src/editor-vue.ts";
 
 // A slow upload that reports progress, so the placeholder shows. Its URL lives only in this tab.
 const upload = Upload.configure({
@@ -24,7 +24,27 @@ Ship it on **Friday**, after the [review](https://comark-ui.onmax.me). :badge[Ne
   - Wait for CI
 
 ::note{type="info"}
-Edit this note in either pane.
+Edit this note in either pane. Open a component's props from its bar.
+::
+
+::card-group
+:::card{title="Renderers" icon="lucide:rocket" to="/guide/renderers"}
+Draw the saved Markdown in Vue, React, Svelte, or HTML.
+
+#footer
+Read the guide.
+:::
+
+:::card{title="Theming" color="neutral"}
+Match the editor to your app.
+:::
+::
+
+::chart{type="stacked" labels title="Review time (min)"}
+| week | reading | writing |
+| --- | --: | --: |
+| 1 | 12 | 30 |
+| 2 | 9 | 21 |
 ::
 
 > [!TIP] Before you tag
@@ -50,9 +70,49 @@ await release({ tag: "v1.0.0" })
 \`\`\`
 `;
 
+const colors = ["primary", "secondary", "success", "info", "warning", "error", "neutral"];
+// Typed fields for the blocks the sample uses. Any other component edits its props as names and values.
+const components = {
+  chart: {
+    label: "Chart",
+    props: {
+      type: {
+        options: [
+          "bar",
+          "stacked",
+          "line",
+          "area",
+          "scatter",
+          "dumbbell",
+          "waterfall",
+          "pie",
+          "gantt",
+          "sankey",
+        ],
+        default: "bar",
+      },
+      title: {},
+      labels: { type: "boolean", description: "Prints the numbers on the chart." },
+      horizontal: { type: "boolean" },
+    },
+  },
+  "card-group": { label: "Card group" },
+  card: {
+    label: "Card",
+    props: {
+      title: {},
+      icon: { description: "An Iconify name, such as lucide:rocket." },
+      to: { label: "Link" },
+      color: { options: colors, default: "primary" },
+      variant: { options: ["outline", "soft", "subtle"], default: "outline" },
+    },
+  },
+  badge: { label: "Badge", props: { color: { options: colors, default: "primary" } } },
+} satisfies Record<string, ComponentInfo>;
+
 const App = defineComponent(() => {
   const markdown = ref(sample);
-  const { editor, editable } = useComarkEditor(markdown, { extensions: [upload] });
+  const { editor, editable } = useComarkEditor(markdown, { extensions: [upload], components });
   watch(editor, (current) =>
     current?.setOptions({
       editorProps: {

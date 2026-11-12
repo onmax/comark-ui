@@ -29,6 +29,7 @@ Choose by what you have:
 - Options to compare, or a plan to approve: this skill.
 - Findings about code, a design, or a system that already exists: [Review document](/skills/review-document).
 - A question about how something works: [Visual explanation](/skills/visual-explanation).
+- Data you explore and filter yourself: [Data explorer](/skills/data-explorer).
 
 ## It's working if
 

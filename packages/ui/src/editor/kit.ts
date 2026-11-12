@@ -1,4 +1,4 @@
-import { Extension, Mark, Node } from "@tiptap/core";
+import { Extension, Mark, Node, type NodeViewRenderer } from "@tiptap/core";
 import Image from "@tiptap/extension-image";
 import { TaskItem, TaskList } from "@tiptap/extension-list";
 import { TableKit } from "@tiptap/extension-table";
@@ -10,6 +10,11 @@ export interface ComarkKitOptions {
    * underline syntax, so `underline` is always off.
    */
   starterKit?: Partial<StarterKitOptions>;
+  /**
+   * Draws block and inline components, such as `componentView()` from `comark-ui/editor/vue`. A node view only draws:
+   * the schema and the Markdown stay the same, so a server's codec and its browsers share a room with or without it.
+   */
+  componentView?: NodeViewRenderer;
 }
 
 // Every node and mark the codec writes, so each keeps the Comark attributes it has no field for.
@@ -259,9 +264,11 @@ export const CriticComment = Node.create({
  */
 export const ComarkKit = Extension.create<ComarkKitOptions>({
   name: "comarkKit",
-  addOptions: () => ({ starterKit: {} }),
+  addOptions: () => ({ starterKit: {}, componentView: undefined }),
   addGlobalAttributes: () => [{ types: typesWithProps, attributes: { props } }],
   addExtensions() {
+    const view = this.options.componentView;
+    const drawn = (node: Node) => (view ? node.extend({ addNodeView: () => view }) : node);
     return [
       StarterKit.extend({
         addExtensions() {
@@ -274,9 +281,9 @@ export const ComarkKit = Extension.create<ComarkKitOptions>({
       TaskItem.configure({ nested: true }),
       ComarkImage,
       TableKit.configure({ table: { resizable: false } }),
-      ComarkBlock,
+      drawn(ComarkBlock),
       ComarkSlot,
-      ComarkInline,
+      drawn(ComarkInline),
       ComarkComment,
       FootnoteReference,
       InlineFootnote,
