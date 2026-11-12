@@ -1,16 +1,17 @@
 // The data-explorer skill's build fills assets/page.html, the same page an agent without Node fills by hand. This runs
 // it on the example in references/blocks.md, as an agent would, and reads the page it writes.
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { describe, expect, it } from "vite-plus/test";
+import { afterAll, describe, expect, it } from "vite-plus/test";
 
 const skill = fileURLToPath(new URL("../skills/data-explorer/", import.meta.url));
 const reference = readFileSync(join(skill, "references/blocks.md"), "utf8");
 const example = JSON.parse(/```json\n([\s\S]*?)\n```/.exec(reference)![1]!);
 const dir = mkdtempSync(join(tmpdir(), "data-explorer-"));
+afterAll(() => rmSync(dir, { recursive: true, force: true }));
 
 function build(report: unknown) {
   const input = join(dir, "report.json");

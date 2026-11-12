@@ -20,7 +20,7 @@ The agent starts from the data, not the page. It writes down the questions you w
 - **flat sections** of charts, segmented bar lists, heatmap matrices and tables, two to a row
 - a **filter sidebar** with search, the period, and one list per entity, where every name keeps one color across the page and a click filters every block
 
-The build rejects text past its limits and names the fix, so the page stays numbers first. It then screenshots every tab in light and dark and on a phone, and the agent reads each one before it hands the page back.
+The build rejects text past its limits and names the fix, so the page stays numbers first. It then screenshots every tab in light and dark, and the first on a phone, and the agent reads each one before it hands the page back.
 
 The result is one HTML file. It opens from disk or any static host, and you can publish it to [Drop](https://drop.vitehub.dev/?utm_source=comark-ui&utm_medium=skills) to share it privately, with a new version on each rebuild and comments on the numbers.
 
@@ -34,7 +34,7 @@ Ask with the data in hand, such as "What does this export say about who contribu
 
 ## What your agent needs
 
-Nothing beyond the skill. With Node, a build script checks the page against its limits and screenshots every tab with `playwright`; with `comark-ui` installed too, the page carries Vega and opens offline. Without Node, as in a chat app, the agent fills the skill's page template itself, and the page loads whatever it couldn't fill, such as Vega, from jsDelivr when it opens.
+Node with `playwright` installed, for the build that checks the page against its limits and screenshots it. With `comark-ui` installed too, the page carries Vega and opens offline. Without Node, as in a chat app, the agent fills the skill's page template itself, and the page loads whatever it couldn't fill, such as Vega, from jsDelivr when it opens.
 
 ## It's working if
 

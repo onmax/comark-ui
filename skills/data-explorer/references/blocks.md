@@ -9,7 +9,7 @@
   "updated": "2026-07-01",
   "search": "Search titles",
   "filters": [
-    { "field": "period", "type": "tabs", "options": ["All time", "12 months", "30 days"] },
+    { "field": "period", "type": "tabs", "options": ["12 months", "30 days", "All time"] },
     { "field": "store", "label": "Stores", "count": "sales" },
     { "field": "genre", "label": "Genres", "count": "sales" },
     { "field": "gift", "type": "toggle", "label": "Include gift cards" }
@@ -48,9 +48,14 @@
 | block `note` | 120 characters, one sentence |
 | fact `text` | 110 characters, one sentence |
 | `method` | 1,600 characters |
+| stat `label` | 28 characters |
+| stat `hint` | 32 characters |
 | tabs 7, blocks per tab 8, series per chart 12, table columns 9, `top` 2 blocks, `bottom` 1 block |
+| `stats` 6 items, `facts` 4 items |
+| `bars` 30 rows, bar charts 40 bars, matrix 24 columns, unless `limit` keeps fewer |
+| data 3 MB in all |
 
-Text fields take `**bold**`, `` `code` `` and links.
+A view `id` is kebab-case, and `method` is taken by the Method tab. A key the reference doesn't list is an error. Notes, fact `text`, tab `summary`, `intro` and `method` take `**bold**`, `` `code` `` and links; titles and labels print as written.
 
 ## Which block for which question
 
@@ -79,7 +84,7 @@ Every value of a `list` filter gets one color, used by the sidebar, `entity` col
 
 Every block takes `title`, `note`, `wide`, `half`.
 
-**stats** (in `top`): `items` of `{ label, value, format, unit, delta, deltaFormat, good, hint }`. `value` and `delta` are a number, or `{ "data", "field", "agg", "where" }` computed on the filtered rows; `agg` is `sum` (default), `count`, `mean`, `min`, `max`, `first`, `last`. A trailing unit (`%`, `K`, `h`) prints small. `delta` prints signed, green when up unless `"good": "down"`.
+**stats** (in `top`): `items` of `{ label, value, format, unit, delta, deltaFormat, good, hint }`. `value` and `delta` are a number, or `{ "data", "field", "agg", "where" }` computed on the filtered rows; `agg` is `sum` (default), `count` (counts the rows when there's no `field`), `mean`, `min`, `max`, `first`, `last`. A trailing unit (`%`, `K`, `h`) prints small. `format: "percent"` takes a 0–1 value. `delta` prints signed, green when up unless `"good": "down"`, as a percent of a 0–1 change unless `deltaFormat` says otherwise (`number`, `integer`, `compact`, `money`).
 
 **facts**: 2 to 4 `items` of `{ value, text }`. `value` is a short string ("53%", "10 of 19", "1.4 h") or a number with `format`; `text` is one sentence that says what it means.
 
@@ -89,17 +94,17 @@ Every block takes `title`, `note`, `wide`, `half`.
 
 **chart**: `chart` is one of:
 
-- `line`, `area`: `x` (a year, an ISO date, or a category), `y`, optional `series`; or wide rows with `"y": ["fix", "feat"]` and `names`. Lines are named at their end; `endValues: true` adds the last value. `emphasis` draws one series (a total, "All") in the text color and thicker. `points: true` marks every value. `area` stacks with a series; `"stack": "percent"` makes shares.
+- `line`, `area`: `x` (a year, an ISO date, or a category), `y`, optional `series`; or wide rows with `"y": ["fix", "feat"]` and `names`. Lines are named at their end; `endValues: true` adds the last value. `emphasis` draws one series (a total, "All") in the text color and thicker. `points: true` marks every value. `area` stacks with a series; `"stack": "percent"` on an `area` makes shares.
 - `bar`, `stacked`, `grouped`: `x` the category, `y` the value, optional `series`. `horizontal: true` sorts by value; `limit` keeps the top N; `"stack": "percent"` for shares.
-- `scatter`: `x`, `y`, optional `size`, `series`, `label` (names the top `labelTop` points, moved apart so they don't overlap). `logX`/`logY` keep points at 0 on the axis. A click on a point filters by its `label` or `series` when that field is a list filter's, and otherwise searches for its `label`, which narrows every table to that row.
-- `histogram`: `x` only; `bins` (default 30).
+- `scatter`: `x`, `y`, optional `size`, `series`, `label` (names the top `labelTop` points, moved apart so they don't overlap). `logX`/`logY` keep points at 0 on the axis. A click on a point filters by its `label` or `series` when that field is a list filter's, and otherwise, when the report has `search`, searches for its `label`, which narrows every table to that row.
+- `histogram`: `x` only; `bins` (default 30). With `logToggle` on log, values at or below 0 are left out.
 
-Options for any chart: `format` (`number`, `integer`, `compact`, `percent` for 0–1 values, `money`), `height` (default 240), `highlight` (one series in color, the rest gray), `tones`, `logToggle`, `xTitle`, `yTitle`.
+Options for any chart: `format` (`number`, `integer`, `compact`, `percent` for 0–1 values, `money` in US dollars), `height` (default 240), `highlight` (one series in color, the rest gray), `tones`, `logToggle`, `xTitle`, `yTitle`.
 
 **table**: `data`, `columns` of `{ field, label, format, number }`, `sort` (a field, descending), `limit` (rows shown, default 12), `more` (rows each "Show more" adds), `search: true`, `rank: false`. `"style": "rows"` is the dense evidence list: no header, no rank, its title shows the matching count, and the sidebar search filters it. Column `format`:
 
 - `entity`: a colored dot and the name, for a list filter's field. Rows click to filter.
-- `bar`: inline bar and number; `heat`: tinted cell; `delta`: signed and colored; `number`/`integer`/`compact`/`percent`/`money`.
+- `bar`: inline bar and number; `heat`: tinted cell; `delta`: signed and colored, a 0–1 change printed as a percent; `number`/`integer`/`compact`/`percent`/`money`.
 - `stack`: a small bar split by `fields` (with `names`, `tones`), for a mix per row. Give it any `field` name as its key.
 - `chips`: an array of strings or `[label, count]` pairs, as pills, like the two things a customer most needs.
 - `text` (`truncate: true` cuts it to the cell), `date`, `user` (GitHub avatar), `country` (flag from an ISO code), `link`. `suffix` prints another field after a number, small.

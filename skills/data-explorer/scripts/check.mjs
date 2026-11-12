@@ -30,9 +30,9 @@ const KEYS = {
   ],
   filter: ["field", "label", "type", "default", "options", "count", "countField", "colors"],
   view: ["id", "label", "summary", "blocks"],
-  stats: ["type", "items", "id"],
+  stats: ["type", "items", "id", "title", "note"],
   stat: ["label", "value", "format", "unit", "delta", "deltaFormat", "good", "hint"],
-  facts: ["type", "items", "id"],
+  facts: ["type", "items", "id", "title", "note"],
   fact: ["value", "format", "text"],
   chart: [
     "type",
@@ -314,8 +314,11 @@ export function check(report) {
         }
         for (const slot of ["value", "delta"]) {
           const v = s[slot];
-          if (v && typeof v === "object" && needData(v.data, `${w}.${slot}`))
+          if (v && typeof v === "object" && needData(v.data, `${w}.${slot}`)) {
+            if (v.field == null && v.agg !== "count")
+              err(`${w}.${slot}`, 'add `field`, or `"agg": "count"` to count the rows.');
             needField(v.data, v.field, `${w}.${slot}`, "`field`");
+          }
         }
         if (s.format && !FORMATS.includes(s.format))
           err(w, `\`format\` must be one of ${FORMATS.join(", ")}.`);
@@ -386,6 +389,8 @@ export function check(report) {
         if (cats > 40)
           err(at, `has ${cats} bars; set \`limit\` to the top 10–25, or use a line or histogram.`);
       }
+      if (b.stack != null && ["line", "scatter", "histogram"].includes(b.chart))
+        err(at, "`stack` applies to area and bar charts; draw shares as an `area` chart.");
       if (b.horizontal && !["bar", "stacked", "grouped"].includes(b.chart))
         err(
           at,
@@ -447,8 +452,11 @@ export function check(report) {
     if (!view.id || !/^[a-z0-9-]+$/.test(view.id))
       err(where, "give it an `id` in kebab-case, like `growth`.");
     if (ids.has(view.id)) err(where, `the id \`${view.id}\` is used twice.`);
-    if (view.id === "method" && report.method)
-      err(where, "the id `method` belongs to the Method tab that `method` adds; rename this view.");
+    if (view.id === "method" && (report.method || report.intro))
+      err(
+        where,
+        "the id `method` belongs to the Method tab that `method` and `intro` add; rename this view.",
+      );
     ids.add(view.id);
     if (!view.label) err(where, "add a `label` for its tab.");
     text(view.label, LIMITS.label, where, "`label`");

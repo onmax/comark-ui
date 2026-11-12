@@ -227,6 +227,7 @@ const resolve = (value) => {
   let rows = rowsOf(value.data);
   if (value.where)
     rows = rows.filter((row) => Object.entries(value.where).every(([k, v]) => row[k] === v));
+  if (value.agg === "count" && value.field == null) return rows.length;
   const xs = rows.map((row) => row[value.field]).filter((v) => v != null);
   return (AGG[value.agg ?? "sum"] ?? AGG.sum)(xs);
 };
@@ -1345,9 +1346,15 @@ function tableBlock(block) {
       );
     }
     if (own.sort)
-      rows = [...rows].sort(
-        (a, b) =>
-          ((a[own.sort] ?? -Infinity) > (b[own.sort] ?? -Infinity) ? 1 : -1) * (own.desc ? -1 : 1),
+      rows = [...rows].sort((a, b) =>
+        a[own.sort] == null
+          ? b[own.sort] == null
+            ? 0
+            : 1
+          : b[own.sort] == null
+            ? -1
+            : (a[own.sort] > b[own.sort] ? 1 : a[own.sort] < b[own.sort] ? -1 : 0) *
+              (own.desc ? -1 : 1),
       );
     const stats = Object.fromEntries(
       block.columns
@@ -1444,11 +1451,14 @@ function tableBlock(block) {
               type: "search",
               placeholder: `Search ${rows.length} rows`,
               value: own.query,
-              oninput: (e) => (
-                (own.query = e.target.value),
-                draw(),
-                wrap.querySelector("input").focus()
-              ),
+              oninput: (e) => {
+                const caret = e.target.selectionStart;
+                own.query = e.target.value;
+                draw();
+                const input = wrap.querySelector("input");
+                input.focus();
+                input.setSelectionRange(caret, caret);
+              },
             }),
           ]
         : []),
