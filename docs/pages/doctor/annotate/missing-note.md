@@ -2,7 +2,7 @@ An annotation's content is its note. Without one, the mark has a number and noth
 
 ::incorrect
 ```md
-::screenshot{src="/pond.png" alt="The pond map with three ducks"}
+::screenshot{src="/pond.svg" alt="The pond map with three ducks"}
 :::annotation{x=20 y=30 w=15 h=10}
 :::
 ::
@@ -11,7 +11,7 @@ An annotation's content is its note. Without one, the mark has a number and noth
 
 ::correct
 ```md
-::screenshot{src="/pond.png" alt="The pond map with three ducks"}
+::screenshot{src="/pond.svg" alt="The pond map with three ducks"}
 :::annotation{x=20 y=30 w=15 h=10}
 The duck without a name tag.
 :::

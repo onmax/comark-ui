@@ -2,14 +2,14 @@
 
 ::incorrect
 ```md
-::screenshot{src="/pond.png" alt="The pond map with three ducks" href="pond.example.com/map"}
+::screenshot{src="/pond.svg" alt="The pond map with three ducks" href="pond.example.com/map"}
 ::
 ```
 ::
 
 ::correct
 ```md
-::screenshot{src="/pond.png" alt="The pond map with three ducks" href="https://pond.example.com/map"}
+::screenshot{src="/pond.svg" alt="The pond map with three ducks" href="https://pond.example.com/map"}
 ::
 ```
 ::
