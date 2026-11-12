@@ -1,0 +1,3 @@
+interface:
+  display_name: "Dashboard"
+  short_description: "Interactive data page with filters, charts and tables from one report.json"
