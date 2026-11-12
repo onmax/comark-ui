@@ -9,7 +9,7 @@ A `::screenshot` without `src` has no image, so its marks and notes point at not
 
 ::correct
 ```md
-::screenshot{src="/pond.png" alt="The pond map with three ducks"}
+::screenshot{src="/pond.svg" alt="The pond map with three ducks"}
 ::
 ```
 ::

@@ -8,7 +8,7 @@ duck:
   y: 30
 ---
 
-::screenshot{src="/pond.png" alt="The pond map with three ducks"}
+::screenshot{src="/pond.svg" alt="The pond map with three ducks"}
 :::annotation{:x="frontmatter.duck.x" :y="frontmatter.duck.why" w=15 h=10}
 The duck without a name tag.
 :::
@@ -24,7 +24,7 @@ duck:
   y: 30
 ---
 
-::screenshot{src="/pond.png" alt="The pond map with three ducks"}
+::screenshot{src="/pond.svg" alt="The pond map with three ducks"}
 :::annotation{:x="frontmatter.duck.x" :y="frontmatter.duck.y" w=15 h=10}
 The duck without a name tag.
 :::

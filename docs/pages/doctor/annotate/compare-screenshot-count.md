@@ -3,7 +3,7 @@ A `::compare` shows a before and an after, so it takes exactly two screenshots. 
 ::incorrect
 ```md
 ::compare
-:::screenshot{src="/pond-after.png" alt="The pond with a fence"}
+:::screenshot{src="/pond-fence.svg" alt="The pond with a fence"}
 :::
 ::
 ```
@@ -12,10 +12,10 @@ A `::compare` shows a before and an after, so it takes exactly two screenshots. 
 ::correct
 ```md
 ::compare
-:::screenshot{src="/pond-before.png" alt="The pond with no fence"}
+:::screenshot{src="/pond.svg" alt="The pond with no fence"}
 :::
 
-:::screenshot{src="/pond-after.png" alt="The pond with a fence"}
+:::screenshot{src="/pond-fence.svg" alt="The pond with a fence"}
 :::
 ::
 ```
