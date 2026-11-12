@@ -1,10 +1,29 @@
 # Personal Project CMS
 
-The documentation site uses the [Personal Project CMS GitHub App](https://github.com/apps/personal-project-cms) for sign-in. Maxi owns the App under `onmax`. The same App can serve more personal projects by adding each project's exact callback URL.
+The team edits the docs in the Content section of the [ViteHub Console](https://console.vitehub.dev) and comments on the pages of the site itself. Both are limited to the people in `server/utils/team.ts`.
 
-For comark-ui, the callback is `https://comark-ui.onmax.me/api/auth/callback/github`. Open `/_vitehub` to sign in. ViteHub provides the provider button, retry state, return URL, and account sign-out using the existing server Auth Definition. There is no project-specific sign-in page or Console Auth client. The Console authorization file keeps the existing team restriction and local development behavior.
+## Edit in the Console
 
-Each project needs these private runtime bindings:
+The site is linked to the Console. The Console signs each call to the site's one Console route, `POST /_vitehub/rpc`, with a key that it keeps for the link. The site has only the public key, in the Worker secret `VITEHUB_CONSOLE_KEY_CONSOLE_<8 hex>` that the Console shows when you link it. `server/console-authorize.ts` lets in a Console user whose email is in `server/utils/team.ts`, and the CLI, whose keys we make ourselves.
+
+- To give someone access, invite them to the Console team that linked the site and add their email to `server/utils/team.ts`.
+- **Preview** opens the page with the saved draft through a one-time link. Unsaved edits don't show in it.
+- Live co-editing works only with `pnpm --filter comark-ui-docs dev`, where the Console route takes calls from this machine without a signature.
+- The CLI can call the site with a key of its own: `vitehub secret console-key <name>` prints a pair. Set the `VITEHUB_CONSOLE_KEY_<NAME>` line on the Worker with `wrangler secret put`, keep the `VITEHUB_CONSOLE_PRIVATE_KEY_<NAME>` line where the CLI runs, and pass `--url https://comark-ui.onmax.me`. Content refuses CLI calls, because they sign no person and `server/content.ts` checks the person. Remove the Worker secret to revoke the key.
+
+A save commits to the `vitehub/content` branch, and publishing opens a pull request into `main` (`server/content.ts`).
+
+## Comment on the site
+
+The site signs the team in with the [Personal Project CMS GitHub App](https://github.com/apps/personal-project-cms). Maxi owns the App under `onmax`. The same App can serve more personal projects by adding each project's exact callback URL.
+
+For comark-ui, the callback is `https://comark-ui.onmax.me/api/auth/callback/github`. Open `/sign-in` to sign in. It returns to the landing page in comment mode. Anyone can sign in, but only the GitHub logins in `server/utils/team.ts` can comment.
+
+The App has email read access for sign-in. Its repository permissions are contents write, pull requests write, and the required metadata read access. Install it only on repositories that use the CMS. The first installation, `176174996`, selects only `onmax/comark-ui`. Webhooks and Device Flow are disabled.
+
+To add another project, add its exact `/api/auth/callback/github` URL in the App settings. Configure that project's bindings and its own session secret. Add the repository to the App installation when it needs repository access. Keep the project's team policy in its own application; signing in does not grant editing access.
+
+## Bindings
 
 | Binding | Value |
 | --- | --- |
@@ -12,9 +31,6 @@ Each project needs these private runtime bindings:
 | `GITHUB_CLIENT_SECRET` | The App's OAuth client secret |
 | `BETTER_AUTH_SECRET` | A separate stable secret for this project's sessions |
 | `VITEHUB_GITHUB_TOKEN` | This project's Content GitHub Store credential |
+| `VITEHUB_CONSOLE_KEY_CONSOLE_<8 hex>` | The public key of the Console link, from the Console's setup page |
 
 The OAuth credentials are saved in Bitwarden as **Personal Project CMS GitHub App**. Keep credentials out of source files and build logs. The Content GitHub Store still uses `VITEHUB_GITHUB_TOKEN`; an App installation alone does not configure that Store's authentication.
-
-The App has email read access for sign-in. Its repository permissions are contents write, pull requests write, and the required metadata read access. Install it only on repositories that use the CMS. The first installation, `176174996`, selects only `onmax/comark-ui`. Webhooks and Device Flow are disabled.
-
-To add another project, add its exact `/api/auth/callback/github` URL in the App settings. Configure that project's bindings and its own session secret. Add the repository to the App installation when it needs repository access. Keep the project's team policy in its own application; signing in does not grant editing access.

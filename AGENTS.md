@@ -245,7 +245,7 @@ How most packages work, so the bullets below don't repeat it:
   - Its Nitro output in `docs/dist` is a Cloudflare Worker (`wrangler.jsonc` at the root) that runs before the static assets, so an agent that asks a page for Markdown gets its copy (`docs/server/middleware/assets.ts`).
   - `docs/links.ts` (`pnpm docs:links`, run by CI after the build) checks internal links and fragments in `docs/dist/public`, so a link with a trailing slash, a missing page, or a missing heading fails.
   - `docs/server/routes/badge.svg.ts` is the badge.
-  - ViteHub adds the team's tools, all limited to the logins in `docs/server/utils/team.ts`: GitHub sign-in (`docs/server/auth.ts`), comments (`docs/server/comments.ts`), and the Console's Markdown editor (`docs/server/content.ts`), which edits the sources in the repository.
+  - ViteHub adds the team's tools, all limited to the people in `docs/server/utils/team.ts`: GitHub sign-in at `/sign-in` (`docs/server/auth.ts`) and comments (`docs/server/comments.ts`) on the site, and the Markdown editor (`docs/server/content.ts`) in the ViteHub Console, which edits the sources in the repository. The site serves the Console only `POST /_vitehub/rpc`, for calls the Console signs (`docs/server/console-authorize.ts`). `docs/CMS.md` has the setup.
 - Pages:
   - Each package has one page, `packages/<name>/docs/index.md`, which `files` keeps out of npm. It is written for comark-ui users in the shape `docs/WRITING.md` gives; read that before you write or restructure any page.
   - A page's API section ends with `### Package`, which installs and registers the package alone. A block's page has no installer, because Getting started installs comark-ui.

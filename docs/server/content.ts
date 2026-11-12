@@ -1,4 +1,5 @@
-import { defineContent, documents } from "vite-hub/content";
+import { defineContent } from "vite-hub/content";
+import { documents } from "vite-hub/content/collections";
 import cms from "vite-hub/cms";
 import * as v from "valibot";
 import { inTeam } from "./utils/team.ts";
@@ -17,7 +18,7 @@ const url =
     /(^|\/)partials\//.test(id) ? null : route(id);
 const fields = { title: v.optional(v.string()), description: v.optional(v.string()) };
 
-export const content = defineContent({
+export default defineContent({
   route: false,
   extends: [
     cms,

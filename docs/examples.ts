@@ -1,8 +1,7 @@
 // Every example the docs show, as one list: each package page's `::examples` panels, then each recipe's first
 // `::example`. The landing's canvas and the playground both read it, so neither has an example the other lacks.
 import { fileURLToPath } from "node:url";
-import { registerSource, splitSource, useSource } from "@vite-hub/source";
-import { glob } from "@vite-hub/source/glob";
+import { registerSource, splitSource, useSource, glob } from "@vite-hub/source";
 import { parseMarkdown } from "comark";
 import { textContent } from "comark/utils";
 import { isElement } from "../shared/nodes.ts";

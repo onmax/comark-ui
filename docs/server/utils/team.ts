@@ -1,29 +1,25 @@
-import { eq } from "drizzle-orm";
-import { db } from "vite-hub/database/drizzle";
-import { user as userTable } from "../databases/config.ts";
+// The people who may comment on the docs and edit them. Everyone else, signed in or not, is an anonymous visitor.
+// Lowercase: GitHub logins and email addresses are not case sensitive.
+const TEAM = [{ login: "onmax", emails: ["hello@onmax.me", "maximogarciamtnez@gmail.com"] }];
 
-// GitHub logins that may comment on the docs and edit them. Everyone else, signed in or not, is an anonymous visitor.
-// Lowercase: GitHub logins are not case sensitive.
-const TEAM = ["onmax"];
+type Person = { id?: string; login?: unknown; email?: unknown } | null | undefined;
 
-type Person = { id?: string; login?: unknown } | null | undefined;
-
-// Auth stores the login with the user (server/auth.ts). The Console's policy gets it, and Comments takes its people from
-// the Console; a policy that gets the user without it reads the login from the database by id. `nuxt dev` has no GitHub
-// OAuth app and runs every call as the user `local`; a build never does.
-export async function inTeam(user: Person): Promise<boolean> {
-  if (import.meta.dev === true && user?.id === "local") return true;
-  const login =
-    typeof user?.login === "string"
-      ? user.login
-      : user?.id
-        ? (
-            await db
-              .select({ login: userTable.login })
-              .from(userTable)
-              .where(eq(userTable.id, user.id))
-              .get()
-          )?.login
-        : undefined;
-  return typeof login === "string" && TEAM.includes(login.toLowerCase());
+// Two kinds of people reach the policies, and they share no ids:
+// - Someone signed in to the site with GitHub (server/auth.ts) has the `login` that GitHub gave, which no request can
+//   change. Comments on the pages passes them. Only the login counts for them.
+// - The ViteHub Console signs its caller as `{ id, name, email }`, with an id of its own and no login. The Console only
+//   signs for the members of the team that linked the site, and takes the email from GitHub, verified. Only the email
+//   counts for them.
+// `nuxt dev` takes Console calls without a signature and runs them as the user `local`; a build never does.
+export function inTeam(user: Person): boolean {
+  if (!user) return false;
+  if (import.meta.dev === true && user.id === "local") return true;
+  if ("login" in user) {
+    const login = user.login;
+    return typeof login === "string" && TEAM.some((member) => member.login === login.toLowerCase());
+  }
+  const email = user.email;
+  return (
+    typeof email === "string" && TEAM.some((member) => member.emails.includes(email.toLowerCase()))
+  );
 }
