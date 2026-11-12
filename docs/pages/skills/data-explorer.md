@@ -3,7 +3,7 @@ title: Data explorer
 description: Your agent explores a dataset and turns what it finds into an interactive page of findings, graphs, matrices and tables, from one report.json.
 icon: layout-dashboard
 keywords: data, data science, dashboard, analytics, report.json, filters, charts, tables, heatmap, vega-lite
-tagline: Hand your agent a dataset and get back what's in it: the findings, and the graphs and tables behind them, on a page you click through, filter and share.
+tagline: "Hand your agent a dataset and get back what's in it: the findings, and the graphs and tables behind them, on a page you click through, filter and share."
 ---
 
 ::skill{name="data-explorer"}
