@@ -1,11 +1,12 @@
-// Opens every playground link in the built docs the way the playground does. A link carries its state in the fragment:
-// a preset by id, or Markdown packed by play-link.ts. The preset must exist, or the Markdown must unpack and parse with
-// the playground's plugins and default config without issues. docs/links.ts checks the rest of each link.
+// Opens every playground link in the built docs the way the playground does. A link carries its files in the fragment,
+// `#code=…`, with a preset as its template. The code must decode against the presets, and the Markdown must parse with
+// the playground's plugins and the link's config without issues. docs/links.ts checks the rest of each link.
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { parseMarkdown } from "comark";
 import { defaultConfig, readConfig } from "./config.ts";
-import { playable, unpack } from "./play-link.ts";
+import { decodePlaygroundLink, readPlaygroundHash } from "@vite-hub/ui-playground/playground";
+import { configFile, contentFile, playable } from "./play-link.ts";
 import { browserPlugins } from "./plugins.ts";
 
 const root = new URL("./dist/public/", import.meta.url).pathname;
@@ -20,33 +21,32 @@ const pages = (dir: string): string[] =>
         : [],
   );
 
-const presets = new Set(
-  (JSON.parse(readFileSync(join(root, "play/presets.json"), "utf8")) as { id: string }[]).map(
-    (preset) => preset.id,
-  ),
-);
-const { config } = readConfig(defaultConfig);
+const { presets: templates } = JSON.parse(
+  readFileSync(join(root, "play/presets.json"), "utf8"),
+) as {
+  presets: { id: string; files: Record<string, string> }[];
+};
 
 async function problemOf(hash: string) {
-  const state = new URLSearchParams(hash.slice(1));
-  const preset = state.get("preset");
-  if (preset) return presets.has(preset) ? undefined : `the preset "${preset}" doesn't exist`;
-  const packed = state.get("md");
-  if (!packed) return;
-  const source = await unpack(packed).catch(() => undefined);
-  if (!source) return "its Markdown doesn't unpack";
+  const code = readPlaygroundHash(hash);
+  if (!code) return "it has no `#code=`";
+  const state = await decodePlaygroundLink(code, templates);
+  if (!state) return "its code doesn't decode, or names a preset that doesn't exist";
+  const source = state.files[contentFile];
+  if (source === undefined) return `it has no ${contentFile}`;
   if (!playable(source)) return "its Markdown includes files, which the playground can't read";
+  const { config, issues } = readConfig(state.files[configFile] ?? defaultConfig);
   const { meta } = await parseMarkdown(source, {
     plugins: browserPlugins(config, { download: false }),
   });
-  return meta.issues?.length ? `the playground reports: ${meta.issues.join(" ")}` : undefined;
+  const all = [...issues, ...(meta.issues ?? [])];
+  return all.length ? `the playground reports: ${all.join(" ")}` : undefined;
 }
 
 const checked = new Map<string, Promise<string | undefined>>();
 const problems = new Set<string>();
 let links = 0;
-// The preset column is a piece of the playground, not a page.
-for (const file of pages(root).filter((file) => relative(root, file) !== "play/presets.html")) {
+for (const file of pages(root)) {
   const page = `/${relative(root, file)}`.replace(/(\/index)?\.html$/, "") || "/";
   for (const [, hash] of readFileSync(file, "utf8").matchAll(/href="\/play\/?(#[^"]+)"/g)) {
     const state = hash!.replaceAll("&amp;", "&");

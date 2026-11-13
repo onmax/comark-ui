@@ -165,7 +165,7 @@ describe("built docs links", () => {
 
   it("reads the playground's fragment as its state, and checks the gallery's as ids", () => {
     const result = check(
-      `<a href="/play#md=y0zMyQEA">Playground</a><a href="/play#preset=tabs-tabs">Preset</a>
+      `<a href="/play#code=q1ZKU7KqVkrOzytJzSvRy01RslJSVvDIVKqtBQA">Playground</a><a href="/play#code=q1YqUbJSKklMKtYFEUq1AA">Preset</a>
       <a href="/play/gallery#tabs-tabs">Gallery</a><a href="/play/gallery#missing">Missing</a>`,
       { "play/index.html": "", "play/gallery/index.html": '<article id="tabs-tabs"></article>' },
     );

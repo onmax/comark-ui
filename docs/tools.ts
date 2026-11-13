@@ -1,22 +1,21 @@
 // Writes what the playground and the component gallery read, rendered from docs/examples.ts with the plugins the
-// pages use: docs/.generated/tools/ is served as is (each gallery cell's document, the presets' stills, the preview's
-// stylesheet), and docs/.generated/tools-data/ is imported by the pages in docs/app/pages/play/. Rendering every
+// pages use: docs/.generated/tools/ is served as is (each gallery cell's document, the presets with their stills, the
+// preview's stylesheet), and docs/.generated/tools-data/ is imported by the gallery page. Rendering every
 // example takes seconds and Shiki, so it runs once before Nuxt, like docs/content.ts, instead of on every request.
 import { fileURLToPath } from "node:url";
 import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync, existsSync } from "node:fs";
 import { renderHtmlFromDocument } from "@comark/html";
 import { icons as lucide } from "@iconify-json/lucide";
+import { playgroundUrl } from "@vite-hub/ui-playground/playground";
 import { parseMarkdown } from "comark";
-import { escapeHtml } from "comark/utils";
 import { parse } from "yaml";
 import { build } from "vite";
 import { css as criticCss } from "../packages/critic/src/index.ts";
-import { defaultConfig } from "./config.ts";
 import { highlighted, sitePlugins, withoutFor } from "./example-plugins.ts";
 import { loadExamples, thirdParty } from "./examples.ts";
-import { highlight } from "./highlight.ts";
 import { components } from "./plugins.ts";
 import { propsOf } from "./props.ts";
+import { presetCode, templateOf } from "./play-link.ts";
 import { cellDocument } from "./preview.ts";
 import { packageOrder } from "./sections.ts";
 
@@ -58,12 +57,15 @@ const packages = packageOrder.flatMap((slug) => {
 const packageOf = (group: string) => packages.find((pkg) => pkg.slug === group);
 
 const examples = await loadExamples(packageOrder);
-const presets = examples
-  .filter((example) => example.playable)
-  .map(({ id, label, group, source }) => {
-    const pkg = packageOf(group);
-    return { id, label, group: pkg?.label ?? "Recipes", npm: pkg?.npm ?? "", source };
-  });
+const presets = await Promise.all(
+  examples
+    .filter((example) => example.playable)
+    .map(async ({ id, label, group, source }) => {
+      const pkg = packageOf(group);
+      const code = await presetCode({ id, source });
+      return { id, label, group: pkg?.label ?? "Recipes", npm: pkg?.npm ?? "", source, code };
+    }),
+);
 
 // A still of a rendered document: no scripts, its plugins' styles collected into `styles` to go in the page once,
 // no ids, since a page holds many, and so no link to one, and a chart without its data table, so the still is all
@@ -79,8 +81,8 @@ const stillOf = (html: string, styles: Set<string>) =>
     .replace(/(<[a-z][^>]*?)\sdata-zoom(?=[\s>])/g, "$1")
     .replace(/<img\b/g, '<img loading="lazy" draggable="false"');
 
-// The presets' column: a still of each preset over its name, with a gray box for each player, so the column loads
-// nothing but the pages' own images. The playground scales each still to its card.
+// The presets' stills, with a gray box for each player, so the column loads nothing but the pages' own images. The
+// playground draws each one over its preset's name and scales it to its card.
 const stillStyles = new Set<string>();
 const stills = new Map(
   await Promise.all(
@@ -94,36 +96,18 @@ const stills = new Map(
     }),
   ),
 );
-const column = [...new Set(presets.map((preset) => preset.group))]
-  .map((group) => {
-    const icon = packages.find((pkg) => pkg.label === group)?.icon ?? "book-open";
-    const cards = presets
-      .filter((preset) => preset.group === group)
-      .map(
-        (preset) =>
-          `<div class="preset"><div class="preset-thumb" aria-hidden="true" inert><div class="preset-page">${stills.get(preset.id) ?? ""}</div></div><a data-preset="${preset.id}" href="#preset=${preset.id}">${escapeHtml(preset.label)}</a></div>`,
-      )
-      .join("");
-    return `<p class="nav-group">${lucideSvg(icon)}${escapeHtml(group)}</p><div class="presets">${cards}</div>`;
-  })
-  .join("");
-writeFileSync(new URL("play/presets.html", out), `${[...stillStyles].join("")}${column}`);
 writeFileSync(
   new URL("play/presets.json", out),
-  JSON.stringify(presets.map(({ id, source, npm }) => ({ id, source, npm }))),
-);
-
-// The playground opens on the first preset, with its Markdown and the config already colored, so the editor reads
-// before the grammar loads in the browser.
-const first = presets[0]!;
-writeFileSync(
-  new URL("play.json", data),
   JSON.stringify({
-    npm: first.npm,
-    source: first.source,
-    config: defaultConfig,
-    sourcePaint: highlight(`${first.source}\n `),
-    configPaint: highlight(`${defaultConfig}\n `, "json"),
+    styles: [...stillStyles].join(""),
+    presets: presets.map(({ id, label, group, npm, source }) => ({
+      id,
+      label,
+      group,
+      npm,
+      files: templateOf({ id, source }).files,
+      still: stills.get(id) ?? "",
+    })),
   }),
 );
 
@@ -143,6 +127,9 @@ await Promise.all(
   }),
 );
 const docsPath = (page: string) => `/${page}`;
+const playLinks = new Map(
+  presets.map((preset) => [preset.id, playgroundUrl("/play", preset.code)]),
+);
 const galleryGroups = [...new Set(examples.map((example) => example.group))].map((group) => {
   const pkg = packageOf(group);
   return {
@@ -157,6 +144,7 @@ const galleryGroups = [...new Set(examples.map((example) => example.group))].map
         label: example.label || pkg?.label || example.page,
         page: docsPath(example.page),
         playable: example.playable,
+        play: playLinks.get(example.id),
       })),
   };
 });

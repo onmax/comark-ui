@@ -8,8 +8,9 @@ export default defineNuxtConfig({
   compatibilityDate: "2026-10-01",
   devtools: { enabled: false },
   telemetry: false,
+  // Load the renderer's styles before the current UI styles, which the modules append below.
+  css: ["@vite-hub/ui-playground/styles.css", "~/assets/landing.css"],
   // vite-hub/nuxt first: @vite-hub/docs turns its Comments on.
-  css: ["~/assets/landing.css"],
   modules: [
     "vite-hub/nuxt",
     "@vite-hub/docs/nuxt",
@@ -109,4 +110,7 @@ export default defineNuxtConfig({
     ],
     prerender: { ignore: excludedLinks, routes: ["/play", "/play/gallery", "/badges"] },
   },
+  // The playground's preview is a sandboxed frame with no origin, so a font it loads needs CORS. On the Worker,
+  // docs/server/middleware/assets.ts sets it.
+  routeRules: { "/play/fonts/**": { headers: { "access-control-allow-origin": "*" } } },
 });

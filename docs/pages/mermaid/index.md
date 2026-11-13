@@ -124,7 +124,7 @@ pele({ languages: ["mermaid"] }); // only `mermaid` fences, not `pele` ones
 
 ### Check a diagram before you publish
 
-A diagram Pele can't draw shows its source as code, with the error in the wrapper's `data-error`. Nothing goes in `meta.issues`, so try it in the [playground](/play#preset=mermaid-flowchart) first.
+A diagram Pele can't draw shows its source as code, with the error in the wrapper's `data-error`. Nothing goes in `meta.issues`, so try it in the [playground](/play#code=q1YqUbJSyk0tyk3MTNFNy8kvT85ILCpRqgUA) first.
 
 ### Comark's own mermaid plugin
 

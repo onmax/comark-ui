@@ -319,4 +319,4 @@ A dark backdrop that lets the page show through:
 }
 ```
 
-To try it, paste it into Extra CSS in the [playground's Theme pane](/play#preset=zoom-image).
+To try it, paste it into Extra CSS in the [playground's Theme pane](/play#code=q1YqUbJSqsrPz9XNzE1MT1WqBQA).

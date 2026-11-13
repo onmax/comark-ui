@@ -12,19 +12,13 @@ import {
   type Node,
 } from "comark";
 import { textContent } from "comark/utils";
+import { playLink } from "./play-link.ts";
 
 const isElement = (node: Node): node is ElementNode =>
   Array.isArray(node) && typeof node[0] === "string";
 // SAFETY: an element node is [tag, attributes, ...children].
 const childrenOf = (node: ElementNode) => node.slice(2) as Node[];
 const isPre = (node: Node): node is ElementNode => isElement(node) && node[0] === "pre";
-
-async function playLink(source: string) {
-  const stream = new Blob([source]).stream().pipeThrough(new CompressionStream("deflate-raw"));
-  const bytes = new Uint8Array(await new Response(stream).arrayBuffer());
-  const base64 = btoa(String.fromCharCode(...bytes));
-  return `/play#md=${base64.replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/, "")}`;
-}
 
 async function studio(node: ElementNode, plugins: () => ComarkPlugin[]) {
   const children = childrenOf(node);

@@ -306,4 +306,4 @@ Wider gaps, no panels, and bigger arrows:
 }
 ```
 
-To try it, paste it into Extra CSS in the [playground's Theme pane](/play#preset=carousel-images).
+To try it, paste it into Extra CSS in the [playground's Theme pane](/play#code=q1YqUbJSSk4syi8tTs3RzcxNTE8tVqoFAA).

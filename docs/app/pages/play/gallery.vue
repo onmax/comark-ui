@@ -191,7 +191,7 @@ onBeforeUnmount(() => {
                         <a
                           class="gallery-action"
                           data-action="play"
-                          :href="`/play#preset=${example.id}`"
+                          :href="example.play"
                           aria-label="Open in the playground"
                           title="Open in the playground"
                           ><UIcon name="i-lucide-flask-conical" class="size-3.5"

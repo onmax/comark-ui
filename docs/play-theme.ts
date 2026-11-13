@@ -1,5 +1,5 @@
-// The playground's Theme pane: the shared `--comark-*` tokens, its presets, and the CSS it copies. No DOM here, so the
-// build can write the pane's markup from the same lists.
+// The playground's Theme pane: the shared `--comark-*` tokens, its presets, and the CSS it copies. Only schemeOf()
+// reads the DOM, so the build and the tests can load the rest.
 export const colorTokens = [
   "background",
   "foreground",
@@ -64,6 +64,39 @@ export const themePresets: { id: string; label: string; tokens: Theme["tokens"];
 
 export const defaultTheme = (): Theme => ({ preset: "shadcn", tokens: {}, css: "" });
 
+/** The text of `theme.json`. A preset's own file is the default theme's, so a link leaves it out until it changes. */
+export const themeText = (theme: Theme) => `${JSON.stringify(theme, null, 2)}\n`;
+export const defaultThemeText = themeText(defaultTheme());
+
+/** The theme's scheme, or the system's when it sets none. */
+export const schemeOf = (theme: Theme) =>
+  theme.scheme ?? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+
+/** The shadcn tokens the plugins fall back to, for a preview that sets none: a page's own. */
+export function schemeCss(scheme: "light" | "dark") {
+  const fallback =
+    scheme === "dark"
+      ? {
+          background: "#0a0a0a",
+          foreground: "#fafafa",
+          "muted-foreground": "#a1a1a1",
+          border: "rgb(255 255 255 / 0.1)",
+          accent: "#262626",
+          ring: "#737373",
+        }
+      : {
+          background: "#fff",
+          foreground: "#0a0a0a",
+          "muted-foreground": "#737373",
+          border: "#e5e5e5",
+          accent: "#f5f5f5",
+          ring: "#a1a1a1",
+        };
+  return `:root {\n${Object.entries(fallback)
+    .map(([name, value]) => `  --${name}: ${value};`)
+    .join("\n")}\n}`;
+}
+
 /** The CSS a reader copies: a `:root` block of the tokens they set, then their own CSS. */
 export function themeCss(theme: Theme) {
   const lines = tokens.flatMap((token) =>
@@ -77,8 +110,20 @@ export function themeCss(theme: Theme) {
     .join("\n\n");
 }
 
-/** Reads a theme from a shared link, keeping only what the pane can show. */
-export function readTheme(value: unknown): Theme {
+/** Reads `theme.json`, keeping only what the pane can show. A file that isn't a theme gives the default and an issue. */
+export function readTheme(text: string | undefined): { theme: Theme; issue?: string } {
+  if (!text?.trim()) return { theme: defaultTheme() };
+  try {
+    return { theme: themeOf(JSON.parse(text)) };
+  } catch {
+    return {
+      theme: defaultTheme(),
+      issue: "The theme in theme.json is not valid; the preview uses the default theme.",
+    };
+  }
+}
+
+function themeOf(value: unknown): Theme {
   const theme = defaultTheme();
   if (typeof value !== "object" || value === null) throw new Error("Not a theme.");
   const record = value as Record<string, unknown>;

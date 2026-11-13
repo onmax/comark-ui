@@ -60,6 +60,9 @@ catalogs:
     '@types/react-dom':
       specifier: ^19.3.0
       version: 19.3.0
+    '@vite-hub/ui-playground':
+      specifier: https://pkg.pr.new/vite-hub/vitehub/@vite-hub/ui@af71f9df43c589af1350de7efe4925b993a93480
+      version: 0.0.0-preview-af71f9d
     ai:
       specifier: ^7.0.130
       version: 7.0.153
@@ -366,6 +369,9 @@ importers:
       '@vite-hub/ui':
         specifier: https://pkg.pr.new/vite-hub/vitehub/@vite-hub/ui@bc43707859b8caf48454e20157075625e9d615a8
         version: https://pkg.pr.new/vite-hub/vitehub/@vite-hub/ui@bc43707859b8caf48454e20157075625e9d615a8(ef35dc0344ee247574ffd9ac4e33b819)
+      '@vite-hub/ui-playground':
+        specifier: 'catalog:'
+        version: '@vite-hub/ui@https://pkg.pr.new/vite-hub/vitehub/@vite-hub/ui@af71f9df43c589af1350de7efe4925b993a93480(e2d3f7cd369b2e3a86cca57d8e49c0e7)'
       '@vite-hub/workflow':
         specifier: https://pkg.pr.new/vite-hub/vitehub/@vite-hub/workflow@bc43707859b8caf48454e20157075625e9d615a8
         version: https://pkg.pr.new/vite-hub/vitehub/@vite-hub/workflow@bc43707859b8caf48454e20157075625e9d615a8(3419a2f55a793a23d677bd26ba5ae245)
@@ -6642,6 +6648,45 @@ packages:
       vue:
         optional: true
 
+  '@vite-hub/ui@https://pkg.pr.new/vite-hub/vitehub/@vite-hub/ui@af71f9df43c589af1350de7efe4925b993a93480':
+    resolution: {integrity: sha512-l2rb2ePceYjIHMHAevGcQXAD5I3Hq70tsG5zwMEXgINm0OienUyIQOUf+qicl8apiLlj1nOraQtPY6oyekRZmA==, tarball: https://pkg.pr.new/vite-hub/vitehub/@vite-hub/ui@af71f9df43c589af1350de7efe4925b993a93480}
+    version: 0.0.0-preview-af71f9d
+    engines: {node: '>=22.22.0'}
+    peerDependencies:
+      '@iconify-json/ph': ^1.2.2
+      '@nuxt/ui': ^4.11.0
+      '@tiptap/core': ^3.31.4
+      '@tiptap/extension-image': ^3.31.4
+      '@tiptap/extension-list': ^3.31.4
+      '@tiptap/extension-table': ^3.31.4
+      '@tiptap/pm': ^3.31.4
+      '@tiptap/starter-kit': ^3.31.4
+      '@tiptap/vue-3': ^3.31.4
+      ai: ^6.0.0 || ^7.0.0-0
+      vite: '>=8.0.0'
+      vue: ^3.5.0
+    peerDependenciesMeta:
+      '@iconify-json/ph':
+        optional: true
+      '@nuxt/ui':
+        optional: true
+      '@tiptap/core':
+        optional: true
+      '@tiptap/extension-image':
+        optional: true
+      '@tiptap/extension-list':
+        optional: true
+      '@tiptap/extension-table':
+        optional: true
+      '@tiptap/pm':
+        optional: true
+      '@tiptap/starter-kit':
+        optional: true
+      '@tiptap/vue-3':
+        optional: true
+      vite:
+        optional: true
+
   '@vite-hub/ui@https://pkg.pr.new/vite-hub/vitehub/@vite-hub/ui@bc43707859b8caf48454e20157075625e9d615a8':
     resolution: {integrity: sha512-HnY5AScHi5qwaRMaIxZ2AU22gP7r6RVYYk4FQcunAJSYJlXY8+rk0Nb0ktVPsqM38WlEcvC3ewb4pbuwPmO5BA==, tarball: https://pkg.pr.new/vite-hub/vitehub/@vite-hub/ui@bc43707859b8caf48454e20157075625e9d615a8}
     version: 0.0.0-preview-bc43707
@@ -7927,6 +7972,30 @@ packages:
 
   comark-chat@0.10.1:
     resolution: {integrity: sha512-A/bUsLbo/4ypmzS9Yg6qH4qgHbEElOnK/mptnC2nn+2upmCTVq065QsoneTGewVn6dh0U8A0ftJG2rsAGsqAuQ==}
+    engines: {node: '>=22.12.0'}
+    peerDependencies:
+      '@comark/react': ^0.9.0
+      '@comark/svelte': ^0.9.0
+      '@comark/vue': ^0.9.0
+      react: '>=18'
+      svelte: '>=5'
+      vue: '>=3.5'
+    peerDependenciesMeta:
+      '@comark/react':
+        optional: true
+      '@comark/svelte':
+        optional: true
+      '@comark/vue':
+        optional: true
+      react:
+        optional: true
+      svelte:
+        optional: true
+      vue:
+        optional: true
+
+  comark-chat@0.7.1:
+    resolution: {integrity: sha512-4U5SBtVbkJ1nkdeiY48aeoDZgFP1rcdWQwm3fcWGn5nYe9+z4ACEaYKBWWUhSj7rb2I/X56h1+ZlQPWIKcFkkQ==}
     engines: {node: '>=22.12.0'}
     peerDependencies:
       '@comark/react': ^0.9.0
@@ -18306,6 +18375,124 @@ snapshots:
     transitivePeerDependencies:
       - crossws
 
+  '@vite-hub/ui@https://pkg.pr.new/vite-hub/vitehub/@vite-hub/ui@af71f9df43c589af1350de7efe4925b993a93480(e2d3f7cd369b2e3a86cca57d8e49c0e7)':
+    dependencies:
+      '@codemirror/autocomplete': 6.20.4
+      '@codemirror/commands': 6.11.1
+      '@codemirror/lang-css': 6.3.1
+      '@codemirror/lang-html': 6.4.12
+      '@codemirror/lang-javascript': 6.2.5
+      '@codemirror/lang-json': 6.0.2
+      '@codemirror/lang-markdown': 6.5.2
+      '@codemirror/lang-vue': 0.1.3
+      '@codemirror/language': 6.13.1
+      '@codemirror/state': 6.7.6
+      '@codemirror/view': 6.43.15
+      '@comark/vue': 0.9.0(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+      '@lezer/highlight': 1.2.5
+      '@nuxt/kit': 4.6.2(@nuxt/schema@4.6.2)(confbox@0.3.2)(dotenv@17.4.2)(giget@3.3.1)(jiti@2.7.0)(magic-string@1.4.5)(mlly@1.8.2)(oxc-parser@0.153.0)(rolldown@1.2.18)(unplugin@3.7.0(@voidzero-dev/vite-plus-core@1.1.0(@types/node@24.19.2)(@volar/typescript@2.4.28)(@vue/language-core@3.3.13)(esbuild@0.28.2)(jiti@2.7.0)(publint@0.3.25)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3))(yaml@2.9.1))(esbuild@0.28.2)(rolldown@1.2.18)(rollup@4.64.12))
+      '@shikijs/langs': 4.5.0
+      '@types/node': 24.19.2
+      '@vite-hub/comments': https://pkg.pr.new/vite-hub/vitehub/@vite-hub/comments@bc43707859b8caf48454e20157075625e9d615a8(f001850346e1a0d5d90bef72c3850062)
+      '@vite-hub/web-container': https://pkg.pr.new/vite-hub/vitehub/@vite-hub/web-container@bc43707859b8caf48454e20157075625e9d615a8(@voidzero-dev/vite-plus-core@1.1.0(@types/node@24.19.2)(@volar/typescript@2.4.28)(@vue/language-core@3.3.13)(esbuild@0.28.2)(jiti@2.7.0)(publint@0.3.25)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3))(yaml@2.9.1))
+      '@xterm/addon-fit': 0.11.0
+      '@xterm/xterm': 6.0.0
+      ai: 7.0.153(zod@4.6.7)
+      comark: 0.9.0(katex@0.19.1)(shiki@4.5.0)
+      comark-chat: 0.7.1(@comark/react@0.9.0(katex@0.19.1)(react@19.3.1)(shiki@4.5.0))(@comark/svelte@0.9.0(katex@0.19.1)(shiki@4.5.0)(svelte@5.57.2(@typescript-eslint/types@8.71.1)))(@comark/vue@0.9.0(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3)))(react@19.3.1)(svelte@5.57.2(@typescript-eslint/types@8.71.1))(vue@3.5.44(typescript@6.0.3))
+      katex: 0.19.1
+      nostics: 1.3.0
+      reka-ui: 2.11.0(vue@3.5.44(typescript@6.0.3))
+      shiki: 4.5.0
+      vega-loader: 5.1.3
+      vue: 3.5.44(typescript@6.0.3)
+    optionalDependencies:
+      '@iconify-json/ph': 1.2.2
+      '@nuxt/ui': 4.12.0(0919750c2ba643b284959464a23d9734)
+      '@tiptap/core': 3.32.0(@tiptap/pm@3.32.0)
+      '@tiptap/extension-image': 3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))
+      '@tiptap/extension-list': 3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0)
+      '@tiptap/extension-table': 3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0)
+      '@tiptap/pm': 3.32.0
+      '@tiptap/starter-kit': 3.32.0
+      '@tiptap/vue-3': 3.32.0(@floating-ui/dom@1.8.0)(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0)(vue@3.5.44(typescript@6.0.3))
+      vite: '@voidzero-dev/vite-plus-core@1.1.0(@types/node@24.19.2)(@volar/typescript@2.4.28)(@vue/language-core@3.3.13)(esbuild@0.28.2)(jiti@2.7.0)(publint@0.3.25)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3))(yaml@2.9.1)'
+    transitivePeerDependencies:
+      - '@aws-sdk/client-s3'
+      - '@aws-sdk/lib-storage'
+      - '@aws-sdk/s3-presigned-post'
+      - '@aws-sdk/s3-request-presigner'
+      - '@azure/identity'
+      - '@azure/storage-blob'
+      - '@better-auth/oauth-provider'
+      - '@cf-wasm/photon'
+      - '@cloudflare/sandbox'
+      - '@comark/react'
+      - '@comark/svelte'
+      - '@farmfe/core'
+      - '@google-cloud/storage'
+      - '@googleapis/drive'
+      - '@lynx-js/react'
+      - '@microsoft/microsoft-graph-client'
+      - '@modelcontextprotocol/sdk'
+      - '@nuxt/schema'
+      - '@opentelemetry/api'
+      - '@prisma/client'
+      - '@rsbuild/core'
+      - '@rspack/core'
+      - '@supabase/storage-js'
+      - '@sveltejs/kit'
+      - '@tanstack/react-start'
+      - '@tanstack/solid-start'
+      - '@types/json-schema'
+      - '@types/mdast'
+      - '@vercel/sandbox'
+      - '@vite-hub/agent'
+      - '@vite-hub/database'
+      - '@vite-hub/shell'
+      - beautiful-mermaid
+      - box-typescript-sdk-gen
+      - bufferutil
+      - bun-types-no-globals
+      - confbox
+      - crossws
+      - dotenv
+      - drizzle-kit
+      - drizzle-orm
+      - dropbox
+      - encoding
+      - giget
+      - google-auth-library
+      - jiti
+      - magic-string
+      - mlly
+      - mongodb
+      - mysql2
+      - next
+      - nitro
+      - ocache
+      - oxc-parser
+      - pg
+      - postgres
+      - prisma
+      - rangi
+      - react
+      - react-dom
+      - rolldown
+      - rollup
+      - sharp
+      - solid-js
+      - ssh2
+      - supports-color
+      - svelte
+      - typescript
+      - unloader
+      - unplugin
+      - uploadthing
+      - utf-8-validate
+      - vitest
+      - webpack
+
   '@vite-hub/ui@https://pkg.pr.new/vite-hub/vitehub/@vite-hub/ui@bc43707859b8caf48454e20157075625e9d615a8(ef35dc0344ee247574ffd9ac4e33b819)':
     dependencies:
       '@codemirror/autocomplete': 6.20.4
@@ -19712,6 +19899,15 @@ snapshots:
   colortranslator@5.0.0: {}
 
   comark-chat@0.10.1(@comark/react@0.9.0(katex@0.19.1)(react@19.3.1)(shiki@4.5.0))(@comark/svelte@0.9.0(katex@0.19.1)(shiki@4.5.0)(svelte@5.57.2(@typescript-eslint/types@8.71.1)))(@comark/vue@0.9.0(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3)))(react@19.3.1)(svelte@5.57.2(@typescript-eslint/types@8.71.1))(vue@3.5.44(typescript@6.0.3)):
+    optionalDependencies:
+      '@comark/react': 0.9.0(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
+      '@comark/svelte': 0.9.0(katex@0.19.1)(shiki@4.5.0)(svelte@5.57.2(@typescript-eslint/types@8.71.1))
+      '@comark/vue': 0.9.0(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+      react: 19.3.1
+      svelte: 5.57.2(@typescript-eslint/types@8.71.1)
+      vue: 3.5.44(typescript@6.0.3)
+
+  comark-chat@0.7.1(@comark/react@0.9.0(katex@0.19.1)(react@19.3.1)(shiki@4.5.0))(@comark/svelte@0.9.0(katex@0.19.1)(shiki@4.5.0)(svelte@5.57.2(@typescript-eslint/types@8.71.1)))(@comark/vue@0.9.0(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3)))(react@19.3.1)(svelte@5.57.2(@typescript-eslint/types@8.71.1))(vue@3.5.44(typescript@6.0.3)):
     optionalDependencies:
       '@comark/react': 0.9.0(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
       '@comark/svelte': 0.9.0(katex@0.19.1)(shiki@4.5.0)(svelte@5.57.2(@typescript-eslint/types@8.71.1))

@@ -258,4 +258,4 @@ A header that matches the code block:
 }
 ```
 
-To try it, paste it into Extra CSS in the [playground's Theme pane](/play#preset=magic-move-refactor).
+To try it, paste it into Extra CSS in the [playground's Theme pane](/play#code=q1YqUbJSyk1Mz0zWzc0vS9UtSk1LTC7JL1KqBQA).
