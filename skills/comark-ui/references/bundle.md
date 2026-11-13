@@ -1,6 +1,6 @@
 # Bundle size
 
-comark-bundle shows what changed between two builds of an app: what every page loads before and after, a bar per build where only the packages that changed have color, and one sentence that says why. A treemap of what the new build holds waits behind a disclosure. Use it for a performance pull request or a dependency upgrade, instead of pasting the build log or a screenshot of an analyzer.
+comark-bundle shows what changed between two builds of an app: what every page loads before and after, and a bar per build where the packages the new build added are dark and the ones it dropped are hatched. A treemap of what the new build holds waits behind a disclosure. Use it for a performance pull request or a dependency upgrade, instead of pasting the build log or a screenshot of an analyzer.
 
 ## Syntax
 

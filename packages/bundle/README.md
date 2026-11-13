@@ -25,7 +25,7 @@ Point `before` and `after` at two builds of the same app, a build folder or a [S
 ::
 ```
 
-The block shows what every page loads after the change, with the difference, a bar per build where only the packages that changed have color, and one sentence that says what moved. A treemap of the new build waits behind a `<details>`. `src` shows one build alone. A build folder is measured with gzip -9 and brotli 11 and needs sourcemaps to name packages; a Sonda report reads anywhere, through the `read` option. The page shows the report with no script.
+The block shows what every page loads after the change, with the difference, and a bar per build where the packages it added are dark and the ones it dropped are hatched, named under the bar. A treemap of the new build waits behind a `<details>`. `src` shows one build alone. A build folder is measured with gzip -9 and brotli 11 and needs sourcemaps to name packages; a Sonda report reads anywhere, through the `read` option. The page shows the report with no script.
 
 The plugin adds every problem to `meta.issues`, so a host can reject a document before publishing it: a missing build, a path that leaves `root` or doesn't exist, and a file that is neither a build nor a Sonda report. Each issue names the block and says how to fix it.
 

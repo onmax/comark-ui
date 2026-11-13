@@ -29,8 +29,8 @@ credits: 'Framed like <a href="https://ui.shadcn.com/charts">shadcn/ui''s chart 
 
 - Reads the builds itself: a build folder, measured with gzip -9 and brotli 11, or a [Sonda](https://sonda.dev) JSON report. Nothing to paste or keep in sync.
 - Splits what every page loads from what loads later: the entry, its static imports, and Nuxt's default layout, against routes and `import()`.
-- Colors only what changed: a removed package is hatched in the old build's bar, and an added one, or one that moved into every page, is red in the new one.
-- Says the change in one sentence under the bars, so the number and the reason read without the picture.
+- Draws the bars in neutrals and marks only what changed: what the new build added to every page is dark, and what it dropped is hatched, with the package's name under it.
+- Says the change in one sentence for screen readers, so the number and the reason read without the picture.
 - Keeps a treemap of the new build behind a native `<details>`, with a removed package at its old size. No script.
 
 ## Usage
@@ -161,7 +161,7 @@ For Vue, React, or Svelte, import from `comark-bundle/vue`, `comark-bundle/react
 
 ## Theme
 
-The report sits in a bordered card with a quiet header, like [Diff](/diff). Red marks what grew every page and green what shrank it, from the status colors; everything else is neutral. The rules sit in a `comark` CSS layer, so any plain rule of yours wins.
+The report sits in a bordered card with a quiet header, like [Diff](/diff). The badge is red when every page grew and green when it shrank, from the status colors; the bars and the treemap are neutral. The rules sit in a `comark` CSS layer, so any plain rule of yours wins.
 
 ### Shared tokens
 
@@ -170,12 +170,12 @@ The report reads these [shared tokens](/guide/theming):
 | Token | Used for |
 | --- | --- |
 | `--comark-background` | The card |
-| `--comark-foreground` | The number and the sentence, mixed into the bars |
+| `--comark-foreground` | The number, mixed into the bars, the tiles, and the labels |
 | `--comark-muted` | Labels, the muted footer line, and the icon |
 | `--comark-border` | The card's edge, the header, and the disclosure |
 | `--comark-accent` | The header, and a hovered disclosure |
-| `--comark-success` | A removed package, and a smaller total |
-| `--comark-danger` | An added package, and a bigger total |
+| `--comark-success` | The badge of a smaller total |
+| `--comark-danger` | The badge of a bigger total |
 | `--comark-ring` | The disclosure's focus ring |
 | `--comark-radius` | The card's corners |
 | `--comark-font` | The text |
@@ -187,8 +187,9 @@ Set them on `.cbr`:
 | Variable | Default | Used for |
 | --- | --- | --- |
 | `--cbr-better`, `--cbr-worse` | Success and danger, mixed toward the text | The badge's text |
-| `--cbr-rest` | The text at 14% | The part of each bar that didn't change |
-| `--cbr-add`, `--cbr-add-tile` | Danger at 62% and 20% | An added package in a bar and in the treemap |
+| `--cbr-rest` | The text at 16% | The part of each bar that didn't change |
+| `--cbr-ink` | The text at 78% | What the new build added, in a bar and in the treemap |
+| `--cbr-text` | The text at 72% | The labels and the names under the bars |
 | `--cbr-tile` | The text at 6% | A package's tile |
 
 ### Classes
@@ -199,12 +200,12 @@ Set them on `.cbr`:
 | `.cbr-head`, `.cbr-title` | The header and its title |
 | `.cbr-big`, `.cbr-pill` | The number and its badge; `[data-verdict]` is `better`, `worse`, or `same` |
 | `.cbr-bar`, `.cbr-seg` | A build's bar and its parts; `[data-kind]` is `rest`, `removed`, `moved-out`, `added`, or `moved-in` |
-| `.cbr-foot-1`, `.cbr-foot-2` | The footer's sentence and its muted line |
+| `.cbr-foot-1`, `.cbr-foot-2` | The change in words, for screen readers, and the footer's muted line |
 | `.cbr-more` | The disclosure, a `<details>` |
 | `.cbr-tile` | A treemap tile; `[data-kind]` as on `.cbr-seg`, plus `changed` and `same` |
 
 ```css
 .cbr {
-  --cbr-add: oklch(0.7 0.15 50);
+  --cbr-ink: oklch(0.55 0.15 260);
 }
 ```
