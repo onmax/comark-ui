@@ -14,6 +14,7 @@ import { lint, type Diagnostic } from "../packages/lint/src/index.ts";
 import { isElement } from "../shared/nodes.ts";
 import { rawText } from "../shared/text.ts";
 import { loadExamples, thirdParty } from "./examples.ts";
+import { withBuilds } from "./builds.ts";
 import { browserPlugins, components } from "./plugins.ts";
 import { packageOrder } from "./sections.ts";
 
@@ -72,12 +73,14 @@ const icon = (name: string) => {
 
 const plugins = () => [
   include({ root: new URL("packages/include/docs/", repo).pathname }),
-  ...browserPlugins(
-    {
-      "comark-github": { references: { repo: "onmax/comark-ui" } },
-      "comark-time": { now: "2026-11-04T12:00:00Z", timeZone: "UTC", locale: "en" },
-    },
-    { icon: { collections: { lucide } } },
+  ...withBuilds(
+    browserPlugins(
+      {
+        "comark-github": { references: { repo: "onmax/comark-ui" } },
+        "comark-time": { now: "2026-11-04T12:00:00Z", timeZone: "UTC", locale: "en" },
+      },
+      { icon: { collections: { lucide } } },
+    ),
   ),
 ];
 
