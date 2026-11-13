@@ -97,7 +97,7 @@ How most packages work, so the bullets below don't repeat it:
   - `src/draw.ts` lays out the graph while parsing: a column per lane (reused once a lane ends, kept for a branch stacked on another's tip), the lines and dots as one escaped SVG string in a `git-graph-lines` node, and each row as plain elements. Rows are a fixed 34px, or 52px with a line of notes, since the SVG is drawn to meet them.
   - Props follow `git log`'s flags: `reverse` and `max-count`. `scripts/fixtures.sh` records the test fixtures from scratch repositories with fixed dates.
 - `packages/github` is `comark-github`: the parts of GitHub's Markdown that Comark doesn't render like GitHub, as three named plugins and no default export.
-  - `callouts()` in `src/callouts.ts` is named `alert`, so Comark's dedupe swaps it in for the built-in alert plugin and it always sees the raw `[!TYPE]` marker. It turns those blockquotes into `github-callout` nodes with `type` and `title`.
+  - `callouts()` in `src/callouts.ts` is named `alert`, so Comark's dedupe swaps it in for the built-in alert plugin and it always sees the raw `[!TYPE]` marker. It turns those blockquotes into `github-callout` nodes with `type` and `title`, and, unless `blocks` is `false`, the `::note` to `::caution` and `::callout{type}` blocks too, so every renderer draws them with the one component.
   - `references()` in `src/references.ts` turns `@user`, `#123`, and `owner/name#123` in text into plain `a` nodes, so no renderer needs a component.
   - `html()` in `src/raw-html.ts` is named `html`, so it replaces Comark's built-in html plugin, reuses its tokenizer, and prunes the nodes marked `$.html` to GitHub's allowlist.
 - `packages/icon` is `comark-icon`.
