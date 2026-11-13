@@ -9,7 +9,7 @@
     "markdown",
     "mdc",
     "plugin",
-    "sonda",
+    "sourcemap",
     "vite"
   ],
   "homepage": "https://comark-ui.onmax.me/bundle",

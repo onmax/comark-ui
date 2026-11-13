@@ -2,7 +2,7 @@ A `::bundle` reads its builds from its props, so anything written inside the blo
 
 ::incorrect
 ```md
-::bundle{before="reports/main.json" after="reports/pr.json"}
+::bundle{before="builds/main/assets" after="builds/pr/assets"}
 ECharts now loads on every page.
 ::
 ```
@@ -12,7 +12,7 @@ ECharts now loads on every page.
 ```md
 ECharts now loads on every page.
 
-::bundle{before="reports/main.json" after="reports/pr.json"}
+::bundle{before="builds/main/assets" after="builds/pr/assets"}
 ::
 ```
 ::

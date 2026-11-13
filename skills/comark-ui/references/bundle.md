@@ -13,7 +13,7 @@ Point `before` and `after` at two builds of the same app. The block reads them w
 
 | Prop | What it does |
 | --- | --- |
-| `before`, `after` | The two builds: a build folder (`dist/assets`, `.output/public/_nuxt`) or a Sonda JSON report (a path ending in `.json`). |
+| `before`, `after` | The two builds' output folders, such as `dist/assets` or `.output/public/_nuxt`. |
 | `src` | One build without a comparison, in place of `before` and `after`. |
 | `title` | The header. It also names the figure for screen readers. Default "Bundle size". |
 
@@ -32,9 +32,10 @@ pnpm build
 - Every page is the entry, its static imports, and Nuxt's default layout. Routes and `import()` count as lazy.
 - Sizes are gzip -9 in kB of 1,000 bytes; raw and brotli are in the number's tooltip. Don't quote a number the block didn't print.
 - Write the explanation outside the block; text inside is dropped.
-- A Drop page or a PR body has no disk: upload the two Sonda reports next to the document, or render the document where the builds are.
+- The block reads the builds while the document parses, in Node: render the document where the builds are. A Drop page or a PR body has no disk.
+- Keep the `index.html` or `.vite/manifest.json` Vite writes next to `assets`; the block finds the entry chunk without them, and says so when it can't.
 
 ## Register
 
 - In `comark-ui`: on, under the key `bundle`, but it reads no builds until you pass `{ root }` (or `{ read, list }`).
-- Alone: `pnpm add comark @comark/html comark-bundle`, then `createHtmlRenderer({ plugins: [bundle({ root: "." })], components })` with both from `comark-bundle/html`. Measuring a build folder needs Node; Sonda reports read anywhere through `read`. `comark-bundle/vue`, `/react`, and `/svelte` render it too.
+- Alone: `pnpm add comark @comark/html comark-bundle`, then `createHtmlRenderer({ plugins: [bundle({ root: "." })], components })` with both from `comark-bundle/html`. Measuring needs Node. `comark-bundle/vue`, `/react`, and `/svelte` render it too.

@@ -1,6 +1,5 @@
-// Reads one build into chunks, their import graph, and the bytes each package takes in them. Two inputs: a build
-// folder (its JavaScript chunks, measured here, and their sourcemaps when the build wrote them), or a Sonda JSON
-// report, which already carries every size and the module graph.
+// Reads one build folder into chunks, their import graph, and the bytes each package takes in them: every JavaScript
+// chunk, measured here, its imports of other chunks, and its sourcemap when the build wrote one.
 
 export type Size = { raw: number; gzip: number; brotli: number };
 
@@ -20,10 +19,10 @@ export type Chunk = Size & {
 export type Build = {
   chunks: Map<string, Chunk>;
   entries: string[];
-  /** Whether the sizes come with packages: a sourcemap per chunk, or a Sonda report. */
+  /** Whether any chunk has a sourcemap, so the sizes come with packages. */
   packages: boolean;
-  /** What measured it, for the footer: `gzip -9 · brotli 11` or `Sonda 0.14.0`. */
-  tool: string;
+  /** How many chunks have no sourcemap; their bytes count as the app's own. */
+  unmapped: number;
 };
 
 /** Reads a file under the root as text. Returns undefined when it doesn't exist. */
@@ -48,8 +47,6 @@ export function packageOf(path: string): string {
   return scope.startsWith("@") ? `${scope}/${name}` : scope;
 }
 
-// --- Sonda ---------------------------------------------------------------------------------------------------------
-
 // JSON from a file, read field by field: a value that isn't what the reader expects reads as missing.
 const record = (value: unknown): Record<string, unknown> =>
   value !== null && typeof value === "object" && !Array.isArray(value)
@@ -58,92 +55,7 @@ const record = (value: unknown): Record<string, unknown> =>
     : {};
 const items = (value: unknown): unknown[] => (Array.isArray(value) ? value : []);
 const string = (value: unknown): string => (typeof value === "string" ? value : "");
-const bytes = (value: unknown): number =>
-  typeof value === "number" && Number.isFinite(value) ? value : 0;
 const parse = (text: string): unknown => JSON.parse(text);
-
-type SondaResource = { kind: string; name: string; parent: string } & Size;
-
-function resource(value: unknown): SondaResource {
-  const r = record(value);
-  return {
-    kind: string(r.kind),
-    name: string(r.name),
-    parent: string(r.parent),
-    raw: bytes(r.uncompressed),
-    gzip: bytes(r.gzip),
-    brotli: bytes(r.brotli),
-  };
-}
-
-export function fromSonda(json: string): Build {
-  let report: Record<string, unknown>;
-  try {
-    report = record(parse(json));
-  } catch {
-    throw new Unreadable("it isn't JSON");
-  }
-  const metadata = record(report.metadata);
-  if (!string(metadata.version) || !Array.isArray(report.resources))
-    throw new Unreadable("it isn't a Sonda report: it has no `metadata.version` or `resources`");
-  if (metadata.gzip !== true)
-    throw new Unreadable("the Sonda report has no gzip sizes. Set `gzip: true` in Sonda's options");
-  const resources = items(report.resources).map(resource);
-  const chunks = new Map<string, Chunk>();
-  for (const r of resources)
-    if (r.kind === "asset" && /\.m?js$/.test(r.name))
-      chunks.set(r.name, {
-        name: r.name,
-        raw: r.raw,
-        gzip: r.gzip,
-        brotli: r.brotli,
-        imports: [],
-        dynamic: [],
-        packages: new Map(),
-        modules: [],
-      });
-  const home = new Map<string, string>();
-  for (const r of resources) {
-    const chunk = r.kind === "chunk" ? chunks.get(r.parent) : undefined;
-    if (!chunk) continue;
-    home.set(r.name, chunk.name);
-    chunk.modules.push(r.name);
-    const name = packageOf(r.name);
-    const size = chunk.packages.get(name) ?? zero();
-    add(size, r);
-    chunk.packages.set(name, size);
-  }
-  const targeted = new Set<string>();
-  const entrypoints: string[] = [];
-  for (const c of items(report.connections).map((value) => {
-    const connection = record(value);
-    return {
-      kind: string(connection.kind),
-      source: string(connection.source),
-      target: string(connection.target),
-    };
-  })) {
-    if (c.kind === "entrypoint") {
-      if (chunks.has(c.source)) entrypoints.push(c.source);
-      continue;
-    }
-    const from = home.get(c.source);
-    const to = home.get(c.target);
-    if (!from || !to || from === to) continue;
-    const owner = chunks.get(from);
-    if (!owner) continue;
-    const list = c.kind === "dynamic-import" ? owner.dynamic : owner.imports;
-    if (!list.includes(to)) list.push(to);
-    targeted.add(to);
-  }
-  const roots = entrypoints.filter((name) => !targeted.has(name));
-  return {
-    chunks,
-    entries: roots.length ? roots : entrypoints,
-    packages: true,
-    tool: `Sonda ${string(metadata.version)}`,
-  };
-}
 
 // --- A build folder ------------------------------------------------------------------------------------------------
 
@@ -218,7 +130,7 @@ async function compressor(): Promise<Compress> {
     zlib = await import("node:zlib");
   } catch {
     throw new Unreadable(
-      "measuring a build folder needs Node's zlib. Point it at a Sonda report instead",
+      "measuring a build folder needs Node's zlib, so render the document with Node",
     );
   }
   const { gzip, brotliCompress, constants } = zlib;
@@ -237,13 +149,29 @@ async function compressor(): Promise<Compress> {
 // gzip -9 and brotli 11 take a while, so each chunk's sizes are kept per process by its contents.
 const measured = new Map<string, Promise<[number, number]>>();
 
+// A read that fails counts as a file that isn't there: the caller only asks to tell a file from a folder, or to look
+// for an optional manifest.
+async function attempt(read: BundleReader, path: string): Promise<string | undefined> {
+  try {
+    return await read(path);
+  } catch {
+    return undefined;
+  }
+}
+
 export async function fromFolder(
   folder: string,
   read: BundleReader,
   list: BundleLister,
 ): Promise<Build | undefined> {
   const files = await list(folder);
-  if (!files) return undefined;
+  if (!files) {
+    if ((await attempt(read, folder)) !== undefined)
+      throw new Unreadable(
+        "it's a file. Point it at the build's output folder, such as `dist/assets`",
+      );
+    return undefined;
+  }
   const scripts = files.filter((file) => /\.m?js$/.test(file)).sort();
   if (!scripts.length)
     throw new Unreadable("it has no JavaScript files. Point it at the build's output folder");
@@ -309,8 +237,8 @@ export async function fromFolder(
   return {
     chunks,
     entries: await entriesOf(folder, chunks, read),
-    packages: mapped === chunks.size,
-    tool: "gzip -9 · brotli 11",
+    packages: mapped > 0,
+    unmapped: chunks.size - mapped,
   };
 }
 
@@ -321,13 +249,7 @@ async function entriesOf(
   chunks: Map<string, Chunk>,
   read: BundleReader,
 ): Promise<string[]> {
-  const tryRead = async (path: string) => {
-    try {
-      return await read(path);
-    } catch {
-      return undefined;
-    }
-  };
+  const tryRead = (path: string) => attempt(read, path);
   const named = (path: string) => {
     const file = path.replace(/^\.?\//, "");
     return [...chunks.keys()].filter((name) => file === name || file.endsWith(`/${name}`));
@@ -354,8 +276,35 @@ async function entriesOf(
     ].flatMap(([, src]) => named(src!));
     if (scripts.length) return [...new Set(scripts)];
   }
-  const referenced = new Set(
-    [...chunks.values()].flatMap((chunk) => [...chunk.imports, ...chunk.dynamic]),
+  const guessed = guessEntries(chunks);
+  if (guessed.length) return guessed;
+  throw new Unreadable(
+    "it doesn't show which chunk is the entry. Keep the build's `index.html` or `.vite/manifest.json` next to the assets folder",
   );
-  return [...chunks.keys()].filter((name) => !referenced.has(name));
+}
+
+// Without them, the entry is where the graph starts. "Nothing imports it" isn't enough: a lazy chunk often imports
+// shared code back from the entry. So a chunk loaded through `import()` is lazy, a chunk only lazy chunks reach is
+// lazy, and of the rest, an entry is one that nothing else imports, unless the importer is in a cycle with it.
+function guessEntries(chunks: Map<string, Chunk>): string[] {
+  const reach = (from: string, lazy: boolean) => {
+    const seen = new Set<string>();
+    const stack = [from];
+    for (let name = stack.pop(); name !== undefined; name = stack.pop()) {
+      const chunk = chunks.get(name);
+      for (const next of chunk ? [...chunk.imports, ...(lazy ? chunk.dynamic : [])] : [])
+        if (!seen.has(next)) (seen.add(next), stack.push(next));
+    }
+    return seen;
+  };
+  const targets = new Set([...chunks.values()].flatMap((chunk) => chunk.dynamic));
+  const onlyLazy = (name: string) =>
+    [...targets].some((target) => reach(target, false).has(name) && !reach(name, true).has(target));
+  const rest = [...chunks.keys()].filter((name) => !targets.has(name) && !onlyLazy(name));
+  return rest.filter((name) =>
+    rest.every(
+      (other) =>
+        chunks.get(other)?.imports.includes(name) !== true || reach(name, false).has(other),
+    ),
+  );
 }

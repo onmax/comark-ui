@@ -1,7 +1,8 @@
 // Writes the test and docs fixtures: made-up builds, deterministic, so a rerun changes nothing.
-//   test/fixtures/vite/{before,after}: a Vite build with sourcemaps, the entry named by index.html.
+//   test/fixtures/vite/{main,pr}: a Vite build with sourcemaps but for one helper chunk, the entry named by index.html,
+//     and a lazy chunk that imports back from the entry. The docs page renders these too.
 //   test/fixtures/nuxt/{before,after}: a Nuxt client build without sourcemaps, its default layout loaded by import().
-//   test/fixtures/sonda/{main,pr}.json: Sonda reports of a dashboard that upgrades ECharts, for the docs.
+//   docs/doctor-include/builds/{main,pr}: two tiny builds for the linter's doctor pages.
 // Run with `node scripts/fixtures.mjs` from the package.
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
@@ -62,7 +63,8 @@ function chunk(name, head, modules) {
   };
 }
 
-function vite(dir, chunks, entry) {
+// A chunk named in `unmapped` gets no sourcemap, as Vite's preload helper may not.
+function vite(dir, chunks, entry, unmapped = []) {
   rmSync(out + dir, { recursive: true, force: true });
   write(
     `${dir}/index.html`,
@@ -71,14 +73,14 @@ function vite(dir, chunks, entry) {
   for (const [name, head, modules] of chunks) {
     const { text, map } = chunk(name, head, modules);
     write(`${dir}/assets/${name}`, text);
-    write(`${dir}/assets/${name}.map`, map);
+    if (!unmapped.includes(name)) write(`${dir}/assets/${name}.map`, map);
   }
 }
 
 const nm = (pkg, file = "index.js") => `../node_modules/${pkg}/${file}`;
 
 vite(
-  "vite/before",
+  "vite/main",
   [
     [
       "index-B1xQ.js",
@@ -96,7 +98,7 @@ vite(
     ],
     [
       "Chart-Cc1k.js",
-      'import"./vendor-vue-Dk2a.js";\n',
+      'import"./vendor-vue-Dk2a.js";import{t}from"./index-B1xQ.js";\n',
       [
         ["../src/Chart.vue", 2000],
         [nm("echarts", "lib/echarts.js"), 60000],
@@ -108,11 +110,11 @@ vite(
 );
 
 vite(
-  "vite/after",
+  "vite/pr",
   [
     [
       "index-Q9zR.js",
-      'import"./vendor-vue-Dk2a.js";import{init}from"./vendor-charts-D8kz.js";const Billing=()=>import("./billing-CqX9.js");\n',
+      'import"./vendor-vue-Dk2a.js";import"./preload-helper-Ab12.js";import{init}from"./vendor-charts-D8kz.js";const Billing=()=>import("./billing-CqX9.js");\n',
       [
         ["../src/main.ts", 9500],
         [nm("date-fns", "index.mjs"), 12000],
@@ -131,9 +133,10 @@ vite(
         [nm("zrender", "lib/zrender.js"), 20000],
       ],
     ],
+    ["preload-helper-Ab12.js", "\n", [["\0vite/preload-helper.js", 600]]],
     [
       "billing-CqX9.js",
-      'import"./vendor-vue-Dk2a.js";\n',
+      'import"./vendor-vue-Dk2a.js";import{t}from"./index-Q9zR.js";\n',
       [
         ["../src/Billing.vue", 1500],
         [nm("billing/node_modules/date-fns", "index.mjs"), 5000],
@@ -142,6 +145,7 @@ vite(
     ],
   ],
   "index-Q9zR.js",
+  ["preload-helper-Ab12.js"],
 );
 
 // Nuxt's client: no sourcemaps, the entry holds `#__nuxt` and a layouts map whose default layout loads by import().
@@ -164,111 +168,22 @@ function nuxt(dir, moment) {
 nuxt("nuxt/before", true);
 nuxt("nuxt/after", false);
 
-// Sonda reports at a real dashboard's scale. Sizes are in bytes: [raw, gzip, brotli] per module per asset.
-function sonda(assets, connections) {
-  const resources = [];
-  const s = (gzip) => ({
-    uncompressed: Math.round(gzip * 3.1),
-    gzip,
-    brotli: Math.round(gzip * 0.87),
-  });
-  for (const [asset, modules] of Object.entries(assets)) {
-    const total = modules.reduce((sum, [, gzip]) => sum + gzip, 0);
-    resources.push({ kind: "asset", name: `dist/assets/${asset}`, type: "script", ...s(total) });
-    for (const [module, gzip] of modules)
-      resources.push({
-        kind: "chunk",
-        name: module,
-        type: "script",
-        format: "esm",
-        ...s(gzip),
-        parent: `dist/assets/${asset}`,
-      });
+// Two tiny builds for the linter's doctor pages, which read files from docs/doctor-include/.
+const doctor = new URL("../../../docs/doctor-include/builds/", import.meta.url).pathname;
+rmSync(doctor, { recursive: true, force: true });
+for (const [dir, files] of Object.entries({
+  "main/assets": {
+    "index-a1.js": `import"./vendor-b2.js";\n${code("main", 4000)}`,
+    "vendor-b2.js": code("vendor", 6000),
+  },
+  "pr/assets": {
+    "index-c3.js": `import"./vendor-b2.js";const Page=()=>import("./page-d4.js");\n${code("pr", 4000)}`,
+    "vendor-b2.js": code("vendor", 6000),
+    "page-d4.js": `import"./index-c3.js";\n${code("page", 3000)}`,
+  },
+}))
+  for (const [name, text] of Object.entries(files)) {
+    mkdirSync(doctor + dir, { recursive: true });
+    writeFileSync(`${doctor}${dir}/${name}`, text);
   }
-  const json = {
-    metadata: {
-      version: "0.14.0",
-      generatedAt: "2026-11-13T12:00:00.000Z",
-      integration: "vite",
-      sources: false,
-      gzip: true,
-      brotli: true,
-    },
-    resources,
-    connections: connections.map(([kind, source, target]) => ({
-      kind,
-      source,
-      target,
-      original: null,
-    })),
-    dependencies: [],
-    issues: [],
-  };
-  return `${JSON.stringify(json, null, 1)}\n`;
-}
-const app = (file) => `src/${file}`;
-const pk = (pkg, file = "index.js") => `node_modules/${pkg}/${file}`;
-const main = {
-  "index-B1xQ.js": [
-    [app("main.ts"), 158800],
-    [pk("lodash", "lodash.js"), 24600],
-    [pk("date-fns", "index.mjs"), 17900],
-    [pk("@floating-ui/dom", "dist/floating-ui.dom.mjs"), 5100],
-    [pk("vue", "dist/vue.runtime.esm-bundler.js"), 44900],
-  ],
-  "Chart-Cc1k.js": [
-    [app("components/Chart.vue"), 1900],
-    [pk("echarts", "lib/echarts.js"), 98200],
-    [pk("zrender", "lib/zrender.js"), 47300],
-  ],
-  "DatePicker-Hn2.js": [
-    [app("components/DatePicker.vue"), 3400],
-    [pk("@internationalized/date", "dist/import.mjs"), 7800],
-  ],
-  "settings-Bq1.js": [[app("pages/settings.vue"), 254200]],
-};
-const pr = {
-  "index-Q9zR.js": [
-    [app("main.ts"), 160200],
-    [pk("date-fns", "index.mjs"), 17900],
-    [pk("@floating-ui/dom", "dist/floating-ui.dom.mjs"), 5400],
-    [pk("vue", "dist/vue.runtime.esm-bundler.js"), 44900],
-  ],
-  "vendor-charts-D8kz.js": [
-    [pk("echarts", "lib/echarts.js"), 102700],
-    [pk("zrender", "lib/zrender.js"), 48000],
-  ],
-  "DatePicker-Hn2.js": [
-    [app("components/DatePicker.vue"), 3400],
-    [pk("@internationalized/date", "dist/import.mjs"), 7800],
-  ],
-  "settings-Bq1.js": [
-    [app("pages/settings.vue"), 247500],
-    [pk("lodash-es", "debounce.js"), 3100],
-  ],
-  "billing-CqX9.js": [
-    [app("pages/settings/billing.vue"), 2500],
-    [pk("billing/node_modules/date-fns", "index.mjs"), 6200],
-  ],
-};
-write(
-  "sonda/main.json",
-  sonda(main, [
-    ["entrypoint", "dist/assets/index-B1xQ.js", app("main.ts")],
-    ["dynamic-import", app("main.ts"), app("components/Chart.vue")],
-    ["import", app("components/Chart.vue"), pk("echarts", "lib/echarts.js")],
-    ["dynamic-import", app("main.ts"), app("components/DatePicker.vue")],
-    ["dynamic-import", app("main.ts"), app("pages/settings.vue")],
-  ]),
-);
-write(
-  "sonda/pr.json",
-  sonda(pr, [
-    ["entrypoint", "dist/assets/index-Q9zR.js", app("main.ts")],
-    ["import", app("main.ts"), pk("echarts", "lib/echarts.js")],
-    ["dynamic-import", app("main.ts"), app("components/DatePicker.vue")],
-    ["dynamic-import", app("main.ts"), app("pages/settings.vue")],
-    ["dynamic-import", app("pages/settings.vue"), app("pages/settings/billing.vue")],
-  ]),
-);
 console.log("written", out);

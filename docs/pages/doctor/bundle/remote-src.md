@@ -1,15 +1,15 @@
-`::bundle` reads builds from disk while it parses, never from a URL. Download the report next to the document, or build both versions locally, and point the props at those paths.
+`::bundle` reads builds from disk while it parses, never from a URL. Build both versions locally and point the props at their output folders.
 
 ::incorrect
 ```md
-::bundle{before="https://example.com/main.json" after="reports/pr.json"}
+::bundle{before="https://example.com/main/assets" after="builds/pr/assets"}
 ::
 ```
 ::
 
 ::correct
 ```md
-::bundle{before="reports/main.json" after="reports/pr.json"}
+::bundle{before="builds/main/assets" after="builds/pr/assets"}
 ::
 ```
 ::

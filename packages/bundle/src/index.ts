@@ -5,7 +5,6 @@ import { card } from "./draw.ts";
 import { loads } from "./model.ts";
 import {
   fromFolder,
-  fromSonda,
   Unreadable,
   type Build,
   type BundleLister,
@@ -28,8 +27,8 @@ export interface BundleOptions {
    */
   read?: BundleReader;
   /**
-   * Lists a build folder's files under `root`, so the block can measure them. Default lists from disk. A runtime
-   * without a disk passes one that returns undefined and points the block at Sonda reports.
+   * Lists a build folder's files under `root`, so the block can measure them. Default lists from disk. Measuring
+   * also needs Node's zlib, so a runtime without them gets an issue instead of a report.
    */
   list?: BundleLister;
 }
@@ -98,19 +97,14 @@ async function load(src: string, name: string, run: Run): Promise<Build | undefi
   if (/^[a-z][a-z\d+.-]*:/i.test(src))
     return fail(
       "comark/bundle/remote-src",
-      `"${src}" is a URL. Point it at a build folder or a Sonda report on disk.`,
+      `"${src}" is a URL. Point it at a build folder on disk.`,
     );
   const path = resolvePath(src.startsWith("/") ? "" : run.base, src);
   const leaves = `"${src}" leaves the root. Move the build under the root or widen \`root\`.`;
   if (path === undefined) return fail("comark/bundle/outside-root", leaves);
   try {
-    if (/\.json$/i.test(path)) {
-      const json = await run.read(path);
-      if (json !== undefined) return fromSonda(json);
-    } else {
-      const build = await fromFolder(path, run.read, run.list);
-      if (build) return build;
-    }
+    const build = await fromFolder(path, run.read, run.list);
+    if (build) return build;
     return fail(
       "comark/bundle/not-found",
       `"${src}" doesn't exist. It resolved to "${path}" under the root; check the path or \`base\`.`,
@@ -174,9 +168,9 @@ async function block(node: ElementNode, number: number, data: Data, run: Run): P
   if (!first || (!src && !second)) return empty;
   const a = loads(first);
   const b = second ? loads(second) : undefined;
-  const packages = first!.packages && (!second || second.packages);
-  const tool =
-    second && first!.tool !== second.tool ? `${first!.tool} → ${second.tool}` : first!.tool;
+  const packages = first.packages && (!second || second.packages);
+  const unmapped = Math.max(first.unmapped, second?.unmapped ?? 0);
+  const tool = `gzip -9 · brotli 11${packages && unmapped ? ` · ${unmapped} ${unmapped === 1 ? "chunk" : "chunks"} without a sourcemap` : ""}`;
   const label = title || "Bundle size";
   return [
     "bundle",
@@ -187,10 +181,10 @@ async function block(node: ElementNode, number: number, data: Data, run: Run): P
 }
 
 /**
- * Turns `::bundle{before after}` into what changed between two builds: what every page loads and what loads later,
- * before and after, a bar per build with the packages that changed in color, and those packages behind a
- * `<details>`. `::bundle{src}` shows one build. Each path is a build folder, measured with gzip -9 and brotli 11, or a
- * Sonda JSON report. Problems are added to `meta.issues`.
+ * Turns `::bundle{before after}` into what changed between two build folders: what every page loads and what loads
+ * later, before and after, a bar per build with the packages that changed marked, and a treemap of the new build
+ * behind a `<details>`. `::bundle{src}` shows one build. Chunks are measured with gzip -9 and brotli 11. Problems are
+ * added to `meta.issues`.
  */
 export default defineComarkPlugin<BundleOptions | undefined, BundleMeta>((options = {}) => ({
   name: "comark-bundle",

@@ -2,14 +2,14 @@
 
 ::incorrect
 ```md
-::bundle{src="reports/pr.json" before="reports/main.json"}
+::bundle{src="builds/pr/assets" before="builds/main/assets"}
 ::
 ```
 ::
 
 ::correct
 ```md
-::bundle{before="reports/main.json" after="reports/pr.json"}
+::bundle{before="builds/main/assets" after="builds/pr/assets"}
 ::
 ```
 ::

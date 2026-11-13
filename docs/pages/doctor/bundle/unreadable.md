@@ -1,15 +1,15 @@
-A path ending in `.json` is read as a Sonda report, with gzip sizes turned on; any other path as a build folder with JavaScript chunks. A file that is neither renders nothing. Point the prop at the build's output folder, or turn on Sonda's JSON report with `gzip: true`.
+Each prop names a build's output folder, such as `dist/assets`. A file, a folder with no JavaScript, or a build whose entry chunk the block can't find renders nothing. Point the prop at the folder of chunks, and keep the `index.html` or `.vite/manifest.json` Vite writes next to it when the message asks for it.
 
 ::incorrect
 ```md
-::bundle{src="reports/stats.json"}
+::bundle{src="builds/main/assets/index-a1.js"}
 ::
 ```
 ::
 
 ::correct
 ```md
-::bundle{src="reports/pr.json"}
+::bundle{src="builds/pr/assets"}
 ::
 ```
 ::

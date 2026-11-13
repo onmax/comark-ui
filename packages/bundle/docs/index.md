@@ -1,7 +1,7 @@
 ---
 title: Bundle
 description: A bundle size report in Markdown, read from two builds.
-keywords: bundle size, bundle analyzer, gzip, brotli, vite, rolldown, nuxt, sonda, treemap, performance, pull request
+keywords: bundle size, bundle analyzer, gzip, brotli, vite, rolldown, nuxt, sourcemap, treemap, performance, pull request
 tagline: What every page loads before and after a change, read from two builds, with the packages that moved.
 group: Review blocks
 icon: package
@@ -12,14 +12,14 @@ credits: 'Framed like <a href="https://ui.shadcn.com/charts">shadcn/ui''s chart 
 ::examples
 :::example{label="Two builds"}
 ```md
-::bundle{before="reports/main.json" after="reports/pr.json" title="Upgrade the dashboard to ECharts 5.5"}
+::bundle{before="main/assets" after="pr/assets" title="Upgrade the dashboard to ECharts 5.5"}
 ::
 ```
 :::
 
 :::example{label="One build"}
 ```md
-::bundle{src="reports/pr.json" title="What the dashboard loads"}
+::bundle{src="pr/assets" title="What the dashboard loads"}
 ::
 ```
 :::
@@ -27,7 +27,7 @@ credits: 'Framed like <a href="https://ui.shadcn.com/charts">shadcn/ui''s chart 
 
 ## Features
 
-- Reads the builds itself: a build folder, measured with gzip -9 and brotli 11, or a [Sonda](https://sonda.dev) JSON report. Nothing to paste or keep in sync.
+- Reads the builds itself: each build folder's chunks, measured with gzip -9 and brotli 11, and their sourcemaps for package names. Nothing to paste or keep in sync.
 - Splits what every page loads from what loads later: the entry, its static imports, and Nuxt's default layout, against routes and `import()`.
 - Draws the bars in neutrals and marks only what changed: what the new build added to every page is dark, and what it dropped is hatched, with the package's name under it.
 - Says the change in one sentence for screen readers, so the number and the reason read without the picture.
@@ -39,12 +39,12 @@ Point `before` and `after` at two builds of the same app. Paths are read from th
 
 ::example
 ```md
-::bundle{before="reports/main.json" after="reports/pr.json"}
+::bundle{before="main/assets" after="pr/assets"}
 ::
 ```
 ::
 
-A path that ends in `.json` is read as a Sonda report. Any other path is a build folder, such as `dist/assets` for Vite or `.output/public/_nuxt` for Nuxt, which the block measures while it parses.
+Each path is a build's output folder, such as `dist/assets` for Vite or `.output/public/_nuxt` for Nuxt, which the block measures while it parses.
 
 > [!NOTE]
 > A build folder needs sourcemaps to show packages, such as Vite's `build.sourcemap: "hidden"`. Without them the block shows chunks.
@@ -55,7 +55,7 @@ Use the `title` prop to name the report in its header. It also names the figure 
 
 ::example
 ```md
-::bundle{before="reports/main.json" after="reports/pr.json" title="Upgrade the dashboard to ECharts 5.5"}
+::bundle{before="main/assets" after="pr/assets" title="Upgrade the dashboard to ECharts 5.5"}
 ::
 ```
 ::
@@ -66,7 +66,7 @@ Use the `src` prop instead of `before` and `after` to show one build without a c
 
 ::example
 ```md
-::bundle{src="reports/pr.json"}
+::bundle{src="pr/assets"}
 ::
 ```
 ::
@@ -99,7 +99,7 @@ Point the block at `.output/public/_nuxt` after `nuxi build`. Nuxt loads the def
 
 | Prop | Default | Description |
 | --- | --- | --- |
-| `before` | — | The build to compare from: a build folder, or a Sonda `.json` report. |
+| `before` | — | The build to compare from: its output folder, such as `dist/assets`. |
 | `after` | — | The build to compare to, in the same forms as `before`. |
 | `src` | — | One build to show without a comparison, in place of `before` and `after`. |
 | `title` | `"Bundle size"` | Shown in the header, and names the figure for screen readers. |
@@ -112,15 +112,16 @@ Pass options under `bundle` in `comarkUi()`, or to `bundle()` alone. In `comarkU
 | --- | --- | --- |
 | `root` | `"."` | The folder a path can't leave, as in [comark-include](/include). |
 | `base` | `""` | The document's folder under `root`, where relative paths start. |
-| `read` | Reads from disk | Takes a path under the root and returns the file's text. Pass one in a browser or an edge runtime, with Sonda reports. |
-| `list` | Lists from disk | Takes a folder under the root and returns its files. Measuring a build folder also needs Node's zlib. |
+| `read` | Reads from disk | Takes a path under the root and returns the file's text. |
+| `list` | Lists from disk | Takes a folder under the root and returns its files. Measuring also needs Node's zlib, so the block reads builds only in Node. |
 
 ### What it reads
 
-- **A build folder**: every `.js` and `.mjs` file under it, with its gzip -9 and brotli 11 size, its `import` and `import()` of other chunks, and its sourcemap's sources, which name the packages. The entries come from Vite's `.vite/manifest.json`, else the `<script type="module">` tags of `index.html`, else the chunks nothing imports. Both are looked for in the folder and its parent.
-- **A Sonda report** (`format: "json"`, `gzip: true`): its assets, each module's share of each asset, and the import graph between modules. The entries are the entry points no other asset imports.
+Every `.js` and `.mjs` file in the folder, with its gzip -9 and brotli 11 size, its `import` and `import()` of other chunks, and its sourcemap's sources, which name the packages. A chunk without a sourcemap counts as the app's own code, and the footer says how many there are.
 
-Every page is the entries and their static imports, plus Nuxt's default layout and its imports when the build has one. Everything else loads later. A package's size in a folder build is its share of its chunks' characters, applied to the chunks' gzip and brotli sizes. Sizes are in kB of 1,000 bytes, as the build tools print them.
+The entries come from Vite's `.vite/manifest.json`, else the `<script type="module">` tags of `index.html`, looked for in the folder and its parent. Without either, the block reads them from the graph: a chunk loaded by `import()`, or reached only from one, is lazy, even when it imports code back from the entry. When the graph can't tell, the block reports it instead of guessing.
+
+Every page is the entries and their static imports, plus Nuxt's default layout and its imports when the build has one. Everything else loads later. A package's size is its share of its chunks' characters, applied to the chunks' gzip and brotli sizes. Sizes are in kB of 1,000 bytes, as the build tools print them.
 
 ### Issues
 
@@ -129,7 +130,7 @@ The plugin adds these problems to `meta.issues`, as [Validation](/guide/validati
 - A block with no build, or with only one of `before` and `after`.
 - A block with `src` and `before` or `after` together.
 - A path that is a URL, leaves the root, or doesn't exist.
-- A file that is neither a build folder with JavaScript nor a Sonda report with gzip sizes.
+- A path that is a file, a folder with no JavaScript, or a build whose entry chunk it can't find.
 - Text inside the block. The block drops it.
 - A prop it doesn't read. It's ignored.
 

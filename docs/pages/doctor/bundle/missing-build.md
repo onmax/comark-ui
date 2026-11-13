@@ -1,4 +1,4 @@
-A `::bundle` reads the builds it compares from its props, so one with none of them has nothing to draw and renders nothing. Point `before` and `after` at two build folders or two Sonda reports, or `src` at one.
+A `::bundle` reads the builds it compares from its props, so one with none of them has nothing to draw and renders nothing. Point `before` and `after` at two build folders, or `src` at one.
 
 ::incorrect
 ```md
@@ -9,7 +9,7 @@ A `::bundle` reads the builds it compares from its props, so one with none of th
 
 ::correct
 ```md
-::bundle{before="reports/main.json" after="reports/pr.json" title="Upgrade the dashboard"}
+::bundle{before="builds/main/assets" after="builds/pr/assets" title="Upgrade the dashboard"}
 ::
 ```
 ::

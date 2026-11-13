@@ -16,7 +16,7 @@ import { components as vueComponents } from "../src/vue.ts";
 
 const root = new URL("fixtures/", import.meta.url).pathname;
 const markdown =
-  '::bundle{before="sonda/main.json" after="sonda/pr.json" title="Ducks & geese"}\n::';
+  '::bundle{before="vite/main/assets" after="vite/pr/assets" title="Ducks & geese"}\n::';
 // Drops what differs only in serialization: comments, line breaks between tags, empty attributes, entities, and the
 // HTML renderer's inline styles.
 const normalize = (html: string) =>

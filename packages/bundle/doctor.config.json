@@ -4,7 +4,7 @@
     {
       "ruleId": "typescript/strict/no-runtime-typeof",
       "file": "src/read.ts",
-      "reason": "Sonda reports, sourcemaps, and Vite manifests are files the block didn't write; record, string, and bytes read each field of their JSON, and a field of another type reads as missing."
+      "reason": "Sourcemaps and Vite manifests are files the block didn't write; record, string, and bytes read each field of their JSON, and a field of another type reads as missing."
     }
   ]
 }
