@@ -293,7 +293,7 @@ async function entriesOf(
 
 // Without them, the entry is where the graph starts. "Nothing imports it" isn't enough: a lazy chunk often imports
 // shared code back from the entry. So a chunk loaded through `import()` is lazy, and so is a chunk such a target
-// needs that the chunk loading the target doesn't. Of the rest, an entry is one that nothing else imports, unless the
+// needs that the chunk starting its chain of `import()` doesn't. Of the rest, an entry is one that nothing else imports, unless the
 // importer is in a cycle with it.
 function guessEntries(chunks: Map<string, Chunk>): string[] {
   const reached = new Map<string, Set<string>>();
@@ -312,16 +312,19 @@ function guessEntries(chunks: Map<string, Chunk>): string[] {
     return seen;
   };
   const targets = new Set([...chunks.values()].flatMap((chunk) => chunk.dynamic));
-  // Only a loader that isn't a target itself counts, since the entry is never one.
-  const loaders = [...chunks.values()].filter((chunk) => !targets.has(chunk.name));
+  // The chunks that start a chain of `import()` down to the target. A loader that is a target itself, such as a route
+  // that loads a dialog, passes the question up, since the entry is never one.
+  const startsOf = (target: string, seen = new Set([target])): string[] =>
+    [...chunks.values()].flatMap((from) => {
+      if (!from.dynamic.includes(target) || seen.has(from.name)) return [];
+      seen.add(from.name);
+      return targets.has(from.name) ? startsOf(from.name, seen) : [from.name];
+    });
   const lazy = (name: string) =>
     [...targets].some(
       (target) =>
         reach(target).has(name) &&
-        loaders.some(
-          (from) =>
-            from.name !== name && from.dynamic.includes(target) && !reach(from.name).has(name),
-        ),
+        startsOf(target).some((from) => from !== name && !reach(from).has(name)),
     );
   const rest = [...chunks.keys()].filter((name) => !targets.has(name) && !lazy(name));
   return rest.filter((name) =>

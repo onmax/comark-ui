@@ -96,6 +96,23 @@ describe("comark-bundle", () => {
     expect(html).toMatch(/class="cbr-top" title="[^"]*, 1 chunk"/);
   });
 
+  it.each([
+    ["imports the entry back", 'import"./entry.js";', 'import"./entry.js";'],
+    ["imports nothing back", "", ""],
+    ["needs code that imports the entry back", "", 'import"./entry.js";'],
+  ])(
+    "leaves what a lazy chunk's own lazy chunk needs out of every page, when it %s",
+    async (_, back, shared) => {
+      const html = await one({
+        "entry.js": 'const a=()=>import("./route.js");',
+        "route.js": `${back}const b=()=>import("./modal.js");`,
+        "modal.js": `${back}import{s}from"./shared.js";`,
+        "shared.js": `${shared}export const s=1;`,
+      });
+      expect(html).toMatch(/class="cbr-top" title="[^"]*, 1 chunk"/);
+    },
+  );
+
   it("counts a worker as lazy", async () => {
     const html = await one({
       "assets/entry.js":
