@@ -197,3 +197,8 @@ export {
   type ComponentProp,
   type ComponentViewOptions,
 } from "./editor/component-view.ts";
+export {
+  CodeLanguageSelect,
+  codeLanguagesCss,
+  type CodeLanguageSlot,
+} from "./editor/code-languages.ts";
