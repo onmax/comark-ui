@@ -80,6 +80,7 @@
     "comark-figure": "workspace:^",
     "comark-file-tree": "workspace:^",
     "comark-footnotes": "workspace:^",
+    "comark-git-graph": "workspace:^",
     "comark-github": "workspace:^",
     "comark-icon": "workspace:^",
     "comark-include": "workspace:^",

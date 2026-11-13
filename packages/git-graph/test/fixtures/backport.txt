@@ -1,0 +1,96 @@
+$ git log --graph --oneline --decorate --parents main release/2.4 release/2.3-enterprise-bundle release/2.2
+* f9c374c 5095f38 (release/2.4) Stop polling closed flows (#815)
+* 5095f38 52783d7 Alert links keep their filters (#812)
+* 52783d7 afb1a3b Rename the table's rows prop
+| * 5595de7 d73449f (HEAD -> main) Engine 422s name the field (#827)
+| * d73449f a94037c Release memory after a long session (#826)
+| * a94037c fe1aa79 Empty replacement no longer crashes the table (#821)
+| * fe1aa79 8ca9d7e Quiet expected 4xx errors (#818)
+| * 8ca9d7e db5f451 Stop polling closed flows (#815)
+| * db5f451 afb1a3b Alert links keep their filters (#812)
+|/  
+* afb1a3b fb4faea (tag: v2.4.3) Pin the export worker to two threads
+| * ca45522 fb4faea (release/2.3-enterprise-bundle) Bundle the enterprise SKU
+|/  
+* fb4faea 5de6be0 (tag: v2.3.9) Read the legacy CSV dialect
+| * 66267ed 5de6be0 (release/2.2) Retry the webhook once on a 502
+|/  
+* 5de6be0 (tag: v2.2.14) Release 2.2.14
+$ git cherry -v release/2.4 main
+- db5f4512c9c358eb843b736d3aa3063ade681869 Alert links keep their filters (#812)
+- 8ca9d7ef7a2b98a2c470ff5d4873c4f45dce3adf Stop polling closed flows (#815)
++ fe1aa79cdf483fe0ef3def6a8a07ca77a2854836 Quiet expected 4xx errors (#818)
++ a94037cbb17286cfedcad6a92232970fd8af6a7b Empty replacement no longer crashes the table (#821)
++ d73449fafcc0d981eea22a5170adf6c1e0c453b8 Release memory after a long session (#826)
++ 5595de735b843dd7542e2142a950148045807fa9 Engine 422s name the field (#827)
+$ git switch release/2.4
+Switched to branch 'release/2.4'
+$ git cherry-pick fe1aa79 a94037c d73449f 5595de7
+[release/2.4 3e0d819] Quiet expected 4xx errors (#818)
+ Date: Mon Jan 5 01:00:00 2026 +0000
+ 1 file changed, 1 insertion(+)
+[release/2.4 4a566e1] Empty replacement no longer crashes the table (#821)
+ Date: Mon Jan 5 03:00:00 2026 +0000
+ 1 file changed, 1 insertion(+)
+ create mode 100644 src/replace.ts
+Auto-merging src/Table.vue
+CONFLICT (content): Merge conflict in src/Table.vue
+error: could not apply d73449f... Release memory after a long session (#826)
+hint: After resolving the conflicts, mark them with
+hint: "git add/rm <pathspec>", then run
+hint: "git cherry-pick --continue".
+hint: You can instead skip this commit with "git cherry-pick --skip".
+hint: To abort and get back to the state before "git cherry-pick",
+hint: run "git cherry-pick --abort".
+hint: Disable this message with "git config set advice.mergeConflict false"
+$ git cherry-pick --skip
+[release/2.4 cfa1496] Engine 422s name the field (#827)
+ Date: Mon Jan 5 06:00:00 2026 +0000
+ 1 file changed, 1 insertion(+)
+ create mode 100644 src/engine.ts
+$ git switch release/2.3-enterprise-bundle
+Switched to branch 'release/2.3-enterprise-bundle'
+$ git cherry-pick 8ca9d7e fe1aa79 d73449f 5595de7
+[release/2.3-enterprise-bundle 8525458] Stop polling closed flows (#815)
+ Date: Mon Jan 5 00:00:00 2026 +0000
+ 1 file changed, 1 insertion(+)
+ create mode 100644 src/flows.ts
+[release/2.3-enterprise-bundle 8b348a3] Quiet expected 4xx errors (#818)
+ Date: Mon Jan 5 01:00:00 2026 +0000
+ 1 file changed, 1 insertion(+)
+[release/2.3-enterprise-bundle bd84b61] Release memory after a long session (#826)
+ Date: Mon Jan 5 04:00:00 2026 +0000
+ 2 files changed, 2 insertions(+)
+[release/2.3-enterprise-bundle 3e52a07] Engine 422s name the field (#827)
+ Date: Mon Jan 5 06:00:00 2026 +0000
+ 1 file changed, 1 insertion(+)
+ create mode 100644 src/engine.ts
+$ git switch release/2.2
+Switched to branch 'release/2.2'
+$ git cherry-pick 8ca9d7e fe1aa79 d73449f
+[release/2.2 b086e43] Stop polling closed flows (#815)
+ Date: Mon Jan 5 00:00:00 2026 +0000
+ 1 file changed, 1 insertion(+)
+ create mode 100644 src/flows.ts
+Auto-merging src/errors.ts
+CONFLICT (content): Merge conflict in src/errors.ts
+error: could not apply fe1aa79... Quiet expected 4xx errors (#818)
+hint: After resolving the conflicts, mark them with
+hint: "git add/rm <pathspec>", then run
+hint: "git cherry-pick --continue".
+hint: You can instead skip this commit with "git cherry-pick --skip".
+hint: To abort and get back to the state before "git cherry-pick",
+hint: run "git cherry-pick --abort".
+hint: Disable this message with "git config set advice.mergeConflict false"
+$ git cherry-pick --skip
+Auto-merging src/settings.ts
+CONFLICT (content): Merge conflict in src/settings.ts
+error: could not apply d73449f... Release memory after a long session (#826)
+hint: After resolving the conflicts, mark them with
+hint: "git add/rm <pathspec>", then run
+hint: "git cherry-pick --continue".
+hint: You can instead skip this commit with "git cherry-pick --skip".
+hint: To abort and get back to the state before "git cherry-pick",
+hint: run "git cherry-pick --abort".
+hint: Disable this message with "git config set advice.mergeConflict false"
+$ git cherry-pick --skip

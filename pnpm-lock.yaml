@@ -1135,6 +1135,42 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(katex@0.19.1)(shiki@4.5.0)
 
+  packages/git-graph:
+    devDependencies:
+      '@comark/html':
+        specifier: ^0.9.0
+        version: 0.9.0(katex@0.19.1)(shiki@4.5.0)
+      '@comark/react':
+        specifier: ^0.9.0
+        version: 0.9.0(katex@0.19.1)(react@19.3.1)(shiki@4.5.0)
+      '@comark/vue':
+        specifier: ^0.9.0
+        version: 0.9.0(katex@0.19.1)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
+      '@types/react':
+        specifier: 'catalog:'
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: 'catalog:'
+        version: 19.3.0(@types/react@19.3.0)
+      comark:
+        specifier: ^0.9.0
+        version: 0.9.0(katex@0.19.1)(shiki@4.5.0)
+      comark-zoom:
+        specifier: workspace:*
+        version: link:../zoom
+      react:
+        specifier: 'catalog:'
+        version: 19.3.1
+      react-dom:
+        specifier: 'catalog:'
+        version: 19.3.1(react@19.3.1)
+      svelte:
+        specifier: 'catalog:'
+        version: 5.57.2(@typescript-eslint/types@8.71.1)
+      vue:
+        specifier: 'catalog:'
+        version: 3.5.44(typescript@6.0.3)
+
   packages/github:
     devDependencies:
       '@comark/html':
@@ -1339,6 +1375,9 @@ importers:
       comark-footnotes:
         specifier: workspace:*
         version: link:../footnotes
+      comark-git-graph:
+        specifier: workspace:*
+        version: link:../git-graph
       comark-github:
         specifier: workspace:*
         version: link:../github
@@ -2318,6 +2357,9 @@ importers:
       comark-footnotes:
         specifier: workspace:^
         version: link:../footnotes
+      comark-git-graph:
+        specifier: workspace:^
+        version: link:../git-graph
       comark-github:
         specifier: workspace:^
         version: link:../github
@@ -3879,8 +3921,8 @@ packages:
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
 
-  '@nuxt/cli-nightly@4.1.0-2611110034-07ea7da':
-    resolution: {integrity: sha512-2aZjKbL0Ru6rFWk03Vj0M4wXO8nLOiCS1L/o8lPGLiQ9e9rfucArLpuq2ygDhaKqT/hH6x9jkT+4LI9TzeSUfA==}
+  '@nuxt/cli-nightly@4.1.0-2611121402-ab4b2dc':
+    resolution: {integrity: sha512-ofDj2sK5O4xv+zeQcKp4kqAAenNu6z/6jVxctRt9yYMcPTMylW1k2KI+cdPUldHIqqJ0M2MaMvVXVR0G+pJMYw==}
     engines: {node: ^22.21.0 || ^24.11.0 || >=26.0.0}
     hasBin: true
     peerDependencies:
@@ -14295,7 +14337,7 @@ snapshots:
       fastq: 1.20.3
     optional: true
 
-  '@nuxt/cli-nightly@4.1.0-2611110034-07ea7da(@nuxt/schema-nightly@5.0.0-2611111405-4462a07)(@voidzero-dev/vite-plus-core@1.1.0(@types/node@24.19.2)(@volar/typescript@2.4.28)(@vue/language-core@3.3.13)(esbuild@0.28.2)(jiti@2.7.0)(publint@0.3.25)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3))(yaml@2.9.1))(jiti@2.7.0)(oxc-parser@0.153.0)(rolldown@1.2.18)':
+  '@nuxt/cli-nightly@4.1.0-2611121402-ab4b2dc(@nuxt/schema-nightly@5.0.0-2611111405-4462a07)(@voidzero-dev/vite-plus-core@1.1.0(@types/node@24.19.2)(@volar/typescript@2.4.28)(@vue/language-core@3.3.13)(esbuild@0.28.2)(jiti@2.7.0)(publint@0.3.25)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3))(yaml@2.9.1))(jiti@2.7.0)(oxc-parser@0.153.0)(rolldown@1.2.18)':
     dependencies:
       '@clack/prompts': 1.8.1
       args-tokenizer: 0.3.0
@@ -22787,7 +22829,7 @@ snapshots:
     dependencies:
       '@dxup/nuxt': 0.5.11(@nuxt/schema-nightly@5.0.0-2611111405-4462a07)(@voidzero-dev/vite-plus-core@1.1.0(@types/node@24.19.2)(@volar/typescript@2.4.28)(@vue/language-core@3.3.13)(esbuild@0.28.2)(jiti@2.7.0)(publint@0.3.25)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3))(yaml@2.9.1))(confbox@0.3.2)(dotenv@17.4.2)(esbuild@0.28.2)(giget@3.3.1)(jiti@2.7.0)(mlly@1.8.2)(oxc-parser@0.153.0)(rolldown@1.2.18)(rollup@4.64.12)
       '@jridgewell/trace-mapping': 0.3.31
-      '@nuxt/cli': '@nuxt/cli-nightly@4.1.0-2611110034-07ea7da(@nuxt/schema-nightly@5.0.0-2611111405-4462a07)(@voidzero-dev/vite-plus-core@1.1.0(@types/node@24.19.2)(@volar/typescript@2.4.28)(@vue/language-core@3.3.13)(esbuild@0.28.2)(jiti@2.7.0)(publint@0.3.25)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3))(yaml@2.9.1))(jiti@2.7.0)(oxc-parser@0.153.0)(rolldown@1.2.18)'
+      '@nuxt/cli': '@nuxt/cli-nightly@4.1.0-2611121402-ab4b2dc(@nuxt/schema-nightly@5.0.0-2611111405-4462a07)(@voidzero-dev/vite-plus-core@1.1.0(@types/node@24.19.2)(@volar/typescript@2.4.28)(@vue/language-core@3.3.13)(esbuild@0.28.2)(jiti@2.7.0)(publint@0.3.25)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3))(yaml@2.9.1))(jiti@2.7.0)(oxc-parser@0.153.0)(rolldown@1.2.18)'
       '@nuxt/devtools-onboard': 4.1.0(1c47e7a31d2e06a47aa02a6643315023)
       '@nuxt/kit': '@nuxt/kit-nightly@5.0.0-2611111405-4462a07(@nuxt/schema-nightly@5.0.0-2611111405-4462a07)(confbox@0.3.2)(dotenv@17.4.2)(giget@3.3.1)(jiti@2.7.0)(magic-string@1.4.5)(mlly@1.8.2)(oxc-parser@0.153.0)(rolldown@1.2.18)(unplugin@3.7.0(@voidzero-dev/vite-plus-core@1.1.0(@types/node@24.19.2)(@volar/typescript@2.4.28)(@vue/language-core@3.3.13)(esbuild@0.28.2)(jiti@2.7.0)(publint@0.3.25)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3))(yaml@2.9.1))(esbuild@0.28.2)(rolldown@1.2.18)(rollup@4.64.12))'
       '@nuxt/nitro-server': '@nuxt/nitro-server-nightly@5.0.0-2611111405-4462a07(@babel/plugin-proposal-decorators@8.0.2(@babel/core@8.1.0))(@babel/plugin-syntax-typescript@7.29.7(@babel/core@8.1.0))(@nuxt/schema-nightly@5.0.0-2611111405-4462a07)(@oxc-project/types@0.156.0)(@voidzero-dev/vite-plus-core@1.1.0(@types/node@24.19.2)(@volar/typescript@2.4.28)(@vue/language-core@3.3.13)(esbuild@0.28.2)(jiti@2.7.0)(publint@0.3.25)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3))(yaml@2.9.1))(acorn@8.19.0)(confbox@0.3.2)(dotenv@17.4.2)(esbuild@0.28.2)(giget@3.3.1)(jiti@2.7.0)(lightningcss@1.33.0)(mlly@1.8.2)(nuxt-nightly@5.0.0-2611111405-4462a07)(oxc-parser@0.153.0)(rollup@4.64.12)(typescript@6.0.3)'

@@ -11,6 +11,7 @@ export const packageOrder = [
   "chips",
   "colors",
   "diff",
+  "git-graph",
   "magic-move",
   "embed",
   "media",

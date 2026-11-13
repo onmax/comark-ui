@@ -126,6 +126,11 @@ describe("docs and playground registration", () => {
       '::tests\n```xml\n<testsuite><testcase name="one"/></testsuite>\n```\n::',
       'class="ctr-count" data-kind="passed">1 passed</span>',
     ],
+    [
+      "gitGraph",
+      "::git-graph\n```\n* bbbbbbb aaaaaaa (HEAD -> main) Second\n* aaaaaaa First\n```\n::",
+      '<span class="cgg-branch" data-lane="0" title="main">main</span>',
+    ],
     ["time", ':time[2020-01-01]{threshold="none"}', 'class="ctm" datetime="2020-01-01"'],
     ["zoom", "![Photo](a.png)", 'data-zoom="" tabindex="0"'],
   ])("renders %s through the docs configuration", async (_name, markdown, expected) => {
