@@ -38,3 +38,4 @@ export {
   type UploadOptions,
 } from "./editor/upload.ts";
 export { createEditorCodec, type EditorCodec, type EditorCodecOptions } from "./editor/codec.ts";
+export { CodeHighlight, codeHighlightKey, type CodeHighlightOptions } from "./editor/highlight.ts";

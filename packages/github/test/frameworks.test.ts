@@ -14,7 +14,8 @@ import { components as htmlComponents } from "../src/html.ts";
 import { components as reactComponents } from "../src/react.ts";
 import { components as vueComponents } from "../src/vue.ts";
 
-const markdown = "> [!WARNING] Heads up\n> Read **this**.";
+const markdown =
+  '> [!WARNING] Heads up\n> Read **this**.\n\n::tip{title="Faster"}\nUse **pnpm**.\n::';
 const parse = () => parseMarkdown(markdown, { plugins: [callouts()] });
 // Drops what differs only in serialization: comments, whitespace between tags, and the HTML renderer's inline styles.
 const normalize = (html: string) =>

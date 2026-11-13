@@ -52,6 +52,26 @@ The map includes every Vue renderer and the typeset styles. Use `comarkUi(option
 
 Vue, React, and Svelte leave out annotate and diff, which render only to HTML.
 
+## Code highlighting
+
+The preset colors code only with a Shiki you pass as `shiki`. `comark-ui/shiki` builds one that loads each grammar the first time a fence uses it, on Shiki's JavaScript regex engine, so it runs on Workers and in browsers. Install `shiki` too:
+
+```ts
+import { createLazyHighlighter } from "comark-ui/shiki";
+
+comarkUi({
+  shiki: createLazyHighlighter({
+    languages: { typescript: () => import("shiki/langs/typescript.mjs") },
+    themes: {
+      light: () => import("shiki/themes/github-light.mjs"),
+      dark: () => import("shiki/themes/github-dark.mjs"),
+    },
+  }),
+});
+```
+
+See [Code highlighting](https://comark-ui.onmax.me/getting-started#code-highlighting).
+
 ## Editor
 
 [Editor docs](https://comark-ui.onmax.me/guide/editor) cover setup, Vue bindings, file uploads, and collaborative rooms.
@@ -64,9 +84,10 @@ Vue, React, and Svelte leave out annotate and diff, which render only to HTML.
 | `fromMarkdown`, `toMarkdown` | Convert between Markdown and the editor's JSON with Comark's own parser and writer. Front matter stays beside the document. |
 | `checkMarkdown(markdown, { plugins })` | Whether the editor can save the document without changing what readers see, judged with the plugins the page renders with. A document it can't keep opens read-only. |
 | `Upload` | Uploads pasted and dropped files, and the files the `chooseFiles` command picks. Each shows a placeholder with its progress until `upload(file, progress)` returns its URL. |
+| `CodeHighlight` | Colors code blocks with the Shiki and themes the preset's `shiki` option takes, as decorations, so the Markdown stays plain. |
 | `createEditorCodec({ plugins })` | `{ extensions, split, join, fromMarkdown, toMarkdown, verify }` for a collaborative room, such as ViteHub Realtime's `editor` option. A room keeps the body as the editor's document and the frontmatter as its fields, so a text edit never overwrites the metadata. |
 
-`comark-ui/editor/vue` binds the editor to a Markdown string with `useComarkEditor(markdown)` or `<ComarkEditor v-model="markdown" />`. Run `pnpm playground` in this package to try it.
+`comark-ui/editor/vue` binds the editor to a Markdown string with `useComarkEditor(markdown)` or `<ComarkEditor v-model="markdown" />`. `CodeLanguageSelect` puts a language select on each code block. Run `pnpm playground` in this package to try it.
 
 ## Agents
 
