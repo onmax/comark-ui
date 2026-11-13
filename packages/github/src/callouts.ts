@@ -31,9 +31,9 @@ const isType = (value: string): value is CalloutType => Object.hasOwn(TITLES, va
 
 /** The blocks `blocks` reads as callouts: one per type, and `::callout`, whose `type` prop picks one. */
 export const CALLOUT_BLOCKS = [...Object.keys(TITLES), "callout"];
-// Whose children are inline, so content made only of them is a paragraph Comark unwrapped.
-const INLINE = new Set(
-  "a abbr b br cite code del dfn em i img ins kbd mark q s samp small span strong sub sup u var".split(
+// Native block boundaries remain intact; custom inline components need no tag allowlist.
+const BLOCK = new Set(
+  "address article aside blockquote caption dd details dialog div dl dt fieldset figcaption figure footer form h1 h2 h3 h4 h5 h6 header hgroup hr li main menu nav ol p pre section summary table tbody td tfoot th thead tr ul".split(
     " ",
   ),
 );
@@ -168,7 +168,13 @@ function fromBlock(node: ElementNode, walk: Walk): ElementNode {
     inline = [];
   };
   for (const child of body) {
-    if (!Array.isArray(child) || (isElement(child) && INLINE.has(child[0]))) {
+    if (
+      !Array.isArray(child) ||
+      (isElement(child) &&
+        !child[1].$?.block &&
+        !BLOCK.has(child[0]) &&
+        !CALLOUT_BLOCKS.includes(child[0]))
+    ) {
       inline.push(child);
     } else {
       flush();
@@ -212,6 +218,23 @@ function transform(nodes: Node[], start: number, walk: Walk) {
 export const callouts = /* @__PURE__ */ defineComarkPlugin<CalloutsOptions, GitHubMeta>(
   (options) => ({
     name: "alert",
+    markdownItPost(state) {
+      if (options?.blocks === false) return;
+      // Preserve the source distinction for custom block components before autoUnwrap removes their paragraph.
+      // Inline components with the same name remain inline, even when both occur in one callout.
+      const containers: boolean[] = [];
+      for (const token of state.tokens) {
+        if (token.type === "mdc_block_close") {
+          containers.pop();
+          continue;
+        }
+        if (token.type !== "mdc_block_open" && token.type !== "mdc_block_shorthand") continue;
+        const inside = containers.at(-1) ?? false;
+        if (inside) token.attrSet("$", JSON.stringify({ block: 1 }));
+        if (token.type === "mdc_block_open")
+          containers.push(inside || CALLOUT_BLOCKS.includes(token.tag));
+      }
+    },
     post(state) {
       const walk: Walk = {
         titles: { ...TITLES, ...options?.titles },

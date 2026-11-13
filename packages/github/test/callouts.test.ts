@@ -166,6 +166,21 @@ describe("comark-github callouts", () => {
     expect(callout(output)?.[3]).toMatch(/^\s*<p><span>Intro.<\/span><\/p>\s*<ul>/);
   });
 
+  it("distinguishes inline and block uses of the same custom component", async () => {
+    const source =
+      ":::note\nThe :custom[inline] text.\n\n::custom\nBlock.\n::\n\n- item\n\n::tip\nNested.\n::\n:::";
+    const tree = await parseMarkdown(source, { plugins: [callouts()] });
+    const [node] = tree.nodes;
+    expect(
+      Array.isArray(node)
+        ? node.slice(2).map((child) => (Array.isArray(child) ? child[0] : child))
+        : [],
+    ).toEqual(["p", "custom", "ul", "github-callout"]);
+    const output = await render(source);
+    expect(output).toMatch(/<p>\s*The <custom>inline<\/custom> text\.\s*<\/p>/);
+    expect(output).not.toMatch(/<p>\s*<(?:ul|div|p)>/);
+  });
+
   it("keeps raw HTML subject to filtering in either plugin order", async () => {
     for (const type of ["note", "tip", "important", "warning", "caution", "callout"]) {
       for (const plugins of [
