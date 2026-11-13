@@ -20,6 +20,12 @@ export type {
  */
 export const railScript = `(${start.toString()})()`;
 
+/**
+ * The inline scripts this renderer writes, each exactly as it goes in its `<script>`. They're the same on every
+ * render, so a page with a strict Content Security Policy can allow them by hash or add its nonce.
+ */
+export const scripts: string[] = [railScript];
+
 // Each render gets a fresh `state.context`, so a document carries the styles and the script once.
 const styled = new WeakSet<object>();
 const started = new WeakSet<object>();

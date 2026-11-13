@@ -63,6 +63,7 @@ export const mermaidScript = `(${start.toString()})()`;
  */
 const mermaid = (zooms: boolean) => ({
   default: pele,
+  scripts: [mermaidScript, ...(zooms ? zoom.scripts : [])],
   components: {
     pele: ((node, state) => {
       const first = !styled.has(state.context);

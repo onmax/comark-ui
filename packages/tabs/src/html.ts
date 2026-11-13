@@ -10,6 +10,14 @@ import { attr } from "../../../shared/html.ts";
 export { default } from "./index.ts";
 export type { PackageManager, TabsMeta, TabsOptions } from "./index.ts";
 
+const inline = `(${start.toString()})("", ${createCodeMotion.toString()})`;
+
+/**
+ * The inline scripts this renderer writes, each exactly as it goes in its `<script>`. They're the same on every
+ * render, so a page with a strict Content Security Policy can allow them by hash or add its nonce.
+ */
+export const scripts: string[] = [inline];
+
 // Each render gets a fresh `state.context`, so a document carries the script once.
 const started = new WeakSet<object>();
 
@@ -18,7 +26,7 @@ export function runtime(state: State): string {
   if (started.has(state.context)) return "";
   started.add(state.context);
   // The styles come inline before the script, so the script has nothing to add.
-  return `<style data-comark-tabs>${css}</style><script>(${start.toString()})("", ${createCodeMotion.toString()})</script>`;
+  return `<style data-comark-tabs>${css}</style><script>${inline}</script>`;
 }
 
 const isItem = (node: Node): node is ElementNode => Array.isArray(node) && node[0] === "tabs-item";

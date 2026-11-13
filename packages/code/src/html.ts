@@ -6,6 +6,14 @@ export { default } from "./index.ts";
 export type { CodeAction, CodeMeta, CodeOptions } from "./index.ts";
 export type { CodeActionDetail } from "./client.ts";
 
+const inline = `(${start.toString()})("")`;
+
+/**
+ * The inline scripts this renderer writes, each exactly as it goes in its `<script>`. They're the same on every
+ * render, so a page with a strict Content Security Policy can allow them by hash or add its nonce.
+ */
+export const scripts: string[] = [inline];
+
 // Each render gets a fresh `state.context`, so a document carries the script once.
 const started = new WeakSet<object>();
 
@@ -14,7 +22,7 @@ export function runtime(state: State): string {
   if (started.has(state.context)) return "";
   started.add(state.context);
   // The styles come inline before the script, so the script has nothing to add.
-  return `<style data-comark-code>${css}</style><script>(${start.toString()})("")</script>`;
+  return `<style data-comark-code>${css}</style><script>${inline}</script>`;
 }
 
 // Every value is a word or a number the parse plugin wrote, so none needs escaping.

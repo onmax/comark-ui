@@ -1,6 +1,6 @@
 import type { ElementNode, Node, NodeHandler, State } from "comark";
 import { escapeHtml, textContent } from "comark/utils";
-import { carouselHtml } from "comark-carousel/html";
+import { carouselHtml, scripts as carouselScripts } from "comark-carousel/html";
 import { runtime as zoomRuntime } from "comark-zoom/html";
 import { measure } from "comark-zoom/size";
 import { start } from "./script.ts";
@@ -33,12 +33,20 @@ function styles(state: State) {
   return `<style>${css}</style>`;
 }
 
+const inline = `(${start.toString()})()`;
+
+/**
+ * The inline scripts this renderer writes, each exactly as it goes in its `<script>`, comark-carousel's and comark-zoom's included. They're the same on every
+ * render, so a page with a strict Content Security Policy can allow them by hash or add its nonce.
+ */
+export const scripts: string[] = [inline, ...carouselScripts];
+
 // Each render gets a fresh `state.context`, so a document carries the script for sliders and copying once.
 const started = new WeakSet<object>();
 function runtime(state: State) {
   if (started.has(state.context)) return "";
   started.add(state.context);
-  return `<script>(${start.toString()})()</script>`;
+  return `<script>${inline}</script>`;
 }
 
 // Ids come from the images and their order, so they stay stable across renders and don't collide with a
