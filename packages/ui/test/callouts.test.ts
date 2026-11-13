@@ -1,4 +1,7 @@
 import { createHtmlRenderer } from "@comark/html";
+import { callouts } from "../../github/src/callouts.ts";
+import cards from "../../cards/src/index.ts";
+import { lint } from "../../lint/src/index.ts";
 import { parseMarkdown } from "comark";
 import { describe, expect, it } from "vite-plus/test";
 import html from "../src/html.ts";
@@ -44,5 +47,62 @@ describe("block callout paragraphs", () => {
         expect(stable(block)).toBe(stable(quote));
       });
     }
+  }
+});
+
+describe("nested callout blocks", () => {
+  const markdown = ':::note\n::card{title="Example"}\nBody.\n::\n:::';
+  it("keeps component props clean in either plugin order", async () => {
+    for (const plugins of [
+      [callouts(), cards()],
+      [cards(), callouts()],
+    ]) {
+      const tree = await parseMarkdown(markdown, { plugins });
+      expect(tree.meta.issues ?? []).toEqual([]);
+      expect(JSON.stringify(tree.nodes)).not.toContain("block-boundary");
+      expect(tree.nodes[0]?.[2]?.[0]).toBe("card");
+    }
+  });
+  for (const tag of ["note", "tip", "important", "warning", "caution", "callout"]) {
+    it(`renders and lints valid nested cards in ${tag}`, async () => {
+      const source = `:::${tag}
+::card{title="Example"}
+Body.
+::
+
+::columns{cols="2"}
+One.
+::
+
+::field{name="value" type="string"}
+Description.
+::
+
+::stats
+| Metric | Before | After |
+| --- | --- | --- |
+| Size | 4 | 2 |
+::
+
+::table
+| Name | Value |
+| --- | --- |
+| A | 1 |
+::
+:::`;
+      const options = preset();
+      const tree = await parseMarkdown(source, options);
+      expect(tree.meta.issues ?? []).toEqual([]);
+      expect(
+        await lint(source, {
+          ...options,
+          components: [...Object.keys(options.components), ...options.blocks, ...options.tags],
+        }),
+      ).toEqual([]);
+      const rendered = await createHtmlRenderer(options)(source);
+      expect(rendered).toContain("Example");
+      expect(rendered).not.toContain("block-boundary");
+      expect(rendered).not.toMatch(/<p>\s*<div/);
+    });
   }
 });

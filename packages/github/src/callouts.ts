@@ -132,6 +132,8 @@ function toCallout(
   ];
 }
 
+const BLOCK_BOUNDARY = "github-callout-block-boundary";
+
 const isSlot = (node: Node, name: string): node is ElementNode =>
   isElement(node) && node[0] === "template" && node[1].name === name;
 
@@ -171,14 +173,16 @@ function fromBlock(node: ElementNode, walk: Walk): ElementNode {
     if (
       !Array.isArray(child) ||
       (isElement(child) &&
-        !child[1].$?.block &&
+        child[0] !== BLOCK_BOUNDARY &&
         !BLOCK.has(child[0]) &&
         !CALLOUT_BLOCKS.includes(child[0]))
     ) {
       inline.push(child);
     } else {
       flush();
-      normalized.push(child);
+      normalized.push(
+        ...(isElement(child) && child[0] === BLOCK_BOUNDARY ? childrenOf(child) : [child]),
+      );
     }
   }
   flush();
@@ -197,6 +201,11 @@ function transform(nodes: Node[], start: number, walk: Walk) {
   for (let index = start; index < nodes.length; index++) {
     const node = nodes[index];
     if (!isElement(node)) continue;
+    if (node[0] === BLOCK_BOUNDARY) {
+      nodes.splice(index, 1, ...childrenOf(node));
+      index--;
+      continue;
+    }
     const callout =
       node[0] === "blockquote"
         ? toCallout(node, walk.titles, walk.issues)
@@ -221,19 +230,47 @@ export const callouts = /* @__PURE__ */ defineComarkPlugin<CalloutsOptions, GitH
     markdownItPost(state) {
       if (options?.blocks === false) return;
       // Preserve the source distinction for custom block components before autoUnwrap removes their paragraph.
+      // Temporary structural wrappers keep bookkeeping out of authored props for every plugin order.
       // Inline components with the same name remain inline, even when both occur in one callout.
-      const containers: boolean[] = [];
+      const containers: { inside: boolean; wrapped: boolean }[] = [];
+      const tokens: typeof state.tokens = [];
+      const boundary = (token: (typeof state.tokens)[number], nesting: 1 | -1) => {
+        // SAFETY: parser tokens are instances of the parser's Token class, whose constructor takes type, tag, nesting.
+        const Token = token.constructor as new (
+          type: string,
+          tag: string,
+          nesting: 1 | -1,
+        ) => typeof token;
+        const wrapper = new Token(
+          nesting === 1 ? "blockquote_open" : "blockquote_close",
+          BLOCK_BOUNDARY,
+          nesting,
+        );
+        wrapper.block = true;
+        return wrapper;
+      };
       for (const token of state.tokens) {
         if (token.type === "mdc_block_close") {
-          containers.pop();
+          const container = containers.pop();
+          tokens.push(token);
+          if (container?.wrapped) tokens.push(boundary(token, -1));
           continue;
         }
-        if (token.type !== "mdc_block_open" && token.type !== "mdc_block_shorthand") continue;
-        const inside = containers.at(-1) ?? false;
-        if (inside) token.attrSet("$", JSON.stringify({ block: 1 }));
+        if (token.type !== "mdc_block_open" && token.type !== "mdc_block_shorthand") {
+          tokens.push(token);
+          continue;
+        }
+        const inside = containers.at(-1)?.inside ?? false;
+        if (inside) tokens.push(boundary(token, 1));
+        tokens.push(token);
         if (token.type === "mdc_block_open")
-          containers.push(inside || CALLOUT_BLOCKS.includes(token.tag));
+          containers.push({
+            inside: inside || CALLOUT_BLOCKS.includes(token.tag),
+            wrapped: inside,
+          });
+        else if (inside) tokens.push(boundary(token, -1));
       }
+      state.tokens = tokens;
     },
     post(state) {
       const walk: Walk = {
