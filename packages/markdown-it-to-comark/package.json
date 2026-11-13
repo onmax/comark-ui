@@ -1,6 +1,6 @@
 {
   "name": "markdown-it-to-comark",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "description": "Moves a project from markdown-it to Comark: reports each markdown-it setup and what its plugins and options become, rewrites setups it owns to Comark's renderHtml, and escapes Markdown Comark would read differently. A CLI, a library, and a Vite Doctor extension.",
   "keywords": [
     "codemod",

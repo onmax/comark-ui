@@ -14,6 +14,7 @@ export type ChartType =
   | "dumbbell"
   | "waterfall"
   | "pie"
+  | "heatmap"
   | "gantt"
   | "sankey";
 
@@ -39,6 +40,12 @@ export interface Chart {
   labels?: boolean;
   /** Whether bars run sideways, from `horizontal`. Only bar and stacked bar charts take it. */
   horizontal?: boolean;
+  /** The unit of the numbers, from `unit`: a currency sign goes before them, anything else after, as `$1.2k` or `40 ms`. */
+  unit?: string;
+  /** Which end of a heatmap's numbers is good, from `better`: its cells run from red through amber to green. */
+  better?: "higher" | "lower";
+  /** The axes on a log scale, from `log`: the numbers', `y`, the x column's when it holds numbers, or both. */
+  log?: "x" | "y" | "both";
   /** How a gantt's starts and ends read: numbers, or dates kept as milliseconds since 1970 in UTC. */
   scale?: Exclude<XKind, "name">;
   /** The column of names a gantt colors its bars by. */
@@ -99,6 +106,7 @@ const TYPES: readonly ChartType[] = [
   "dumbbell",
   "waterfall",
   "pie",
+  "heatmap",
   "gantt",
   "sankey",
 ];
@@ -108,6 +116,11 @@ const PROPS = new Set([
   "x",
   "y",
   "title",
+  "description",
+  "unit",
+  "log",
+  "better",
+  ":log",
   "labels",
   ":labels",
   "horizontal",
@@ -125,6 +138,7 @@ const A: Record<ChartType, string> = {
   dumbbell: "a dumbbell",
   waterfall: "a waterfall",
   pie: "a pie",
+  heatmap: "a heatmap",
   gantt: "a gantt",
   sankey: "a sankey",
 };
@@ -177,7 +191,7 @@ export function readChart(
     if (!spec && key !== "$" && !PROPS.has(key))
       issues.push({
         rule: "comark/charts/unknown-prop",
-        message: `${name}: ${code(key)} isn't a prop of \`::chart\`. Valid props: type, x, y, title, labels, horizontal.`,
+        message: `${name}: ${code(key)} isn't a prop of \`::chart\`. Valid props: type, x, y, title, description, unit, log, better, labels, horizontal.`,
       });
 
   const content = childrenOf(node).filter(isContent);
@@ -199,7 +213,7 @@ export function readChart(
   if (content.length > 1 + annotations.length)
     issues.push({
       rule: "comark/charts/content-dropped",
-      message: `${name} drops everything inside it but its table and annotations. Name the chart with \`title\`, and write other text outside the block.`,
+      message: `${name} drops everything inside it but its table and annotations. Name the chart with \`title\`, say what to read in it with \`description\`, and write other text outside the block.`,
     });
 
   const [head] = elements(table, "thead");
@@ -272,7 +286,15 @@ export function readChart(
     });
     return;
   }
-  if (text(attrs.type) === "sankey") {
+  const own = text(attrs.type);
+  if (own === "sankey" || own === "gantt")
+    for (const prop of ["unit", "log", "better"])
+      if (attrs[prop] !== undefined || attrs[`:${prop}`] !== undefined)
+        issues.push({
+          rule: `comark/charts/invalid-${prop}`,
+          message: `${name}: ${A[own]} prints its own amounts, so \`${prop}\` changes nothing. Remove it, and put the unit in the header, such as \`amount ($)\`.`,
+        });
+  if (own === "sankey") {
     const flow = readFlow(
       name,
       attrs,
@@ -286,7 +308,7 @@ export function readChart(
     const flags = readFlags(name, "sankey", attrs, issues);
     return flow && { ...flow, ...flags };
   }
-  if (text(attrs.type) === "gantt") {
+  if (own === "gantt") {
     const gantt = readGantt(
       name,
       attrs,
@@ -393,6 +415,7 @@ export function readChart(
     type = "bar";
   }
   if (type === "waterfall") readTotal(name, points, issues);
+  const scale = readScale(name, type, xKind, points, attrs, issues);
   return {
     type,
     title: text(attrs.title),
@@ -400,9 +423,102 @@ export function readChart(
     xKind,
     series,
     rows: points.map((row) => ({ x: row.x, values: row.values.slice(0, series.length) })),
-    marks: readMarks(name, type, x, annotations, points, series, issues),
+    marks: readMarks(
+      name,
+      type,
+      x,
+      annotations,
+      points,
+      series,
+      issues,
+      undefined,
+      scale.log === "y" || scale.log === "both",
+    ),
     ...readFlags(name, type, attrs, issues),
+    ...scale,
   };
+}
+
+// A log scale spreads numbers that span orders of magnitude, such as costs or timings, along a line or a scatter
+// plot's axes and a bar chart's values. Stacks, areas, and pies add up, and a log scale has no zero to add from.
+const LOGGED = new Set<ChartType>(["line", "scatter", "bar"]);
+const SUMMED = new Set<ChartType>(["area", "stacked", "pie", "waterfall"]);
+
+/** Reads `better`, `unit`, and `log`, and checks that a log scale has only positive numbers to place. */
+function readScale(
+  name: string,
+  type: ChartType,
+  xKind: XKind,
+  points: { x: string; values: (number | undefined)[] }[],
+  attrs: ElementNode[1],
+  issues: Issue[],
+): { better?: "higher" | "lower"; unit?: string; log?: "x" | "y" | "both" } {
+  const better = text(attrs.better);
+  if (better && (type !== "heatmap" || (better !== "higher" && better !== "lower")))
+    issues.push({
+      rule: "comark/charts/invalid-better",
+      message:
+        type === "heatmap"
+          ? `${name}: \`better="${better}"\` isn't a direction. Use \`better="higher"\` or \`better="lower"\`.`
+          : `${name}: \`better\` colors a heatmap's cells from bad to good, and ${A[type]} has no cells. Remove it, or use \`type="heatmap"\`.`,
+    });
+  const direction = better === "higher" ? "higher" : better === "lower" ? "lower" : undefined;
+  const rated: { better?: "higher" | "lower" } =
+    type === "heatmap" && direction ? { better: direction } : {};
+  return { ...rated, ...readUnitAndLog(name, type, xKind, points, attrs, issues) };
+}
+
+function readUnitAndLog(
+  name: string,
+  type: ChartType,
+  xKind: XKind,
+  points: { x: string; values: (number | undefined)[] }[],
+  attrs: ElementNode[1],
+  issues: Issue[],
+): { unit?: string; log?: "x" | "y" | "both" } {
+  const unit = text(attrs.unit);
+  const raw = attrs.log ?? attrs[":log"];
+  if (raw === undefined) return unit ? { unit } : {};
+  const value = text(raw);
+  if (value === "false") return unit ? { unit } : {};
+  const asked = value === "" || value === "true" ? "y" : value;
+  const scale = (log: "x" | "y" | "both") => ({ ...(unit && { unit }), log });
+  if (asked !== "x" && asked !== "y" && asked !== "both") {
+    issues.push({
+      rule: "comark/charts/invalid-log",
+      message: `${name}: \`log="${value}"\` isn't an axis. Write \`log\` alone for the numbers' axis, \`log="x"\` for the x column's, or \`log="both"\`.`,
+    });
+    return unit ? { unit } : {};
+  }
+  let log: "x" | "y" | "both" = asked;
+  if (!LOGGED.has(type)) {
+    issues.push({
+      rule: "comark/charts/invalid-log",
+      message: `${name}: ${A[type]} can't use a log scale${SUMMED.has(type) ? ", since its parts add up from zero" : ""}. Remove \`log\`, or use \`type="bar"\` or \`type="line"\`.`,
+    });
+    return unit ? { unit } : {};
+  }
+  if (log !== "y" && (xKind !== "number" || type === "bar")) {
+    issues.push({
+      rule: "comark/charts/invalid-log",
+      message: `${name}: \`log="${log}"\` puts the x column on a log scale, and only a line or a scatter plot over numbers has one. Use \`log\` alone for the numbers' axis.`,
+    });
+    if (log === "x") return unit ? { unit } : {};
+    log = "y";
+  }
+  const values = points.flatMap((point) => point.values.filter((cell) => cell !== undefined));
+  const xs = points.map((point) => readNumber(point.x) ?? 0);
+  const below = [...(log !== "x" ? values : []), ...(log !== "y" ? xs : [])].find(
+    (number) => number <= 0,
+  );
+  if (below !== undefined) {
+    issues.push({
+      rule: "comark/charts/invalid-log",
+      message: `${name}: a log scale has no place for ${format(below)}, since it only holds numbers above 0. Remove \`log\`, or leave the cell empty.`,
+    });
+    return unit ? { unit } : {};
+  }
+  return scale(log);
 }
 
 /**
@@ -463,12 +579,23 @@ function readFlag(name: string, prop: string, attrs: ElementNode[1], issues: Iss
 
 // The types with bars, steps, or dots to print a number on; lines, areas, scatter plots, and pies are read off their axis
 // or legend and the data table.
-const LABELED = new Set<ChartType>(["bar", "stacked", "waterfall", "dumbbell", "gantt", "sankey"]);
+const LABELED = new Set<ChartType>([
+  "bar",
+  "stacked",
+  "waterfall",
+  "dumbbell",
+  "heatmap",
+  "gantt",
+  "sankey",
+]);
 
 /** Reads `labels` and `horizontal`, each on the types that take it. */
 function readFlags(name: string, type: ChartType, attrs: ElementNode[1], issues: Issue[]) {
   const flags: { labels?: true; horizontal?: true } = {};
-  if (readFlag(name, "labels", attrs, issues)) {
+  // Bars print their numbers unless told not to with `labels=false`: a report's reader reads the number, not the axis.
+  const unset = attrs.labels === undefined && attrs[":labels"] === undefined;
+  if (unset && (type === "bar" || type === "stacked" || type === "heatmap")) flags.labels = true;
+  else if (readFlag(name, "labels", attrs, issues)) {
     if (LABELED.has(type)) flags.labels = true;
     else
       issues.push({
@@ -503,6 +630,7 @@ function readMarks(
   series: string[],
   issues: Issue[],
   groups?: { column?: string; names: string[] },
+  log = false,
 ): ChartMark[] {
   const marks: ChartMark[] = [];
   let stamp = 1;
@@ -524,11 +652,11 @@ function readMarks(
     const valueText = text(markAttrs.value);
     if (mark.mark === "line") {
       const value = readNumber(valueText);
-      const axis = type !== "pie" && type !== "gantt" && type !== "sankey";
+      const axis = type !== "pie" && type !== "heatmap" && type !== "gantt" && type !== "sankey";
       if (!axis)
         found.push({
           rule: "comark/charts/invalid-line",
-          message: `\`mark="line"\` crosses the plot at a number on its value axis, and ${A[type]} has none. Mark a ${type === "pie" ? "slice" : type === "sankey" ? "node" : "bar"} with \`at\` and another mark, such as \`box\`.`,
+          message: `\`mark="line"\` crosses the plot at a number on its value axis, and ${A[type]} has none. Mark a ${type === "pie" ? "slice" : type === "sankey" ? "node" : type === "heatmap" ? "cell" : "bar"} with \`at\` and another mark, such as \`box\`.`,
         });
       else if (!valueText)
         found.push({
@@ -540,6 +668,11 @@ function readMarks(
           rule: "comark/charts/invalid-line",
           message: `\`value="${valueText}"\` isn't a number. Write the number alone, such as \`200\` or \`1,200\`, in the unit of the chart's numbers.`,
         });
+      else if (log && value <= 0)
+        found.push({
+          rule: "comark/charts/invalid-line",
+          message: `\`value="${valueText}"\` has no place on a log scale. Use a value above 0, or remove \`log\` from the chart.`,
+        });
       const extra = [at && "`at`", seriesName && "`series`"].filter(Boolean).join(" and ");
       if (axis && extra)
         found.push({
@@ -549,7 +682,7 @@ function readMarks(
       issues.push(
         ...found.map((problem) => ({ ...problem, message: `${where}: ${problem.message}` })),
       );
-      if (axis && value !== undefined)
+      if (axis && value !== undefined && (!log || value > 0))
         marks.push({ ...mark, n: index + 1, number: mark.side ? undefined : stamp++, value });
       continue;
     }
@@ -960,7 +1093,7 @@ function readSpec(
   issues: Issue[],
 ): SpecChart | undefined {
   for (const key of Object.keys(attrs))
-    if (key !== "$" && key !== "title" && key !== "class" && key !== "id")
+    if (key !== "$" && key !== "title" && key !== "description" && key !== "class" && key !== "id")
       issues.push({
         rule: "comark/charts/spec-with-props",
         message: `${name}: ${code(key)} doesn't apply to a chart drawn from a Vega-Lite spec. Name the columns in the spec's \`encoding\` instead.`,
@@ -973,7 +1106,7 @@ function readSpec(
   if (others > annotations)
     issues.push({
       rule: "comark/charts/content-dropped",
-      message: `${name} drops everything inside it but its table and its Vega-Lite spec. Name the chart with \`title\`, and write other text outside the block.`,
+      message: `${name} drops everything inside it but its table and its Vega-Lite spec. Name the chart with \`title\`, say what to read in it with \`description\`, and write other text outside the block.`,
     });
   let spec: unknown;
   try {

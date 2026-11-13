@@ -8,8 +8,9 @@ export interface ReferencesOptions {
   repo?: string;
 }
 
-// Text that is already a link, or is code, keeps its characters.
-const SKIP = new Set(["a", "code", "pre", "script", "style"]);
+// Text that is already a link, or is code, keeps its characters. comark-chips turns a link into a `chip`, which draws
+// as a link, so a reference in its label would put a link inside a link.
+const SKIP = new Set(["a", "chip", "code", "pre", "script", "style"]);
 const REPO = /^[a-z\d-]+\/[\w.-]+$/i;
 // `owner/name#123`, `#123`, or `@user`, not inside a word, a path, or an email address. A name followed by a slash
 // is an npm scope such as `@comark/html`, so it isn't a mention.

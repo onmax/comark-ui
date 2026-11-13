@@ -142,4 +142,16 @@ export default {
     code: "COMARK0438",
     title: "Send no more out of a sankey's node than flows into it",
   },
+  "comark/charts/invalid-log": {
+    code: "COMARK0439",
+    title: "Put `log` on a line, scatter plot, or bar chart whose numbers are all above 0",
+  },
+  "comark/charts/invalid-better": {
+    code: "COMARK0440",
+    title: "Write `better` as `higher` or `lower`, on a heatmap",
+  },
+  "comark/charts/invalid-unit": {
+    code: "COMARK0441",
+    title: "Leave `unit` off a gantt or a sankey, which print their own amounts",
+  },
 } satisfies Record<`comark/charts/${string}`, RuleInfo>;

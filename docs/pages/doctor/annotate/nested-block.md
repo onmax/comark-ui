@@ -2,7 +2,7 @@ Screenshots, compares, and annotations are read only where they belong: an annot
 
 ::incorrect
 ```md
-::screenshot{src="/pond.png" alt="The pond map with three ducks"}
+::screenshot{src="/pond.svg" alt="The pond map with three ducks"}
 :::annotation{x=20 y=30 w=15 h=10}
 The duck without a name tag.
 
@@ -16,7 +16,7 @@ The duck with two.
 
 ::correct
 ```md
-::screenshot{src="/pond.png" alt="The pond map with three ducks"}
+::screenshot{src="/pond.svg" alt="The pond map with three ducks"}
 :::annotation{x=20 y=30 w=15 h=10}
 The duck without a name tag.
 :::

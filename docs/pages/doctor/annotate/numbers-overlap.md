@@ -2,7 +2,7 @@ Each number sits on a corner of its mark, on the first corner that's clear of th
 
 ::incorrect
 ```md
-::screenshot{src="/pond.png" alt="The pond map with three ducks"}
+::screenshot{src="/pond.svg" alt="The pond map with three ducks"}
 :::annotation{x=40 y=40 w=10 h=10}
 Duck 1 on the rock.
 :::
@@ -24,7 +24,7 @@ Duck 5 on the rock.
 
 ::correct
 ```md
-::screenshot{src="/pond.png" alt="The pond map with three ducks"}
+::screenshot{src="/pond.svg" alt="The pond map with three ducks"}
 :::annotation{x=40 y=40 w=10 h=10}
 Five ducks share the rock.
 :::

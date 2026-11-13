@@ -3,13 +3,14 @@
   import { onMount } from "svelte";
   import { bar, css, start } from "comark-charts/client";
 
-  let { type = undefined, title = undefined, svg = undefined, children } = $props();
+  let { type = undefined, title = undefined, description = undefined, svg = undefined, children } = $props();
   onMount(() => start(css));
 </script>
 
 {#if svg}
-  <figure class="cch" data-comark-frame="" data-type={type}>
+  <figure class="cch" data-type={type}>
     {#if title}<figcaption>{title}</figcaption>{/if}
+    {#if description}<p class="cch-description">{description}</p>{/if}
     <div class="cch-plot">{@html svg}</div>
     <div class="cch-bar">{@html bar()}</div>
     <details class="cch-data"><summary>Data</summary>{@render children?.()}</details>

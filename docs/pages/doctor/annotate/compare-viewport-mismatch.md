@@ -3,10 +3,10 @@ Screenshots captured at different sizes lay the page out differently, so what mo
 ::incorrect
 ```md
 ::compare
-:::screenshot{src="/pond-before.png" alt="The pond with no fence" viewport="1440x900"}
+:::screenshot{src="/pond.svg" alt="The pond with no fence" viewport="1440x900"}
 :::
 
-:::screenshot{src="/pond-after.png" alt="The pond with a fence" viewport="1280x800"}
+:::screenshot{src="/pond-fence.svg" alt="The pond with a fence" viewport="1280x800"}
 :::
 ::
 ```
@@ -15,10 +15,10 @@ Screenshots captured at different sizes lay the page out differently, so what mo
 ::correct
 ```md
 ::compare
-:::screenshot{src="/pond-before.png" alt="The pond with no fence" viewport="1440x900"}
+:::screenshot{src="/pond.svg" alt="The pond with no fence" viewport="1440x900"}
 :::
 
-:::screenshot{src="/pond-after.png" alt="The pond with a fence" viewport="1440x900"}
+:::screenshot{src="/pond-fence.svg" alt="The pond with a fence" viewport="1440x900"}
 :::
 ::
 ```

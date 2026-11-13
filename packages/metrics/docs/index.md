@@ -190,7 +190,7 @@ Use the `unit` prop to set the unit of a difference from 0, for cells written wi
 
 #### Tiles
 
-Use the `tiles` prop to show each row as a tile, with the name above the after value and the change below it in a pill. The before value counts toward the change but doesn't show.
+Use the `tiles` prop to show the rows as one strip of figures, as a dashboard's header: each tile holds the after value, its name under it, and the change below in a pill, with hairlines between the tiles. The strip wraps onto more rows in a narrow column. The before value counts toward the change but doesn't show.
 
 ::example
 ```md
@@ -325,9 +325,9 @@ Deltas, bars, and tables read these [shared tokens](/guide/theming):
 | `--comark-primary` | The progress bar |
 | `--comark-muted` | The value before, a change with no verdict, a bar's label and percent, a tile's name |
 | `--comark-font` | Inherited text, with tabular numbers |
-| `--comark-border` | Tile borders |
+| `--comark-border` | The strip's border and the hairlines between tiles |
 | `--comark-background` | Tile backgrounds |
-| `--comark-radius` | Tile corner radius |
+| `--comark-radius` | The strip's corner radius |
 
 ### Variables
 
@@ -347,6 +347,6 @@ Set `--cmt-better` and `--cmt-worse` on `.cmt-delta`, and `--cmt-bar` on `.cmt-p
 | `.cmt-from`, `.cmt-to`, `.cmt-change` | Its value before, after, and the arrow with the percent |
 | `.cmt-progress` | A progress bar, with `.cmt-label` before it and `.cmt-percent` after |
 | `.cmt-stats` | A `::stats` table |
-| `.cmt-tiles` | The grid rendered by `::stats{tiles}` |
+| `.cmt-tiles` | The strip rendered by `::stats{tiles}` |
 | `.cmt-tile` | One stat tile, containing its name, value, and optional change |
 | `.cmt-value` | The large value inside a tile |

@@ -8,15 +8,16 @@ export type { ChartsMeta, ChartsOptions, DrawnChart } from "./index.ts";
 export const Chart = defineComponent({
   name: "Chart",
   inheritAttrs: false,
-  props: { type: String, title: String, svg: String },
+  props: { type: String, title: String, description: String, svg: String },
   setup(props, { slots }) {
     let stop = () => {};
     onMounted(() => (stop = start(css)));
     onBeforeUnmount(() => stop());
     return () =>
       props.svg
-        ? h("figure", { class: "cch", "data-comark-frame": "", "data-type": props.type }, [
+        ? h("figure", { class: "cch", "data-type": props.type }, [
             props.title ? h("figcaption", props.title) : null,
+            props.description ? h("p", { class: "cch-description" }, props.description) : null,
             h("div", { class: "cch-plot", innerHTML: props.svg }),
             h("div", { class: "cch-bar", innerHTML: bar() }),
             h("details", { class: "cch-data" }, [h("summary", "Data"), slots.default?.()]),

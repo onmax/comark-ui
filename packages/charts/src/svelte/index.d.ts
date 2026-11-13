@@ -6,6 +6,7 @@ export type { ChartsMeta, ChartsOptions, DrawnChart } from "comark-charts";
 export declare const Chart: Component<{
   type?: string;
   title?: string;
+  description?: string;
   svg?: string;
   children?: Snippet;
 }>;
