@@ -360,9 +360,9 @@ function fold(
     return at === undefined || at < 0 ? undefined : map[at];
   };
   return {
-    commits: commits
-      .filter((_, i) => !folded.has(i))
-      .map((commit) => ({ ...commit, mergeFrom: near(commit.mergeFrom) })),
+    commits: commits.flatMap((commit, i) =>
+      folded.has(i) ? [] : [{ ...commit, mergeFrom: near(commit.mergeFrom) }],
+    ),
     lanes: lanes.map((lane) => ({ ...lane, from: near(lane.from) })),
   };
 }

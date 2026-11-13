@@ -198,7 +198,7 @@ export function draw(graph: Graph, reverse: boolean): Drawing {
         "span",
         { class: "cgg-subject" },
         ...(commit.ref
-          ? [["span", { class: "cgg-ref" }, `#${commit.ref}`] as ElementNode, " "]
+          ? [["span", { class: "cgg-ref" }, `#${commit.ref}`] satisfies ElementNode, " "]
           : []),
         commit.text,
       ],
