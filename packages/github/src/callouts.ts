@@ -160,11 +160,23 @@ function fromBlock(node: ElementNode, walk: Walk): ElementNode {
     child === slot ? [] : isSlot(child, "default") ? childrenOf(child) : [child],
   );
   const title = (slot && textContent(slot).trim()) || text(attrs.title) || walk.titles[type];
-  const inline = body.some((child) =>
-    Array.isArray(child) ? isElement(child) && INLINE.has(child[0]) : child.trim(),
-  );
-  const paragraph: ElementNode = ["p", {}, ...body];
-  return [CALLOUT_TAG, { type, title }, ...(inline ? [paragraph] : body)];
+  const normalized: Node[] = [];
+  let inline: Node[] = [];
+  const flush = () => {
+    if (inline.some((child) => Array.isArray(child) || child.trim()))
+      normalized.push(["p", {}, ...inline]);
+    inline = [];
+  };
+  for (const child of body) {
+    if (!Array.isArray(child) || (isElement(child) && INLINE.has(child[0]))) {
+      inline.push(child);
+    } else {
+      flush();
+      normalized.push(child);
+    }
+  }
+  flush();
+  return [CALLOUT_TAG, { type, title }, ...normalized];
 }
 
 interface Walk {
@@ -182,7 +194,7 @@ function transform(nodes: Node[], start: number, walk: Walk) {
     const callout =
       node[0] === "blockquote"
         ? toCallout(node, walk.titles, walk.issues)
-        : walk.blocks && CALLOUT_BLOCKS.includes(node[0])
+        : walk.blocks && !node[1].$?.html && CALLOUT_BLOCKS.includes(node[0])
           ? fromBlock(node, walk)
           : undefined;
     if (callout) nodes[index] = callout;

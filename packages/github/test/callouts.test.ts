@@ -1,7 +1,7 @@
 import { createHtmlRenderer } from "@comark/html";
 import { parseMarkdown } from "comark";
 import { describe, expect, it } from "vite-plus/test";
-import { callouts, components, references } from "../src/html.ts";
+import { callouts, components, html, references } from "../src/html.ts";
 
 type Options = Parameters<typeof callouts>[0];
 const render = (markdown: string, options?: Options, registerDefaultPlugins = true) =>
@@ -145,6 +145,45 @@ describe("comark-github callouts", () => {
       '`::callout` 2 has the type "info", which isn\'t a GitHub callout, so it renders as a note. Set `type` to `note`, `tip`, `important`, `warning`, or `caution`.',
     ]);
     expect(meta.issueRules[meta.issues[0]!]).toBe("comark/github/unknown-callout-type");
+  });
+
+  it("preserves mixed block and inline bodies", async () => {
+    const markdown = "::note\nIntro.\n\n#title\nTitle\n\n#default\nBody.\n::";
+    const { nodes } = await parseMarkdown(markdown, { plugins: [callouts()] });
+    expect(nodes).toEqual([
+      ["github-callout", { type: "note", title: "Title" }, ["p", {}, "Intro."], ["p", {}, "Body."]],
+    ]);
+    expect(callout(await render(markdown))?.[3]).toMatch(/^\s*<p>Intro.<\/p>\s*<p>Body.<\/p>\s*$/);
+    const mixed = "::note\n<span>Intro.</span>\n\n- one\n::";
+    const tree = await parseMarkdown(mixed, { plugins: [callouts(), html()] });
+    const [mixedCallout] = tree.nodes;
+    expect(
+      Array.isArray(mixedCallout)
+        ? mixedCallout.slice(2).map((node) => (Array.isArray(node) ? node[0] : node))
+        : [],
+    ).toEqual(["p", "ul"]);
+    const output = await createHtmlRenderer({ plugins: [callouts(), html()], components })(mixed);
+    expect(callout(output)?.[3]).toMatch(/^\s*<p><span>Intro.<\/span><\/p>\s*<ul>/);
+  });
+
+  it("keeps raw HTML subject to filtering in either plugin order", async () => {
+    for (const type of ["note", "tip", "important", "warning", "caution", "callout"]) {
+      for (const plugins of [
+        [callouts(), html()],
+        [html(), callouts()],
+      ]) {
+        const markdown = `<${type} title="Native"><p>Text</p></${type}>`;
+        const { nodes } = await parseMarkdown(markdown, { plugins });
+        expect(JSON.stringify(nodes)).not.toContain("github-callout");
+        const output = await createHtmlRenderer({ plugins, components })(markdown);
+        expect(output).toContain("Text");
+        expect(output).not.toContain('class="cgc"');
+        expect(output).not.toContain(`<${type}`);
+        expect(await createHtmlRenderer({ plugins, components })(`::${type}\nText\n::`)).toContain(
+          'class="cgc"',
+        );
+      }
+    }
   });
 
   it("leaves the blocks alone with `blocks: false`", async () => {
