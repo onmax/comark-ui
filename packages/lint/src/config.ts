@@ -8,7 +8,7 @@ export const defineConfig = (config: Config): Config => config;
 
 // Each one is an optional peer dependency, so a project lints with exactly the plugins it renders with. The names
 // after a loader are blocks its renderer has no component for: comark-tabs turns `::code-group` into tabs while
-// parsing, and renders each `:::tabs-item` inside `::tabs`.
+// parsing, and renders each `:::tabs-item` inside `::tabs`, and comark-github turns `::note` into a callout.
 const packages = [
   [
     "comark-ui/html",
@@ -63,7 +63,7 @@ const packages = [
     "comark-github/html",
     // Of its plugins only callouts make blocks; references and raw HTML have nothing to lint.
     () => import("comark-github/html").then((module) => ({ ...module, default: module.callouts })),
-    [],
+    ["note", "tip", "important", "warning", "caution", "callout"],
   ],
   [
     "comark-chips/html",
