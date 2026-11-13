@@ -1,3 +1,4 @@
+import { Script } from "node:vm";
 import { createHtmlRenderer } from "@comark/html";
 import { describe, expect, it } from "vite-plus/test";
 import html, { mermaidScript, type PresetOptions } from "../src/html.ts";
@@ -37,8 +38,31 @@ const scriptsIn = (out: string) =>
   [...out.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((match) => match[1]!);
 
 describe("preset scripts", () => {
+  it.each([
+    "![Sound](sound.mp3)",
+    "- Item\n\n  ```ts\n  const a = 1\n  ```",
+    "> ```ts\n> const a = 1\n> ```",
+    "::tabs\n:::tab{label=One}\nOne\n:::\n::",
+    "::question{#nested}\nWhich?\n\n- [x] One\n- [ ] Two\n::",
+    "::sources\n1. [One](https://example.com)\n::",
+  ])("allowlists scripts under native parents: %s", async (markdown) => {
+    const preset = html(offline);
+    for (const input of [
+      markdown,
+      markdown
+        .split("\n")
+        .map((line) => `> ${line}`)
+        .join("\n"),
+    ]) {
+      const out = await createHtmlRenderer(preset)(input);
+      const written = scriptsIn(out);
+      expect(written.length).toBeGreaterThan(0);
+      for (const script of written) expect(preset.scripts).toContain(script);
+    }
+  });
   it("lists the text of every inline script the HTML renderer writes, each once", async () => {
     const preset = html(offline);
+    for (const script of preset.scripts) expect(() => new Script(script)).not.toThrow();
     const out = await createHtmlRenderer(preset)(document);
     const written = new Set(scriptsIn(out));
     // Zoom, carousel, annotate, charts, sources, table, code, tabs, magic move, media, embed, quiz, outline,

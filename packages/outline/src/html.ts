@@ -3,7 +3,7 @@ import { RAIL_TAG } from "./index.ts";
 import { start } from "./script.ts";
 import { css } from "./styles.ts";
 import { rawText } from "../../../shared/text.ts";
-import { attr } from "../../../shared/html.ts";
+import { attr, inlineScript } from "../../../shared/html.ts";
 
 export { default, RAIL_TAG } from "./index.ts";
 export type {
@@ -18,7 +18,7 @@ export type {
  * The side outline's script, exactly as the HTML renderer inlines it in a `<script>`, so a page with a strict
  * Content-Security-Policy can hash it.
  */
-export const railScript = `(${start.toString()})()`;
+export const railScript = inlineScript(`(${start.toString()})()`);
 
 /**
  * The inline scripts this renderer writes, each exactly as it goes in its `<script>`. They're the same on every

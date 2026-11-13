@@ -1,12 +1,12 @@
 import type { NodeHandler } from "comark";
 import { controls, start } from "./client.ts";
 import { css } from "./styles.ts";
-import { attr } from "../../../shared/html.ts";
+import { attr, inlineScript } from "../../../shared/html.ts";
 
 export { default } from "./index.ts";
 export type { MediaAttributes, MediaMeta, MediaOptions } from "./index.ts";
 
-const inline = `(${start.toString()})("")`;
+const inline = inlineScript(`(${start.toString()})("")`);
 
 /**
  * The inline scripts this renderer writes, each exactly as it goes in its `<script>`. They're the same on every

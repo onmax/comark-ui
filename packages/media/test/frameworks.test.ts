@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import { renderHtmlFromDocument } from "@comark/html";
+import { createHtmlRenderer, renderHtmlFromDocument } from "@comark/html";
 import { MarkdownDocument as ReactDocument } from "@comark/react";
 import { MarkdownDocument as VueDocument } from "@comark/vue";
 import { type MarkdownDocument, parseMarkdown } from "comark";
@@ -10,7 +10,7 @@ import { describe, expect, it } from "vite-plus/test";
 import { createSSRApp, h } from "vue";
 import { renderToString as renderVue } from "vue/server-renderer";
 import media from "../src/index.ts";
-import { components as htmlComponents } from "../src/html.ts";
+import { components as htmlComponents, scripts } from "../src/html.ts";
 import { components as reactComponents } from "../src/react.ts";
 import { components as vueComponents } from "../src/vue.ts";
 
@@ -42,6 +42,18 @@ const renderers = {
 };
 
 describe("comark-media renderers", async () => {
+  it("exports the exact scripts of isolated and nested media", async () => {
+    const render = createHtmlRenderer({ plugins: [media()], components: htmlComponents });
+    for (const markdown of [
+      "![Sound](sound.mp3)",
+      "> ![Sound](sound.mp3)",
+      "- ![Sound](sound.mp3)",
+    ]) {
+      const out = await render(markdown);
+      const written = [...out.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((match) => match[1]);
+      expect(written).toEqual(scripts);
+    }
+  });
   const value = await parseMarkdown(markdown, { plugins: [media({ size: false })] });
   const expected = normalize(await renderHtmlFromDocument(value, { components: htmlComponents }));
 

@@ -18,7 +18,7 @@ import {
   target,
 } from "./read.ts";
 import { css } from "./styles.ts";
-import { attr } from "../../../shared/html.ts";
+import { attr, inlineScript } from "../../../shared/html.ts";
 
 export { default } from "./index.ts";
 export type { AnnotateMeta, AnnotateOptions, Annotation, Mark } from "./index.ts";
@@ -33,7 +33,7 @@ function styles(state: State) {
   return `<style>${css}</style>`;
 }
 
-const inline = `(${start.toString()})()`;
+const inline = inlineScript(`(${start.toString()})()`);
 
 /**
  * The inline scripts this renderer writes, each exactly as it goes in its `<script>`, comark-carousel's and comark-zoom's included. They're the same on every

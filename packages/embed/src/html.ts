@@ -1,12 +1,12 @@
 import type { NodeHandler } from "comark";
 import { allow, icons, referrerPolicy, start } from "./client.ts";
 import { css } from "./styles.ts";
-import { attr } from "../../../shared/html.ts";
+import { attr, inlineScript } from "../../../shared/html.ts";
 
 export { default } from "./index.ts";
 export type { EmbedAttributes, EmbedMeta, EmbedOptions, Player, Size } from "./index.ts";
 
-const inline = `(${start.toString()})()`;
+const inline = inlineScript(`(${start.toString()})()`);
 
 /**
  * The inline scripts this renderer writes, each exactly as it goes in its `<script>`: the one that sizes X posts. They're the same on every

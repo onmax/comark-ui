@@ -41,7 +41,7 @@ import { mermaidBar, mermaidCss } from "./client.ts";
 import { type Preset, type PresetOptions, preset } from "./index.ts";
 import { start } from "./script.ts";
 import { typesetCss } from "./typeset-css.ts";
-import { attr } from "../../../shared/html.ts";
+import { attr, inlineScript } from "../../../shared/html.ts";
 
 export { commentsCss, criticCss } from "./index.ts";
 export type { PresetOptions } from "./index.ts";
@@ -54,7 +54,7 @@ const styled = new WeakSet<object>();
  * every render and changes only between versions, so a page with a strict Content Security Policy can allow it by its
  * hash without rendering a document first.
  */
-export const mermaidScript = `(${start.toString()})()`;
+export const mermaidScript = inlineScript(`(${start.toString()})()`);
 
 /**
  * Wraps Pele's card in `.cmm` with the bar of buttons and the source they copy. The wrapper is a wide block with the

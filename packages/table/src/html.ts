@@ -1,3 +1,4 @@
+import { inlineScript } from "../../../shared/html.ts";
 import type { NodeHandler, State } from "comark";
 import { bar, start } from "./client.ts";
 import { css } from "./styles.ts";
@@ -5,7 +6,7 @@ import { css } from "./styles.ts";
 export { default, TABLE_TAG } from "./index.ts";
 export type { TableAttributes, TableMeta, TableOptions, TableReader } from "./index.ts";
 
-const inline = `(${start.toString()})("")`;
+const inline = inlineScript(`(${start.toString()})("")`);
 
 /**
  * The inline scripts this renderer writes, each exactly as it goes in its `<script>`. They're the same on every

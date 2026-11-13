@@ -1,3 +1,4 @@
+import { inlineScript } from "../../../shared/html.ts";
 import type { NodeHandler } from "comark";
 import { annotateHtml, scripts as annotateScripts } from "comark-annotate/html";
 import { escapeHtml } from "comark/utils";
@@ -18,7 +19,7 @@ export type {
 } from "./index.ts";
 export { css };
 
-const inline = `(${start.toString()})("")`;
+const inline = inlineScript(`(${start.toString()})("")`);
 
 /**
  * The inline scripts this renderer writes, each exactly as it goes in its `<script>`, and comark-annotate's, which draws the marks on a chart. They're the same on every

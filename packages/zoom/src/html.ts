@@ -2,13 +2,13 @@ import type { NodeHandler, State } from "comark";
 import { script } from "./script.ts";
 import { RUNTIME_TAG } from "./index.ts";
 import { css } from "./styles.ts";
-import { attr } from "../../../shared/html.ts";
+import { attr, inlineScript } from "../../../shared/html.ts";
 
 export { default, RUNTIME_TAG } from "./index.ts";
 export type { ZoomOptions } from "./index.ts";
 export type { ZoomDetail } from "./client.ts";
 
-const inline = `(${script.toString()})("")`;
+const inline = inlineScript(`(${script.toString()})("")`);
 
 /**
  * The inline scripts this renderer writes, each exactly as it goes in its `<script>`. They're the same on every

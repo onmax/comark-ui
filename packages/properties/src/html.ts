@@ -1,3 +1,4 @@
+import { inlineScript } from "../../../shared/html.ts";
 import type { NodeHandler } from "comark";
 import { localizeDates } from "./client.ts";
 import { css } from "./styles.ts";
@@ -5,7 +6,9 @@ import { css } from "./styles.ts";
 export { default } from "./index.ts";
 export type { PropertiesMeta, PropertiesOptions } from "./index.ts";
 
-const inline = `(${localizeDates.toString()})(document.currentScript.previousElementSibling)`;
+const inline = inlineScript(
+  `(${localizeDates.toString()})(document.currentScript.previousElementSibling)`,
+);
 
 /**
  * The inline scripts this renderer writes, each exactly as it goes in its `<script>`: the one after every box with a

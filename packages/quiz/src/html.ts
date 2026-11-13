@@ -6,7 +6,7 @@ import { childrenOf, isElement } from "../../../shared/nodes.ts";
 import type { Kind } from "./read.ts";
 import { script } from "./script.ts";
 import { css } from "./styles.ts";
-import { attr } from "../../../shared/html.ts";
+import { attr, inlineScript } from "../../../shared/html.ts";
 
 export { default, DEFAULT_LABELS } from "./index.ts";
 export type { QuizLabels, QuizMeta, QuizOptions } from "./index.ts";
@@ -14,7 +14,7 @@ export type { QuizAnswer, QuizAnswerDetail, QuizReadyDetail, QuizState } from ".
 
 // `<` is escaped, so no label can close the script early.
 const config = JSON.stringify({ labels: DEFAULT_LABELS, icons }).replaceAll("<", "\\u003c");
-const inline = `(${script.toString()})(${config})`;
+const inline = inlineScript(`(${script.toString()})(${config})`);
 
 /**
  * The inline scripts this renderer writes, each exactly as it goes in its `<script>`. They're the same on every

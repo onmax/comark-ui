@@ -5,12 +5,12 @@ import { start } from "./client.ts";
 import type { IconData } from "comark-icon";
 import { iconHtml, iconStyles } from "comark-icon/html";
 import { css } from "./styles.ts";
-import { attr } from "../../../shared/html.ts";
+import { attr, inlineScript } from "../../../shared/html.ts";
 
 export { default } from "./index.ts";
 export type { PackageManager, TabsMeta, TabsOptions } from "./index.ts";
 
-const inline = `(${start.toString()})("", ${createCodeMotion.toString()})`;
+const inline = inlineScript(`(${start.toString()})("", ${createCodeMotion.toString()})`);
 
 /**
  * The inline scripts this renderer writes, each exactly as it goes in its `<script>`. They're the same on every

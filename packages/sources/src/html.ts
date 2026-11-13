@@ -2,12 +2,12 @@ import type { NodeHandler, State } from "comark";
 import { start } from "./client.ts";
 import { css } from "./styles.ts";
 import { rawText } from "../../../shared/text.ts";
-import { attr } from "../../../shared/html.ts";
+import { attr, inlineScript } from "../../../shared/html.ts";
 
 export { default } from "./index.ts";
 export type { SourcesAttributes, SourcesMeta } from "./index.ts";
 
-const inline = `(${start.toString()})("")`;
+const inline = inlineScript(`(${start.toString()})("")`);
 
 /**
  * The inline scripts this renderer writes, each exactly as it goes in its `<script>`. They're the same on every
