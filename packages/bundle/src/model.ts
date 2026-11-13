@@ -98,24 +98,11 @@ export type Change = {
   total: [number, number];
 };
 
-/**
- * Whether a package on one side only may still be on the other, hidden in code without a sourcemap that grew by at
- * least its size. Then nothing says it was added or removed. Growth per chunk, not the total: a `sw.js` both builds
- * ship without a map hides nothing, and one that shrank doesn't cancel a chunk that lost its map.
- */
+/** A missing package may be hidden in any unmapped code, regardless of compressed size or growth. */
 export function unsure(name: string, before: Loads, after: Loads): boolean {
-  const total = (sizes: { page: Size; lazy: Size }) => sizes.page.gzip + sizes.lazy.gzip;
-  const growth = (from: Loads, to: Loads) =>
-    [...to.unmapped].reduce(
-      (sum, [chunk, bytes]) => sum + Math.max(0, bytes - (from.unmapped.get(chunk) ?? 0)),
-      0,
-    );
-  const a = before.packages.get(name);
-  const b = after.packages.get(name);
-  // Compressed in another chunk, a package's gzip size shifts, so twice the growth is the bound, not the growth.
-  if (a && !b) return total(a) <= 2 * growth(before, after);
-  if (b && !a) return total(b) <= 2 * growth(after, before);
-  return false;
+  const a = before.packages.has(name);
+  const b = after.packages.has(name);
+  return (a && !b && after.unmapped.size > 0) || (b && !a && before.unmapped.size > 0);
 }
 
 // Below this, a package that only changed size is noise: a rebuild moves a few bytes around.

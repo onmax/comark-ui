@@ -56,20 +56,15 @@ describe("comark-bundle", () => {
     expect(text).toContain("9.7 kB +4.3 kB every page, was 5.4 kB before");
     // Said in words for screen readers, since the badge and the names under the bars say it on screen.
     expect(text).toContain(
-      "Every page up 4.3 kB (79.0%): lodash removed; echarts, zrender moved into every page; lodash-es added",
+      "Every page up 4.3 kB (79.0%): echarts, zrender moved into every page; lodash-es added",
     );
-    expect(html).toMatch(
-      /class="cbr-seg" data-kind="removed" style="width:[\d.]+%" title="lodash: /,
-    );
+    // Unmapped code on the new side leaves lodash's absence unknown.
+    expect(html).not.toContain('data-kind="removed"');
     expect(html).toMatch(
       /class="cbr-seg" data-kind="moved-in" style="width:[\d.]+%" title="echarts: /,
     );
     expect(html).toMatch(/<details class="cbr-more">\s*<summary>/);
     expect(text).toContain("What's in the bundle 5 packages · 5 chunks");
-    // A removed package keeps its old area in the treemap.
-    expect(html).toMatch(
-      /class="cbr-tile" data-kind="removed"[^>]*title="lodash: [\d.]+ kB, removed"/,
-    );
     expect(html.match(/<style data-comark-bundle>/g)).toHaveLength(1);
   });
 
@@ -185,13 +180,29 @@ describe("comark-bundle", () => {
       }
       files["main/charts-a.js"] = `${charts}\n//# sourceMappingURL=charts-a.js.map`;
       files["main/charts-a.js.map"] = mapOf("../node_modules/charts/index.js");
-      files["pr/charts-b.js"] = charts.slice(0, -40);
+      files["pr/charts-b.js"] = "export const chart=[1];";
       const html = await render(block(`before="${before}" after="${after}"`), memory(files));
       expect(words(html)).not.toMatch(/charts (removed|added)/);
+      expect(html).not.toMatch(/data-kind="(?:removed|added)"/);
     },
   );
 
-  it("still names a package added when both builds ship the same script without a sourcemap", async () => {
+  it.each([
+    ["main", "pr", "removed"],
+    ["pr", "main", "added"],
+  ])("confirms absence with complete maps (%s to %s)", async (before, after, kind) => {
+    const files = {
+      "main/entry.js": "export const chart=[1];",
+      "main/entry.js.map": mapOf("../node_modules/charts/index.js"),
+      "pr/entry.js": "export{};",
+      "pr/entry.js.map": mapOf("../src/main.ts"),
+    };
+    const html = await render(block(`before="${before}" after="${after}"`), memory(files));
+    expect(words(html)).toContain(`charts ${kind}`);
+    expect(html).toContain(`data-kind="${kind}"`);
+  });
+
+  it("keeps presence unknown even when an unmapped script has unchanged bytes", async () => {
     const worker = `self.v=${JSON.stringify("service worker ".repeat(300))};`;
     const files: Record<string, string> = {};
     for (const side of ["main", "pr"]) {
@@ -204,7 +215,7 @@ describe("comark-bundle", () => {
     files["pr/assets/entry.js.map"] = mapOf("../src/main.ts");
     files["pr/assets/zod.js"] = `export const z=${JSON.stringify("zod ".repeat(200))};`;
     files["pr/assets/zod.js.map"] = mapOf("../node_modules/zod/index.js");
-    expect(words(await render(block('before="main" after="pr"'), memory(files)))).toContain(
+    expect(words(await render(block('before="main" after="pr"'), memory(files)))).not.toContain(
       "zod added",
     );
   });
