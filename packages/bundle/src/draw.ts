@@ -1,5 +1,5 @@
 import type { ElementNode } from "comark";
-import { changes, type Change, type Loads } from "./model.ts";
+import { changes, unsure, type Change, type Loads } from "./model.ts";
 
 const counted = (n: number, one: string) => `${n} ${n === 1 ? one : `${one}s`}`;
 
@@ -213,15 +213,16 @@ function groupItems(after: Loads, before: Loads | undefined, page: boolean, pack
       if (!bytes) continue;
       const old = before?.packages.get(name);
       const was = pick(old);
-      const kind = !before
-        ? "same"
-        : !old
-          ? "added"
-          : !was
-            ? "moved-in"
-            : Math.abs(bytes - was) >= 1000
-              ? "changed"
-              : "same";
+      const kind =
+        !before || (!old && unsure(name, before, after))
+          ? "same"
+          : !old
+            ? "added"
+            : !was
+              ? "moved-in"
+              : Math.abs(bytes - was) >= 1000
+                ? "changed"
+                : "same";
       const note = {
         added: "added",
         "moved-in": "moved in",
@@ -230,18 +231,19 @@ function groupItems(after: Loads, before: Loads | undefined, page: boolean, pack
       }[kind];
       items.push({ name, bytes, kind, note });
     }
-    for (const [name, sizes] of before?.packages ?? []) {
-      const was = pick(sizes);
-      const now = after.packages.get(name);
-      if (!was || pick(now)) continue;
-      // A package that left keeps its old area, hatched, so the biggest change stays in the picture.
-      items.push({
-        name,
-        bytes: was,
-        kind: now ? "moved-out" : "removed",
-        note: now ? "moved out" : "removed",
-      });
-    }
+    if (before)
+      for (const [name, sizes] of before.packages) {
+        const was = pick(sizes);
+        const now = after.packages.get(name);
+        if (!was || pick(now) || unsure(name, before, after)) continue;
+        // A package that left keeps its old area, hatched, so the biggest change stays in the picture.
+        items.push({
+          name,
+          bytes: was,
+          kind: now ? "moved-out" : "removed",
+          note: now ? "moved out" : "removed",
+        });
+      }
   } else
     for (const file of after.files)
       if (file.page === page)
@@ -350,7 +352,16 @@ export function card(
       "details",
       { class: "cbr-more" },
       ["summary", {}, "What's in the bundle", ["span", { class: "cbr-count" }, holds]],
-      ["div", { class: "cbr-more-body" }, treemap(after, before, packages), muted(note)],
+      [
+        "div",
+        { class: "cbr-more-body" },
+        treemap(after, before, packages),
+        muted(
+          found.some((c) => c.kind === "removed" || c.kind === "moved-out")
+            ? `${note} Hatched tiles are what left, at their old size.`
+            : note,
+        ),
+      ],
     ],
   ];
 }

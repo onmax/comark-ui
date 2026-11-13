@@ -10,6 +10,8 @@ export type Loads = {
   files: { name: string; gzip: number; page: boolean }[];
   /** Whether Nuxt's default layout counts toward every page. */
   layout: boolean;
+  /** gzip bytes in chunks without a sourcemap, where any package could hide. */
+  unmapped: number;
 };
 
 const zero = (): Size & { chunks: number } => ({ raw: 0, gzip: 0, brotli: 0, chunks: 0 });
@@ -30,12 +32,18 @@ function closure(build: Build, from: string[], into = new Set<string>()): Set<st
 const LAYOUT =
   /\bdefault\s*:\s*[\w$]+\(\s*\(\)\s*=>\s*(?:[\w$]+\(\s*\(\)\s*=>\s*)?import\(\s*[`"']\.\/([^`"']+\.m?js)[`"']\s*\)/;
 
+// Only a Nuxt build has one: an app of its own can name a lazy file `layouts/default.vue` too.
 function layoutOf(build: Build, page: Set<string>): string | undefined {
+  const chunks = [...page].map((name) => build.chunks.get(name)!);
+  const nuxt = chunks.some(
+    (chunk) =>
+      chunk.code?.includes("__nuxt") ||
+      chunk.modules.some((path) => /(^|\/)node_modules\/nuxt\//.test(path)),
+  );
+  if (!nuxt) return undefined;
   for (const chunk of build.chunks.values())
     if (chunk.modules.some((path) => /(^|\/)layouts\/default\.vue$/.test(path)))
       return page.has(chunk.name) ? undefined : chunk.name;
-  const chunks = [...page].map((name) => build.chunks.get(name)!);
-  if (!chunks.some((chunk) => chunk.code?.includes("__nuxt"))) return undefined;
   for (const chunk of chunks) {
     const found = chunk.code?.match(LAYOUT)?.[1];
     if (!found) continue;
@@ -55,8 +63,10 @@ export function loads(build: Build): Loads {
     packages: new Map(),
     files: [],
     layout: !!layout,
+    unmapped: 0,
   };
   for (const chunk of build.chunks.values()) {
+    if (!chunk.modules.length) out.unmapped += chunk.gzip;
     const tier = page.has(chunk.name) ? out.page : out.lazy;
     tier.raw += chunk.raw;
     tier.gzip += chunk.gzip;
@@ -88,12 +98,26 @@ export type Change = {
   total: [number, number];
 };
 
+/**
+ * Whether a package on one side only may still be on the other, in chunks without a sourcemap at least its size. Then
+ * nothing says it was added or removed.
+ */
+export function unsure(name: string, before: Loads, after: Loads): boolean {
+  const total = (sizes: { page: Size; lazy: Size }) => sizes.page.gzip + sizes.lazy.gzip;
+  const a = before.packages.get(name);
+  const b = after.packages.get(name);
+  if (a && !b) return total(a) <= after.unmapped;
+  if (b && !a) return total(b) <= before.unmapped;
+  return false;
+}
+
 // Below this, a package that only changed size is noise: a rebuild moves a few bytes around.
 const NOISE = 100;
 
 export function changes(before: Loads, after: Loads): Change[] {
   const out: Change[] = [];
   for (const name of new Set([...before.packages.keys(), ...after.packages.keys()])) {
+    if (unsure(name, before, after)) continue;
     const a = before.packages.get(name);
     const b = after.packages.get(name);
     const page: [number, number] = [a?.page.gzip ?? 0, b?.page.gzip ?? 0];

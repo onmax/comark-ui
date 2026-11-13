@@ -25,12 +25,26 @@ const assetsOnly: BundleOptions = {
   list: (path) => readdir(root + path, { recursive: true }).catch(() => undefined),
 };
 
-// A build from files in memory, under `build/`.
+// Builds from files in memory, by their path under the root.
 const memory = (files: Record<string, string>): BundleOptions => ({
-  read: (path) => files[path.replace(/^build\//, "")],
-  list: (path) => (path === "build" ? Object.keys(files) : undefined),
+  read: (path) => files[path],
+  list: (path) => {
+    const names = Object.keys(files)
+      .filter((name) => name.startsWith(`${path}/`))
+      .map((name) => name.slice(path.length + 1));
+    return names.length ? names : undefined;
+  },
 });
-const one = (files: Record<string, string>) => render(block('src="build"'), memory(files));
+const one = (files: Record<string, string>) =>
+  render(
+    block('src="build"'),
+    memory(
+      Object.fromEntries(Object.entries(files).map(([name, code]) => [`build/${name}`, code])),
+    ),
+  );
+// A sourcemap that gives the whole one-line chunk to one source.
+const mapOf = (source: string) =>
+  JSON.stringify({ version: 3, sources: [source], names: [], mappings: "AAAA" });
 
 describe("comark-bundle", () => {
   it("compares two builds: the number, the bars, and the treemap behind a disclosure, with the styles once", async () => {
@@ -99,6 +113,32 @@ describe("comark-bundle", () => {
       }),
     );
     expect(text).toContain("every page counts the default layout");
+  });
+
+  it("leaves a lazy layout out of every page in an app that isn't Nuxt", async () => {
+    const text = words(
+      await one({
+        "entry.js": 'const Layout=()=>import("./default.js");',
+        "entry.js.map": mapOf("../src/main.ts"),
+        "default.js": "export default{};",
+        "default.js.map": mapOf("../src/layouts/default.vue"),
+      }),
+    );
+    expect(text).not.toContain("every page counts the default layout");
+  });
+
+  it("doesn't call a package removed when its chunk lost its sourcemap", async () => {
+    const charts = `export const chart=${JSON.stringify("chart ".repeat(400))};`;
+    const files: Record<string, string> = {};
+    for (const side of ["main", "pr"]) {
+      files[`${side}/entry.js`] = 'import"./charts.js";';
+      files[`${side}/entry.js.map`] = mapOf("../src/main.ts");
+      files[`${side}/charts.js`] = charts;
+    }
+    files["main/charts.js.map"] = mapOf("../node_modules/charts/index.js");
+    const html = await render(block('before="main" after="pr"'), memory(files));
+    expect(words(html)).not.toContain("charts removed");
+    expect(html).not.toContain('data-kind="removed"');
   });
 
   it("counts Nuxt's default layout toward every page, and shows chunks when the build has no sourcemaps", async () => {
