@@ -202,7 +202,7 @@ export default defineComarkPlugin<void, GitGraphMeta>(() => ({
     const issues: Issue[] = [];
     let blocks = 0;
     let fences = 0;
-    const walk = (nodes: Node[], start: number) => {
+    const walk = (nodes: Node[], start: number, parent?: string) => {
       for (let index = start; index < nodes.length; index++) {
         const node = nodes[index];
         if (!node || !isElement(node)) continue;
@@ -210,12 +210,18 @@ export default defineComarkPlugin<void, GitGraphMeta>(() => ({
           nodes[index] = block(node, ++blocks, data, issues);
           continue;
         }
-        if (node[0] === "pre" && text(node[1].language).toLowerCase() === "git-graph") {
+        // Diff reads its direct source fences at render time, after this hook.
+        if (
+          node[0] === "pre" &&
+          parent !== "diff" &&
+          !node[1].$?.html &&
+          text(node[1].language).toLowerCase() === "git-graph"
+        ) {
           nodes[index] = fence(node, ++fences, issues);
           continue;
         }
         // SAFETY: an element node is [tag, attributes, ...children], so its children start at index 2.
-        walk(node as Node[], 2);
+        walk(node as Node[], 2, node[0]);
       }
     };
     walk(tree.nodes, 0);

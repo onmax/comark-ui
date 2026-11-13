@@ -109,6 +109,17 @@ describe("comark-git-graph", () => {
     expect(html).toContain('<span class="cgg-count">4 branches · 6 commits</span>');
   });
 
+  it("preserves raw HTML pre elements and their fragment targets", async () => {
+    const markdown =
+      '<a href="#example">Example</a>\n\n<pre id="example" language="git-graph">* aaaaaaa Initial commit</pre>';
+    const html = await render(markdown);
+    expect(html).toContain('href="#example"');
+    expect(html).toContain('<pre id="example" language="git-graph">');
+    expect(html).toContain("* aaaaaaa Initial commit");
+    expect(html).not.toContain('<figure class="cgg"');
+    expect((await parse(markdown)).meta.issues ?? []).toEqual([]);
+  });
+
   it("keeps a ```git-graph fence with no commits as code, and reports it", async () => {
     const markdown = "```git-graph\nnot a log\n```";
     expect(flat(await render(markdown))).toContain("<pre");
