@@ -15,7 +15,12 @@ import type { EmbedOptions } from "comark-embed";
 import figure, { type FigureOptions } from "comark-figure";
 import type { FileTreeOptions } from "comark-file-tree";
 import footnotes, { type FootnotesOptions } from "comark-footnotes";
-import { HTML_TAGS, type CalloutsOptions, type ReferencesOptions } from "comark-github";
+import {
+  CALLOUT_BLOCKS,
+  HTML_TAGS,
+  type CalloutsOptions,
+  type ReferencesOptions,
+} from "comark-github";
 import { createIcons, type IconOptions, type Icons } from "comark-icon";
 import include, { type IncludeOptions } from "comark-include";
 import keys, { type KeysOptions } from "comark-keys";
@@ -371,6 +376,12 @@ export function preset<C>(renderer: Renderer<C>, options: PresetOptions = {}): P
     ...(on(options.github) && on(optionsOf(options.github)?.html) ? HTML_TAGS : []),
     ...TAGS.flatMap(([key, list]) => (enabled(key) ? list : [])),
   ]);
-  const blocks = BLOCKS.flatMap(([key, list]) => (enabled(key) ? list : []));
+  const calloutOptions = optionsOf(options.github)?.callouts;
+  const calloutBlocks =
+    on(options.github) && on(calloutOptions) && on(optionsOf(calloutOptions)?.blocks);
+  const blocks = [
+    ...BLOCKS.flatMap(([key, list]) => (enabled(key) ? list : [])),
+    ...(calloutBlocks ? CALLOUT_BLOCKS : []),
+  ];
   return { plugins, components, tags: [...tags], blocks };
 }

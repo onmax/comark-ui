@@ -1,7 +1,7 @@
 ---
 title: GitHub
 description: GitHub's alerts, references, and raw HTML, rendered as on GitHub.
-keywords: callout, alert, admonition, note, tip, important, warning, caution, GFM, GitHub Flavored Markdown, issue links, mentions, raw HTML, sanitize, blockquote
+keywords: callout, alert, admonition, ::note, ::tip, ::callout, note, tip, important, warning, caution, GFM, GitHub Flavored Markdown, issue links, mentions, raw HTML, sanitize, blockquote
 tagline: GitHub's alerts, references, and raw HTML, rendered the way GitHub renders them.
 group: Review blocks
 icon: github
@@ -26,6 +26,18 @@ credits: 'Syntax from <a href="https://docs.github.com/en/get-started/writing-on
 
 > [!CAUTION]
 > Deleting a folder deletes every document in it.
+```
+:::
+
+:::example{label="Blocks"}
+```md
+::note
+Drafts save every few seconds, so closing the tab keeps your work.
+::
+
+::warning{title="Breaking change"}
+Changing the slug breaks links people already shared.
+::
 ```
 :::
 
@@ -74,6 +86,7 @@ The source has a <code>&lt;script&gt;</code> after this sentence. GitHub drops i
 
 - Three plugins that each work alone, in any order: `callouts()`, `references()`, and `html()`.
 - `callouts()` draws GitHub's five alerts with an icon, a color, and a title. Comark's built-in [alert plugin](https://comark.dev/plugins/defaults/alert) only tags the quote with its type.
+- `::note`, `::tip`, `::important`, `::warning`, `::caution`, and `::callout{type}`, as Nuxt UI and Docus write them, draw the same callouts.
 - `references()` links `@user` to the profile and `#123` or `owner/name#123` to the issue or pull request, as GitHub does in comments.
 - `html()` keeps the raw HTML GitHub allows and drops the rest, scripts included. Without it, Comark renders all raw HTML as written.
 - References and the HTML GitHub allows render as plain elements, so your page's styles apply to them.
@@ -125,6 +138,35 @@ Use text after the marker, on its line, to replace the callout's title.
 > Keep the existing endpoint. Clients pin its response shape.
 ```
 ::
+
+#### Blocks
+
+Use `::note`, `::tip`, `::important`, `::warning`, or `::caution` to draw the same callout as a block. `::callout` takes its type from the `type` prop, and is a note without one.
+
+::example
+```md
+::tip
+Press ⌘K to search every document.
+::
+
+::callout{type="caution"}
+Deleting a folder deletes every document in it.
+::
+```
+::
+
+Use the `title` prop, or a `#title` slot, to replace the block's title.
+
+::example
+```md
+::important{title="Decision"}
+Keep the existing endpoint. Clients pin its response shape.
+::
+```
+::
+
+> [!NOTE]
+> A `::callout` whose `type` isn't one of the five renders as a note, and `meta.issues` names it.
 
 ### References
 
@@ -203,6 +245,7 @@ Options go under `github` in `comarkUi()`, keyed by plugin, such as `comarkUi({ 
 | Option | Default | Description |
 | --- | --- | --- |
 | `titles` | GitHub's: Note, Tip, Important, Warning, Caution | Titles for callouts that don't set their own, by type, such as `{ note: "Nota" }`. |
+| `blocks` | `true` | Reads `::note`, `::tip`, `::important`, `::warning`, `::caution`, and `::callout{type}` as callouts. `false` leaves those blocks to your own components. `CALLOUT_BLOCKS` exports their names, for a linter that reports unknown components. |
 
 #### references()
 
@@ -219,6 +262,7 @@ Options go under `github` in `comarkUi()`, keyed by plugin, such as `comarkUi({ 
 The plugins add these problems to `meta.issues`, as [Validation](/guide/validation) describes:
 
 - A quote marked with a type other than GitHub's five, such as `[!INFO]`. It stays a plain quote.
+- A `::callout` whose `type` isn't one of the five, such as `type="info"`. It renders as a note.
 - A `repo` that isn't `owner/name`. Until it's fixed, `#123` stays text.
 
 Each has its own rule in [Doctor](/doctor).
