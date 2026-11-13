@@ -40,12 +40,27 @@ import * as time from "comark-time/html";
 import * as zoom from "comark-zoom/html";
 import { mermaidBar, mermaidCss } from "./client.ts";
 import { type Preset, type PresetOptions, preset } from "./index.ts";
+import { issuesCss, issuesInner, issuesOf, type IssuesOptions } from "./issues.ts";
 import { start } from "./script.ts";
 import { typesetCss } from "./typeset-css.ts";
 import { attr } from "../../../shared/html.ts";
 
 export { commentsCss, criticCss } from "./index.ts";
 export type { PresetOptions } from "./index.ts";
+export { issuesCss, issuesOf, type IssuesOptions } from "./issues.ts";
+
+/**
+ * The problems a parse found in a document, from `meta.issues`, as a box for its author: a `<details open>` with a
+ * title, a hint, and one item per problem, with its styles. Empty when there are none. Put it above the document.
+ */
+export function renderIssues(
+  meta: { issues?: unknown } | undefined,
+  options?: IssuesOptions,
+): string {
+  const issues = issuesOf(meta);
+  if (!issues.length) return "";
+  return `<style data-comark-issues>${issuesCss}</style><details class="cis" data-comark-frame open>${issuesInner(issues, options)}</details>`;
+}
 
 // Each render gets a fresh `state.context`, so a document carries the styles and the script once.
 const styled = new WeakSet<object>();
