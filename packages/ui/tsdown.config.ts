@@ -3,6 +3,7 @@ import { createRequire } from "node:module";
 import { parseMarkdown } from "comark";
 import { definePackage } from "../../tsdown.shared.ts";
 import { mermaidCss } from "./src/client.ts";
+import { issuesCss } from "./src/issues.ts";
 import type { Skill } from "./src/skills.ts";
 import { typesetStylesheet } from "./src/typeset-css.ts";
 
@@ -54,8 +55,9 @@ const { version, dependencies } = manifest as {
   dependencies: Record<string, string>;
 };
 
-// `comark-ui/style.css` is every package's own `style.css` and the Mermaid wrapper's styles, the rules the components
-// add on mount, in one file for a page to link or import. The build script refreshes dependencies before loading it.
+// `comark-ui/style.css` is every package's own `style.css`, the Mermaid wrapper's styles, and the issues box's: the rules
+// the components add on mount, in one file for a page to link or import. The build script refreshes dependencies before
+// loading it.
 const require = createRequire(import.meta.url);
 const stylesheet = [
   ...Object.entries(dependencies)
@@ -68,6 +70,7 @@ const stylesheet = [
         : [];
     }),
   mermaidCss,
+  issuesCss,
 ].join("\n");
 
 export default definePackage({
