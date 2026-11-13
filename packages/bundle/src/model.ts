@@ -10,8 +10,8 @@ export type Loads = {
   files: { name: string; gzip: number; page: boolean }[];
   /** Whether Nuxt's default layout counts toward every page. */
   layout: boolean;
-  /** gzip bytes in chunks without a sourcemap, where any package could hide. */
-  unmapped: number;
+  /** Each chunk without a sourcemap, where any package could hide, by its name and gzip bytes. */
+  unmapped: Map<string, number>;
 };
 
 const zero = (): Size & { chunks: number } => ({ raw: 0, gzip: 0, brotli: 0, chunks: 0 });
@@ -63,10 +63,10 @@ export function loads(build: Build): Loads {
     packages: new Map(),
     files: [],
     layout: !!layout,
-    unmapped: 0,
+    unmapped: new Map(),
   };
   for (const chunk of build.chunks.values()) {
-    if (!chunk.modules.length) out.unmapped += chunk.gzip;
+    if (!chunk.modules.length) out.unmapped.set(chunk.name, chunk.gzip);
     const tier = page.has(chunk.name) ? out.page : out.lazy;
     tier.raw += chunk.raw;
     tier.gzip += chunk.gzip;
@@ -100,15 +100,20 @@ export type Change = {
 
 /**
  * Whether a package on one side only may still be on the other, hidden in code without a sourcemap that grew by at
- * least its size. Then nothing says it was added or removed. Growth, not the total: a `sw.js` both builds ship without
- * a map hides nothing.
+ * least its size. Then nothing says it was added or removed. Growth per chunk, not the total: a `sw.js` both builds
+ * ship without a map hides nothing, and one that shrank doesn't cancel a chunk that lost its map.
  */
 export function unsure(name: string, before: Loads, after: Loads): boolean {
   const total = (sizes: { page: Size; lazy: Size }) => sizes.page.gzip + sizes.lazy.gzip;
+  const growth = (from: Loads, to: Loads) =>
+    [...to.unmapped].reduce(
+      (sum, [chunk, bytes]) => sum + Math.max(0, bytes - (from.unmapped.get(chunk) ?? 0)),
+      0,
+    );
   const a = before.packages.get(name);
   const b = after.packages.get(name);
-  if (a && !b) return total(a) <= after.unmapped - before.unmapped;
-  if (b && !a) return total(b) <= before.unmapped - after.unmapped;
+  if (a && !b) return total(a) <= growth(before, after);
+  if (b && !a) return total(b) <= growth(after, before);
   return false;
 }
 

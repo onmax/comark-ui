@@ -146,7 +146,10 @@ describe("comark-bundle", () => {
     expect(text).not.toContain("every page counts the default layout");
   });
 
-  it("doesn't call a package removed when its chunk lost its sourcemap", async () => {
+  it.each([
+    ["", ""],
+    ["while another unmapped script shrinks", "self.v=1;"],
+  ])("doesn't call a package removed when its chunk lost its sourcemap %s", async (_, smaller) => {
     const charts = `export const chart=${JSON.stringify("chart ".repeat(400))};`;
     const files: Record<string, string> = {};
     for (const side of ["main", "pr"]) {
@@ -155,6 +158,11 @@ describe("comark-bundle", () => {
       files[`${side}/charts.js`] = charts;
     }
     files["main/charts.js.map"] = mapOf("../node_modules/charts/index.js");
+    if (smaller) {
+      files["main/sw.js"] =
+        `self.v=[${Array.from({ length: 500 }, (_, i) => (i * 7919) % 10007)}];`;
+      files["pr/sw.js"] = smaller;
+    }
     const html = await render(block('before="main" after="pr"'), memory(files));
     expect(words(html)).not.toContain("charts removed");
     expect(html).not.toContain('data-kind="removed"');
