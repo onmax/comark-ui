@@ -86,9 +86,12 @@ textarea {
 .ProseMirror {
   outline: none;
 }
+.editor {
+  position: relative;
+}
 .ProseMirror pre {
   background: var(--code);
-  padding: 12px;
+  padding: 36px 12px 12px;
   border-radius: 6px;
 }
 .ProseMirror blockquote {
