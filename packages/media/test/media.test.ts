@@ -71,6 +71,8 @@ describe("comark-media", () => {
     expect(html).toContain(
       '<span class="cm-choices" role="radiogroup" aria-label="Loop"><label><input type="radio" data-option="loop" value="off">Off</label><label><input type="radio" data-option="loop" value="on">On</label></span>',
     );
+    expect(html.match(/class="cm-copy-link"/g)).toHaveLength(3);
+    expect(html.match(/class="cm-copy-frame"/g)).toHaveLength(1);
     expect(html.match(/<script>/g)).toHaveLength(1);
   });
 

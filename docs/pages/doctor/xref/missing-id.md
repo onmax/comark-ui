@@ -2,7 +2,7 @@
 
 ::incorrect
 ```md
-![Three ducks on the pond](ducks.png){#fig-ducks}
+![Three ducks on the pond](/pond.svg){#fig-ducks}
 
 As :ref{fig-ducks} shows, the ducks stay near the reeds.
 ```
@@ -10,7 +10,7 @@ As :ref{fig-ducks} shows, the ducks stay near the reeds.
 
 ::correct
 ```md
-![Three ducks on the pond](ducks.png){#fig-ducks}
+![Three ducks on the pond](/pond.svg){#fig-ducks}
 
 As :ref{#fig-ducks} shows, the ducks stay near the reeds.
 ```

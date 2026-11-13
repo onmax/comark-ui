@@ -46,7 +46,7 @@ The playground opens the editor right away, so it stays slow.
 
 :::example{label="Target line"}
 ```md
-::chart{labels title="Minutes to the first review comment"}
+::chart{title="Minutes to the first review comment"}
 | team | minutes |
 | --- | --: |
 | frontend | 38 |

@@ -2,14 +2,14 @@ Only an image alone in its paragraph becomes a numbered figure, since a caption 
 
 ::incorrect
 ```md
-The pigeons land here ![The roof after the deploy](roof.png){#fig-roof} every morning.
+The ducks swim here ![The duck pond](/pond.svg){#fig-pond} every morning.
 ```
 ::
 
 ::correct
 ```md
-The pigeons land on the roof every morning.
+The ducks swim in the pond every morning.
 
-![The roof after the deploy](roof.png){#fig-roof}
+![The duck pond](/pond.svg){#fig-pond}
 ```
 ::

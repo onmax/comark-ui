@@ -32,11 +32,11 @@ describe("comark-charts with a Vega-Lite spec", () => {
     expect(await issues(markdown)).toEqual([]);
     const html = await render(markdown);
     expect(html).toContain(
-      '<figure class="cch" data-comark-frame data-type="vega-lite"><figcaption>Latency per request</figcaption><div class="cch-plot"><svg role="img" aria-label="Latency per request"',
+      '<figure class="cch" data-type="vega-lite"><figcaption>Latency per request</figcaption><div class="cch-plot"><svg role="img" aria-label="Latency per request"',
     );
     expect(html).toContain(">/search</text>");
     // In the house inks, which the stylesheet swaps for the page's.
-    expect(html).toContain('fill="#3b82f6"');
+    expect(html).toContain('fill="#4d97de"');
     expect(html).toContain('<details class="cch-data"><summary>Data</summary><table>');
     expect(html).toContain("<td>/login</td>");
     expect(html).not.toContain("<pre");

@@ -8,7 +8,7 @@ license: MIT
 
 The reader scans a report before reading it. They want the answer, the decisions they have to make, and the numbers behind both, and they check the rest only when they doubt something. So the page has a fixed shape: the answer on top, one picture per section, short table cells, and detail folded underneath.
 
-For findings about something that already exists, such as a code review or an audit, use `review-document`. For how something works, use `visual-explanation`. This skill shapes a report you already have the material for; gathering the material is the research itself.
+For findings about something that already exists, such as a code review or an audit, use `review-document`. For how something works, use `visual-explanation`. For a dashboard the reader explores with filters, use Drop's `data-explorer` skill. This skill shapes a report you already have the material for; gathering the material is the research itself.
 
 ## 1. Write the answer and the decisions
 
@@ -29,8 +29,11 @@ A section opens with one sentence that says what to look at, then its picture. A
 | The section answers | Picture |
 | --- | --- |
 | Which items are worth it, by two scores and a size | Bubble chart: `::chart` with a `vega-lite` spec |
-| How big each item is, or what each blocker would unlock | `::chart{type="bar" horizontal labels}` |
+| The headline figures, before any section | `::stats{tiles}` with two columns: name, value |
+| How big each item is, or what each blocker would unlock | `::chart{type="bar" horizontal}` |
 | How each item's size splits into parts | `::chart{type="stacked" horizontal}` |
+| How two groupings cross, such as customer by type, or a score per agent and section | `::chart{type="heatmap"}`, with `better="higher"` for scores |
+| A trend, or a measure against cost across orders of magnitude | `::chart{type="line"}`, with `log` or `log="x"` and `unit="$"` |
 | In what order, and what has to land first | `mermaid` flowchart, blockers as `{{hexagons}}` |
 | How a mechanism moves between states | `mermaid` `stateDiagram-v2` |
 | A number before and after | `::stats` or `:delta` |
@@ -40,7 +43,7 @@ A section opens with one sentence that says what to look at, then its picture. A
 | What you left out | Bar chart of the largest, then `::accordion` grouped by reason |
 | How you checked | `> [!CAUTION]` for what you didn't verify, kept open; sources in `::details` |
 
-A table cell holds a value, a badge, or a few words. The reasoning behind a cell goes in that item's accordion. A column whose cells are all the same says one thing, so say it in the section's sentence and drop the column. Two charts that compare the same unit share one scale, so draw them as one chart, or fix the axis domain in both.
+Give every chart a `description` that says what to see in it, and a `unit` when its numbers have one, so its labels read `$22.2k` rather than `22200`. A table cell holds a value, a badge, or a few words. The reasoning behind a cell goes in that item's accordion. A column whose cells are all the same says one thing, so say it in the section's sentence and drop the column. Two charts that compare the same unit share one scale, so draw them as one chart, or fix the axis domain in both.
 
 [references/blocks.md](references/blocks.md) has the syntax for each, with the gotchas the renderer doesn't report. The `comark-ui` skill documents every block in full.
 

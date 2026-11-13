@@ -61,6 +61,9 @@ export default defineNuxtConfig({
     },
     // Files live in the repository (server/content.ts), so there is no R2 bucket.
     blob: false,
+    // Workers KV (the comark-ui-kv namespace, bound as KV). Content keeps the GitHub answers that never change there, so
+    // a new isolate reads the Console overview with 3 GitHub requests instead of 19.
+    kv: true,
     auth: true,
     // A Durable Object holds each page's room: who else is on it and where their cursor is, for comments and the editor.
     realtime: { authority: "cloudflare" },

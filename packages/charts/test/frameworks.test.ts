@@ -25,7 +25,7 @@ const normalize = (html: string) =>
     .replace(/>\s+</g, "><")
     .trim();
 
-const markdown = `::chart{title="Bundle size"}
+const markdown = `::chart{title="Bundle size" description="Annotate is twice zoom."}
 | package | size (kB) |
 | --- | --: |
 | annotate | 41.2 |
@@ -37,7 +37,7 @@ describe("comark-charts renderers", () => {
     const value = await parseMarkdown(markdown, { plugins: [charts()] });
     const html = normalize(await renderHtmlFromDocument(value, { components: htmlComponents }));
     expect(html).toContain(
-      '<figure class="cch" data-comark-frame data-type="bar"><figcaption>Bundle size</figcaption><div class="cch-plot"><svg role="img" aria-label="Bundle size"',
+      '<figure class="cch" data-type="bar"><figcaption>Bundle size</figcaption><p class="cch-description">Annotate is twice zoom.</p><div class="cch-plot"><svg role="img" aria-label="Bundle size"',
     );
     const vue = normalize(
       await renderVue(
@@ -51,7 +51,7 @@ describe("comark-charts renderers", () => {
       const svg = /<svg[^]*<\/svg>/.exec(output)?.[0];
       expect(svg).toBe(/<svg[^]*<\/svg>/.exec(html)?.[0]);
       expect(output).toContain(
-        '<figure class="cch" data-comark-frame data-type="bar"><figcaption>Bundle size</figcaption>',
+        '<figure class="cch" data-type="bar"><figcaption>Bundle size</figcaption><p class="cch-description">Annotate is twice zoom.</p>',
       );
       expect(output).toContain('<details class="cch-data"><summary>Data</summary>');
       expect(output).toContain("<td>annotate</td>");

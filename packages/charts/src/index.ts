@@ -6,7 +6,7 @@ import type { Issue } from "./read.ts";
 import { readChart } from "./read.ts";
 import { attr } from "../../../shared/html.ts";
 import { childrenOf, isElement } from "../../../shared/nodes.ts";
-import { errorText, hash } from "../../../shared/text.ts";
+import { errorText, hash, text } from "../../../shared/text.ts";
 
 export type { Chart, ChartType, FlowChart, SpecChart, XKind } from "./read.ts";
 
@@ -26,6 +26,8 @@ export interface ChartsOptions {
 export interface DrawnChart {
   type: string;
   title: string;
+  /** What to read in the chart, printed under its title, from `description`. */
+  description?: string;
   /** The chart's accessible name: its title, or what it draws. */
   label: string;
   svg: string;
@@ -112,9 +114,11 @@ export default /* @__PURE__ */ defineComarkPlugin<ChartsOptions | void, ChartsMe
             const box = drawn.boxes.get(mark.n);
             return box ? [{ ...mark, ...box }] : [];
           });
+      const description = text(node[1].description);
       const attrs: DrawnChart = {
         type: chart.type,
         title: chart.title,
+        ...(description && { description }),
         label,
         svg: drawn.svg.replace("<svg", `<svg role="img" aria-label="${attr(label)}"`),
         ...(marks.length && { marks }),

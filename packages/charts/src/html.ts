@@ -24,7 +24,7 @@ const styled = new WeakSet<object>();
 const chart: NodeHandler = async (node, state) => {
   const [, attrs, ...children] = node;
   // SAFETY: the parse plugin writes a DrawnChart on every chart it drew, and leaves no `svg` on the others.
-  const { type, title, label, svg, marks } = attrs as Partial<DrawnChart>;
+  const { type, title, description, label, svg, marks } = attrs as Partial<DrawnChart>;
   if (!svg) return state.flow(["div", {}, ...children], state);
   // The styles come inline before the script, so the script has nothing to add.
   const styles = styled.has(state.context)
@@ -32,14 +32,16 @@ const chart: NodeHandler = async (node, state) => {
     : `<style data-comark-charts>${css}</style><script>(${start.toString()})("")</script>`;
   styled.add(state.context);
   const data = (await Promise.all(children.map((child) => state.one(child, state)))).join("");
-  const caption = title ? `<figcaption>${escapeHtml(title)}</figcaption>` : "";
+  const caption =
+    (title ? `<figcaption>${escapeHtml(title)}</figcaption>` : "") +
+    (description ? `<p class="cch-description">${escapeHtml(description)}</p>` : "");
   const [, width, height] = /viewBox="0 0 ([\d.]+) ([\d.]+)"/.exec(svg) ?? [];
   const aspect = width && height ? Number(height) / Number(width) : undefined;
   const plot = marks?.length
     ? `<div class="cch-plot cch-marked">${await annotateHtml(svg, marks, label ?? "", state, ".cch-plot", aspect, 0)}</div>`
     : `<div class="cch-plot">${svg}</div>`;
   return (
-    `${styles}<figure class="cch" data-comark-frame data-type="${type}">${caption}${plot}<div class="cch-bar">${bar()}</div>` +
+    `${styles}<figure class="cch" data-type="${type}">${caption}${plot}<div class="cch-bar">${bar()}</div>` +
     `<details class="cch-data"><summary>Data</summary>${data}</details></figure>`
   );
 };
