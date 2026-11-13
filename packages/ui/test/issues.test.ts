@@ -13,7 +13,7 @@ describe("renderIssues", () => {
     const { meta } = await parse("> [!INFO]\n> Ducks.\n\n::question\nWhy?\n::");
     const box = renderIssues(meta);
     expect(box).toMatch(/^<style data-comark-issues>@layer comark\{/);
-    expect(box).toContain('<details class="cis" open><summary>');
+    expect(box).toContain('<details class="cis" data-comark-frame open><summary>');
     expect(box).toContain(`<span class="cis-title">This document has 3 problems</span>`);
     expect(box).toContain('<p class="cis-hint">Fix them in the Markdown.</p>');
     // Backticks read as code, and a counted block's number as an ordinal.
@@ -38,6 +38,20 @@ describe("renderIssues", () => {
     expect(box).not.toContain(`<p class="cis-hint">`);
     expect(box).toContain("<li>Broken &lt;b&gt;tag&lt;/b&gt;</li>");
     expect(renderIssues({ issues: ["One"] })).toContain("This document has a problem");
+  });
+
+  it("preserves literal entities in issues and host labels in both renderers", async () => {
+    const meta = { issues: ["File `a&amp;b.ts` contains &lt;div&gt; and &#65;."] };
+    const options = { title: "Check &amp; fix", hint: "Write &lt;div&gt; literally" };
+    const markup = renderIssues(meta, options).replace(/<style[^>]*>.*?<\/style>/, "");
+    expect(markup).toContain("<code>a&amp;amp;b.ts</code>");
+    expect(markup).toContain("contains &amp;lt;div&amp;gt; and &amp;#65;.");
+    expect(markup).toContain('class="cis-title">Check &amp;amp; fix</span>');
+    expect(markup).toContain('class="cis-hint">Write &amp;lt;div&amp;gt; literally</p>');
+    const vue = await renderToString(
+      createSSRApp({ render: () => h(ComarkIssues, { meta, ...options }) }),
+    );
+    expect(vue.replace(' open=""', " open")).toBe(markup);
   });
 
   it("draws the same box in Vue", async () => {

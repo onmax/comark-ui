@@ -58,7 +58,7 @@ export function renderIssues(
 ): string {
   const issues = issuesOf(meta);
   if (!issues.length) return "";
-  return `<style data-comark-issues>${issuesCss}</style><details class="cis" open>${issuesInner(issues, options)}</details>`;
+  return `<style data-comark-issues>${issuesCss}</style><details class="cis" data-comark-frame open>${issuesInner(issues, options)}</details>`;
 }
 
 // Each render gets a fresh `state.context`, so a document carries the styles and the script once.

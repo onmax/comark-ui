@@ -48,12 +48,15 @@ const FOLD =
 const say = (value: IssuesOptions["title"], count: number) =>
   value instanceof Function ? value(count) : value;
 
+// Metadata and host labels are plain text, including any literal character references.
+const escapeText = (value: string) => escapeHtml(value.replace(/&/g, "&amp;"));
+
 /**
  * Plugins quote Markdown in backticks, which reads as code here. "`::question` 2 has no id" counts blocks of a kind, so
  * the number gets a `#` to read as an ordinal rather than part of the sentence.
  */
 const item = (issue: string) =>
-  `<li>${escapeHtml(issue)
+  `<li>${escapeText(issue)
     .replace(/`([^`]+)`/g, "<code>$1</code>")
     .replace(/^(<code>::[\w-]+<\/code>) (\d+) /, "$1 #$2 ")}</li>`;
 
@@ -65,8 +68,8 @@ export function issuesInner(issues: string[], options: IssuesOptions = {}): stri
     (count === 1 ? "This document has a problem" : `This document has ${count} problems`);
   const hint = say(options.hint, count) ?? `Fix ${count === 1 ? "it" : "them"} in the Markdown.`;
   return (
-    `<summary>${ICON}<span class="cis-title">${escapeHtml(title)}</span>${FOLD}</summary>` +
-    (hint ? `<p class="cis-hint">${escapeHtml(hint)}</p>` : "") +
+    `<summary>${ICON}<span class="cis-title">${escapeText(title)}</span>${FOLD}</summary>` +
+    (hint ? `<p class="cis-hint">${escapeText(hint)}</p>` : "") +
     `<ul class="cis-list">${issues.map(item).join("")}</ul>`
   );
 }

@@ -70,7 +70,7 @@ export const ComarkIssues = defineComponent({
       const issues = issuesOf(props.meta);
       if (!issues.length) return null;
       const inner = issuesInner(issues, { title: props.title, hint: props.hint });
-      return h("details", { class: "cis", open: true, innerHTML: inner });
+      return h("details", { class: "cis", "data-comark-frame": "", open: true, innerHTML: inner });
     };
   },
 });
