@@ -2493,6 +2493,9 @@ importers:
       react-dom:
         specifier: 'catalog:'
         version: 19.3.1(react@19.3.1)
+      shiki:
+        specifier: 'catalog:'
+        version: 4.5.0
       svelte:
         specifier: 'catalog:'
         version: 5.57.2(@typescript-eslint/types@8.71.1)

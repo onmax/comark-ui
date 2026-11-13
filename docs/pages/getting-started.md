@@ -194,7 +194,31 @@ If you use Comark's built-in `mermaid` plugin instead, pass `mermaid: false`, si
 
 ## Code highlighting
 
-comark-ui highlights code only with a Shiki you pass, so the preset bundles no grammars or themes. `highlighter` gets each fence's language and returns your Shiki, so it can load the grammar first, or `undefined` to leave the block plain. A language Shiki doesn't know stays plain too. comark-code reads the colored lines after, so line markers and numbers still work:
+comark-ui highlights code only with a Shiki you pass, so the preset bundles no grammars or themes. `createLazyHighlighter()` from `comark-ui/shiki` builds one: give it the grammars a document may use and the themes, each as a dynamic import, and pass the result as `shiki`. Install `shiki` beside comark-ui:
+
+```ts
+import { createLazyHighlighter } from "comark-ui/shiki";
+
+comarkUi({
+  shiki: createLazyHighlighter({
+    languages: {
+      typescript: () => import("@shikijs/langs/typescript"),
+      bash: () => import("@shikijs/langs/bash"),
+    },
+    aliases: { ts: "typescript", sh: "bash", zsh: "bash" },
+    themes: {
+      light: () => import("@shikijs/themes/github-light"),
+      dark: () => import("@shikijs/themes/github-dark"),
+    },
+  }),
+});
+```
+
+Each grammar loads the first time a fence asks for it, once however many documents ask at the same time, so a bundler splits the ones a page never uses into chunks that never load. The themes load with the first grammar. A fence in a language you didn't list stays plain and loads nothing. A grammar that fails to load leaves its block plain, and loads again the next time a fence asks. Shiki names a grammar only once it loads, so list in `aliases` every other name your fences use for it, such as `ts` for `typescript`.
+
+The result also has `language(info)`, which gives the name in `languages` that a fence's info string or alias stands for, and `languages`, every name you listed.
+
+To pass your own Shiki instead, `highlighter` gets each fence's language and returns your Shiki, so it can load the grammar first, or `undefined` to leave the block plain. A language Shiki doesn't know stays plain too. comark-code reads the colored lines after, so line markers and numbers still work:
 
 ```ts
 import { createHighlighterCore } from "shiki/core";
@@ -213,7 +237,7 @@ comarkUi({
 });
 ```
 
-The JavaScript regex engine needs no WebAssembly, so it runs on Workers. A site that renders documents other people write can also pass `maxBlocks` and `maxSource`, the characters of code over the whole document. A block past either shows without colors, and `meta.issues` says which one and why. Limits are checked before calling `highlighter`, so rejected blocks load no grammars, even to check language support. Unsupported languages within the remaining budget stay plain and use no budget; after an oversized block, a later, shorter block can still fit.
+Both use the JavaScript regex engine, which needs no WebAssembly, so they run on Workers and in browsers. A site that renders documents other people write can also pass `maxBlocks` and `maxSource`, the characters of code over the whole document. Spread a lazy highlighter to add them, as in `shiki: { ...highlighter, maxSource: 200_000 }`. A block past either shows without colors, and `meta.issues` says which one and why. Limits are checked before calling `highlighter`, so rejected blocks load no grammars, even to check language support. Unsupported languages within the remaining budget stay plain and use no budget; after an oversized block, a later, shorter block can still fit.
 
 ## One block alone
 
