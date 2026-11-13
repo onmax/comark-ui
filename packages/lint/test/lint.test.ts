@@ -139,6 +139,15 @@ describe("comark/unknown-component", () => {
     expect(await lint(markdown, await resolveConfig())).toEqual([]);
   });
 
+  it("knows the callout blocks of an installed comark-github, and places a `::callout` type it doesn't know", async () => {
+    const markdown =
+      '::note\nA.\n::\n\n::callout{type="tip"}\nB.\n::\n\n::callout{type="info"}\nC.\n::\n';
+    const found = await lint(markdown, await resolveConfig());
+    expect(found.map(({ rule, line }) => [rule, line])).toEqual([
+      ["comark/github/unknown-callout-type", 9],
+    ]);
+  });
+
   it("knows the embeds of an installed comark-embed", async () => {
     const markdown = `::embed{url="https://www.youtube.com/watch?v=KCrXgy8qtjM" title="Vite in 100 Seconds"}\n::\n`;
     expect(await lint(markdown, await resolveConfig())).toEqual([]);
