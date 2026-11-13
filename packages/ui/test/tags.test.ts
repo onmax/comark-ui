@@ -86,6 +86,7 @@ describe("tags", () => {
         table: false,
         tests: false,
         gitGraph: false,
+        bundle: false,
       };
       expect(html(isolated).tags).not.toContain("div");
       const { plugins, components, tags } = html({ ...isolated, [key]: true });

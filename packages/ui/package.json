@@ -61,6 +61,7 @@
   "dependencies": {
     "comark-annotate": "workspace:^",
     "comark-badge": "workspace:^",
+    "comark-bundle": "workspace:^",
     "comark-cards": "workspace:^",
     "comark-carousel": "workspace:^",
     "comark-cast": "workspace:^",

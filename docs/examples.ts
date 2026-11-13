@@ -5,6 +5,7 @@ import { registerSource, splitSource, useSource, glob } from "@vite-hub/source";
 import { parseMarkdown } from "comark";
 import { textContent } from "comark/utils";
 import { isElement } from "../shared/nodes.ts";
+import { playable } from "./play-link.ts";
 
 export interface Example {
   id: string;
@@ -15,7 +16,7 @@ export interface Example {
   label: string;
   /** The Markdown in the example's fenced block. */
   source: string;
-  /** An include reads files, so the playground can't run it. */
+  /** An include and a bundle read files, so the playground can't run them. */
   playable: boolean;
 }
 
@@ -89,7 +90,7 @@ const examples = registerSource(
             page,
             label,
             source,
-            playable: !/^:+include\b/m.test(source),
+            playable: playable(source),
           } satisfies Example,
         };
       });

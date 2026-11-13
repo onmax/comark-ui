@@ -19,6 +19,7 @@ import footnotes from "./footnotes.ts";
 import fields from "./fields.ts";
 import fileTree from "./file-tree.ts";
 import github from "./github.ts";
+import bundle from "./bundle.ts";
 import gitGraph from "./git-graph.ts";
 import icon from "./icon.ts";
 import include from "./include.ts";
@@ -86,4 +87,5 @@ export const catalog = {
   ...shiki,
   ...time,
   ...gitGraph,
+  ...bundle,
 } satisfies Record<string, RuleInfo>;

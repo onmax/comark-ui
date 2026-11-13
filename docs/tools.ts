@@ -11,6 +11,7 @@ import { parseMarkdown } from "comark";
 import { parse } from "yaml";
 import { build } from "vite";
 import { css as criticCss } from "../packages/critic/src/index.ts";
+import { withBuilds } from "./builds.ts";
 import { highlighted, sitePlugins, withoutFor } from "./example-plugins.ts";
 import { loadExamples, thirdParty } from "./examples.ts";
 import { components } from "./plugins.ts";
@@ -117,7 +118,9 @@ await Promise.all(
   examples.map(async (example) => {
     const document = await parseMarkdown(example.source, {
       plugins: highlighted(
-        sitePlugins().filter((plugin) => !withoutFor(example.group).includes(plugin.name)),
+        withBuilds(sitePlugins()).filter(
+          (plugin) => !withoutFor(example.group).includes(plugin.name),
+        ),
       ),
     });
     if (document.meta.issues.length)
