@@ -6,7 +6,7 @@ import {
 } from "shiki/core";
 import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
 
-/** A dynamic import, such as `() => import("@shikijs/langs/typescript")`. */
+/** A dynamic import, such as `() => import("shiki/langs/typescript.mjs")`. */
 export type Loader<T extends object> = () => Promise<T | { default: T }>;
 
 export type LazyHighlighterOptions = {
@@ -55,10 +55,9 @@ export function createLazyHighlighter(options: LazyHighlighterOptions): LazyHigh
 
   const load = () =>
     (core ??= Promise.all(
-      Object.entries(options.themes).map(async ([role, theme]) => ({
-        ...(await unwrap(theme)),
-        name: role,
-      })),
+      Object.entries(options.themes).flatMap(([role, theme]) =>
+        theme ? [unwrap(theme).then((loaded) => ({ ...loaded, name: role }))] : [],
+      ),
     )
       .then((loaded) =>
         createHighlighterCore({
@@ -68,6 +67,15 @@ export function createLazyHighlighter(options: LazyHighlighterOptions): LazyHigh
           engine: createJavaScriptRegexEngine(),
         }),
       )
+      .then((shiki): HighlighterCore => ({
+        ...shiki,
+        codeToTokens(code, options) {
+          return shiki.codeToTokens(code, {
+            ...options,
+            lang: language(options.lang) ?? options.lang,
+          });
+        },
+      }))
       .catch((error: unknown) => {
         // A chunk the network dropped loads again on the next call.
         core = undefined;

@@ -202,13 +202,13 @@ import { createLazyHighlighter } from "comark-ui/shiki";
 comarkUi({
   shiki: createLazyHighlighter({
     languages: {
-      typescript: () => import("@shikijs/langs/typescript"),
-      bash: () => import("@shikijs/langs/bash"),
+      typescript: () => import("shiki/langs/typescript.mjs"),
+      bash: () => import("shiki/langs/bash.mjs"),
     },
     aliases: { ts: "typescript", sh: "bash", zsh: "bash" },
     themes: {
-      light: () => import("@shikijs/themes/github-light"),
-      dark: () => import("@shikijs/themes/github-dark"),
+      light: () => import("shiki/themes/github-light.mjs"),
+      dark: () => import("shiki/themes/github-dark.mjs"),
     },
   }),
 });
@@ -225,8 +225,8 @@ import { createHighlighterCore } from "shiki/core";
 import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
 
 const shiki = await createHighlighterCore({
-  themes: [import("@shikijs/themes/github-light"), import("@shikijs/themes/github-dark")],
-  langs: [import("@shikijs/langs/typescript")],
+  themes: [import("shiki/themes/github-light.mjs"), import("shiki/themes/github-dark.mjs")],
+  langs: [import("shiki/langs/typescript.mjs")],
   engine: createJavaScriptRegexEngine(),
 });
 comarkUi({

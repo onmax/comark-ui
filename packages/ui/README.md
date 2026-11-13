@@ -61,10 +61,10 @@ import { createLazyHighlighter } from "comark-ui/shiki";
 
 comarkUi({
   shiki: createLazyHighlighter({
-    languages: { typescript: () => import("@shikijs/langs/typescript") },
+    languages: { typescript: () => import("shiki/langs/typescript.mjs") },
     themes: {
-      light: () => import("@shikijs/themes/github-light"),
-      dark: () => import("@shikijs/themes/github-dark"),
+      light: () => import("shiki/themes/github-light.mjs"),
+      dark: () => import("shiki/themes/github-dark.mjs"),
     },
   }),
 });

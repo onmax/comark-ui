@@ -43,16 +43,30 @@ describe("createLazyHighlighter", () => {
       [
         fence("deno", "const a = 1"),
         fence("ts", "const b = 2"),
+        fence("TS", "const c = 3"),
+        fence("TypeScript", "const d = 4"),
         fence("cobol", "MOVE A TO B"),
       ].join("\n\n"),
     );
-    expect(out.match(/<pre[^>]*class="shiki"/g)).toHaveLength(2);
+    expect(out.match(/<pre[^>]*class="shiki"/g)).toHaveLength(4);
     expect(out).toMatch(/<span style="color:#[0-9A-F]{6};--shiki-dark:#[0-9A-F]{6}">const<\/span>/);
     expect(out).toContain("MOVE A TO B");
     expect(grammars.calls).toEqual(["typescript"]);
 
     await Promise.all([render(fence("ts", "let c")), render(fence("ts", "let d"))]);
     expect(grammars.calls).toEqual(["typescript"]);
+  });
+
+  it("highlights with an explicitly absent optional dark theme", async () => {
+    const shiki = createLazyHighlighter({
+      languages: { typescript: () => import("shiki/langs/typescript.mjs") },
+      themes: { light: themes.light, dark: undefined },
+    });
+    const render = createHtmlRenderer(html({ ...offline, shiki }));
+    expect(shiki.themes).toEqual({ light: "light" });
+    expect(await render(fence("typescript", "const a = 1"))).toMatch(
+      /<span style="color:#[0-9A-F]{6}">const<\/span>/,
+    );
   });
 
   it("names the grammar a fence's info string or alias stands for", () => {
