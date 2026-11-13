@@ -52,6 +52,32 @@ meta.issueRules['screenshot "after.png", annotation 2: the box runs past the ima
 // "comark/annotate/box-outside-image"
 ```
 
+## Show them to the author
+
+A host that publishes documents it didn't write can render the document anyway and show its problems above it. `renderIssues()` from `comark-ui/html` turns `meta.issues` into an open box with a title, a hint, and one item per problem, with its styles. Backticks in an issue read as code. It returns an empty string when there are none.
+
+```ts
+import { renderHtmlFromDocument } from "@comark/html";
+import { parseMarkdown } from "comark";
+import comarkUi, { renderIssues } from "comark-ui/html";
+
+const preset = comarkUi();
+const document = await parseMarkdown(markdown, { plugins: preset.plugins });
+const body = await renderHtmlFromDocument(document, { components: preset.components });
+const page = renderIssues(document.meta) + body;
+```
+
+Pass `title` and `hint` to say what fits your app, as text or as a function of how many problems there are. `hint: ""` drops the hint.
+
+```ts
+renderIssues(document.meta, {
+  title: (count) => (count === 1 ? "This doc has a problem" : `This doc has ${count} problems`),
+  hint: "Fix it in the Markdown and publish again.",
+});
+```
+
+In Vue, `ComarkIssues` from `comark-ui/vue` draws the same box from a `meta` prop, with the same `title` and `hint`, and adds its styles when it mounts. The box is a `.cis` `<details>`, themed with the [shared tokens](/guide/theming), and its rules are in `comark-ui/style.css`.
+
 ## Line numbers
 
 Comark gives nodes no source positions, so `meta.issues` can't say where a problem is. [comark-linter](/lint) finds each issue's line. It also catches what Comark lets pass: unclosed blocks, misspelled components, broken links and anchors, links to localhost, unsafe URLs, repeated ids, images without alt text, and links without text.
