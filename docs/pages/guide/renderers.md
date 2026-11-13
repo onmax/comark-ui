@@ -107,20 +107,34 @@ Without a renderer, call `start()` from `comark-zoom/client` once on a page with
 
 ## Content Security Policy
 
+Serve rendered HTML as UTF-8, with `Content-Type: text/html; charset=utf-8` or an early `<meta charset="utf-8">` in the document head. Inline scripts use Unicode line separators to keep their text identical when nested inside HTML elements. Without an encoding declaration, browsers can decode those separators incorrectly, preventing the scripts from running and invalidating their CSP hashes.
+
 The inlined `<style>` and `<script>` elements need `'unsafe-inline'` in `style-src` and `script-src`, or a hash of each. A script's text changes only between versions. Annotate places marks with `style` attributes, so its pages need `style-src 'unsafe-inline'`.
 
-To hash a script without rendering a document first, hash the text a package exports. `mermaidScript` from `comark-ui/html` is the Mermaid buttons' script:
+To allow the scripts without rendering a document first, use the preset's `scripts`: the text of every inline script its plugins can write, for the plugins that are on. Hash each one:
 
 ```ts
 import { createHash } from "node:crypto";
-import { mermaidScript } from "comark-ui/html";
+import comarkUi from "comark-ui/html";
 
-const hash = `'sha256-${createHash("sha256").update(mermaidScript).digest("base64")}'`;
-// Content-Security-Policy: script-src 'self' <hash>, plus the hash of each other script your documents use
+const preset = comarkUi();
+const hashes = preset.scripts.map(
+  (script) => `'sha256-${createHash("sha256").update(script).digest("base64")}'`,
+);
+// Content-Security-Policy: script-src 'self' ${hashes.join(" ")}
 ```
 
-Copy image draws the diagram from a `data:` image to make the PNG, so the policy also needs `img-src data:`.
+Or add a nonce to each `<script>` whose text is in the list, and leave any other script, such as one written in a document's own HTML, blocked:
 
-For any other script, render a document that uses it once at startup and hash the text between its `<script>` tags.
+```ts
+const allowed = new Set(preset.scripts);
+const html = rendered.replace(/<script>([\s\S]*?)<\/script>/g, (tag, text) =>
+  allowed.has(text) ? `<script nonce="${nonce}">${text}</script>` : tag,
+);
+```
+
+The Vue, React, and Svelte presets run their scripts from your bundle, so their `scripts` is empty. A package used alone exports its list as `scripts` from its `/html` entry, such as `comark-zoom/html`. `mermaidScript` from `comark-ui/html` and `railScript` from `comark-outline/html` are each one entry of those lists.
+
+Copy image draws a Mermaid diagram from a `data:` image to make the PNG, so the policy also needs `img-src data:`.
 
 Raw HTML in notes, slides, and callouts renders like anywhere else in the document. For untrusted input, add Comark's `security` plugin with the tags to drop, such as `security({ blockedTags: ["script", "style", "iframe"] })`.

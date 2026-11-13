@@ -5,10 +5,18 @@ import { escapeHtml } from "comark/utils";
 import { start } from "./client.ts";
 import { css } from "./styles.ts";
 import { scalar } from "../../../shared/text.ts";
-import { attr } from "../../../shared/html.ts";
+import { attr, inlineScript } from "../../../shared/html.ts";
 
 export { default } from "./index.ts";
 export type { MagicMoveMeta } from "./index.ts";
+
+const inline = inlineScript(`(${start.toString()})("", ${createCodeMotion.toString()})`);
+
+/**
+ * The inline scripts this renderer writes, each exactly as it goes in its `<script>`. They're the same on every
+ * render, so a page with a strict Content Security Policy can allow them by hash or add its nonce.
+ */
+export const scripts: string[] = [inline];
 
 // Each render gets a fresh `state.context`, so a document carries the script once.
 const started = new WeakSet<object>();
@@ -18,7 +26,7 @@ export function runtime(state: State): string {
   if (started.has(state.context)) return "";
   started.add(state.context);
   // The styles come inline before the script, so the script has nothing to add.
-  return `<style data-comark-magic-move>${css}</style><script>(${start.toString()})("", ${createCodeMotion.toString()})</script>`;
+  return `<style data-comark-magic-move>${css}</style><script>${inline}</script>`;
 }
 
 // `:bound` props resolve the way Comark's Vue, React, and Svelte renderers resolve them, so all four agree.

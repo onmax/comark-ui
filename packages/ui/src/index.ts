@@ -149,8 +149,13 @@ export type PresetOptions = {
 
 // oxlint-disable-next-line no-explicit-any -- each plugin types its own meta, as in Comark's ParserOptions.
 export type AnyPlugin = ComarkPlugin<any, any>;
-// A package's renderer entry, which exports the parse plugin as `default` beside its `components`.
-type Part<C, O = void> = { default: (options?: O) => AnyPlugin; components: Record<string, C> };
+// A package's renderer entry, which exports the parse plugin as `default` beside its `components`, and, in HTML, the
+// inline scripts those components write.
+type Part<C, O = void> = {
+  default: (options?: O) => AnyPlugin;
+  components: Record<string, C>;
+  scripts?: readonly string[];
+};
 
 /** One renderer's entry of each package with components, by the option that turns it on. */
 export type Renderer<C> = {
@@ -219,6 +224,13 @@ export type Preset<C> = {
    * linter that reports unknown components needs them beside `components`' names.
    */
   blocks: string[];
+  /**
+   * The text of every inline `<script>` the components can write, for the plugins that are on, each once. A page with a
+   * strict Content Security Policy allows them by hash, or adds its nonce to each `<script>` whose text is one of them.
+   * Only the HTML entry writes inline scripts; the Vue, React, and Svelte components run theirs on mount, so theirs is
+   * empty.
+   */
+  scripts: string[];
 };
 
 const words = (text: string) => text.split(" ");
@@ -272,6 +284,7 @@ const noFiles = { read: () => undefined };
 export function preset<C>(renderer: Renderer<C>, options: PresetOptions = {}): Preset<C> {
   const plugins: AnyPlugin[] = [];
   const components: Record<string, C> = {};
+  const scripts = new Set<string>();
   const add = <O>(
     part: Part<C, O> | undefined,
     value: O | boolean | undefined,
@@ -280,6 +293,7 @@ export function preset<C>(renderer: Renderer<C>, options: PresetOptions = {}): P
     if (!part || !on(value)) return;
     plugins.push(part.default(settings));
     Object.assign(components, part.components);
+    for (const script of part.scripts ?? []) scripts.add(script);
   };
   const parse = <O>(plugin: (options?: O) => AnyPlugin, value: O | boolean | undefined) => {
     if (on(value)) plugins.push(plugin(optionsOf(value)));
@@ -383,5 +397,5 @@ export function preset<C>(renderer: Renderer<C>, options: PresetOptions = {}): P
     ...BLOCKS.flatMap(([key, list]) => (enabled(key) ? list : [])),
     ...(calloutBlocks ? CALLOUT_BLOCKS : []),
   ];
-  return { plugins, components, tags: [...tags], blocks };
+  return { plugins, components, tags: [...tags], blocks, scripts: [...scripts] };
 }
