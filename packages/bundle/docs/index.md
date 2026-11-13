@@ -117,7 +117,7 @@ Pass options under `bundle` in `comarkUi()`, or to `bundle()` alone. In `comarkU
 
 ### What it reads
 
-Every `.js` and `.mjs` file in the folder, with its gzip -9 and brotli 11 size, its `import` and `import()` of other chunks, and its sourcemap's sources, which name the packages. A chunk without a sourcemap counts as the app's own code, and the footer says how many there are. A package found on one side only isn't called added or removed when the other side's chunks without a sourcemap could hold it.
+Every `.js` and `.mjs` file in the folder, with its gzip -9 and brotli 11 size, its `import` and `import()` of other chunks, and its sourcemap's sources, which name the packages. A chunk without a sourcemap counts as the app's own code, and the footer says how many there are. A package found on one side only isn't called added or removed when the code without a sourcemap grew enough on the other side to hold it.
 
 The entries come from Vite's `.vite/manifest.json`, else the `<script type="module">` tags of `index.html`, looked for in the folder and its parent. Without either, the block reads them from the graph: a chunk loaded by `import()` or as a worker is lazy, and so is the code it needs that the chunk loading it doesn't, even when it imports code back from the entry. When the graph can't tell, the block reports it instead of guessing.
 

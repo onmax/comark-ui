@@ -112,7 +112,8 @@ function charsBySource(code: string, mappings: string, sources: number): number[
 
 const STATIC = /(?:\bfrom|\bimport)\s*["'](\.{1,2}\/[^"'\n]+?\.m?js)["']/g;
 const DYNAMIC = /\bimport\s*\(\s*["'`](\.{1,2}\/[^"'`\n]+?\.m?js)["'`]\s*\)/g;
-// A worker's chunk is named only in `new URL(…, import.meta.url)`, by a path from the chunk or from the site's root.
+// A worker's chunk is named only in `new URL(…, import.meta.url)`, by a path from the chunk or, with a leading `/`, from
+// the site's root.
 const WORKER = /\bnew\s+URL\(\s*["'`]([^"'`\n]+?\.m?js)["'`]\s*,\s*import\.meta\.url/g;
 
 function join(from: string, spec: string): string {
@@ -211,7 +212,7 @@ export async function fromFolder(
     for (const [, spec] of code.matchAll(STATIC)) chunk.imports.push(join(name, spec!));
     for (const [, spec] of code.matchAll(DYNAMIC)) chunk.dynamic.push(join(name, spec!));
     for (const [, spec] of code.matchAll(WORKER))
-      chunk.dynamic.push(spec!.startsWith(".") ? join(name, spec!) : spec!.replace(/^\/+/, ""));
+      chunk.dynamic.push(spec!.startsWith("/") ? spec!.replace(/^\/+/, "") : join(name, spec!));
     let parsed: Record<string, unknown> = {};
     try {
       parsed = map ? record(parse(map)) : {};

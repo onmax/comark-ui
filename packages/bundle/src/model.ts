@@ -99,15 +99,16 @@ export type Change = {
 };
 
 /**
- * Whether a package on one side only may still be on the other, in chunks without a sourcemap at least its size. Then
- * nothing says it was added or removed.
+ * Whether a package on one side only may still be on the other, hidden in code without a sourcemap that grew by at
+ * least its size. Then nothing says it was added or removed. Growth, not the total: a `sw.js` both builds ship without
+ * a map hides nothing.
  */
 export function unsure(name: string, before: Loads, after: Loads): boolean {
   const total = (sizes: { page: Size; lazy: Size }) => sizes.page.gzip + sizes.lazy.gzip;
   const a = before.packages.get(name);
   const b = after.packages.get(name);
-  if (a && !b) return total(a) <= after.unmapped;
-  if (b && !a) return total(b) <= before.unmapped;
+  if (a && !b) return total(a) <= after.unmapped - before.unmapped;
+  if (b && !a) return total(b) <= before.unmapped - after.unmapped;
   return false;
 }
 

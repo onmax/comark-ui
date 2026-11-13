@@ -113,14 +113,16 @@ describe("comark-bundle", () => {
     },
   );
 
-  it("counts a worker as lazy", async () => {
-    const html = await one({
-      "assets/entry.js":
-        'new Worker(new URL("/assets/worker.js",import.meta.url),{type:"module"});',
-      "assets/worker.js": "self.onmessage=()=>{};",
-    });
-    expect(html).toMatch(/class="cbr-top" title="[^"]*, 1 chunk"/);
-  });
+  it.each(["/assets/worker.js", "worker.js", "./worker.js"])(
+    "counts a worker as lazy, named %s",
+    async (path) => {
+      const html = await one({
+        "assets/entry.js": `new Worker(new URL("${path}",import.meta.url),{type:"module"});`,
+        "assets/worker.js": "self.onmessage=()=>{};",
+      });
+      expect(html).toMatch(/class="cbr-top" title="[^"]*, 1 chunk"/);
+    },
+  );
 
   it("finds Nuxt's default layout when nothing wraps its import", async () => {
     const text = words(
@@ -156,6 +158,24 @@ describe("comark-bundle", () => {
     const html = await render(block('before="main" after="pr"'), memory(files));
     expect(words(html)).not.toContain("charts removed");
     expect(html).not.toContain('data-kind="removed"');
+  });
+
+  it("still names a package added when both builds ship the same script without a sourcemap", async () => {
+    const worker = `self.v=${JSON.stringify("service worker ".repeat(300))};`;
+    const files: Record<string, string> = {};
+    for (const side of ["main", "pr"]) {
+      files[`${side}/index.html`] = '<script type="module" src="/assets/entry.js"></script>';
+      files[`${side}/sw.js`] = worker;
+    }
+    files["main/assets/entry.js"] = "export{};";
+    files["main/assets/entry.js.map"] = mapOf("../src/main.ts");
+    files["pr/assets/entry.js"] = 'import"./zod.js";';
+    files["pr/assets/entry.js.map"] = mapOf("../src/main.ts");
+    files["pr/assets/zod.js"] = `export const z=${JSON.stringify("zod ".repeat(200))};`;
+    files["pr/assets/zod.js.map"] = mapOf("../node_modules/zod/index.js");
+    expect(words(await render(block('before="main" after="pr"'), memory(files)))).toContain(
+      "zod added",
+    );
   });
 
   it("counts Nuxt's default layout toward every page, and shows chunks when the build has no sourcemaps", async () => {
