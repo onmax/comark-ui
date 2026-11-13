@@ -183,6 +183,73 @@ The component nodes keep a block's structure and editable content. Pass a node v
 
 `ComarkImage` plays video and audio URLs it recognizes by extension in native players, and keeps images inline. `ComarkKit` includes it and the other exported nodes: `ComarkBlock`, `ComarkInline`, `ComarkSlot`, `ComarkComment`, `FootnoteReference`, `InlineFootnote`, `FootnoteDefinition`, `DefinitionList`, `DefinitionTerm`, `DefinitionDescription`, and `CriticComment`, and the marks `CriticInsertion`, `CriticDeletion`, and `CriticHighlight`.
 
+## Code blocks
+
+### Color the code
+
+Add `CodeHighlight` from `comark-ui/editor` to color code blocks with the same Shiki your page renders with. Configure it with the object you pass the preset as `shiki`, its `highlighter` and `themes`, from [Code highlighting](/getting-started#code-highlighting):
+
+```ts
+import { CodeHighlight } from "comark-ui/editor";
+
+// Your Shiki, as in Getting started's Code highlighting section.
+const shiki = {
+  highlighter: async (language: string) => (language in grammars ? highlighter : undefined),
+  themes: { light: "github-light", dark: "github-dark" },
+};
+const { plugins } = comarkUi({ shiki });
+const { editor } = useComarkEditor(markdown, {
+  plugins,
+  extensions: [CodeHighlight.configure(shiki)],
+});
+```
+
+The colors are decorations, so the document, its Markdown, and a collaborative room stay plain, and a server's codec doesn't need the extension. A block's language loads the first time a block uses it, and the block colors once it arrives. A language the highlighter returns `undefined` for, or whose grammar fails, stays plain until the editor is created again, so typing never asks for it twice. The code follows dark mode like the page's: under a `.dark` class, or in the system's dark mode unless a `.light` class is set.
+
+### Pick the language
+
+`CodeLanguageSelect` from `comark-ui/editor/vue` puts a select in the top right corner of each code block. Choosing a language sets the block's `language`, which a room syncs like any edit, and "Plain text" removes it. Place it beside `EditorContent`, in an element with `position: relative`:
+
+```vue
+<script setup lang="ts">
+import { EditorContent } from "@tiptap/vue-3";
+import { CodeLanguageSelect } from "comark-ui/editor/vue";
+
+const languages = { typescript: "TypeScript", bash: "Bash", json: "JSON" };
+const aliases: Record<string, string> = { ts: "typescript", sh: "bash" };
+const language = (info: string) => {
+  const name = info.trim().split(/\s/)[0];
+  return aliases[name] ?? (name in languages ? name : undefined);
+};
+</script>
+
+<template>
+  <div v-if="editor" class="relative">
+    <EditorContent :editor="editor" />
+    <CodeLanguageSelect :editor="editor" :languages="languages" :language="language" />
+  </div>
+</template>
+```
+
+`languages` lists the languages it offers by name, with the label each shows, sorted by label. `language(info)` gives the name a block's language stands for, so a block written `ts` shows TypeScript. Without it, a block's first word must be a name in `languages`. A language the select doesn't offer shows as written.
+
+The selects sit over the editor rather than inside it, so ProseMirror's DOM stays as the schema draws it. Give your code blocks room at the top, such as `padding-top: 2rem` on `pre`, so the select doesn't cover the first line. Its classes start with `cel-`.
+
+To draw your own select, such as your design system's, use the `#select` slot. It gets the block's `language`, the language as `written`, whether the editor is `editable`, and `choose(language)`, where `null` makes the block plain text:
+
+```vue
+<CodeLanguageSelect :editor="editor" :languages="languages">
+  <template #select="{ language, written, editable, choose }">
+    <MySelect
+      :model-value="language"
+      :placeholder="written ?? 'Plain text'"
+      :disabled="!editable"
+      @update:model-value="choose"
+    />
+  </template>
+</CodeLanguageSelect>
+```
+
 ## File uploads
 
 Add `Upload` from `comark-ui/editor` to the editor's `extensions` to take pasted and dropped images, video, and audio. Its `upload(file, progress)` callback returns the uploaded file's URL. Here an endpoint at `/api/uploads` takes a file and returns `{ url }`:
