@@ -160,7 +160,7 @@ describe("comark-bundle", () => {
     files["main/charts.js.map"] = mapOf("../node_modules/charts/index.js");
     if (smaller) {
       files["main/sw.js"] =
-        `self.v=[${Array.from({ length: 500 }, (_, i) => (i * 7919) % 10007)}];`;
+        `self.v=[${Array.from({ length: 500 }, (_, i) => (i * 7919) % 10007).join(",")}];`;
       files["pr/sw.js"] = smaller;
     }
     const html = await render(block('before="main" after="pr"'), memory(files));
