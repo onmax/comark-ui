@@ -76,6 +76,7 @@ export default definePackage({
     "src/client.ts",
     "src/editor.ts",
     "src/editor-vue.ts",
+    "src/highlighter.ts",
     "src/html.ts",
     "src/nuxt-ui.ts",
     "src/skills.ts",

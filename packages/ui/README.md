@@ -52,6 +52,26 @@ The map includes every Vue renderer and the typeset styles. Use `comarkUi(option
 
 Vue, React, and Svelte leave out annotate and diff, which render only to HTML.
 
+## Code highlighting
+
+The preset colors code only with a Shiki you pass as `shiki`. `comark-ui/shiki` builds one that loads each grammar the first time a fence uses it, on Shiki's JavaScript regex engine, so it runs on Workers and in browsers. Install `shiki` too:
+
+```ts
+import { createLazyHighlighter } from "comark-ui/shiki";
+
+comarkUi({
+  shiki: createLazyHighlighter({
+    languages: { typescript: () => import("shiki/langs/typescript.mjs") },
+    themes: {
+      light: () => import("shiki/themes/github-light.mjs"),
+      dark: () => import("shiki/themes/github-dark.mjs"),
+    },
+  }),
+});
+```
+
+See [Code highlighting](https://comark-ui.onmax.me/getting-started#code-highlighting).
+
 ## Editor
 
 [Editor docs](https://comark-ui.onmax.me/guide/editor) cover setup, Vue bindings, file uploads, and collaborative rooms.
