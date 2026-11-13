@@ -112,8 +112,9 @@ export function unsure(name: string, before: Loads, after: Loads): boolean {
     );
   const a = before.packages.get(name);
   const b = after.packages.get(name);
-  if (a && !b) return total(a) <= growth(before, after);
-  if (b && !a) return total(b) <= growth(after, before);
+  // Compressed in another chunk, a package's gzip size shifts, so twice the growth is the bound, not the growth.
+  if (a && !b) return total(a) <= 2 * growth(before, after);
+  if (b && !a) return total(b) <= 2 * growth(after, before);
   return false;
 }
 

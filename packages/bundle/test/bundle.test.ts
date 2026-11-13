@@ -113,16 +113,19 @@ describe("comark-bundle", () => {
     },
   );
 
-  it.each(["/assets/worker.js", "worker.js", "./worker.js"])(
-    "counts a worker as lazy, named %s",
-    async (path) => {
-      const html = await one({
-        "assets/entry.js": `new Worker(new URL("${path}",import.meta.url),{type:"module"});`,
-        "assets/worker.js": "self.onmessage=()=>{};",
-      });
-      expect(html).toMatch(/class="cbr-top" title="[^"]*, 1 chunk"/);
-    },
-  );
+  // What Vite writes: the default base, a relative base, and a `?worker` import.
+  it.each([
+    "new Worker(new URL(`/assets/worker.js`, `` + import.meta.url), { type: `module` });",
+    "new Worker(new URL(new URL(`worker.js`, import.meta.url).href, `` + import.meta.url));",
+    "new Worker(`/assets/worker.js`, { name: options?.name });",
+    'new Worker(new URL("./worker.js",import.meta.url));',
+  ])("counts a worker as lazy: %s", async (code) => {
+    const html = await one({
+      "assets/entry.js": code,
+      "assets/worker.js": "self.onmessage=()=>{};",
+    });
+    expect(html).toMatch(/class="cbr-top" title="[^"]*, 1 chunk"/);
+  });
 
   it("finds Nuxt's default layout when nothing wraps its import", async () => {
     const text = words(
@@ -167,6 +170,26 @@ describe("comark-bundle", () => {
     expect(words(html)).not.toContain("charts removed");
     expect(html).not.toContain('data-kind="removed"');
   });
+
+  it.each([
+    ["main", "pr"],
+    ["pr", "main"],
+  ])(
+    "doesn't call a package added or removed when its chunk lost its map and shrank (%s to %s)",
+    async (before, after) => {
+      const charts = `export const chart=[${Array.from({ length: 300 }, (_, i) => (i * 7919) % 10007).join(",")}];`;
+      const files: Record<string, string> = {};
+      for (const side of ["main", "pr"]) {
+        files[`${side}/entry.js`] = `import"./${side === "main" ? "charts-a" : "charts-b"}.js";`;
+        files[`${side}/entry.js.map`] = mapOf("../src/main.ts");
+      }
+      files["main/charts-a.js"] = `${charts}\n//# sourceMappingURL=charts-a.js.map`;
+      files["main/charts-a.js.map"] = mapOf("../node_modules/charts/index.js");
+      files["pr/charts-b.js"] = charts.slice(0, -40);
+      const html = await render(block(`before="${before}" after="${after}"`), memory(files));
+      expect(words(html)).not.toMatch(/charts (removed|added)/);
+    },
+  );
 
   it("still names a package added when both builds ship the same script without a sourcemap", async () => {
     const worker = `self.v=${JSON.stringify("service worker ".repeat(300))};`;

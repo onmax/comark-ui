@@ -1,6 +1,5 @@
 // Reads one build folder into chunks, their import graph, and the bytes each package takes in them: every JavaScript
 // chunk, measured here, its imports of other chunks, and its sourcemap when the build wrote one.
-import { hash } from "../../../shared/text.ts";
 
 export type Size = { raw: number; gzip: number; brotli: number };
 
@@ -112,9 +111,11 @@ function charsBySource(code: string, mappings: string, sources: number): number[
 
 const STATIC = /(?:\bfrom|\bimport)\s*["'](\.{1,2}\/[^"'\n]+?\.m?js)["']/g;
 const DYNAMIC = /\bimport\s*\(\s*["'`](\.{1,2}\/[^"'`\n]+?\.m?js)["'`]\s*\)/g;
-// A worker's chunk is named only in `new URL(…, import.meta.url)`, by a path from the chunk or, with a leading `/`, from
-// the site's root.
-const WORKER = /\bnew\s+URL\(\s*["'`]([^"'`\n]+?\.m?js)["'`]\s*,\s*import\.meta\.url/g;
+// A worker's chunk is named only by its URL, by a path from the chunk or, with a leading `/`, from the site's root. Vite
+// writes `new URL(path, "" + import.meta.url)`, nested in another `new URL` with a relative base, or `new Worker(path)`
+// for a `?worker` import.
+const WORKER =
+  /\bnew\s+(?:URL|(?:Shared)?Worker)\(\s*["'`]([^"'`\n]+?\.m?js)["'`]\s*(?:\)|,\s*(?:["'`]{2}\s*\+\s*)?(?:import\.meta\.url|\{))/g;
 
 function join(from: string, spec: string): string {
   const parts = from.split("/").slice(0, -1);
@@ -128,10 +129,15 @@ function join(from: string, spec: string): string {
 
 type Compress = (text: string) => Promise<[number, number]>;
 
+// gzip -9 and brotli 11 take a while, so each chunk's sizes are kept per process, keyed by a SHA-256 of its contents
+// rather than the contents, so a long-running server doesn't keep every build's code.
+const measured = new Map<string, Promise<[number, number]>>();
+
 async function compressor(): Promise<Compress> {
   let zlib: typeof import("node:zlib");
+  let crypto: typeof import("node:crypto");
   try {
-    zlib = await import("node:zlib");
+    [zlib, crypto] = await Promise.all([import("node:zlib"), import("node:crypto")]);
   } catch {
     throw new Unreadable(
       "measuring a build folder needs Node's zlib, so render the document with Node",
@@ -139,7 +145,7 @@ async function compressor(): Promise<Compress> {
   }
   const { gzip, brotliCompress, constants } = zlib;
   const brotli = { params: { [constants.BROTLI_PARAM_QUALITY]: 11 } };
-  return (text) =>
+  const compress: Compress = (text) =>
     Promise.all([
       new Promise<number>((done, fail) =>
         gzip(text, { level: 9 }, (error, out) => (error ? fail(error) : done(out.length))),
@@ -148,11 +154,16 @@ async function compressor(): Promise<Compress> {
         brotliCompress(text, brotli, (error, out) => (error ? fail(error) : done(out.length))),
       ),
     ]);
+  return (text) => {
+    const key = crypto.createHash("sha256").update(text).digest("base64");
+    let sizes = measured.get(key);
+    if (!sizes) {
+      sizes = compress(text);
+      measured.set(key, sizes);
+    }
+    return sizes;
+  };
 }
-
-// gzip -9 and brotli 11 take a while, so each chunk's sizes are kept per process, keyed by a hash of its contents
-// rather than the contents, so a long-running server doesn't keep every build's code.
-const measured = new Map<string, Promise<[number, number]>>();
 
 // A read that fails counts as a file that isn't there: the caller only asks to tell a file from a folder, or to look
 // for an optional manifest.
@@ -186,12 +197,7 @@ export async function fromFolder(
   const loaded = await Promise.all(
     scripts.map(async (name) => {
       const code = (await read(at(name))) ?? "";
-      const key = `${code.length}:${hash(code)}`;
-      let sizes = measured.get(key);
-      if (!sizes) {
-        sizes = compress(code);
-        measured.set(key, sizes);
-      }
+      const sizes = compress(code);
       const map = files.includes(`${name}.map`) ? await read(at(`${name}.map`)) : undefined;
       return { name, code, sizes: await sizes, map };
     }),
