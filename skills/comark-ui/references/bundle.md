@@ -7,13 +7,13 @@ comark-bundle shows what changed between two builds of an app: what every page l
 Point `before` and `after` at two builds of the same app. The block reads them while the document parses, so there is nothing to paste.
 
 ```md
-::bundle{before=".bundle/main" after="dist/assets" title="Replace Moment with Temporal"}
+::bundle{before=".bundle/main" after="dist" title="Replace Moment with Temporal"}
 ::
 ```
 
 | Prop | What it does |
 | --- | --- |
-| `before`, `after` | The two builds' output folders, such as `dist/assets` or `.output/public/_nuxt`. |
+| `before`, `after` | The two builds' output folders, such as `dist` or `.output/public/_nuxt`. Every JavaScript file under them counts, so leave server code out. |
 | `src` | One build without a comparison, in place of `before` and `after`. |
 | `title` | The header. It also names the figure for screen readers. Default "Bundle size". |
 
@@ -24,7 +24,7 @@ Build the base branch in a second worktree and keep its output, then build your 
 ```sh
 git worktree add ../main origin/main
 (cd ../main && pnpm install && pnpm build)
-cp -r ../main/dist/assets .bundle/main
+cp -r ../main/dist .bundle/main
 pnpm build
 ```
 
@@ -33,7 +33,7 @@ pnpm build
 - Sizes are gzip -9 in kB of 1,000 bytes; raw and brotli are in the number's tooltip. Don't quote a number the block didn't print.
 - Write the explanation outside the block; text inside is dropped.
 - The block reads the builds while the document parses, in Node: render the document where the builds are. A Drop page or a PR body has no disk.
-- Keep the `index.html` or `.vite/manifest.json` Vite writes next to `assets`; the block finds the entry chunk without them, and says so when it can't.
+- Point at the whole `dist`, or keep the `index.html` or `.vite/manifest.json` Vite writes next to `assets`, on both sides. Without them the block guesses the entry from the graph, and says so when it can't.
 
 ## Register
 

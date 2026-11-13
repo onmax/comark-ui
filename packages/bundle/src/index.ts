@@ -143,7 +143,7 @@ async function block(node: ElementNode, number: number, data: Data, run: Run): P
   if (!before && !after && !src) {
     issue(
       "comark/bundle/missing-build",
-      'it has no build to read. Write `::bundle{before=".bundle/main" after="dist/assets"}`, or `::bundle{src="dist/assets"}` for one build.',
+      'it has no build to read. Write `::bundle{before=".bundle/main" after="dist"}`, or `::bundle{src="dist"}` for one build.',
     );
     return empty;
   }

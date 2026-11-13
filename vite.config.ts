@@ -34,12 +34,21 @@ export default defineConfig({
   // oxfmt reads Comark blocks as plain Markdown and breaks them.
   fmt: {
     // comark-bundle's fixtures stand in for a bundler's minified output.
-    ignorePatterns: ["**/dist/**", "**/*.md", "packages/bundle/test/fixtures/**"],
+    ignorePatterns: [
+      "**/dist/**",
+      "**/*.md",
+      "packages/bundle/test/fixtures/**",
+      "docs/doctor-include/builds/**",
+    ],
     // Nitro 3 reads wrangler.jsonc with confbox's parseJSONC, which rejects trailing commas.
     overrides: [{ files: ["wrangler.jsonc"], options: { trailingComma: "none" } }],
   },
   lint: {
-    ignorePatterns: ["**/dist/**", "packages/bundle/test/fixtures/**"],
+    ignorePatterns: [
+      "**/dist/**",
+      "packages/bundle/test/fixtures/**",
+      "docs/doctor-include/builds/**",
+    ],
     options: { typeAware: true, typeCheck: false },
   },
 });

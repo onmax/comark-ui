@@ -125,7 +125,7 @@ export type PresetOptions = {
   tests?: TestsOptions | boolean;
   /** `::git-graph` around pasted `git log --graph --oneline --decorate --parents` output, with picks from `git cherry` and `git cherry-pick`. */
   gitGraph?: boolean;
-  /** Reads no builds unless you pass `{ root }`, or `{ read }` for Sonda reports in a runtime without a disk. */
+  /** Reads no builds unless you pass `{ root }`, or `{ read, list }` in a runtime without a disk. */
   bundle?: BundleOptions | boolean;
   /** `:time[2026-10-12]` as relative time: "3 days ago", a date past `threshold`, and the full date in a tooltip. */
   time?: TimeOptions | boolean;

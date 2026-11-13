@@ -25,6 +25,13 @@ const assetsOnly: BundleOptions = {
   list: (path) => readdir(root + path, { recursive: true }).catch(() => undefined),
 };
 
+// A build from files in memory, under `build/`.
+const memory = (files: Record<string, string>): BundleOptions => ({
+  read: (path) => files[path.replace(/^build\//, "")],
+  list: (path) => (path === "build" ? Object.keys(files) : undefined),
+});
+const one = (files: Record<string, string>) => render(block('src="build"'), memory(files));
+
 describe("comark-bundle", () => {
   it("compares two builds: the number, the bars, and the treemap behind a disclosure, with the styles once", async () => {
     const html = await render(`${compare}\n\n${compare}`);
@@ -65,6 +72,35 @@ describe("comark-bundle", () => {
     );
   });
 
+  it("leaves a chunk that lazy pages share out of every page, though it imports the entry", async () => {
+    const html = await one({
+      "entry.js": 'const a=()=>import("./page.js"),b=()=>import("./page2.js");',
+      "page.js": 'import"./entry.js";import"./shared.js";',
+      "page2.js": 'import"./entry.js";import"./shared.js";',
+      "shared.js": 'import"./entry.js";',
+    });
+    expect(html).toMatch(/class="cbr-top" title="[^"]*, 1 chunk"/);
+  });
+
+  it("counts a worker as lazy", async () => {
+    const html = await one({
+      "assets/entry.js":
+        'new Worker(new URL("/assets/worker.js",import.meta.url),{type:"module"});',
+      "assets/worker.js": "self.onmessage=()=>{};",
+    });
+    expect(html).toMatch(/class="cbr-top" title="[^"]*, 1 chunk"/);
+  });
+
+  it("finds Nuxt's default layout when nothing wraps its import", async () => {
+    const text = words(
+      await one({
+        "entry.js": 'const layouts={default:Jt(()=>import("./default.js"))};mount("#__nuxt");',
+        "default.js": "export default{};",
+      }),
+    );
+    expect(text).toContain("every page counts the default layout");
+  });
+
   it("counts Nuxt's default layout toward every page, and shows chunks when the build has no sourcemaps", async () => {
     const markdown = block('before="nuxt/before" after="nuxt/after"');
     expect((await parse(markdown)).meta.issues).toEqual([]);
@@ -80,6 +116,7 @@ describe("comark-bundle", () => {
   it("shows one build with its number and what it holds, and no disclosure", async () => {
     const html = await render(block('src="vite/pr/assets"'));
     expect(words(html)).toContain("9.7 kB every page · lazy 0.8 kB");
+    expect(html).toMatch(/<div class="cbr-foot-2">\s*5 packages · 5 chunks\s*<\/div>/);
     expect(html).toContain('class="cbr-tile"');
     expect(html).not.toContain("<details");
   });

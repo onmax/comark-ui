@@ -21,7 +21,7 @@ const render = createHtmlRenderer({ plugins: [bundle({ root: "." })], components
 Point `before` and `after` at the output folders of two builds of the same app:
 
 ```md
-::bundle{before=".bundle/main" after="dist/assets" title="Replace Moment with Temporal"}
+::bundle{before=".bundle/main" after="dist" title="Replace Moment with Temporal"}
 ::
 ```
 

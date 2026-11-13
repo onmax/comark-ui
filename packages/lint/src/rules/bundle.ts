@@ -24,6 +24,6 @@ export default {
   },
   "comark/bundle/unreadable": {
     code: "COMARK4809",
-    title: "Point `::bundle` at a build folder or a Sonda report",
+    title: "Point `::bundle` at a build folder with JavaScript and an entry",
   },
 } satisfies Record<`comark/bundle/${string}`, RuleInfo>;

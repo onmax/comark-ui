@@ -28,7 +28,7 @@ function closure(build: Build, from: string[], into = new Set<string>()): Set<st
 // Nuxt loads the default layout through `import()`, though every page that uses it waits for it. With modules, its
 // chunk is the one holding `layouts/default.vue`; without, it's the `default:` entry of the layouts map in the code.
 const LAYOUT =
-  /\bdefault\s*:\s*[\w$]+\(\s*\(\)\s*=>\s*[\w$]+\(\s*\(\)\s*=>\s*import\(\s*[`"']\.\/([^`"']+\.m?js)[`"']\s*\)/;
+  /\bdefault\s*:\s*[\w$]+\(\s*\(\)\s*=>\s*(?:[\w$]+\(\s*\(\)\s*=>\s*)?import\(\s*[`"']\.\/([^`"']+\.m?js)[`"']\s*\)/;
 
 function layoutOf(build: Build, page: Set<string>): string | undefined {
   for (const chunk of build.chunks.values())

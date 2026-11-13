@@ -1,6 +1,8 @@
 import type { ElementNode } from "comark";
 import { changes, type Change, type Loads } from "./model.ts";
 
+const counted = (n: number, one: string) => `${n} ${n === 1 ? one : `${one}s`}`;
+
 /** kB and MB as the build tools print them: 1 kB is 1000 bytes. */
 export function size(bytes: number): string {
   const kb = bytes / 1000;
@@ -14,8 +16,8 @@ const percent = (a: number, b: number) => (a ? `${((Math.abs(b - a) / a) * 100).
 
 const tip = (tier: Loads["page"], other?: Loads["page"]) =>
   other
-    ? `raw ${size(other.raw)} → ${size(tier.raw)}, brotli ${size(other.brotli)} → ${size(tier.brotli)}, ${other.chunks} → ${tier.chunks} chunks`
-    : `raw ${size(tier.raw)}, brotli ${size(tier.brotli)}, ${tier.chunks} chunks`;
+    ? `raw ${size(other.raw)} → ${size(tier.raw)}, brotli ${size(other.brotli)} → ${size(tier.brotli)}, ${other.chunks} → ${counted(tier.chunks, "chunk")}`
+    : `raw ${size(tier.raw)}, brotli ${size(tier.brotli)}, ${counted(tier.chunks, "chunk")}`;
 
 const list = (names: string[]) =>
   names.length > 3
@@ -300,7 +302,6 @@ function treemap(after: Loads, before: Loads | undefined, packages: boolean): El
 
 const muted = (text: string): ElementNode => ["div", { class: "cbr-foot-2" }, text];
 const chunks = (l: Loads) => l.page.chunks + l.lazy.chunks;
-const counted = (n: number, one: string) => `${n} ${n === 1 ? one : `${one}s`}`;
 
 // --- The card ----------------------------------------------------------------------------------------------------
 
@@ -337,7 +338,7 @@ export function card(
         [
           "div",
           { class: "cbr-foot" },
-          ["div", { class: "cbr-foot-1" }, holds],
+          muted(holds),
           muted(`${note.slice(0, -1)}${after.layout ? LAYOUT : ""} · ${tool}`),
         ],
       ],

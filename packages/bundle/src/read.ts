@@ -1,5 +1,6 @@
 // Reads one build folder into chunks, their import graph, and the bytes each package takes in them: every JavaScript
 // chunk, measured here, its imports of other chunks, and its sourcemap when the build wrote one.
+import { hash } from "../../../shared/text.ts";
 
 export type Size = { raw: number; gzip: number; brotli: number };
 
@@ -111,6 +112,8 @@ function charsBySource(code: string, mappings: string, sources: number): number[
 
 const STATIC = /(?:\bfrom|\bimport)\s*["'](\.{1,2}\/[^"'\n]+?\.m?js)["']/g;
 const DYNAMIC = /\bimport\s*\(\s*["'`](\.{1,2}\/[^"'`\n]+?\.m?js)["'`]\s*\)/g;
+// A worker's chunk is named only in `new URL(…, import.meta.url)`, by a path from the chunk or from the site's root.
+const WORKER = /\bnew\s+URL\(\s*["'`]([^"'`\n]+?\.m?js)["'`]\s*,\s*import\.meta\.url/g;
 
 function join(from: string, spec: string): string {
   const parts = from.split("/").slice(0, -1);
@@ -146,7 +149,8 @@ async function compressor(): Promise<Compress> {
     ]);
 }
 
-// gzip -9 and brotli 11 take a while, so each chunk's sizes are kept per process by its contents.
+// gzip -9 and brotli 11 take a while, so each chunk's sizes are kept per process, keyed by a hash of its contents
+// rather than the contents, so a long-running server doesn't keep every build's code.
 const measured = new Map<string, Promise<[number, number]>>();
 
 // A read that fails counts as a file that isn't there: the caller only asks to tell a file from a folder, or to look
@@ -167,9 +171,7 @@ export async function fromFolder(
   const files = await list(folder);
   if (!files) {
     if ((await attempt(read, folder)) !== undefined)
-      throw new Unreadable(
-        "it's a file. Point it at the build's output folder, such as `dist/assets`",
-      );
+      throw new Unreadable("it's a file. Point it at the build's output folder, such as `dist`");
     return undefined;
   }
   const scripts = files.filter((file) => /\.m?js$/.test(file)).sort();
@@ -183,10 +185,11 @@ export async function fromFolder(
   const loaded = await Promise.all(
     scripts.map(async (name) => {
       const code = (await read(at(name))) ?? "";
-      let sizes = measured.get(code);
+      const key = `${code.length}:${hash(code)}`;
+      let sizes = measured.get(key);
       if (!sizes) {
         sizes = compress(code);
-        measured.set(code, sizes);
+        measured.set(key, sizes);
       }
       const map = files.includes(`${name}.map`) ? await read(at(`${name}.map`)) : undefined;
       return { name, code, sizes: await sizes, map };
@@ -207,6 +210,8 @@ export async function fromFolder(
     };
     for (const [, spec] of code.matchAll(STATIC)) chunk.imports.push(join(name, spec!));
     for (const [, spec] of code.matchAll(DYNAMIC)) chunk.dynamic.push(join(name, spec!));
+    for (const [, spec] of code.matchAll(WORKER))
+      chunk.dynamic.push(spec!.startsWith(".") ? join(name, spec!) : spec!.replace(/^\/+/, ""));
     let parsed: Record<string, unknown> = {};
     try {
       parsed = map ? record(parse(map)) : {};
@@ -230,9 +235,12 @@ export async function fromFolder(
     } else chunk.code = code;
     chunks.set(name, chunk);
   }
+  // A path from the site's root names the chunk that ends with it.
+  const named = (path: string) =>
+    chunks.has(path) ? path : [...chunks.keys()].find((name) => path.endsWith(`/${name}`));
   for (const chunk of chunks.values()) {
     chunk.imports = [...new Set(chunk.imports.filter((name) => chunks.has(name)))];
-    chunk.dynamic = [...new Set(chunk.dynamic.filter((name) => chunks.has(name)))];
+    chunk.dynamic = [...new Set(chunk.dynamic.flatMap((path) => named(path) ?? []))];
   }
   return {
     chunks,
@@ -279,32 +287,46 @@ async function entriesOf(
   const guessed = guessEntries(chunks);
   if (guessed.length) return guessed;
   throw new Unreadable(
-    "it doesn't show which chunk is the entry. Keep the build's `index.html` or `.vite/manifest.json` next to the assets folder",
+    "it doesn't show which chunk is the entry. Point it at the whole `dist`, or keep the build's `index.html` or `.vite/manifest.json` next to the assets folder",
   );
 }
 
 // Without them, the entry is where the graph starts. "Nothing imports it" isn't enough: a lazy chunk often imports
-// shared code back from the entry. So a chunk loaded through `import()` is lazy, a chunk only lazy chunks reach is
-// lazy, and of the rest, an entry is one that nothing else imports, unless the importer is in a cycle with it.
+// shared code back from the entry. So a chunk loaded through `import()` is lazy, and so is a chunk such a target
+// needs that the chunk loading the target doesn't. Of the rest, an entry is one that nothing else imports, unless the
+// importer is in a cycle with it.
 function guessEntries(chunks: Map<string, Chunk>): string[] {
-  const reach = (from: string, lazy: boolean) => {
+  const reached = new Map<string, Set<string>>();
+  const reach = (from: string) => {
+    const known = reached.get(from);
+    if (known) return known;
     const seen = new Set<string>();
     const stack = [from];
-    for (let name = stack.pop(); name !== undefined; name = stack.pop()) {
-      const chunk = chunks.get(name);
-      for (const next of chunk ? [...chunk.imports, ...(lazy ? chunk.dynamic : [])] : [])
-        if (!seen.has(next)) (seen.add(next), stack.push(next));
-    }
+    for (let name = stack.pop(); name !== undefined; name = stack.pop())
+      for (const next of chunks.get(name)?.imports ?? [])
+        if (!seen.has(next)) {
+          seen.add(next);
+          stack.push(next);
+        }
+    reached.set(from, seen);
     return seen;
   };
   const targets = new Set([...chunks.values()].flatMap((chunk) => chunk.dynamic));
-  const onlyLazy = (name: string) =>
-    [...targets].some((target) => reach(target, false).has(name) && !reach(name, true).has(target));
-  const rest = [...chunks.keys()].filter((name) => !targets.has(name) && !onlyLazy(name));
+  // Only a loader that isn't a target itself counts, since the entry is never one.
+  const loaders = [...chunks.values()].filter((chunk) => !targets.has(chunk.name));
+  const lazy = (name: string) =>
+    [...targets].some(
+      (target) =>
+        reach(target).has(name) &&
+        loaders.some(
+          (from) =>
+            from.name !== name && from.dynamic.includes(target) && !reach(from.name).has(name),
+        ),
+    );
+  const rest = [...chunks.keys()].filter((name) => !targets.has(name) && !lazy(name));
   return rest.filter((name) =>
     rest.every(
-      (other) =>
-        chunks.get(other)?.imports.includes(name) !== true || reach(name, false).has(other),
+      (other) => chunks.get(other)?.imports.includes(name) !== true || reach(name).has(other),
     ),
   );
 }

@@ -12,14 +12,14 @@ credits: 'Framed like <a href="https://ui.shadcn.com/charts">shadcn/ui''s chart 
 ::examples
 :::example{label="Two builds"}
 ```md
-::bundle{before="main/assets" after="pr/assets" title="Upgrade the dashboard to ECharts 5.5"}
+::bundle{before="main" after="pr" title="Upgrade the dashboard to ECharts 5.5"}
 ::
 ```
 :::
 
 :::example{label="One build"}
 ```md
-::bundle{src="pr/assets" title="What the dashboard loads"}
+::bundle{src="pr" title="What the dashboard loads"}
 ::
 ```
 :::
@@ -39,12 +39,12 @@ Point `before` and `after` at two builds of the same app. Paths are read from th
 
 ::example
 ```md
-::bundle{before="main/assets" after="pr/assets"}
+::bundle{before="main" after="pr"}
 ::
 ```
 ::
 
-Each path is a build's output folder, such as `dist/assets` for Vite or `.output/public/_nuxt` for Nuxt, which the block measures while it parses.
+Each path is a build's client output folder, such as `dist` for Vite or `.output/public/_nuxt` for Nuxt, which the block measures while it parses. Every JavaScript file under it counts, so leave server code out.
 
 > [!NOTE]
 > A build folder needs sourcemaps to show packages, such as Vite's `build.sourcemap: "hidden"`. Without them the block shows chunks.
@@ -55,7 +55,7 @@ Use the `title` prop to name the report in its header. It also names the figure 
 
 ::example
 ```md
-::bundle{before="main/assets" after="pr/assets" title="Upgrade the dashboard to ECharts 5.5"}
+::bundle{before="main" after="pr" title="Upgrade the dashboard to ECharts 5.5"}
 ::
 ```
 ::
@@ -66,7 +66,7 @@ Use the `src` prop instead of `before` and `after` to show one build without a c
 
 ::example
 ```md
-::bundle{src="pr/assets"}
+::bundle{src="pr"}
 ::
 ```
 ::
@@ -80,12 +80,12 @@ Keep the base branch's build next to the new one, then put the block in the pull
 ```sh
 git worktree add ../main origin/main
 (cd ../main && pnpm install && pnpm build)
-cp -r ../main/dist/assets .bundle/main
+cp -r ../main/dist .bundle/main
 pnpm build
 ```
 
 ```md
-::bundle{before=".bundle/main" after="dist/assets" title="Replace Moment with Temporal"}
+::bundle{before=".bundle/main" after="dist" title="Replace Moment with Temporal"}
 ::
 ```
 
@@ -99,7 +99,7 @@ Point the block at `.output/public/_nuxt` after `nuxi build`. Nuxt loads the def
 
 | Prop | Default | Description |
 | --- | --- | --- |
-| `before` | — | The build to compare from: its output folder, such as `dist/assets`. |
+| `before` | — | The build to compare from: its output folder, such as `dist`. |
 | `after` | — | The build to compare to, in the same forms as `before`. |
 | `src` | — | One build to show without a comparison, in place of `before` and `after`. |
 | `title` | `"Bundle size"` | Shown in the header, and names the figure for screen readers. |
@@ -119,9 +119,9 @@ Pass options under `bundle` in `comarkUi()`, or to `bundle()` alone. In `comarkU
 
 Every `.js` and `.mjs` file in the folder, with its gzip -9 and brotli 11 size, its `import` and `import()` of other chunks, and its sourcemap's sources, which name the packages. A chunk without a sourcemap counts as the app's own code, and the footer says how many there are.
 
-The entries come from Vite's `.vite/manifest.json`, else the `<script type="module">` tags of `index.html`, looked for in the folder and its parent. Without either, the block reads them from the graph: a chunk loaded by `import()`, or reached only from one, is lazy, even when it imports code back from the entry. When the graph can't tell, the block reports it instead of guessing.
+The entries come from Vite's `.vite/manifest.json`, else the `<script type="module">` tags of `index.html`, looked for in the folder and its parent. Without either, the block reads them from the graph: a chunk loaded by `import()` or as a worker is lazy, and so is the code it needs that the chunk loading it doesn't, even when it imports code back from the entry. When the graph can't tell, the block reports it instead of guessing.
 
-Every page is the entries and their static imports, plus Nuxt's default layout and its imports when the build has one. Everything else loads later. A package's size is its share of its chunks' characters, applied to the chunks' gzip and brotli sizes. Sizes are in kB of 1,000 bytes, as the build tools print them.
+Every page is the entries and their static imports, plus Nuxt's default layout and its imports when the build has one. A build with several entries, such as a multi-page app, counts them all. Everything else loads later. A package's size is its share of its chunks' characters, applied to the chunks' gzip and brotli sizes. Sizes are in kB of 1,000 bytes, as the build tools print them.
 
 ### Issues
 
