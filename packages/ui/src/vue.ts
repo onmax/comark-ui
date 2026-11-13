@@ -37,6 +37,7 @@ import * as steps from "comark-steps/vue";
 import * as table from "comark-table/vue";
 import * as tabs from "comark-tabs/vue";
 import * as tests from "comark-tests/vue";
+import * as gitGraph from "comark-git-graph/vue";
 import * as time from "comark-time/vue";
 import * as zoom from "comark-zoom/vue";
 import { addMermaidStyles, mermaidBar, startMermaid } from "./client.ts";
@@ -110,6 +111,7 @@ export const components = {
   ...tabs.components,
   ...outline.components,
   ...tests.components,
+  ...gitGraph.components,
   ...time.components,
   ...zoom.components,
   ...magicMove.components,
@@ -153,6 +155,7 @@ export default (options?: PresetOptions): Preset<Component> =>
       table,
       tabs,
       tests,
+      gitGraph,
       time,
       typeset,
       zoom,

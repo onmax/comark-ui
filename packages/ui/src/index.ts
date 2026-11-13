@@ -122,6 +122,8 @@ export type PresetOptions = {
   xref?: XrefOptions | boolean;
   /** Reads no JUnit reports unless you pass `{ root }` or `{ read }`; inline reports render either way. */
   tests?: TestsOptions | boolean;
+  /** `::git-graph` around pasted `git log --graph --oneline --decorate --parents` output, with picks from `git cherry` and `git cherry-pick`. */
+  gitGraph?: boolean;
   /** `:time[2026-10-12]` as relative time: "3 days ago", a date past `threshold`, and the full date in a tooltip. */
   time?: TimeOptions | boolean;
   zoom?: ZoomOptions | boolean;
@@ -189,6 +191,7 @@ export type Renderer<C> = {
   tabs: Part<C, TabsOptions>;
   outline: Part<C, OutlineOptions>;
   tests: Part<C, TestsOptions>;
+  gitGraph: Part<C>;
   time: Part<C, TimeOptions>;
   zoom: Part<C, ZoomOptions>;
   code: Part<C, CodeOptions>;
@@ -241,6 +244,7 @@ const TAGS: [keyof PresetOptions, string[]][] = [
   ["table", words("button div span")],
   ["tabs", words("div tabs-item")],
   ["tests", words("details div summary")],
+  ["gitGraph", words("b code div span")],
   ["xref", words("caption figcaption figure")],
 ];
 // The blocks each plugin replaces while parsing, by the option that turns it on.
@@ -342,6 +346,7 @@ export function preset<C>(renderer: Renderer<C>, options: PresetOptions = {}): P
   add(renderer.outline, options.outline);
   parse(xref, options.xref);
   add(renderer.tests, options.tests, optionsOf(options.tests) ?? noFiles);
+  add(renderer.gitGraph, options.gitGraph);
   add(renderer.time, options.time);
   add(renderer.zoom, options.zoom);
   // After every plugin that writes code blocks, and before code, which reads the lines it draws.

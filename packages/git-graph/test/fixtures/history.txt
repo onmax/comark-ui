@@ -1,0 +1,33 @@
+$ git log --all --graph --oneline --decorate --parents
+*   734e0a0 ade7d86 e148d3c (HEAD -> main) Merge pull request #97 from acme/fix/footer
+|\  
+| * e148d3c ade7d86 Fix a typo in the footer
+|/  
+| * efd3757 25ee3b2 (feat/billing) Charge in cents
+| * 25ee3b2 e9f7701 Draft the pricing page
+| * e9f7701 ade7d86 Add the invoices table
+|/  
+* ade7d86 2d2de00 Fix the RC's broken migration
+* 2d2de00 c32642f Drop Node 20
+| * 1f298c4 c32642f (tag: v1.5.0, release/1.5) Fix the RC's broken migration
+|/  
+*   c32642f 4d511f4 951f8dc (tag: v1.5.0-rc.1) Merge pull request #90 from acme/feat/search
+|\  
+| * 951f8dc 9b62dd1 Highlight matches
+| *   9b62dd1 0a3b14a 4d511f4 Merge branch 'main' into feat/search
+| |\  
+| |/  
+|/|   
+* | 4d511f4 9b1263f Upgrade the router
+| * 0a3b14a 16098db Rank by recency
+| * 16098db 9b1263f Index titles
+|/  
+* 9b1263f 8709485 Tidy the README
+* 8709485 40ce85b Retry flaky uploads
+* 40ce85b b8e39b6 Split the settings page
+* b8e39b6 8d269bc Log slow queries
+* 8d269bc 00a0dfb Cache the font files
+* 00a0dfb 27a1a3e Bump Vite to 8
+* 27a1a3e (tag: v1.4.0) Release 1.4
+$ git cherry -v main release/1.5
+- 1f298c4cb9c1a6bc84e8b227fc3e79d07046be11 Fix the RC's broken migration

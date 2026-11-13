@@ -97,6 +97,7 @@ Browse the [docs and live examples](https://comark-ui.onmax.me) for component sy
 | [`comark-tabs`](./packages/tabs) | Tabs and code groups that switch together across the page, and read without a script. |
 | [`comark-outline`](./packages/outline) | A table of contents in the body of a page: `::toc` becomes a nested list of links to its headings. |
 | [`comark-tests`](./packages/tests) | Test results from a JUnit XML report: pass, fail, and skip counts, the duration, and each failure with its stack. |
+| [`comark-git-graph`](./packages/git-graph) | Commit graphs from pasted `git log` output, with branches, merges, tags, and which branches have each cherry-picked fix. |
 | [`comark-time`](./packages/time) | Dates as relative time that turn into a date past a threshold, with the full date in a tooltip. |
 | [`comark-xref`](./packages/xref) | Numbered figures and tables, and `:ref{#fig-x}` references that read "Figure 1". |
 | [`comark-zoom`](./packages/zoom) | Zoom images and any block like medium-zoom, with Escape, Back, and click-outside to close. |

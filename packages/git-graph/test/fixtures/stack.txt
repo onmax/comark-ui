@@ -1,0 +1,8 @@
+$ git log --all --graph --oneline --decorate --parents
+* 0d65aff 676e7b8 (HEAD -> main) Bump Vite to 8
+| * 45a57b9 67cab57 (stack/sign-in-docs) Document signing in
+| * 67cab57 8bb4fd2 (stack/sign-in-form) Remember the last email
+| * 8bb4fd2 706c526 Sign-in form
+| * 706c526 676e7b8 (stack/session-api) Add the session endpoint
+|/  
+* 676e7b8 Release 1.4
