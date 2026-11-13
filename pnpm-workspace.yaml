@@ -91,8 +91,8 @@ catalog:
   "@vite-hub/realtime": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/realtime@bc43707859b8caf48454e20157075625e9d615a8
   "@vite-hub/source": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/source@bc43707859b8caf48454e20157075625e9d615a8
   "@vite-hub/ui": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/ui@bc43707859b8caf48454e20157075625e9d615a8
-  # The design-system build lacks ./playground. Alias the codec build so the docs keep the shared design system.
-  "@vite-hub/ui-playground": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/ui@0fe50ee248888266a9b59bfd8949fc3fdae329e9
+  # The design-system build lacks ./playground and ./playground-render. Alias their build to keep the shared design system.
+  "@vite-hub/ui-playground": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/ui@af71f9df43c589af1350de7efe4925b993a93480
   "@vite-hub/workspace": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/workspace@bc43707859b8caf48454e20157075625e9d615a8
   drizzle-kit: 1.0.0-rc.5
   drizzle-orm: 1.0.0-rc.5

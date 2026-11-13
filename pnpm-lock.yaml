@@ -61,8 +61,8 @@ catalogs:
       specifier: ^19.3.0
       version: 19.3.0
     '@vite-hub/ui-playground':
-      specifier: https://pkg.pr.new/vite-hub/vitehub/@vite-hub/ui@0fe50ee248888266a9b59bfd8949fc3fdae329e9
-      version: 0.0.0-preview-0fe50ee
+      specifier: https://pkg.pr.new/vite-hub/vitehub/@vite-hub/ui@af71f9df43c589af1350de7efe4925b993a93480
+      version: 0.0.0-preview-af71f9d
     ai:
       specifier: ^7.0.130
       version: 7.0.153
@@ -371,7 +371,7 @@ importers:
         version: https://pkg.pr.new/vite-hub/vitehub/@vite-hub/ui@bc43707859b8caf48454e20157075625e9d615a8(ef35dc0344ee247574ffd9ac4e33b819)
       '@vite-hub/ui-playground':
         specifier: 'catalog:'
-        version: '@vite-hub/ui@https://pkg.pr.new/vite-hub/vitehub/@vite-hub/ui@0fe50ee248888266a9b59bfd8949fc3fdae329e9(e2d3f7cd369b2e3a86cca57d8e49c0e7)'
+        version: '@vite-hub/ui@https://pkg.pr.new/vite-hub/vitehub/@vite-hub/ui@af71f9df43c589af1350de7efe4925b993a93480(e2d3f7cd369b2e3a86cca57d8e49c0e7)'
       '@vite-hub/workflow':
         specifier: https://pkg.pr.new/vite-hub/vitehub/@vite-hub/workflow@bc43707859b8caf48454e20157075625e9d615a8
         version: https://pkg.pr.new/vite-hub/vitehub/@vite-hub/workflow@bc43707859b8caf48454e20157075625e9d615a8(3419a2f55a793a23d677bd26ba5ae245)
@@ -6648,9 +6648,9 @@ packages:
       vue:
         optional: true
 
-  '@vite-hub/ui@https://pkg.pr.new/vite-hub/vitehub/@vite-hub/ui@0fe50ee248888266a9b59bfd8949fc3fdae329e9':
-    resolution: {integrity: sha512-c7LIY40jSRm3/uZysWf43MnzcjFbVUlLrUcTTshOk+PYY5U0Hm+3MixTdkbZyYWvC45BE4CocVQynZNWwH8K6A==, tarball: https://pkg.pr.new/vite-hub/vitehub/@vite-hub/ui@0fe50ee248888266a9b59bfd8949fc3fdae329e9}
-    version: 0.0.0-preview-0fe50ee
+  '@vite-hub/ui@https://pkg.pr.new/vite-hub/vitehub/@vite-hub/ui@af71f9df43c589af1350de7efe4925b993a93480':
+    resolution: {integrity: sha512-l2rb2ePceYjIHMHAevGcQXAD5I3Hq70tsG5zwMEXgINm0OienUyIQOUf+qicl8apiLlj1nOraQtPY6oyekRZmA==, tarball: https://pkg.pr.new/vite-hub/vitehub/@vite-hub/ui@af71f9df43c589af1350de7efe4925b993a93480}
+    version: 0.0.0-preview-af71f9d
     engines: {node: '>=22.22.0'}
     peerDependencies:
       '@iconify-json/ph': ^1.2.2
@@ -18375,7 +18375,7 @@ snapshots:
     transitivePeerDependencies:
       - crossws
 
-  '@vite-hub/ui@https://pkg.pr.new/vite-hub/vitehub/@vite-hub/ui@0fe50ee248888266a9b59bfd8949fc3fdae329e9(e2d3f7cd369b2e3a86cca57d8e49c0e7)':
+  '@vite-hub/ui@https://pkg.pr.new/vite-hub/vitehub/@vite-hub/ui@af71f9df43c589af1350de7efe4925b993a93480(e2d3f7cd369b2e3a86cca57d8e49c0e7)':
     dependencies:
       '@codemirror/autocomplete': 6.20.4
       '@codemirror/commands': 6.11.1
