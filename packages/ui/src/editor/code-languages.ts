@@ -1,3 +1,4 @@
+import { Plugin, PluginKey } from "@tiptap/pm/state";
 import type { Editor } from "@tiptap/vue-3";
 import { theme } from "comark-zoom/theme";
 import {
@@ -26,7 +27,7 @@ export interface CodeLanguageSlot {
 interface Block {
   /** Stays with its code block while blocks are added or removed above it, so an open select stays on its block. */
   id: number;
-  element: HTMLElement;
+  target: { pos: number; valid: boolean };
   top: number;
   right: number;
   language: string | undefined;
@@ -70,14 +71,9 @@ export const CodeLanguageSelect = defineComponent({
   setup(props, { slots }) {
     const blocks = shallowRef<Block[]>([]);
     const layer = shallowRef<HTMLElement>();
-    // ProseMirror keeps a code block's DOM node across edits, so the node names the block.
-    const ids = new WeakMap<HTMLElement, number>();
+    const targets = new Map<number, { pos: number; valid: boolean }>();
+    const pluginKey = new PluginKey("codeLanguageTargets");
     let lastId = 0;
-    const idOf = (element: HTMLElement) => {
-      let id = ids.get(element);
-      if (id === undefined) ids.set(element, (id = ++lastId));
-      return id;
-    };
     const nameOf = (info: string) => {
       if (props.language) return props.language(info);
       const word = firstWord(info);
@@ -96,8 +92,10 @@ export const CodeLanguageSelect = defineComponent({
           const rect = element.getBoundingClientRect();
           const info = String(node.attrs.language ?? "");
           next.push({
-            id: idOf(element),
-            element,
+            id:
+              [...targets].find(([, target]) => target.valid && target.pos === pos)?.[0] ??
+              ++lastId,
+            target: { pos, valid: true },
             top: rect.top - box.top,
             right: box.right - rect.right,
             language: nameOf(info),
@@ -106,13 +104,19 @@ export const CodeLanguageSelect = defineComponent({
         }
         return false;
       });
+      for (const block of next) {
+        const existing = targets.get(block.id);
+        if (existing) block.target = existing;
+        else targets.set(block.id, block.target);
+      }
       blocks.value = next;
     }
 
-    // The block's position comes from its DOM at the moment of choosing, since a teammate's edit moves it.
+    // Retained slot callbacks share a mapped target, never a reusable rendering element.
     function choose(block: Block, language: string | null) {
+      if (!props.editor.isEditable || !block.target.valid) return;
       const { view } = props.editor;
-      const pos = view.posAtDOM(block.element, 0) - 1;
+      const { pos } = block.target;
       if (view.state.doc.nodeAt(pos)?.type.name !== "codeBlock") return;
       props.editor
         .chain()
@@ -128,14 +132,33 @@ export const CodeLanguageSelect = defineComponent({
     onMounted(() => {
       addStyles("editor-languages", codeLanguagesCss);
       measure();
-      props.editor.on("update", measure);
+      props.editor.registerPlugin(
+        new Plugin({
+          key: pluginKey,
+          state: {
+            init: () => null,
+            apply(tr) {
+              for (const [id, target] of targets) {
+                const mapped = tr.mapping.mapResult(target.pos, 1);
+                target.pos = mapped.pos;
+                if (mapped.deleted || tr.doc.nodeAt(target.pos)?.type.name !== "codeBlock") {
+                  target.valid = false;
+                  targets.delete(id);
+                }
+              }
+              return null;
+            },
+          },
+          view: () => ({ update: measure }),
+        }),
+      );
       if ("ResizeObserver" in globalThis) {
         resize = new ResizeObserver(() => measure());
         resize.observe(props.editor.view.dom);
       }
     });
     onBeforeUnmount(() => {
-      props.editor.off("update", measure);
+      props.editor.unregisterPlugin(pluginKey);
       resize?.disconnect();
     });
 

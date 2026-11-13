@@ -126,6 +126,67 @@ describe("CodeLanguageSelect", () => {
     await vi.waitFor(() => expect(markdown.value).toContain("```\nconst a = 1\n```"));
   });
 
+  it("refreshes silent loads and rejects choices in read-only mode", async () => {
+    const { host, markdown, editor } = await mount({ languages, language });
+    markdown.value = source.replace("```ts", "```json");
+    await vi.waitFor(() => expect(editor.state.doc.firstChild?.attrs.language).toBe("json"));
+    await nextTick();
+    const select = host.querySelector<HTMLSelectElement>(".cel-select")!;
+    expect(select.value).toBe("json");
+    select.value = "typescript";
+    select.dispatchEvent(new Event("change"));
+    await vi.waitFor(() => expect(markdown.value).toContain("```typescript"));
+    const protectedSource = "---\n# Preserve this comment\ntitle: Example\n---\n\n" + source;
+    markdown.value = protectedSource;
+    await vi.waitFor(() => expect(editor.isEditable).toBe(false));
+    await nextTick();
+    const disabled = host.querySelector<HTMLSelectElement>(".cel-select")!;
+    expect(disabled.disabled).toBe(true);
+    disabled.value = "json";
+    disabled.dispatchEvent(new Event("change"));
+    await nextTick();
+    expect(markdown.value).toBe(protectedSource);
+  });
+
+  it("maps retained choices through edits and invalidates deleted targets", async () => {
+    const choices: CodeLanguageSlot[] = [];
+    const { editor } = await mount(
+      { languages },
+      {
+        select: (slot) => {
+          choices.push(slot);
+          return h("span", String(slot.editable));
+        },
+      },
+    );
+    const chooseFirst = choices[0]!.choose;
+    editor.setEditable(false, false);
+    await nextTick();
+    expect(choices.at(-1)!.editable).toBe(false);
+    chooseFirst("json");
+    expect(editor.state.doc.firstChild?.attrs.language).toBe("ts");
+    editor.setEditable(true, false);
+    editor.commands.insertContentAt(editor.state.doc.content.size, { type: "paragraph" });
+    const paragraphPos = editor.state.doc.content.size - 2;
+    const inserted = editor.schema.nodes.codeBlock!.create(
+      { language: "ts" },
+      editor.schema.text("new"),
+    );
+    editor.view.dispatch(
+      editor.state.tr.delete(paragraphPos, paragraphPos + 2).insert(0, inserted),
+    );
+    await nextTick();
+    chooseFirst("json");
+    expect(editor.state.doc.child(0).attrs.language).toBe("ts");
+    expect(editor.state.doc.child(1).attrs.language).toBe("json");
+    const pos = inserted.nodeSize;
+    editor.view.dispatch(editor.state.tr.delete(pos, pos + editor.state.doc.child(1).nodeSize));
+    await nextTick();
+    const before = editor.getJSON();
+    expect(() => chooseFirst("typescript")).not.toThrow();
+    expect(editor.getJSON()).toEqual(before);
+  });
+
   it("draws the `#select` slot in place of the native select", async () => {
     const { host, markdown } = await mount(
       { languages },
