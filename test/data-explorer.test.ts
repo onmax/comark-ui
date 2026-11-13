@@ -102,3 +102,50 @@ it("an unfilled page names the missing file instead of loading it", () => {
   expect(page).toMatch(/assets\/app\.js isn't in the page/);
   expect(page).toMatch(/assets\/style\.css isn't in the page/);
 });
+
+it.each(["x", "y", "value"])("rejects a matrix missing %s", (key) => {
+  const matrix: Record<string, unknown> = {
+    type: "matrix",
+    title: "Grid",
+    data: "grid",
+    x: "team",
+    y: "team",
+    value: "n",
+  };
+  delete matrix[key];
+  const { ok, log } = build({
+    ...example,
+    data: { grid: [{ team: "Alpha", n: 1 }] },
+    views: [{ id: "overview", label: "Overview", blocks: [matrix] }],
+    top: [],
+    filters: [],
+  });
+  expect(ok).toBe(false);
+  expect(log).toContain(`add the required \`${key}\` field reference`);
+  expect(log).toContain("blocks[0]");
+});
+
+it("rejects a table column missing field", () => {
+  const { ok, log } = build({
+    ...example,
+    data: { grid: [{ team: "Alpha", n: 1 }] },
+    top: [],
+    filters: [],
+    views: [
+      {
+        id: "overview",
+        label: "Overview",
+        blocks: [
+          {
+            type: "table",
+            title: "Teams",
+            data: "grid",
+            columns: [{ label: "Team" }],
+          },
+        ],
+      },
+    ],
+  });
+  expect(ok).toBe(false);
+  expect(log).toMatch(/columns\[0\].*add the required `field`/);
+});

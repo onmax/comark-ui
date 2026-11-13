@@ -125,6 +125,28 @@ if (shots) {
       process.exit(1);
     }
   }
+  async function reportViews(page) {
+    try {
+      await page.waitForFunction(
+        () =>
+          (window.__report && document.body.dataset.ready) || document.body.dataset.startupError,
+        null,
+        {
+          timeout: 20000,
+        },
+      );
+      return await page.evaluate(() => {
+        if (document.body.dataset.startupError) throw new Error(document.body.dataset.startupError);
+        if (!window.__report?.views?.length) throw new Error("report has no initialized views");
+        return window.__report.views;
+      });
+    } catch (error) {
+      await browser.close();
+      throw new Error(
+        `--shots: report startup failed. Check Vega loading and the report runtime: ${error.message}`,
+      );
+    }
+  }
   const problems = [];
   const url = pathToFileURL(resolve(output)).href;
   for (const theme of ["light", "dark"]) {
@@ -142,7 +164,7 @@ if (shots) {
     );
     await page.goto(`${url}?theme=${theme}`);
     await page.evaluate(() => document.fonts.ready);
-    const ids = await page.evaluate(() => window.__report?.views ?? []);
+    const ids = await reportViews(page);
     for (const id of ids) {
       await page.evaluate((v) => window.__report.go(v), id);
       await page
@@ -247,11 +269,11 @@ if (shots) {
     deviceScaleFactor: 2,
   });
   await phone.goto(`${url}?theme=light`);
-  for (const id of await phone.evaluate(() => window.__report?.views ?? [])) {
+  for (const id of await reportViews(phone)) {
     await phone.evaluate((v) => window.__report.go(v), id);
     await phone
       .waitForFunction((v) => document.body.dataset.ready === v, id, { timeout: 20000 })
-      .catch(() => {});
+      .catch(() => problems.push(`phone view ${id}: charts didn't finish drawing in 20 s`));
     await phone.waitForTimeout(150);
     // A table cut at the screen's edge with nothing that says it scrolls reads as the whole table.
     const silent = await phone.$$eval(".rp-scroll", (els) =>

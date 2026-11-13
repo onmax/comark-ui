@@ -435,9 +435,10 @@ export function check(report) {
         err(at, `has ${rows.length} rows; set \`limit\` (at most 30) or use a table.`);
     }
     if (kind === "matrix" || (kind === "chart" && b.chart === "heatmap")) {
-      needField(b.data, b.x, at, "`x`");
-      needField(b.data, b.y, at, "`y`");
-      needField(b.data, b.value, at, "`value`");
+      for (const key of ["x", "y", "value"]) {
+        if (b[key] == null) err(at, `add the required \`${key}\` field reference.`);
+        else needField(b.data, b[key], at, `\`${key}\``);
+      }
       if (b.tint && !["columns", "rows", "single"].includes(b.tint))
         err(
           at,
@@ -533,7 +534,8 @@ export function check(report) {
             );
           needField(b.data, c.fields, w, "`fields`");
           tones(c.tones, w);
-        } else needField(b.data, c.field, w, "`field`");
+        } else if (c.field == null) err(w, "add the required `field` reference.");
+        else needField(b.data, c.field, w, "`field`");
         if (c.format && !COLUMN_FORMATS.includes(c.format))
           err(w, `\`format\` must be one of ${COLUMN_FORMATS.join(", ")}.`);
         if (c.format === "entity" && !listFields.has(c.field))

@@ -477,7 +477,13 @@ function lineSpec(block, input, width) {
   ];
   if (series && !stacked && !log) {
     const last = new Map();
-    for (const r of rows) if (r[y] != null) last.set(r[series], r);
+    const position = (row) => (kind === "temporal" ? +new Date(row[x]) : +row[x]);
+    for (const r of rows) {
+      if (r[y] == null || r[x] == null) continue;
+      const previous = last.get(r[series]);
+      if (!previous || kind === "ordinal" || position(r) >= position(previous))
+        last.set(r[series], r);
+    }
     const ends = [...last.values()]
       .map((r) => ({
         name: r[series],
@@ -536,7 +542,7 @@ function lineSpec(block, input, width) {
     ...(series
       ? {
           transform: [
-            { pivot: series, value: y, groupby: [x] },
+            { pivot: field(series), value: field(y), groupby: [field(x)] },
             ...(percent
               ? [
                   {
@@ -1051,7 +1057,7 @@ function histogramSpec(block, rows, width) {
     encoding: {
       x: {
         bin: { maxbins: block.bins ?? 30 },
-        field: f,
+        field: field(f),
         type: "quantitative",
         title: block.xTitle ?? block.x,
         axis: log ? { labelExpr: "format(pow(10, datum.value), '.2~s')" } : { format: D3.compact },
@@ -1784,7 +1790,9 @@ function readHash() {
       state.filters[k] =
         kindOf(f) === "toggle"
           ? v === "1"
-          : (options(f).find((o) => String(o.value) === v)?.value ?? state.filters[k]);
+          : kindOf(f) === "list" && v === ""
+            ? null
+            : (options(f).find((o) => String(o.value) === v)?.value ?? state.filters[k]);
   }
 }
 function writeHash() {
@@ -1796,9 +1804,9 @@ function writeHash() {
         ? (f.default ?? options(f)[0]?.value)
         : kindOf(f) === "toggle"
           ? Boolean(f.default)
-          : null;
-    if (v !== initial && v != null)
-      params.set(f.field, kindOf(f) === "toggle" ? (v ? "1" : "0") : String(v));
+          : (f.default ?? null);
+    if (v !== initial)
+      params.set(f.field, kindOf(f) === "toggle" ? (v ? "1" : "0") : v == null ? "" : String(v));
   }
   if (state.q) params.set("q", state.q);
   const q = params.toString();

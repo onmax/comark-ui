@@ -43,6 +43,7 @@
           }),
         );
       })().catch((error) => {
+        document.body.dataset.startupError = error.message;
         document.getElementById("report").textContent =
           `This page couldn't load: ${error.message}. Rebuild it with the data-explorer skill's build script.`;
       });
