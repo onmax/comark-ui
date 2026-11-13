@@ -2,19 +2,17 @@
 title: Git graph
 description: A commit graph in Markdown, drawn from pasted git output.
 keywords: git, git log, graph, branches, merge, cherry-pick, backport, release branch, stacked PRs, rebase, tags
-tagline: A commit graph drawn from what git printed, with branches, merges, tags, and which branches have each fix.
+tagline: A commit graph drawn from what git printed, with branches, merges, and tags.
 group: Review blocks
 icon: git-graph
-blurb: Branches and backports from git log
+blurb: Branches, merges, and tags from git log
 credits: 'Laid out like <a href="https://sapling-scm.com/docs/addons/isl/">Sapling''s smartlog</a>: the graph is a narrow gutter and the commit text owns the row.'
 ---
 
 ::examples
 :::example{label="History"}
 ````md
-::git-graph{title="How 1.5 shipped"}
-```
-$ git log --all --graph --oneline --decorate --parents
+```git-graph [How 1.5 shipped]
 *   734e0a0 ade7d86 e148d3c (HEAD -> main) Merge pull request #97 from acme/fix/footer
 |\  
 | * e148d3c ade7d86 Fix a typo in the footer
@@ -45,18 +43,205 @@ $ git log --all --graph --oneline --decorate --parents
 * 8d269bc 00a0dfb Cache the font files
 * 00a0dfb 27a1a3e Bump Vite to 8
 * 27a1a3e (tag: v1.4.0) Release 1.4
-$ git cherry -v main release/1.5
-- 1f298c4cb9c1a6bc84e8b227fc3e79d07046be11 Fix the RC's broken migration
 ```
-::
 ````
 :::
 
-:::example{label="Backport"}
+:::example{label="Release branches"}
+````md
+```git-graph [Release branches]
+* f9c374c 5095f38 (release/2.4) Stop polling closed flows (#815)
+* 5095f38 52783d7 Alert links keep their filters (#812)
+* 52783d7 afb1a3b Rename the table's rows prop
+| * 5595de7 d73449f (HEAD -> main) Engine 422s name the field (#827)
+| * d73449f a94037c Release memory after a long session (#826)
+| * a94037c fe1aa79 Empty replacement no longer crashes the table (#821)
+| * fe1aa79 8ca9d7e Quiet expected 4xx errors (#818)
+| * 8ca9d7e db5f451 Stop polling closed flows (#815)
+| * db5f451 afb1a3b Alert links keep their filters (#812)
+|/  
+* afb1a3b fb4faea (tag: v2.4.3) Pin the export worker to two threads
+| * ca45522 fb4faea (release/2.3-enterprise-bundle) Bundle the enterprise SKU
+|/  
+* fb4faea 5de6be0 (tag: v2.3.9) Read the legacy CSV dialect
+| * 66267ed 5de6be0 (release/2.2) Retry the webhook once on a 502
+|/  
+* 5de6be0 (tag: v2.2.14) Release 2.2.14
+```
+````
+:::
+
+:::example{label="Stack"}
+````md
+```git-graph [Sign-in, as a stack of three PRs]
+* 0d65aff 676e7b8 (HEAD -> main) Bump Vite to 8
+| * 45a57b9 67cab57 (stack/sign-in-docs) Document signing in
+| * 67cab57 8bb4fd2 (stack/sign-in-form) Remember the last email
+| * 8bb4fd2 706c526 Sign-in form
+| * 706c526 676e7b8 (stack/session-api) Add the session endpoint
+|/  
+* 676e7b8 Release 1.4
+```
+````
+:::
+::
+
+## Features
+
+- Reads `git log --graph --oneline --decorate --parents` pasted as is, from a ```` ```git-graph ```` fence. On GitHub, or anywhere the plugin doesn't run, the fence still reads as the log.
+- Draws forks and merges from the parent hashes, not from git's ASCII drawing, so lanes stay in their columns.
+- Puts each branch's name at its tip and each tag on its commit, as `--decorate` does. A branch that was merged and deleted gets its name from the merge's message.
+- Draws with no script.
+
+## Usage
+
+Run `git log --graph --oneline --decorate --parents` and paste what it prints in a ```` ```git-graph ```` fence.
+
+::example
+````md
+```git-graph
+* 0d65aff 676e7b8 (HEAD -> main) Bump Vite to 8
+| * 45a57b9 67cab57 (stack/sign-in-docs) Document signing in
+| * 67cab57 8bb4fd2 (stack/sign-in-form) Remember the last email
+| * 8bb4fd2 706c526 Sign-in form
+| * 706c526 676e7b8 (stack/session-api) Add the session endpoint
+|/  
+* 676e7b8 Release 1.4
+```
+````
+::
+
+`git log` shows only the branch you're on. Add `--all`, or name the branches, such as `git log --graph --oneline --decorate --parents main release/2.4`, to get the others into the graph.
+
+### Title
+
+Write the title in brackets after the fence's language. It also names the figure for screen readers.
+
+::example
+````md
+```git-graph [Sign-in stack]
+* 0d65aff 676e7b8 (HEAD -> main) Bump Vite to 8
+| * 45a57b9 67cab57 (stack/sign-in-docs) Document signing in
+| * 67cab57 8bb4fd2 (stack/sign-in-form) Remember the last email
+| * 8bb4fd2 706c526 Sign-in form
+| * 706c526 676e7b8 (stack/session-api) Add the session endpoint
+|/  
+* 676e7b8 Release 1.4
+```
+````
+::
+
+### Props and slots
+
+A fence takes a title and nothing else, because Comark keeps no other attribute on a code block. For the props and slots below, put the fence inside `::git-graph`. Its `title` prop works like the brackets, and a `#title` slot takes Markdown instead.
+
+::example
+````md
+::git-graph{title="Sign-in stack"}
+```
+* 0d65aff 676e7b8 (HEAD -> main) Bump Vite to 8
+| * 45a57b9 67cab57 (stack/sign-in-docs) Document signing in
+| * 67cab57 8bb4fd2 (stack/sign-in-form) Remember the last email
+| * 8bb4fd2 706c526 Sign-in form
+| * 706c526 676e7b8 (stack/session-api) Add the session endpoint
+|/  
+* 676e7b8 Release 1.4
+```
+::
+````
+::
+
+### Oldest first
+
+Use the `reverse` prop to show the oldest commit first, as `git log --reverse` does. Without it the rows keep git's order, newest first. A plan reads better oldest first.
+
+::example
+````md
+::git-graph{reverse}
+```
+* 0d65aff 676e7b8 (HEAD -> main) Bump Vite to 8
+| * 45a57b9 67cab57 (stack/sign-in-docs) Document signing in
+| * 67cab57 8bb4fd2 (stack/sign-in-form) Remember the last email
+| * 8bb4fd2 706c526 Sign-in form
+| * 706c526 676e7b8 (stack/session-api) Add the session endpoint
+|/  
+* 676e7b8 Release 1.4
+```
+::
+````
+::
+
+### Newest commits
+
+Use the `max-count` prop to keep the newest commits, as `git log -n` does. The rest fold into one row that says how many it left out.
+
+::example
+````md
+::git-graph{max-count=4}
+```
+* 0d65aff 676e7b8 (HEAD -> main) Bump Vite to 8
+| * 45a57b9 67cab57 (stack/sign-in-docs) Document signing in
+| * 67cab57 8bb4fd2 (stack/sign-in-form) Remember the last email
+| * 8bb4fd2 706c526 Sign-in form
+| * 706c526 676e7b8 (stack/session-api) Add the session endpoint
+|/  
+* 676e7b8 Release 1.4
+```
+::
+````
+::
+
+### Footer
+
+Use the `#footer` slot to write Markdown under the graph, such as the next steps for a stack.
+
+::example
+````md
+::git-graph
+```
+* 0d65aff 676e7b8 (HEAD -> main) Bump Vite to 8
+| * 45a57b9 67cab57 (stack/sign-in-docs) Document signing in
+| * 67cab57 8bb4fd2 (stack/sign-in-form) Remember the last email
+| * 8bb4fd2 706c526 Sign-in form
+| * 706c526 676e7b8 (stack/session-api) Add the session endpoint
+|/  
+* 676e7b8 Release 1.4
+```
+
+#footer
+- [ ] Merge #101, then restack the other two
+::
+````
+::
+
+## Examples
+
+### A stack of pull requests
+
+`git log` on a stack shows one line of commits with a branch name at each tip. The block splits it into one lane per branch, all in one column, so each pull request reads as its own colored segment.
+
+### History before a release
+
+`git log --all` shows feature branches that forked, grew beside `main`, took `main` back in, and merged. Each merge draws as a curve into the branch it joined, and a branch that was deleted after its merge keeps its name, read from the merge message, with a dashed pill.
+
+### Backport fixes to release branches
+
+The block also reads a backport's dry run, when you paste the whole terminal with each command after a `$`: `git cherry -v <branch> main` for the fixes a branch already has, then `git switch` and `git cherry-pick` for each branch, with `git cherry-pick --skip` after a conflict. The `git log` output goes first, and needs no `$` line.
+
+```sh
+git log --graph --oneline --decorate --parents main release/2.4 release/2.3
+git cherry -v release/2.4 main
+git switch release/2.4
+git cherry-pick cc4127a 378f25e 978ebb9
+git cherry-pick --skip
+```
+
+Each fix on `main` gets one row. A pick that applied is a green dot in the branch's lane, a conflict an amber one, numbered in the order you picked, and the conflicting files show under the commit. A `-` from `git cherry` is a ring: the branch already has that change, so its own copy folds into the fix's row. Reset the branches afterwards; the graph keeps what the dry run printed.
+
+::example
 ````md
 ::git-graph{title="Backport the January fixes" reverse}
 ```
-$ git log --graph --oneline --decorate --parents main release/2.4 release/2.3-enterprise-bundle release/2.2
 * f9c374c 5095f38 (release/2.4) Stop polling closed flows (#815)
 * 5095f38 52783d7 Alert links keep their filters (#812)
 * 52783d7 afb1a3b Rename the table's rows prop
@@ -155,162 +340,7 @@ $ git cherry-pick --skip
 ```
 ::
 ````
-:::
-
-:::example{label="Stack"}
-````md
-::git-graph{title="Sign-in, as a stack of three PRs"}
-```
-$ git log --all --graph --oneline --decorate --parents
-* 0d65aff 676e7b8 (HEAD -> main) Bump Vite to 8
-| * 45a57b9 67cab57 (stack/sign-in-docs) Document signing in
-| * 67cab57 8bb4fd2 (stack/sign-in-form) Remember the last email
-| * 8bb4fd2 706c526 Sign-in form
-| * 706c526 676e7b8 (stack/session-api) Add the session endpoint
-|/  
-* 676e7b8 Release 1.4
-```
 ::
-````
-:::
-::
-
-## Features
-
-- Reads what git printed, pasted as is: `git log --graph --oneline --decorate --parents`, then `git cherry -v` and a `git cherry-pick` dry run for a backport.
-- Draws forks and merges from the parent hashes, not from git's ASCII drawing, so lanes stay in their columns.
-- Puts each branch's name at its tip and each tag on its commit, as `--decorate` does. A branch that was merged and deleted gets its name from the merge's message.
-- Shows a cherry-pick on its source's row, numbered in the order it was picked, with the files of a conflict.
-- Draws with no script, and says every pick in words for screen readers.
-
-## Usage
-
-Run `git log --graph --oneline --decorate --parents` and paste what it prints in a fence inside `::git-graph`.
-
-::example
-````md
-::git-graph
-```
-* 0d65aff 676e7b8 (HEAD -> main) Bump Vite to 8
-| * 45a57b9 67cab57 (stack/sign-in-docs) Document signing in
-| * 67cab57 8bb4fd2 (stack/sign-in-form) Remember the last email
-| * 8bb4fd2 706c526 Sign-in form
-| * 706c526 676e7b8 (stack/session-api) Add the session endpoint
-|/  
-* 676e7b8 Release 1.4
-```
-::
-````
-::
-
-Add `--all`, or name the branches to show, such as `git log --graph --oneline --decorate --parents main release/2.4`. A transcript that starts each command with `$ git` works too, so you can paste a terminal as it is.
-
-### Title
-
-Use the `title` prop to name the graph in its header. It also names the figure for screen readers. A `#title` slot takes Markdown instead.
-
-::example
-````md
-::git-graph{title="Sign-in stack"}
-```
-* 0d65aff 676e7b8 (HEAD -> main) Bump Vite to 8
-| * 45a57b9 67cab57 (stack/sign-in-docs) Document signing in
-| * 67cab57 8bb4fd2 (stack/sign-in-form) Remember the last email
-| * 8bb4fd2 706c526 Sign-in form
-| * 706c526 676e7b8 (stack/session-api) Add the session endpoint
-|/  
-* 676e7b8 Release 1.4
-```
-::
-````
-::
-
-### Oldest first
-
-Use the `reverse` prop to show the oldest commit first, as `git log --reverse` does. Without it the rows keep git's order, newest first. A plan reads better oldest first.
-
-::example
-````md
-::git-graph{reverse}
-```
-* 0d65aff 676e7b8 (HEAD -> main) Bump Vite to 8
-| * 45a57b9 67cab57 (stack/sign-in-docs) Document signing in
-| * 67cab57 8bb4fd2 (stack/sign-in-form) Remember the last email
-| * 8bb4fd2 706c526 Sign-in form
-| * 706c526 676e7b8 (stack/session-api) Add the session endpoint
-|/  
-* 676e7b8 Release 1.4
-```
-::
-````
-::
-
-### Newest commits
-
-Use the `max-count` prop to keep the newest commits, as `git log -n` does. The rest fold into one row that says how many it left out.
-
-::example
-````md
-::git-graph{max-count=4}
-```
-* 0d65aff 676e7b8 (HEAD -> main) Bump Vite to 8
-| * 45a57b9 67cab57 (stack/sign-in-docs) Document signing in
-| * 67cab57 8bb4fd2 (stack/sign-in-form) Remember the last email
-| * 8bb4fd2 706c526 Sign-in form
-| * 706c526 676e7b8 (stack/session-api) Add the session endpoint
-|/  
-* 676e7b8 Release 1.4
-```
-::
-````
-::
-
-### Footer
-
-Use the `#footer` slot to write Markdown under the graph, such as the steps after a backport.
-
-::example
-````md
-::git-graph
-```
-* 0d65aff 676e7b8 (HEAD -> main) Bump Vite to 8
-| * 45a57b9 67cab57 (stack/sign-in-docs) Document signing in
-| * 67cab57 8bb4fd2 (stack/sign-in-form) Remember the last email
-| * 8bb4fd2 706c526 Sign-in form
-| * 706c526 676e7b8 (stack/session-api) Add the session endpoint
-|/  
-* 676e7b8 Release 1.4
-```
-
-#footer
-- [ ] Merge #101, then restack the other two
-::
-````
-::
-
-## Examples
-
-### Backport fixes to release branches
-
-Run the backport as a dry run, and paste the whole terminal: `git log` for the branches, `git cherry -v <branch> main` for the fixes a branch already has, then `git switch` and `git cherry-pick` for each branch, with `git cherry-pick --skip` after a conflict.
-
-```sh
-git log --graph --oneline --decorate --parents main release/2.4 release/2.3
-git cherry -v release/2.4 main
-git switch release/2.4
-git cherry-pick cc4127a 378f25e 978ebb9
-git cherry-pick --skip
-```
-
-Each fix on `main` gets one row. A pick that applied is a green dot in the branch's lane, a conflict an amber one, numbered in the order you picked, and the conflicting files show under the commit. A `-` from `git cherry` is a ring: the branch already has that change, so its own copy folds into the fix's row. Reset the branches afterwards; the graph keeps what the dry run printed.
-
-### A stack of pull requests
-
-`git log` on a stack shows one line of commits with a branch name at each tip. The block splits it into one lane per branch, all in one column, so each pull request reads as its own colored segment.
-
-### History before a release
-
-`git log --all` shows feature branches that forked, grew beside `main`, took `main` back in, and merged. Each merge draws as a curve into the branch it joined, and a branch that was deleted after its merge keeps its name, read from the merge message, with a dashed pill.
 
 ## API
 
@@ -321,6 +351,8 @@ Each fix on `main` gets one row. A pick that applied is a green dot in the branc
 | `title` | — | Shown in the header, and names the figure for screen readers. |
 | `reverse` | `false` | Shows the oldest commit first, as `git log --reverse` does. |
 | `max-count` | — | Keeps the newest commits, as `git log -n` does, and folds the rest into one row. A whole number from 1. |
+
+The props and slots need `::git-graph`. A ```` ```git-graph ```` fence takes only a title, in brackets after its language.
 
 ### Slots
 
@@ -341,7 +373,7 @@ Lanes come from the branch tips: `main`, `master`, or `trunk` first, then each b
 
 The plugin adds these problems to `meta.issues`, as [Validation](/guide/validation) describes:
 
-- A block with no `git log` output.
+- A block or fence with no `git log` output. A fence with none stays a code block.
 - `git log` output without `--parents`. It draws the commits in one line.
 - A branch or a commit, named by `git switch`, `git cherry`, or `git cherry-pick`, that the `git log` above doesn't show.
 - A `max-count` that isn't a whole number from 1.
@@ -351,7 +383,7 @@ The plugin adds these problems to `meta.issues`, as [Validation](/guide/validati
 Each issue names the block and the fix, and has its own rule in [Doctor](/doctor):
 
 ```txt
-`::git-graph` 1's `git log` was run without `--parents`, so it shows the commits in one line and draws no merges. Run `git log --graph --oneline --decorate --parents` again and paste that.
+The ```git-graph fence 1's `git log` was run without `--parents`, so it shows the commits in one line and draws no merges. Run `git log --graph --oneline --decorate --parents` again and paste that.
 `::git-graph` 2: `git switch release/9` names `release/9`, a branch the `git log` above doesn't show. Add the branch to the `git log` command, or add `--all`.
 ```
 

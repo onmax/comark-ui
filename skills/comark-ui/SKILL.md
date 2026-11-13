@@ -77,7 +77,7 @@ Read the reference for each block you use before you write it. Mix the blocks fr
 | A number before and after, a table of befores and afters, or progress | `:delta`, `::stats`, `:progress` | [metrics](references/metrics.md) |
 | Data from a CSV, TSV, or JSON fence or file, as a table that copies and sorts | `::table`, a `csv` fence | [table](references/table.md) |
 | A test run's passed, failed, and skipped counts and its failures, from a JUnit report | `::tests` | [tests](references/tests.md) |
-| Branches, merges, tags, a PR stack, or a backport across release branches, from what git printed | `::git-graph` | [git-graph](references/git-graph.md) |
+| Branches, merges, tags, a PR stack, or a backport across release branches, from what git printed | a `git-graph` fence, or `::git-graph` | [git-graph](references/git-graph.md) |
 | A note, tip, or warning box, or long output folded away, as on GitHub | `> [!NOTE]`, `<details>` | [github](references/github.md) |
 | The review's status, pull request, author, date, and tags in a box | frontmatter, `::properties` | [properties](references/properties.md) |
 | When something happened or is due, as "2 days ago" or a date, with the full date on hover | `:time[2026-11-02]` | [time](references/time.md) |
