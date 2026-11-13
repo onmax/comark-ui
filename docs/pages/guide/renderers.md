@@ -107,6 +107,8 @@ Without a renderer, call `start()` from `comark-zoom/client` once on a page with
 
 ## Content Security Policy
 
+Serve rendered HTML as UTF-8, with `Content-Type: text/html; charset=utf-8` or an early `<meta charset="utf-8">` in the document head. Inline scripts use Unicode line separators to keep their text identical when nested inside HTML elements. Without an encoding declaration, browsers can decode those separators incorrectly, preventing the scripts from running and invalidating their CSP hashes.
+
 The inlined `<style>` and `<script>` elements need `'unsafe-inline'` in `style-src` and `script-src`, or a hash of each. A script's text changes only between versions. Annotate places marks with `style` attributes, so its pages need `style-src 'unsafe-inline'`.
 
 To allow the scripts without rendering a document first, use the preset's `scripts`: the text of every inline script its plugins can write, for the plugins that are on. Hash each one:

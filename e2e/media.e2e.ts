@@ -57,7 +57,7 @@ const open = async (
   if (options.typeset) html = `<main><style>${typesetCss}</style>${html}</main>`;
   await page.route(`${origin}/`, (route) =>
     route.fulfill({
-      contentType: "text/html",
+      contentType: "text/html; charset=utf-8",
       body: `<!doctype html><html><body style="width:${options.width ?? "32rem"};margin:2rem">${html}</body></html>`,
     }),
   );
@@ -601,12 +601,13 @@ test("exported hashes allow nested media scripts under a strict CSP", async ({ p
   const html = await render("![Sound](sound.mp3)");
   await page.route("http://csp.test/", (route) =>
     route.fulfill({
-      contentType: "text/html",
+      contentType: "text/html; charset=utf-8",
       headers: { "Content-Security-Policy": `script-src ${hashes}` },
       body: `<!doctype html>${html}<script>window.documentScriptRan = true</script>`,
     }),
   );
   await page.goto("http://csp.test/");
+  expect(await page.evaluate(() => document.characterSet)).toBe("UTF-8");
   await expect.poll(() => page.evaluate(() => Boolean(window.__comarkMedia))).toBe(true);
   expect(await page.evaluate(() => "documentScriptRan" in window)).toBe(false);
 });
