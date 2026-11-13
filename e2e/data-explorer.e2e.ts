@@ -227,7 +227,7 @@ test("literal columns draw marks and unsorted lines label the plotted endpoint",
             x: "year.num",
             y: "issue.count",
             series: "team.name",
-            stack: false,
+            ...(kind === "area" ? { stack: false } : {}),
             endValues: true,
           })),
         ],
@@ -267,7 +267,14 @@ test("cleared list defaults survive reopening the URL", async ({ page }) => {
       {
         id: "overview",
         label: "Overview",
-        blocks: [{ type: "table", title: "Teams", data: "rows", columns: [{ field: "team" }] }],
+        blocks: [
+          {
+            type: "table",
+            title: "Teams",
+            data: "rows",
+            columns: [{ field: "team", label: "Team" }],
+          },
+        ],
       },
     ],
   });
@@ -301,7 +308,8 @@ for (const offline of [true, false])
     writeFileSync(
       join(moduleDir, "index.mjs"),
       `
-    import { chromium as real } from ${JSON.stringify(playwright)};
+    import playwright from ${JSON.stringify(playwright)};
+    const { chromium: real } = playwright;
     import { readFileSync } from "node:fs";
     export const chromium = { async launch(options) {
       const browser = await real.launch(options);
@@ -332,7 +340,10 @@ for (const offline of [true, false])
               type: "table",
               title: "Teams",
               data: "teams",
-              columns: [{ field: "team" }, { field: "count" }],
+              columns: [
+                { field: "team", label: "Team" },
+                { field: "count", label: "Count" },
+              ],
             },
           ],
         })),
