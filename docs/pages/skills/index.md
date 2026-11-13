@@ -14,7 +14,7 @@ tagline: Each skill teaches your agent one kind of document, what goes in it and
 - A visible change needs proof on a pull request: [Before/after evidence](/skills/before-after-evidence).
 - A review is done, and someone has to decide what to do: [Review document](/skills/review-document).
 - Someone has to choose between options or approve a plan, from your research: [Report](/skills/report).
-- Someone hands over data and wants a dashboard with graphs and filters: Drop's [data-explorer skill](https://drop.vitehub.dev/.well-known/skills/data-explorer/SKILL.md?utm_source=comark-ui&utm_medium=skills), since it writes an HTML page rather than Comark.
+- Someone hands over data and wants to see what's in it, with graphs and filters: [Data explorer](/skills/data-explorer).
 - Someone asked how a system, a flow, or a change works: [Visual explanation](/skills/visual-explanation).
 - Someone needs to learn one concept and prove it: [Teach lesson](/skills/teach-lesson).
 - Your agent needs a block's syntax, not a whole document: the [comark-ui skill](/guide/agents).

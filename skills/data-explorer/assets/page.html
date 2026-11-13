@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Data explorer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap"
+    />
+    <style id="rp-style">
+      /* Paste assets/style.css here. */
+    </style>
+  </head>
+  <body>
+    <div id="report"></div>
+    <!-- Paste report.json between these tags, escaped as SKILL.md says. -->
+    <script id="report-data" type="application/json"></script>
+    <!-- Paste assets/app.js between these tags. -->
+    <script id="rp-app" type="text/plain"></script>
+    <!-- vega -->
+    <script>
+      // Runs the template pasted into this page, and fetches only Vega and Vega-Lite from jsDelivr when the build
+      // didn't inline them.
+      (async () => {
+        const cdn = "https://cdn.jsdelivr.net/npm/";
+        const load = (src) =>
+          new Promise((done, fail) => {
+            const script = Object.assign(document.createElement("script"), { src, onload: done });
+            script.onerror = () => fail(new Error(`couldn't load ${src}`));
+            document.head.append(script);
+          });
+        if (!/\.rp-/.test(document.getElementById("rp-style").textContent))
+          throw new Error("assets/style.css isn't in the page");
+        const app = document.getElementById("rp-app").textContent;
+        if (!/\bfunction render\b/.test(app)) throw new Error("assets/app.js isn't in the page");
+        if (!window.vega) await load(`${cdn}vega@6/build/vega.min.js`);
+        if (!window.vegaLite) await load(`${cdn}vega-lite@6/build/vega-lite.min.js`);
+        document.body.append(
+          Object.assign(document.createElement("script"), {
+            textContent: `(() => {\n${app}\n})();`,
+          }),
+        );
+      })().catch((error) => {
+        document.getElementById("report").textContent =
+          `This page couldn't load: ${error.message}. Rebuild it with the data-explorer skill's build script.`;
+      });
+    </script>
+  </body>
+</html>

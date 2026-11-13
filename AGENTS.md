@@ -235,6 +235,10 @@ How most packages work, so the bullets below don't repeat it:
   - `vp dlx skills add onmax/comark-ui` lists them beside comark-ui and installs the ones picked.
   - Each installs alone, so it carries the syntax of the blocks it uses in `references/blocks.md` and links nothing outside its folder. Its `references/example.md` is a finished document.
   - Each has a page in `docs/pages/skills/` that leads with that example rendered.
+- `skills/data-explorer` writes `report.json` instead of Comark, and a shared template in `assets/` draws it as an interactive page.
+  - `assets/page.html` is the one page. `scripts/build.mjs` checks `report.json` with `scripts/check.mjs`, fills the page's slots, inlines Vega when `vega` and `vega-lite` are installed where it runs, and with `--shots` screenshots every tab. An agent without Node fills the slots by hand.
+  - The page runs only what it holds and fetches only Vega from jsDelivr, so an unfilled slot names the missing file instead of loading it.
+  - `test/data-explorer.test.ts` runs the build on the example in `references/blocks.md`, and `e2e/data-explorer.e2e.ts` clicks through a built page. Its docs page links a live example instead of rendering one.
 
 ### Docs site
 

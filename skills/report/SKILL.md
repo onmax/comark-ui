@@ -8,7 +8,7 @@ license: MIT
 
 The reader scans a report before reading it. They want the answer, the decisions they have to make, and the numbers behind both, and they check the rest only when they doubt something. So the page has a fixed shape: the answer on top, one picture per section, short table cells, and detail folded underneath.
 
-For findings about something that already exists, such as a code review or an audit, use `review-document`. For how something works, use `visual-explanation`. For a dashboard the reader explores with filters, use Drop's `data-explorer` skill. This skill shapes a report you already have the material for; gathering the material is the research itself.
+For findings about something that already exists, such as a code review or an audit, use `review-document`. For how something works, use `visual-explanation`. For data the reader explores with filters, use `data-explorer`. This skill shapes a report you already have the material for; gathering the material is the research itself.
 
 ## 1. Write the answer and the decisions
 
