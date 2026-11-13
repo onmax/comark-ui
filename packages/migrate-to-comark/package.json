@@ -1,6 +1,6 @@
 {
   "name": "migrate-to-comark",
-  "version": "0.12.0",
+  "version": "0.12.1",
   "description": "A wizard that finds the Markdown libraries a project uses (remark, markdown-it, marked) and moves it to Comark with each library's migrator.",
   "keywords": [
     "codemod",
