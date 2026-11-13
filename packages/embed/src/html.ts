@@ -1,10 +1,18 @@
 import type { NodeHandler } from "comark";
 import { allow, icons, referrerPolicy, start } from "./client.ts";
 import { css } from "./styles.ts";
-import { attr } from "../../../shared/html.ts";
+import { attr, inlineScript } from "../../../shared/html.ts";
 
 export { default } from "./index.ts";
 export type { EmbedAttributes, EmbedMeta, EmbedOptions, Player, Size } from "./index.ts";
+
+const inline = inlineScript(`(${start.toString()})()`);
+
+/**
+ * The inline scripts this renderer writes, each exactly as it goes in its `<script>`: the one that sizes X posts. They're the same on every
+ * render, so a page with a strict Content Security Policy can allow them by hash or add its nonce.
+ */
+export const scripts: string[] = [inline];
 
 // Each render gets a fresh `state.context`, so a document carries the styles, and the script X posts need, once.
 const styled = new WeakSet<object>();
@@ -19,9 +27,7 @@ const embed: NodeHandler = ([, attrs], state) => {
   const styles = styled.has(state.context) ? "" : `<style data-comark-embed>${css}</style>`;
   styled.add(state.context);
   const script =
-    provider === "x" && !started.has(state.context)
-      ? `<script>(${start.toString()})()</script>`
-      : "";
+    provider === "x" && !started.has(state.context) ? `<script>${inline}</script>` : "";
   if (script) started.add(state.context);
   if (!src)
     return `${styles}<a class="ce-card" data-comark-frame href="${attr(href)}">${icon(icons.globe)}<strong>${attr(title)}</strong> <span>${attr(host)}</span></a>`;
