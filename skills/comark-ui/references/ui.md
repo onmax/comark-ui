@@ -28,6 +28,7 @@ comarkUi({
 - `mermaid` draws `mermaid` fences with comark-pele, on the server and offline. In the HTML entry the diagram zooms with comark-zoom unless `zoom` is `false`. `mermaid: false` turns it off.
 - `shiki` highlights fenced code with your own Shiki, before comark-code: `{ highlighter: (language) => shiki | undefined, themes: { light, dark } }`. It is off until you pass it, so the preset bundles no grammars. `maxBlocks` and `maxSource` cap how many blocks, and how many characters of code, a document highlights; the blocks past them show plain, each with an issue.
 - comark-critic has no component to add its styles, so put `criticCss`, which every entry exports, in the page.
+- `renderIssues(meta, { title, hint })` from `comark-ui/html`, and `ComarkIssues` from `comark-ui/vue`, draw a document's `meta.issues` as a box to put above it, for a host that shows authors what to fix.
 - The preset styles the text around the blocks, scoped to the element the document renders into, on the same `--comark-*` tokens. Pass `typeset: false` when the site already styles Markdown, such as with Tailwind Typography's `prose`.
 
 ## Renderers

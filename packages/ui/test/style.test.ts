@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import autoprefixer from "autoprefixer";
 import { mermaidCss } from "comark-ui/client";
+import { issuesCss } from "comark-ui/html";
 import { transform } from "lightningcss";
 import postcss from "postcss";
 import { expect, it } from "vite-plus/test";
@@ -20,10 +21,11 @@ const styled = Object.keys(dependencies).filter(
     (require(`${name}/package.json`) as { exports: Record<string, unknown> }).exports,
 );
 
-it("holds every package's styles and the Mermaid wrapper's", () => {
+it("holds every package's styles, the Mermaid wrapper's, and the issues box's", () => {
   expect(styled).toEqual(expect.arrayContaining(["comark-code", "comark-tabs", "comark-zoom"]));
   for (const name of styled) expect(css, name).toContain(read(`${name}/style.css`));
   expect(css).toContain(mermaidCss);
+  expect(css).toContain(issuesCss);
 });
 
 it("keeps every rule in the comark layer", () => {
