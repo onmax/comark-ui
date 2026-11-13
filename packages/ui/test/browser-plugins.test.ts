@@ -131,6 +131,11 @@ describe("docs and playground registration", () => {
       "::git-graph\n```\n* bbbbbbb aaaaaaa (HEAD -> main) Second\n* aaaaaaa First\n```\n::",
       '<span class="cgg-branch" data-lane="0" title="main">main</span>',
     ],
+    [
+      "bundle",
+      '::bundle{before="reports/main.json" after="reports/pr.json"}\n::',
+      '<details class="cbr-more">',
+    ],
     ["time", ':time[2020-01-01]{threshold="none"}', 'class="ctm" datetime="2020-01-01"'],
     ["zoom", "![Photo](a.png)", 'data-zoom="" tabindex="0"'],
   ])("renders %s through the docs configuration", async (_name, markdown, expected) => {

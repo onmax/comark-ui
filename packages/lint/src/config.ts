@@ -29,6 +29,7 @@ const packages = [
           links: { external: false },
           table: {},
           tests: {},
+          bundle: {},
         });
         return {
           default: () => preset.plugins,
@@ -166,6 +167,7 @@ const packages = [
   ["comark-tabs/html", () => import("comark-tabs/html"), ["code-group", "tabs-item"]],
   ["comark-tests/html", () => import("comark-tests/html"), []],
   ["comark-git-graph/html", () => import("comark-git-graph/html"), []],
+  ["comark-bundle/html", () => import("comark-bundle/html"), []],
   ["comark-time/html", () => import("comark-time/html"), ["time"]],
   [
     "comark-xref",

@@ -30,6 +30,7 @@ import readingTime, { type ReadingTimeOptions } from "comark-reading-time";
 import type { TableOptions } from "comark-table";
 import type { TabsOptions } from "comark-tabs";
 import type { TestsOptions } from "comark-tests";
+import type { BundleOptions } from "comark-bundle";
 import type { TimeOptions } from "comark-time";
 import xref, { type XrefOptions } from "comark-xref";
 import type { ZoomOptions } from "comark-zoom";
@@ -50,7 +51,7 @@ export { typeset, typesetCss, typesetStylesheet, TYPESET_TAG } from "./typeset.t
 
 /**
  * `false` turns a plugin off, and an object turns it on with those options. Everything but `include` is on, and cast,
- * table, and tests read no files until they get options.
+ * table, tests, and bundle read no files until they get options.
  */
 export type PresetOptions = {
   /** Pastes files into the Markdown before the other plugins read it. Off, since it reads from disk by default. */
@@ -124,6 +125,8 @@ export type PresetOptions = {
   tests?: TestsOptions | boolean;
   /** `::git-graph` around pasted `git log --graph --oneline --decorate --parents` output, with picks from `git cherry` and `git cherry-pick`. */
   gitGraph?: boolean;
+  /** Reads no builds unless you pass `{ root }`, or `{ read }` for Sonda reports in a runtime without a disk. */
+  bundle?: BundleOptions | boolean;
   /** `:time[2026-10-12]` as relative time: "3 days ago", a date past `threshold`, and the full date in a tooltip. */
   time?: TimeOptions | boolean;
   zoom?: ZoomOptions | boolean;
@@ -192,6 +195,7 @@ export type Renderer<C> = {
   outline: Part<C, OutlineOptions>;
   tests: Part<C, TestsOptions>;
   gitGraph: Part<C>;
+  bundle: Part<C, BundleOptions>;
   time: Part<C, TimeOptions>;
   zoom: Part<C, ZoomOptions>;
   code: Part<C, CodeOptions>;
@@ -245,6 +249,7 @@ const TAGS: [keyof PresetOptions, string[]][] = [
   ["tabs", words("div tabs-item")],
   ["tests", words("details div summary")],
   ["gitGraph", words("b code div span")],
+  ["bundle", words("details div span summary")],
   ["xref", words("caption figcaption figure")],
 ];
 // The blocks each plugin replaces while parsing, by the option that turns it on.
@@ -262,6 +267,7 @@ const optionsOf = <T>(value: T | boolean | undefined): T | undefined =>
   value === true || value === false ? undefined : value;
 // What cast, table, and tests read when they get no options: no file, so a document can't pull one off the disk.
 const noFiles = { read: () => undefined };
+const noBuilds = { ...noFiles, list: () => undefined };
 
 /** Builds a renderer's preset. Use the one from `comark-ui/html`, `/vue`, `/react`, or `/svelte`. */
 export function preset<C>(renderer: Renderer<C>, options: PresetOptions = {}): Preset<C> {
@@ -347,6 +353,7 @@ export function preset<C>(renderer: Renderer<C>, options: PresetOptions = {}): P
   parse(xref, options.xref);
   add(renderer.tests, options.tests, optionsOf(options.tests) ?? noFiles);
   add(renderer.gitGraph, options.gitGraph);
+  add(renderer.bundle, options.bundle, optionsOf(options.bundle) ?? noBuilds);
   add(renderer.time, options.time);
   add(renderer.zoom, options.zoom);
   // After every plugin that writes code blocks, and before code, which reads the lines it draws.

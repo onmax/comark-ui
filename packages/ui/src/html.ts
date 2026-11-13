@@ -35,6 +35,7 @@ import * as table from "comark-table/html";
 import * as tabs from "comark-tabs/html";
 import * as tests from "comark-tests/html";
 import * as gitGraph from "comark-git-graph/html";
+import * as bundle from "comark-bundle/html";
 import * as time from "comark-time/html";
 import * as zoom from "comark-zoom/html";
 import { mermaidBar, mermaidCss } from "./client.ts";
@@ -126,6 +127,7 @@ export default (options?: PresetOptions): Preset<NodeHandler> =>
       tabs,
       tests,
       gitGraph,
+      bundle,
       time,
       typeset,
       zoom,

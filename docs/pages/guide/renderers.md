@@ -57,6 +57,7 @@ Every plugin is on except `include`, which reads from disk. cast, table, and tes
 | [tabs](/tabs) | `comark-tabs/html` | `comark-tabs/vue` | `comark-tabs/react` | `comark-tabs/svelte` |
 | [tests](/tests) | `comark-tests/html` | `comark-tests/vue` | `comark-tests/react` | `comark-tests/svelte` |
 | [git graph](/git-graph) | `comark-git-graph/html` | `comark-git-graph/vue` | `comark-git-graph/react` | `comark-git-graph/svelte` |
+| [bundle](/bundle) | `comark-bundle/html` | `comark-bundle/vue` | `comark-bundle/react` | `comark-bundle/svelte` |
 | [time](/time) | `comark-time/html` | `comark-time/vue` | `comark-time/react` | `comark-time/svelte` |
 | [zoom](/zoom) | `comark-zoom/html` | `comark-zoom/vue` | `comark-zoom/react` | `comark-zoom/svelte` |
 

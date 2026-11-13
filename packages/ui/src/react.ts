@@ -31,6 +31,7 @@ import * as table from "comark-table/react";
 import * as tabs from "comark-tabs/react";
 import * as tests from "comark-tests/react";
 import * as gitGraph from "comark-git-graph/react";
+import * as bundle from "comark-bundle/react";
 import * as time from "comark-time/react";
 import * as zoom from "comark-zoom/react";
 import { addMermaidStyles, mermaidBar, startMermaid } from "./client.ts";
@@ -104,6 +105,7 @@ export default (options?: PresetOptions): Preset<AnyComponent> =>
       tabs,
       tests,
       gitGraph,
+      bundle,
       time,
       typeset,
       zoom,
