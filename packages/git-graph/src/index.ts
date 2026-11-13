@@ -125,7 +125,7 @@ function block(node: ElementNode, number: number, data: Data, issues: Issue[]): 
     [
       "div",
       { class: "cgg-head" },
-      ...(title.length ? [["span", { class: "cgg-title" }, ...title] as ElementNode] : []),
+      ...(title.length ? [["span", { class: "cgg-title" }, ...title] satisfies ElementNode] : []),
       ["span", { class: "cgg-count" }, drawing.summary],
     ],
     [
@@ -135,9 +135,9 @@ function block(node: ElementNode, number: number, data: Data, issues: Issue[]): 
       ["div", { class: "cgg-rows" }, ...drawing.rows],
     ],
     ...(drawing.legend.length
-      ? [["div", { class: "cgg-legend" }, ...drawing.legend] as ElementNode]
+      ? [["div", { class: "cgg-legend" }, ...drawing.legend] satisfies ElementNode]
       : []),
-    ...(footer.length ? [["div", { class: "cgg-footer" }, ...footer] as ElementNode] : []),
+    ...(footer.length ? [["div", { class: "cgg-footer" }, ...footer] satisfies ElementNode] : []),
   ];
 }
 
