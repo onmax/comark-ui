@@ -230,9 +230,10 @@ export const callouts = /* @__PURE__ */ defineComarkPlugin<CalloutsOptions, GitH
     markdownItPost(state) {
       if (options?.blocks === false) return;
       // Preserve the source distinction for custom block components before autoUnwrap removes their paragraph.
-      // Temporary structural wrappers keep bookkeeping out of authored props for every plugin order.
+      // Only immediate callout-body blocks need boundaries. Never wrap a container's own children:
+      // carousel slides, tab items, and annotations must remain direct children before any AST plugin runs.
       // Inline components with the same name remain inline, even when both occur in one callout.
-      const containers: { inside: boolean; wrapped: boolean }[] = [];
+      const containers: { callout: boolean; wrapped: boolean }[] = [];
       const tokens: typeof state.tokens = [];
       const boundary = (token: (typeof state.tokens)[number], nesting: 1 | -1) => {
         // SAFETY: parser tokens are instances of the parser's Token class, whose constructor takes type, tag, nesting.
@@ -260,12 +261,12 @@ export const callouts = /* @__PURE__ */ defineComarkPlugin<CalloutsOptions, GitH
           tokens.push(token);
           continue;
         }
-        const inside = containers.at(-1)?.inside ?? false;
+        const inside = containers.at(-1)?.callout ?? false;
         if (inside) tokens.push(boundary(token, 1));
         tokens.push(token);
         if (token.type === "mdc_block_open")
           containers.push({
-            inside: inside || CALLOUT_BLOCKS.includes(token.tag),
+            callout: CALLOUT_BLOCKS.includes(token.tag),
             wrapped: inside,
           });
         else if (inside) tokens.push(boundary(token, -1));

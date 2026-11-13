@@ -1,5 +1,8 @@
 import { createHtmlRenderer } from "@comark/html";
 import { callouts } from "../../github/src/callouts.ts";
+import tabs, { components as tabComponents } from "../../tabs/src/html.ts";
+import details, { components as detailComponents } from "../../details/src/html.ts";
+import { components as githubComponents } from "../../github/src/html.ts";
 import cards from "../../cards/src/index.ts";
 import { lint } from "../../lint/src/index.ts";
 import { parseMarkdown } from "comark";
@@ -104,5 +107,65 @@ Description.
       expect(rendered).not.toContain("block-boundary");
       expect(rendered).not.toMatch(/<p>\s*<div/);
     });
+  }
+});
+
+describe("containers inside callouts", () => {
+  for (const tag of ["note", "tip", "important", "warning", "caution", "callout"]) {
+    it(`preserves compare and annotation ownership in ${tag}`, async () => {
+      const source = `::::${tag}
+::compare
+:::screenshot{src="before.png" alt="Before" viewport="900x360"}
+::::annotation{x=10 y=20 w=30 h=15}
+Before note.
+::::
+:::
+:::screenshot{src="after.png" alt="After" viewport="900x360"}
+::::annotation{x=50 y=20 w=10 h=10}
+After note.
+::::
+:::
+::
+::::`;
+      const options = preset();
+      const tree = await parseMarkdown(source, options);
+      expect(tree.meta.issues ?? []).toEqual([]);
+      const rendered = await createHtmlRenderer(options)(source);
+      expect(rendered).toContain("Before note.");
+      expect(rendered).toContain("After note.");
+      expect(rendered).not.toContain("block-boundary");
+    });
+    it(`preserves carousel ownership in ${tag}`, async () => {
+      const source = `::::${tag}\n::carousel\n:::slide{title="First"}\nOne\n:::\n::\n::::`;
+      const options = preset();
+      const tree = await parseMarkdown(source, options);
+      expect(tree.meta.issues ?? []).toEqual([]);
+      expect(
+        await lint(source, {
+          ...options,
+          components: [...Object.keys(options.components), ...options.blocks, ...options.tags],
+        }),
+      ).toEqual([]);
+      expect(await createHtmlRenderer(options)(source)).toContain('data-zoom-title="First"');
+    });
+    for (const [name, plugin, item, components] of [
+      ["tabs", tabs, "tabs-item", tabComponents],
+      ["accordion", details, "accordion-item", detailComponents],
+    ] as const) {
+      for (const reversed of [false, true]) {
+        it(`preserves ${name} items in ${tag}, reversed=${reversed}`, async () => {
+          const container = plugin();
+          const plugins = reversed ? [callouts(), container] : [container, callouts()];
+          const source = `::::${tag}\n::${name}\n:::${item}{label="First"}\nUnique item body\n:::\n::\n::::`;
+          const options = { plugins, components: { ...githubComponents, ...components } };
+          const tree = await parseMarkdown(source, options);
+          expect(tree.meta.issues ?? []).toEqual([]);
+          const rendered = await createHtmlRenderer(options)(source);
+          expect(rendered).toContain("Unique item body");
+          expect(rendered).toContain("First");
+          expect(rendered).not.toMatch(/<p>\s*<(?:div|details)/);
+        });
+      }
+    }
   }
 });
