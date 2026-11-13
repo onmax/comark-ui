@@ -106,4 +106,51 @@ describe("comark-github callouts", () => {
     expect(html).toContain('<p class="cgc-title">Nota</p>');
     expect(html).not.toContain("<b>");
   });
+
+  it("reads `::note` through `::caution` as callouts that render as the quotes do", async () => {
+    for (const type of ["note", "tip", "important", "warning", "caution"]) {
+      const block = await render(`::${type}\nRead **this**.\n::`);
+      const quote = await render(`> [!${type.toUpperCase()}]\n> Read **this**.`);
+      expect(block).toBe(quote);
+    }
+  });
+
+  it("takes a block's title from `title` or the `#title` slot, and keeps every block of its body", async () => {
+    const titled = callout(await render('::warning{title="Breaking change"}\nFirst.\n\n- one\n::'));
+    expect(titled?.[1]).toBe("warning");
+    expect(titled?.[2]).toBe("Breaking change");
+    expect(titled?.[3]).toMatch(/^\s*<p>First.<\/p>\s*<ul>\s*<li>one<\/li>/);
+    const slotted = callout(
+      await render("::tip\n#title\nFaster **way**\n\n#default\nUse pnpm.\n::"),
+    );
+    expect(slotted?.[2]).toBe("Faster way");
+    expect(slotted?.[3]).toMatch(/^\s*<p>Use pnpm.<\/p>\s*$/);
+    const translated = await render("::note\nHi\n::", { titles: { note: "Nota" } });
+    expect(translated).toContain('<p class="cgc-title">Nota</p>');
+  });
+
+  it("reads `::callout{type}`, a note without one, and reports a type GitHub doesn't have", async () => {
+    const html = await render(
+      '::callout{type="Tip"}\nA.\n::\n\n::callout\nB.\n::\n\n::callout{type="info"}\nC.\n::',
+    );
+    expect(
+      [...html.matchAll(/class="cgc" data-comark-frame data-type="(\w+)"/g)].map(
+        (match) => match[1],
+      ),
+    ).toEqual(["tip", "note", "note"]);
+    const { meta } = await parseMarkdown('::callout\nA.\n::\n\n::callout{type="info"}\nB.\n::', {
+      plugins: [callouts()],
+    });
+    expect(meta.issues).toEqual([
+      '`::callout` 2 has the type "info", which isn\'t a GitHub callout, so it renders as a note. Set `type` to `note`, `tip`, `important`, `warning`, or `caution`.',
+    ]);
+    expect(meta.issueRules[meta.issues[0]!]).toBe("comark/github/unknown-callout-type");
+  });
+
+  it("leaves the blocks alone with `blocks: false`", async () => {
+    const { nodes } = await parseMarkdown("::note\nHi\n::", {
+      plugins: [callouts({ blocks: false })],
+    });
+    expect(nodes).toEqual([["note", {}, "Hi"]]);
+  });
 });

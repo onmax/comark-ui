@@ -3,12 +3,18 @@ import { defineComarkPlugin } from "comark";
 import { textContent } from "comark/utils";
 import { type GitHubMeta, type Issue, report } from "./meta.ts";
 import { childrenOf, isElement } from "../../../shared/nodes.ts";
+import { text } from "../../../shared/text.ts";
 
 export type CalloutType = "note" | "tip" | "important" | "warning" | "caution";
 
 export interface CalloutsOptions {
   /** Titles for callouts that don't set their own, by type. Default GitHub's: Note, Tip, Important, Warning, Caution. */
   titles?: Partial<Record<CalloutType, string>>;
+  /**
+   * Also reads the blocks `::note`, `::tip`, `::important`, `::warning`, `::caution`, and `::callout{type}` as callouts,
+   * the way Nuxt UI and Docus write them. Default `true`.
+   */
+  blocks?: boolean;
 }
 
 /** The node a callout becomes. Its attributes are `type` and `title`; its children are the callout's blocks. */
@@ -22,6 +28,15 @@ const TITLES: Record<CalloutType, string> = {
   caution: "Caution",
 };
 const isType = (value: string): value is CalloutType => Object.hasOwn(TITLES, value);
+
+/** The blocks `blocks` reads as callouts: one per type, and `::callout`, whose `type` prop picks one. */
+export const CALLOUT_BLOCKS = [...Object.keys(TITLES), "callout"];
+// Whose children are inline, so content made only of them is a paragraph Comark unwrapped.
+const INLINE = new Set(
+  "a abbr b br cite code del dfn em i img ins kbd mark q s samp small span strong sub sup u var".split(
+    " ",
+  ),
+);
 
 /**
  * Reads the `[!TYPE]` marker at the start of a blockquote's first line, written as text or, with the components
@@ -117,34 +132,83 @@ function toCallout(
   ];
 }
 
-function transform(
-  nodes: Node[],
-  start: number,
-  titles: Record<CalloutType, string>,
-  issues: Issue[],
-) {
+const isSlot = (node: Node, name: string): node is ElementNode =>
+  isElement(node) && node[0] === "template" && node[1].name === name;
+
+/**
+ * A `::note` through `::caution` block, or `::callout{type}`, as a callout. The title is the `title` prop or the
+ * `#title` slot. A body Comark unwrapped from its one paragraph is wrapped again, so it renders as the quote would.
+ */
+function fromBlock(node: ElementNode, walk: Walk): ElementNode {
+  const [tag, attrs] = node;
+  let type: CalloutType = "note";
+  if (isType(tag)) type = tag;
+  else {
+    const written = text(attrs.type);
+    const number = ++walk.callouts;
+    const lower = written.toLowerCase();
+    if (isType(lower)) type = lower;
+    else if (written)
+      walk.issues.push({
+        rule: "comark/github/unknown-callout-type",
+        message: `\`::callout\` ${number} has the type "${written}", which isn't a GitHub callout, so it renders as a note. Set \`type\` to \`note\`, \`tip\`, \`important\`, \`warning\`, or \`caution\`.`,
+      });
+  }
+  const children = childrenOf(node);
+  const slot = children.find((child) => isSlot(child, "title"));
+  const body = children.flatMap((child) =>
+    child === slot ? [] : isSlot(child, "default") ? childrenOf(child) : [child],
+  );
+  const title = (slot && textContent(slot).trim()) || text(attrs.title) || walk.titles[type];
+  const inline = body.some((child) =>
+    Array.isArray(child) ? isElement(child) && INLINE.has(child[0]) : child.trim(),
+  );
+  const paragraph: ElementNode = ["p", {}, ...body];
+  return [CALLOUT_TAG, { type, title }, ...(inline ? [paragraph] : body)];
+}
+
+interface Walk {
+  titles: Record<CalloutType, string>;
+  blocks: boolean;
+  issues: Issue[];
+  /** The `::callout` blocks so far, which issues count by. */
+  callouts: number;
+}
+
+function transform(nodes: Node[], start: number, walk: Walk) {
   for (let index = start; index < nodes.length; index++) {
     const node = nodes[index];
     if (!isElement(node)) continue;
-    const callout = node[0] === "blockquote" ? toCallout(node, titles, issues) : undefined;
+    const callout =
+      node[0] === "blockquote"
+        ? toCallout(node, walk.titles, walk.issues)
+        : walk.blocks && CALLOUT_BLOCKS.includes(node[0])
+          ? fromBlock(node, walk)
+          : undefined;
     if (callout) nodes[index] = callout;
     // SAFETY: an element node is [tag, attributes, ...children], so its children start at index 2.
-    transform((callout ?? node) as Node[], 2, titles, issues);
+    transform((callout ?? node) as Node[], 2, walk);
   }
 }
 
 /**
  * GitHub's alerts, `> [!NOTE]` through `> [!CAUTION]`, as callouts with an icon and a title. Text after the marker
  * on its line replaces the title. It is named `alert`, so it takes the place of Comark's built-in alert plugin. A
- * marker of any other type, such as `[!INFO]`, leaves a plain quote and is reported in `meta.issues`.
+ * marker of any other type, such as `[!INFO]`, leaves a plain quote and is reported in `meta.issues`. Unless `blocks`
+ * is `false`, `::note` through `::caution` and `::callout{type}` become the same callouts.
  */
 export const callouts = /* @__PURE__ */ defineComarkPlugin<CalloutsOptions, GitHubMeta>(
   (options) => ({
     name: "alert",
     post(state) {
-      const issues: Issue[] = [];
-      transform(state.tree.nodes, 0, { ...TITLES, ...options?.titles }, issues);
-      if (issues.length) report(state.tree.meta, issues);
+      const walk: Walk = {
+        titles: { ...TITLES, ...options?.titles },
+        blocks: options?.blocks ?? true,
+        issues: [],
+        callouts: 0,
+      };
+      transform(state.tree.nodes, 0, walk);
+      if (walk.issues.length) report(state.tree.meta, walk.issues);
     },
   }),
 );
