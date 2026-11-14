@@ -19,6 +19,8 @@ export const ComarkHtml = defineComponent({
       for (const old of root.value?.querySelectorAll("script") ?? []) {
         const script = document.createElement("script");
         for (const { name, value } of old.attributes) script.setAttribute(name, value);
+        // HTTP CSP hides the nonce attribute on connected scripts; the property retains it.
+        script.nonce = old.nonce;
         script.textContent = old.textContent;
         old.replaceWith(script);
       }

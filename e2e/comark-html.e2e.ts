@@ -40,7 +40,10 @@ type Test = {
 };
 
 async function mount(page: Page, html: string, tag?: string) {
-  await page.addScriptTag({ content: bundle });
+  await page.route("**/comark-html-test.js", (route) =>
+    route.fulfill({ contentType: "text/javascript", body: bundle }),
+  );
+  await page.addScriptTag({ url: "/comark-html-test.js" });
   await page.evaluate(
     ({ html, tag }) => {
       const app = window as unknown as Test;
@@ -78,6 +81,36 @@ test("a zoomable image rendered to HTML zooms inside ComarkHtml", async ({ page 
   const render = createHtmlRenderer({ plugins: [zoom()], components });
   await fixture(page, "");
   await mount(page, await render("![Office correlations dashboard](/dashboard.png)"));
+  await page.locator("main img[data-zoom]").click();
+  await expect(page.locator(".cz-dialog")).toBeVisible();
+});
+
+test("ComarkHtml preserves script nonces under an HTTP CSP on mount and update", async ({
+  page,
+}) => {
+  const nonce = "comark-html-test-nonce";
+  await page.route("**/fixture/", (route) =>
+    route.fulfill({
+      contentType: "text/html",
+      headers: { "Content-Security-Policy": `script-src 'self' 'nonce-${nonce}'` },
+      body: "<!doctype html><main></main>",
+    }),
+  );
+  await page.goto("/fixture/");
+  const render = createHtmlRenderer({ plugins: [zoom()], components });
+  const rendered = await render("![Office correlations dashboard](/dashboard.png)");
+  const html = (count + rendered).replaceAll("<script>", `<script nonce="${nonce}">`);
+  await mount(page, html);
+  await expect.poll(() => page.evaluate(() => (window as unknown as Test).runs)).toBe(1);
+  const script = page.locator("main script").first();
+  expect(await script.getAttribute("nonce")).toBe("");
+  expect(await script.evaluate((element: HTMLScriptElement) => element.nonce)).toBe(nonce);
+
+  await page.evaluate(
+    (next) => (window as unknown as Test).update(next),
+    html.replace("Counted", "Replaced"),
+  );
+  await expect.poll(() => page.evaluate(() => (window as unknown as Test).runs)).toBe(2);
   await page.locator("main img[data-zoom]").click();
   await expect(page.locator(".cz-dialog")).toBeVisible();
 });
