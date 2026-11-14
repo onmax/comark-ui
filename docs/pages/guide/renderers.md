@@ -108,11 +108,11 @@ Without a renderer, call `start()` from `comark-zoom/client` once on a page with
 
 ### HTML in a Vue app
 
-A Vue app that renders its documents with `comark-ui/html`, at build time or on a server, can show the HTML with `ComarkHtml` from `comark-ui/vue`. `v-html` leaves the inline scripts inert, so nothing would zoom, slide, or copy. `ComarkHtml` runs them after it mounts and again when `html` changes:
+A Vue app that renders its documents with `comark-ui/html`, at build time or on a server, can show the HTML with `ComarkHtml` from `comark-ui/html/vue`. `v-html` leaves the inline scripts inert, so nothing would zoom, slide, or copy. `ComarkHtml` runs them after it mounts and again when `html` changes:
 
 ```vue
 <script setup lang="ts">
-import { ComarkHtml } from "comark-ui/vue";
+import { ComarkHtml } from "comark-ui/html/vue";
 
 defineProps<{ html: string }>();
 </script>
@@ -122,7 +122,7 @@ defineProps<{ html: string }>();
 </template>
 ```
 
-Each script starts once per page, so the copies a server render already ran don't start twice. It renders a `div`; pass `tag="span"` for HTML inside a paragraph.
+Each script starts once per page, so the copies a server render already ran don't start twice. It renders a `div`; pass `tag="span"` for HTML inside a paragraph. `comark-ui/vue` exports it too, but importing from there also bundles every block's Vue components.
 
 ## Content Security Policy
 
