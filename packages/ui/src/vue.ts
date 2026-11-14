@@ -1,12 +1,4 @@
-import {
-  type Component,
-  defineAsyncComponent,
-  defineComponent,
-  h,
-  onBeforeUnmount,
-  onMounted,
-  type PropType,
-} from "vue";
+import { type Component, defineComponent, h, onMounted, type PropType } from "vue";
 import * as badge from "comark-badge/vue";
 import * as cards from "comark-cards/vue";
 import * as carousel from "comark-carousel/vue";
@@ -42,10 +34,9 @@ import * as gitGraph from "comark-git-graph/vue";
 import * as bundle from "comark-bundle/vue";
 import * as time from "comark-time/vue";
 import * as zoom from "comark-zoom/vue";
-import { addMermaidStyles, mermaidBar, startMermaid } from "./client.ts";
 import { type Preset, type PresetOptions, preset } from "./index.ts";
 import { issuesCss, issuesInner, issuesOf, type IssuesOptions } from "./issues.ts";
-import { typesetCss } from "./typeset-css.ts";
+import { Mermaid, typeset } from "./vue-blocks.ts";
 import { addStyles } from "../../../shared/styles.ts";
 
 export { commentsCss, criticCss } from "./index.ts";
@@ -76,39 +67,7 @@ export const ComarkIssues = defineComponent({
   },
 });
 
-// Pele is about 270 kB gzipped, so it loads only when a document has a diagram. Vue's server renderer waits for it, so a
-// server render still arrives drawn.
-const Pele = defineAsyncComponent(() =>
-  import("comark-pele/vue").then(({ createPeleComponent }) =>
-    createPeleComponent({ onRender: addMermaidStyles, onError: addMermaidStyles }),
-  ),
-);
-
-// Pele's card in `.cmm` with the bar of buttons, as `comark-ui/html` draws it. In the browser Pele's own `mount()` zooms
-// the diagram in place, so it doesn't zoom with comark-zoom.
-const Mermaid = defineComponent({
-  name: "ComarkMermaid",
-  inheritAttrs: false,
-  props: { content: { type: String, default: "" } },
-  setup(props, { attrs }) {
-    let stop = () => {};
-    onMounted(() => (stop = startMermaid()));
-    onBeforeUnmount(() => stop());
-    return () =>
-      h("div", { class: "cmm", "data-comark-frame": "", "data-source": props.content }, [
-        // SAFETY: Comark passes the node's attributes, whose `class` is a string, as Pele's prop takes it.
-        h(Pele, { ...(attrs as { class?: string }), content: props.content }),
-        h("div", { class: "cmm-bar", innerHTML: mermaidBar() }),
-      ]);
-  },
-});
 const mermaid = { default: pele, components: { pele: Mermaid } };
-
-// Rendered with the document rather than added on mount, so `@scope` styles its root and server renders arrive styled.
-const typeset = defineComponent({
-  name: "ComarkTypeset",
-  setup: () => () => h("style", { "data-comark-typeset": "", innerHTML: typesetCss }),
-});
 
 /** Render documents parsed elsewhere without constructing or bundling the parser preset. */
 export const components = {
