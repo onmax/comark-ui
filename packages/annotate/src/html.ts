@@ -4,7 +4,7 @@ import { carouselHtml, scripts as carouselScripts } from "comark-carousel/html";
 import { runtime as zoomRuntime } from "comark-zoom/html";
 import { measure } from "comark-zoom/size";
 import { start } from "./script.ts";
-import { draw } from "./marks.ts";
+import { draw, seed } from "./marks.ts";
 import { BOX_PADDING, pixels, place } from "./place.ts";
 import {
   type Annotation,
@@ -133,14 +133,6 @@ const noteText = (annotation: Annotation) =>
   textContent(wrap(annotation.note)).trim().slice(0, 120);
 const label = (annotation: Annotation) =>
   annotation.number ? `Annotation ${annotation.number}` : `Side note: ${noteText(annotation)}`;
-
-// Each mark wobbles by its own number and box, so marks differ from each other but not between renders.
-function seed({ n, x, y, w, h, mark }: Annotation) {
-  let hash = 2166136261;
-  for (const char of `${mark}|${n}|${x}|${y}|${w}|${h}`)
-    hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
-  return hash;
-}
 
 function markSvg(annotation: Annotation, aspect?: number) {
   const { w, h } = pixels(annotation, aspect);
