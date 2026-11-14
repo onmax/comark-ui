@@ -14,4 +14,13 @@ export const disclosureMotion = (selector: string, rules = ""): string =>
   // fades as it grows, and fades out before the height clips it, so text never slides under a hard edge.
   `${selector}::details-content{display:flow-root;block-size:0;opacity:0;overflow-y:clip;transition:block-size ${closing},opacity .12s ease-in,content-visibility .18s allow-discrete}` +
   `${selector}[open]::details-content{block-size:auto;opacity:1;transition:block-size ${opening},opacity ${opening},content-visibility .25s allow-discrete}` +
-  `${rules}}}`;
+  `${rules}}}` +
+  // Firefox and Safari can't grow a height to `auto`, and Firefox runs no transition or animation on
+  // `::details-content`, so there the content's children fade in as it opens. Closing stays instant, since a closed
+  // details hides its content before anything could fade it out. Text alone has no element to fade, and a details that
+  // starts open fades in once on load.
+  "@supports not (interpolate-size:allow-keywords){" +
+  "@media screen and (prefers-reduced-motion:no-preference){" +
+  `${selector}[open]>:not(summary){animation:comark-disclosure-in ${opening}}` +
+  "}}" +
+  "@keyframes comark-disclosure-in{from{opacity:0;translate:0 -4px}}";

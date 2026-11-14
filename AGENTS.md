@@ -231,7 +231,7 @@ How most packages work, so the bullets below don't repeat it:
   - `html.ts`: `attr`. `nodes.ts`: `isElement` and `childrenOf`. `url.ts`: `isWebUrl`.
   - `styles.ts`: the `addStyles(name, css)` every `client.ts` wraps.
   - `disk.ts`: the root-guarded reader behind `include`, `table`, `tests`, and `cast`.
-  - `disclosure.ts`: the animation for disclosures.
+  - `disclosure.ts`: the animation for disclosures. Where `interpolate-size` is missing (Firefox, Safari) their children fade in instead, since Firefox animates nothing on `::details-content`.
   - `markdown-it.ts`: bundled by each package that adds Markdown syntax. Comark builds nodes from a closed table of token types, so these plugins emit `blockquote` or `mdc_inline_span` tokens with their own tag, never `mdc_block_slot`, which a `::component` reads as a named slot. It also places rules next to anchors that may be missing, as Comark's are under `registerDefaultPlugins: false`, and keeps one markdown-it function per set of options, since Comark caches parsers by their identity.
 - `skills/comark-ui` is the agent skill for the blocks.
   - `vp dlx skills add onmax/comark-ui` installs it from GitHub, the docs serve it under `/.well-known/skills/` through nuxt-agent-discovery, and comark-ui ships it.
