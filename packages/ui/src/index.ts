@@ -39,6 +39,7 @@ import type { BundleOptions } from "comark-bundle";
 import type { TimeOptions } from "comark-time";
 import xref, { type XrefOptions } from "comark-xref";
 import type { ZoomOptions } from "comark-zoom";
+import { componentInfo, type ComponentInfo } from "./info.ts";
 import mermaidLimits, { type MermaidOptions } from "./mermaid-limits.ts";
 import shiki, { type ShikiOptions } from "./shiki.ts";
 import { typeset, TYPESET_TAG } from "./typeset.ts";
@@ -50,6 +51,7 @@ import { typeset, TYPESET_TAG } from "./typeset.ts";
 export { css as commentsCss } from "comark-comments";
 /** comark-critic's styles. It has no component to add them, so put them in the page yourself. */
 export { css as criticCss } from "comark-critic";
+export { componentInfo, type ComponentInfo, type ComponentProp } from "./info.ts";
 export type { MermaidOptions } from "./mermaid-limits.ts";
 export type { ShikiHighlighter, ShikiOptions } from "./shiki.ts";
 export { typeset, typesetCss, typesetStylesheet, TYPESET_TAG } from "./typeset.ts";
@@ -235,6 +237,11 @@ export type Preset<C> = {
    * empty.
    */
   scripts: string[];
+  /**
+   * What an editor shows for each block the plugins read and the renderer draws, as `componentInfo()` returns it, for
+   * `ComarkEditor`'s `components`.
+   */
+  componentInfo: Record<string, ComponentInfo>;
 };
 
 const words = (text: string) => text.split(" ");
@@ -404,5 +411,16 @@ export function preset<C>(renderer: Renderer<C>, options: PresetOptions = {}): P
     ...BLOCKS.flatMap(([key, list]) => (enabled(key) ? list : [])),
     ...(calloutBlocks ? CALLOUT_BLOCKS : []),
   ];
-  return { plugins, components, tags: [...tags], blocks, scripts: [...scripts] };
+  const info = componentInfo({
+    ...options,
+    ...Object.fromEntries(absent.map((key) => [key, false])),
+  });
+  return {
+    plugins,
+    components,
+    tags: [...tags],
+    blocks,
+    scripts: [...scripts],
+    componentInfo: info,
+  };
 }

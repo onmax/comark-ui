@@ -31,6 +31,7 @@
     ".": "./dist/index.mjs",
     "./font": "./dist/font.mjs",
     "./html": "./dist/html.mjs",
+    "./info": "./dist/info.mjs",
     "./tour": "./dist/tour.mjs",
     "./package.json": "./package.json"
   },

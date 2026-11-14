@@ -1,3 +1,3 @@
 import { definePackage } from "../../tsdown.shared.ts";
 
-export default definePackage({ entry: ["src/index.ts"] });
+export default definePackage({ entry: ["src/index.ts", "src/info.ts"] });
