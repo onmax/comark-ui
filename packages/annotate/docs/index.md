@@ -204,6 +204,18 @@ The [annotation page](/annotate/components/annotation#side-note) covers where si
 
 Measure each element in the page you captured instead of estimating from the image. The [annotation page](/annotate/components/annotation#place-marks-on-their-target) shows how.
 
+### Make a video tour of a compare
+
+`tour` turns every `::compare` in a document into a video. It zooms to each change, draws its mark, writes its note, and cuts from before to after at the same place, then ends on the whole after. Marks within a fifth of the image of each other on both sides share one shot. It draws with the same marks and seeds as the page, in its own Caveat, with no browser.
+
+```sh
+pnpm add -D @napi-rs/canvas
+vp exec comark-annotate tour pr.md --sheet sheet.png  # 12 frames on one image, to check it
+vp exec comark-annotate tour pr.md -o tour.mp4        # the video, 1920×1080 at 30 fps
+```
+
+The video needs [ffmpeg](https://ffmpeg.org) on the `PATH`; the sheet doesn't. Marks take the ink of their annotation or screenshot, else red before and green after. The tour shows only what the screenshots show, so keep the compare as the evidence and the video as a way into it.
+
 ### Page through screenshots across a page
 
 The [recipes](/recipes/zoom) show how to page through screenshots spread across a page, or through a flow one step at a time.
@@ -222,6 +234,7 @@ The package has a small CLI that knows zoom and carousel too.
 | --- | --- |
 | `check` | Lists every problem in one or more files, and exits with 1 if it finds any. |
 | `render` | Writes a standalone page next to each file, or to `-o` for one file. Screenshot it to check that each mark sits on its target. |
+| `tour` | Writes a video tour of one file's compares, next to it or to `-o`. `--sheet` writes 12 of its frames on one image, and alone writes only that. Needs `@napi-rs/canvas`, and ffmpeg for the video. |
 
 Install comark-annotate as a direct dependency of the workspace package where you run the CLI, at the exact version of the project's Comark UI packages: `pnpm add -D comark-annotate@<version>`. Add `-w` at the workspace root. With no Comark UI packages installed, leave out `@<version>`. Then run the local executable:
 
@@ -233,6 +246,16 @@ vp exec comark-annotate render duck-audit.md -o duck-audit.html
 `vp` is the [global Vite+ CLI](https://viteplus.dev/guide/global-cli). Without it, use `pnpm exec` for `vp exec` and `pnpm dlx` for `vp dlx`.
 
 pnpm links the executable only for a direct dependency. When comark-annotate is only transitive, npx stops with `comark-annotate: not found`, and `@latest` can run a different release from the project's renderers.
+
+### Functions
+
+`comark-annotate/tour` exports `tour(markdown, options)`, which the CLI's `tour` runs. It resolves to the tour's `duration`, its `shots` (each change, its side, and its notes, with times), and its `issues`, with `frame(t)` and `sheet(count)` for PNGs and `write(file)` for the MP4.
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `base` | the working directory | The folder or URL that relative image paths resolve against. |
+| `width`, `height` | `1920`, `1080` | The frame size in pixels. Text and strokes scale with the height. |
+| `fps` | `30` | Frames per second of the video. |
 
 ### Issues
 

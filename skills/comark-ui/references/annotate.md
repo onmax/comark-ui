@@ -59,7 +59,7 @@ Make comark-annotate a direct dependency of the workspace package where you run 
 vp exec comark-annotate render report.md -o report.html
 ```
 
-`render` writes a standalone page of the screenshots and compares, and relative `src` paths resolve next to it. Without comark-linter, `vp exec comark-annotate check report.md` lists these blocks' problems on its own. It names each one like `screenshot "after.png", annotation 2`, counting annotations within their screenshot, and exits with 1 while any remain.
+`render` writes a standalone page of the screenshots and compares, and relative `src` paths resolve next to it. `tour` writes a video tour of every compare (`-o tour.mp4`, or `--sheet sheet.png` alone for 12 frames on one image), with `@napi-rs/canvas` installed and ffmpeg for the video. Without comark-linter, `vp exec comark-annotate check report.md` lists these blocks' problems on its own. It names each one like `screenshot "after.png", annotation 2`, counting annotations within their screenshot, and exits with 1 while any remain.
 
 ## Register
 
