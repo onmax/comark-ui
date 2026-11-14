@@ -2,8 +2,7 @@
 // Replaces the shell's DocsMarkdown to add comark-ui's components. The shell passes its own (`pre`) on top.
 import { MarkdownDocument } from "@comark/vue";
 import contentComponents from "#docs/components";
-import { components } from "comark-ui/vue";
-import ComarkHtml from "./ComarkHtml.vue";
+import { ComarkHtml, components } from "comark-ui/vue";
 
 import type { Component } from "vue";
 import type { DocsDocument } from "@vite-hub/docs";
