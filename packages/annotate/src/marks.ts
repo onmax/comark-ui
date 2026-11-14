@@ -188,3 +188,26 @@ export function draw(
 ): Drawing {
   return marks[mark](width, height, generator(seed), edge);
 }
+
+// Each mark wobbles by its own number and box, so marks differ from each other but not between renders, and a tour
+// draws the same wobble as the page.
+export function seed({
+  n,
+  x,
+  y,
+  w,
+  h,
+  mark,
+}: {
+  n: number;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  mark: Mark;
+}) {
+  let hash = 2166136261;
+  for (const char of `${mark}|${n}|${x}|${y}|${w}|${h}`)
+    hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
+  return hash;
+}

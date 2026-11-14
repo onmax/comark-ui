@@ -59,6 +59,7 @@ Install comark-annotate directly in the package where you run the CLI, at the ve
 ```sh
 vp exec comark-annotate check report.md other.md        # one line per problem, exit 1 if any
 vp exec comark-annotate render report.md -o report.html # standalone page to screenshot
+vp exec comark-annotate tour report.md -o tour.mp4      # video tour of each ::compare, needs @napi-rs/canvas and ffmpeg
 ```
 
 `vp` comes with the [global Vite+ CLI](https://viteplus.dev/guide/global-cli). Without it, use `pnpm dlx` for `vp dlx` and `pnpm exec` for `vp exec`.

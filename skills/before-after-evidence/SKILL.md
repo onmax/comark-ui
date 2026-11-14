@@ -76,3 +76,7 @@ Image `src` must be a URL the renderer can reach: a path next to the document, o
 3. Check that each mark sits on its target and each note matches what its side shows. A clip should start by itself and loop in the page. Measure a mark that misses again from the source; a box moved by eye stays a guess.
 
 Done when you've looked at the rendered page and every mark lands. Name any mark or block you couldn't check in your report.
+
+## 5. Add a tour, when it helps
+
+When the document has two or more marks or several compares, add a video tour of them under the compare: comark-annotate draws it from the marks you already measured, so it takes no new writing. Skip it for one small change. [references/tour.md](references/tour.md) has the commands and what to check.
