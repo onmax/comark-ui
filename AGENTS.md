@@ -9,6 +9,7 @@ A pnpm workspace. Every package in `packages/` is published to npm under its own
 How most packages work, so the bullets below don't repeat it:
 
 - A parse plugin turns syntax into explicit nodes with the props a renderer needs, so no renderer splits children or parses URLs. Renderers only draw.
+- A package whose blocks a document writes exports `componentInfo` from `src/info.ts`, its `./info` entry: each block's `kind`, `label`, `description`, typed `props`, and named `slots`, keyed by the name as written, for editors. It's plain data on the type in `shared/component-info.ts`, so a server can load it without the plugin. A new block adds its entry; `packages/ui/test/info.test.ts` checks every component the docs' examples write has one.
 - A package has no script unless its bullet says so. Its Vue, React, and Svelte components add the styles on mount, and the HTML renderer inlines them once per document.
 - Where a bullet says "built like zoom's", the package's browser script is built the way `packages/zoom/src/script.ts` is.
 
@@ -206,6 +207,7 @@ How most packages work, so the bullets below don't repeat it:
   - `src/html.ts`, `src/vue.ts`, `src/react.ts`, and `src/svelte/` are the renderers. They all output the same markup.
 - `packages/ui` is `comark-ui`: every other package in one install, and the one the docs recommend. It has no docs page of its own: `docs/pages/getting-started.md` is its page, and its homepage is the site. Add a new package here too.
   - `preset()` in `src/index.ts` takes one renderer's entries of the packages with components, adds the parse-only ones itself, and returns `{ plugins, components }` in the order the docs render with, plus `scripts`: every inline script the HTML components of the plugins that are on can write. Each package with a script exports its own list as `scripts` from `/html`, its dependencies' included, so a host can nonce or hash them. One `createIcons()` is shared by icon, cards, details, file-tree, tabs, and code. Each renderer entry only passes its imports. The Vue, React, and Svelte entries leave out annotate, comments, diff, and quiz.
+  - `src/info.ts` is `comark-ui/info`. `componentInfo(options)` collects the packages' `componentInfo` for the plugins those options turn on, and each preset returns it as `componentInfo`, without the blocks its renderer leaves out. Add a new package's map there.
   - It re-exports comark-critic's `css` as `criticCss`, since a project can't import a dependency of a dependency.
   - Its build writes `comark-ui/style.css`: every dependency's `style.css` and the Mermaid wrapper's styles, all in the `comark` layer, for a server-rendered page to link. `test/style.test.ts` checks it through the package's exports.
   - Typeset: `src/typeset-css.ts` is the text around the blocks, shadcn/typeset on the `--comark-*` tokens, with no imports but the theme, so `comark-ui/client` exports it to browsers too. `src/typeset.ts` is its plugin, on by default, which appends one `typeset-styles` node.
@@ -231,6 +233,7 @@ How most packages work, so the bullets below don't repeat it:
   - `html.ts`: `attr`. `nodes.ts`: `isElement` and `childrenOf`. `url.ts`: `isWebUrl`.
   - `styles.ts`: the `addStyles(name, css)` every `client.ts` wraps.
   - `disk.ts`: the root-guarded reader behind `include`, `table`, `tests`, and `cast`.
+  - `component-info.ts`: the `ComponentInfo` type every package's `/info` entry uses.
   - `disclosure.ts`: the animation for disclosures.
   - `markdown-it.ts`: bundled by each package that adds Markdown syntax. Comark builds nodes from a closed table of token types, so these plugins emit `blockquote` or `mdc_inline_span` tokens with their own tag, never `mdc_block_slot`, which a `::component` reads as a named slot. It also places rules next to anchors that may be missing, as Comark's are under `registerDefaultPlugins: false`, and keeps one markdown-it function per set of options, since Comark caches parsers by their identity.
 - `skills/comark-ui` is the agent skill for the blocks.

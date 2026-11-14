@@ -103,6 +103,19 @@ A component you don't list shows its name, and the panel edits its props as text
 
 Any other `type`, such as `image`, edits as text until a `field` draws it. `default` shows in an empty field and is never written. `icon` takes a class, such as an UnoCSS icon's, or a Vue component.
 
+### comark-ui's blocks
+
+`componentInfo(options)` from `comark-ui/info` describes every block the preset reads with those options: its `kind`, `label`, a one-sentence `description`, typed `props`, and named `slots`. Pass it the options you render with, and the editor knows every block a document can hold:
+
+```ts
+import { componentInfo } from "comark-ui/info";
+
+const options = { typeset: false, chips: false };
+const { editor } = useComarkEditor(markdown, { components: componentInfo(options) });
+```
+
+It's plain data, so a server can build it too, such as for ViteHub's `documents({ components })`. Each preset returns the same map as `componentInfo`, without the blocks its renderer doesn't draw. A package used alone exports its own map as `componentInfo` from its `/info` entry, such as `comark-embed/info`. Spread your own entries over it to add icons.
+
 ### Draw your own fields
 
 Use the `field` option to draw a prop's field, such as a media picker. It gets the `component` and prop `name`, the prop's entry in `prop`, its `value`, `editable`, the `id` its label points at, and `update(value)`, which sets the prop. `update(undefined)` removes it. Return `undefined` to keep the panel's own field.
