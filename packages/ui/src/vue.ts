@@ -48,6 +48,7 @@ import { issuesCss, issuesInner, issuesOf, type IssuesOptions } from "./issues.t
 import { typesetCss } from "./typeset-css.ts";
 import { addStyles } from "../../../shared/styles.ts";
 
+export { ComarkHtml } from "./html-vue.ts";
 export { commentsCss, criticCss } from "./index.ts";
 export type { PresetOptions } from "./index.ts";
 export { issuesCss, issuesOf, type IssuesOptions } from "./issues.ts";
