@@ -14,6 +14,7 @@ export interface TourNote {
   w: number;
   h: number;
   mark: Mark;
+  edge?: "left" | "right" | "top" | "bottom";
   color?: string;
   text: string;
   seed: number;
@@ -53,6 +54,7 @@ export interface PlacedMark {
   image: number;
   box: Rect;
   mark: Mark;
+  edge?: "left" | "right" | "top" | "bottom";
   seed: number;
   color: string;
   lines: string[];
@@ -168,11 +170,22 @@ function wrap(text: string, max: number, size: number, measure: Measure) {
   const lines: string[] = [];
   let line = "";
   for (const word of text.split(/\s+/).filter(Boolean)) {
-    const next = line ? `${line} ${word}` : word;
-    if (line && measure(next, size) > max) {
+    if (line && measure(`${line} ${word}`, size) > max) {
       lines.push(line);
-      line = word;
-    } else line = next;
+      line = "";
+    }
+    if (measure(word, size) <= max) {
+      line = line ? `${line} ${word}` : word;
+      continue;
+    }
+    // URLs and scripts without spaces still need to fit the card.
+    for (const character of word) {
+      if (line && measure(line + character, size) > max) {
+        lines.push(line);
+        line = "";
+      }
+      line += character;
+    }
   }
   if (line) lines.push(line);
   return lines;
@@ -269,14 +282,14 @@ function placeNote(
     );
   };
   const best = options
+    .map((option) => ({
+      ...option,
+      x: clamp(option.x, s.margin, width - s.margin - option.w),
+      y: clamp(option.y, s.top, height - s.bottom - option.h),
+    }))
     .map((option, index) => ({ option, score: score(option, index) }))
     .sort((a, b) => a.score - b.score)[0]!.option;
-  const placed = {
-    ...best,
-    x: clamp(best.x, s.margin, width - s.margin - best.w),
-    y: clamp(best.y, s.top, height - s.bottom - best.h),
-  };
-  return { ...placed, card: overlap(placed, image) > 0 };
+  return { ...best, card: overlap(best, image) > 0 };
 }
 
 // Pairs each before mark with the nearest after mark within a fifth of the image, so a change seen in one place on
@@ -353,7 +366,7 @@ export function plan(
     const frame = toScreen(image, at, { x: 0, y: 0, w: 100, h: 100 }, width, height);
     const taken: Rect[] = [];
     const start = t;
-    let end = t;
+    let end = notes.length ? t : t + 1.4;
     notes.forEach((note, index) => {
       const box = toScreen(image, at, note, width, height);
       const ink = inkBounds(box, note.mark, s.unit);
@@ -368,6 +381,7 @@ export function plan(
         image: side.image,
         box: { x: note.x, y: note.y, w: note.w, h: note.h },
         mark: note.mark,
+        edge: note.edge,
         seed: note.seed,
         color: inkOf(note.color ?? side.ink, image.dark, which),
         lines: placed?.lines ?? [],
@@ -399,19 +413,15 @@ export function plan(
     for (const shot of pairs(before.notes, after.notes)) {
       const first = shot.before.length ? before : after;
       const at = shotCamera(images[first.image]!, [...shot.before, ...shot.after], width, height);
-      if (shown !== first.image) show(first, 0.3);
+      show(before, 0.3);
       moveTo(at);
-      if (shot.before.length) {
-        mark(before, "before", shot.before, at);
-        clear();
-      }
-      if (shot.after.length) {
-        // A short crossfade: before and after rarely line up past the change, and a long one shows both at once.
-        if (shown !== after.image) show(after, 0.2);
-        t += 0.2;
-        mark(after, "after", shot.after, at);
-        clear();
-      }
+      mark(before, "before", shot.before, at);
+      clear();
+      // The screenshot transition belongs to the change, even when one side has no marks.
+      show(after, 0.2);
+      t += 0.2;
+      mark(after, "after", shot.after, at);
+      clear();
     }
     show(after);
     moveTo(FULL, 1.1);
@@ -420,6 +430,7 @@ export function plan(
         image: after.image,
         box: { x: note.x, y: note.y, w: note.w, h: note.h },
         mark: note.mark,
+        edge: note.edge,
         seed: note.seed,
         color: inkOf(note.color ?? after.ink, images[after.image]!.dark, "after"),
         lines: [],

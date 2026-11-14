@@ -6,7 +6,7 @@ import { textContent } from "comark/utils";
 import annotate from "./index.ts";
 import { caveat } from "./font.ts";
 import { seed } from "./marks.ts";
-import { readCompare, type Screenshot } from "./read.ts";
+import { bracketEdge, readCompare, type Screenshot } from "./read.ts";
 import { drawFrame, FONT } from "./tour/draw.ts";
 import { plan, type Scene, type TourCompare, type TourImage, type TourSide } from "./tour/plan.ts";
 import { childrenOf, isElement } from "../../../shared/nodes.ts";
@@ -145,6 +145,7 @@ export async function tour(markdown: string, options: TourOptions = {}): Promise
             h: annotation.h,
             // On the page an arrow from the side note points at a `none` mark; a tour has no arrows, so it loops it.
             mark: annotation.mark === "none" ? "circle" : annotation.mark,
+            edge: bracketEdge(annotation, shot.aspect ?? image.height / image.width),
             color: annotation.color,
             text: noteText(annotation.note),
             seed: seed(annotation),
