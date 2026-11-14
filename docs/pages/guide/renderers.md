@@ -106,6 +106,24 @@ The Vue, React, and Svelte components add the styles and start the script on mou
 
 Without a renderer, call `start()` from `comark-zoom/client` once on a page with `data-zoom` elements. It adds the styles and returns a stop function.
 
+### HTML in a Vue app
+
+A Vue app that renders its documents with `comark-ui/html`, at build time or on a server, can show the HTML with `ComarkHtml` from `comark-ui/vue`. `v-html` leaves the inline scripts inert, so nothing would zoom, slide, or copy. `ComarkHtml` runs them after it mounts and again when `html` changes:
+
+```vue
+<script setup lang="ts">
+import { ComarkHtml } from "comark-ui/vue";
+
+defineProps<{ html: string }>();
+</script>
+
+<template>
+  <ComarkHtml :html="html" class="article" />
+</template>
+```
+
+Each script starts once per page, so the copies a server render already ran don't start twice. It renders a `div`; pass `tag="span"` for HTML inside a paragraph.
+
 ## Content Security Policy
 
 Serve rendered HTML as UTF-8, with `Content-Type: text/html; charset=utf-8` or an early `<meta charset="utf-8">` in the document head. Inline scripts use Unicode line separators to keep their text identical when nested inside HTML elements. Without an encoding declaration, browsers can decode those separators incorrectly, preventing the scripts from running and invalidating their CSP hashes.
