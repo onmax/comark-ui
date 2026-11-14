@@ -3,7 +3,7 @@ import { defineConfig, devices } from "@playwright/test";
 // Agents share the machine, so each one can test its own build on its own port.
 const port = Number(process.env.E2E_PORT ?? 4173);
 
-// End-to-end checks of the components in Chromium. Each test renders its Markdown into a page of its own; the server
+// End-to-end checks of the components in Chromium, and in Firefox where a file says so. Each test renders its Markdown into a page of its own; the server
 // only answers with the images in docs/public, so nothing needs the docs built.
 export default defineConfig({
   // Run the docs migration checks in CI alongside the component contracts.

@@ -46,6 +46,7 @@ No. Each item is a native `<details>`, and `type="single"` gives them one `name`
 
 - Every block renders as `<details>` with a real `<summary>`, even from a `#summary` slot, so it opens and closes with no script.
 - The browser's search finds text inside a closed block, and it prints.
+- It opens with motion: the height grows in Chromium, and the content fades in in Firefox and Safari. With reduced motion it opens at once.
 - A single accordion keeps one item open through the `name` attribute, which [every current browser](https://caniuse.com/mdn-html_elements_details_name) supports.
 - It uses Nuxt UI's syntax, so a page renders the same under Nuxt UI.
 
