@@ -34,7 +34,7 @@ async function problemOf(hash: string) {
   if (!state) return "its code doesn't decode, or names a preset that doesn't exist";
   const source = state.files[contentFile];
   if (source === undefined) return `it has no ${contentFile}`;
-  if (!playable(source)) return "its Markdown includes files, which the playground can't read";
+  if (!playable(source)) return "its Markdown reads files, which the playground can't";
   const { config, issues } = readConfig(state.files[configFile] ?? defaultConfig);
   const { meta } = await parseMarkdown(source, {
     plugins: browserPlugins(config, { download: false }),

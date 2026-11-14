@@ -51,7 +51,7 @@ describe("tags", () => {
   it("follows the options: a plugin that's off adds none of its tags or blocks", () => {
     expect(html().tags).toEqual(expect.arrayContaining(["kbd", "quiz-option", "tabs-item"]));
     expect(html().blocks).toEqual(
-      expect.arrayContaining(["code-group", "progress", "stats", "ref"]),
+      expect.arrayContaining(["code-group", "progress", "stats", "ref", "note", "callout"]),
     );
     const off = html({ quiz: false, tabs: false, metrics: false, github: { html: false } });
     expect(off.tags).not.toContain("quiz-option");
@@ -60,6 +60,8 @@ describe("tags", () => {
     expect(off.blocks).not.toContain("code-group");
     expect(off.blocks).not.toContain("progress");
     expect(off.blocks).not.toContain("stats");
+    expect(html({ github: { callouts: { blocks: false } } }).blocks).not.toContain("note");
+    expect(html({ github: { callouts: false } }).blocks).not.toContain("note");
     // Quiz has no Vue renderer, so the Vue preset leaves it out.
     expect(vue().tags).not.toContain("quiz-option");
   });
@@ -84,6 +86,7 @@ describe("tags", () => {
         table: false,
         tests: false,
         gitGraph: false,
+        bundle: false,
       };
       expect(html(isolated).tags).not.toContain("div");
       const { plugins, components, tags } = html({ ...isolated, [key]: true });

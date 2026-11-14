@@ -5,6 +5,7 @@ import {
   h,
   onBeforeUnmount,
   onMounted,
+  type PropType,
 } from "vue";
 import * as badge from "comark-badge/vue";
 import * as cards from "comark-cards/vue";
@@ -38,14 +39,42 @@ import * as table from "comark-table/vue";
 import * as tabs from "comark-tabs/vue";
 import * as tests from "comark-tests/vue";
 import * as gitGraph from "comark-git-graph/vue";
+import * as bundle from "comark-bundle/vue";
 import * as time from "comark-time/vue";
 import * as zoom from "comark-zoom/vue";
 import { addMermaidStyles, mermaidBar, startMermaid } from "./client.ts";
 import { type Preset, type PresetOptions, preset } from "./index.ts";
+import { issuesCss, issuesInner, issuesOf, type IssuesOptions } from "./issues.ts";
 import { typesetCss } from "./typeset-css.ts";
+import { addStyles } from "../../../shared/styles.ts";
 
 export { commentsCss, criticCss } from "./index.ts";
 export type { PresetOptions } from "./index.ts";
+export { issuesCss, issuesOf, type IssuesOptions } from "./issues.ts";
+
+/**
+ * The problems a parse found in a document, from `meta.issues`, as `comark-ui/html`'s `renderIssues()` draws them. It
+ * renders nothing when there are none, and adds its styles when it mounts. Put it above the document.
+ */
+export const ComarkIssues = defineComponent({
+  name: "ComarkIssues",
+  props: {
+    meta: { type: Object, default: undefined },
+    // SAFETY: Vue checks each value is a string or a function, which IssuesOptions calls with the count.
+    title: { type: [String, Function] as PropType<IssuesOptions["title"]>, default: undefined },
+    // SAFETY: as `title`.
+    hint: { type: [String, Function] as PropType<IssuesOptions["hint"]>, default: undefined },
+  },
+  setup(props) {
+    onMounted(() => addStyles("issues", issuesCss));
+    return () => {
+      const issues = issuesOf(props.meta);
+      if (!issues.length) return null;
+      const inner = issuesInner(issues, { title: props.title, hint: props.hint });
+      return h("details", { class: "cis", "data-comark-frame": "", open: true, innerHTML: inner });
+    };
+  },
+});
 
 // Pele is about 270 kB gzipped, so it loads only when a document has a diagram. Vue's server renderer waits for it, so a
 // server render still arrives drawn.
@@ -112,6 +141,7 @@ export const components = {
   ...outline.components,
   ...tests.components,
   ...gitGraph.components,
+  ...bundle.components,
   ...time.components,
   ...zoom.components,
   ...magicMove.components,
@@ -156,6 +186,7 @@ export default (options?: PresetOptions): Preset<Component> =>
       tabs,
       tests,
       gitGraph,
+      bundle,
       time,
       typeset,
       zoom,

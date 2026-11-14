@@ -1,4 +1,4 @@
-GitHub draws five callouts: `[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`, and `[!CAUTION]`. A quote marked with any other type, such as `[!INFO]` or `[!DANGER]` from another Markdown flavor, renders as a plain quote with the marker left in as text, here and on GitHub.
+GitHub draws five callouts: `[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`, and `[!CAUTION]`. A quote marked with any other type, such as `[!INFO]` or `[!DANGER]` from another Markdown flavor, renders as a plain quote with the marker left in as text, here and on GitHub. A `::callout` block with any other `type` renders as a note.
 
 ::incorrect
 ```md

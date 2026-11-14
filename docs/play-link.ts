@@ -14,8 +14,8 @@ export const contentFile = "content.md";
 export const configFile = "config.json";
 export const themeFile = "theme.json";
 
-/** An include reads files, so the playground can't run it. */
-export const playable = (source: string) => !/^:+include\b/m.test(source);
+/** An include and a bundle read files, so the playground can't run them. */
+export const playable = (source: string) => !/^:+(?:include|bundle)\b/m.test(source);
 
 export const templateOf = (preset: { id: string; source: string }): PlaygroundTemplate => ({
   id: preset.id,

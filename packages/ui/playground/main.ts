@@ -1,8 +1,13 @@
 // Shared by the local editor playground and the docs build.
 import { EditorContent } from "@tiptap/vue-3";
+import type { LanguageRegistration } from "shiki";
+import { createHighlighterCore } from "shiki/core";
+import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
+import dark from "shiki/themes/github-dark.mjs";
+import light from "shiki/themes/github-light.mjs";
 import { createApp, defineComponent, h, ref, watch } from "vue";
-import { Upload } from "../src/editor.ts";
-import { type ComponentInfo, useComarkEditor } from "../src/editor-vue.ts";
+import { CodeHighlight, Upload } from "../src/editor.ts";
+import { CodeLanguageSelect, type ComponentInfo, useComarkEditor } from "../src/editor-vue.ts";
 
 // A slow upload that reports progress, so the placeholder shows. Its URL lives only in this tab.
 const upload = Upload.configure({
@@ -13,6 +18,40 @@ const upload = Upload.configure({
     }
     return URL.createObjectURL(file);
   },
+});
+
+// Shiki on the JavaScript regex engine, with each grammar loaded the first time a code block uses it.
+const shiki = createHighlighterCore({
+  themes: [light, dark],
+  langs: [],
+  engine: createJavaScriptRegexEngine(),
+});
+const grammars = {
+  typescript: () => import("shiki/langs/typescript.mjs"),
+  bash: () => import("shiki/langs/bash.mjs"),
+  json: () => import("shiki/langs/json.mjs"),
+  vue: () => import("shiki/langs/vue.mjs"),
+} satisfies Record<string, () => Promise<{ default: LanguageRegistration[] }>>;
+const labels = { typescript: "TypeScript", bash: "Bash", json: "JSON", vue: "Vue" };
+const aliases = new Map([
+  ["ts", "typescript"],
+  ["sh", "bash"],
+]);
+const isLanguage = (name: string): name is keyof typeof grammars => Object.hasOwn(grammars, name);
+const languageOf = (info: string) => {
+  const name = info.trim().split(/\s/, 1)[0]?.toLowerCase() ?? "";
+  const target = aliases.get(name) ?? name;
+  return isLanguage(target) ? target : undefined;
+};
+const highlight = CodeHighlight.configure({
+  async highlighter(info) {
+    const name = languageOf(info);
+    if (!name) return undefined;
+    const core = await shiki;
+    await core.loadLanguage(...(await grammars[name]()).default);
+    return core;
+  },
+  themes: { light: "github-light", dark: "github-dark" },
 });
 
 const sample = `# Release notes
@@ -68,6 +107,10 @@ When does the release go out?
 \`\`\`ts [release.ts]
 await release({ tag: "v1.0.0" })
 \`\`\`
+
+\`\`\`sh
+pnpm add comark-ui
+\`\`\`
 `;
 
 const colors = ["primary", "secondary", "success", "info", "warning", "error", "neutral"];
@@ -112,7 +155,10 @@ const components = {
 
 const App = defineComponent(() => {
   const markdown = ref(sample);
-  const { editor, editable } = useComarkEditor(markdown, { extensions: [upload], components });
+  const { editor, editable } = useComarkEditor(markdown, {
+    extensions: [upload, highlight],
+    components,
+  });
   watch(editor, (current) =>
     current?.setOptions({
       editorProps: {
@@ -155,7 +201,16 @@ const App = defineComponent(() => {
               ? "Changes update the Markdown source."
               : "Read-only: this document contains syntax the editor cannot preserve.",
         ),
-        editor.value ? h(EditorContent, { editor: editor.value }) : null,
+        editor.value
+          ? h("div", { class: "editor" }, [
+              h(EditorContent, { editor: editor.value }),
+              h(CodeLanguageSelect, {
+                editor: editor.value,
+                languages: labels,
+                language: languageOf,
+              }),
+            ])
+          : null,
       ]),
     ]);
 });

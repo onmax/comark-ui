@@ -11,6 +11,7 @@ import { playable, playLink } from "./play-link.ts";
 import { browserPlugins, components as html } from "./plugins.ts";
 import { studioPlugin } from "./studio.ts";
 import { sizeOf } from "../packages/zoom/src/size.ts";
+import bundle from "../packages/bundle/src/index.ts";
 
 const isElement = (node: Node): node is ElementNode =>
   Array.isArray(node) && typeof node[0] === "string";
@@ -76,12 +77,18 @@ const sizes = defineComarkPlugin(() => {
   return { name: "docs-image-sizes", post: (state) => visit(state.tree.nodes) };
 });
 
+// The bundle examples measure two made-up builds of comark-bundle's test fixtures, found from the working directory as
+// the images are. The playground and the Worker have no disk, so a `::bundle` there reports it reads nothing.
+const builds = join(process.cwd(), "../packages/bundle/test/fixtures/vite");
+
 // The pages measure `:time` from one moment, in English and UTC, so their examples read the same wherever the site is built.
 const timeNow = { now: "2026-11-04T12:00:00Z", timeZone: "UTC", locale: "en" };
 // The docs shell styles prose. Scoped preset styles are lost when zoom copies a block into its dialog.
 const blocks = () => [
   sizes(),
-  ...browserPlugins({ "comark-time": timeNow }, { typeset: false }),
+  ...browserPlugins({ "comark-time": timeNow }, { typeset: false }).map((plugin) =>
+    plugin.name === "comark-bundle" ? bundle({ root: builds }) : plugin,
+  ),
   bridge(),
 ];
 

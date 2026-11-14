@@ -1,6 +1,6 @@
 // The plugins that run in a browser, shared by the static pages and the playground so both render alike: the preset,
 // so the site shows what it gives. comark-include reads files and comark-linter is a checker, so they're left out, and
-// the preset's cast, table, and tests read no files, which a browser doesn't have.
+// the preset's cast, table, tests, and bundle read no files, which a browser doesn't have.
 import comarkUi from "../packages/ui/src/html.ts";
 import type { IconOptions } from "comark-icon";
 import { avatars } from "./avatars.ts";

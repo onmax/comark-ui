@@ -1,7 +1,8 @@
 import { createHtmlRenderer } from "@comark/html";
+import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { expect, type Page, type Route, test } from "@playwright/test";
-import media, { components } from "../packages/media/src/html.ts";
+import media, { components, scripts } from "../packages/media/src/html.ts";
 import { typesetCss } from "../packages/ui/src/typeset-css.ts";
 
 const render = createHtmlRenderer({ plugins: [media()], components });
@@ -56,7 +57,7 @@ const open = async (
   if (options.typeset) html = `<main><style>${typesetCss}</style>${html}</main>`;
   await page.route(`${origin}/`, (route) =>
     route.fulfill({
-      contentType: "text/html",
+      contentType: "text/html; charset=utf-8",
       body: `<!doctype html><html><body style="width:${options.width ?? "32rem"};margin:2rem">${html}</body></html>`,
     }),
   );
@@ -591,4 +592,22 @@ test("Copy link gives the file's address at the second the player is at, and Cop
   expect(frame.time).toBeCloseTo(2.6, 1);
   await expect(player.getByRole("status")).toHaveText("Copied");
   await expect(player).not.toHaveAttribute("data-playing");
+});
+
+test("exported hashes allow nested media scripts under a strict CSP", async ({ page }) => {
+  const hashes = scripts
+    .map((script) => `'sha256-${createHash("sha256").update(script).digest("base64")}'`)
+    .join(" ");
+  const html = await render("![Sound](sound.mp3)");
+  await page.route("http://csp.test/", (route) =>
+    route.fulfill({
+      contentType: "text/html; charset=utf-8",
+      headers: { "Content-Security-Policy": `script-src ${hashes}` },
+      body: `<!doctype html>${html}<script>window.documentScriptRan = true</script>`,
+    }),
+  );
+  await page.goto("http://csp.test/");
+  expect(await page.evaluate(() => document.characterSet)).toBe("UTF-8");
+  await expect.poll(() => page.evaluate(() => Boolean(window.__comarkMedia))).toBe(true);
+  expect(await page.evaluate(() => "documentScriptRan" in window)).toBe(false);
 });

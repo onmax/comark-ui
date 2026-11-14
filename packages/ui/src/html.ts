@@ -35,16 +35,32 @@ import * as table from "comark-table/html";
 import * as tabs from "comark-tabs/html";
 import * as tests from "comark-tests/html";
 import * as gitGraph from "comark-git-graph/html";
+import * as bundle from "comark-bundle/html";
 import * as time from "comark-time/html";
 import * as zoom from "comark-zoom/html";
 import { mermaidBar, mermaidCss } from "./client.ts";
 import { type Preset, type PresetOptions, preset } from "./index.ts";
+import { issuesCss, issuesInner, issuesOf, type IssuesOptions } from "./issues.ts";
 import { start } from "./script.ts";
 import { typesetCss } from "./typeset-css.ts";
-import { attr } from "../../../shared/html.ts";
+import { attr, inlineScript } from "../../../shared/html.ts";
 
 export { commentsCss, criticCss } from "./index.ts";
 export type { PresetOptions } from "./index.ts";
+export { issuesCss, issuesOf, type IssuesOptions } from "./issues.ts";
+
+/**
+ * The problems a parse found in a document, from `meta.issues`, as a box for its author: a `<details open>` with a
+ * title, a hint, and one item per problem, with its styles. Empty when there are none. Put it above the document.
+ */
+export function renderIssues(
+  meta: { issues?: unknown } | undefined,
+  options?: IssuesOptions,
+): string {
+  const issues = issuesOf(meta);
+  if (!issues.length) return "";
+  return `<style data-comark-issues>${issuesCss}</style><details class="cis" data-comark-frame open>${issuesInner(issues, options)}</details>`;
+}
 
 // Each render gets a fresh `state.context`, so a document carries the styles and the script once.
 const styled = new WeakSet<object>();
@@ -54,7 +70,7 @@ const styled = new WeakSet<object>();
  * every render and changes only between versions, so a page with a strict Content Security Policy can allow it by its
  * hash without rendering a document first.
  */
-export const mermaidScript = `(${start.toString()})()`;
+export const mermaidScript = inlineScript(`(${start.toString()})()`);
 
 /**
  * Wraps Pele's card in `.cmm` with the bar of buttons and the source they copy. The wrapper is a wide block with the
@@ -63,6 +79,7 @@ export const mermaidScript = `(${start.toString()})()`;
  */
 const mermaid = (zooms: boolean) => ({
   default: pele,
+  scripts: [mermaidScript, ...(zooms ? zoom.scripts : [])],
   components: {
     pele: ((node, state) => {
       const first = !styled.has(state.context);
@@ -126,6 +143,7 @@ export default (options?: PresetOptions): Preset<NodeHandler> =>
       tabs,
       tests,
       gitGraph,
+      bundle,
       time,
       typeset,
       zoom,
