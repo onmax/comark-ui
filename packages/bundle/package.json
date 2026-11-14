@@ -1,6 +1,6 @@
 {
   "name": "comark-bundle",
-  "version": "0.12.1",
+  "version": "0.12.2",
   "description": "Bundle size from two builds: what every page loads before and after, and which packages changed. A Comark plugin.",
   "keywords": [
     "bundle",
