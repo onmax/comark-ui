@@ -7,15 +7,15 @@ import { text } from "../../../shared/text.ts";
 import { childrenOf, isElement } from "../../../shared/nodes.ts";
 
 export type GitGraphMeta = {
-  /** One readable sentence per problem with a `::git-graph`. Other plugins add theirs too. */
+  /** One readable sentence per problem with a git graph. Other plugins add theirs too. */
   issues: string[];
   /** The comark-linter rule of each issue, by its sentence, so the linter reports it under its own code. */
   issueRules: Record<string, string>;
 };
 
 /**
- * What a `::git-graph` becomes. `label` names the figure for screen readers. Its children are plain elements: the
- * header, a `git-graph-lines` node beside the rows, the legend, and the `#footer` slot.
+ * What a `::git-graph` or a ```` ```git-graph ```` fence becomes. `label` names the figure for screen readers. Its
+ * children are plain elements: the header, a `git-graph-lines` node beside the rows, the legend, and the `#footer` slot.
  */
 export type GitGraphAttributes = { label?: string };
 
@@ -41,12 +41,12 @@ const unwrap = (nodes: Node[]) =>
     .flatMap((node) => (isElement(node) && node[0] === "p" ? childrenOf(node) : [node]));
 const flag = (value: unknown) => value === true || value === "" || value === "true";
 
-function problem(name: string, found: Problem): Issue {
+function problem(name: string, found: Problem, fence: boolean): Issue {
   switch (found.kind) {
     case "no-commits":
       return {
         rule: "comark/git-graph/missing-log",
-        message: `${name} has no commits to draw. Paste the output of ${LOG} in a fence inside it.`,
+        message: `${name} has no commits to draw. Paste the output of ${LOG} ${fence ? "in it" : "in a fence inside it"}.`,
       };
     case "no-parents":
       return {
@@ -64,6 +64,58 @@ function problem(name: string, found: Problem): Issue {
         message: `${name}: \`${found.command}\` names ${found.sha}, a commit the \`git log\` above doesn't show. Widen the \`git log\` so it includes that commit.`,
       };
   }
+}
+
+interface Figure {
+  /** The block's name in its issues. */
+  name: string;
+  source: string;
+  fence: boolean;
+  title: Node[];
+  footer: Node[];
+  reverse: boolean;
+  maxCount: unknown;
+}
+
+function figure(input: Figure, issues: Issue[]): ElementNode | undefined {
+  const { name } = input;
+  let graph = readGraph(input.source);
+  for (const found of graph.problems) issues.push(problem(name, found, input.fence));
+  if (!graph.commits.length) return undefined;
+
+  const raw = input.maxCount;
+  if (raw !== undefined) {
+    const count = Number(raw);
+    if (Number.isInteger(count) && count > 0) graph = limit(graph, count);
+    else
+      issues.push({
+        rule: "comark/git-graph/invalid-max-count",
+        message: `${name}: \`max-count\` is "${text(raw)}", so every commit shows. Write a whole number from 1, as with \`git log -n\`.`,
+      });
+  }
+  const drawing = draw(graph, input.reverse);
+  const { title, footer } = input;
+  const label = title.map(textOf).join("").trim();
+  return [
+    "git-graph",
+    label ? { label } : {},
+    [
+      "div",
+      { class: "cgg-head" },
+      ...(title.length ? [["span", { class: "cgg-title" }, ...title] satisfies ElementNode] : []),
+      ["span", { class: "cgg-count" }, drawing.summary],
+    ],
+    [
+      "div",
+      { class: "cgg-graph" },
+      ["git-graph-lines", { svg: drawing.svg, width: drawing.width, height: drawing.height }],
+      ["div", { class: "cgg-rows" }, ...drawing.rows],
+    ],
+    ...(drawing.legend.length
+      ? [["div", { class: "cgg-legend" }, ...drawing.legend] satisfies ElementNode]
+      : []),
+    ...(footer.length ? [["div", { class: "cgg-footer" }, ...footer] satisfies ElementNode] : []),
+  ];
 }
 
 function block(node: ElementNode, number: number, data: Data, issues: Issue[]): ElementNode {
@@ -97,54 +149,50 @@ function block(node: ElementNode, number: number, data: Data, issues: Issue[]): 
       rule: "comark/git-graph/content-dropped",
       message: `${name} drops the text beside its fence. Put only git's output in the fence, and write the rest outside the block or in a \`#footer\` slot.`,
     });
-  let graph = readGraph(fences.map(textOf).join("\n"));
-  for (const found of graph.problems) issues.push(problem(name, found));
-  if (!graph.commits.length) return ["div", {}];
+  const drawn = figure(
+    {
+      name,
+      source: fences.map(textOf).join("\n"),
+      fence: false,
+      title: titleSlot
+        ? unwrap(childrenOf(titleSlot))
+        : text(attrs.title)
+          ? [text(attrs.title)]
+          : [],
+      footer: footerSlot ? childrenOf(footerSlot).filter(isContent) : [],
+      reverse: flag(attrs.reverse),
+      maxCount: attrs["max-count"],
+    },
+    issues,
+  );
+  return drawn ?? ["div", {}];
+}
 
-  const raw = attrs["max-count"];
-  if (raw !== undefined) {
-    const count = Number(raw);
-    if (Number.isInteger(count) && count > 0) graph = limit(graph, count);
-    else
-      issues.push({
-        rule: "comark/git-graph/invalid-max-count",
-        message: `${name}: \`max-count\` is "${text(raw)}", so every commit shows. Write a whole number from 1, as with \`git log -n\`.`,
-      });
-  }
-  const drawing = draw(graph, flag(attrs.reverse));
-  const title = titleSlot
-    ? unwrap(childrenOf(titleSlot))
-    : text(attrs.title)
-      ? [text(attrs.title)]
-      : [];
-  const footer = footerSlot ? childrenOf(footerSlot).filter(isContent) : [];
-  const label = title.map(textOf).join("").trim();
-  return [
-    "git-graph",
-    label ? { label } : {},
-    [
-      "div",
-      { class: "cgg-head" },
-      ...(title.length ? [["span", { class: "cgg-title" }, ...title] satisfies ElementNode] : []),
-      ["span", { class: "cgg-count" }, drawing.summary],
-    ],
-    [
-      "div",
-      { class: "cgg-graph" },
-      ["git-graph-lines", { svg: drawing.svg, width: drawing.width, height: drawing.height }],
-      ["div", { class: "cgg-rows" }, ...drawing.rows],
-    ],
-    ...(drawing.legend.length
-      ? [["div", { class: "cgg-legend" }, ...drawing.legend] satisfies ElementNode]
-      : []),
-    ...(footer.length ? [["div", { class: "cgg-footer" }, ...footer] satisfies ElementNode] : []),
-  ];
+// A fence's `[label]` is the one attribute Comark keeps on it, so the fence form has a title and no other props.
+// One with no commits stays a code block, which still shows what was pasted.
+function fence(node: ElementNode, number: number, issues: Issue[]): ElementNode {
+  const title = text(node[1].filename);
+  return (
+    figure(
+      {
+        name: `The \`\`\`git-graph fence ${number}`,
+        source: textOf(node),
+        fence: true,
+        title: title ? [title] : [],
+        footer: [],
+        reverse: false,
+        maxCount: undefined,
+      },
+      issues,
+    ) ?? node
+  );
 }
 
 /**
- * Turns a `::git-graph` around pasted git output into a commit graph: `git log --graph --oneline --decorate
- * --parents` for the commits, branches, merges, and tags, then `git cherry -v` and a `git cherry-pick` dry run for
- * which branches have each change, numbered in the order they were picked. Problems are added to `meta.issues`.
+ * Turns pasted git output, in a ```` ```git-graph ```` fence or a `::git-graph` around a fence, into a commit graph:
+ * `git log --graph --oneline --decorate --parents` for the commits, branches, merges, and tags, then `git cherry -v`
+ * and a `git cherry-pick` dry run for which branches have each change, numbered in the order they were picked.
+ * Problems are added to `meta.issues`.
  */
 export default defineComarkPlugin<void, GitGraphMeta>(() => ({
   name: "comark-git-graph",
@@ -152,17 +200,28 @@ export default defineComarkPlugin<void, GitGraphMeta>(() => ({
     const { tree } = state;
     const data: Data = { frontmatter: tree.frontmatter, meta: tree.meta, data: {}, props: {} };
     const issues: Issue[] = [];
-    let count = 0;
-    const walk = (nodes: Node[], start: number) => {
+    let blocks = 0;
+    let fences = 0;
+    const walk = (nodes: Node[], start: number, parent?: string) => {
       for (let index = start; index < nodes.length; index++) {
         const node = nodes[index];
         if (!node || !isElement(node)) continue;
         if (node[0] === "git-graph") {
-          nodes[index] = block(node, ++count, data, issues);
+          nodes[index] = block(node, ++blocks, data, issues);
+          continue;
+        }
+        // Diff reads its direct source fences at render time, after this hook.
+        if (
+          node[0] === "pre" &&
+          parent !== "diff" &&
+          !node[1].$?.html &&
+          text(node[1].language).toLowerCase() === "git-graph"
+        ) {
+          nodes[index] = fence(node, ++fences, issues);
           continue;
         }
         // SAFETY: an element node is [tag, attributes, ...children], so its children start at index 2.
-        walk(node as Node[], 2);
+        walk(node as Node[], 2, node[0]);
       }
     };
     walk(tree.nodes, 0);

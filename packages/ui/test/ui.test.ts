@@ -27,6 +27,23 @@ const offline: PresetOptions = {
 };
 const renderHtml = (markdown: string, options: PresetOptions = {}) =>
   createHtmlRenderer(html({ ...offline, ...options }))(markdown);
+it("preserves git-graph source fences owned by a diff", async () => {
+  const markdown =
+    '::diff{file="history.log"}\n```git-graph\n* bbbbbbb aaaaaaa (HEAD -> main) Before change\n* aaaaaaa Initial commit\n```\n```git-graph\n* bbbbbbb aaaaaaa (HEAD -> main) After change\n* aaaaaaa Initial commit\n```\n::';
+  const options = html(offline);
+  const parsed = await parseMarkdown(markdown, options);
+  expect(parsed.meta.issues ?? []).toEqual([]);
+  const output = await renderHtml(markdown);
+  expect(output).toContain('class="cd-added">+1</span>');
+  expect(output).toContain('class="cd-removed">−1</span>');
+  expect(output.match(/<tr class="cd-del"/g)).toHaveLength(1);
+  expect(output.match(/<tr class="cd-add"/g)).toHaveLength(1);
+  expect(output.match(/<tr class="cd-same"/g)).toHaveLength(1);
+  expect(output).toContain("Before");
+  expect(output).toContain("After");
+  expect(output).toContain("Initial commit");
+});
+
 const document = [
   "> [!TIP]\n> Read this.",
   "Released :badge[New]",

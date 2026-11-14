@@ -4,7 +4,7 @@ import type { RuleInfo } from "./types.ts";
 export default {
   "comark/git-graph/missing-log": {
     code: "COMARK4701",
-    title: "Paste `git log` output in every `::git-graph`",
+    title: "Paste `git log` output in every git graph",
   },
   "comark/git-graph/missing-parents": {
     code: "COMARK4702",

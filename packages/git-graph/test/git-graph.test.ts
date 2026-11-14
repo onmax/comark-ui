@@ -90,6 +90,46 @@ describe("comark-git-graph", () => {
     );
   });
 
+  it("draws a ```git-graph fence like the block, with its [label] as the title", async () => {
+    for (const name of ["history", "stack", "backport"]) {
+      const log = fixture(name);
+      expect(await render(`\`\`\`git-graph [A normal week]\n${log}\n\`\`\``)).toBe(
+        await render(block(log, '{title="A normal week"}')),
+      );
+      expect(await render(`\`\`\`git-graph\n${log}\n\`\`\``)).toBe(await render(block(log)));
+    }
+  });
+
+  it("draws a ```git-graph fence anywhere in the document, without a $ git log line", async () => {
+    const log = fixture("stack").replace(/^\$ git log.*\n/, "");
+    const html = flat(
+      await render(`- The plan:\n\n  \`\`\`git-graph\n  ${log.replace(/\n/g, "\n  ")}\n  \`\`\``),
+    );
+    expect(html).toMatch(/<li><p>The plan:<\/p>(<style[^]*?<\/style>)?<figure class="cgg"/);
+    expect(html).toContain('<span class="cgg-count">4 branches · 6 commits</span>');
+  });
+
+  it("preserves raw HTML pre elements and their fragment targets", async () => {
+    const markdown =
+      '<a href="#example">Example</a>\n\n<pre id="example" language="git-graph">* aaaaaaa Initial commit</pre>';
+    const html = await render(markdown);
+    expect(html).toContain('href="#example"');
+    expect(html).toContain('<pre id="example" language="git-graph">');
+    expect(html).toContain("* aaaaaaa Initial commit");
+    expect(html).not.toContain('<figure class="cgg"');
+    expect((await parse(markdown)).meta.issues ?? []).toEqual([]);
+  });
+
+  it("keeps a ```git-graph fence with no commits as code, and reports it", async () => {
+    const markdown = "```git-graph\nnot a log\n```";
+    expect(flat(await render(markdown))).toContain("<pre");
+    const { meta } = await parse(markdown);
+    expect(meta.issues).toEqual([
+      "The ```git-graph fence 1 has no commits to draw. Paste the output of `git log --graph --oneline --decorate --parents` in it.",
+    ]);
+    expect(meta.issueRules?.[meta.issues?.[0] ?? ""]).toBe("comark/git-graph/missing-log");
+  });
+
   it("reads git's long format and a conflict printed in another language", async () => {
     const log = [
       "$ git log --graph --decorate --parents --all",
