@@ -222,7 +222,9 @@ describe("read()", () => {
 
 describe("css", () => {
   it("marks a step under way without motion", () => {
-    expect(css).not.toMatch(/animation|@keyframes/);
+    // The only motion is the disclosures' shared fade, where a browser can't grow their height.
+    expect(css.match(/@keyframes [\w-]+/g)).toEqual(["@keyframes comark-disclosure-in"]);
+    expect(css).not.toMatch(/\.cht-dot[^{}]*\{[^}]*animation/);
     expect(css).toContain(
       ".cht-step:is([data-status=running],[data-status=waiting]) .cht-dot{box-sizing:border-box;border:1px solid currentColor;background:none",
     );

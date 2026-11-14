@@ -105,5 +105,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Chromium
         run: pnpm exec playwright install --with-deps --only-shell chromium
+      # The disclosures' fallback motion runs only in a browser without `interpolate-size`.
+      - name: Firefox
+        run: pnpm exec playwright install --with-deps firefox
       - name: End to end
         run: pnpm test:e2e
