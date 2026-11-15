@@ -37,7 +37,8 @@ export const componentInfo = {
     props: {
       sync,
       magic: {
-        type: "boolean",
+        type: "string",
+        options: ["true", "false"],
         description:
           "Animates the code shared between tabs. Without it, only snippets that share half their tokens animate.",
       },

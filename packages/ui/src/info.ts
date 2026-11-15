@@ -16,7 +16,6 @@ import { componentInfo as fileTree } from "comark-file-tree/info";
 import { componentInfo as gitGraph } from "comark-git-graph/info";
 import { componentInfo as callouts } from "comark-github/info";
 import { componentInfo as icon } from "comark-icon/info";
-import { componentInfo as include } from "comark-include/info";
 import { componentInfo as magicMove } from "comark-magic-move/info";
 import { componentInfo as metrics } from "comark-metrics/info";
 import { componentInfo as outline } from "comark-outline/info";
@@ -38,7 +37,6 @@ export type { ComponentInfo, ComponentProp } from "../../../shared/component-inf
 
 // Each package's blocks, by the preset option that turns it on. GitHub's are its callout blocks, read apart below.
 const INFO: [keyof PresetOptions, Record<string, ComponentInfo>][] = [
-  ["include", include],
   ["annotate", annotate],
   ["carousel", carousel],
   ["cast", cast],
@@ -84,9 +82,7 @@ const optionsOf = <T>(value: T | boolean | undefined): T | undefined =>
  */
 export function componentInfo(options: PresetOptions = {}): Record<string, ComponentInfo> {
   const info: Record<string, ComponentInfo> = {};
-  for (const [key, blocks] of INFO)
-    if (key === "include" ? options.include && !off(options.include) : !off(options[key]))
-      Object.assign(info, blocks);
+  for (const [key, blocks] of INFO) if (!off(options[key])) Object.assign(info, blocks);
   const github = optionsOf(options.github);
   const calloutOptions = optionsOf(github?.callouts);
   if (!off(options.github) && !off(github?.callouts) && !off(calloutOptions?.blocks))

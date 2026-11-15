@@ -415,6 +415,7 @@ export function preset<C>(renderer: Renderer<C>, options: PresetOptions = {}): P
     ...options,
     ...Object.fromEntries(absent.map((key) => [key, false])),
   });
+  if (absent.includes("annotate")) delete info.annotation;
   return {
     plugins,
     components,

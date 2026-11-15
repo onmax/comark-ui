@@ -114,6 +114,8 @@ const options = { typeset: false, chips: false };
 const { editor } = useComarkEditor(markdown, { components: componentInfo(options) });
 ```
 
+Include is omitted from the insertion map: it requires bracketless syntax alone on its line, which a generic inline insertion cannot produce. Chart labels and code-group magic offer an empty automatic setting and explicit true/false choices.
+
 It's plain data, so a server can build it too, such as for ViteHub's `documents({ components })`. Each preset returns the same map as `componentInfo`, without the blocks its renderer doesn't draw. A package used alone exports its own map as `componentInfo` from its `/info` entry, such as `comark-embed/info`. Spread your own entries over it to add icons.
 
 ### Draw your own fields

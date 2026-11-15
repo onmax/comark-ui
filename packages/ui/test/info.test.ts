@@ -1,3 +1,5 @@
+import { createHtmlRenderer } from "@comark/html";
+import { componentInfo as chartsInfo } from "../../charts/src/info.ts";
 import { glob, readFile } from "node:fs/promises";
 import { parseMarkdown, type Node } from "comark";
 import { HTML_TAGS } from "comark-github";
@@ -43,7 +45,7 @@ describe("componentInfo", () => {
     const info = componentInfo({ include: true });
     const found = new Set<string>();
     for (const example of examples) written((await parseMarkdown(example)).nodes, found);
-    const components = [...found].filter((tag) => !MARKDOWN.has(tag));
+    const components = [...found].filter((tag) => !MARKDOWN.has(tag) && tag !== "include");
     expect(components.filter((tag) => !info[tag])).toEqual([]);
     // And each name is one the preset reads, so a typo can't hide.
     const preset = html({ include: { read: () => undefined } });
@@ -65,9 +67,25 @@ describe("componentInfo", () => {
     }
   });
 
+  it("keeps badge insertion defaults in prose mode, with image mode opt-in", async () => {
+    const defaults = Object.entries(componentInfo().badge!.props!)
+      .filter(([, spec]) => spec.default !== undefined)
+      .map(([key, spec]) => `${key}="${spec.default}"`)
+      .join(" ");
+    const render = createHtmlRenderer(html({ shiki: false }));
+    const prose = await render(`:badge[Badge]{${defaults}}`);
+    expect(prose).toContain("Badge");
+    expect(prose).not.toContain("<img");
+    expect(await render(`:badge[Badge]{${defaults} source="static"}`)).toContain("<img");
+    expect(chartsInfo.annotation).toBeDefined();
+  });
+
   it("follows the preset's options", () => {
     expect(componentInfo().embed?.props?.url?.type).toBe("string");
     expect(componentInfo().include).toBeUndefined();
+    expect(componentInfo({ include: true }).include).toBeUndefined();
+    expect(html({ annotate: false }).componentInfo.annotation).toBeDefined();
+    expect(vue().componentInfo.annotation).toBeUndefined();
     expect(componentInfo({ embed: false }).embed).toBeUndefined();
     expect(componentInfo().note).toBeDefined();
     expect(componentInfo({ github: { callouts: { blocks: false } } }).note).toBeUndefined();

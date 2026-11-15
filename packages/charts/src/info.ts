@@ -1,7 +1,9 @@
+import { annotationInfo } from "../../../shared/annotation-info.ts";
 import type { ComponentInfo } from "../../../shared/component-info.ts";
 
 /** What an editor shows for `::chart`. */
 export const componentInfo = {
+  ...annotationInfo,
   chart: {
     kind: "block",
     label: "Chart",
@@ -54,7 +56,8 @@ export const componentInfo = {
         description: "Colors a heatmap's cells from red to green.",
       },
       labels: {
-        type: "boolean",
+        type: "string",
+        options: ["true", "false"],
         description:
           "Prints the numbers on the chart. On by default for bars, stacked bars, and heatmaps.",
       },

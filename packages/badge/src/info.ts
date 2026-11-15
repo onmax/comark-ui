@@ -17,7 +17,6 @@ export const componentInfo = {
       source: {
         type: "string",
         options: ["static", "npm-version", "npm-downloads", "github-actions"],
-        default: "static",
         description: "Draws the badge as an image.",
       },
       label: { type: "string", description: "An image's left-hand text, up to 80 characters." },
@@ -29,7 +28,6 @@ export const componentInfo = {
       period: {
         type: "string",
         options: ["day", "week", "month"],
-        default: "month",
         description: "The downloads' window.",
       },
       repository: {
@@ -45,24 +43,20 @@ export const componentInfo = {
       },
       labelColor: {
         type: "string",
-        default: "neutral",
         description: "A color name or hex color behind the label, in the subtle and solid styles.",
       },
       preset: {
         type: "string",
         options: ["default", "npmx", "nuxt", "flat", "for-the-badge"],
-        default: "default",
       },
       style: {
         type: "string",
         options: ["shadcn", "subtle", "solid"],
-        default: "shadcn",
         description: "The image's look in the default preset.",
       },
       theme: {
         type: "string",
         options: ["auto", "light", "dark"],
-        default: "auto",
         description: "auto follows the page's light or dark theme.",
       },
     },
