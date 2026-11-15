@@ -82,9 +82,11 @@ export default definePackage({
     "src/highlighter.ts",
     "src/html.ts",
     "src/html-vue.ts",
+    "src/info.ts",
     "src/nuxt-ui.ts",
     "src/skills.ts",
     "src/vue.ts",
+    "src/vue-lazy.ts",
     "src/react.ts",
   ],
   define: {

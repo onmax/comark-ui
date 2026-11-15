@@ -28,6 +28,7 @@
   "exports": {
     ".": "./dist/index.mjs",
     "./html": "./dist/html.mjs",
+    "./info": "./dist/info.mjs",
     "./package.json": "./package.json"
   },
   "publishConfig": {

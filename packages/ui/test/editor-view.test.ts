@@ -1,4 +1,7 @@
 // @vitest-environment happy-dom
+import { createHtmlRenderer } from "@comark/html";
+import html from "../src/html.ts";
+import { componentInfo } from "../src/info.ts";
 import { getSchema } from "@tiptap/core";
 import { EditorContent } from "@tiptap/vue-3";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
@@ -116,6 +119,42 @@ describe("componentView", () => {
         Object.keys(spec.attrs ?? {}),
       ]);
     expect(shape(drawn)).toEqual(shape(plain));
+  });
+
+  it("preserves chart values and automatic booleans through metadata fields", async () => {
+    const source = `::chart
+| team | done |
+| --- | ---: |
+| docs | 45 |
+:::annotation{mark="line" value="45"}
+Goal
+:::
+::
+
+::code-group
+\`\`\`js [one]
+const one = 1;
+\`\`\`
+\`\`\`js [two]
+const two = 2;
+\`\`\`
+::
+`;
+    const { markdown, host } = await mount(source, { components: componentInfo() });
+    type(field<HTMLInputElement>(panelOf(host, "annotation"), "value"), "50");
+    const labels = field<HTMLSelectElement>(panelOf(host, "chart"), "labels");
+    expect(labels.value).toBe("");
+    type(labels, "false", "change");
+    type(field<HTMLSelectElement>(panelOf(host, "code-group"), "magic"), "false", "change");
+    await vi.waitFor(() => {
+      expect(markdown.value).toContain('value="50"');
+      expect(markdown.value).toContain('labels="false"');
+      expect(markdown.value).toContain('magic="false"');
+    });
+    const rendered = await createHtmlRenderer(html({ shiki: false }))(markdown.value);
+    expect(rendered).toContain("Goal");
+    expect(rendered).toContain("never");
+    expect(markdown.value).not.toContain(":value=");
   });
 
   it("edits typed props, and writes them as Comark does", async () => {

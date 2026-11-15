@@ -33,6 +33,7 @@
     "./editor/vue": "./dist/editor-vue.mjs",
     "./html": "./dist/html.mjs",
     "./html/vue": "./dist/html-vue.mjs",
+    "./info": "./dist/info.mjs",
     "./nuxt-ui": "./dist/nuxt-ui.mjs",
     "./react": "./dist/react.mjs",
     "./svelte": {
@@ -41,6 +42,7 @@
       "default": "./dist/svelte/index.js"
     },
     "./vue": "./dist/vue.mjs",
+    "./vue/lazy": "./dist/vue-lazy.mjs",
     "./package.json": "./package.json",
     "./shiki": "./dist/highlighter.mjs",
     "./skills": "./dist/skills.mjs",
