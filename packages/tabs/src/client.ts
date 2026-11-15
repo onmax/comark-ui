@@ -126,7 +126,13 @@ export function start(css: string, createMotion = createCodeMotion): () => void 
   // The HTML renderer inlines the script after the first tabs, so the page's later tabs arrive after it.
   const added = new MutationObserver((records) => {
     for (const record of records)
-      for (const node of record.addedNodes) if (node instanceof Element) restore(node);
+      for (const node of record.addedNodes) {
+        if (!(node instanceof Element)) continue;
+        restore(node);
+        // Lazy Vue children can mount after their parent's runtime restored only the header.
+        if (node.matches(".ct-panel") && node.parentElement?.matches(".ct[data-tabs-sync]"))
+          restore(node.parentElement);
+      }
   });
   added.observe(document.documentElement, { childList: true, subtree: true });
 

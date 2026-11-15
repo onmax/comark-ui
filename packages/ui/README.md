@@ -41,6 +41,12 @@ import { components } from "comark-ui/vue";
 
 The map includes every Vue renderer and the typeset styles. Use `comarkUi(options).components` when you need the map to follow plugin options.
 
+A page that renders only some blocks can import the same map from `comark-ui/vue/lazy`. Each block's package then loads the first time a document renders that block, and Vue's server renderer waits for it, so a server render still arrives drawn:
+
+```ts
+import { components } from "comark-ui/vue/lazy";
+```
+
 ## Renderers
 
 | Renderer | Import |

@@ -86,6 +86,7 @@ export default definePackage({
     "src/nuxt-ui.ts",
     "src/skills.ts",
     "src/vue.ts",
+    "src/vue-lazy.ts",
     "src/react.ts",
   ],
   define: {

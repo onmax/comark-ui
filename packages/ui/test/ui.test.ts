@@ -17,6 +17,7 @@ import { renderToString as renderVue } from "vue/server-renderer";
 import html, { mermaidScript, type PresetOptions } from "../src/html.ts";
 import react from "../src/react.ts";
 import vue, { components as vueComponents } from "../src/vue.ts";
+import { components as lazyComponents } from "../src/vue-lazy.ts";
 
 // No downloads and no Kroki, so the tests stay offline.
 const offline: PresetOptions = {
@@ -451,6 +452,46 @@ describe("comark-ui", () => {
       true,
     );
     expect(modules.filter((id) => /\/(?:vega(?:-lite)?|flint-chart)\//.test(id))).toEqual([]);
+  });
+
+  it("loads each block's package in comark-ui/vue/lazy only when a document renders it", async () => {
+    expect(Object.keys(lazyComponents).sort()).toEqual(Object.keys(vueComponents).sort());
+    const parsed = await parseMarkdown(document, { plugins: vue(offline).plugins });
+    const render = (components: Record<string, Component>) =>
+      renderVue(createSSRApp({ render: () => h(VueDocument, { value: parsed, components }) }));
+    // Vue's useId adds a segment for each async component above the caller, the same on the server and the client.
+    const ids = (html: string) => html.replaceAll(/\bv-[\d-]+-(?=tab|panel)/g, "v-");
+    expect(ids(await render(lazyComponents))).toBe(ids(await render(vueComponents)));
+
+    const result = await build({
+      configFile: false,
+      logLevel: "error",
+      build: {
+        write: false,
+        minify: false,
+        lib: {
+          entry: fileURLToPath(new URL("../src/vue-lazy.ts", import.meta.url)),
+          formats: ["es"],
+        },
+        rollupOptions: { external: ["vue"] },
+      },
+    });
+    // SAFETY: `write: false` gives the output, in an array of one for the one format.
+    const [{ output }] = result as Rolldown.RolldownOutput[];
+    const chunks = output.filter((file) => file.type === "chunk");
+    const loaded = new Set<string>();
+    const load = (name: string) => {
+      if (loaded.has(name)) return;
+      loaded.add(name);
+      chunks.find((chunk) => chunk.fileName === name)?.imports.forEach(load);
+    };
+    for (const chunk of chunks) if (chunk.isEntry) load(chunk.fileName);
+    const blockPackage = /\/packages\/(?!ui\/)[\w-]+\/(?:dist|src)\/vue\./;
+    const eager = chunks
+      .filter((chunk) => loaded.has(chunk.fileName))
+      .flatMap((chunk) => chunk.moduleIds.filter((id) => blockPackage.test(id)));
+    expect(eager).toEqual([]);
+    expect(chunks.some((chunk) => chunk.moduleIds.some((id) => blockPackage.test(id)))).toBe(true);
   });
 
   it("loads Pele in Vue only when a document has a diagram", async () => {
