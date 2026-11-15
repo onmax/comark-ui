@@ -27,6 +27,7 @@
   "sideEffects": false,
   "exports": {
     ".": "./dist/index.mjs",
+    "./info": "./dist/info.mjs",
     "./package.json": "./package.json"
   },
   "publishConfig": {

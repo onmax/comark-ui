@@ -33,6 +33,7 @@
     "./editor/vue": "./dist/editor-vue.mjs",
     "./html": "./dist/html.mjs",
     "./html/vue": "./dist/html-vue.mjs",
+    "./info": "./dist/info.mjs",
     "./nuxt-ui": "./dist/nuxt-ui.mjs",
     "./react": "./dist/react.mjs",
     "./svelte": {
