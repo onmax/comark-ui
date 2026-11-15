@@ -63,7 +63,7 @@ function strokeMark(
   // draw past their viewBox and stand 5px out from the area.
   const room = mark.mark === "box" ? 6 : mark.mark === "highlight" ? 0 : 5;
   const area = { x: box.x - room, y: box.y - room, w: box.w + 2 * room, h: box.h + 2 * room };
-  const drawing = draw(mark.mark, box.w, box.h, mark.seed);
+  const drawing = draw(mark.mark, box.w, box.h, mark.seed, mark.edge);
   const { paths, length } = fit(
     drawing.paths,
     drawing.viewBox,

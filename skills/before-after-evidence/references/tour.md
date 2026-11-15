@@ -17,7 +17,7 @@ pnpm add -D @napi-rs/canvas
 vp exec comark-annotate tour evidence.md --sheet tour-sheet.png
 ```
 
-It draws with no browser. Look at the sheet:
+It draws with no browser. The sheet samples the tour and can skip notes; use it as a quick preview. Look at the sheet:
 
 - Each loop sits on what its note names, as it does on the page.
 - Each note reads whole, beside its mark.
@@ -25,7 +25,7 @@ It draws with no browser. Look at the sheet:
 
 A loop that misses its target comes from its annotation's box. Measure it again, as step 2 of the skill says, and render again; the tour has nothing to adjust by hand.
 
-Done when every frame on the sheet shows a mark on its target or the whole screenshot.
+Continue when every frame on the sheet shows a mark on its target or the whole screenshot. This preview does not complete verification.
 
 ## 2. Render the video
 
@@ -34,6 +34,8 @@ vp exec comark-annotate tour evidence.md -o tour.mp4
 ```
 
 It needs ffmpeg on the `PATH`. A 30-second tour is 1 to 4 MB at 1920×1080.
+
+Before publishing, inspect every note shot in the rendered video, pausing after its note is fully written. Check every mark against its target and read each note whole beside it, including notes absent from the sheet. You can instead extract targeted frames with fully written notes for any the sheet missed. Done when every mark and its complete note have been checked. If a loop misses its target, remeasure the annotation and render both the sheet and video again.
 
 ## 3. Place it
 

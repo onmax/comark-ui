@@ -16,7 +16,9 @@ import bundle from "../packages/bundle/src/index.ts";
 const isElement = (node: Node): node is ElementNode =>
   Array.isArray(node) && typeof node[0] === "string";
 
-// annotate, diff, quiz, and comments have only an HTML renderer, so their blocks reach the page as the HTML it draws.
+// annotate, diff, quiz, and comments have only an HTML renderer, so their blocks reach the page as the HTML it draws, in
+// a `comark-html` node that comark-ui's `ComarkHtml` shows. Its `data-block` is the block's tag, so a page's styles can
+// tell a diff from a screenshot without looking inside.
 // The Vue components are named in PascalCase, `Tabs` for `tabs`.
 const name = (tag: string) => tag.replaceAll("-", "").toLowerCase();
 const vue = new Set(Object.keys(vueComponents).map(name));
@@ -34,7 +36,8 @@ const bridge = defineComarkPlugin(() => {
           "comark-html",
           {
             html: await renderHtmlFromDocument({ nodes: [node] }, { components: html }),
-            block: node[0],
+            class: "comark-html",
+            "data-block": node[0],
           },
         ];
         continue;
