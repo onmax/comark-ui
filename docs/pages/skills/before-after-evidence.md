@@ -15,6 +15,8 @@ The skill turns a visible change into a `::compare` of two screenshots, so a rev
 
 When the change is motion, such as an animation or a transition, the skill records a few seconds of it instead, since a still caught partway through looks broken. A new animation gets the after clip alone, and the first sentence says what happened before.
 
+When the document has several marks or compares, it can add a video tour under them: comark-annotate zooms to each change, draws its mark, and cuts from before to after, from the marks already in the document.
+
 ## When to use it
 
 Ask in your own words, such as "Add before and after screenshots of the invite dialog to the PR." Your agent loads the skill for requests about a visible change. To be sure, say "Use the before-after-evidence skill."
@@ -28,7 +30,8 @@ Choose by what you want:
 ## What your agent needs
 
 - **A browser it can drive**, such as Playwright, to capture both states and read each mark's box from the page. With only a screen recording or a design export, it measures marks in pixels.
-- **ffmpeg**, for a change in motion, to turn the recorded frames into an mp4.
+- **ffmpeg**, for a change in motion, to turn the recorded frames into an mp4, and for a video tour of the screenshots.
+- **@napi-rs/canvas**, only for a tour, which comark-annotate draws with, with no browser.
 - **Both states of the change**, as deployments or commits it can run, or comparable images from a recording or design export.
 
 ## It's working if
@@ -39,3 +42,4 @@ Choose by what you want:
 - The document is one sentence, one line of steps to reach the screen, and the compare. Test runs and retries go in the agent's report to you, not in the evidence.
 - The report names any mark the agent couldn't check in the render.
 - A clip starts and ends at rest, plays by itself in a loop, and shows the motion the first sentence describes.
+- A tour, when there is one, sits under its compare as a tour of the same screenshots, and every mark it draws lands where the compare's does.
