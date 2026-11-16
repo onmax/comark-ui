@@ -20,8 +20,10 @@ const isElement = (node: Node): node is ElementNode =>
 // timed as HTML in the studio plugin, so the studio draws them here first.
 // A chart's notes are comark-annotate marks, which only the HTML renderer draws. @vite-hub/docs draws such a chart as
 // HTML too, but its DocsMarkdown gives a `comark-html` node whose `block` has a Vue component back to that component,
-// which draws no marks. So a chart with notes is drawn here, and names its block only in `data-block`. Drop that half
-// once @vite-hub/docs keeps the HTML.
+// which draws no marks. So a chart with notes is drawn here, and names its block only in `data-block`.
+// @vite-hub/docs also draws the HTML-only blocks inside another one, such as each `::screenshot` of a `::compare`,
+// before the outer block, which then finds none and draws an empty carousel. So a block with one inside is drawn here.
+// Drop all but the studio's half once @vite-hub/docs keeps a marked chart's HTML and draws nested blocks with their parent.
 // The Vue components are named in PascalCase, `Tabs` for `tabs`.
 const name = (tag: string) => tag.replaceAll("-", "").toLowerCase();
 const vue = new Set(Object.keys(vueComponents).map(name));
@@ -29,11 +31,16 @@ const vue = new Set(Object.keys(vueComponents).map(name));
 const htmlOnly = Object.keys(html).filter((tag) => tag !== "span" && !vue.has(name(tag)));
 const marked = (node: ElementNode) =>
   node[0] === "chart" && Array.isArray(node[1].marks) && node[1].marks.length > 0;
+// SAFETY: an element node is [tag, attributes, ...children].
+const children = (node: ElementNode) => (node.slice(2) as Node[]).filter(isElement);
+const holdsHtmlOnly = (node: ElementNode): boolean =>
+  children(node).some((child) => htmlOnly.includes(child[0]) || holdsHtmlOnly(child));
+const nested = (node: ElementNode) => htmlOnly.includes(node[0]) && holdsHtmlOnly(node);
 const bridge = defineComarkPlugin((all: boolean = true) => {
   const visit = async (nodes: Node[]): Promise<void> => {
     for (const [at, node] of nodes.entries()) {
       if (!isElement(node)) continue;
-      if ((all && htmlOnly.includes(node[0])) || marked(node)) {
+      if ((all && htmlOnly.includes(node[0])) || marked(node) || nested(node)) {
         const drawn = await renderHtmlFromDocument({ nodes: [node] }, { components: html });
         nodes[at] = [
           "comark-html",
@@ -46,7 +53,7 @@ const bridge = defineComarkPlugin((all: boolean = true) => {
     }
   };
   return {
-    name: all ? "docs-studio-html" : "docs-chart-marks",
+    name: all ? "docs-studio-html" : "docs-html-workarounds",
     post: (state) => visit(state.tree.nodes),
   };
 });
