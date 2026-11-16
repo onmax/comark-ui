@@ -292,9 +292,11 @@ How most packages work, so the bullets below don't repeat it:
 
 ## Releasing
 
-uppt opens a draft `release/vX.Y.Z` PR from conventional commits on `main`, in lockstep for every package matched by `packages/*`. Merging it tags the version and publishes each package to npm through OIDC trusted publishing, with no approval step.
+uppt opens a draft `release/vX.Y.Z` PR from conventional commits on `main`, in lockstep for every package matched by `packages/*`. Merging it tags the version and stages each package on npm through OIDC trusted publishing. Each goes live when the maintainer approves it with 2FA on npmjs.com.
 
-- A new package needs a trusted publisher on npmjs.com before its first release, with workflow `release.yaml`, environment `npm`, and `npm publish` allowed.
-- Publish goes in waves of dependency order, so comark-ui follows its plugins and comark-linter follows comark-ui. A package that fails stops every later wave, so `latest` never names a sibling version npm lacks.
-- If publishing fails after the tag exists, run `gh workflow run release.yaml --repo onmax/comark-ui --ref vX.Y.Z`.
+- Every package is staged, never published directly. pnpm ranks a staged publish above a direct one, and its `trustPolicy: no-downgrade` refuses any version with weaker evidence than an earlier one. comark-annotate, comark-carousel, and comark-zoom began staged, so their direct releases from 0.4.1 to 0.12.2 can't be installed under that policy. `test/npm-trust.test.ts` fails if the workflow publishes directly again.
+- A new package needs a trusted publisher on npmjs.com before its first release, with workflow `release.yaml`, environment `npm`, and `npm stage publish` allowed. Leave `npm publish` off.
+- The publish job stages in waves of dependency order and lists them in its summary. Approve in that order, so `latest` never names a sibling version npm lacks: comark-ui after its plugins, comark-linter after comark-ui.
+- The verify job waits up to six hours for the approvals, then fails for any version that is missing or went out without a staged publish. Approve the rest and rerun it.
+- If staging fails after the tag exists, approve or reject what it staged, then run `gh workflow run release.yaml --repo onmax/comark-ui --ref vX.Y.Z`. It skips versions already on npm.
 - The docs deploy through Cloudflare Workers Builds on every push to `main`.
