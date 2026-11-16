@@ -129,7 +129,9 @@ jobs:
           expected=$(jq -s '[.[] | select(.private != true)] | length' packages/*/package.json)
           jq -e --argjson expected "$expected" 'type == "array" and length == $expected and length > 0' <<<"$FILES"
 
-  # publish the prebuilt tarballs straight to npm through OIDC trusted publishing
+  # Stage the prebuilt tarballs on npm through OIDC trusted publishing; a maintainer approves each with 2FA.
+  # pnpm ranks a staged publish above a direct one, and comark-annotate, comark-carousel, and comark-zoom began staged,
+  # so a direct publish is a trust downgrade that pnpm's `trustPolicy: no-downgrade` refuses to install.
   publish:
     timeout-minutes: 15
     needs: pack
@@ -144,6 +146,8 @@ jobs:
     permissions:
       id-token: write
     environment: npm
+    outputs:
+      releases: ${{ steps.publish.outputs.releases }}
     steps:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
@@ -158,7 +162,7 @@ jobs:
           name: uppt-tarball
           path: ${{ runner.temp }}/tarballs
 
-      - name: Publish to npm
+      - name: Stage on npm
         id: publish
         env:
           FILES: ${{ needs.pack.outputs.files }}
@@ -190,7 +194,7 @@ jobs:
                 *) tag=latest ;;
               esac
             fi
-            npm publish "$tarball" --provenance --ignore-scripts --access public --tag "$tag"
+            npm stage publish "$tarball" --provenance --ignore-scripts --access public --tag "$tag"
           }
           export -f publish_package
           package_manifests=()
@@ -198,7 +202,7 @@ jobs:
           for file in $(jq -r '.[]' <<<"$FILES"); do
             manifest=$(tar -xOzf "$TARBALLS/$file" package/package.json | jq -sce --arg file "$file" '
               if length != 1 then error("expected one package manifest in \($file)") else .[0] end
-              | {file: $file, name, needs: ([.dependencies, .peerDependencies, .optionalDependencies | objects | keys[]] | unique)}')
+              | {file: $file, name, version, needs: ([.dependencies, .peerDependencies, .optionalDependencies | objects | keys[]] | unique)}')
             package_manifests+=("$manifest")
           done
           manifests=$(printf '%s\n' "${package_manifests[@]}" | jq -s .)
@@ -207,10 +211,11 @@ jobs:
             npm view "$name" name >/dev/null 2>&1 || echo "$name"
           done)
           if [ -n "$unregistered" ]; then
-            echo "::error::Not on npm yet: $(tr "\n" " " <<<"$unregistered"). Publish a 0.0.0 placeholder and add its trusted publisher (release.yaml, environment npm) first."
+            echo "::error::Not on npm yet: $(tr "\n" " " <<<"$unregistered"). Publish a 0.0.0 placeholder and add its trusted publisher (release.yaml, environment npm, npm stage publish allowed) first."
             exit 1
           fi
-          # A package goes out only after every sibling it depends on, so latest never names a missing version.
+          echo "releases=$(jq -c 'map("\(.name)@\(.version)")' <<<"$manifests")" >> "$GITHUB_OUTPUT"
+          # Approve a package only after every sibling it depends on, so latest never names a missing version.
           # comark-ui follows its plugins, and comark-linter, which peers on comark-ui, follows it.
           waves=$(jq -c '
             (map(.name)) as $names
@@ -223,51 +228,34 @@ jobs:
                       else wave($done + ($ready | map(.name)); $out + [$ready | map(.file)]) end
                   end;
               wave([]; [])' <<<"$manifests")
+          echo '### Approve on npmjs.com in this order' >> "$GITHUB_STEP_SUMMARY"
           while read -r wave; do
             if ! jq -jr '.[] | ., "\u0000"' <<<"$wave" | xargs -0 -r -n 1 -P 4 bash -c 'set -euo pipefail; publish_package "$1"' _; then
-              echo "::error::A package in this wave failed, so the packages that depend on it were not published. Wave: $(jq -r 'join(", ")' <<<"$wave")"
+              echo "::error::A package in this wave failed, so the packages that depend on it were not staged. Wave: $(jq -r 'join(", ")' <<<"$wave")"
               exit 1
             fi
+            echo "1. $(jq -r 'join(", ")' <<<"$wave")" >> "$GITHUB_STEP_SUMMARY"
           done < <(jq -c '.[]' <<<"$waves")
 
-      - name: Verify every release package is on npm
-        if: ${{ !cancelled() && steps.publish.outcome != 'skipped' }}
+  # Wait for the approvals, then check every version went out staged.
+  verify:
+    needs: publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/npm-trust.ts
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Wait for approval and check trust evidence
         env:
-          FILES: ${{ needs.pack.outputs.files }}
-          TARBALLS: ${{ runner.temp }}/tarballs
-        run: |
-          set -euo pipefail
-          missing=0
-          # The registry can take minutes to list a version it just accepted, so every package shares one deadline.
-          deadline=$((SECONDS + 600))
-          echo '### npm release verification' >> "$GITHUB_STEP_SUMMARY"
-          for file in $(jq -r '.[]' <<<"$FILES"); do
-            manifest=$(tar -xOzf "$TARBALLS/$file" package/package.json)
-            name=$(jq -r .name <<<"$manifest")
-            version=$(jq -r .version <<<"$manifest")
-            found=false
-            while :; do
-              # Version URLs avoid the package metadata cached before publishing.
-              if manifest=$(curl --fail --silent --show-error --connect-timeout 5 --max-time 15 "https://registry.npmjs.org/$name/$version"); then
-                if jq -e --arg name "$name" --arg version "$version" '
-                  .name == $name and .version == $version
-                  and ._npmUser.trustedPublisher.id == "github"
-                  and (._npmUser | has("approver") | not)
-                  and .dist.attestations.provenance.predicateType == "https://slsa.dev/provenance/v1"
-                ' <<<"$manifest" > /dev/null; then
-                  found=true
-                  break
-                fi
-              fi
-              if [ "$SECONDS" -ge "$deadline" ]; then break; fi
-              sleep 15
-            done
-            if [ "$found" = true ]; then
-              echo "- Published: $name@$version" >> "$GITHUB_STEP_SUMMARY"
-            else
-              echo "::error::$name@$version could not be verified on npm with direct GitHub trusted publishing and provenance. Check the publish error and this package's trusted publisher settings."
-              echo "- Missing or without direct GitHub trusted publishing and provenance: $name@$version" >> "$GITHUB_STEP_SUMMARY"
-              missing=1
-            fi
-          done
-          exit "$missing"
+          RELEASES: ${{ needs.publish.outputs.releases }}
+        # GitHub stops a job after six hours. Approve the rest, then rerun this job.
+        run: jq -r '.[]' <<<"$RELEASES" | xargs node .github/npm-trust.ts 340
