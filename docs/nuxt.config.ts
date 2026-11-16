@@ -1,8 +1,11 @@
+import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { defineNuxtConfig } from "nuxt/config";
 import { env } from "vite-hub/env";
 import { excludedLinks } from "./link-excludes.ts";
 import { categories, railGroups } from "./sections.ts";
+
+const buildDir = new URL(".nuxt/", import.meta.url);
 
 export default defineNuxtConfig({
   compatibilityDate: "2026-10-01",
@@ -11,13 +14,7 @@ export default defineNuxtConfig({
   // Load the renderer's styles before the current UI styles, which the modules append below.
   css: ["@vite-hub/ui-playground/styles.css", "~/assets/landing.css"],
   // vite-hub/nuxt first: @vite-hub/docs turns its Comments on.
-  modules: [
-    "vite-hub/nuxt",
-    "@vite-hub/docs/nuxt",
-    "~~/modules/comark-styles",
-    "~~/modules/docs-theme-source",
-    "~~/modules/wrangler-output",
-  ],
+  modules: ["vite-hub/nuxt", "@vite-hub/docs/nuxt", "~~/modules/wrangler-output"],
   // Every prerendered page has a payload, so prefetching each link the reader can see loaded megabytes of them: the
   // sidebar alone lists every page. A link prefetches when the reader points at it or focuses it instead.
   experimental: {
@@ -53,7 +50,7 @@ export default defineNuxtConfig({
   },
   vitehub: {
     name: "comark-ui",
-    preset: "cloudflare",
+    host: "cloudflare",
     // Comments, the editor's sessions in the Content cms preset (server/content.ts), and nothing else use the database.
     database: {
       driver: "d1",
@@ -87,6 +84,21 @@ export default defineNuxtConfig({
           secret: env({ secret: true, source: env.source("BETTER_AUTH_SECRET") }),
         },
       },
+    },
+  },
+  hooks: {
+    // @vite-hub/docs maps each `#docs/*` template to its `.mjs`, so vue-tsc reads the JavaScript and never the `.d.mts`
+    // beside it, and fails inside the package. Point the types at the declarations. Remove this when @vite-hub/docs does.
+    "prepare:types": ({ tsConfig, sharedTsConfig }) => {
+      for (const paths of [tsConfig, sharedTsConfig].map(
+        (config) => config?.compilerOptions?.paths,
+      ))
+        for (const [alias, targets] of Object.entries(paths ?? {}))
+          if (paths && alias.startsWith("#docs/"))
+            paths[alias] = targets.map((target) => {
+              const types = target.replace(/\.mjs$/, ".d.mts");
+              return existsSync(new URL(types, buildDir)) ? types : target;
+            });
     },
   },
   // `nuxt dev` takes Console calls without a signature, from this machine only, as the user `local`, whom team.ts
