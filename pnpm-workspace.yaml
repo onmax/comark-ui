@@ -69,32 +69,30 @@ catalog:
   nuxt-agent-discovery: ^0.8.0
   valibot: ^1.4.2
   better-auth: 1.7.15
-  # ViteHub #4138 (the Content GitHub store with fewer requests and GitHub App sign-in), from pkg.pr.new:
-  # @vite-hub/docs isn't on npm yet. Every @vite-hub/* package names the
-  # others by this full commit URL, so the app uses the same one and the tree holds a single commit.
-  vite-hub: https://pkg.pr.new/vite-hub/vitehub/vite-hub@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/blob": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/blob@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/connections": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/connections@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/email": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/email@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/kv": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/kv@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/workflow": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/workflow@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/agent": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/agent@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/gateways": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/gateways@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/presets": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/presets@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/schedule": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/schedule@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/shell": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/shell@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/auth": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/auth@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/cms": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/cms@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/comments": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/comments@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/content": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/content@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/database": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/database@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/docs": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/docs@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/realtime": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/realtime@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/source": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/source@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/ui": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/ui@bc43707859b8caf48454e20157075625e9d615a8
-  # The design-system build lacks ./playground and ./playground-render. Alias their build to keep the shared design system.
-  "@vite-hub/ui-playground": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/ui@af71f9df43c589af1350de7efe4925b993a93480
-  "@vite-hub/workspace": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/workspace@bc43707859b8caf48454e20157075625e9d615a8
+  # ViteHub main (e425ff3), from pkg.pr.new: @vite-hub/docs isn't on npm yet. Every @vite-hub/* package names the
+  # others by this full commit URL, so the app uses the same one and the tree holds a single commit. The build stops
+  # when two ViteHub commits meet in one app.
+  vite-hub: https://pkg.pr.new/vite-hub/vitehub/vite-hub@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/blob": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/blob@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/connections": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/connections@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/email": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/email@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/kv": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/kv@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/workflow": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/workflow@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/agent": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/agent@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/gateways": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/gateways@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/presets": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/presets@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/schedule": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/schedule@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/shell": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/shell@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/auth": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/auth@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/cms": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/cms@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/comments": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/comments@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/content": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/content@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/database": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/database@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/docs": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/docs@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/realtime": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/realtime@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/source": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/source@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/ui": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/ui@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/workspace": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/workspace@e425ff329ff581a09d64b6369bd391cdd29b550f
   drizzle-kit: 1.0.0-rc.5
   drizzle-orm: 1.0.0-rc.5
   wrangler: ^4.152.0
@@ -116,54 +114,48 @@ overrides:
   # calls it, so every /_fonts file shipped empty. 1.x downloads them when Vite closes the bundle.
   "@nuxt/ui>@nuxt/fonts": ^1.2.0
   vite: "catalog:"
-  # The ViteHub preview pins Comark 0.8.1. The docs render with the same Comark as the plugins, and 0.9 fixes the
-  # exponential backtracking in its Shiki grammar that stalled docs generation.
-  comark: "catalog:"
-  "@comark/html": "catalog:"
-  "@comark/vue": "catalog:"
-  "@comark/react": "catalog:"
-  "@comark/svelte": "catalog:"
-  # ViteHub pins KaTeX 0.18, and Comark 0.9 asks for ^0.19.1.
+  # micromark-extension-math and rehype-katex ask for KaTeX 0.16, and Comark 0.9 for ^0.19.1. One KaTeX renders math
+  # everywhere in the repository.
   katex: "catalog:"
   # The preview packages take each other as peers at "0.1.0 || 0.0.0-preview-…", and pnpm fills a missing peer from
   # npm's 0.1.0. Every @vite-hub/* package comes from the same commit as the catalog's instead.
-  "@vite-hub/agent": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/agent@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/auth": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/auth@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/blob": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/blob@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/browser": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/browser@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/bundle": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/bundle@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/channels": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/channels@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/cli": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/cli@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/cms": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/cms@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/comments": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/comments@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/connections": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/connections@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/content": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/content@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/database": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/database@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/decisions": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/decisions@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/docs": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/docs@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/email": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/email@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/env": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/env@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/forge": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/forge@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/forms": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/forms@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/gateways": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/gateways@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/i18n": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/i18n@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/kv": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/kv@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/markdown-template": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/markdown-template@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/mcp": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/mcp@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/presets": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/presets@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/queue": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/queue@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/rate-limit": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/rate-limit@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/realtime": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/realtime@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/runtime": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/runtime@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/sandbox": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/sandbox@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/schedule": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/schedule@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/shell": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/shell@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/source": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/source@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/ui": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/ui@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/web-container": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/web-container@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/workflow": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/workflow@bc43707859b8caf48454e20157075625e9d615a8
-  "@vite-hub/workspace": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/workspace@bc43707859b8caf48454e20157075625e9d615a8
-  "vite-hub": https://pkg.pr.new/vite-hub/vitehub/vite-hub@bc43707859b8caf48454e20157075625e9d615a8
+  "@vite-hub/agent": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/agent@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/auth": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/auth@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/blob": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/blob@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/browser": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/browser@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/bundle": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/bundle@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/channels": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/channels@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/cli": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/cli@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/cms": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/cms@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/comments": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/comments@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/connections": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/connections@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/content": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/content@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/database": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/database@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/decisions": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/decisions@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/docs": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/docs@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/email": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/email@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/env": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/env@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/forge": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/forge@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/forms": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/forms@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/gateways": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/gateways@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/i18n": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/i18n@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/kv": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/kv@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/markdown-template": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/markdown-template@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/mcp": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/mcp@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/presets": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/presets@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/queue": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/queue@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/rate-limit": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/rate-limit@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/realtime": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/realtime@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/runtime": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/runtime@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/sandbox": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/sandbox@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/schedule": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/schedule@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/shell": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/shell@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/source": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/source@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/ui": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/ui@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/web-container": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/web-container@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/workflow": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/workflow@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "@vite-hub/workspace": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/workspace@e425ff329ff581a09d64b6369bd391cdd29b550f
+  "vite-hub": https://pkg.pr.new/vite-hub/vitehub/vite-hub@e425ff329ff581a09d64b6369bd391cdd29b550f
 
 minimumReleaseAgeExclude:
   - vite-doctor@0.1.0
@@ -179,6 +171,7 @@ minimumReleaseAgeExclude:
   - "@nuxt/vite-server-nightly@5.0.0-2611111405-4462a07"
   - nuxt-nightly@5.0.0-2611111405-4462a07
   - vue-router@5.5.0
+  - nostics@1.4.0
 
 allowBuilds:
   # ViteHub's optional dependencies (zstd, swc, cbor-extract, cpu-features, liblzma, ssh2) are not used by the docs.
@@ -195,8 +188,3 @@ allowBuilds:
   # @vite-hub/docs pulls it through @vueuse; its postinstall only picks the Vue 2 or 3 build, and Vue 3 is its default.
   vue-demi: false
   workerd: true
-
-# Temporary dependency backports. See patches/README.md for upstream PRs and removal conditions.
-patchedDependencies:
-  # Workers builds resolve the `workerd` condition, which 5.0.1 lacks (crouchcd/pkce-challenge#50, merged, unreleased).
-  pkce-challenge@5.0.1: patches/pkce-challenge@5.0.1.patch

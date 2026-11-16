@@ -8,16 +8,9 @@ export default defineNuxtConfig({
   compatibilityDate: "2026-10-01",
   devtools: { enabled: false },
   telemetry: false,
-  // Load the renderer's styles before the current UI styles, which the modules append below.
-  css: ["@vite-hub/ui-playground/styles.css", "~/assets/landing.css"],
+  css: ["~/assets/landing.css"],
   // vite-hub/nuxt first: @vite-hub/docs turns its Comments on.
-  modules: [
-    "vite-hub/nuxt",
-    "@vite-hub/docs/nuxt",
-    "~~/modules/comark-styles",
-    "~~/modules/docs-theme-source",
-    "~~/modules/wrangler-output",
-  ],
+  modules: ["vite-hub/nuxt", "@vite-hub/docs/nuxt", "~~/modules/wrangler-output"],
   // Every prerendered page has a payload, so prefetching each link the reader can see loaded megabytes of them: the
   // sidebar alone lists every page. A link prefetches when the reader points at it or focuses it instead.
   experimental: {
@@ -53,7 +46,7 @@ export default defineNuxtConfig({
   },
   vitehub: {
     name: "comark-ui",
-    preset: "cloudflare",
+    host: "cloudflare",
     // Comments, the editor's sessions in the Content cms preset (server/content.ts), and nothing else use the database.
     database: {
       driver: "d1",

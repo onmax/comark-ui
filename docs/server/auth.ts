@@ -1,10 +1,7 @@
-// Load the generated environment augmentation for checks outside Nuxt's TypeScript project too.
-import type {} from "../.vitehub/types.d.ts";
-import type {} from "../.vitehub/types/auth.d.ts";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthMiddleware } from "better-auth/api";
 import { defineAuth } from "vite-hub/auth";
-import { db, schema } from "vite-hub/database/drizzle";
+import { db, schema } from "vite-hub/database";
 
 // Sign in with GitHub, nothing else, at /sign-in (server/routes/sign-in.get.ts). Anyone can sign in; only the logins in
 // server/utils/team.ts can then comment. Editing happens in the ViteHub Console, which signs its own people in.
