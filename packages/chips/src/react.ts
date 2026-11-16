@@ -1,7 +1,7 @@
 import { createElement, type ReactNode, useEffect } from "react";
 import { addStyles } from "./client.ts";
 
-export { CHIP_TAG, default } from "./index.ts";
+export { CHIP_TAG, chipNode, default } from "./index.ts";
 export type { ChipsMeta, ChipsOptions } from "./index.ts";
 
 /** A chip for `@comark/react`. */

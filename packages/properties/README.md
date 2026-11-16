@@ -28,7 +28,7 @@ tags: [colors, docs]
 ---
 ```
 
-Options: `keys` (default `["status", "pr", "author", "date", "tags"]`), `labels` per key, and `top` (default true) to put the box at the top of a document with no `::properties`. A pull request or issue link reads as `owner/repo#123`, any other link as its address, and a list as badges.
+Options: `keys` (default `["status", "pr", "author", "date", "tags"]`), `labels` per key, and `top` (default true) to put the box at the top of a document with no `::properties`. A pull request or issue link reads as `owner/repo#123`, any other link as its address, and a list as badges. With `comark-chips` registered after it, as comark-ui does, each link is a chip with its site's favicon.
 
 The plugin adds every problem to `meta.issues`: a value it can't show, a `::properties` with nothing to show, and content inside it. Each issue names the key or block and says how to fix it.
 

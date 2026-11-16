@@ -37,6 +37,9 @@ export const css = `@layer comark{${[
   ".cfm a{color:inherit;text-decoration-color:var(--_comark-border);text-underline-offset:4px}",
   ".cfm a:hover{text-decoration-color:currentColor}",
   ".cfm a:focus-visible{border-radius:calc(var(--_comark-radius)/4);outline:2px solid var(--_comark-ring);outline-offset:2px;box-shadow:0 0 0 3px color-mix(in srgb,var(--_comark-ring) 50%,transparent)}",
+  // A link into an account is an avatar chip, which comark-chips draws bare in text; in the box every link is the same pill.
+  '.cfm .cp[data-kind="avatar"]{padding:.0625em .375em .0625em .25em;background:var(--_cp-tint);box-shadow:inset 0 0 0 1px var(--_cp-ring);text-decoration:none}',
+  '.cfm .cp[data-kind="avatar"]:hover{background:var(--_cp-hover)}',
   ".cfm-tag,.cfm-status{display:inline-flex;align-items:center;padding:0 .5rem;border:1px solid var(--_comark-border);font-size:.75rem;font-weight:500;line-height:1.25rem}",
   ".cfm-tag{border-radius:calc(var(--_comark-radius) - 2px);background:var(--_comark-accent)}",
   ".cfm-status{gap:.375rem;border-radius:999px}",

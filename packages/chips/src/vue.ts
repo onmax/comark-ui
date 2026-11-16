@@ -1,7 +1,7 @@
 import { defineComponent, h, onMounted } from "vue";
 import { addStyles } from "./client.ts";
 
-export { CHIP_TAG, default } from "./index.ts";
+export { CHIP_TAG, chipNode, default } from "./index.ts";
 export type { ChipsMeta, ChipsOptions } from "./index.ts";
 
 /** A chip for `@comark/vue`. */

@@ -97,7 +97,9 @@ Each value shows by its kind:
 | Text, a number, `true` or `false` | Itself |
 | A GitHub or GitLab pull request, merge request, or issue link | `owner/repo#123`, linked |
 | Any other `http(s)` link | Its host and path, linked |
-| A list | One badge per item |
+| A list | One badge per item, and each link a link |
+
+With [Chips](/chips) on, as in comark-ui, every link in the box is a chip with its site's favicon, like the links in the text. Register `comark-properties` before `comark-chips` when you use them alone, so chips sees the box's links.
 
 ::example
 ```md

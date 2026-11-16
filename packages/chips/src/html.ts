@@ -4,7 +4,7 @@ import { css } from "./styles.ts";
 import { rawText } from "../../../shared/text.ts";
 import { attr } from "../../../shared/html.ts";
 
-export { CHIP_TAG, default } from "./index.ts";
+export { CHIP_TAG, chipNode, default } from "./index.ts";
 export type { ChipsMeta, ChipsOptions } from "./index.ts";
 export { css };
 

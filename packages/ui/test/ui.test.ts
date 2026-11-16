@@ -75,6 +75,20 @@ const blocks = [
 ];
 
 describe("comark-ui", () => {
+  it("draws the links in the properties box as chips, like the document's own", async () => {
+    const output = await renderHtml(
+      "---\npr: https://example.com/acme/app/pull/7\ntags: [docs, https://example.com/spec]\n---\n\nSee [the spec](https://example.com/spec).",
+      { chips: { download: false, favicon: (host) => `https://icons.example/${host}` } },
+    );
+    const box = output.slice(output.indexOf('<dl class="cfm"'), output.indexOf("</dl>"));
+    expect(box).toContain(
+      '<a class="cp" href="https://example.com/acme/app/pull/7" data-kind="favicon">',
+    );
+    expect(box).toContain('src="https://icons.example/example.com"');
+    expect(box).toMatch(/<span class="cfm-tag">\s*docs\s*<\/span>/);
+    expect(box).not.toMatch(/cfm-tag">\s*<a/);
+  });
+
   it("renders every plugin's blocks with one install", async () => {
     const { plugins, components } = html(offline);
     const out = await createHtmlRenderer({ plugins, components })(document);

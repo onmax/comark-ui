@@ -112,6 +112,19 @@ describe("comark-properties", () => {
     );
   });
 
+  it("gives plain list items a tag and leaves links for comark-chips to draw", async () => {
+    const html = await render("---\ntags: [docs, https://example.com/spec]\n---\n");
+    expect(html).toContain(
+      '<dd><span class="cfm-tag">docs</span><a href="https://example.com/spec">example.com/spec</a></dd>',
+    );
+  });
+
+  it("draws every link in the box as the same pill, an account's avatar chip too", async () => {
+    const { css } = await import("../src/styles.ts");
+    expect(css).toContain('.cfm .cp[data-kind="avatar"]{padding:');
+    expect(css).toContain("box-shadow:inset 0 0 0 1px var(--_cp-ring)");
+  });
+
   it("picks each other key's icon from its value", async () => {
     const html = await render(
       "---\nsite: https://example.com\ncount: 3\ndone: true\nlabels: [a]\nwhen: 2026-02-30\n---\n",

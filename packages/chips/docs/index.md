@@ -158,6 +158,18 @@ chips({
 });
 ```
 
+### Links you add after parsing
+
+A host that adds links to a parsed document, such as rows of [Properties](/properties) it fills in itself, builds each one with `chipNode()` so it looks like the document's own chips. Pass the image already resolved:
+
+```ts
+import { chipNode } from "comark-chips";
+
+chipNode("https://github.com/onmax/comark-ui/pull/111", "PR #111", "https://example.com/favicons/github.com");
+```
+
+It returns `["chip", { href, kind: "favicon", src }, text]`. Pass `"avatar"` as the fourth argument for a round image.
+
 ## API
 
 ### Props
@@ -189,7 +201,7 @@ The plugin adds every problem to `meta.issues`, as [Validation](/guide/validatio
 - An `avatar` that is a bare login, such as `avatar="antfu"`. Write `avatar="@antfu"`.
 - A `:chip` whose `href` isn't a web address.
 
-A site without a favicon gets a globe in its place, and no issue. Each problem has its own rule in [Doctor](/doctor).
+A site without a favicon gets a globe in its place, and no issue. In the dark theme a favicon sits on a white plate, since sites draw them for a light tab bar. Each problem has its own rule in [Doctor](/doctor).
 
 ### Package
 
