@@ -162,11 +162,16 @@ onBeforeUnmount(() => stop?.());
 
 /* A block that draws its own frame carries `data-comark-frame` and isn't framed again: a preview that holds only such
    blocks drops its ring and padding, and stacks them with a gap. A block drawn on the server sits in a `.comark-html`
-   wrapper, so check its direct children for the marker too. */
-.docs-example-preview:not(:has(> :not(style, script, [data-comark-frame], .comark-html))):not(
+   wrapper, so check its direct children for the marker too. Only in the preview view: this rule is as specific as the
+   one that hides the preview, and comes later, so in the code view it would show the preview again. */
+[data-view="preview"]
+  > .docs-example-content
+  > .docs-example-preview:not(:has(> :not(style, script, [data-comark-frame], .comark-html))):not(
     :has(> .comark-html > :not(style, script, [data-comark-frame]))
   ),
-.docs-example-preview:has(> p > :is(.cm-video, .cm-audio)) {
+[data-view="preview"]
+  > .docs-example-content
+  > .docs-example-preview:has(> p > :is(.cm-video, .cm-audio)) {
   display: flex;
   flex-direction: column;
   gap: 1rem;
