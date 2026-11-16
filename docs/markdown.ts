@@ -4,9 +4,8 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { renderHtmlFromDocument } from "@comark/html";
 import { defineComarkPlugin, type ElementNode, type Node } from "comark";
-import { textContent } from "comark/utils";
 import { components as vueComponents } from "comark-ui/vue";
-import { createDocsParser, type DocsParserOptions } from "@vite-hub/docs/server";
+import type { DocsParserOptions } from "@vite-hub/docs/server";
 import { playable, playLink } from "./play-link.ts";
 import { browserPlugins, components as html } from "./plugins.ts";
 import { studioPlugin } from "./studio.ts";
@@ -16,29 +15,36 @@ import bundle from "../packages/bundle/src/index.ts";
 const isElement = (node: Node): node is ElementNode =>
   Array.isArray(node) && typeof node[0] === "string";
 
-// annotate, diff, quiz, and comments have only an HTML renderer, so their blocks reach the page as the HTML it draws, in
-// a `comark-html` node that comark-ui's `ComarkHtml` shows. Its `data-block` is the block's tag, so a page's styles can
-// tell a diff from a screenshot without looking inside.
+// @vite-hub/docs draws the blocks that have only an HTML renderer (annotate, diff, quiz, and comments) after every
+// plugin, in a `comark-html` node that its `ComarkHtml` shows. The studio's blocks are parsed apart from the page and
+// timed as HTML in the studio plugin, so the studio draws them here first.
+// A chart's notes are comark-annotate marks, which only the HTML renderer draws. @vite-hub/docs draws such a chart as
+// HTML too, but its DocsMarkdown gives a `comark-html` node whose `block` has a Vue component back to that component,
+// which draws no marks. So a chart with notes is drawn here, and names its block only in `data-block`.
+// @vite-hub/docs also draws the HTML-only blocks inside another one, such as each `::screenshot` of a `::compare`,
+// before the outer block, which then finds none and draws an empty carousel. So a block with one inside is drawn here.
+// Drop all but the studio's half once @vite-hub/docs keeps a marked chart's HTML and draws nested blocks with their parent.
 // The Vue components are named in PascalCase, `Tabs` for `tabs`.
 const name = (tag: string) => tag.replaceAll("-", "").toLowerCase();
 const vue = new Set(Object.keys(vueComponents).map(name));
 // comark-links' `span` only fixes how the HTML renderer writes `aria-hidden`, which Vue writes right.
 const htmlOnly = Object.keys(html).filter((tag) => tag !== "span" && !vue.has(name(tag)));
-// A chart's notes are comark-annotate marks, which only the HTML renderer draws, so a chart with any goes as HTML too.
-const needsHtml = (node: ElementNode) =>
-  htmlOnly.includes(node[0]) || (node[0] === "chart" && Array.isArray(node[1].marks));
-const bridge = defineComarkPlugin(() => {
+const marked = (node: ElementNode) =>
+  node[0] === "chart" && Array.isArray(node[1].marks) && node[1].marks.length > 0;
+// SAFETY: an element node is [tag, attributes, ...children].
+const children = (node: ElementNode) => (node.slice(2) as Node[]).filter(isElement);
+const holdsHtmlOnly = (node: ElementNode): boolean =>
+  children(node).some((child) => htmlOnly.includes(child[0]) || holdsHtmlOnly(child));
+const nested = (node: ElementNode) => htmlOnly.includes(node[0]) && holdsHtmlOnly(node);
+const bridge = defineComarkPlugin((all: boolean = true) => {
   const visit = async (nodes: Node[]): Promise<void> => {
     for (const [at, node] of nodes.entries()) {
       if (!isElement(node)) continue;
-      if (needsHtml(node)) {
+      if ((all && htmlOnly.includes(node[0])) || marked(node) || nested(node)) {
+        const drawn = await renderHtmlFromDocument({ nodes: [node] }, { components: html });
         nodes[at] = [
           "comark-html",
-          {
-            html: await renderHtmlFromDocument({ nodes: [node] }, { components: html }),
-            class: "comark-html",
-            "data-block": node[0],
-          },
+          marked(node) ? { html: drawn, "data-block": node[0] } : { html: drawn, block: node[0] },
         ];
         continue;
       }
@@ -46,7 +52,10 @@ const bridge = defineComarkPlugin(() => {
       await visit(node.slice(2) as Node[]);
     }
   };
-  return { name: "docs-html-only", post: (state) => visit(state.tree.nodes) };
+  return {
+    name: all ? "docs-studio-html" : "docs-html-workarounds",
+    post: (state) => visit(state.tree.nodes),
+  };
 });
 
 // comark-zoom can't measure an image of the site's own, such as `/before.png`, from its path, so the image took its room
@@ -92,36 +101,8 @@ const blocks = () => [
   ...browserPlugins({ "comark-time": timeNow }, { typeset: false }).map((plugin) =>
     plugin.name === "comark-bundle" ? bundle({ root: builds }) : plugin,
   ),
-  bridge(),
+  bridge(false),
 ];
-
-// `:::example` shows its fenced Markdown twice, rendered and as code. The rendered copy is parsed here so the page
-// reaches the browser as nodes, and the playground link, which deflates the Markdown, is written here too.
-const examples = defineComarkPlugin(() => {
-  const parse = createDocsParser({ plugins: blocks() });
-  const visit = async (nodes: Node[]): Promise<void> => {
-    for (const node of nodes) {
-      if (!isElement(node)) continue;
-      if (node[0] === "example" || node[0] === "correct" || node[0] === "incorrect") {
-        // SAFETY: an element node is [tag, attributes, ...children].
-        const pre = (node.slice(2) as Node[]).find(
-          (child): child is ElementNode => isElement(child) && child[0] === "pre",
-        );
-        // A Doctor example can be broken on purpose, such as invalid frontmatter, so it shows its source alone.
-        const source = pre && textContent(pre);
-        const preview = source ? await parse(source).catch(() => undefined) : undefined;
-        if (preview) node.splice(2, 0, ["example-preview", {}, ...preview.nodes]);
-        // An example opens in the playground with its Markdown; a Doctor rule's doesn't.
-        if (node[0] === "example" && source && playable(source))
-          node[1].play = await playLink(source);
-        continue;
-      }
-      // SAFETY: an element node is [tag, attributes, ...children].
-      await visit(node.slice(2) as Node[]);
-    }
-  };
-  return { name: "docs-examples", post: (state) => visit(state.tree.nodes) };
-});
 
 // `#51` in the landing's studio links to this repository's issues.
 const studio = studioPlugin(() => [
@@ -132,4 +113,10 @@ const studio = studioPlugin(() => [
   bridge(),
 ]);
 
-export default { plugins: [...blocks(), examples(), studio] } satisfies DocsParserOptions;
+export default {
+  plugins: [...blocks(), studio],
+  // An example opens in the playground with its Markdown; a Doctor rule's `::correct` and `::incorrect` don't.
+  examples: {
+    play: (source, tag) => (tag === "example" && playable(source) ? playLink(source) : undefined),
+  },
+} satisfies DocsParserOptions;
