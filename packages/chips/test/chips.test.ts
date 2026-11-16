@@ -1,9 +1,9 @@
 import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import { join } from "node:path";
-import { createHtmlRenderer } from "@comark/html";
+import { createHtmlRenderer, renderHtmlFromDocument } from "@comark/html";
 import { parseMarkdown } from "comark";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
-import chips, { type ChipsOptions, components } from "../src/html.ts";
+import chips, { type ChipsOptions, chipNode, components } from "../src/html.ts";
 
 const PNG = new Uint8Array([137, 80, 78, 71]);
 const requests: string[] = [];
@@ -30,6 +30,7 @@ const render = (markdown: string, options?: ChipsOptions) =>
 const issues = async (markdown: string, options?: ChipsOptions) =>
   (await parseMarkdown(markdown, { plugins: [chips({ cache: false, ...options })] })).meta.issues;
 const DATA = "data:image/png;base64,iVBORw==";
+const FAVICON = "https://icons.example/vite.dev.png";
 
 describe("comark-chips", () => {
   it("turns a link into a chip with the site's favicon inlined, and the styles once", async () => {
@@ -40,6 +41,40 @@ describe("comark-chips", () => {
     expect(html).toContain('href="https://vuejs.org"');
     expect(html.match(/<style data-comark-chips>/g)).toHaveLength(1);
     expect(requests).toContain("https://www.google.com/s2/favicons?domain=vite.dev&sz=64");
+  });
+
+  it("builds the chip a host adds after parsing, drawn like a parsed one", async () => {
+    const parsed = await render("[Vite](https://vite.dev)", {
+      download: false,
+      favicon: () => FAVICON,
+    });
+    const added = await renderHtmlFromDocument(
+      {
+        nodes: [["p", {}, chipNode("https://vite.dev", "Vite", FAVICON)]],
+        frontmatter: {},
+        meta: {},
+      },
+      { components },
+    );
+    expect(added).toContain(
+      `<a class="cp" href="https://vite.dev" data-kind="favicon"><img class="cp-img" src="${FAVICON}" alt="">Vite</a>`,
+    );
+    expect(parsed).toContain(
+      added.slice(added.indexOf('<a class="cp"'), added.indexOf("</a>") + 4),
+    );
+    expect(chipNode("https://vite.dev", "Vite")).toEqual([
+      "chip",
+      { href: "https://vite.dev", kind: "favicon" },
+      "Vite",
+    ]);
+  });
+
+  // A chip in a flex row, such as comark-properties' box, is laid out as a block; its own line height keeps the room
+  // above and below the image as small as the room on its left, as inline.
+  it("keeps the room around the image even, and puts favicons on a white plate in the dark theme", async () => {
+    const html = await render("[Vite](https://vite.dev)");
+    expect(html).toMatch(/\.cp\{padding:\.0625em \.375em \.0625em \.25em;line-height:1\.375;/);
+    expect(html).toContain('.cp[data-kind="favicon"] .cp-img){background:#fff');
   });
 
   // Prose styles give every image a top margin, and outside a paragraph, as in a list item, nothing takes it back.

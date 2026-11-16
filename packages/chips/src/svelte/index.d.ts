@@ -1,6 +1,6 @@
 import type { Component, Snippet } from "svelte";
 
-export { CHIP_TAG, default } from "comark-chips";
+export { CHIP_TAG, chipNode, default } from "comark-chips";
 export type { ChipsMeta, ChipsOptions } from "comark-chips";
 
 export declare const Chip: Component<{

@@ -93,7 +93,12 @@ function valueOf(value: unknown, nested = false): Node[] | undefined {
     if (nested) return;
     const items = value.map((item) => valueOf(item, true));
     if (items.some((item) => item === undefined)) return;
-    return items.map((item): Node => ["span", { class: "cfm-tag" }, ...(item ?? [])]);
+    // A link draws its own pill once comark-chips makes it a chip, so only plain items get a tag.
+    return items.map((item): Node =>
+      item?.length === 1 && isElement(item[0]) && item[0][0] === "a"
+        ? item[0]
+        : ["span", { class: "cfm-tag" }, ...(item ?? [])],
+    );
   }
   if (value === undefined || value === null || value instanceof Object) return;
   // SAFETY: undefined, null, objects, and arrays returned above, so only a string, number, or boolean is left.

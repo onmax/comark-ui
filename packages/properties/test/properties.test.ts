@@ -112,6 +112,13 @@ describe("comark-properties", () => {
     );
   });
 
+  it("gives plain list items a tag and leaves links for comark-chips to draw", async () => {
+    const html = await render("---\ntags: [docs, https://example.com/spec]\n---\n");
+    expect(html).toContain(
+      '<dd><span class="cfm-tag">docs</span><a href="https://example.com/spec">example.com/spec</a></dd>',
+    );
+  });
+
   it("picks each other key's icon from its value", async () => {
     const html = await render(
       "---\nsite: https://example.com\ncount: 3\ndone: true\nlabels: [a]\nwhen: 2026-02-30\n---\n",

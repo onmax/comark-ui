@@ -324,6 +324,8 @@ export function preset<C>(renderer: Renderer<C>, options: PresetOptions = {}): P
   parse(figure, options.figure);
   parse(critic, options.critic);
   add(renderer.charts, options.charts);
+  // Before chips, so the links in the box become chips like the document's own.
+  add(renderer.properties, options.properties);
   add(renderer.chips, options.chips);
   add(renderer.colors, options.colors);
   add(renderer.diagrams, options.diagrams);
@@ -361,7 +363,6 @@ export function preset<C>(renderer: Renderer<C>, options: PresetOptions = {}): P
   }
   add(renderer.fileTree, options.fileTree, { iconResolver: icons, ...optionsOf(options.fileTree) });
   add(renderer.fields, options.fields);
-  add(renderer.properties, options.properties);
   parse(keys, options.keys);
   add(renderer.badge, options.badge);
   add(renderer.media, options.media);

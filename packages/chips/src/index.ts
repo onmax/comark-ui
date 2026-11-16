@@ -31,6 +31,19 @@ type Issue = { rule: `comark/chips/${string}`; message: string };
 /** The node a chip is. After parsing, its attributes are `href`, `kind` (`avatar` or `favicon`), `src`, and `title`. */
 export const CHIP_TAG = "chip";
 
+/**
+ * A chip as parsing leaves one, for a host that adds links to a document after it was parsed, such as rows of
+ * comark-properties, and wants them to look like the document's own. `src` is the image, already resolved.
+ */
+export function chipNode(
+  href: string,
+  text: string,
+  src?: string,
+  kind: "favicon" | "avatar" = "favicon",
+): ElementNode {
+  return [CHIP_TAG, { href, kind, ...(src && { src }) }, text];
+}
+
 const LOGIN = "[a-z\\d](?:[a-z\\d]|-(?=[a-z\\d])){0,38}";
 // `@user`, not inside a word, a path, or an email address. A name followed by a slash is an npm scope such as
 // `@comark/html`, so it isn't a mention.
