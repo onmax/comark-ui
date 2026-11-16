@@ -1,4 +1,4 @@
-A git graph draws the commits it reads from pasted `git log` output, so a ```` ```git-graph ```` fence or a `::git-graph` with no log draws nothing, and the fence stays a code block. Run `git log --graph --oneline --decorate --parents`, with `--all` or the branches to show, and paste what it prints in the fence.
+A git graph draws the commits it reads from pasted `git log` output, so a `git-graph` fence or a `::git-graph` with no log draws nothing, and the fence stays a code block. Run `git log --graph --oneline --decorate --parents`, with `--all` or the branches to show, and paste what it prints in the fence.
 
 ::incorrect
 ````md

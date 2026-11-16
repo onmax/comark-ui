@@ -88,14 +88,20 @@ credits: 'Laid out like <a href="https://sapling-scm.com/docs/addons/isl/">Sapli
 
 ## Features
 
-- Reads `git log --graph --oneline --decorate --parents` pasted as is, from a ```` ```git-graph ```` fence. On GitHub, or anywhere the plugin doesn't run, the fence still reads as the log.
+- Reads what `git log` prints, pasted as is in a `git-graph` fence. On GitHub, or anywhere the plugin doesn't run, the fence still reads as the log.
 - Draws forks and merges from the parent hashes, not from git's ASCII drawing, so lanes stay in their columns.
 - Puts each branch's name at its tip and each tag on its commit, as `--decorate` does. A branch that was merged and deleted gets its name from the merge's message.
 - Draws with no script.
 
 ## Usage
 
-Run `git log --graph --oneline --decorate --parents` and paste what it prints in a ```` ```git-graph ```` fence.
+Run this in your repository:
+
+```sh
+git log --graph --oneline --decorate --parents --all
+```
+
+Paste what it prints, as is, in a fenced code block whose language is `git-graph`.
 
 ::example
 ````md
@@ -111,7 +117,7 @@ Run `git log --graph --oneline --decorate --parents` and paste what it prints in
 ````
 ::
 
-`git log` shows only the branch you're on. Add `--all`, or name the branches, such as `git log --graph --oneline --decorate --parents main release/2.4`, to get the others into the graph.
+`--all` puts every branch in the graph. To show only some, name them instead, such as `git log --graph --oneline --decorate --parents main release/2.4`.
 
 ### Title
 
@@ -352,7 +358,7 @@ $ git cherry-pick --skip
 | `reverse` | `false` | Shows the oldest commit first, as `git log --reverse` does. |
 | `max-count` | — | Keeps the newest commits, as `git log -n` does, and folds the rest into one row. A whole number from 1. |
 
-The props and slots need `::git-graph`. A ```` ```git-graph ```` fence takes only a title, in brackets after its language.
+The props and slots need `::git-graph`. A `git-graph` fence takes only a title, in brackets after its language.
 
 ### Slots
 
