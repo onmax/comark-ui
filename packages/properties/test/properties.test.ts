@@ -119,6 +119,12 @@ describe("comark-properties", () => {
     );
   });
 
+  it("draws every link in the box as the same pill, an account's avatar chip too", async () => {
+    const { css } = await import("../src/styles.ts");
+    expect(css).toContain('.cfm .cp[data-kind="avatar"]{padding:');
+    expect(css).toContain("box-shadow:inset 0 0 0 1px var(--_cp-ring)");
+  });
+
   it("picks each other key's icon from its value", async () => {
     const html = await render(
       "---\nsite: https://example.com\ncount: 3\ndone: true\nlabels: [a]\nwhen: 2026-02-30\n---\n",
