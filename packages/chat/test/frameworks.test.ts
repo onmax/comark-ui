@@ -9,6 +9,7 @@ import { Comment, createSSRApp, h } from "vue";
 import { renderToString } from "vue/server-renderer";
 import { MessageParts as ReactParts } from "../src/react.ts";
 import { MessageParts as VueParts } from "../src/vue.ts";
+import { svelte } from "./svelte-render.ts";
 
 const parts: UIMessage["parts"] = [
   { type: "reasoning", text: "Check the *config*.", state: "done" },
@@ -83,6 +84,18 @@ describe("comark-chat renderers", () => {
         "r.pdf",
       ])
         expect(markup, `${name}: ${piece}`).toContain(piece);
+  });
+
+  it("shows an image by a relative URL", async () => {
+    const image: UIMessage["parts"] = [
+      { type: "file", mediaType: "image/png", url: "/uploads/a.png" },
+    ];
+    const img = '<img class="cht-image" alt="image/png" src="/uploads/a.png" loading="lazy"';
+    expect(
+      await renderToString(createSSRApp({ render: () => h(VueParts, { parts: image }) })),
+    ).toContain(img);
+    expect(await react(createElement(ReactParts, { parts: image }))).toContain(img);
+    expect(await svelte(image)).toContain(img);
   });
 
   it("lets a slot or a render function replace a kind of part", async () => {

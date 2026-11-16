@@ -92,6 +92,28 @@ describe("read()", () => {
     },
   );
 
+  it("shows an image the page serves itself, by a root-relative or relative URL", () => {
+    const image = (url: string) => read([{ type: "file", mediaType: "image/png", url }])[0];
+    for (const url of [
+      "/uploads/a.png",
+      "uploads/a.png",
+      "../a.png",
+      "?id=1",
+      "//cdn.example.com/a.png",
+    ])
+      expect(image(url), url).toMatchObject({ kind: "file", image: url });
+    for (const url of [
+      "",
+      " ",
+      "javascript:alert(1)",
+      "java\tscript:alert(1)",
+      " javascript:alert(1)",
+      "file:///etc/a.png",
+      "http://[",
+    ])
+      expect(image(url), JSON.stringify(url)).not.toHaveProperty("image");
+  });
+
   it("renders reasoning files with the same URL safety as files and preserves the part", () => {
     const parts: UIMessage["parts"] = [
       { type: "reasoning-file", mediaType: "image/png", url: "https://example.com/thought.png" },

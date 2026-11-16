@@ -50,7 +50,7 @@ export type Block<Part extends MessagePart = MessagePart> =
       href?: string;
       /** The name to save the file as, when it has one and a link. */
       download?: string;
-      /** Set when the file is an image the page may load. */
+      /** Set when the file is an image the page may load: http, https, relative to the page, a data image, or blob. */
       image?: string;
     }
   | { kind: "step-start"; index: number; part: Part }
@@ -62,8 +62,19 @@ type Fields = Record<string, unknown>;
 const fields = (part: MessagePart) => part as MessagePart & Fields;
 const string = (value: unknown) => (typeof value === "string" ? value : undefined);
 
+// A relative URL, such as "/uploads/a.png", loads from the page's own site. Resolving it against a stand-in web origin
+// parses it as the browser will, so "java\tscript:" still reads as a script and is refused.
+function isPageUrl(value: string) {
+  if (value.trim() === "") return false;
+  try {
+    return isWebUrl(new URL(value, "https://page.invalid").href);
+  } catch {
+    return false;
+  }
+}
+
 const isImageUrl = (value: string) =>
-  isWebUrl(value) || value.startsWith("blob:") || /^data:image\/[a-z0-9.+-]+[;,]/i.test(value);
+  isPageUrl(value) || value.startsWith("blob:") || /^data:image\/[a-z0-9.+-]+[;,]/i.test(value);
 
 /** A tool's value as text. Values come from the model and from tools, so they can be cyclic or throw when read. */
 export function valueText(value: unknown): string {
