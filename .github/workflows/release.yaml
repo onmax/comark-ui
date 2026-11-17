@@ -194,7 +194,11 @@ jobs:
                 *) tag=latest ;;
               esac
             fi
-            npm stage publish "$tarball" --provenance --ignore-scripts --access public --tag "$tag"
+            # 0.4.1 to 0.12.2 published directly, so a trusted publisher set up in that time may not allow staging.
+            if ! npm stage publish "$tarball" --provenance --ignore-scripts --access public --tag "$tag"; then
+              echo "::error::npm refused to stage $name@$version. If it answered E403 or E404, allow npm stage publish in the package's trusted publisher on npmjs.com, then rerun this workflow on the tag."
+              return 1
+            fi
           }
           export -f publish_package
           package_manifests=()
