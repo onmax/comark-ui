@@ -161,6 +161,6 @@ Citations and sources read the [shared tokens](/guide/theming). The rules sit in
 | `.cso` | The sources' `section` |
 | `.cso-title` | Its title |
 | `.cso-back` | A link back to a citation |
-| `.cso-card` | The card, a popover the script adds at the end of the page |
+| `.cso-card` | The card, a popover the script adds at the end of the page. It sits above its citation, or below it near the top edge, placed with CSS anchor positioning where the browser has it |
 | `.cso-card-site` | Its row with the icon and the site |
 | `.cso-card-title` | Its title |
