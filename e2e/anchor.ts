@@ -38,7 +38,7 @@ export function anchoredPopovers() {
       const html = await render(markdown);
       // Model both the CSS parser and CSS.supports of a partial implementation.
       await page.setContent(
-        '<script>const supports = CSS.supports.bind(CSS); CSS.supports = (...args) => args[0].includes("position-area") ? false : supports(...args);</script>' +
+        '<!doctype html><script>const supports = CSS.supports.bind(CSS); CSS.supports = (...args) => args[0].includes("position-area") ? false : supports(...args);</script>' +
           '<div style="position:absolute;top:300px;left:200px">' +
           html.replace(/@supports \(anchor-name:[^{]+/g, "@supports (unsupported: value)") +
           "</div>",
@@ -58,15 +58,20 @@ export function anchoredPopovers() {
       });
       await page.mouse.move(750, 550);
       await expect(cite(page, 1)).not.toHaveAttribute("data-cso-open", "");
-      const closing = await page.locator(".cso-card").evaluate((e) => {
-        const rect = e.getBoundingClientRect();
-        return { x: rect.x, y: rect.y, opacity: Number(getComputedStyle(e).opacity) };
-      });
-      expect(closing.opacity).toBeGreaterThan(0);
-      expect(Math.abs(closing.x - box.x)).toBeLessThan(12);
-      expect(Math.abs(closing.y - box.y)).toBeLessThan(12);
+      await expect(cite(page, 1)).toHaveAttribute("data-cso-anchor", "");
+      // Firefox hides popovers immediately because it doesn't support overlay transitions.
+      if (await page.evaluate(() => CSS.supports("overlay: auto"))) {
+        const closing = await page.locator(".cso-card").evaluate((e) => {
+          const rect = e.getBoundingClientRect();
+          return { x: rect.x, y: rect.y, opacity: Number(getComputedStyle(e).opacity) };
+        });
+        expect(closing.opacity).toBeGreaterThan(0);
+        expect(Math.abs(closing.x - box.x)).toBeLessThan(12);
+        expect(Math.abs(closing.y - box.y)).toBeLessThan(12);
+      }
       await cite(page, 2).hover();
       await expect(cite(page, 2)).toHaveAttribute("data-cso-open", "");
+      await expect(cite(page, 2)).toHaveAttribute("data-cso-anchor", "");
       await expect(cite(page, 1)).not.toHaveAttribute("data-cso-anchor", "");
     });
 
