@@ -557,6 +557,17 @@ describe("lint-comark CLI", () => {
     });
   });
 
+  it("prints its version, and the usage for an option it doesn't know", async () => {
+    const { version } = (await import("../package.json", { with: { type: "json" } })).default;
+    for (const flag of ["--version", "-v"])
+      expect(await cli(flag)).toMatchObject({ stdout: `${version}\n`, stderr: "" });
+    const error = await cli("--bogus", "page.md").catch(
+      (error: { code: number; stdout: string; stderr: string }) => error,
+    );
+    expect(error).toMatchObject({ code: 2, stdout: expect.stringMatching(/^Usage: comark-lint /) });
+    expect(error.stderr).toBe("comark-lint: Unknown option '--bogus'.\n");
+  });
+
   it("adds a config's components to the installed packages'", async () => {
     const dir = await mkdtemp(join(tmpdir(), "lint-comark-"));
     await writeFile(join(dir, "pigeon-coop.md"), `::pigeon-coop\n::\n`);
