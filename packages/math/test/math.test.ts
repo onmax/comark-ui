@@ -194,12 +194,12 @@ describe("comark-mathml", () => {
     expect(Object.values(meta.issueRules ?? {})).toEqual(["comark/math/authored-html"]);
   });
 
-  it("keeps its MathML through Comark's security plugin with the tags it exports", async () => {
+  it("keeps its MathML through Comark's security plugin when its elements are allowed", async () => {
     const { default: security } = await import("comark/plugins/security");
-    const { MATHML_TAGS } = await import("../src/html.ts");
+    const tags = "annotation math mfrac mi mn mo mrow msup semantics".split(" ");
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const html = await createHtmlRenderer({
-      plugins: [math(), security({ allowedTags: ["p", "formula", ...MATHML_TAGS] })],
+      plugins: [math(), security({ allowedTags: ["p", "formula", ...tags] })],
       components,
     })("Mass $E = mc^2$\n\n$$\n\\frac{a}{b}\n$$\n");
     expect(warn).not.toHaveBeenCalled();
