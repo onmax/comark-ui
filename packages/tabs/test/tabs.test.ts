@@ -514,6 +514,52 @@ ${pm.replace('sync="pm"', flag)}`;
       );
     });
 
+    it("gives a code group's tabs named after files their file's icon, without `icon=`", async () => {
+      const vscode: IconCollection = {
+        prefix: "vscode-icons",
+        width: 32,
+        height: 32,
+        icons: {
+          "file-type-reactts": { body: '<path fill="#00b3e6" d="M0 0h8v8H0z"/>' },
+          "file-type-json": { body: '<path fill="#f5de19" d="M0 0h8v8H0z"/>' },
+          "file-type-npm": { body: '<path fill="#cb3837" d="M0 0h8v8H0z"/>' },
+        },
+      };
+      const iconResolver = createIcons({ collections: { logos, lucide, "vscode-icons": vscode } });
+      const group =
+        "::code-group\n```tsx [app.tsx]\na\n```\n\n```json [data.json]\nb\n```\n\n```json [package.json]\nc\n```\n\n```sh [pnpm]\nd\n```\n\n```ts [main.ts] icon=lucide:apple\ne\n```\n\n```vue [App.vue]\nf\n```\n::";
+      const out = await html(group, { iconResolver, icons: { ".vue": "logos:pnpm" } });
+      const drawn = (color: string, label: string) =>
+        new RegExp(
+          `<span class="ci" aria-hidden="true" style="[^"]*%23${color}[^"]*"></span>${label.replace(".", "\\.")}</button>`,
+        );
+      expect(out).toMatch(drawn("00b3e6", "app.tsx"));
+      expect(out).toMatch(drawn("f5de19", "data.json"));
+      // A whole file name wins over its extension, and an extension in `icons` over the built-in one.
+      expect(out).toMatch(drawn("cb3837", "package.json"));
+      expect(out).toMatch(drawn("f9ad00", "App.vue"));
+      expect(out).toMatch(/data-mask aria-hidden="true" style="[^"]*"><\/span>main\.ts<\/button>/);
+      expect(out).toMatch(/tabindex="-1">pnpm<\/button>/);
+      // `main.ts` has its own icon, so the set's missing TypeScript icon goes unreported.
+      expect((await parse(group, { iconResolver })).meta.issues).toEqual([]);
+      // `::tabs` labels aren't file names.
+      expect(
+        await html('::tabs\n:::tabs-item{label="app.tsx"}\nA\n:::\n::', { iconResolver }),
+      ).not.toContain('class="ci"');
+    });
+
+    it("leaves a file's tab without an icon, and says nothing, when its icon doesn't load", async () => {
+      const offline = createIcons({ fetch: false });
+      const group = "::code-group\n```ts [config.ts]\na\n```\n::";
+      expect((await parse(group, { iconResolver: offline })).meta.issues).toEqual([]);
+      expect(await html(group, { iconResolver: offline })).not.toContain('class="ci"');
+      // Without a resolver of the host's, nothing is fetched for a file.
+      const fetch = vi.fn(async () => new Response("{}"));
+      vi.stubGlobal("fetch", fetch);
+      expect(await html(group, {})).not.toContain('class="ci"');
+      expect(fetch).not.toHaveBeenCalled();
+    });
+
     it("gives tabs without one an icon by label, set once for every block", async () => {
       const out = await html(pm, { iconResolver, icons: { PNPM: "logos:pnpm", "./npm.svg": "x" } });
       expect(out).toMatch(/<span class="ci"[^>]*><\/span>pnpm<\/button>/);
