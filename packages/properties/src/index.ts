@@ -86,7 +86,10 @@ function dateNode(text: string, locale: string | undefined): ElementNode {
     year: "numeric",
     timeZone: "UTC",
   }).format(new Date(time.datetime));
-  const id = `cfm-${crypto.randomUUID()}`;
+  // getRandomValues is available on HTTP origins too; randomUUID requires HTTPS.
+  const id = `cfm-${Array.from(crypto.getRandomValues(new Uint32Array(4)), (word) =>
+    word.toString(16).padStart(8, "0"),
+  ).join("")}`;
   return [
     "time",
     {

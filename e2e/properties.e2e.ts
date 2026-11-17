@@ -1,3 +1,5 @@
+import { build } from "vite";
+import { fileURLToPath } from "node:url";
 import { createHtmlRenderer } from "@comark/html";
 import { expect, type Page, test } from "@playwright/test";
 import properties, { components } from "../packages/properties/src/html.ts";
@@ -125,4 +127,41 @@ test("Svelte makes dates relative on mount and on in-place snippet updates", asy
   // A date's `lang` sets the language of its words.
   await expect(page.locator(".cfm time[lang]")).toHaveText("letzte Woche");
   expect(errors).toEqual([]);
+});
+
+test("date rows render on an insecure HTTP origin", async ({ page }) => {
+  const built = await build({
+    configFile: false,
+    logLevel: "error",
+    build: {
+      write: false,
+      lib: {
+        entry: fileURLToPath(new URL("../packages/properties/src/index.ts", import.meta.url)),
+        formats: ["iife"],
+        name: "PropertyRows",
+      },
+    },
+  });
+  const result = (Array.isArray(built) ? built[0]! : built) as {
+    output: { type: string; code?: string }[];
+  };
+  const chunk = result.output.find((entry) => entry.type === "chunk")!;
+  await page.route("http://properties.test/**", (route) =>
+    route.fulfill({
+      contentType: "text/html",
+      body: "<!doctype html><body></body>",
+    }),
+  );
+  await page.goto("http://properties.test/");
+  expect(await page.evaluate(() => window.isSecureContext)).toBe(false);
+  expect(await page.evaluate(() => typeof crypto.randomUUID)).toBe("undefined");
+  await page.addScriptTag({ content: chunk.code! });
+  const rows = await page.evaluate(() => {
+    // The IIFE exposes the actual public browser entry.
+    const api = (
+      window as unknown as { PropertyRows: typeof import("../packages/properties/src/index.ts") }
+    ).PropertyRows;
+    return api.rowsOf({ date: "2026-11-02" }).rows;
+  });
+  expect(JSON.stringify(rows)).toContain("2026-11-02");
 });
