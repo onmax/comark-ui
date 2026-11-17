@@ -70,6 +70,35 @@ test("hover waits before it opens, and focus doesn't", async ({ page }) => {
   await hidden(page);
 });
 
+// WCAG 1.4.13: a reader can dismiss the tooltip without moving focus or the pointer.
+test("Escape closes the tooltip until focus and the pointer leave the time", async ({ page }) => {
+  await open(page, "Opened :time[2026-11-02] by the loft, due :time[2026-12-25].");
+  const text = page.locator(".ctm").first();
+  await page.keyboard.press("Tab");
+  await shown(page);
+  await page.keyboard.press("Escape");
+  await hidden(page);
+  await expect(text).toBeFocused();
+  // The pointer passing over it while it keeps focus doesn't bring it back.
+  await text.hover();
+  await page.mouse.move(0, 0);
+  await page.waitForTimeout(500);
+  await hidden(page);
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Shift+Tab");
+  await shown(page);
+
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Tab");
+  await text.hover();
+  await shown(page);
+  await page.keyboard.press("Escape");
+  await hidden(page);
+  await page.mouse.move(0, 0);
+  await text.hover();
+  await shown(page);
+});
+
 test("the tooltip stays inside the window at its edge and names the time", async ({ page }) => {
   await page.setViewportSize({ width: 420, height: 600 });
   await open(page, ":time[2026-12-25T09:30:00Z]", "margin:8rem 0");

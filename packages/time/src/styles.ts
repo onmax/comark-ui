@@ -38,6 +38,8 @@ const sheet = (below: string) =>
       "@position-try --ctm-below-start{position-area:bottom span-right;justify-self:start}" +
       below +
       "}",
+    // Escape closed it, at once: the script marks the time until focus and the pointer leave it.
+    ".ctm[data-dismissed] .ctm-tip{visibility:hidden;transition-delay:0s}",
     "@supports not (anchor-scope:all){.ctm{position:relative}.ctm-tip{position:absolute;bottom:100%;left:0;margin-bottom:.375rem}}",
     "@media (prefers-reduced-motion:reduce){.ctm,.ctm-tip,.ctm-pill{transition:none!important}.ctm-pill{scale:1;translate:none}}",
   ].join("")}}`;

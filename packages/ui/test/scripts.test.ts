@@ -17,7 +17,7 @@ const document = [
   "---\ndate: 2026-10-23\n---",
   "::properties\n::",
   "## Pigeons",
-  "Pigeons find home by the sun :cite[1].",
+  "Pigeons find home by the sun :cite[1], as of :time[2026-10-23].",
   "::sources\n1. [Magnetoreception](https://en.wikipedia.org/wiki/Magnetoreception)\n::",
   "## Ducks",
   "![A duck](/duck.png)",
@@ -66,8 +66,8 @@ describe("preset scripts", () => {
     const out = await createHtmlRenderer(preset)(document);
     const written = new Set(scriptsIn(out));
     // Zoom, carousel, annotate, charts, sources, table, code, tabs, magic move, media, embed, quiz, outline,
-    // properties, and Mermaid.
-    expect(written.size).toBe(15);
+    // properties, time, and Mermaid.
+    expect(written.size).toBe(16);
     expect(preset.scripts.toSorted()).toEqual([...written].toSorted());
     expect(preset.scripts).toContain(mermaidScript);
   });

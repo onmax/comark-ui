@@ -43,7 +43,7 @@ Two thresholds for one date: :time[2026-09-30] and :time[2026-09-30]{threshold="
 - `:time` turns a date into the words a reader would say: "today", "yesterday", "2 days ago", "in 3 weeks".
 - Past a threshold, 4 weeks by default, it shows the date instead: "Sep 30", or "Sep 30, 2025" in another year.
 - Hover or focus opens a tooltip with the full date and time, or with how far away the date is once it shows as a date. It opens above the text, or below where the page has no room, and grows from the edge that touches the text.
-- No script runs. The plugin works out the words, the date, and the tooltip while parsing, and the tooltip is CSS.
+- The plugin works out the words, the date, and the tooltip while parsing, and the tooltip is CSS. One small script lets <kbd>Escape</kbd> close it.
 - Everything is measured from one `now` per document, so rendering twice gives the same words.
 
 ## Usage
@@ -130,7 +130,7 @@ time({ threshold: "2w" });
 
 ## Accessibility
 
-A time is a `<time datetime>` with `tabindex="0"`, so a keyboard reaches it and a tap focuses it. The tooltip has `role="tooltip"`, and the time points to it with `aria-describedby`, so a screen reader reads "2 days ago" and then the full date. The pill opens when the time has focus and closes when it loses it. On a touch screen, a tap opens it and a tap elsewhere closes it. The pill is not a target: it passes the pointer through to the text.
+A time is a `<time datetime>` with `tabindex="0"`, so a keyboard reaches it and a tap focuses it. The tooltip has `role="tooltip"`, and the time points to it with `aria-describedby`, so a screen reader reads "2 days ago" and then the full date. The pill opens when the time has focus and closes when it loses it. <kbd>Escape</kbd> closes it while the time keeps focus or the pointer, and it opens again once both have left the time. On a touch screen, a tap opens it and a tap elsewhere closes it. The pill is not a target: it passes the pointer through to the text.
 
 Reduced motion shows the pill without a transition.
 
@@ -140,6 +140,7 @@ Reduced motion shows the pill without a transition.
 | --- | --- |
 | <kbd>Tab</kbd> | Focuses the time and opens its tooltip. |
 | <kbd>Shift</kbd> + <kbd>Tab</kbd> | Moves focus off the time and closes its tooltip. |
+| <kbd>Escape</kbd> | Closes the tooltip and keeps focus on the time. |
 
 ## API
 
