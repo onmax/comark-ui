@@ -1,5 +1,5 @@
-import { defineComponent, h, onMounted } from "vue";
-import { addStyles } from "./client.ts";
+import { defineComponent, h, onBeforeUnmount, onMounted } from "vue";
+import { css, start } from "./client.ts";
 
 export { default, TIME_TAG } from "./index.ts";
 export type { TimeAttributes, TimeMeta, TimeOptions } from "./index.ts";
@@ -10,7 +10,9 @@ export const RelativeTime = defineComponent({
   inheritAttrs: false,
   props: { id: String, datetime: String, mode: String, label: String, tip: String },
   setup(props) {
-    onMounted(addStyles);
+    let stop: (() => void) | undefined;
+    onMounted(() => (stop = start(css)));
+    onBeforeUnmount(() => stop?.());
     return () =>
       props.datetime && props.label
         ? h(

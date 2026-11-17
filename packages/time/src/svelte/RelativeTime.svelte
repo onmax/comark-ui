@@ -1,10 +1,10 @@
 <!-- `:time` for `@comark/svelte`. -->
 <script>
   import { onMount } from "svelte";
-  import { addStyles } from "comark-time/client";
+  import { css, start } from "comark-time/client";
 
   let { id = undefined, datetime = undefined, mode = undefined, label = undefined, tip = undefined } = $props();
-  onMount(addStyles);
+  onMount(() => start(css));
 </script>
 
 {#if datetime && label}

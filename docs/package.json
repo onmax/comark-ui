@@ -7,7 +7,7 @@
     "dev": "node content.ts && node landing.ts && node tools.ts && NODE_OPTIONS=--max-old-space-size=6144 nuxi dev --port 4317",
     "generate": "node content.ts && node landing.ts && node tools.ts && NODE_OPTIONS=--max-old-space-size=7168 nuxi build && node links.ts",
     "preview": "E2E_PORT=${PORT:-4391} node ../e2e/serve.ts",
-    "prepare": "node content.ts && nuxi prepare",
+    "prepare": "node content.ts && if [ -f ../packages/ui/dist/html.mjs ] && [ -f ../packages/ui/dist/style.css ]; then nuxi prepare; fi",
     "typecheck": "node landing.ts && vue-tsc -b --noEmit"
   },
   "dependencies": {

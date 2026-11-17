@@ -94,6 +94,7 @@ comark-lint <file or glob>... [--format text|json] [--config comark-lint.config.
 | `--config`, `-c` | `comark-lint.config.ts` in the working directory | A config file whose default export is a `defineConfig()` object. |
 | `--check-urls` | Off | Requests every external URL and reports the dead ones as `comark/dead-url`. |
 | `--help`, `-h` | — | Prints the usage. |
+| `--version`, `-v` | — | Prints the version. |
 
 A glob skips `node_modules` and `dist`.
 
@@ -101,7 +102,7 @@ A glob skips `node_modules` and `dist`.
 | --- | --- |
 | `0` | No problems |
 | `1` | At least one problem |
-| `2` | A file can't be read, a glob matches no files, the config can't load, or no files or an unknown `--format` were given |
+| `2` | A file can't be read, a glob matches no files, the config can't load, no files were given, or an option or `--format` is unknown. An unknown option also prints the usage. |
 
 ### Library
 
