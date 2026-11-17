@@ -197,7 +197,7 @@ export function start(): () => void {
   const copying = "clipboard" in navigator && "ClipboardItem" in window;
   if (copying) root.setAttribute("data-annotate-copy", "");
   const PAD = 16;
-  const SKIP = ".ca-copy,.ca-copy-status,.ca-overlay";
+  const SKIP = ".ca-copy,.ca-copy-status,.ca-overlay,.ca-hide";
   type Box = [x: number, y: number, width: number, height: number];
   type Paint = (context: CanvasRenderingContext2D, source: HTMLImageElement) => void;
   type Made = { key: string; blob: Blob; url: string };
@@ -708,7 +708,9 @@ export function start(): () => void {
             : null))
         : null;
     // Zoom copies the figure as it was, a moment's "Copied" included; a thumbnail is a button and gets no button inside.
-    for (const part of document.querySelectorAll(".cz-thumb :is(.ca-copy,.ca-copy-status)"))
+    for (const part of document.querySelectorAll(
+      ".cz-thumb :is(.ca-copy,.ca-copy-status,.ca-hide)",
+    ))
       part.remove();
     for (const button of document.querySelectorAll(".cz-dialog .ca-copy[data-state]"))
       button.removeAttribute("data-state");

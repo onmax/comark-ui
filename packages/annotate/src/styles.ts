@@ -80,6 +80,19 @@ export const css = `@layer comark{${[
   ".ca-copy:focus-visible{outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--_comark-ring) 50%,transparent)}",
   ".ca-screenshot:is(:hover,:focus-visible,:has(:focus-visible)) .ca-copy,.ca-copy:focus-visible,.ca-copy[data-state],.cz-dialog .ca-copy{opacity:1}",
   "@media (hover:none){[data-annotate-copy] .ca-copy{opacity:1}}",
+  // Hide marks shows where Copy does, beside it, and stays while the marks are hidden so the reader can bring them back.
+  // Hidden marks keep their paint, so Copy still draws them.
+  ".ca-hide{position:absolute;top:.5rem;right:.5rem;display:grid;place-items:center;width:1.75rem;height:1.75rem;box-sizing:border-box;border:1px solid var(--_comark-border);border-radius:calc(var(--_comark-radius) - 4px);background:var(--_comark-background);color:var(--_comark-foreground);cursor:pointer;opacity:0;transition:opacity .15s ease,background .15s ease}",
+  "[data-annotate-copy] .ca-frame:has(>.ca-copy)>.ca-hide{right:2.75rem}",
+  ".ca-frame:has(>.ca-hide)>.ca-copy-status{right:5rem}",
+  ".ca-hide:hover{background:var(--_comark-accent)}",
+  ".ca-hide input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}",
+  ".ca-hide:has(:focus-visible){box-shadow:0 0 0 3px color-mix(in srgb,var(--_comark-ring) 50%,transparent)}",
+  ".ca-screenshot:is(:hover,:focus-visible,:has(:focus-visible)) .ca-hide,.ca-hide:has(:checked),.cz-dialog .ca-hide{opacity:1}",
+  "@media (hover:none){.ca-hide{opacity:1}}",
+  ".ca-hide svg{width:.875rem;height:.875rem;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}",
+  ".ca-hide input:checked~.ca-eye,.ca-hide input:not(:checked)~.ca-eye-off{display:none}",
+  ".ca-frame:has(>.ca-hide>:checked)>:is(.ca-mark,.ca-arrow){visibility:hidden}",
   ".ca-copy svg{width:.875rem;height:.875rem;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}",
   ".ca-copy-done,.ca-copy[data-state=done] .ca-copy-idle{display:none}",
   ".ca-copy[data-state=done] .ca-copy-done{display:block}",
@@ -99,8 +112,12 @@ export const css = `@layer comark{${[
   ".ca-frame .ca-overlay[data-menu]{pointer-events:auto;opacity:1}",
   // A copy paints the marks at rest, and nothing animates while it reads them.
   "[data-ca-capture] *{transition:none!important}",
-  "[data-ca-capture=still] *{--ca-on:0!important}",
+  "[data-ca-capture=still] *{--ca-on:0!important;--ca-dim:0!important}",
   ".ca-mark{position:absolute;color:var(--ca-color);text-decoration:none;outline:none}",
+  // While a mark or its note is lit, the other marks fade, so it stands out among many.
+  `.ca:has([data-n]:is(:hover,:focus-visible,:target)){--ca-dim:1}`,
+  `.cz-dialog:has(${zoomed} [data-n]:is(:hover,:focus-visible)) ${zoomed}{--ca-dim:1}`,
+  ".ca-mark,.ca-arrow{opacity:calc(1 - .65 * var(--ca-dim,0) * (1 - var(--ca-on,0)));transition:opacity .15s ease}",
   // Strokes take the mark's full color so they read at a glance; the numbers sit beside the marks, so only a thin line
   // covers the screenshot. Hovering a mark or its note thickens it.
   ".ca-mark,.ca-arrow{--ca-stroke:var(--ca-color)}",
