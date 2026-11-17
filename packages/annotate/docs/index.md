@@ -307,10 +307,10 @@ Annotate reads these [shared tokens](/guide/theming):
 
 | Token | Used for |
 | --- | --- |
-| `--comark-background` | The Copy button, the slider's line and grip, the ring around stamps |
-| `--comark-foreground` | The Copy button's icon, the slider's grip, the status after a copy |
-| `--comark-border` | The outline around screenshots, the Copy button, the slider's grip |
-| `--comark-accent` | The hovered Copy button |
+| `--comark-background` | The Copy button, the Hide marks toggle, the slider's line and grip, the ring around stamps |
+| `--comark-foreground` | The icons on Copy and Hide marks, the slider's grip, the status after a copy |
+| `--comark-border` | The outline around screenshots, the Copy button, the Hide marks toggle, the slider's grip |
+| `--comark-accent` | The hovered Copy button and Hide marks toggle |
 | `--comark-ring` | Focus rings |
 | `--comark-radius` | Corners of screenshots and notes |
 | `--comark-shadow` | The slider's handle and grip |
@@ -344,7 +344,7 @@ A screenshot's or compare's `ink` sets `--ca-color`, `--ca-solid`, and `--ca-ink
 - Every block sits in a `.ca`. A screenshot's `figure.ca-screenshot` is inside it, and a compare is `.ca.ca-compare`, plus `.ca-slider` with `mode="slider"`.
 - A screenshot holds `.ca-heading` with its title in `.ca-label`, then `.ca-stage` with the image in `.ca-frame`, and a `figcaption` with the notes in `ol.ca-notes`. It has `.ca-left`, `.ca-right`, `.ca-top`, or `.ca-bottom` when it has side notes there.
 - A mark is a `.ca-mark` with its shape as a class, such as `.ca-box` or `.ca-circle`, and its number in `.ca-stamp`. A side note is a `.ca-callout` with its arrow in `.ca-arrow`. A mark, its arrow, and its note share a `data-n`.
-- The Copy button is `.ca-copy`. A slider's divider is `.ca-handle`, with its knob in `.ca-grip`.
+- The Copy button is `.ca-copy`, and the Hide marks toggle is `label.ca-hide`. A slider's divider is `.ca-handle`, with its knob in `.ca-grip`.
 
 ### Example
 

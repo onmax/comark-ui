@@ -304,7 +304,7 @@ describe("comark-annotate", () => {
     ).toHaveLength(3);
     // In the frame, after the marks, so it sits on the image's corner.
     expect(html).toMatch(
-      /<div class="ca-frame"><img src="a.png"[^>]*><span class="ca-mark[^]*?<\/span><button type="button" class="ca-copy"[^]*?<\/button><span class="ca-copy-status" role="status"><\/span><\/div>/,
+      /<div class="ca-frame"><img src="a.png"[^>]*><span class="ca-mark[^]*?<\/span><label class="ca-hide"[^]*?<\/label><button type="button" class="ca-copy"[^]*?<\/button><span class="ca-copy-status" role="status"><\/span><\/div>/,
     );
     expect(html.match(/<script>\(function start\(\) \{/g)).toHaveLength(1);
     expect(styles(html)).toContain(".ca-copy{display:none}");
@@ -315,6 +315,25 @@ describe("comark-annotate", () => {
 
     const slider = await run(compare.replace("::compare", '::compare{mode="slider"}'));
     expect(slider.html).not.toContain('class="ca-copy"');
+  });
+
+  it("gives every screenshot with marks a Hide marks checkbox that works without the script", async () => {
+    const { html } = await run(
+      `::screenshot{src="a.png" alt="A"}\n:::annotation{x=10 y=10 w=10 h=10}\nNote\n:::\n::\n\n::screenshot{src="b.png" alt="B"}\n::\n\n${compare}`,
+    );
+    expect(
+      html.match(
+        /<label class="ca-hide" title="Hide marks"><input type="checkbox" aria-label="Hide marks">/g,
+      ),
+    ).toHaveLength(3);
+    expect(html).not.toMatch(/<img src="b.png"[^>]*><label class="ca-hide"/);
+    expect(styles(html)).toContain(
+      ".ca-frame:has(>.ca-hide>:checked)>:is(.ca-mark,.ca-arrow){visibility:hidden}",
+    );
+    expect(styles(html)).not.toMatch(/\[data-annotate-[a-z]+\] \.ca-hide\{/);
+
+    const slider = await run(compare.replace("::compare", '::compare{mode="slider"}'));
+    expect(slider.html).not.toContain('class="ca-hide"');
   });
 
   it("points from a note above the image without drawing a mark", async () => {

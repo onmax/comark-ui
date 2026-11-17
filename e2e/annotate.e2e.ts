@@ -509,3 +509,108 @@ A wide row.
   expect(found.outside).toBe(true);
   expect(found.red).toBeGreaterThan(0);
 });
+
+test("Hide marks hides the marks and arrows without zooming, and Copy still draws them", async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await open(
+    page,
+    `::screenshot{src="/before.png" alt="Filter toolbar" viewport="640x250"}
+:::annotation{x=4.5 y=28.7 w=40 h=44.4 color="red"}
+The toolbar wraps.
+:::
+
+:::annotation{x=60 y=40 w=10 h=10 side="right"}
+Apply sits low.
+:::
+::`,
+  );
+  const figure = page.locator("main .ca-screenshot");
+  const toggle = figure.locator(".ca-hide");
+  const marks = figure.locator(":is(.ca-mark,.ca-arrow)");
+  await expect(marks).toHaveCount(3);
+  // Like Copy, it shows on hover, beside Copy.
+  await expect(toggle).toHaveCSS("opacity", "0");
+  await figure.locator(".ca-frame > img:not(.ca-overlay)").hover();
+  await expect(toggle).toHaveCSS("opacity", "1");
+  const [hide, copy] = [await toggle.boundingBox(), await figure.locator(".ca-copy").boundingBox()];
+  expect(hide!.x + hide!.width).toBeLessThan(copy!.x);
+
+  await expect(toggle.locator(".ca-eye")).toBeVisible();
+  await expect(toggle.locator(".ca-eye-off")).toBeHidden();
+  await toggle.click();
+  await expect(toggle.locator("input")).toBeChecked();
+  // The icon says the marks are hidden.
+  await expect(toggle.locator(".ca-eye")).toBeHidden();
+  await expect(toggle.locator(".ca-eye-off")).toBeVisible();
+  for (const mark of await marks.all()) await expect(mark).toBeHidden();
+  await expect(page.locator(".cz-dialog")).toHaveCount(0);
+  // It stays while the marks are hidden, so the reader can bring them back.
+  await page.mouse.move(0, 0);
+  await expect(toggle).toHaveCSS("opacity", "1");
+
+  await figure.locator(".ca-copy").click();
+  await expect(figure.locator(".ca-copy-status")).toHaveText("Copied");
+  const [copied, expected] = await figure.evaluate(async (node) => {
+    const [item] = await navigator.clipboard.read();
+    const bitmap = await createImageBitmap(await item!.getType("image/png"));
+    const box = node.getBoundingClientRect();
+    const stamp = node.querySelector(".ca-mark .ca-stamp")!;
+    const at = stamp.getBoundingClientRect();
+    const scale = bitmap.width / (box.width + 32);
+    const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+    const context = canvas.getContext("2d")!;
+    context.drawImage(bitmap, 0, 0);
+    const x = Math.round((at.left + at.width / 2 - box.left + 16) * scale);
+    const y = Math.round((at.top + 2 - box.top + 16) * scale);
+    const pixel = [...context.getImageData(x, y, 1, 1).data].slice(0, 3);
+    context.fillStyle = getComputedStyle(stamp).backgroundColor;
+    context.fillRect(0, 0, 1, 1);
+    return [pixel, [...context.getImageData(0, 0, 1, 1).data].slice(0, 3)];
+  });
+  for (const [index, channel] of copied.entries())
+    expect(Math.abs(channel - expected[index]!)).toBeLessThan(24);
+
+  // A zoomed copy keeps the reader's choice, and the keyboard brings the marks back.
+  await figure.locator(".ca-stage").click({ position: { x: 10, y: 10 } });
+  await expect(page.locator(".cz-item .ca-mark")).toHaveCount(2);
+  for (const mark of await page.locator(".cz-item .ca-mark").all()) await expect(mark).toBeHidden();
+  await page.keyboard.press("Escape");
+  await expect(page.locator(".cz-dialog")).toHaveCount(0);
+  await toggle.locator("input").focus();
+  await page.keyboard.press("Space");
+  await expect(toggle.locator("input")).not.toBeChecked();
+  for (const mark of await marks.all()) await expect(mark).toBeVisible();
+});
+
+test("hovering a mark or its note fades the other marks", async ({ page }) => {
+  await open(
+    page,
+    `::screenshot{src="/after.png" alt="Filter toolbar on one row" viewport="640x250"}
+:::annotation{x=5 y=30 w=15 h=20}
+Search.
+:::
+
+:::annotation{x=40 y=30 w=15 h=20}
+Chips.
+:::
+
+:::annotation{x=75 y=30 w=15 h=20}
+Apply.
+:::
+::`,
+  );
+  const mark = (n: number) => page.locator(`main .ca-mark[data-n="${n}"]`);
+  for (const n of [1, 2, 3]) await expect(mark(n)).toHaveCSS("opacity", "1");
+  await page.locator('main .ca-notes li[data-n="2"]').hover();
+  await expect(mark(2)).toHaveCSS("opacity", "1");
+  await expect(mark(1)).toHaveCSS("opacity", "0.35");
+  await expect(mark(3)).toHaveCSS("opacity", "0.35");
+  await mark(3).hover();
+  await expect(mark(3)).toHaveCSS("opacity", "1");
+  await expect(mark(2)).toHaveCSS("opacity", "0.35");
+  await page.mouse.move(0, 0);
+  for (const n of [1, 2, 3]) await expect(mark(n)).toHaveCSS("opacity", "1");
+});

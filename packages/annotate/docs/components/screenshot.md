@@ -21,6 +21,8 @@ Extra filters collapse into **+2 filters**.
 - Each [`annotation`](/annotate/components/annotation) inside it draws one mark and its note.
 - A click anywhere on the screenshot zooms it, with its notes beside it.
 - The Copy button copies it as a PNG with its marks and notes drawn in.
+- The Hide marks toggle beside it hides the marks and arrows, so readers can see what's under them.
+- Hovering a mark or its note fades the other marks.
 
 ## Usage
 
@@ -120,7 +122,7 @@ Copying needs setup in two cases:
 
 The image keeps its `alt` text. Each numbered mark is an image named by its number and note, such as "Annotation 1: Extra filters collapse into +2 filters." A side note's mark is named "Side note:" and its note. The arrows are hidden from screen readers.
 
-The image is one tab stop that opens the [zoomed view](/zoom). The Copy button is labelled "Copy the screenshot with its marks", and a status announces "Copied" once the PNG is on the clipboard.
+The image is one tab stop that opens the [zoomed view](/zoom). The Copy button is labelled "Copy the screenshot with its marks", and a status announces "Copied" once the PNG is on the clipboard. The Hide marks toggle is a checkbox labelled "Hide marks", and works without the script.
 
 ### Keyboard interactions
 

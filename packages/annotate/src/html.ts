@@ -96,6 +96,11 @@ const COPY =
   `<svg class="ca-copy-idle" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="14" height="14" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>` +
   `<svg class="ca-copy-done" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></button>` +
   `<span class="ca-copy-status" role="status"></span>`;
+// A checkbox, so readers can hide the marks to see what's under them without the script.
+const HIDE =
+  `<label class="ca-hide" title="Hide marks"><input type="checkbox" aria-label="Hide marks">` +
+  `<svg class="ca-eye" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>` +
+  `<svg class="ca-eye-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/></svg></label>`;
 const HEAD_DOWN = `<svg class="ca-arrow-head" viewBox="0 0 12 12"><path d="M1.5 3.5Q5 7 6 11Q7 7 10.5 3.5" vector-effect="non-scaling-stroke"/></svg>`;
 // And rising from a note below it.
 const ARROW_UP = `<svg class="ca-arrow-line" viewBox="0 0 24 100" preserveAspectRatio="none"><path d="M17 98C2 74 3 34 12 2" vector-effect="non-scaling-stroke"/></svg>`;
@@ -304,7 +309,7 @@ async function parts(
   return {
     sides: sided.map((annotation) => ` ca-${annotation.side}`),
     heading: heading && `<div class="ca-heading">${heading}</div>`,
-    frame: `<div class="ca-frame">${body ?? `<img src="${attr(shot.src)}" alt="${attr(shot.alt)}"${sized} loading="lazy" decoding="async">`}${pins.join("")}${arrows.join("")}${copy ? COPY : ""}</div>`,
+    frame: `<div class="ca-frame">${body ?? `<img src="${attr(shot.src)}" alt="${attr(shot.alt)}"${sized} loading="lazy" decoding="async">`}${pins.join("")}${arrows.join("")}${copy ? `${pins.length ? HIDE : ""}${COPY}` : ""}</div>`,
     callouts,
     notes: caption || notes ? `${caption}${notes ? `<ol class="ca-notes">${notes}</ol>` : ""}` : "",
   };
