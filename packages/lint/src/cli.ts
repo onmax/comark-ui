@@ -4,10 +4,12 @@ import { glob } from "node:fs/promises";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
+import pkg from "../package.json" with { type: "json" };
 import { lintFiles, resolveConfig, type Config, type Diagnostic } from "./index.ts";
 import { errorText } from "../../../shared/text.ts";
 
 const USAGE = `Usage: comark-lint <file or glob>... [--format text|json] [--config comark-lint.config.ts] [--check-urls]
+       comark-lint --version
 
 Checks Comark documents with every comark-ui package installed. Exits with 1 if there are problems.
 Without --config, it loads comark-lint.config.ts (or .mts, .mjs, .js, or a lint-comark.config file)
@@ -15,16 +17,31 @@ from the working directory when there is one.
 --check-urls also requests every external URL and reports dead ones.
 The command is also installed as lint-comark.`;
 
-const { positionals, values } = parseArgs({
-  allowPositionals: true,
-  options: {
-    format: { type: "string", default: "text" },
-    config: { type: "string", short: "c" },
-    "check-urls": { type: "boolean" },
-    help: { type: "boolean", short: "h" },
-  },
-});
+function args() {
+  try {
+    return parseArgs({
+      allowPositionals: true,
+      options: {
+        format: { type: "string", default: "text" },
+        config: { type: "string", short: "c" },
+        "check-urls": { type: "boolean" },
+        help: { type: "boolean", short: "h" },
+        version: { type: "boolean", short: "v" },
+      },
+    });
+  } catch (error) {
+    // Node's message goes on to explain `--`, which a mistyped option doesn't need.
+    console.error(`comark-lint: ${errorText(error).replace(/\.(?: .*)?$/s, "")}.`);
+    console.log(USAGE);
+    process.exit(2);
+  }
+}
+const { positionals, values } = args();
 
+if (values.version) {
+  console.log(pkg.version);
+  process.exit(0);
+}
 if (values.help || !positionals.length || (values.format !== "text" && values.format !== "json")) {
   console.log(USAGE);
   process.exit(values.help ? 0 : 2);
