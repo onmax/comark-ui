@@ -102,7 +102,7 @@ The column's width is yours to set, since only the page knows what sits beside i
 
 ### Wide blocks
 
-A [before/after comparison](/annotate/components/compare) and a Mermaid diagram wider than the column carry `data-wide`, so the diagram's labels don't shrink to fit. They grow into the room you give them on each side of the column, and keep to the column if you give none. For a column centered in the window:
+A [before/after comparison](/annotate/components/compare), a Mermaid diagram wider than the column, and a [wide table](#tables) carry `data-wide`, so a diagram's labels don't shrink to fit and a table's columns don't wrap every few words. They grow into the room you give them on each side of the column, and keep to the column if you give none. For a column centered in the window:
 
 ```css
 .article {
@@ -120,6 +120,20 @@ A [before/after comparison](/annotate/components/compare) and a Mermaid diagram 
 | `--comark-wide-width` | Set by the block | A block's own width, which a diagram never grows past. Your own blocks can set it too. |
 
 A wide block stays centered on the column. When one side has less room, such as beside a panel, it shifts toward the side with more, so a diagram keeps its size. The [side outline](/outline#side-outline) tells the page when it needs a column beside wide blocks. Only top-level blocks grow, so a diagram inside tabs or a list keeps to its parent. A `##`, `###`, or `####` heading right above a comparison grows with it, so it starts where Before does and reads as the comparison's title. To make your own block wide, put `data-wide` on its outer element.
+
+### Tables
+
+A Markdown table gets its layout from its cells, with nothing to write:
+
+- A column whose longest cell is 24 characters or fewer, such as an id, a date, a status, or links, stays on one line. A chip in it keeps its label whole, so `portal #1596` never breaks into `#159` and `6`.
+- A table wider than a readable column grows into the room beside the text, up to the width its cells need, like any [wide block](#wide-blocks).
+- A table with two or more prose columns stacks them when it gets well under the width it needs: the later ones move under the first, in muted text, so a row reads as a summary with its detail below. On a phone, each row becomes one column.
+
+| Wide enough | Cramped |
+| --- | --- |
+| `PR` · `Summary` · `Status` · `Links` | `PR` · `Summary` over `Status` · `Links` |
+
+Only the document's own tables get a layout, not one inside a list or a quote. The layout is the `tableLayout` plugin's data attributes and a wrapping `div`; `comarkUi({ tableLayout: false })` turns it off.
 
 ## Turn it off
 

@@ -42,6 +42,7 @@ import type { ZoomOptions } from "comark-zoom";
 import { componentInfo, type ComponentInfo } from "./info.ts";
 import mermaidLimits, { type MermaidOptions } from "./mermaid-limits.ts";
 import shiki, { type ShikiOptions } from "./shiki.ts";
+import { tableLayout } from "./table-layout.ts";
 import { typeset, TYPESET_TAG } from "./typeset.ts";
 
 /**
@@ -54,6 +55,7 @@ export { css as criticCss } from "comark-critic";
 export { componentInfo, type ComponentInfo, type ComponentProp } from "./info.ts";
 export type { MermaidOptions } from "./mermaid-limits.ts";
 export type { ShikiHighlighter, ShikiOptions } from "./shiki.ts";
+export { tableLayout } from "./table-layout.ts";
 export { typeset, typesetCss, typesetStylesheet, TYPESET_TAG } from "./typeset.ts";
 
 /**
@@ -154,6 +156,12 @@ export type PresetOptions = {
    * quotes. `false` leaves the text to your own styles.
    */
   typeset?: boolean;
+  /**
+   * Lays out the document's Markdown tables from their cells: short columns stay on one line, a table wider than the
+   * text grows into the room beside it, and one with two or more prose columns stacks them when it's cramped. It only
+   * adds data attributes and a wrapping `div`, which the typeset styles.
+   */
+  tableLayout?: boolean;
 };
 
 // oxlint-disable-next-line no-explicit-any -- each plugin types its own meta, as in Comark's ParserOptions.
@@ -255,6 +263,7 @@ const MARKDOWN_TAGS = words(
 );
 // The plain elements each plugin writes into the tree, by the option that turns it on.
 const TAGS: [keyof PresetOptions, string[]][] = [
+  ["tableLayout", words("div")],
   ["carousel", words("div")],
   ["codeNotes", words("div span")],
   ["critic", words("del ins mark")],
@@ -398,6 +407,8 @@ export function preset<C>(renderer: Renderer<C>, options: PresetOptions = {}): P
   add(renderer.codeNotes, options.codeNotes);
   // Last of the plugins that draw, since it wraps the document's blocks in one root when a card needs the margin.
   add(renderer.comments, options.comments);
+  // After comments, which may wrap the tables in its root.
+  parse(tableLayout, options.tableLayout);
   if (on(options.typeset)) {
     plugins.push(typeset());
     components[TYPESET_TAG] = renderer.typeset;
