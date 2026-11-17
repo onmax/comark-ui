@@ -36,7 +36,8 @@ import * as time from "comark-time/vue";
 import * as zoom from "comark-zoom/vue";
 import { type Preset, type PresetOptions, preset } from "./index.ts";
 import { issuesCss, issuesInner, issuesOf, type IssuesOptions } from "./issues.ts";
-import { Mermaid, typeset } from "./vue-blocks.ts";
+import { Mermaid } from "./vue-mermaid.ts";
+import { typeset } from "./vue-typeset.ts";
 import { addStyles } from "../../../shared/styles.ts";
 
 export { ComarkHtml } from "./html-vue.ts";

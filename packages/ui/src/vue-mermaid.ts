@@ -1,6 +1,5 @@
 import { defineAsyncComponent, defineComponent, h, onBeforeUnmount, onMounted } from "vue";
 import { addMermaidStyles, mermaidBar, startMermaid } from "./client.ts";
-import { typesetCss } from "./typeset-css.ts";
 
 // Pele is about 270 kB gzipped, so it loads only when a document has a diagram. Vue's server renderer waits for it, so a
 // server render still arrives drawn.
@@ -29,8 +28,4 @@ export const Mermaid = defineComponent({
   },
 });
 
-// Rendered with the document rather than added on mount, so `@scope` styles its root and server renders arrive styled.
-export const typeset = defineComponent({
-  name: "ComarkTypeset",
-  setup: () => () => h("style", { "data-comark-typeset": "", innerHTML: typesetCss }),
-});
+export const components = { pele: Mermaid };

@@ -1,5 +1,4 @@
 import { type Component, defineAsyncComponent } from "vue";
-import { Mermaid, typeset } from "./vue-blocks.ts";
 
 type Renderer = { components: Record<string, Component> };
 
@@ -31,7 +30,7 @@ export const components = {
   ...lazy(() => import("comark-chips/vue"), ["Chip"]),
   ...lazy(() => import("comark-colors/vue"), ["Color", "Palette"]),
   ...lazy(() => import("comark-diagrams/vue"), ["Diagram"]),
-  pele: Mermaid,
+  ...lazy(() => import("./vue-mermaid.ts"), ["pele"]),
   ...lazy(() => import("comark-embed/vue"), ["Embed"]),
   ...lazy(() => import("comark-github/vue"), ["GithubCallout"]),
   ...lazy(() => import("comark-icon/vue"), ["Icon"]),
@@ -63,6 +62,7 @@ export const components = {
   ...lazy(() => import("comark-magic-move/vue"), ["MagicMove", "MagicMoveStep"]),
   ...lazy(() => import("comark-code/vue"), ["Pre"]),
   ...lazy(() => import("comark-code-notes/vue"), ["CodeNotes"]),
-  // Every document has its typeset styles, so they don't wait for a download.
-  "typeset-styles": typeset,
+  // Every document has the typeset styles, but they are about 12 kB, so they load with the first document like a block.
+  // A server render already holds them.
+  ...lazy(() => import("./vue-typeset.ts"), ["typeset-styles"]),
 } satisfies Record<string, Component>;

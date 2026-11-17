@@ -501,9 +501,13 @@ describe("comark-ui", () => {
     };
     for (const chunk of chunks) if (chunk.isEntry) load(chunk.fileName);
     const blockPackage = /\/packages\/(?!ui\/)[\w-]+\/(?:dist|src)\/vue\./;
+    // The Mermaid wrapper's bar and styles and the typeset styles are about 19 kB a page renders without them.
+    const ownBlock = /\/packages\/ui\/src\/(?:client|typeset-css|vue-mermaid|vue-typeset)\.ts$/;
     const eager = chunks
       .filter((chunk) => loaded.has(chunk.fileName))
-      .flatMap((chunk) => chunk.moduleIds.filter((id) => blockPackage.test(id)));
+      .flatMap((chunk) =>
+        chunk.moduleIds.filter((id) => blockPackage.test(id) || ownBlock.test(id)),
+      );
     expect(eager).toEqual([]);
     expect(chunks.some((chunk) => chunk.moduleIds.some((id) => blockPackage.test(id)))).toBe(true);
   });
