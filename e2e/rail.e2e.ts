@@ -196,3 +196,120 @@ test("when the document with the outline goes, the next one's outline takes over
   await page.setViewportSize({ width: 1300, height: 800 });
   await expect.poll(async () => (await box(page, ".cto-rail")).left).toBeLessThan(before.left);
 });
+
+// 72 headings, more than a 1034px window shows, the way a long review doc reads.
+const long = [
+  "# Pigeon tracker handbook",
+  ...Array.from({ length: 24 }, (_, i) =>
+    [`## Chapter ${i + 1}`, `### Setup ${i + 1}`, `### Results ${i + 1}`]
+      .map(
+        (heading) =>
+          `${heading}\n\nPigeons home from far away. ${"Each leg is logged. ".repeat(20)}`,
+      )
+      .join("\n\n"),
+  ),
+].join("\n\n");
+
+async function openLong(page: Page, css = "") {
+  await page.setViewportSize({ width: 1743, height: 1034 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setContent(
+    `<!doctype html><meta charset="utf-8"><style>body{margin:0}main{width:46rem;margin:auto}${css}</style><main>${await render(long)}</main>`,
+  );
+  await expect(page.locator(".cto-rail")).toBeVisible();
+}
+
+const list = (page: Page) => page.locator(".cto-rail > ul");
+// Where the marked link sits inside the list's visible part, from its top.
+const markedSpot = (page: Page) =>
+  page.evaluate(() => {
+    const list = document.querySelector(".cto-rail > ul")!.getBoundingClientRect();
+    const link = document.querySelector(".cto-rail a[aria-current]")!.getBoundingClientRect();
+    return { top: link.top - list.top, bottom: list.bottom - link.bottom, height: list.height };
+  });
+
+test("a long outline reaches the bottom of the window, and only its list scrolls", async ({
+  page,
+}) => {
+  await openLong(page);
+  const [nav, title, ul] = [
+    await box(page, ".cto-rail"),
+    await box(page, ".cto-rail .cto-title"),
+    await box(page, ".cto-rail > ul"),
+  ];
+  expect(nav.top).toBe(56);
+  expect(nav.bottom).toBe(1034);
+  expect(ul.bottom).toBe(1034);
+  expect(ul.top).toBeGreaterThan(title.bottom);
+  await list(page).evaluate((ul) => ul.scrollTo(0, 400));
+  expect((await box(page, ".cto-rail .cto-title")).top).toBe(title.top);
+});
+
+test("a short outline ends after its last link, so it doesn't take clicks below it", async ({
+  page,
+}) => {
+  await open(page, 1440);
+  const nav = await box(page, ".cto-rail");
+  expect(nav.bottom).toBeLessThan(400);
+  await expect(list(page)).not.toHaveAttribute("data-more");
+});
+
+test("the list fades out at the bottom only while more links sit below", async ({ page }) => {
+  await openLong(page);
+  await expect(list(page)).toHaveAttribute("data-more");
+  await list(page).evaluate((ul) => ul.scrollTo(0, ul.scrollHeight));
+  await expect(list(page)).not.toHaveAttribute("data-more");
+  await list(page).evaluate((ul) => ul.scrollTo(0, 100));
+  await expect(list(page)).toHaveAttribute("data-more");
+  // A window tall enough for every link has nothing below.
+  await page.setViewportSize({ width: 1743, height: 2400 });
+  await expect(list(page)).not.toHaveAttribute("data-more");
+});
+
+test("the list follows the section being read, bringing it a third of the way down", async ({
+  page,
+}) => {
+  await openLong(page);
+  const current = page.locator(".cto-rail a[aria-current]");
+  // Near the top, the marked link is already in view, so the list stays put.
+  await page.locator("#results-1").evaluate((heading) => heading.scrollIntoView());
+  await expect(current).toHaveText("Results 1");
+  expect(await list(page).evaluate((ul) => ul.scrollTop)).toBe(0);
+
+  await page.locator("#chapter-14").evaluate((heading) => heading.scrollIntoView());
+  await expect(current).toHaveText("Chapter 14");
+  const spot = await markedSpot(page);
+  expect(Math.abs(spot.top - spot.height / 3)).toBeLessThan(2);
+
+  // A link that is still inside the list's margins doesn't move it.
+  const before = await list(page).evaluate((ul) => ul.scrollTop);
+  await page.locator("#setup-14").evaluate((heading) => heading.scrollIntoView());
+  await expect(current).toHaveText("Setup 14");
+  expect(await list(page).evaluate((ul) => ul.scrollTop)).toBe(before);
+
+  // At the bottom of the page, the last heading is the one being read, and its link shows.
+  await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
+  await expect(current).toHaveText("Results 24");
+  const end = await markedSpot(page);
+  expect(end.top).toBeGreaterThanOrEqual(0);
+  expect(end.bottom).toBeGreaterThanOrEqual(0);
+  await expect(list(page)).not.toHaveAttribute("data-more");
+});
+
+test("the list stays where the reader put it while they point at it", async ({ page }) => {
+  await openLong(page);
+  await list(page).hover();
+  await page.locator("#chapter-20").evaluate((heading) => heading.scrollIntoView());
+  await expect(page.locator(".cto-rail a[aria-current]")).toHaveText("Chapter 20");
+  await page.waitForTimeout(100);
+  expect(await list(page).evaluate((ul) => ul.scrollTop)).toBe(0);
+});
+
+test("the page sets the outline's top under a fixed header, and it still reaches the bottom", async ({
+  page,
+}) => {
+  await openLong(page, ":root{--comark-rail-top:5rem}");
+  const nav = await box(page, ".cto-rail");
+  expect(nav.top).toBe(80);
+  expect(nav.bottom).toBe(1034);
+});
