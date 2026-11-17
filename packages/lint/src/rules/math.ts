@@ -9,6 +9,6 @@ export default {
   },
   "comark/math/authored-html": {
     code: "COMARK4103",
-    title: "Write math between `$` signs, not as a formula's `html`",
+    title: "Write math between `$` signs, not as a `formula` element",
   },
 } satisfies Record<`comark/math/${string}`, RuleInfo>;

@@ -155,6 +155,18 @@ import math, { components } from "comark-mathml/html";
 const render = createHtmlRenderer({ plugins: [math()], components });
 ```
 
+With Comark's `security` plugin, allow `formula` and the MathML elements the package exports as `MATHML_TAGS`, and `KATEX_TAGS` too for KaTeX's HTML. `comarkUi()` already lists them in its `tags`.
+
+```ts
+import security from "comark/plugins/security";
+import math, { components, MATHML_TAGS } from "comark-mathml/html";
+
+const render = createHtmlRenderer({
+  plugins: [math(), security({ allowedTags: ["p", "formula", ...MATHML_TAGS] })],
+  components,
+});
+```
+
 For Vue, React, or Svelte, import from `comark-mathml/vue`, `comark-mathml/react`, or `comark-mathml/svelte`. The components add the styles on mount. On a server-rendered page, also import `comark-mathml/style.css` so it doesn't shift. [Renderers](/guide/renderers) covers using it with other plugins.
 
 ## Theme

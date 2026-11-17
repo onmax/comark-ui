@@ -10,6 +10,7 @@ import {
   type Icons,
 } from "comark-icon";
 import { defaultManagers, translate, writtenIn, type PackageManager } from "./managers.ts";
+import { FILE_ICONS, fileIcon } from "../../../shared/file-icons.ts";
 import { hash, text } from "../../../shared/text.ts";
 import { childrenOf, isElement } from "../../../shared/nodes.ts";
 
@@ -18,12 +19,15 @@ export type { PackageManager };
 export type TabsOptions = {
   /**
    * Icons for tabs that don't set one, by label, such as `{ pnpm: "logos:pnpm" }`. Labels match without regard to
-   * case. Each value is an Iconify name or an image URL, like the `icon` prop.
+   * case. Each value is an Iconify name or an image URL, like the `icon` prop. With an `iconResolver`, a code group's
+   * tab named after a file also matches by extension, such as `{ ".vue": "logos:vue" }`, on top of the built-in VS
+   * Code icons.
    */
   icons?: Record<string, string>;
   /**
    * Resolves the icons, from `createIcons()` in comark-icon. Pass the one the page's other plugins use, so they share
-   * its `collections` and `fetch`. By default icons come from the Iconify API.
+   * its `collections` and `fetch`. By default icons come from the Iconify API, and a code group's tabs named after
+   * files get no icon of their own.
    */
   iconResolver?: Icons;
   /**
@@ -74,7 +78,8 @@ interface Walk {
   data: Data;
   issues: Issue[];
   labelIcons: Map<string, string>;
-  icons: { block: ElementNode; index: number; value: string; name: string }[];
+  fileIcons: Record<string, string>;
+  icons: { block: ElementNode; index: number; value: string; name: string; derived: boolean }[];
   tabs: number;
   groups: number;
   strays: number;
@@ -190,8 +195,10 @@ function tabs(node: ElementNode, walk: Walk, name?: string) {
       });
     labels.push(label);
     item[1] = { label, index: String(index + 1) };
-    const icon = text(props.icon) || walk.labelIcons.get(label.toLowerCase());
-    if (icon) walk.icons.push({ block: node, index, value: icon, name });
+    const own = text(props.icon) || walk.labelIcons.get(label.toLowerCase());
+    // A code group's tab named after a file, such as `app.tsx`, takes that file's icon.
+    const icon = own || (node[1].code ? fileIcon(label, walk.fileIcons) : undefined);
+    if (icon) walk.icons.push({ block: node, index, value: icon, name, derived: !own });
   }
   const sync = text(attrs.sync);
   const code = node[1].code;
@@ -257,10 +264,12 @@ async function addIcons(walk: Walk, resolver: Icons) {
   if (!walk.icons.length) return;
   const resolved = await resolver.resolve(walk.icons.map(({ value }) => value));
   const blocks = new Map<ElementNode, (IconData | null)[]>();
-  for (const { block, index, value, name } of walk.icons) {
+  for (const { block, index, value, name, derived } of walk.icons) {
     const icon = resolved.get(value);
     const where = `${name}, tab ${index + 1}`;
     if (!icon) continue;
+    // A file's icon that doesn't load leaves its tab without one: the document has nothing to fix.
+    if ("problem" in icon && derived) continue;
     if ("problem" in icon) {
       walk.issues.push({
         rule: iconProblemRule(icon),
@@ -307,12 +316,16 @@ export default defineComarkPlugin<TabsOptions, TabsMeta>((options = {}) => {
     name: "comark-tabs",
     async post(state) {
       const { tree } = state;
+      const labelIcons = new Map(
+        Object.entries(options.icons ?? {}).map(([label, icon]) => [label.toLowerCase(), icon]),
+      );
       const walk: Walk = {
         data: { frontmatter: tree.frontmatter, meta: tree.meta, data: {}, props: {} },
         issues: [],
-        labelIcons: new Map(
-          Object.entries(options.icons ?? {}).map(([label, icon]) => [label.toLowerCase(), icon]),
-        ),
+        labelIcons,
+        // Like comark-file-tree, files get their icons only from a resolver the host passes, so a bare plugin, such as
+        // the linter's, fetches none the document didn't name.
+        fileIcons: options.iconResolver ? { ...FILE_ICONS, ...Object.fromEntries(labelIcons) } : {},
         icons: [],
         tabs: 0,
         groups: 0,

@@ -114,6 +114,22 @@ describe("comark/unknown-component", () => {
     ]);
   });
 
+  it("leaves out the blocks a plugin makes from its own syntax, such as display math", async () => {
+    const { default: math, components: mathComponents } = await import("comark-mathml/html");
+    const markdown =
+      "Mass $E = mc^2$.\n\n$$\n\\frac{a}{b}\n$$\n\n```math\n\\sum_i i\n```\n\n::mystery\n::";
+    const found = await lint(markdown, {
+      plugins: [math()],
+      components: [...Object.keys(mathComponents), "screenshot"],
+    });
+    expect(found.map(({ rule, line }) => [rule, line])).toEqual([["comark/unknown-component", 11]]);
+    const cased = await lint("::Screnshot\n::\n\n:Screnshot[x]\n\n::UnknownThing\n::", {
+      plugins: [math()],
+      components: ["Screenshot"],
+    });
+    expect(cased.map(({ line }) => line)).toEqual([1, 4, 6]);
+  });
+
   it("is off without components, since any name could be valid", async () => {
     expect(await lint("::anything\n::")).toEqual([]);
   });
