@@ -27,7 +27,7 @@ api -> db
 
 ` ```plantuml `, ` ```graphviz ` or ` ```dot `, ` ```d2 `, ` ```dbml `, and ` ```goat ` or ` ```svgbob ` fences become SVG; a title in brackets names the diagram and shows under it.
 
-**Each diagram's source is sent to the Kroki server**, `https://kroki.io` by default. To keep sources private, run your own with `docker run -d -p 8000:8000 yuzutech/kroki` and pass `server: "http://localhost:8000"`. `draw: false` sends nothing and leaves the fences as code.
+**Each diagram's source is sent to the Kroki server**, `https://kroki.io` by default. To keep sources private, run your own with `docker run -d -p 8000:8000 yuzutech/kroki` and pass `server: "http://localhost:8000"`. `draw: false` sends nothing and leaves the fences as code. The comark-ui preset draws nothing unless you pass `diagrams: true` or `diagrams: { server }`.
 
 The SVG is sanitized: scripts, event handlers, `foreignObject`, animations, links that aren't to the web or within the drawing, and `@import` are dropped. A diagram that can't be drawn stays code, and the plugin adds a sentence to `meta.issues` with the tool's error or why the server couldn't be reached.
 

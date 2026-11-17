@@ -11,7 +11,7 @@ import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
 import dark from "shiki/themes/github-dark.mjs";
 import light from "shiki/themes/github-light.mjs";
 import { build, type Rolldown } from "vite";
-import { describe, expect, it } from "vite-plus/test";
+import { describe, expect, it, vi } from "vite-plus/test";
 import { createSSRApp, h, type Component } from "vue";
 import { renderToString as renderVue } from "vue/server-renderer";
 import html, { mermaidScript, type PresetOptions } from "../src/html.ts";
@@ -345,6 +345,37 @@ describe("comark-ui", () => {
     expect(Object.keys(html({ ...offline, typeset: false }).components)).not.toContain(
       "typeset-styles",
     );
+  });
+
+  it("leaves Kroki diagrams as code and sends nothing unless asked", async () => {
+    const sent: string[] = [];
+    vi.stubGlobal("fetch", async (url: string) => {
+      sent.push(url);
+      return new Response('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"></svg>');
+    });
+    try {
+      const { diagrams: _, ...rest } = offline;
+      const fences = ["plantuml", "graphviz", "dot", "d2", "dbml", "goat", "svgbob"]
+        .map((lang) => `\`\`\`${lang}\nunasked ${lang}\n\`\`\``)
+        .join("\n\n");
+      const off = await createHtmlRenderer(html(rest))(fences);
+      expect(off).not.toContain('class="cdg"');
+      expect(off.match(/<pre/g)).toHaveLength(7);
+      expect(sent).toEqual([]);
+
+      const authored = '::diagram{svg="<svg onload=alert(1)></svg>"}\n::';
+      expect((await parseMarkdown(authored, html(rest))).meta.issues).toEqual([
+        "`::diagram` 1 sets `svg`, which only comark-diagrams writes, so it's ignored. Draw the diagram from a fence, such as ```d2.",
+      ]);
+
+      const d2 = (source: string) => `\`\`\`d2\n${source}\n\`\`\``;
+      expect(await renderHtml(d2("asked"), { diagrams: true })).toContain('class="cdg"');
+      await renderHtml(d2("own server"), { diagrams: { server: "http://kroki.test/" } });
+      await renderHtml(d2("not drawn"), { diagrams: { server: "http://kroki.test", draw: false } });
+      expect(sent).toEqual(["https://kroki.io/d2/svg", "http://kroki.test/d2/svg"]);
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it("includes files only when asked", async () => {

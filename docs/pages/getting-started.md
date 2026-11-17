@@ -148,7 +148,7 @@ Each key is the package name without `comark-`, in camelCase, such as `fileTree`
 Pass `chips: { download: false }` when you parse in a browser, which may block downloading another site's images.
 
 > [!WARNING]
-> [diagrams](/diagrams) sends each diagram's source to `https://kroki.io` unless you pass your own `server`.
+> [diagrams](/diagrams) leaves PlantUML, Graphviz, D2, DBML, GoAT, and Svgbob fences as code unless you turn drawing on. `diagrams: true` sends each diagram's source to `https://kroki.io`; `diagrams: { server }` sends it to your own Kroki.
 
 ### Critic styles
 

@@ -45,7 +45,7 @@ An SVG means it draws; any other answer is the tool's error.
 
 ## Register
 
-- In `comark-ui`: on, with the options below under `diagrams`.
+- In `comark-ui`: registered, but the fences stay code until `diagrams: true` (draws through `https://kroki.io`) or `diagrams: { server }`. The options below go under `diagrams`.
 - Alone: `pnpm add comark @comark/html comark-diagrams`, then `createHtmlRenderer({ plugins: [diagrams()], components })` with both from `comark-diagrams/html`. `comark-diagrams/vue`, `/react`, and `/svelte` render it too.
 
 `server` is the Kroki server, `https://kroki.io` by default. `docker run -d -p 8000:8000 yuzutech/kroki` runs your own, which draws every fence above, and `diagrams({ server: "http://localhost:8000" })` points at it. `draw: false` leaves every fence as code and sends nothing, for a lint step. The plugin draws each diagram once per process, and a failed one again on the next parse.

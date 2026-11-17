@@ -28,6 +28,9 @@ export const browserPlugins = (
     icon,
     code: config["comark-code"],
     comments: { avatars },
+    // The preset leaves diagrams as code unless asked. The site's own pages and its playground draw them, to show
+    // what the block looks like; the diagrams page warns that the source goes to kroki.io.
+    diagrams: true,
     github: config["comark-github"],
     links: config["comark-links"],
     time: config["comark-time"],
