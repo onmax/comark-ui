@@ -1,4 +1,4 @@
-import { createHtmlRenderer } from "@comark/html";
+import { renderHtmlFromDocument, createHtmlRenderer } from "@comark/html";
 import { parseMarkdown } from "comark";
 import { describe, expect, it } from "vite-plus/test";
 import html from "../src/html.ts";
@@ -21,6 +21,33 @@ const prs = `| PR | Summary | Status / your next step | Links |
 `;
 
 describe("table layout", () => {
+  it.each(['note="Check"', ':note="data.note"'])(
+    "lays out tables through comments with %s",
+    async (binding) => {
+      const preset = html(offline);
+      const doc = await parseMarkdown(`Intro :comment[text]{${binding}}\n\n${prs}`, preset);
+      const output = await renderHtmlFromDocument(doc, { ...preset, data: { note: "Why?" } });
+      expect(output).toContain('class="cr"');
+      expect(output).toMatch(/<div[^>]*data-stack="3-2"/);
+    },
+  );
+
+  it("allows long headers above numeric values to wrap", async () => {
+    const output = await createHtmlRenderer(html(offline))(
+      "| Average response time (milliseconds) | Successful requests per second |\n|---|---|\n| 20 | 100 |",
+    );
+    expect(output).not.toMatch(/<th[^>]*data-short/);
+  });
+
+  it.each(["colspan", "rowspan"])("preserves native %s tables", async (span) => {
+    const output = await createHtmlRenderer(html(offline))(
+      `<table><thead><tr><th ${span}="2">Group</th><th>Description</th></tr></thead><tbody><tr><td>Team A</td><td>A long summary with enough text to classify as prose without any links.</td><td>A long detail with enough text to classify as prose without any links.</td></tr></tbody></table>`,
+    );
+    expect(output).toContain(`${span}="2"`);
+    expect(output).not.toMatch(/<div[^>]*data-stack/);
+    expect(output).not.toMatch(/<(?:td|th)[^>]*data-short/);
+  });
+
   it("keeps a small table as it is, with its short columns on one line", async () => {
     const [table] = await nodes("| Name | Seen |\n|---|---|\n| Heron | 2 |\n");
     expect(table![0]).toBe("table");

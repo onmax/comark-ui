@@ -12,7 +12,9 @@ export const STACK_ROWS = 3;
 
 const range = (from: number, to: number) =>
   Array.from({ length: to - from + 1 }, (_, index) => from + index);
-const table = ":scope > div[data-width]";
+// Comments add a document wrapper; nested component/list tables remain outside this scope.
+const documentRoot = ":is(:scope, :scope > .cr)";
+const table = `${documentRoot} > div[data-width]`;
 const card = `${table}[data-stack][data-width] > table`;
 
 /*
@@ -253,7 +255,7 @@ const rules = `
    toward the side that has more when one doesn't. Without room set, it keeps to the column. Only the document's own
    blocks grow, not one inside a list or tabs. A heading right above a comparison grows with it, so it starts where
    Before does and reads as its title. comark-links may wrap the heading, and the comparison's styles may sit between them. */
-:scope > [data-wide],
+${documentRoot} > [data-wide],
 :scope > :is(h2, h3, h4, .cl-heading:has(> :is(h2, h3, h4))):has(+ .ca-compare, + style + .ca-compare) {
   /* Room a page works out from the window can come out negative on a phone, where the column fills it: none, then. */
   --_ty-start: max(0px, var(--comark-wide-start, 0px));

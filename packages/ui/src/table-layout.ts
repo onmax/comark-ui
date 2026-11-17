@@ -46,6 +46,9 @@ const cellsOf = (row: ElementNode): ElementNode[] =>
  */
 function layoutTable(table: ElementNode): ElementNode {
   const rows = rowsOf(table);
+  // Grid placement cannot preserve native occupied slots from spanning cells.
+  if (rows.some((row) => cellsOf(row).some((cell) => "colspan" in cell[1] || "rowspan" in cell[1])))
+    return table;
   const head = rows.find((row) => cellsOf(row).every((cell) => cell[0] === "th"));
   const body = rows.filter((row) => row !== head).map(cellsOf);
   const count = Math.max(0, ...rows.map((row) => cellsOf(row).length));
@@ -56,7 +59,12 @@ function layoutTable(table: ElementNode): ElementNode {
       .map((cells) => cells[index])
       .filter((cell) => cell !== undefined)
       .map((cell) => text(cell).trim().length + 3 * chips(cell));
-    const longest = Math.max(0, ...lengths);
+    const header = head && cellsOf(head)[index];
+    const longest = Math.max(
+      0,
+      ...lengths,
+      header ? text(header).trim().length + 3 * chips(header) : 0,
+    );
     const average = lengths.reduce((sum, length) => sum + length, 0) / Math.max(1, lengths.length);
     const short = longest <= SHORT;
     return { short, prose: !short && average >= PROSE, longest };
@@ -110,7 +118,7 @@ function visit(nodes: Node[]) {
     if (node[0] === "table") nodes[index] = layoutTable(node);
     // comark-comments wraps the document's blocks in one root when a card goes in the margin. Its children start after
     // its tag and attributes.
-    else if (node[0] === "comments")
+    else if (node[0] === "comments" || node[0] === "comments-render")
       childrenOf(node).forEach((inner, child) => {
         if (isElement(inner) && inner[0] === "table") node[child + 2] = layoutTable(inner);
       });

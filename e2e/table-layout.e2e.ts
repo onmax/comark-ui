@@ -1,15 +1,15 @@
-import { createHtmlRenderer } from "@comark/html";
+import { createHtmlRenderer, renderHtmlFromDocument } from "@comark/html";
 import { expect, type Page, test } from "@playwright/test";
+import { parseMarkdown } from "comark";
 import comarkUi from "../packages/ui/src/html.ts";
 
-const render = createHtmlRenderer(
-  comarkUi({
-    chips: { download: false },
-    badge: { download: false },
-    icon: { fetch: false },
-    diagrams: { draw: false },
-  }),
-);
+const preset = comarkUi({
+  chips: { download: false },
+  badge: { download: false },
+  icon: { fetch: false },
+  diagrams: { draw: false },
+});
+const render = createHtmlRenderer(preset);
 
 // A review doc's table of pull requests: short ids and links, and two prose columns.
 const prs = `| PR | Summary | Status / your next step | Links |
@@ -103,4 +103,52 @@ test("on a phone each row becomes one column: the id, the summary, the status, t
   expect(shown.links.top).toBeGreaterThanOrEqual(shown.status.bottom - 1);
   expect(shown.table.right).toBeLessThanOrEqual(390);
   expect(shown.overflow).toBe(0);
+});
+
+for (const binding of ['note="Check"', ':note="data.note"']) {
+  test(`comments preserve wide and phone table layouts: ${binding}`, async ({ page }) => {
+    const doc = await parseMarkdown(`Intro :comment[text]{${binding}}\n\n${prs}`, preset);
+    const output = await renderHtmlFromDocument(doc, { ...preset, data: { note: "Why?" } });
+    for (const width of [1600, 390]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.setContent(
+        `<style>body{margin:0}</style><main style="width:min(46rem, 100% - 2rem);margin:auto;--comark-wide-start:${side};--comark-wide-end:${side}">${output}</main>`,
+      );
+      const layout = await page.evaluate(() => {
+        const table = document.querySelector("main table")!;
+        const wrapper = table.parentElement!;
+        const cells = [...table.querySelectorAll("tbody tr:first-child td")].map((cell) =>
+          cell.getBoundingClientRect(),
+        );
+        return {
+          width: table.getBoundingClientRect().width,
+          grid: getComputedStyle(table).display,
+          container: getComputedStyle(wrapper).containerType,
+          left: cells.map((cell) => cell.left),
+        };
+      });
+      expect(layout.container).toBe("inline-size");
+      if (width === 1600) expect(layout.width).toBeGreaterThan(836);
+      else {
+        expect(layout.grid).toBe("grid");
+        for (const left of layout.left) expect(left).toBeCloseTo(layout.left[0]!, 0);
+      }
+    }
+  });
+}
+
+test("long numeric column headers wrap without horizontal scrolling", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.setContent(
+    `<style>body{margin:0}</style><main style="width:min(46rem, 100% - 2rem);margin:auto">${await render("| Average response time (milliseconds) | Successful requests per second |\n|---|---|\n| 20 | 100 |")}</main>`,
+  );
+  expect(
+    await page
+      .locator("th")
+      .first()
+      .evaluate((cell) => getComputedStyle(cell).whiteSpace),
+  ).toBe("normal");
+  expect(
+    await page.locator("table").evaluate((table) => table.scrollWidth - table.clientWidth),
+  ).toBeLessThanOrEqual(1);
 });
