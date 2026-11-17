@@ -577,6 +577,20 @@ Apply sits low.
   await figure.locator(".ca-stage").click({ position: { x: 10, y: 10 } });
   await expect(page.locator(".cz-item .ca-mark")).toHaveCount(2);
   for (const mark of await page.locator(".cz-item .ca-mark").all()) await expect(mark).toBeHidden();
+  const zoomedToggle = page.locator(".cz-item .ca-hide input");
+  // The dialog starts focused; reverse Tab wraps to Copy, then Hide marks.
+  await page.keyboard.press("Shift+Tab");
+  await expect(page.locator(".cz-item .ca-copy")).toBeFocused();
+  await page.keyboard.press("Shift+Tab");
+  await expect(zoomedToggle).toBeFocused();
+  await page.keyboard.press("Space");
+  await expect(zoomedToggle).not.toBeChecked();
+  for (const mark of await page.locator(".cz-item .ca-mark").all())
+    await expect(mark).toBeVisible();
+  await page.keyboard.press("Shift+Tab");
+  await expect(page.locator(".cz-close")).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(zoomedToggle).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(page.locator(".cz-dialog")).toHaveCount(0);
   await toggle.locator("input").focus();

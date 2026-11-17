@@ -740,9 +740,9 @@ export function script(css: string): () => void {
         // Keep focus in the dialog.
         const focusable = [
           ...view.dialog.querySelectorAll<HTMLElement>(
-            "button,[href],[tabindex]:not([tabindex='-1'])",
+            "button,input:not([type=hidden]),select,textarea,[href],[tabindex]",
           ),
-        ];
+        ].filter((element) => !element.matches(":disabled,[tabindex='-1']"));
         if (!focusable.length) return;
         const first = focusable[0]!;
         const last = focusable[focusable.length - 1]!;
