@@ -279,6 +279,7 @@ How most packages work, so the bullets below don't repeat it:
 - Rendering never throws. Problems go in `meta.issues`, one sentence each that names the block and the fix. Every plugin appends to the list and never replaces it, since several run on one document.
 - Each issue also names its rule, `comark/<package>/<kind>`, in `meta.issueRules`, keyed by the sentence. Plugins merge into it the same way. A new kind of issue needs its rule in `packages/lint/src/rules/<package>.ts` and a page in `docs/pages/doctor/<package>/`.
 - Comments are rare and explain why, never what.
+- Use the platform before JavaScript. See Browser support below.
 - Each package's classes start with its own prefix, since every package's styles share the `comark` layer. Pick an unused prefix for a new package. Taken: `ca` annotate, `cc` carousel, `cch` charts, `cp` chips, `ck` code, `cd` diff, `ce` embed, `cgc` github, `ci` icon, `ckb` keys, `cs` steps, `ccr` cards, `cb` badge, `ct` tabs, `cz` zoom, `cca` cast, `cm` media, `cqr` qr, `cfl` fields, `cft` file-tree, `cdt` details, `cco` colors, `ccm` critic, `cl` links, `cfm` properties, `cso` sources, `cdg` diagrams, `cmt` metrics, `cfn` footnotes, `cxr` xref, `cn` code-notes, `ctr` tests, `cqz` quiz, `cmk` mark, `cmh` math, `cht` chat, `cmv` magic-move, `cr` comments, `ctm` time, `cgg` git-graph, `cbr` bundle, and `cmm` comark-ui's Mermaid wrapper, `cis` comark-ui's issues box, and comark-ui's editor `cue` (uploads), `cev` (the component view), and `cel` (the code language select).
 - A block whose outer element draws its own frame (a border, a card, or a surface) carries `data-comark-frame` there, in every renderer, so a host can leave it out of a frame of its own. A new framed block adds it, and the docs' example frames select it rather than listing classes.
 - Style another package's blocks only through the roots its `theme()` call names and the attributes and variables it documents, unless you list it in `dependencies` because you render its markup. When a container needs more, add it to the other package's contract, as comark-code's `data-code-header` does for code groups. `doctor/parts.ts` enforces this in `pnpm run doctor`.
@@ -290,6 +291,22 @@ How most packages work, so the bullets below don't repeat it:
   - Publish a Comark document with one `::compare` per package, before then after, to Drop. Link it from the PR description and give the maintainer the link.
   - A new block has no before, so show its after alone.
 - Never comment on issues or pull requests without explicit consent.
+
+## Browser support
+
+**The support floor** is the latest two Chrome and Firefox releases plus the current and previous Safari major (27.2 and 27.1 as of November 2026). Every block works there, in the HTML renderer's inline scripts as much as in the components.
+
+- **Use a feature directly** when [webstatus.dev](https://webstatus.dev) shows it in every browser of the floor. Write the native element or property; don't add a feature check or a fallback for it.
+- **When a browser of the floor lacks a feature** and the block still works without it, use it under `@supports`, with no fallback. `shared/disclosure.ts` is the reference: disclosures grow with `interpolate-size` where it exists, and elsewhere their children fade in.
+- **When a block breaks without the feature**, keep the JavaScript, or load a polyfill behind a feature check from bundled code only, never from a CDN.
+- **Inline client scripts never carry polyfills.** The HTML renderers inline a function's source with `toString()`, so nothing it imports reaches the page. `test/inline-scripts.test.ts` fails when a module whose function is inlined imports one.
+- **Dates** need no library. Format with `Intl` (`DateTimeFormat`, `RelativeTimeFormat`, `DurationFormat`). Temporal waits until stable Safari ships it; then load `temporal-polyfill/global` through a dynamic import, in bundled code only, until it's in the whole floor.
+- **Prefer native elements:** `popover` and `popovertarget` for cards and menus, `<dialog>` with `showModal()` for anything modal, and `<details>` for disclosures. They bring Escape, light dismiss, focus return, and the top layer, so don't write those by hand.
+- **Positioning** uses CSS anchor positioning (`anchor-name`, `position-area`, `position-try-fallbacks`) under `@supports`, with the JavaScript placement kept as the fallback where it's missing. comark-sources' citation card and comark-ui's component view panel do this.
+- **Known exceptions**, each until the browsers catch up:
+  - The side outline follows the scroll in JavaScript (`scroll.scrollTo` in `packages/outline/src/script.ts`), because `scrollIntoView({ container })`, which would scroll only the rail, is Chrome-only.
+  - comark-sources opens its card on hover in JavaScript, because `interestfor` is Chrome-only.
+  - Dialogs don't use `closedby` until Safari 27.3 is stable. Until then a click outside closes them in JavaScript.
 
 ## Releasing
 
