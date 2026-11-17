@@ -35,11 +35,11 @@ export type MathMeta = {
 type Issue = { rule: `comark/math/${string}`; message: string };
 
 /**
- * What a formula becomes, and all its renderers read: its `tex`, and `display` for display math. The typeset MathML is
- * the formula's children, as elements, so a host's `security` plugin checks them like the rest of the document. A
- * formula with no children couldn't be typeset, and renders its TeX.
+ * What a formula becomes, and all its renderers read: its `tex`, `display` for display math, and `typeset` when its
+ * children are its MathML, as elements, so a host's `security` plugin checks them like the rest of the document. A
+ * formula that couldn't be typeset has no children, and renders its TeX.
  */
-export type FormulaAttributes = { tex?: string; display?: boolean };
+export type FormulaAttributes = { tex?: string; display?: boolean; typeset?: boolean };
 
 const DOLLAR = 0x24;
 const BACKSLASH = 0x5c;
@@ -213,8 +213,9 @@ export default defineComarkPlugin<MathOptions | undefined, MathMeta>((options = 
           const [tag, attrs] = node;
           // A formula's children are MathML that the renderers print as it is, so only formulas this plugin typeset
           // may have any. A document that writes a `formula` with content, or the `html` it once carried, hears so.
-          if (tag === "formula" && ("html" in attrs || node.length > 2)) {
+          if (tag === "formula" && ("html" in attrs || "typeset" in attrs || node.length > 2)) {
             delete attrs.html;
+            delete attrs.typeset;
             node.length = 2;
             issues.push({
               rule: "comark/math/authored-html",
@@ -245,7 +246,7 @@ export default defineComarkPlugin<MathOptions | undefined, MathMeta>((options = 
         const result = typeset(tex, display);
         const attrs: FormulaAttributes = display ? { tex, display } : { tex };
         if ("html" in result) {
-          list[index] = ["formula", attrs, ...markupToNodes(result.html)];
+          list[index] = ["formula", { ...attrs, typeset: true }, ...markupToNodes(result.html)];
           continue;
         }
         issues.push({

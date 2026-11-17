@@ -123,6 +123,11 @@ describe("comark/unknown-component", () => {
       components: [...Object.keys(mathComponents), "screenshot"],
     });
     expect(found.map(({ rule, line }) => [rule, line])).toEqual([["comark/unknown-component", 11]]);
+    const cased = await lint("::Screnshot\n::\n\n:Screnshot[x]\n\n::UnknownThing\n::", {
+      plugins: [math()],
+      components: ["Screenshot"],
+    });
+    expect(cased.map(({ line }) => line)).toEqual([1, 4, 6]);
   });
 
   it("is off without components, since any name could be valid", async () => {

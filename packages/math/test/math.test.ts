@@ -208,6 +208,21 @@ describe("comark-mathml", () => {
     expect(html).not.toContain('class="cmh cmh-source"');
   });
 
+  it("keeps text that looks like an entity literal, in every output", async () => {
+    for (const output of ["mathml", "html", "htmlAndMathml"] as const) {
+      const html = await render("$\\verb|&lt;|$", { output });
+      expect(html).toContain("&amp;lt;");
+      expect(html).not.toMatch(/>&lt;</);
+    }
+  });
+
+  it("reads a reference inside a formula and keeps the rest of it whole", async () => {
+    const html = await render("$x+\\ref{eq1}+y$");
+    expect(html).not.toContain("href=&#39;");
+    expect(html).toMatch(/<a href="#eq1" class="tml-ref">/);
+    expect(html).toMatch(/<mi>y<\/mi><\/mrow>/);
+  });
+
   it("takes the place of Comark's math plugin", async () => {
     const { default: core } = await import("comark/plugins/math");
     expect(math().name).toBe(core().name);

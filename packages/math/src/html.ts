@@ -1,5 +1,4 @@
 import type { Node, NodeHandler } from "comark";
-import { escapeHtml } from "comark/utils";
 import { classOf } from "./client.ts";
 import { css } from "./styles.ts";
 import { isElement } from "../../../shared/nodes.ts";
@@ -8,6 +7,11 @@ import { rawText } from "../../../shared/text.ts";
 export { default, KATEX_TAGS, MATHML_TAGS } from "./index.ts";
 export type { FormulaAttributes, MathMeta, MathOptions, MathOutput } from "./index.ts";
 
+// The nodes hold decoded text, so every `&` is escaped, including one that looks like an entity, as `&lt;` in
+// `\verb|&lt;|` does. Comark's `escapeHtml` leaves those as they are.
+const escape = (text: string) =>
+  text.replace(/[&<>"]/g, (char) => `&${{ "&": "amp", "<": "lt", ">": "gt", '"': "quot" }[char]};`);
+
 /**
  * A formula's MathML as markup, with no whitespace added: Comark's renderer indents elements it doesn't know, which
  * would pad each `<mi>` and the TeX that copying reads.
@@ -15,12 +19,12 @@ export type { FormulaAttributes, MathMeta, MathOptions, MathOutput } from "./ind
 const markup = (nodes: Node[]): string =>
   nodes
     .map((node) => {
-      if (!Array.isArray(node)) return escapeHtml(node);
+      if (!Array.isArray(node)) return escape(node);
       if (!isElement(node)) return "";
       const [tag, attrs, ...children] = node;
       const attributes = Object.entries(attrs)
         .filter(([name, value]) => name !== "$" && value !== undefined && value !== null)
-        .map(([name, value]) => ` ${name}="${escapeHtml(String(value))}"`)
+        .map(([name, value]) => ` ${name}="${escape(String(value))}"`)
         .join("");
       return `<${tag}${attributes}>${markup(children)}</${tag}>`;
     })
@@ -33,7 +37,7 @@ const formula: NodeHandler = ([, attrs, ...children], state) => {
   const styles = styled.has(state.context) ? "" : `<style data-comark-mathml>${css}</style>`;
   styled.add(state.context);
   const typeset = children.length > 0;
-  const body = typeset ? markup(children) : escapeHtml(rawText(attrs.tex));
+  const body = typeset ? markup(children) : escape(rawText(attrs.tex));
   return `${styles}<span class="${classOf(attrs.display === true, typeset)}">${body}</span>`;
 };
 
