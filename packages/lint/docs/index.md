@@ -1,5 +1,5 @@
 ---
-title: comark-linter
+title: Linter
 description: Finds unclosed blocks, unknown components, broken links and anchors, local URLs, and plugin issues in Comark documents.
 keywords: linter, lint, ESLint, check, validate, validation, CI, Vite Doctor, markdownlint, errors, diagnostics, broken links, CLI
 tagline: A linter for Comark documents that runs from the command line, a script, ESLint, or Vite Doctor.

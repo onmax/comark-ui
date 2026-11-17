@@ -1,8 +1,8 @@
 // Draws the docs' images in headless Chromium: the screens of Spurious, the made-up app the annotate examples mark up;
-// the annotated screenshot at the top of annotate's README; the site's Open Graph image; and the README banner. Run it
-// after changing any of them with `pnpm docs:images`. It prints the box of each marked element in the app, as
+// the annotated screenshot at the top of annotate's README; and the site's Open Graph image. Run it after changing any
+// of them with `pnpm docs:images`. It prints the box of each marked element in the app, as
 // annotation props, so the examples can point at it.
-import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { renderHtmlFromDocument } from "@comark/html";
 import { chromium, type Browser } from "@playwright/test";
 import { parseMarkdown } from "comark";
@@ -14,17 +14,6 @@ const root = new URL("./", import.meta.url);
 const pub = new URL("public/", root);
 const fonts = new URL("../node_modules/geist/dist/fonts/", root);
 const red = "#e5484d";
-// The banner counts the packages instead of naming one.
-const plugins = (
-  await Promise.all(
-    (await readdir(new URL("../packages/", root))).map((dir) =>
-      readFile(new URL(`../packages/${dir}/package.json`, root)).then(
-        () => true,
-        () => false,
-      ),
-    ),
-  )
-).filter(Boolean).length;
 
 // The pages are set as content, with no origin to load files from, so fonts and images go in as data URLs.
 const font = async (family: string, file: string) =>
@@ -194,27 +183,21 @@ The pigeons ate week 15.
 
   await mkdir(new URL("og/", pub), { recursive: true });
   const index = await readFile(new URL("pages/index.md", root), "utf8");
-  // The hero shows a broken block first and its fix last; the banner draws the fix.
+  // The hero shows a broken block first and its fix last; the card draws the fix.
   const hero = [
     ...(/^::hero\n([\s\S]*?^````)\n::$/m.exec(index)?.[1].matchAll(/````md\n([\s\S]*?)````/g) ??
       []),
   ].at(-1)?.[1];
   if (!hero) throw new Error("docs/pages/index.md needs a ::hero with a ````md block.");
   const example = await render(hero, darkScreens);
-  for (const [file, width, height, scale] of [
-    ["home.png", 1200, 630, 1],
-    ["readme-banner.png", 1600, 560, 2],
-  ] as const) {
-    const og = await browser.newPage({
-      viewport: { width, height },
-      deviceScaleFactor: scale,
-      colorScheme: "dark",
-    });
-    await og.setContent(brand(file === "home.png", example), { waitUntil: "load" });
-    await og.evaluate(() => document.fonts.ready);
-    await og.screenshot({ path: new URL(`og/${file}`, pub).pathname });
-    await og.close();
-  }
+  const og = await browser.newPage({
+    viewport: { width: 1200, height: 630 },
+    colorScheme: "dark",
+  });
+  await og.setContent(brand(example), { waitUntil: "load" });
+  await og.evaluate(() => document.fonts.ready);
+  await og.screenshot({ path: new URL("og/home.png", pub).pathname });
+  await og.close();
 } finally {
   await browser.close();
 }
@@ -229,37 +212,35 @@ async function render(markdown: string, images: Map<string, string>) {
   ).replace(/src="\/([\w.-]+\.png)"/g, (_, file: string) => `src="${images.get(file)}"`);
 }
 
-// The Open Graph image and the banner share a layout. The banner is wider and shorter, so its window shrinks the
-// page to show the notes too.
-function brand(og: boolean, example: string) {
-  const zoom = og ? 1 : 0.8;
+// The Open Graph image says what the README banner (.github/banner.svg) says, beside a review the plugins rendered.
+function brand(example: string) {
   return html(
     `html,body{width:100%;height:100%;overflow:hidden}
 body{--fg:#f5f5f5;--muted:#a3a3a3;--line:#262626;background:#0a0a0a;color:var(--fg);font-family:Geist,sans-serif;position:relative;
   background-image:radial-gradient(60rem 30rem at 85% 110%,rgb(229 72 77/.16),transparent 60%),
     linear-gradient(#ffffff08 1px,transparent 1px),linear-gradient(90deg,#ffffff08 1px,transparent 1px);
   background-size:auto,40px 40px,40px 40px}
-.copy{position:absolute;left:${og ? 68 : 88}px;top:${og ? 64 : 72}px;bottom:${og ? 64 : 72}px;width:${og ? 560 : 760}px;display:flex;flex-direction:column}
-.brand{display:flex;align-items:center;gap:14px;font-size:${og ? 26 : 28}px;font-weight:600;letter-spacing:-.01em}
-.brand svg{width:${og ? 44 : 48}px;height:${og ? 44 : 48}px}
-.copy h1{margin:auto 0 0;font-size:${og ? 64 : 76}px;line-height:1.02;letter-spacing:-.045em;font-weight:700}
+.copy{position:absolute;left:68px;top:64px;bottom:64px;width:560px;display:flex;flex-direction:column}
+.brand{display:flex;align-items:center;gap:14px;font-size:26px;font-weight:600;letter-spacing:-.01em}
+.brand svg{width:44px;height:44px}
+.copy h1{margin:auto 0 0;font-size:64px;line-height:1.02;letter-spacing:-.045em;font-weight:700}
 .copy h1 .marked{position:relative;white-space:nowrap}
 .copy h1 .marked svg{position:absolute;left:-4%;bottom:-.2em;height:.36em;width:108%;fill:none;stroke:${red};stroke-width:5;stroke-linecap:round;overflow:visible}
-.copy p{margin:${og ? 22 : 26}px 0 0;font-size:26px;line-height:1.35;color:var(--muted);letter-spacing:-.01em}
+.copy p{margin:22px 0 0;font-size:26px;line-height:1.35;color:var(--muted);letter-spacing:-.01em}
 .install{margin-top:auto;align-self:flex-start;font:500 22px/1 "Geist Mono",monospace;padding:16px 22px;border:1px solid #333;border-radius:12px;background:#141414}
 .install span{color:${red}}
-.window{position:absolute;right:${og ? -70 : 88}px;top:${og ? 150 : 48}px;width:${og ? 600 : 640}px;height:${og ? 560 : 464}px;border:1px solid #333;border-radius:16px;background:#141414;overflow:hidden;box-shadow:0 30px 80px #000c}
+.window{position:absolute;right:-70px;top:150px;width:600px;height:560px;border:1px solid #333;border-radius:16px;background:#141414;overflow:hidden;box-shadow:0 30px 80px #000c}
 .bar{display:flex;align-items:center;gap:8px;height:44px;padding:0 16px;border-bottom:1px solid var(--line);font:14px "Geist Mono",monospace;color:var(--muted)}
 .bar i{width:11px;height:11px;border-radius:50%;background:#3a3a3a}
 .bar b{margin-left:10px;font-weight:400}
-.page{zoom:${zoom};height:calc((100% - 44px) / ${zoom});padding:24px 28px;background:#111113;color:#e5e5e5;font-size:15px;line-height:1.5;--comark-radius:10px}
+.page{height:calc(100% - 44px);padding:24px 28px;background:#111113;color:#e5e5e5;font-size:15px;line-height:1.5;--comark-radius:10px}
 .page img{max-width:100%}
 .page>:first-child{margin-top:0}`,
     `<div class="copy">
-<div class="brand">${logo}comark ui</div>
-<h1>Review documents,<br>written in <span class="marked">Markdown.${underline}</span></h1>
-<p>Annotated screenshots, charts, tabs, icons,<br>and more. Plugins for Comark.</p>
-<div class="install"><span>+</span>${plugins} plugins</div>
+<div class="brand">${logo}Comark UI</div>
+<h1>The Component Library for <span class="marked">Markdown.${underline}</span></h1>
+<p>40+ blocks for docs, reviews,<br>and agent reports.</p>
+<div class="install"><span>$</span> pnpm add comark-ui</div>
 </div>
 <div class="window"><div class="bar"><i></i><i></i><i></i><b>review.md, rendered</b></div><div class="page">${example}</div></div>`,
   );
