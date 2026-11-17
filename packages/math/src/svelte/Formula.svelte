@@ -11,16 +11,21 @@
   const MATHML = "http://www.w3.org/1998/Math/MathML";
   let drawn = $state();
   let copy = $state("");
-  onMount(() => {
-    addStyles();
-    if (!drawn) return;
+  onMount(addStyles);
+  // The span that holds Svelte's own render appears whenever the formula is typeset, on mount or on a later update.
+  $effect(() => {
+    const box = drawn;
+    if (!box) {
+      copy = "";
+      return;
+    }
     const sync = () => {
-      const math = drawn.querySelector("math");
-      copy = math && math.namespaceURI !== MATHML ? drawn.innerHTML : "";
+      const math = box.querySelector("math");
+      copy = math && math.namespaceURI !== MATHML ? box.innerHTML : "";
     };
     sync();
     const observer = new MutationObserver(sync);
-    observer.observe(drawn, { subtree: true, childList: true, characterData: true, attributes: true });
+    observer.observe(box, { subtree: true, childList: true, characterData: true, attributes: true });
     return () => observer.disconnect();
   });
 </script>

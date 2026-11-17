@@ -18,13 +18,13 @@ test("@comark/svelte gives formulas made in the browser MathML's namespace", asy
   await page.setContent("<!doctype html><meta charset=utf-8><body></body>");
   await page.addScriptTag({ content: bundle });
   // The document goes as JSON, the form a page receives it in.
-  await page.evaluate(
-    (json) =>
-      (
-        window as unknown as { fixture: { mountDocument: (document: unknown) => void } }
-      ).fixture.mountDocument(JSON.parse(json)),
-    JSON.stringify(value),
-  );
+  await page.evaluate((json) => {
+    const app = window as unknown as {
+      fixture: { mountDocument: (document: unknown) => (next: unknown) => void };
+      update: (next: unknown) => void;
+    };
+    app.update = app.fixture.mountDocument(JSON.parse(json));
+  }, JSON.stringify(value));
   await expect(page.locator(".cmh")).toHaveCount(3);
   const shown = await page.evaluate(() =>
     [...document.querySelectorAll(".cmh")].map((formula) => {
@@ -45,4 +45,22 @@ test("@comark/svelte gives formulas made in the browser MathML's namespace", asy
     { source: "\\frac{a}", namespaces: [] },
     { source: null, namespaces: [[MATHML, MATHML]] },
   ]);
+
+  // A formula that didn't typeset becomes one that does, in the same component, as while someone fixes their TeX.
+  const fixed = await parseMarkdown(markdown.replace("\\frac{a}$", "\\frac{a}{c}$"), {
+    plugins: [math()],
+  });
+  await page.evaluate(
+    (json) => (window as unknown as { update: (next: unknown) => void }).update(JSON.parse(json)),
+    JSON.stringify(fixed),
+  );
+  await expect(page.locator(".cmh-source")).toHaveCount(0);
+  const updated = await page.evaluate(() =>
+    [...document.querySelectorAll(".cmh")].map(
+      (formula) =>
+        [...formula.querySelectorAll("math")].find((math) => math.getBoundingClientRect().width > 0)
+          ?.namespaceURI,
+    ),
+  );
+  expect(updated).toEqual([MATHML, MATHML, MATHML]);
 });

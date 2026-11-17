@@ -1,7 +1,10 @@
-import { MarkdownDocument } from "@comark/svelte";
-import type { MarkdownDocument as Document } from "comark";
 import { mount } from "svelte";
-import { components } from "../../src/svelte/index.js";
+import Host from "./SvelteHost.svelte";
 
-export const mountDocument = (value: Document) =>
-  mount(MarkdownDocument, { target: document.body, props: { value, components } });
+/** Mounts a document and returns a function that replaces it. */
+export const mountDocument = (value: unknown) => {
+  const host = mount(Host, { target: document.body, props: { initial: value } }) as {
+    update: (next: unknown) => void;
+  };
+  return (next: unknown) => host.update(next);
+};
