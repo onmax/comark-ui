@@ -4,6 +4,71 @@ import { shikiDark } from "../../../shared/shiki.ts";
 // T3 Code's surface grain (pingdotgg/t3code apps/web/src/index.css): fractal noise at 3.5% opacity in a 256px tile.
 const grain = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E")`;
 
+/** The widths, in em, a wide table's `data-width` rounds up to (table-layout.ts). The wide block's maximum caps the last. */
+export const TABLE_WIDTHS = [48, 52, 56, 60, 64, 68, 72];
+/** A table stacks with at most this many columns, and this many prose columns under one another. */
+export const STACK_COLUMNS = 6;
+export const STACK_ROWS = 3;
+
+const range = (from: number, to: number) =>
+  Array.from({ length: to - from + 1 }, (_, index) => from + index);
+// Comments add a document wrapper; nested component/list tables remain outside this scope.
+const documentRoot = ":is(:scope, :scope > .cr)";
+const table = `${documentRoot} > div[data-width]`;
+const card = `${table}[data-stack][data-width] > table`;
+
+/*
+ * The tables table-layout.ts marks. A wide one sits in a div that grows like any wide block, up to its own width. A
+ * stacked one is a grid of its rows, each a subgrid, so its columns line up from row to row, and it only stacks when it
+ * gets less than about 85% of its own width: there the prose columns would wrap every few words.
+ */
+const tableRules = [
+  `:scope :where(td[data-short], th[data-short]) { white-space: nowrap; }`,
+  `${table} { overflow-x: auto; margin-block: var(--_ty-flow) 0; }`,
+  `${table} > table { display: table; width: 100%; max-width: none; overflow: visible; margin: 0; }`,
+  ...TABLE_WIDTHS.map(
+    (width) => `${table}[data-width="${width}"] { --comark-wide-width: ${width}em; }`,
+  ),
+  `${table}[data-stack] { container-type: inline-size; }`,
+  ...range(2, STACK_COLUMNS).flatMap((columns) =>
+    range(1, columns).map(
+      (prose) =>
+        `${table}[data-stack="${columns}-${prose}"] > table { grid-template-columns: ${range(
+          1,
+          columns,
+        )
+          .map((column) => (column === prose ? "minmax(0, 1fr)" : "auto"))
+          .join(" ")}; }`,
+    ),
+  ),
+  ...range(1, STACK_COLUMNS).map(
+    (column) => `${table}[data-stack] [data-col="${column}"] { grid-column: ${column}; }`,
+  ),
+  ...TABLE_WIDTHS.map((width) => {
+    const stacked = `${table}[data-stack][data-width="${width}"] > table`;
+    return `@container (max-width: ${Math.round(width * 0.85) - 0.01}em) {
+      ${stacked} { display: grid; }
+      ${stacked} > :is(thead, tbody, tfoot) { display: contents; }
+      ${stacked} tr { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; }
+      ${stacked} :is(td, th):not([data-row]) { grid-row: 1 / span ${STACK_ROWS}; }
+      ${range(1, STACK_ROWS)
+        .map((row) => `${stacked} [data-row="${row}"] { grid-row: ${row}; }`)
+        .join("\n      ")}
+      ${stacked} [data-row="1"] { padding-block-end: 0.25em; }
+      ${stacked} [data-row]:not([data-row="1"]) { border-block-start: 0; padding-block-start: 0; color: var(--_ty-muted); }
+    }`;
+  }),
+  // On a phone even the short columns leave the prose no room, so each row becomes one column: the cells in order, the
+  // header kept for screen readers only. Last, so it wins over the stacked rules above.
+  `@container (max-width: 31.99em) {
+    ${card} { grid-template-columns: minmax(0, 1fr); }
+    ${card} tr > :is(td, th, [data-row]) { grid-column: 1; grid-row: auto; padding: 0 0 0.25em; border-block-start: 0; white-space: normal; }
+    ${card} tr > :first-child { padding-block-start: 0.75em; border-block-start: 1px solid var(--_ty-rule); }
+    ${card} tr > :last-child { padding-block-end: 0.75em; }
+    ${card} thead tr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  }`,
+].join("\n");
+
 // Whatever an author or a block marks to keep its own look.
 const own = ":where(.not-typeset, [data-not-typeset], .not-typeset *, [data-not-typeset] *)";
 
@@ -190,7 +255,7 @@ const rules = `
    toward the side that has more when one doesn't. Without room set, it keeps to the column. Only the document's own
    blocks grow, not one inside a list or tabs. A heading right above a comparison grows with it, so it starts where
    Before does and reads as its title. comark-links may wrap the heading, and the comparison's styles may sit between them. */
-:scope > [data-wide],
+${documentRoot} > [data-wide],
 :scope > :is(h2, h3, h4, .cl-heading:has(> :is(h2, h3, h4))):has(+ .ca-compare, + style + .ca-compare) {
   /* Room a page works out from the window can come out negative on a phone, where the column fills it: none, then. */
   --_ty-start: max(0px, var(--comark-wide-start, 0px));
@@ -199,6 +264,8 @@ const rules = `
   width: var(--_ty-wide);
   margin-inline: clamp(-1 * var(--_ty-start), (100% - var(--_ty-wide)) / 2, 100% + var(--_ty-end) - var(--_ty-wide)) 0;
 }
+
+${tableRules}
 
 /* The first child adds no space above. Last, so it wins ties. */
 :scope > :where(:first-child):not(${own}),

@@ -20,6 +20,9 @@ export const css = `@layer comark{${[
   theme(".cp"),
   ":where(.cp){--_cp-tint:var(--cp-background,color-mix(in oklab,var(--_comark-foreground) 3.5%,transparent));--_cp-hover:var(--cp-hover,color-mix(in oklab,var(--_comark-foreground) 7%,transparent));--_cp-ring:var(--cp-ring,color-mix(in oklab,var(--_comark-foreground) 8%,transparent))}",
   ".cp{padding:.0625em .375em .0625em .25em;line-height:1.375;border-radius:var(--cp-radius,calc(var(--_comark-radius) - 4px));background:var(--_cp-tint);box-shadow:inset 0 0 0 1px var(--_cp-ring);color:var(--cp-color,currentColor);font-weight:var(--cp-font-weight,500);text-decoration:none;white-space:normal;overflow-wrap:anywhere;-webkit-box-decoration-break:clone;box-decoration-break:clone;transition:background-color .15s ease-out,box-shadow .15s ease-out}",
+  // In a table column the typeset keeps on one line (data-short), a chip keeps its label whole, so the column never
+  // squeezes it to a letter a line.
+  ":is(td,th)[data-short] .cp{white-space:nowrap;overflow-wrap:normal}:is(td,th)[data-short] .cp-img{max-width:none}",
   // A site with no favicon gets a globe in its place, so its chip still reads as a link and not as inline code.
   `.cp[data-kind="favicon"]:not(:has(.cp-img))::before{content:'';display:inline-block;width:1em;height:1em;margin:0 .3125em 0 0;background:color-mix(in oklab,currentColor 55%,transparent);-webkit-mask:${globe} center/contain no-repeat;mask:${globe} center/contain no-repeat;vertical-align:-.125em}`,
   ".cp:hover{background:var(--_cp-hover)}",

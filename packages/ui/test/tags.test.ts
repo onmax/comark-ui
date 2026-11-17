@@ -84,6 +84,7 @@ describe("tags", () => {
         outline: false,
         properties: false,
         table: false,
+        tableLayout: false,
         tests: false,
         gitGraph: false,
         bundle: false,
