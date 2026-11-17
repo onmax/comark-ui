@@ -2,6 +2,8 @@ import { createHtmlRenderer } from "@comark/html";
 import { expect, type Page, test } from "@playwright/test";
 import carousel, { components as carouselComponents } from "../packages/carousel/src/html.ts";
 import zoom, { components as zoomComponents } from "../packages/zoom/src/html.ts";
+import sources, { components as sourceComponents } from "../packages/sources/src/html.ts";
+import code, { components as codeComponents } from "../packages/code/src/html.ts";
 import { fixture } from "./helpers.ts";
 
 // The zoom is a native modal <dialog>. Each browser file runs these, since the top layer, `cancel`, and focus on
@@ -46,6 +48,82 @@ const settle = (page: Page) =>
   });
 
 export function dialogTests() {
+  test("citation cards stay interactive in zoom and return to the page after close", async ({
+    page,
+  }) => {
+    const renderContent = createHtmlRenderer({
+      plugins: [zoom(), sources()],
+      components: { ...zoomComponents, ...sourceComponents },
+    });
+    await fixture(
+      page,
+      await renderContent(
+        '::zoom{title="Evidence"}\nPigeons navigate :cite[1].\n::\n\nOutside :cite[1].\n\n::sources\n1. [Magnetoreception](https://example.com/magnetoreception)\n::',
+      ),
+    );
+    const outside = page.locator("main > p .cso-cite a");
+    await outside.hover();
+    const card = page.locator(".cso-card");
+    await expect(card).toBeVisible();
+    await page.mouse.move(0, 0);
+    await page.locator("main [data-zoom]").first().click();
+    await settle(page);
+    await page.locator(".cz-dialog .cso-cite a").hover();
+    await expect(page.locator(".cz-dialog .cso-card")).toBeVisible();
+    await card.hover();
+    await expect(card).toBeVisible();
+    await card.locator("a").focus();
+    await expect(card.locator("a")).toBeFocused();
+    await card.locator("a").evaluate((node) =>
+      node.addEventListener(
+        "click",
+        (event) => {
+          event.preventDefault();
+          node.setAttribute("data-clicked", "");
+        },
+        { once: true },
+      ),
+    );
+    await card.locator("a").click();
+    await expect(card.locator("a")).toHaveAttribute("data-clicked", "");
+    await page.locator(".cz-close").click();
+    await expect(page.locator(".cz-dialog")).toHaveCount(0);
+    await expect(card).toHaveCount(0);
+    await outside.hover();
+    await expect(card).toBeVisible();
+    await card.hover();
+    await expect(card).toBeVisible();
+  });
+
+  test("clipboard failure selects code inside the modal", async ({ page }) => {
+    const renderContent = createHtmlRenderer({
+      plugins: [zoom(), code()],
+      components: { ...zoomComponents, ...codeComponents },
+    });
+    await fixture(page, await renderContent('::zoom{title="Code"}\n```sh\necho pigeons\n```\n::'));
+    await page.evaluate(() =>
+      Object.defineProperty(navigator, "clipboard", {
+        value: { writeText: () => Promise.reject(new Error("denied")) },
+        configurable: true,
+      }),
+    );
+    await page.locator("main [data-zoom]").first().click();
+    await settle(page);
+    await page
+      .locator(".cz-dialog")
+      .getByRole("button", { name: "Copy code", exact: true })
+      .click();
+    const field = page.locator(".cz-dialog textarea");
+    await expect(field).toBeFocused();
+    expect(
+      await field.evaluate((node: HTMLTextAreaElement) =>
+        node.value.slice(node.selectionStart, node.selectionEnd),
+      ),
+    ).toBe("echo pigeons");
+    await page.evaluate(() => document.dispatchEvent(new Event("copy")));
+    await expect(field).toHaveCount(0);
+  });
+
   test("the zoom opens as a modal dialog in the top layer, and the page behind it is inert", async ({
     page,
   }) => {
