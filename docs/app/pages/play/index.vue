@@ -3,7 +3,7 @@
 // presets with their stills; docs/play.ts renders them.
 import "~/assets/tools.css";
 import "~/assets/play.css";
-import { PlaygroundRender } from "@vite-hub/ui-playground/playground-render";
+import { PlaygroundRender } from "@vite-hub/ui";
 import { configFile, contentFile, themeFile } from "~~/play-link.ts";
 import type { Preset } from "~~/play.ts";
 

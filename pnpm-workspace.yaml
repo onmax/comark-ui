@@ -92,8 +92,6 @@ catalog:
   "@vite-hub/realtime": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/realtime@a32d1f25548e464b4bdc1f35ab3ec65da971203e
   "@vite-hub/source": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/source@a32d1f25548e464b4bdc1f35ab3ec65da971203e
   "@vite-hub/ui": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/ui@a32d1f25548e464b4bdc1f35ab3ec65da971203e
-  # The design-system build lacks ./playground and ./playground-render. Alias their build to keep the shared design system.
-  "@vite-hub/ui-playground": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/ui@af71f9df43c589af1350de7efe4925b993a93480
   "@vite-hub/workspace": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/workspace@a32d1f25548e464b4bdc1f35ab3ec65da971203e
   drizzle-kit: 1.0.0-rc.5
   drizzle-orm: 1.0.0-rc.5
@@ -197,8 +195,3 @@ allowBuilds:
   # @vite-hub/docs pulls it through @vueuse; its postinstall only picks the Vue 2 or 3 build, and Vue 3 is its default.
   vue-demi: false
   workerd: true
-
-# Temporary dependency backports. See patches/README.md for upstream PRs and removal conditions.
-patchedDependencies:
-  # Workers builds resolve the `workerd` condition, which 5.0.1 lacks (crouchcd/pkce-challenge#50, merged, unreleased).
-  pkce-challenge@5.0.1: patches/pkce-challenge@5.0.1.patch

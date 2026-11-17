@@ -11,8 +11,7 @@ export default defineNuxtConfig({
   compatibilityDate: "2026-10-01",
   devtools: { enabled: false },
   telemetry: false,
-  // Load the renderer's styles before the current UI styles, which the modules append below.
-  css: ["@vite-hub/ui-playground/styles.css", "~/assets/landing.css"],
+  css: ["~/assets/landing.css"],
   // vite-hub/nuxt first: @vite-hub/docs turns its Comments on.
   modules: ["vite-hub/nuxt", "@vite-hub/docs/nuxt", "~~/modules/wrangler-output"],
   // Every prerendered page has a payload, so prefetching each link the reader can see loaded megabytes of them: the

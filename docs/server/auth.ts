@@ -1,6 +1,3 @@
-// Load the generated environment augmentation for checks outside Nuxt's TypeScript project too.
-import type {} from "../.vitehub/types.d.ts";
-import type {} from "../.vitehub/types/auth.d.ts";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthMiddleware } from "better-auth/api";
 import { defineAuth } from "vite-hub/auth";

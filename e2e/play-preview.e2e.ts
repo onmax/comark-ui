@@ -6,7 +6,6 @@ import { playDocument } from "../docs/preview.ts";
 
 // Match the page's stylesheet order, including the renderer's iframe defaults.
 const styles = [
-  import.meta.resolve("@vite-hub/ui-playground/styles.css"),
   import.meta.resolve("@vite-hub/ui/styles.css"),
   new URL("../docs/app/assets/play.css", import.meta.url),
 ]

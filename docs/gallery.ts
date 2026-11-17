@@ -9,7 +9,7 @@ import {
   encodePlaygroundLink,
   playgroundHashKey,
   type PlaygroundFiles,
-} from "@vite-hub/ui-playground/playground";
+} from "@vite-hub/ui/playground";
 import { playLink } from "./play-link.ts";
 import { errorText } from "../shared/text.ts";
 

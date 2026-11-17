@@ -2,11 +2,7 @@
 // with every plugin that runs in a browser, but not Shiki, which would triple the bundle, and fits the presets'
 // stills. docs/app/pages/play/index.vue loads it on mount.
 import { renderHtmlFromDocument } from "@comark/html";
-import type {
-  PlaygroundFiles,
-  PlaygroundPreset,
-  PlaygroundResult,
-} from "@vite-hub/ui-playground/playground-render";
+import type { PlaygroundFiles, PlaygroundPreset, PlaygroundResult } from "@vite-hub/ui";
 import { parseMarkdown } from "comark";
 import { defaultConfig, readConfig } from "./config.ts";
 import { readTheme } from "./play-theme.ts";

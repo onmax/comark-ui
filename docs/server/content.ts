@@ -46,6 +46,9 @@ export default defineContent({
       url: url(packagePage),
     }),
   },
+  // The repository is public, so every reader may read published pages: the docs' llms.txt, sitemap, Markdown copies,
+  // and MCP read them through Content. `authorize` decides drafts, saves, and publishing.
+  access: "public",
   authorize: ({ user }) => inTeam(user),
   // @vite-hub/docs serves the sitemap and robots.txt (nuxt.config.ts).
   seo: { site: "https://comark-ui.onmax.me", sitemap: false },
