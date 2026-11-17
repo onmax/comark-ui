@@ -15,11 +15,13 @@ import { components as reactComponents } from "../src/react.ts";
 import { components as vueComponents } from "../src/vue.ts";
 
 const markdown = "Mass $E = mc^2$, a broken $\\frac{a}$, and $a < b$.\n\n$$\n\\sum_{i=1}^n i\n$$\n";
-// Drops what differs only in serialization: comments, whitespace between tags, and the HTML renderer's inline styles.
+// Drops what differs only in serialization: comments, whitespace between tags, the HTML renderer's inline styles, and
+// the `;` that ends a `style` attribute, which React leaves out.
 const normalize = (html: string) =>
   html
     .replace(/<!--.*?-->/g, "")
     .replace(/<style[^>]*>.*?<\/style>/g, "")
+    .replace(/;"/g, '"')
     .replace(/>\s+/g, ">")
     .replace(/\s+</g, "<")
     .replace(/\s+/g, " ")

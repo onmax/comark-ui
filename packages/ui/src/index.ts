@@ -25,7 +25,7 @@ import { createIcons, type IconOptions, type Icons } from "comark-icon";
 import include, { type IncludeOptions } from "comark-include";
 import keys, { type KeysOptions } from "comark-keys";
 import type { AnchorsOptions, ExternalOptions } from "comark-links";
-import type { MathOptions } from "comark-mathml";
+import { KATEX_TAGS, MATHML_TAGS, type MathOptions } from "comark-mathml";
 import type { MediaOptions } from "comark-media";
 import type { OutlineOptions } from "comark-outline";
 import type { PeleConfig } from "comark-pele";
@@ -424,6 +424,11 @@ export function preset<C>(renderer: Renderer<C>, options: PresetOptions = {}): P
     ...MARKDOWN_TAGS,
     ...(on(options.github) && on(optionsOf(options.github)?.html) ? HTML_TAGS : []),
     ...TAGS.flatMap(([key, list]) => (enabled(key) ? list : [])),
+    // A formula's MathML, and KaTeX's boxes when the math is typeset as its HTML.
+    ...(enabled("math") ? MATHML_TAGS : []),
+    ...(enabled("math") && (optionsOf(options.math)?.output ?? "mathml") !== "mathml"
+      ? KATEX_TAGS
+      : []),
   ]);
   const calloutOptions = optionsOf(options.github)?.callouts;
   const calloutBlocks =

@@ -40,7 +40,14 @@ export function start(): () => void {
   const RESERVED = 200;
   const NARROWEST = 176;
 
+  // The list keeps the marked link 24px inside its top and 48px inside its bottom, where it fades out, and brings one
+  // outside that to a third of the way down.
+  const FOLLOW_TOP = 24;
+  const FOLLOW_BOTTOM = 48;
+
   const rail = () => document.querySelector<HTMLElement>(".cto-rail");
+  // Only the list scrolls, under the title.
+  const list = (nav: HTMLElement) => nav.querySelector<HTMLElement>(":scope > ul");
   const reserve = (on: boolean) => root.toggleAttribute("data-comark-rail", on);
   const length = (value: string) => {
     const number = parseFloat(value) || 0;
@@ -101,6 +108,8 @@ export function start(): () => void {
         : null;
       if (!spot) reserve(false);
     }
+    // Placement can change the visible height or wrap links, even if the current heading stays the same.
+    marked = null;
     nav.toggleAttribute("data-fits", !!spot);
     if (spot) {
       nav.style.left = `${spot.left}px`;
@@ -127,10 +136,42 @@ export function start(): () => void {
         ? link.setAttribute("aria-current", "location")
         : link.removeAttribute("aria-current"),
     );
+    const link = links[current];
+    if (link && link !== marked && nav.hasAttribute("data-fits")) {
+      marked = link;
+      follow(nav, link);
+    }
+  }
+
+  // Scrolls the list so the marked link stays in view, unless the reader is pointing at the list, which they may be
+  // scrolling themselves. Measured on screen, so it works inside a shadow root too.
+  function follow(nav: HTMLElement, link: HTMLElement) {
+    const scroll = list(nav);
+    if (!scroll || scroll.matches(":hover")) return;
+    // Stop an earlier follow before testing visibility at its current position.
+    scroll.scrollTo({ top: scroll.scrollTop, behavior: "instant" });
+    const box = scroll.getBoundingClientRect();
+    const item = link.getBoundingClientRect();
+    if (item.top >= box.top + FOLLOW_TOP && item.bottom <= box.bottom - FOLLOW_BOTTOM) return;
+    scroll.scrollTo({
+      top: scroll.scrollTop + item.top - box.top - box.height / 3,
+      behavior: motion.matches ? "auto" : "smooth",
+    });
+  }
+
+  // Fades the list out at the bottom while more links sit below what shows.
+  function fade(nav: HTMLElement) {
+    const scroll = list(nav);
+    scroll?.toggleAttribute(
+      "data-more",
+      scroll.scrollTop + scroll.clientHeight < scroll.scrollHeight - 1,
+    );
   }
 
   // The element whose scroll moved the text last, when the page scrolls it in a container of its own.
   let scroller: Element | null = null;
+  // The link the list last followed.
+  let marked: HTMLElement | null = null;
   let frame = 0;
   let placing = false;
   const update = (again: boolean) => {
@@ -160,6 +201,7 @@ export function start(): () => void {
     if (!nav) return;
     place(nav);
     mark(nav);
+    fade(nav);
   }
 
   addEventListener("resize", () => update(true), { signal });
@@ -167,8 +209,13 @@ export function start(): () => void {
   document.addEventListener(
     "scroll",
     (event) => {
+      const nav = rail();
+      if (nav && event.target === list(nav)) {
+        fade(nav);
+        return;
+      }
       // Only a scroll that moves the document counts, not a code block's or another widget's.
-      const parent = rail()?.parentElement;
+      const parent = nav?.parentElement;
       if (event.target === document) scroller = null;
       else if (event.target instanceof Element && parent && event.target.contains(parent))
         scroller = event.target;

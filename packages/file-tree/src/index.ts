@@ -2,6 +2,7 @@ import type { ElementNode, Node } from "comark";
 import { defineComarkPlugin } from "comark";
 import { textContent } from "comark/utils";
 import type { IconData, Icons } from "comark-icon";
+import { FILE_ICONS, fileIcon } from "../../../shared/file-icons.ts";
 import { childrenOf, isElement } from "../../../shared/nodes.ts";
 
 export type FileTreeOptions = {
@@ -48,50 +49,11 @@ const clip = (value: string) => {
   return words.length > 40 ? `${words.slice(0, 39)}…` : words;
 };
 
-// Iconify's VS Code icons, the set most readers know their files by.
 const ICONS = {
   folder: "vscode-icons:default-folder-opened",
   file: "vscode-icons:default-file",
-  ".ts": "vscode-icons:file-type-typescript-official",
-  ".mts": "vscode-icons:file-type-typescript-official",
-  ".cts": "vscode-icons:file-type-typescript-official",
-  ".tsx": "vscode-icons:file-type-reactts",
-  ".js": "vscode-icons:file-type-js-official",
-  ".mjs": "vscode-icons:file-type-js-official",
-  ".cjs": "vscode-icons:file-type-js-official",
-  ".jsx": "vscode-icons:file-type-reactjs",
-  ".json": "vscode-icons:file-type-json",
-  ".md": "vscode-icons:file-type-markdown",
-  ".mdx": "vscode-icons:file-type-mdx",
-  ".vue": "vscode-icons:file-type-vue",
-  ".svelte": "vscode-icons:file-type-svelte",
-  ".astro": "vscode-icons:file-type-astro",
-  ".css": "vscode-icons:file-type-css",
-  ".scss": "vscode-icons:file-type-scss",
-  ".html": "vscode-icons:file-type-html",
-  ".yaml": "vscode-icons:file-type-yaml",
-  ".yml": "vscode-icons:file-type-yaml",
-  ".toml": "vscode-icons:file-type-toml",
-  ".py": "vscode-icons:file-type-python",
-  ".rs": "vscode-icons:file-type-rust",
-  ".go": "vscode-icons:file-type-go",
-  ".sh": "vscode-icons:file-type-shell",
-  ".svg": "vscode-icons:file-type-svg",
-  ".png": "vscode-icons:file-type-image",
-  ".jpg": "vscode-icons:file-type-image",
-  ".jpeg": "vscode-icons:file-type-image",
-  ".gif": "vscode-icons:file-type-image",
-  ".webp": "vscode-icons:file-type-image",
-  ".txt": "vscode-icons:file-type-text",
-  ".env": "vscode-icons:file-type-dotenv",
-  ".gitignore": "vscode-icons:file-type-git",
-  "package.json": "vscode-icons:file-type-npm",
-  "tsconfig.json": "vscode-icons:file-type-tsconfig",
-  "pnpm-lock.yaml": "vscode-icons:file-type-pnpm",
-  "pnpm-workspace.yaml": "vscode-icons:file-type-pnpm",
-  dockerfile: "vscode-icons:file-type-docker",
-  license: "vscode-icons:file-type-license",
-} satisfies Record<string, string>;
+  ...FILE_ICONS,
+};
 
 const STATES = new Map<string, EntryState>([
   ["+", "added"],
@@ -162,8 +124,7 @@ function iconKey(item: ElementNode, icons: Record<string, string>) {
   // SAFETY: `readTree` writes `name` as a string, or leaves it out of a placeholder.
   const name = ((item[1].name as string | undefined) ?? "").toLowerCase();
   if (item[1].type === "folder") return icons[`${name}/`] ?? icons.folder;
-  const dot = name.lastIndexOf(".");
-  return icons[name] ?? (dot >= 0 ? icons[name.slice(dot)] : undefined) ?? icons.file;
+  return fileIcon(name, icons) ?? icons.file;
 }
 
 function* items(nodes: Node[]): Generator<ElementNode> {

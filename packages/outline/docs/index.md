@@ -122,7 +122,9 @@ import comarkUi from "comark-ui/html";
 const render = createHtmlRenderer(comarkUi({ outline: { rail: true } }));
 ```
 
-The plugin adds the outline at the end of the document, as a `nav` that looks like the list. A small script places it 4rem right of the element you render into, or 2.5rem when room is short, at up to 15rem wide and 3.5rem below the top of the window. Under a fixed header, set `top` on `.cto-rail`. The script places it again when the window or that element resizes.
+The plugin adds the outline at the end of the document, as a `nav` that looks like the list. A small script places it 4rem right of the element you render into, or 2.5rem when room is short, at up to 15rem wide, from 3.5rem below the top of the window. Under a fixed header, set `--comark-rail-top`. The script places it again when the window or that element resizes.
+
+A long outline runs to the bottom of the window, and its links scroll under the title. The list fades out at the bottom while more links sit below, and it scrolls the section being read a third of the way down when it would leave the list's view, unless the reader is pointing at the list. A short outline ends after its last link.
 
 The outline shows only where it fits, so phones and narrow windows don't get it, and it never prints. A click scrolls to the heading, smoothly unless the reader asks for reduced motion.
 
@@ -142,6 +144,7 @@ The page tells the outline what it covers, and the outline tells the page when i
 
 | Variable | Set by | Description |
 | --- | --- | --- |
+| `--comark-rail-top` | The page, on `:root` | Where the outline starts below the top of the window, `3.5rem` by default, such as a fixed header's height plus a gap. A long outline runs from there to the bottom of the window. |
 | `--comark-inset-end` | The page, on `:root` | The width the page covers at the right edge, such as a side panel, in `px` or `rem`. The outline keeps clear of it, or hides, and moves when it changes. |
 | `data-comark-rail` | The outline, on `<html>` | Set while the outline keeps a column beside [wide blocks](/guide/typeset#wide-blocks). Shrink `--comark-wide-end` by `--comark-rail-width` while it's there. |
 | `--comark-rail-width` | The outline, on `<html>` | The column it keeps with its gap, `264px`, while `data-comark-rail` is set. |
@@ -259,4 +262,6 @@ The list reads these [shared tokens](/guide/theming):
 | `.cto-title` | Its title |
 | `.cto-rail` | The side outline's `nav`, beside `.cto`. Skip it in tools that read the page's text. |
 | `.cto-rail[data-fits]` | The side outline once the script finds it room |
+| `.cto-rail > ul` | The side outline's list, which scrolls under the title |
+| `.cto-rail > ul[data-more]` | The list while more links sit below what shows, when it fades out at the bottom |
 | `.cto-rail a[aria-current]` | The link to the section being read |

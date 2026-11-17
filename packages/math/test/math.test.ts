@@ -184,6 +184,45 @@ describe("comark-mathml", () => {
     expect(meta.issues).toHaveLength(2);
   });
 
+  it("ignores the content a document writes in a formula itself", async () => {
+    const markdown =
+      '<div>\n<formula tex="x"><img src="x" onerror="alert(1)"></formula>\n</div>\n\nand $y$';
+    const html = await render(markdown);
+    expect(html).not.toContain("<img");
+    expect(html).toContain('<span class="cmh cmh-source">x</span>');
+    const { meta } = await parse(markdown);
+    expect(Object.values(meta.issueRules ?? {})).toEqual(["comark/math/authored-html"]);
+  });
+
+  it("keeps its MathML through Comark's security plugin when its elements are allowed", async () => {
+    const { default: security } = await import("comark/plugins/security");
+    const tags = "annotation math mfrac mi mn mo mrow msup semantics".split(" ");
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const html = await createHtmlRenderer({
+      plugins: [math(), security({ allowedTags: ["p", "formula", ...tags] })],
+      components,
+    })("Mass $E = mc^2$\n\n$$\n\\frac{a}{b}\n$$\n");
+    expect(warn).not.toHaveBeenCalled();
+    expect(html).toContain("<mi>E</mi><mo>=</mo>");
+    expect(html).toContain("<mfrac><mi>a</mi><mi>b</mi></mfrac>");
+    expect(html).not.toContain('class="cmh cmh-source"');
+  });
+
+  it("keeps text that looks like an entity literal, in every output", async () => {
+    for (const output of ["mathml", "html", "htmlAndMathml"] as const) {
+      const html = await render("$\\verb|&lt;|$", { output });
+      expect(html).toContain("&amp;lt;");
+      expect(html).not.toMatch(/>&lt;</);
+    }
+  });
+
+  it("reads a reference inside a formula and keeps the rest of it whole", async () => {
+    const html = await render("$x+\\ref{eq1}+y$");
+    expect(html).not.toContain("href=&#39;");
+    expect(html).toMatch(/<a href="#eq1" class="tml-ref">/);
+    expect(html).toMatch(/<mi>y<\/mi><\/mrow>/);
+  });
+
   it("takes the place of Comark's math plugin", async () => {
     const { default: core } = await import("comark/plugins/math");
     expect(math().name).toBe(core().name);

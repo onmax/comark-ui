@@ -156,7 +156,7 @@ Press **Ctrl+K** to search.
 ```
 ::
 
-In a code group, write a code block's icon after its label, as `icon=logos:pnpm`.
+In a code group, write a code block's icon after its label, as `icon=logos:pnpm`. With an `iconResolver`, as comark-ui passes, a tab named after a file, such as `[app.tsx]` or `[package.json]`, takes that file's icon from [VS Code's icon set](https://icones.js.org/collection/vscode-icons) without one, the same icon [comark-file-tree](/file-tree) draws for it. When that icon doesn't load, the tab has none and the document gets no issue.
 
 ### Code group
 
@@ -247,7 +247,7 @@ When a manager has no form for a command, such as `npm install -g` in yarn, coma
 
 ### Icons for every block
 
-Use the `icons` option to set icons by label once, for every tab without its own. They come from the Iconify API unless you pass the page's `:icon` resolver as `iconResolver`:
+Use the `icons` option to set icons by label once, for every tab without its own. In a code group, a key that starts with a dot, such as `".vue"`, sets the icon of every file with that extension. They come from the Iconify API unless you pass the page's `:icon` resolver as `iconResolver`:
 
 ```ts
 import { icons as logos } from "@iconify-json/logos";
@@ -320,8 +320,8 @@ Pass options under `tabs` in `comarkUi()`, or to `tabs()` when you use it alone.
 | Option | Default | Description |
 | --- | --- | --- |
 | `managers` | `["npm", "pnpm", "yarn", "bun"]` | The tabs a `pm` code block becomes, in order. Add `"deno"` for Deno. See [Choose the package managers](#choose-the-package-managers). |
-| `icons` | `{}` | Icons for tabs that don't set one, by label, such as `{ pnpm: "logos:pnpm" }`. Labels match case-insensitively. Each value is an Iconify name or an image URL, like the `icon` prop. See [Icons for every block](#icons-for-every-block). |
-| `iconResolver` | The Iconify API | Resolves the icons, from `createIcons()` in comark-icon. Pass the one the page's other plugins use, so they share its `collections` and `fetch`. comark-ui passes the one its `icon` uses. |
+| `icons` | `{}` | Icons for tabs that don't set one, by label, such as `{ pnpm: "logos:pnpm" }`. Labels match case-insensitively. With an `iconResolver`, a code group's tab named after a file also matches by extension, such as `{ ".vue": "logos:vue" }`. Each value is an Iconify name or an image URL, like the `icon` prop. See [Icons for every block](#icons-for-every-block). |
+| `iconResolver` | The Iconify API | Resolves the icons, from `createIcons()` in comark-icon. Pass the one the page's other plugins use, so they share its `collections` and `fetch`. comark-ui passes the one its `icon` uses. Without it, a code group's tabs named after files get no icon. |
 
 ### Issues
 

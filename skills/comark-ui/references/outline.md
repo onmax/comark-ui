@@ -35,8 +35,9 @@ The redesign moves the filters into one row and adds an empty state.
 The `rail` option adds an "On this page" outline beside the text of every document with two headings or more to list, and marks the section being read. It isn't Markdown: a document can't turn it on, and `::toc` still works beside it. Write short h2 and h3 headings, since they become its links.
 
 - Options: `rail: true`, or `{ title, depth }` (default "On this page" and 3).
-- The page sets `--comark-inset-end` on `:root` for a panel that covers its right edge. While the outline keeps a column beside wide blocks, it sets `data-comark-rail` and `--comark-rail-width` on `<html>`, and the page shrinks `--comark-wide-end` by it, so wide blocks move toward the room before the text.
+- The page sets `--comark-rail-top` on `:root` for a fixed header (default `3.5rem`), and `--comark-inset-end` for a panel that covers its right edge. While the outline keeps a column beside wide blocks, it sets `data-comark-rail` and `--comark-rail-width` on `<html>`, and the page shrinks `--comark-wide-end` by it, so wide blocks move toward the room before the text.
 - It hides where it doesn't fit, and hides rather than narrow a wide diagram.
+- A long outline runs to the bottom of the window, scrolls its links under the title, and keeps the section being read in view.
 
 ## Register
 
