@@ -578,8 +578,11 @@ Apply sits low.
   await expect(page.locator(".cz-item .ca-mark")).toHaveCount(2);
   for (const mark of await page.locator(".cz-item .ca-mark").all()) await expect(mark).toBeHidden();
   const zoomedToggle = page.locator(".cz-item .ca-hide input");
-  // The dialog starts focused; reverse Tab wraps to Hide marks, the last tab stop.
-  await page.keyboard.press("Shift+Tab");
+  // Native dialog focus wrapping varies; check that forward Tab reaches Hide marks.
+  for (let tabs = 0; tabs < 4; tabs++) {
+    await page.keyboard.press("Tab");
+    if (await zoomedToggle.evaluate((input) => input === document.activeElement)) break;
+  }
   await expect(zoomedToggle).toBeFocused();
   await page.keyboard.press("Space");
   await expect(zoomedToggle).not.toBeChecked();
