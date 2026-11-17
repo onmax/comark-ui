@@ -60,6 +60,7 @@
   "devDependencies": {
     "@comark/html": "catalog:",
     "@comark/react": "catalog:",
+    "@comark/svelte": "catalog:",
     "@comark/vue": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

@@ -1,19 +1,15 @@
-import { createElement, useEffect } from "react";
+import { Children, createElement, type ReactNode, useEffect } from "react";
 import { addStyles, classOf } from "./client.ts";
 import type { FormulaAttributes } from "./index.ts";
 
-export { default } from "./index.ts";
+export { default, KATEX_TAGS, MATHML_TAGS } from "./index.ts";
 export type { FormulaAttributes, MathMeta, MathOptions, MathOutput } from "./index.ts";
 
-/** Math for `@comark/react`. */
-export function Formula({ tex, display, html }: FormulaAttributes) {
+/** Math for `@comark/react`. The typeset MathML arrives as its children. */
+export function Formula({ tex, display, children }: FormulaAttributes & { children?: ReactNode }) {
   useEffect(addStyles, []);
-  return html
-    ? // The plugin typeset `html` itself, with links and other trusted commands off.
-      createElement("span", {
-        className: classOf(display, true),
-        dangerouslySetInnerHTML: { __html: html },
-      })
+  return Children.count(children)
+    ? createElement("span", { className: classOf(display, true) }, children)
     : createElement("span", { className: classOf(display, false) }, tex ?? "");
 }
 
