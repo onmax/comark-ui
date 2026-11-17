@@ -1,5 +1,9 @@
 import { css } from "./styles.ts";
 import { addStyles as add } from "../../../shared/styles.ts";
+import { describeTime } from "./describe.ts";
+
+export { describeTime } from "./describe.ts";
+export type { DescribeTimeOptions, TimeDescription } from "./describe.ts";
 
 declare global {
   interface Window {
@@ -74,6 +78,58 @@ export function start(css: string): () => void {
   };
   window.__comarkTime = state;
   return state.stop;
+}
+
+/**
+ * Writes every `time[datetime]` under `root` again from its `datetime`, in the reader's zone and against the reader's
+ * clock: now, whenever the page becomes visible again, and once a minute while it is visible. A time in comark-time's
+ * markup gets its label, its tooltip, and its `data-mode`; any other gets its text. A time's `lang` sets the words'
+ * language, English without one. A `datetime` it can't read is left alone. Returns a function that stops it, and it
+ * stops itself once `root` leaves the page.
+ *
+ * It is self-contained: an HTML renderer inlines its source as a script and passes `describeTime`'s source as
+ * `describe`, so it must not use anything from outside its body.
+ */
+export function relativize(
+  root: ParentNode & Node,
+  describe: typeof describeTime = describeTime,
+): () => void {
+  const refresh = () => {
+    for (const time of root.querySelectorAll<HTMLTimeElement>("time[datetime]")) {
+      const found = describe(time.dateTime, { locale: time.getAttribute("lang") || undefined });
+      if (!found) continue;
+      const pill = time.querySelector(".ctm-pill");
+      // Only what changed is written, so an observer of the box sees nothing on a minute when no word moved.
+      if (!pill) {
+        if (time.textContent !== found.label) time.textContent = found.label;
+        continue;
+      }
+      const label = time.firstChild;
+      if (label instanceof Text) {
+        if (label.data !== found.label) label.data = found.label;
+      } else time.prepend(found.label);
+      if (pill.textContent !== found.tip) pill.textContent = found.tip;
+      if (time.dataset.mode !== found.mode) time.dataset.mode = found.mode;
+    }
+  };
+  let timer: ReturnType<typeof setInterval> | undefined;
+  const stop = () => {
+    clearInterval(timer);
+    document.removeEventListener("visibilitychange", wake);
+  };
+  const tick = () => (root.isConnected ? refresh() : stop());
+  // A hidden tab keeps no timer; it catches up the moment it shows.
+  const wake = () => {
+    clearInterval(timer);
+    timer = undefined;
+    if (document.visibilityState === "hidden") return;
+    tick();
+    timer = setInterval(tick, 6e4);
+  };
+  refresh();
+  document.addEventListener("visibilitychange", wake);
+  if (document.visibilityState !== "hidden") timer = setInterval(tick, 6e4);
+  return stop;
 }
 
 export { css };

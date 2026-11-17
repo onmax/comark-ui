@@ -1,5 +1,5 @@
-import { defineComponent, h, onMounted, onUpdated, shallowRef } from "vue";
-import { addStyles, localizeDates } from "./client.ts";
+import { defineComponent, h, onBeforeUnmount, onMounted, onUpdated, shallowRef } from "vue";
+import { relativize, start } from "./client.ts";
 
 export { default } from "./index.ts";
 export type { PropertiesMeta, PropertiesOptions } from "./index.ts";
@@ -10,12 +10,13 @@ export const Properties = defineComponent({
   inheritAttrs: false,
   setup(_, { slots }) {
     const box = shallowRef<HTMLElement>();
-    const localize = () => box.value && localizeDates(box.value);
+    let stop: (() => void) | undefined;
     onMounted(() => {
-      addStyles();
-      localize();
+      if (box.value) stop = start(box.value);
     });
-    onUpdated(localize);
+    // A render can write a date's server text again; the clock that `start` set keeps it current after this.
+    onUpdated(() => box.value && relativize(box.value)());
+    onBeforeUnmount(() => stop?.());
     return () => {
       const rows = slots.default?.();
       return rows?.length

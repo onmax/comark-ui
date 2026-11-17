@@ -15,7 +15,7 @@ credits: 'After GitHub''s <a href="https://github.com/github/relative-time-eleme
 ::examples
 :::example{label="Relative"}
 ```md
-Opened :time[2026-11-02], last touched :time[2026-11-04T11:59:56Z], due :time[2026-11-25].
+Opened :time[2026-11-02], last touched :time[2026-11-04T11:59:56Z], due :time[2026-11-18].
 ```
 :::
 
@@ -40,11 +40,12 @@ Two thresholds for one date: :time[2026-09-30] and :time[2026-09-30]{threshold="
 
 ## Features
 
-- `:time` turns a date into the words a reader would say: "today", "yesterday", "2 days ago", "in 3 weeks".
-- Past a threshold, 4 weeks by default, it shows the date instead: "Sep 30", or "Sep 30, 2025" in another year.
+- `:time` turns a date into the words a reader would say: "today", "yesterday", "2 days ago", "in 2 weeks".
+- From a threshold on, 3 weeks by default, it shows the date instead: "Sep 30", or "Sep 30, 2025" in another year.
 - Hover or focus opens a tooltip with the full date and time, or with how far away the date is once it shows as a date. It opens above the text, or below where the page has no room, and grows from the edge that touches the text.
 - The plugin works out the words, the date, and the tooltip while parsing, and the tooltip is CSS. One small script lets <kbd>Escape</kbd> close it.
 - Everything is measured from one `now` per document, so rendering twice gives the same words.
+- `describeTime()` gives the same words in your own code, and `relativize()` keeps them current in a page that was rendered earlier.
 
 ## Usage
 
@@ -68,11 +69,11 @@ Fractional seconds use one to three digits, such as `2026-11-04T09:30:00.250Z`; 
 ```
 ::
 
-The words come from `Intl.RelativeTimeFormat`, so they follow the `locale` option, and a date up to a minute away counts in seconds, up to an hour in minutes, up to a day in hours, up to a week in days, and then in weeks, months, and years. A number is cut toward now, so 2.9 days reads "2 days ago".
+The words come from `Intl.RelativeTimeFormat`, in English unless the `locale` option names another language, and a date up to a minute away counts in seconds, up to an hour in minutes, up to a day in hours, up to a week in days, and then in weeks, months, and years. A number is cut toward now, so 2.9 days reads "2 days ago".
 
 ### Threshold
 
-Use the `threshold` prop to set how far from now a date stops reading as relative. Write a number and a unit: `s`, `m`, `h`, `d`, `w`, `mo`, or `y`. The default is `4w`.
+Use the `threshold` prop to set how far from now a date stops reading as relative. Write a number and a unit: `s`, `m`, `h`, `d`, `w`, `mo`, or `y`. The default is `3w`, so a date reads relative while it's within 3 weeks: 20 days back is "2 weeks ago", and 21 days back is the date.
 
 ::example
 ```md
@@ -101,7 +102,7 @@ With a time of day, the tooltip shows it with its zone: "Mon, Nov 2, 2026, 9:30 
 
 ### Pin the clock
 
-Pass `now` so the words don't depend on when the document is parsed. A host that caches rendered HTML should do this, or pass the moment the document was written.
+Pass `now` so the words don't depend on when the document is parsed.
 
 ```ts
 import time from "comark-time";
@@ -110,7 +111,30 @@ const plugin = time({ now: "2026-11-04T12:00:00Z" });
 ```
 
 > [!WARNING]
-> Rendered HTML keeps the words it was parsed with. "2 days ago" stays that until you parse again, so re-render cached pages, or render in the reader's browser with Vue, React, or Svelte.
+> Rendered HTML keeps the words it was parsed with. "2 days ago" stays that until you parse again. A host that caches pages runs `relativize()` on them, or renders in the reader's browser with Vue, React, or Svelte.
+
+### Keep cached pages current
+
+Use `relativize(root)` from `comark-time/client` to write every `time[datetime]` under `root` again from its `datetime`, against the reader's clock and in the reader's time zone. It writes them right away, again whenever the tab is shown, and once a minute while the tab is visible. It stops when `root` leaves the page or you call the function it returns.
+
+```ts
+import { relativize } from "comark-time/client";
+
+const stop = relativize(document.querySelector("article")!);
+```
+
+A time in comark-time's markup gets its label, its tooltip, and its `data-mode`; any other `time` gets its text. The words are English unless the time has a `lang`. [Properties](/properties) runs it on its date rows.
+
+### Describe a date in code
+
+Use `describeTime(at, options)` to get the words a `:time` would show, for a date you render yourself.
+
+```ts
+import { describeTime } from "comark-time";
+
+describeTime("2026-11-02", { now: "2026-11-04T12:00:00Z" });
+// { datetime: "2026-11-02", mode: "relative", label: "2 days ago", tip: "Mon, Nov 2, 2026" }
+```
 
 ### A reader's zone and language
 
@@ -148,7 +172,7 @@ Reduced motion shows the pill without a transition.
 
 | Prop | Default | Description |
 | --- | --- | --- |
-| `threshold` | `4w` | How far from now the text stops being relative, as a number and a unit (`s`, `m`, `h`, `d`, `w`, `mo`, `y`), or `none`. |
+| `threshold` | `3w` | How far from now the text stops being relative, as a number and a unit (`s`, `m`, `h`, `d`, `w`, `mo`, `y`), or `none`. |
 
 The date is the content in brackets. It isn't a prop.
 
@@ -157,11 +181,18 @@ The date is the content in brackets. It isn't a prop.
 | Option | Default | Description |
 | --- | --- | --- |
 | `now` | The moment of parsing | The date, ISO string, or milliseconds every `:time` is measured from. |
-| `threshold` | `4w` | The default for the `threshold` prop. |
-| `locale` | The runtime's | A BCP 47 tag, such as `es`, for the words and the date format. |
+| `threshold` | `3w` | The default for the `threshold` prop. |
+| `locale` | `en-US` | A BCP 47 tag, such as `es`, for the words and the date format. |
 | `timeZone` | The runtime's | An IANA zone, such as `Europe/Madrid`, for which day is today and for the time shown. |
 
 A `now`, `threshold`, `locale`, or `timeZone` the runtime can't read throws when the plugin is created, not while a document renders. A configured `now` is captured then, so changing a passed `Date` later doesn't change the clock.
+
+### Functions
+
+| Function | Returns | Description |
+| --- | --- | --- |
+| `describeTime(at, options?)` | `{ datetime, mode, label, tip }` or `undefined` | A date, an ISO string, or milliseconds as a `:time` would show it. Takes `now`, `threshold`, `locale`, and `timeZone` as the plugin does, plus `style` (`long`, `short`, or `narrow`) for the words. `undefined` for a value it can't read. From `comark-time` and every renderer entry. |
+| `relativize(root)` | `() => void` | From `comark-time/client`. Writes every `time[datetime]` under `root` again against the reader's clock, now, when the tab is shown, and each minute while it's visible. Returns a function that stops it. |
 
 ### Issues
 

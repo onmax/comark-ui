@@ -2,8 +2,14 @@ import { createElement, useEffect } from "react";
 import { css, start } from "./client.ts";
 import type { TimeAttributes } from "./index.ts";
 
-export { default, TIME_TAG } from "./index.ts";
-export type { TimeAttributes, TimeMeta, TimeOptions } from "./index.ts";
+export { default, describeTime, TIME_TAG } from "./index.ts";
+export type {
+  DescribeTimeOptions,
+  TimeAttributes,
+  TimeDescription,
+  TimeMeta,
+  TimeOptions,
+} from "./index.ts";
 
 /** `:time` for `@comark/react`. */
 export function RelativeTime({ id, datetime, mode, label, tip }: TimeAttributes) {

@@ -1882,6 +1882,10 @@ importers:
         version: 3.5.44(typescript@6.0.3)
 
   packages/properties:
+    dependencies:
+      comark-time:
+        specifier: workspace:*
+        version: link:../time
     devDependencies:
       '@comark/html':
         specifier: ^0.9.0

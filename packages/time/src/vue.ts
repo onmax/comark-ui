@@ -1,8 +1,14 @@
 import { defineComponent, h, onBeforeUnmount, onMounted } from "vue";
 import { css, start } from "./client.ts";
 
-export { default, TIME_TAG } from "./index.ts";
-export type { TimeAttributes, TimeMeta, TimeOptions } from "./index.ts";
+export { default, describeTime, TIME_TAG } from "./index.ts";
+export type {
+  DescribeTimeOptions,
+  TimeAttributes,
+  TimeDescription,
+  TimeMeta,
+  TimeOptions,
+} from "./index.ts";
 
 /** `:time` for `@comark/vue`. */
 export const RelativeTime = defineComponent({

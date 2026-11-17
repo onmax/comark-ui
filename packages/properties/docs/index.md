@@ -45,6 +45,7 @@ The loft moves to the roof in spring.
 
 - The box shows only the frontmatter keys you choose, so a layout or a slug stays out of the page.
 - A pull request or issue link reads as `owner/repo#123`, any other link as its address, and a list as badges.
+- A date reads as relative time, "2 days ago", with the full date in a tooltip, worked out in the reader's browser, so a cached page stays right.
 - The box goes first in the document, or wherever `::properties` sits.
 - The box skips a missing or empty key, and a document with none of the keys gets no box.
 
@@ -93,7 +94,7 @@ Each value shows by its kind:
 | Value | Shows as |
 | --- | --- |
 | `status` | A pill with a dot |
-| A date such as `2026-10-23` | `Oct 23, 2026` in the reader's locale, such as `23 oct 2026` in Spanish, in a `time` element that keeps the date as written |
+| A date such as `2026-10-23`, or an instant such as `2026-10-23T09:30:00Z` | Relative time, as [Time](/time) draws it: "2 days ago" within 3 weeks, then "Oct 23", with the full date in a tooltip |
 | Text, a number, `true` or `false` | Itself |
 | A GitHub or GitLab pull request, merge request, or issue link | `owner/repo#123`, linked |
 | Any other `http(s)` link | Its host and path, linked |
@@ -114,6 +115,23 @@ The palette page now shows every token.
 
 > [!NOTE]
 > An object, or a list of lists, isn't shown.
+
+### Dates
+
+A date row works out its words in the reader's browser, against the reader's clock and time zone, so a page you render once and cache never reads "2 days ago" a week later. The server writes the date with its year, "Oct 23, 2026", which reads right before the script runs and without it. The script right after the box, or the component once it mounts, turns it into "2 days ago", or "Oct 23" from 3 weeks on, and the tooltip into the full date and time. It updates each minute while the page is open and when a reader comes back to the tab.
+
+::example
+```md
+---
+date: 2026-11-02
+shipped: 2026-09-04T09:30:00Z
+---
+
+The pigeon census closed.
+```
+::
+
+A time with no offset, such as `2026-10-23 09:30`, is read as UTC. The words are English; the `locale` option sets another language.
 
 ## Examples
 
@@ -164,7 +182,7 @@ Pass options under `properties` in `comarkUi()`, or to `properties()` alone.
 | `keys` | `["status", "pr", "author", "date", "tags"]` | The frontmatter keys to show, in this order. The box skips missing keys. |
 | `labels` | `{}` | A label per key, such as `{ pr: "Pull request" }`. Without one, a key shows capitalized, with dashes and underscores as spaces, and `pr` and `url` show as "PR" and "URL". |
 | `top` | `true` | Puts the box at the top of a document that has no `::properties`. `false` shows the box only where `::properties` sits. |
-| `locale` | none | The locale dates show in, such as `"de-DE"`, for every reader. Without it, dates render in English and a small script, or the component once mounted, rewrites them in the reader's locale. |
+| `locale` | `en-US` | The language of the dates' words and format, such as `"de-DE"`, for every reader. |
 
 ### Issues
 
@@ -174,7 +192,7 @@ The plugin adds these problems to `meta.issues`, as [Validation](/guide/validati
 - A `::properties` with nothing to show.
 - Content inside `::properties`. The block drops it.
 - A prop on `::properties`. It's ignored.
-- An invalid `locale` option. It's ignored, so dates use the reader's locale.
+- An invalid `locale` option. It's ignored, so dates are in English.
 
 Each names the key or block and the fix, and has its own rule in [Doctor](/doctor).
 
@@ -195,7 +213,9 @@ import properties, { components } from "comark-properties/html";
 const render = createHtmlRenderer({ plugins: [properties()], components });
 ```
 
-For Vue, React, or Svelte, import from `comark-properties/vue`, `comark-properties/react`, or `comark-properties/svelte`. The components add the styles on mount. Import `comark-properties/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers) covers using it with other plugins.
+It brings comark-time, which draws the date rows. The HTML renderer inlines comark-time's styles and two scripts once per document, and exports them as `scripts` for a page with a strict Content-Security-Policy.
+
+For Vue, React, or Svelte, import from `comark-properties/vue`, `comark-properties/react`, or `comark-properties/svelte`. The components add the styles on mount. Import `comark-properties/style.css` and `comark-time/style.css` with your styles so a server-rendered page doesn't shift. [Renderers](/guide/renderers) covers using it with other plugins.
 
 ## Theme
 

@@ -33,7 +33,7 @@ const defaults: Required<PlayConfig> = {
     external: { target: false, rel: [], hosts: [] },
     anchors: { levels: [2, 3, 4] },
   },
-  "comark-time": { threshold: "4w" },
+  "comark-time": { threshold: "3w" },
   "comark-zoom": { images: true },
 };
 const names = Object.keys(defaults);
