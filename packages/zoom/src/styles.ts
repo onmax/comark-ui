@@ -12,7 +12,11 @@ export const css = `@layer comark{${[
   // A `::zoom` block holds no margin of its own for its content's to collapse into, so blocks in a row would touch.
   ".cz{margin:1.5rem 0}",
   "[data-zoom]:focus-visible{outline:2px solid var(--_comark-ring);outline-offset:3px}",
-  ".cz-dialog{position:fixed;inset:0;z-index:2147483000;display:grid;grid-template-rows:auto minmax(0,1fr) auto;color:var(--_comark-foreground);font:13px/1.4 var(--_comark-font);outline:none}",
+  // The dialog fills the window in place of the browser's centered box. Its styles keep it shown after a close, so the
+  // closing animation runs to its end whatever closed it.
+  ".cz-dialog{position:fixed;inset:0;z-index:2147483000;display:grid;grid-template-rows:auto minmax(0,1fr) auto;width:auto;height:auto;max-width:none;max-height:none;margin:0;padding:0;overflow:visible;border:0;background:none;color:var(--_comark-foreground);font:13px/1.4 var(--_comark-font);outline:none}",
+  // .cz-backdrop is the backdrop, so it fades with the rest of the view.
+  ".cz-dialog::backdrop{background:none}",
   ".cz-backdrop{position:absolute;inset:0;background:var(--cz-backdrop,color-mix(in srgb,var(--_comark-background) var(--cz-backdrop-opacity,96%),transparent))}",
   ".cz-header{position:relative;display:flex;gap:.75rem;align-items:center;min-height:2.75rem;padding:0 .5rem 0 1rem}",
   ".cz-title{overflow:hidden;font-weight:500;white-space:nowrap;text-overflow:ellipsis}",

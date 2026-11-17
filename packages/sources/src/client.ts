@@ -83,8 +83,10 @@ export function start(css: string): () => void {
         `<span class="cso-card-host"></span>${svg("cso-card-arrow", '<path d="M7 7h10v10"/><path d="M7 17 17 7"/>')}</span>` +
         '<span class="cso-card-title"></span></a>';
     }
-    // An app that replaces the page's body takes the card with it.
-    if (!card.isConnected) document.body.append(card);
+    // Popovers still inherit modal inertness. Keep the shared card with its citation,
+    // and move it back to the page when a later citation is outside a dialog.
+    const parent = link.closest("dialog:modal") ?? document.body;
+    if (card.parentElement !== parent) parent.append(card);
     const anchor = card.querySelector<HTMLAnchorElement>(".cso-card-link");
     const image = card.querySelector<HTMLImageElement>(".cso-card-image");
     const host = card.querySelector(".cso-card-host");
@@ -144,6 +146,7 @@ export function start(css: string): () => void {
   function show(link: HTMLAnchorElement, instant: boolean) {
     clearTimeout(opening);
     clearTimeout(closing);
+    if (!link.isConnected) return;
     const filled = fill(link);
     if (!filled) return hide(true);
     if (current && current !== link) {
