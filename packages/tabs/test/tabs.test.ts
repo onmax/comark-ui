@@ -548,6 +548,20 @@ ${pm.replace('sync="pm"', flag)}`;
       ).not.toContain('class="ci"');
     });
 
+    it("keeps inherited object keys as plain code-group labels", async () => {
+      for (const options of [{}, { iconResolver: createIcons({ fetch: false }) }]) {
+        for (const label of ["constructor", "__proto__", "toString", "hasOwnProperty"]) {
+          const group = "::code-group\n```ts [" + label + "]\nconst value = 1\n```\n::";
+          const parsed = await parse(group, options);
+          expect(parsed.meta.issues).toEqual([]);
+          expect(JSON.stringify(parsed.nodes)).toContain(label);
+          const out = await html(group, options);
+          expect(out).toContain(`>${label}</button>`);
+          expect(out).not.toContain('class="ci"');
+        }
+      }
+    });
+
     it("leaves a file's tab without an icon, and says nothing, when its icon doesn't load", async () => {
       const offline = createIcons({ fetch: false });
       const group = "::code-group\n```ts [config.ts]\na\n```\n::";

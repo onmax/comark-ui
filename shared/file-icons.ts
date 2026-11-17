@@ -46,5 +46,9 @@ export const FILE_ICONS: Record<string, string> = {
 export function fileIcon(name: string, icons: Record<string, string>): string | undefined {
   const lower = name.toLowerCase();
   const dot = lower.lastIndexOf(".");
-  return icons[lower] ?? (dot >= 0 ? icons[lower.slice(dot)] : undefined);
+  const extension = dot >= 0 ? lower.slice(dot) : "";
+  return (
+    (Object.hasOwn(icons, lower) ? icons[lower] : undefined) ??
+    (dot >= 0 && Object.hasOwn(icons, extension) ? icons[extension] : undefined)
+  );
 }
