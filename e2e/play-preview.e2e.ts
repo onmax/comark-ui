@@ -109,3 +109,10 @@ test("system changes preserve custom theme colors", async ({ page }) => {
   await setSystem(page, "dark");
   await expect(text).toHaveCSS("background-color", "rgb(46, 16, 101)");
 });
+
+test("the preview pads its content only enough for marks drawn past a block's edge", async ({
+  page,
+}) => {
+  await open(page, "light");
+  await expect(preview(page).locator("body")).toHaveCSS("padding", "16px");
+});
