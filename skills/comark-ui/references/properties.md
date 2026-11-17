@@ -23,7 +23,7 @@ The palette page now shows every token of the theme.
 
 - The box shows the host's `keys`, by default `status`, `pr`, `author`, `date`, and `tags`, in that order. A key that's missing or empty is skipped, and the rest of the frontmatter, such as a layout or a slug, stays off the page.
 - The box goes first in the document. To put it somewhere else, such as under the title, write `::properties` there and close it with `::` on the next line. It takes no props and no content; choosing keys is the host's job.
-- Text, a number, `true`, and `false` show as written, and so does a date such as `2026-10-23`. A GitHub or GitLab pull request, merge request, or issue link shows as `owner/repo#123`, any other http(s) link as its host and path, and a list as one badge per item. An object or a list of lists doesn't show, and is reported.
+- Text, a number, `true`, and `false` show as written. A date such as `2026-10-23`, or an instant such as `2026-10-23T09:30:00Z`, reads as relative time in the reader's browser, "2 days ago" within 3 weeks and "Oct 23" after, with the full date on hover. Write the exact date; the box does the words. A GitHub or GitLab pull request, merge request, or issue link shows as `owner/repo#123`, any other http(s) link as its host and path, and a list as one badge per item. An object or a list of lists doesn't show, and is reported.
 - Each label is its key capitalized, with dashes and underscores as spaces, `pr` as PR, and `url` as URL, unless the host names it.
 
 ## Register

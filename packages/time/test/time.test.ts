@@ -3,7 +3,7 @@ import { createRequire } from "node:module";
 import { createHtmlRenderer } from "@comark/html";
 import { defineComarkPlugin, parseMarkdown } from "comark";
 import { describe, expect, it } from "vite-plus/test";
-import time, { components, type TimeOptions } from "../src/html.ts";
+import time, { components, describeTime, type TimeOptions } from "../src/html.ts";
 
 // 4 November 2026, noon. A fixed clock and zone make every word below the same on any machine.
 const settings: TimeOptions = { now: "2026-11-04T12:00:00Z", timeZone: "UTC", locale: "en" };
@@ -37,7 +37,7 @@ describe("comark-time", () => {
     expect(await label("2026-11-02")).toBe("2 days ago");
     expect(await label("2026-11-07")).toBe("in 3 days");
     expect(await label("2026-10-28")).toBe("last week");
-    expect(await label("2026-11-25")).toBe("in 3 weeks");
+    expect(await label("2026-11-24")).toBe("in 2 weeks");
   });
 
   it("counts a time of day down to the second, rounding toward now", async () => {
@@ -50,9 +50,10 @@ describe("comark-time", () => {
     expect(await label("2026-11-01T11:00:00Z")).toBe("3 days ago");
   });
 
-  it("shows a date from the threshold on, with the year only when it isn't this one", async () => {
-    expect(await label("2026-10-08")).toBe("3 weeks ago");
-    expect(await label("2026-10-07")).toBe("Oct 7");
+  it("shows a date from 3 weeks on, with the year only when it isn't this one", async () => {
+    expect(await label("2026-10-15")).toBe("2 weeks ago");
+    expect(await label("2026-10-14")).toBe("Oct 14");
+    expect(await label("2026-10-13")).toBe("Oct 13");
     expect(await label("2026-12-25")).toBe("Dec 25");
     expect(await label("2025-09-30")).toBe("Sep 30, 2025");
     expect(await label("2026-12-03T09:00:00Z")).toBe("Dec 3");
@@ -128,7 +129,9 @@ describe("comark-time", () => {
   it("is a time with a tooltip a keyboard reaches, and inlines the styles once", async () => {
     const html = await render("Opened :time[2026-11-02], merged :time[2026-11-04].");
     const first = html.match(/<time [^>]*>/)?.[0] ?? "";
-    expect(first).toMatch(/class="ctm" datetime="2026-11-02" data-mode="relative" tabindex="0"/);
+    expect(first).toMatch(
+      /class="ctm" datetime="2026-11-02" lang="en" data-threshold="3w" data-mode="relative" tabindex="0"/,
+    );
     expect(html).toContain('role="tooltip"');
     expect(html.match(/<style data-comark-time>/g)).toHaveLength(1);
     const ids = [...html.matchAll(/aria-describedby="([^"]+)"/g)].map((match) => match[1]);
@@ -255,11 +258,85 @@ describe("comark-time", () => {
     },
   );
 
+  it("is the same description describeTime gives", async () => {
+    const html = flat(await render(":time[2026-10-14] :time[2026-11-02T09:30:00Z]"));
+    for (const at of ["2026-10-14", "2026-11-02T09:30:00Z"]) {
+      const time = describeTime(at, settings)!;
+      expect(html).toContain(
+        `datetime="${time.datetime}" lang="en" data-threshold="3w" data-mode="${time.mode}" tabindex="0" aria-describedby=`,
+      );
+      expect(html).toContain(`>${flat(time.label)}<span class="ctm-tip"`);
+      expect(html).toContain(`<span class="ctm-pill">${flat(time.tip)}</span>`);
+    }
+  });
+
   it("captures a configured Date when the plugin is created", async () => {
     const now = new Date(settings.now!);
     const plugin = time({ ...settings, now });
     now.setTime(Number.NaN);
     const html = await createHtmlRenderer({ plugins: [plugin], components })(":time[2026-11-02]");
     expect(html).toContain(">2 days ago<");
+  });
+});
+
+describe("describeTime", () => {
+  // 4 November 2026, noon UTC, as above.
+  const at = (date: string, options = {}) => describeTime(date, { ...settings, ...options });
+
+  it.each([
+    ["2026-10-15", "relative", "2 weeks ago", "Thu, Oct 15, 2026"],
+    ["2026-10-14", "absolute", "Oct 14", "3 weeks ago"],
+    ["2026-10-13", "absolute", "Oct 13", "3 weeks ago"],
+    ["2025-10-13", "absolute", "Oct 13, 2025", "last year"],
+  ])("switches to a date at 3 weeks: %s", (date, mode, label, tip) => {
+    expect(at(date)).toEqual({ datetime: date, mode, label, tip });
+  });
+
+  it("reads a full instant as well as a date alone", () => {
+    expect(at("2026-11-02T09:30:00Z")).toEqual({
+      datetime: "2026-11-02T09:30:00Z",
+      mode: "relative",
+      label: "2 days ago",
+      tip: "Mon, Nov 2, 2026, 9:30 AM UTC",
+    });
+    expect(at("2026-11-02T10:30:00.250+01:00")?.datetime).toBe("2026-11-02T09:30:00.250Z");
+    expect(at("2026-11-02")).toEqual({
+      datetime: "2026-11-02",
+      mode: "relative",
+      label: "2 days ago",
+      tip: "Mon, Nov 2, 2026",
+    });
+    // An instant 20 days and 23 hours back is still relative; a date alone counts whole days.
+    expect(at("2026-10-14T13:00:00Z")?.label).toBe("2 weeks ago");
+    expect(at("2026-10-14T12:00:00Z")).toMatchObject({
+      label: "Oct 14",
+      tip: "3 weeks ago · 12:00 PM UTC",
+    });
+    expect(describeTime(new Date("2026-11-04T11:00:00Z"), settings)?.label).toBe("1 hour ago");
+  });
+
+  it("shows the tip in the reader's zone", () => {
+    expect(at("2026-11-02T09:30:00Z", { timeZone: "Europe/Madrid" })?.tip).toBe(
+      "Mon, Nov 2, 2026, 10:30 AM GMT+1",
+    );
+    // A date alone is a calendar day, so no zone moves it.
+    expect(at("2026-11-02", { timeZone: "America/Los_Angeles" })?.tip).toBe("Mon, Nov 2, 2026");
+  });
+
+  it("writes English unless given a locale, in long or short words", () => {
+    expect(describeTime("2026-11-02", { now: settings.now, timeZone: "UTC" })?.label).toBe(
+      "2 days ago",
+    );
+    expect(at("2026-11-01", { locale: "es" })?.label).toBe("hace 3 días");
+    expect(at("2026-10-24", { style: "short" })?.label).toBe("last wk.");
+    expect(at("2026-11-02", { threshold: "1d" })?.label).toBe("Nov 2");
+  });
+
+  it("returns nothing for a value it can't read, and throws for options it can't", () => {
+    expect(at("next friday")).toBeUndefined();
+    expect(at("2026-02-31")).toBeUndefined();
+    expect(describeTime(Number.NaN, settings)).toBeUndefined();
+    expect(() => at("2026-11-02", { threshold: "soon" })).toThrow(/threshold "soon"/);
+    expect(() => at("2026-11-02", { now: "never" })).toThrow(/now isn't a valid date/);
   });
 });

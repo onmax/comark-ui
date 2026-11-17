@@ -5,7 +5,7 @@
 [![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-time)
 [![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/time)
 
-Dates as relative time: "today", "2 days ago", "in 3 weeks". Past a threshold, 4 weeks by default, the text becomes a date, and hover or focus opens a tooltip with the full date and time. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
+Dates as relative time: "today", "2 days ago", "in 2 weeks". From a threshold on, 3 weeks by default, the text becomes a date, and hover or focus opens a tooltip with the full date and time. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
 
 ```sh
 pnpm add comark comark-time
@@ -19,15 +19,17 @@ const render = createHtmlRenderer({ plugins: [time()], components });
 ```
 
 ```md
-Opened :time[2026-11-02], last touched :time[2026-11-04T11:59:56Z], due :time[2026-11-25].
+Opened :time[2026-11-02], last touched :time[2026-11-04T11:59:56Z], due :time[2026-11-18].
 
 The first sighting was :time[2026-09-30]{threshold="8w"}.
 ```
 
 `:time[2026-11-02]` reads "2 days ago" and opens "Mon, Nov 2, 2026" in a tooltip. A date alone counts whole days from today; with a time of day, it counts down to the second. The plugin works out the words, the date, and the tooltip while parsing, and every `:time` in a document is measured from one `now`. The tooltip is CSS; a small script only lets Escape close it. Pass `now` to pin it, `locale` and `timeZone` to set the words and the day, and `threshold` to move the switch to a date or write `threshold="none"` to keep a date relative.
 
+The words are English unless `locale` names another language. `describeTime(at, options)` gives the same `{ datetime, mode, label, tip }` in your own code.
+
 > [!NOTE]
-> Rendered HTML keeps the words it was parsed with. Re-render cached pages, or render in the reader's browser with Vue, React, or Svelte.
+> Rendered HTML keeps the words it was parsed with. For cached pages, run `relativize(root)` from `comark-time/client`: it writes every `time[datetime]` under `root` again against the reader's clock, at once, when the tab is shown, and each minute while it's visible. Or render in the reader's browser with Vue, React, or Svelte.
 
 The plugin adds every problem to `meta.issues`, so a host can reject a document before publishing it: a `:time` with no date, a date that isn't ISO, a `threshold` that isn't a number and a unit, and a prop it doesn't read. Each issue names its block and says how to fix it.
 

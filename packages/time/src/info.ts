@@ -10,7 +10,7 @@ export const componentInfo = {
     props: {
       threshold: {
         type: "string",
-        default: "4w",
+        default: "3w",
         description:
           "How far from now it shows a date instead, such as 2w, or none to stay relative.",
       },

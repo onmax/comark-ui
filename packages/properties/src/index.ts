@@ -1,5 +1,6 @@
 import type { ElementNode, Node } from "comark";
 import { defineComarkPlugin } from "comark";
+import { describeTime } from "comark-time";
 import { childrenOf, isElement } from "../../../shared/nodes.ts";
 
 export interface PropertiesOptions {
@@ -9,10 +10,7 @@ export interface PropertiesOptions {
   labels?: Record<string, string>;
   /** Puts the box at the top of a document that has no `::properties`. Default true. */
   top?: boolean;
-  /**
-   * The locale dates show in, such as `"de-DE"`. Without it, dates render in English and the reader's browser rewrites
-   * them in its own locale.
-   */
+  /** The language of the dates' words and format, such as `"de-DE"`. Default English. */
   locale?: string;
 }
 
@@ -50,7 +48,9 @@ function link(href: string) {
   return ["a", { href: url.href }, text] satisfies ElementNode;
 }
 
-const DAY = /^\d{4}-\d{2}-\d{2}$/;
+// A date, or a date and time, in ISO form. The time and its offset are optional.
+const DATE =
+  /^\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?\s*(?:Z|[+-]\d{2}:?\d{2})?)?$/i;
 const KINDS = new Map([
   ["status", "status"],
   ["pr", "pr"],
@@ -67,24 +67,42 @@ function kindOf(key: string, value: unknown): string {
   if (Number(value) === value) return "number";
   if (value === true || value === false) return "boolean";
   const text = String(value);
-  if (DAY.test(text)) return "date";
+  if (DATE.test(text)) return "date";
   return /^https?:\/\//.test(text) ? "link" : "text";
 }
 
-/** `2026-10-23` as `Oct 23, 2026`, in a `time` that keeps the date for machines. */
-function day(text: string, locale: string | undefined): ElementNode {
-  const date = new Date(`${text}T00:00:00Z`);
-  // `Date` rolls an impossible day, such as February 30, over into the next month.
-  if (Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== text)
-    return ["span", {}, text];
-  // Keep these in step with `localizeDates`, which rewrites a date without a `lang` in the reader's locale.
-  const shown = date.toLocaleDateString(locale ?? "en-US", {
+/**
+ * A date or an instant in comark-time's markup: a `time` that keeps the value for machines, with a tooltip. The words
+ * depend on when and where it's read, so the server writes the date with its year, which reads right in any cached
+ * copy, and the script after the box (or the component, once mounted) turns it into "2 days ago" in the reader's
+ * browser. A time without an offset is UTC.
+ */
+function dateNode(text: string, locale: string | undefined): ElementNode {
+  const time = describeTime(text, { locale, timeZone: "UTC", threshold: "none" });
+  if (!time) return ["span", {}, text];
+  const label = new Intl.DateTimeFormat(locale ?? "en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
     timeZone: "UTC",
-  });
-  return ["time", locale ? { datetime: text, lang: locale } : { datetime: text }, shown];
+  }).format(new Date(time.datetime));
+  // getRandomValues is available on HTTP origins too; randomUUID requires HTTPS.
+  const id = `cfm-${Array.from(crypto.getRandomValues(new Uint32Array(4)), (word) =>
+    word.toString(16).padStart(8, "0"),
+  ).join("")}`;
+  return [
+    "time",
+    {
+      class: "ctm",
+      datetime: time.datetime,
+      "data-mode": "absolute",
+      tabindex: "0",
+      "aria-describedby": id,
+      ...(locale ? { lang: locale } : {}),
+    },
+    label,
+    ["span", { class: "ctm-tip", role: "tooltip", id }, ["span", { class: "ctm-pill" }, time.tip]],
+  ];
 }
 
 /** A frontmatter value as nodes: text, a link for an http(s) URL, or one tag per item of a list of those. */
@@ -127,7 +145,7 @@ export function rowsOf(
       issues.push({
         rule: "comark/properties/invalid-locale",
         message:
-          "properties: `locale` is not a valid language tag, so dates use the reader's locale. Use a tag such as `de-DE`, or leave `locale` unset.",
+          "properties: `locale` is not a valid language tag, so dates are in English. Use a tag such as `de-DE`, or leave `locale` unset.",
       });
     }
   }
@@ -153,8 +171,8 @@ export function rowsOf(
     const shown: Node[] =
       kind === "status" && text !== undefined
         ? [["span", { class: "cfm-status" }, ...nodes]]
-        : kind === "date" && text !== undefined && DAY.test(text)
-          ? [day(text, locale)]
+        : kind === "date" && text !== undefined && DATE.test(text)
+          ? [dateNode(text, locale)]
           : nodes;
     rows.push([
       "div",
@@ -205,7 +223,7 @@ export default defineComarkPlugin<PropertiesOptions, PropertiesMeta>((options = 
             rule: "comark/properties/nothing-to-show",
             message: `${name} has nothing to show: the frontmatter has none of ${keys.map((key) => `\`${key}\``).join(", ")}. Add one, or remove the block.`,
           });
-        nodes[index] = ["properties", {}, ...rows];
+        nodes[index] = ["properties", {}, ...rowsOf(tree.frontmatter, options).rows];
       }
     };
     walk(tree.nodes, 0);
