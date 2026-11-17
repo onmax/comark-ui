@@ -578,9 +578,7 @@ Apply sits low.
   await expect(page.locator(".cz-item .ca-mark")).toHaveCount(2);
   for (const mark of await page.locator(".cz-item .ca-mark").all()) await expect(mark).toBeHidden();
   const zoomedToggle = page.locator(".cz-item .ca-hide input");
-  // The dialog starts focused; reverse Tab wraps to Copy, then Hide marks.
-  await page.keyboard.press("Shift+Tab");
-  await expect(page.locator(".cz-item .ca-copy")).toBeFocused();
+  // The dialog starts focused; reverse Tab wraps to Hide marks, the last tab stop.
   await page.keyboard.press("Shift+Tab");
   await expect(zoomedToggle).toBeFocused();
   await page.keyboard.press("Space");
