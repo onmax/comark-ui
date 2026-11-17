@@ -35,6 +35,8 @@ export function start(css: string): () => void {
     `<svg class="${name}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg>`;
   let card: HTMLElement | undefined;
   let current: HTMLAnchorElement | undefined;
+  // Keep the last anchor through the card's exit transition, until another citation takes it.
+  let positioned: HTMLAnchorElement | undefined;
   // A citation whose card Escape closed stays closed until the pointer or focus leaves it.
   let dismissed: HTMLAnchorElement | undefined;
   let opening = 0;
@@ -116,7 +118,9 @@ export function start(css: string): () => void {
 
   // Above the citation, or below it when there's no room, centered on it and kept inside the viewport. CSS anchor
   // positioning places it where the browser has it, and follows scrolling; elsewhere the script measures.
-  const anchored = CSS.supports("anchor-name: --a");
+  const anchored = CSS.supports(
+    "(anchor-name: --a) and (position-area: top) and (position-try-fallbacks: flip-block) and (justify-self: anchor-center)",
+  );
   function place() {
     if (!card || !current) return;
     const at = current.getBoundingClientRect();
@@ -146,6 +150,9 @@ export function start(css: string): () => void {
       current.removeAttribute("aria-describedby");
       current.removeAttribute("data-cso-open");
     }
+    positioned?.removeAttribute("data-cso-anchor");
+    positioned = link;
+    link.setAttribute("data-cso-anchor", "");
     current = link;
     link.setAttribute("aria-describedby", filled.id);
     link.setAttribute("data-cso-open", "");
@@ -255,6 +262,7 @@ export function start(css: string): () => void {
       clearTimeout(opening);
       clearTimeout(closing);
       card?.remove();
+      positioned?.removeAttribute("data-cso-anchor");
       for (const link of document.querySelectorAll(".cso-cite a[data-cso-title]")) {
         link.setAttribute("title", link.getAttribute("data-cso-title") ?? "");
         for (const name of [

@@ -34,6 +34,42 @@ export function anchoredPopovers() {
   };
 
   test.describe("a citation's card", () => {
+    test("uses measured placement with anchor-name but no position-area", async ({ page }) => {
+      const html = await render(markdown);
+      // Model both the CSS parser and CSS.supports of a partial implementation.
+      await page.setContent(
+        '<script>const supports = CSS.supports.bind(CSS); CSS.supports = (...args) => args[0].includes("position-area") ? false : supports(...args);</script>' +
+          '<div style="position:absolute;top:300px;left:200px">' +
+          html.replace(/@supports \(anchor-name:[^{]+/g, "@supports (unsupported: value)") +
+          "</div>",
+      );
+      expect(await page.evaluate(() => CSS.supports("anchor-name: --a"))).toBe(true);
+      const { link, box } = await card(page, 1);
+      near(box.y + box.height, link.y - 4);
+      expect(await page.locator(".cso-card").evaluate((e) => e.style.top)).not.toBe("");
+    });
+
+    test("keeps its position throughout the exit transition", async ({ page }) => {
+      await at(page, "top:300px;left:200px");
+      const { box } = await card(page, 1);
+      // Slow the exit so a visible frame can be sampled reliably.
+      await page.locator(".cso-card").evaluate((e) => {
+        e.style.transitionDuration = "1s";
+      });
+      await page.mouse.move(750, 550);
+      await expect(cite(page, 1)).not.toHaveAttribute("data-cso-open", "");
+      const closing = await page.locator(".cso-card").evaluate((e) => {
+        const rect = e.getBoundingClientRect();
+        return { x: rect.x, y: rect.y, opacity: Number(getComputedStyle(e).opacity) };
+      });
+      expect(closing.opacity).toBeGreaterThan(0);
+      expect(Math.abs(closing.x - box.x)).toBeLessThan(12);
+      expect(Math.abs(closing.y - box.y)).toBeLessThan(12);
+      await cite(page, 2).hover();
+      await expect(cite(page, 2)).toHaveAttribute("data-cso-open", "");
+      await expect(cite(page, 1)).not.toHaveAttribute("data-cso-anchor", "");
+    });
+
     test("sits above its citation, centered, placed by the browser", async ({ page }) => {
       await at(page, "top:300px;left:200px");
       const { link, box } = await card(page, 1);

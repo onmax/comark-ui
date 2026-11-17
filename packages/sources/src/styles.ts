@@ -30,7 +30,7 @@ export const css = `@layer comark{${[
   ".cso-card[data-instant]{transition:none}",
   // Where the browser has anchor positioning, the open citation is the card's anchor: above it and centered, below it
   // when there's no room, and kept 8px inside the viewport. Elsewhere the script places it.
-  "@supports (anchor-name:--a){.cso-cite a[data-cso-open]{anchor-name:--cso-cite}.cso-card{position-anchor:--cso-cite;position-area:top;position-try-fallbacks:flip-block;justify-self:anchor-center;margin:8px 8px 4px}}",
+  "@supports (anchor-name: --a) and (position-area: top) and (position-try-fallbacks: flip-block) and (justify-self: anchor-center){.cso-cite a[data-cso-anchor]{anchor-name:--cso-cite}.cso-card{position-anchor:--cso-cite;position-area:top;position-try-fallbacks:flip-block;justify-self:anchor-center;margin:8px 8px 4px}}",
   // The pointer crosses the gap between the citation and the card without leaving either.
   '.cso-card::before{content:"";position:absolute;z-index:-1;inset:-6px 0}',
   ".cso-card-link{display:grid;gap:.375rem;padding:.625rem .75rem;color:inherit;text-decoration:none}",
