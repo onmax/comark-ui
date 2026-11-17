@@ -899,6 +899,7 @@ async function readPage(markdown: string, { plugins = [], registerDefaultPlugins
           tip[1].id = canonical;
         }
       }
+      // SAFETY: AST tuples store their tag and attributes first, followed only by child nodes.
       normalize(node.slice(2) as AstNode[], inProperties);
     }
   };
