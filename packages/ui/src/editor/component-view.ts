@@ -129,6 +129,13 @@ const stopEvent = ({ event }: { event: Event }) =>
 
 let count = 0;
 
+// CSS anchor positioning places the panel where the browser has it (see `componentViewCss`), so the script measures
+// only where it's missing.
+const anchored = () =>
+  CSS.supports(
+    "(anchor-name: --a) and (position-area: top) and (position-try-fallbacks: flip-block) and (justify-self: anchor-center)",
+  );
+
 /** Places an open panel under its button, or above it when there's no room below, inside the viewport. */
 function place(panel: HTMLElement, anchor: HTMLElement) {
   const box = anchor.getBoundingClientRect();
@@ -162,8 +169,9 @@ const ComponentView = defineComponent({
     // JSON commits on change, so document transactions must leave even an incomplete draft intact.
     const drafts = ref(new Map<string, string>());
 
+    let follow = false;
     const reposition = () => {
-      if (panel.value && button.value && panel.value.matches(":popover-open"))
+      if (follow && panel.value && button.value && panel.value.matches(":popover-open"))
         place(panel.value, button.value);
     };
     function toggle() {
@@ -174,6 +182,8 @@ const ComponentView = defineComponent({
     }
     onMounted(() => {
       addStyles("editor-component-view", componentViewCss);
+      if (anchored()) return;
+      follow = true;
       addEventListener("scroll", reposition, true);
       addEventListener("resize", reposition);
     });
@@ -363,6 +373,7 @@ const ComponentView = defineComponent({
           ref: panel,
           id,
           class: "cev-panel",
+          style: `position-anchor:--${id}`,
           popover: "auto",
           [CHROME]: "",
           contenteditable: "false",
@@ -399,6 +410,7 @@ const ComponentView = defineComponent({
                 ref: button,
                 type: "button",
                 class: "cev-tag",
+                style: `anchor-name:--${id}`,
                 popovertarget: id,
                 title: summary || undefined,
                 contenteditable: "false",
@@ -422,7 +434,13 @@ const ComponentView = defineComponent({
               ? null
               : h(
                   "button",
-                  { ref: button, type: "button", class: "cev-props", popovertarget: id },
+                  {
+                    ref: button,
+                    type: "button",
+                    class: "cev-props",
+                    style: `anchor-name:--${id}`,
+                    popovertarget: id,
+                  },
                   [
                     h("span", { class: "cev-visually-hidden" }, `Props of ${title}: `),
                     summary || (can ? "Add props" : "No props"),
@@ -466,8 +484,12 @@ export const componentViewCss = `@layer comark{${[
   `.cev-block [data-comark-slot]::before{content:"#" attr(data-comark-slot);display:block;padding-top:.25rem;color:var(--_comark-muted);font:500 .6875rem/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;user-select:none}`,
   `.cev-inline{padding:0 .125rem 0 .25rem;border:1px solid var(--_comark-border);border-radius:calc(var(--_comark-radius)*.75);background:var(--_comark-accent)}`,
   `.cev-tag{display:inline-flex;align-items:center;gap:.25rem;margin-inline-start:.25rem;padding:0 .25rem;border:0;border-radius:calc(var(--_comark-radius)*.5);background:none;color:var(--_comark-muted);font:500 max(.75em,.6875rem)/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;vertical-align:baseline;cursor:pointer;user-select:none}`,
-  `.cev-panel{position:fixed;inset:auto;margin:0;width:18rem;max-height:min(24rem,80vh);overflow:auto;padding:.75rem;border:1px solid var(--_comark-border);border-radius:var(--_comark-radius);background:var(--_comark-background);color:var(--_comark-foreground);box-shadow:var(--_comark-shadow);font:400 .8125rem/1.4 var(--_comark-font);white-space:normal}`,
+  `.cev-panel{position:fixed;inset:auto;margin:0;width:18rem;max-height:min(24rem,50vh - 3.5rem);overflow:auto;padding:.75rem;border:1px solid var(--_comark-border);border-radius:var(--_comark-radius);background:var(--_comark-background);color:var(--_comark-foreground);box-shadow:var(--_comark-shadow);font:400 .8125rem/1.4 var(--_comark-font);white-space:normal}`,
   `.cev-panel:popover-open{display:grid;gap:.625rem}`,
+  // Under its button and from its start, or flipped above it or to its end when that side has no room. Its height,
+  // padding included, stays under half the viewport, so it always fits on one side and never covers the button. The
+  // button names the anchor and the panel takes it, both inline, since each view has its own.
+  `@supports (anchor-name: --a) and (position-area: top) and (position-try-fallbacks: flip-block) and (justify-self: anchor-center){.cev-panel{position-area:block-end span-inline-end;position-try-fallbacks:flip-block,flip-inline,flip-block flip-inline;margin:4px 8px 8px 0}}`,
   `.cev-panel-title{display:flex;align-items:baseline;justify-content:space-between;gap:.5rem;margin:0;font-weight:600}`,
   `.cev-panel-title .cev-code,.cev-tag-name{color:var(--_comark-muted);font-weight:500}`,
   `.cev-field{display:grid;gap:.25rem}`,
