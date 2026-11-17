@@ -313,3 +313,47 @@ test("the page sets the outline's top under a fixed header, and it still reaches
   expect(nav.top).toBe(80);
   expect(nav.bottom).toBe(1034);
 });
+
+test("a new current link cancels an earlier smooth follow", async ({ page }) => {
+  await openLong(page);
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.evaluate(() => {
+    for (const chapter of [20, 5]) {
+      const link = document.createElement("a");
+      link.href = `#chapter-${chapter}`;
+      link.textContent = `Jump ${chapter}`;
+      link.style.cssText = `position:fixed;left:0;top:${chapter}px`;
+      document.body.append(link);
+    }
+  });
+  await page.getByRole("link", { name: "Jump 20", exact: true }).click();
+  await expect(page.locator(".cto-rail a[aria-current]")).toHaveText("Chapter 20");
+  await page.getByRole("link", { name: "Jump 5", exact: true }).click();
+  await expect(page.locator(".cto-rail a[aria-current]")).toHaveText("Chapter 5");
+  // Let the first animation finish before checking the final destination.
+  await page.waitForTimeout(1000);
+  const spot = await markedSpot(page);
+  expect(spot.top).toBeGreaterThanOrEqual(0);
+  expect(spot.bottom).toBeGreaterThanOrEqual(0);
+});
+
+test("layout changes keep the current link visible", async ({ page }) => {
+  await openLong(page);
+  await page.locator("#results-10").evaluate((heading) => heading.scrollIntoView());
+  await expect(page.locator(".cto-rail a[aria-current]")).toHaveText("Results 10");
+  await page.setViewportSize({ width: 1743, height: 800 });
+  await expect.poll(async () => (await markedSpot(page)).bottom).toBeGreaterThanOrEqual(48);
+  await page.evaluate(() =>
+    document.documentElement.style.setProperty("--comark-rail-top", "30rem"),
+  );
+  await expect.poll(async () => (await markedSpot(page)).bottom).toBeGreaterThanOrEqual(48);
+});
+
+test("keyboard focus remains visible at the fade boundary", async ({ page }) => {
+  await openLong(page);
+  await page.locator(".cto-rail a").first().focus();
+  for (let i = 0; i < 36; i++) await page.keyboard.press("Tab");
+  await expect(page.locator(".cto-rail a:focus-visible")).toHaveText("Chapter 13");
+  await expect(list(page)).toHaveAttribute("data-more");
+  expect(await list(page).evaluate((ul) => getComputedStyle(ul).maskImage)).toBe("none");
+});

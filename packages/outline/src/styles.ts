@@ -23,7 +23,7 @@ export const css = `@layer comark{${[
   ".cto-rail{position:fixed;top:var(--comark-rail-top,3.5rem);display:none;flex-direction:column;box-sizing:border-box;max-height:calc(100vh - var(--comark-rail-top,3.5rem));margin:0;font-size:.8125rem;line-height:1.25rem}",
   ".cto-rail[data-fits]{display:flex}",
   ".cto-rail>ul{min-height:0;padding-bottom:1.5rem;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none}",
-  ".cto-rail>ul[data-more]{mask-image:linear-gradient(#000 calc(100% - 3rem),transparent)}",
+  ".cto-rail>ul[data-more]:not(:has(a:focus-visible)){mask-image:linear-gradient(#000 calc(100% - 3rem),transparent)}",
   ".cto-rail a{display:block;color:var(--_comark-muted);text-wrap:pretty}",
   ".cto-rail :is(a:hover,a[aria-current]){color:var(--_comark-foreground)}",
   ":root[data-comark-rail]{--comark-rail-width:264px}",

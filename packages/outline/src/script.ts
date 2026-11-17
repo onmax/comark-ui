@@ -108,8 +108,8 @@ export function start(): () => void {
         : null;
       if (!spot) reserve(false);
     }
-    // An outline that shows again catches up with the section being read.
-    if (spot && !nav.hasAttribute("data-fits")) marked = null;
+    // Placement can change the visible height or wrap links, even if the current heading stays the same.
+    marked = null;
     nav.toggleAttribute("data-fits", !!spot);
     if (spot) {
       nav.style.left = `${spot.left}px`;
@@ -148,6 +148,8 @@ export function start(): () => void {
   function follow(nav: HTMLElement, link: HTMLElement) {
     const scroll = list(nav);
     if (!scroll || scroll.matches(":hover")) return;
+    // Stop an earlier follow before testing visibility at its current position.
+    scroll.scrollTo({ top: scroll.scrollTop, behavior: "instant" });
     const box = scroll.getBoundingClientRect();
     const item = link.getBoundingClientRect();
     if (item.top >= box.top + FOLLOW_TOP && item.bottom <= box.bottom - FOLLOW_BOTTOM) return;
