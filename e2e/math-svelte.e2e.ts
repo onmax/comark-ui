@@ -63,4 +63,27 @@ test("@comark/svelte gives formulas made in the browser MathML's namespace", asy
     ),
   );
   expect(updated).toEqual([MATHML, MATHML, MATHML]);
+
+  // A formula that goes to TeX and comes back shows its new MathML, not the copy of the one before.
+  const update = (source: string) =>
+    parseMarkdown(source, { plugins: [math()] }).then((next) =>
+      page.evaluate(
+        (json) =>
+          (window as unknown as { update: (next: unknown) => void }).update(JSON.parse(json)),
+        JSON.stringify(next),
+      ),
+    );
+  await update("$a$");
+  await update("$\\frac{a}$");
+  await expect(page.locator(".cmh-source")).toHaveCount(1);
+  await update("$b$");
+  await expect(page.locator(".cmh")).toHaveCount(1);
+  const last = await page
+    .locator(".cmh")
+    .evaluate((formula) =>
+      [...formula.querySelectorAll("math")]
+        .filter((math) => math.getBoundingClientRect().width > 0)
+        .map((math) => [math.namespaceURI, math.querySelector("mi")?.textContent]),
+    );
+  expect(last).toEqual([[MATHML, "b"]]);
 });
