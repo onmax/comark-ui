@@ -108,5 +108,8 @@ jobs:
       # The disclosures' fallback motion runs only in a browser without `interpolate-size`.
       - name: Firefox
         run: pnpm exec playwright install --with-deps firefox
+      # The zoom's native dialog runs in each engine.
+      - name: WebKit
+        run: pnpm exec playwright install --with-deps webkit
       - name: End to end
         run: pnpm test:e2e
