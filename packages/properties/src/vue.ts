@@ -1,5 +1,5 @@
 import { defineComponent, h, onBeforeUnmount, onMounted, onUpdated, shallowRef } from "vue";
-import { relativize, start } from "./client.ts";
+import { start } from "./client.ts";
 
 export { default } from "./index.ts";
 export type { PropertiesMeta, PropertiesOptions } from "./index.ts";
@@ -11,11 +11,12 @@ export const Properties = defineComponent({
   setup(_, { slots }) {
     const box = shallowRef<HTMLElement>();
     let stop: (() => void) | undefined;
-    onMounted(() => {
-      if (box.value) stop = start(box.value);
-    });
-    // A render can write a date's server text again; the clock that `start` set keeps it current after this.
-    onUpdated(() => box.value && relativize(box.value)());
+    const refresh = () => {
+      stop?.();
+      stop = box.value ? start(box.value) : undefined;
+    };
+    onMounted(refresh);
+    onUpdated(refresh);
     onBeforeUnmount(() => stop?.());
     return () => {
       const rows = slots.default?.();

@@ -42,6 +42,8 @@ export type TimeAttributes = {
   mode?: "relative" | "absolute";
   label?: string;
   tip?: string;
+  locale?: string;
+  threshold?: string;
 };
 
 /** The tag a `:time` becomes, so a `<time>` that another plugin or the author writes never reaches its components. */
@@ -111,9 +113,10 @@ export default defineComarkPlugin<TimeOptions, TimeMeta>((settings = {}) => {
           });
           return asWritten(node, "");
         }
+        const threshold = wanted && DURATION.test(wanted) ? wanted : fallback;
         const time = describeTime(shown, {
           now,
-          threshold: wanted && DURATION.test(wanted) ? wanted : fallback,
+          threshold,
           locale: settings.locale,
           timeZone: settings.timeZone,
         });
@@ -124,7 +127,12 @@ export default defineComarkPlugin<TimeOptions, TimeMeta>((settings = {}) => {
           });
           return asWritten(node, shown);
         }
-        node.splice(0, node.length, TIME_TAG, { id: `${prefix}-${count}`, ...time });
+        node.splice(0, node.length, TIME_TAG, {
+          id: `${prefix}-${count}`,
+          ...time,
+          locale: settings.locale ?? "en-US",
+          threshold,
+        });
       };
 
       const walk = (nodes: Node[]) => {

@@ -34,16 +34,20 @@ const renderers = {
 
 describe("comark-time renderers", async () => {
   const value = await parseMarkdown(markdown, {
-    plugins: [time({ now: "2026-11-04T12:00:00Z", timeZone: "UTC", locale: "en" })],
+    plugins: [time({ now: "2026-11-04T12:00:00Z", timeZone: "UTC", locale: "es" })],
   });
   const html = normalize(await renderHtmlFromDocument(value, { components: htmlComponents }));
   const times = html.match(/<time .*?<\/time>/g) ?? [];
 
   it("renders a time with its tooltip in HTML", () => {
     expect(times).toHaveLength(3);
-    expect(times[0]).toContain(">2 days ago<");
+    for (const markup of times) {
+      expect(markup).toContain('lang="es"');
+      expect(markup).toContain('data-threshold="3w"');
+    }
+    expect(times[0]).toContain(">anteayer<");
     expect(times[1]).toContain('data-mode="absolute"');
-    expect(times[2]).toContain(">4 seconds ago<");
+    expect(times[2]).toContain(">hace 4 segundos<");
   });
 
   for (const [name, render] of Object.entries(renderers))

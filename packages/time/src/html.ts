@@ -37,10 +37,10 @@ export const timeRuntime = ({ context }: State): string => {
 };
 
 const time: NodeHandler = ([, attrs], state) => {
-  const { id, datetime, mode, label, tip } = attrs;
+  const { id, datetime, mode, label, tip, locale, threshold } = attrs;
   if (!datetime || !label) return "";
   return (
-    `${timeRuntime(state)}<time class="ctm" datetime="${attr(datetime)}" data-mode="${attr(mode)}" tabindex="0" aria-describedby="${attr(id)}">` +
+    `${timeRuntime(state)}<time class="ctm" datetime="${attr(datetime)}" lang="${attr(locale)}" data-threshold="${attr(threshold)}" data-mode="${attr(mode)}" tabindex="0" aria-describedby="${attr(id)}">` +
     `${attr(label)}<span class="ctm-tip" role="tooltip" id="${attr(id)}"><span class="ctm-pill">${attr(tip)}</span></span></time>`
   );
 };

@@ -129,7 +129,9 @@ describe("comark-time", () => {
   it("is a time with a tooltip a keyboard reaches, and inlines the styles once", async () => {
     const html = await render("Opened :time[2026-11-02], merged :time[2026-11-04].");
     const first = html.match(/<time [^>]*>/)?.[0] ?? "";
-    expect(first).toMatch(/class="ctm" datetime="2026-11-02" data-mode="relative" tabindex="0"/);
+    expect(first).toMatch(
+      /class="ctm" datetime="2026-11-02" lang="en" data-threshold="3w" data-mode="relative" tabindex="0"/,
+    );
     expect(html).toContain('role="tooltip"');
     expect(html.match(/<style data-comark-time>/g)).toHaveLength(1);
     const ids = [...html.matchAll(/aria-describedby="([^"]+)"/g)].map((match) => match[1]);
@@ -261,7 +263,7 @@ describe("comark-time", () => {
     for (const at of ["2026-10-14", "2026-11-02T09:30:00Z"]) {
       const time = describeTime(at, settings)!;
       expect(html).toContain(
-        `datetime="${time.datetime}" data-mode="${time.mode}" tabindex="0" aria-describedby=`,
+        `datetime="${time.datetime}" lang="en" data-threshold="3w" data-mode="${time.mode}" tabindex="0" aria-describedby=`,
       );
       expect(html).toContain(`>${flat(time.label)}<span class="ctm-tip"`);
       expect(html).toContain(`<span class="ctm-pill">${flat(time.tip)}</span>`);

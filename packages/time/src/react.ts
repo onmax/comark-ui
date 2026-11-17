@@ -12,7 +12,15 @@ export type {
 } from "./index.ts";
 
 /** `:time` for `@comark/react`. */
-export function RelativeTime({ id, datetime, mode, label, tip }: TimeAttributes) {
+export function RelativeTime({
+  id,
+  datetime,
+  mode,
+  label,
+  tip,
+  locale,
+  threshold,
+}: TimeAttributes) {
   useEffect(() => start(css), []);
   if (!datetime || !label) return null;
   return createElement(
@@ -20,6 +28,8 @@ export function RelativeTime({ id, datetime, mode, label, tip }: TimeAttributes)
     {
       className: "ctm",
       dateTime: datetime,
+      lang: locale,
+      "data-threshold": threshold,
       "data-mode": mode,
       tabIndex: 0,
       "aria-describedby": id,

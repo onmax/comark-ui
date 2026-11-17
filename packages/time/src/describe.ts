@@ -41,7 +41,7 @@ export function describeTime(
 ): TimeDescription | undefined {
   const [SECOND, MINUTE, HOUR, DAY] = [1e3, 6e4, 36e5, 864e5];
   const [WEEK, MONTH, YEAR] = [7 * DAY, 30 * DAY, 365 * DAY];
-  const units: Record<string, number> = {
+  const units = {
     s: SECOND,
     m: MINUTE,
     h: HOUR,
@@ -55,7 +55,8 @@ export function describeTime(
   const limit = /^(none|never)$/i.test(threshold)
     ? Number.POSITIVE_INFINITY
     : amount && unit
-      ? Number(amount) * (units[unit.toLowerCase()] ?? Number.NaN)
+      ? Number(amount) *
+        (Object.entries(units).find(([name]) => name === unit.toLowerCase())?.[1] ?? Number.NaN)
       : Number.NaN;
   if (Number.isNaN(limit))
     throw new RangeError(
@@ -102,6 +103,7 @@ export function describeTime(
         value,
       );
     if (!match) return undefined;
+    // SAFETY: mapping exactly six indices produces six numbers; missing optional clock fields become zero.
     const [year, month, day, hour, minute, second] = [1, 2, 3, 4, 5, 6].map((index) =>
       Number(match[index] ?? 0),
     ) as [number, number, number, number, number, number];

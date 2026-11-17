@@ -14,7 +14,15 @@ export type {
 export const RelativeTime = defineComponent({
   name: "RelativeTime",
   inheritAttrs: false,
-  props: { id: String, datetime: String, mode: String, label: String, tip: String },
+  props: {
+    id: String,
+    datetime: String,
+    mode: String,
+    label: String,
+    tip: String,
+    locale: String,
+    threshold: String,
+  },
   setup(props) {
     let stop: (() => void) | undefined;
     onMounted(() => (stop = start(css)));
@@ -26,6 +34,8 @@ export const RelativeTime = defineComponent({
             {
               class: "ctm",
               datetime: props.datetime,
+              lang: props.locale,
+              "data-threshold": props.threshold,
               "data-mode": props.mode,
               tabindex: 0,
               "aria-describedby": props.id,

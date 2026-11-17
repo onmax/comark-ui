@@ -2,7 +2,6 @@ import type { ElementNode, Node } from "comark";
 import { defineComarkPlugin } from "comark";
 import { describeTime } from "comark-time";
 import { childrenOf, isElement } from "../../../shared/nodes.ts";
-import { hash } from "../../../shared/text.ts";
 
 export interface PropertiesOptions {
   /** The frontmatter keys to show, in this order. Default `["status", "pr", "author", "date", "tags"]`. */
@@ -78,7 +77,7 @@ function kindOf(key: string, value: unknown): string {
  * copy, and the script after the box (or the component, once mounted) turns it into "2 days ago" in the reader's
  * browser. A time without an offset is UTC.
  */
-function dateNode(text: string, key: string, locale: string | undefined): ElementNode {
+function dateNode(text: string, locale: string | undefined): ElementNode {
   const time = describeTime(text, { locale, timeZone: "UTC", threshold: "none" });
   if (!time) return ["span", {}, text];
   const label = new Intl.DateTimeFormat(locale ?? "en-US", {
@@ -87,7 +86,7 @@ function dateNode(text: string, key: string, locale: string | undefined): Elemen
     year: "numeric",
     timeZone: "UTC",
   }).format(new Date(time.datetime));
-  const id = `cfm-${hash(`${key}\0${time.datetime}`)}`;
+  const id = `cfm-${crypto.randomUUID()}`;
   return [
     "time",
     {
@@ -170,7 +169,7 @@ export function rowsOf(
       kind === "status" && text !== undefined
         ? [["span", { class: "cfm-status" }, ...nodes]]
         : kind === "date" && text !== undefined && DATE.test(text)
-          ? [dateNode(text, key, locale)]
+          ? [dateNode(text, locale)]
           : nodes;
     rows.push([
       "div",
@@ -221,7 +220,7 @@ export default defineComarkPlugin<PropertiesOptions, PropertiesMeta>((options = 
             rule: "comark/properties/nothing-to-show",
             message: `${name} has nothing to show: the frontmatter has none of ${keys.map((key) => `\`${key}\``).join(", ")}. Add one, or remove the block.`,
           });
-        nodes[index] = ["properties", {}, ...rows];
+        nodes[index] = ["properties", {}, ...rowsOf(tree.frontmatter, options).rows];
       }
     };
     walk(tree.nodes, 0);

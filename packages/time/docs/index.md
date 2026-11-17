@@ -123,7 +123,7 @@ import { relativize } from "comark-time/client";
 const stop = relativize(document.querySelector("article")!);
 ```
 
-A time in comark-time's markup gets its label, its tooltip, and its `data-mode`; any other `time` gets its text. The words are English unless the time has a `lang`. [Properties](/properties) runs it on its date rows.
+A time in comark-time's markup gets its label, its tooltip, and its `data-mode`; any other `time` gets its text. The words are English unless the time has a `lang`. Renderers retain the configured locale in `lang` and the effective threshold in `data-threshold`, so refreshing preserves both, including a per-time threshold override. [Properties](/properties) runs it on its date rows.
 
 ### Describe a date in code
 

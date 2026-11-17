@@ -14,7 +14,7 @@ const render = (markdown: string, options = {}) =>
 // comark-time's markup: the date with its year until the script makes it relative, and the full date in the tooltip.
 const date = (datetime: string, label: string, tip: string, extra = "") =>
   new RegExp(
-    `<time class="ctm" datetime="${datetime}" data-mode="absolute" tabindex="0" aria-describedby="(cfm-\\w+)"${extra}>` +
+    `<time class="ctm" datetime="${datetime}" data-mode="absolute" tabindex="0" aria-describedby="(cfm-[\\w-]+)"${extra}>` +
       `${label}<span class="ctm-tip" role="tooltip" id="\\1"><span class="ctm-pill">${tip}</span></span></time>`,
   );
 const issues = async (markdown: string, options = {}) =>
@@ -33,6 +33,20 @@ const review = [
 ].join("\n");
 
 describe("comark-properties", () => {
+  it("gives repeated boxes and separate documents their own tooltip IDs", async () => {
+    const markdown = "---\ndate: 2026-11-02\n---\n\n::properties\n::\n\n::properties\n::";
+    const english = await render(markdown);
+    const german = await render(markdown, { locale: "de-DE" });
+    const combined = english + german;
+    const ids = [...combined.matchAll(/role="tooltip" id="([^"]+)"/g)].map((match) => match[1]);
+    const references = [...combined.matchAll(/aria-describedby="([^"]+)"/g)].map(
+      (match) => match[1],
+    );
+    expect(ids).toHaveLength(4);
+    expect(new Set(ids).size).toBe(4);
+    expect(references).toEqual(ids);
+  });
+
   it("shows the chosen keys at the top, in order, and inlines the styles once", async () => {
     const html = await render(review);
     expect(html.startsWith('<dl class="cfm" data-comark-frame>')).toBe(true);

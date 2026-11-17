@@ -84,8 +84,8 @@ export function start(css: string): () => void {
  * Writes every `time[datetime]` under `root` again from its `datetime`, in the reader's zone and against the reader's
  * clock: now, whenever the page becomes visible again, and once a minute while it is visible. A time in comark-time's
  * markup gets its label, its tooltip, and its `data-mode`; any other gets its text. A time's `lang` sets the words'
- * language, English without one. A `datetime` it can't read is left alone. Returns a function that stops it, and it
- * stops itself once `root` leaves the page.
+ * language, English without one; `data-threshold` retains its relative-time policy. A `datetime` it can't read is left
+ * alone. Returns a function that stops it, and it stops itself once `root` leaves the page.
  *
  * It is self-contained: an HTML renderer inlines its source as a script and passes `describeTime`'s source as
  * `describe`, so it must not use anything from outside its body.
@@ -96,7 +96,10 @@ export function relativize(
 ): () => void {
   const refresh = () => {
     for (const time of root.querySelectorAll<HTMLTimeElement>("time[datetime]")) {
-      const found = describe(time.dateTime, { locale: time.getAttribute("lang") || undefined });
+      const found = describe(time.dateTime, {
+        locale: time.getAttribute("lang") || undefined,
+        threshold: time.getAttribute("data-threshold") || undefined,
+      });
       if (!found) continue;
       const pill = time.querySelector(".ctm-pill");
       // Only what changed is written, so an observer of the box sees nothing on a minute when no word moved.
