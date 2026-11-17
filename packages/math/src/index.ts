@@ -7,10 +7,12 @@ import {
   type StateInline,
   type Token,
 } from "../../../shared/markdown-it.ts";
+import { markupToNodes } from "./markup.ts";
 import { type MathOutput, typesetter } from "./typeset.ts";
 import { isElement } from "../../../shared/nodes.ts";
 
 export type { MathOutput } from "./typeset.ts";
+export { KATEX_TAGS, MATHML_TAGS } from "./markup.ts";
 
 export interface MathOptions {
   /**
@@ -33,10 +35,11 @@ export type MathMeta = {
 type Issue = { rule: `comark/math/${string}`; message: string };
 
 /**
- * What a formula becomes, and all its renderers read: its `tex`, `display` for display math, and `html`, the typeset
- * markup. A formula with no `html` couldn't be typeset, and renders its TeX.
+ * What a formula becomes, and all its renderers read: its `tex`, and `display` for display math. The typeset MathML is
+ * the formula's children, as elements, so a host's `security` plugin checks them like the rest of the document. A
+ * formula with no children couldn't be typeset, and renders its TeX.
  */
-export type FormulaAttributes = { tex?: string; display?: boolean; html?: string };
+export type FormulaAttributes = { tex?: string; display?: boolean };
 
 const DOLLAR = 0x24;
 const BACKSLASH = 0x5c;
@@ -208,13 +211,16 @@ export default defineComarkPlugin<MathOptions | undefined, MathMeta>((options = 
           const node = nodes[index];
           if (!node || !isElement(node)) continue;
           const [tag, attrs] = node;
-          // The renderers print `html` as it is, so only markup this plugin typeset may reach them.
-          if (tag === "formula" && "html" in attrs) {
+          // A formula's children are MathML that the renderers print as it is, so only formulas this plugin typeset
+          // may have any. A document that writes a `formula` with content, or the `html` it once carried, hears so.
+          if (tag === "formula" && ("html" in attrs || node.length > 2)) {
             delete attrs.html;
+            node.length = 2;
             issues.push({
               rule: "comark/math/authored-html",
-              message: `A \`formula\` element sets \`html\`, which only comark-mathml writes, so it's ignored. Write the formula between \`$\` signs instead.`,
+              message: `A \`formula\` element has content of its own, which only comark-mathml writes, so it's ignored. Write the formula between \`$\` signs instead.`,
             });
+            continue;
           }
           const inHtml = html || !!attrs.$?.html;
           if (!inHtml && tag === source.tag) {
@@ -238,12 +244,14 @@ export default defineComarkPlugin<MathOptions | undefined, MathMeta>((options = 
       for (const { list, index, tex, display } of found) {
         const result = typeset(tex, display);
         const attrs: FormulaAttributes = display ? { tex, display } : { tex };
-        if ("html" in result) attrs.html = result.html;
-        else
-          issues.push({
-            rule: "comark/math/invalid-tex",
-            message: `Math \`${quoted(tex)}\` failed to typeset: ${result.reason}. Fix the TeX or wrap it in code.`,
-          });
+        if ("html" in result) {
+          list[index] = ["formula", attrs, ...markupToNodes(result.html)];
+          continue;
+        }
+        issues.push({
+          rule: "comark/math/invalid-tex",
+          message: `Math \`${quoted(tex)}\` failed to typeset: ${result.reason}. Fix the TeX or wrap it in code.`,
+        });
         list[index] = ["formula", attrs];
       }
       if (!issues.length) return;

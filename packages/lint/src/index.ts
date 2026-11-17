@@ -489,11 +489,14 @@ function unknownComponents(
     ...new Set((Array.isArray(components) ? components : Object.keys(components)).map(kebab)),
   ].sort();
   const known = new Set([...names, ...htmlTags]);
-  const used: { name: string; written: string; line: number; column?: number }[] = blocks.map(
-    (block) => ({
-      ...block,
-      written: `${source.lines[block.line - 1]?.trim().match(/^:+/)?.[0] ?? "::"}${block.name}`,
-    }),
+  // A plugin can turn its own syntax into a block while parsing, as comark-mathml does with `$$`, under a name the
+  // document never writes. Only a block whose line writes `:name` is the author's.
+  const used: { name: string; written: string; line: number; column?: number }[] = blocks.flatMap(
+    (block) => {
+      const text = source.lines[block.line - 1] ?? "";
+      if (!text.includes(`:${block.name}`)) return [];
+      return [{ ...block, written: `${text.trim().match(/^:+/)?.[0] ?? "::"}${block.name}` }];
+    },
   );
   let range: [number, number] | null = null;
   for (const token of tokens) {

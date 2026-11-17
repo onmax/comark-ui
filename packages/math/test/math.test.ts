@@ -184,6 +184,30 @@ describe("comark-mathml", () => {
     expect(meta.issues).toHaveLength(2);
   });
 
+  it("ignores the content a document writes in a formula itself", async () => {
+    const markdown =
+      '<div>\n<formula tex="x"><img src="x" onerror="alert(1)"></formula>\n</div>\n\nand $y$';
+    const html = await render(markdown);
+    expect(html).not.toContain("<img");
+    expect(html).toContain('<span class="cmh cmh-source">x</span>');
+    const { meta } = await parse(markdown);
+    expect(Object.values(meta.issueRules ?? {})).toEqual(["comark/math/authored-html"]);
+  });
+
+  it("keeps its MathML through Comark's security plugin with the tags it exports", async () => {
+    const { default: security } = await import("comark/plugins/security");
+    const { MATHML_TAGS } = await import("../src/html.ts");
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const html = await createHtmlRenderer({
+      plugins: [math(), security({ allowedTags: ["p", "formula", ...MATHML_TAGS] })],
+      components,
+    })("Mass $E = mc^2$\n\n$$\n\\frac{a}{b}\n$$\n");
+    expect(warn).not.toHaveBeenCalled();
+    expect(html).toContain("<mi>E</mi><mo>=</mo>");
+    expect(html).toContain("<mfrac><mi>a</mi><mi>b</mi></mfrac>");
+    expect(html).not.toContain('class="cmh cmh-source"');
+  });
+
   it("takes the place of Comark's math plugin", async () => {
     const { default: core } = await import("comark/plugins/math");
     expect(math().name).toBe(core().name);

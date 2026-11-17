@@ -1,21 +1,22 @@
 import { defineComponent, h, onMounted } from "vue";
 import { addStyles, classOf } from "./client.ts";
 
-export { default } from "./index.ts";
+export { default, KATEX_TAGS, MATHML_TAGS } from "./index.ts";
 export type { FormulaAttributes, MathMeta, MathOptions, MathOutput } from "./index.ts";
 
-/** Math for `@comark/vue`. */
+/** Math for `@comark/vue`. The typeset MathML arrives as its default slot. */
 export const Formula = defineComponent({
   name: "Formula",
   inheritAttrs: false,
-  props: { tex: String, display: Boolean, html: String },
-  setup(props) {
+  props: { tex: String, display: Boolean },
+  setup(props, { slots }) {
     onMounted(addStyles);
-    return () =>
-      props.html
-        ? // The plugin typeset `html` itself, with links and other trusted commands off.
-          h("span", { class: classOf(props.display, true), innerHTML: props.html })
+    return () => {
+      const math = slots.default?.();
+      return math?.length
+        ? h("span", { class: classOf(props.display, true) }, math)
         : h("span", { class: classOf(props.display, false) }, props.tex ?? "");
+    };
   },
 });
 
