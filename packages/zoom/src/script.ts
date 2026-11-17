@@ -1,6 +1,7 @@
 /** What `comark-zoom:open` and `comark-zoom:change` carry, so a host can add its own UI to the zoomed view. */
 export interface ZoomDetail {
-  dialog: HTMLElement;
+  /** A modal `<dialog>` in the top layer, so the page behind it is inert. Add UI inside it, not elsewhere on the page. */
+  dialog: HTMLDialogElement;
   header: HTMLElement;
   /** A layer over the zoomed content, sized to it. Draw pins or outlines here. */
   layer: HTMLElement;
@@ -66,7 +67,7 @@ export function script(css: string): () => void {
   const easing = "cubic-bezier(.22,1,.36,1)";
 
   type View = {
-    dialog: HTMLElement;
+    dialog: HTMLDialogElement;
     header: HTMLElement;
     title: HTMLElement;
     count: HTMLElement;
@@ -543,7 +544,8 @@ export function script(css: string): () => void {
   function open(item: HTMLElement) {
     if (view) return;
     const items = groupOf(item);
-    const dialog = el("div", "cz-dialog", { role: "dialog", "aria-modal": "true", tabindex: "-1" });
+    // A modal dialog keeps focus in itself, makes the page inert, and closes on Escape.
+    const dialog = el("dialog", "cz-dialog", { tabindex: "-1" });
     const header = el("div", "cz-header");
     const title = el("span", "cz-title");
     const count = el("span", "cz-count");
@@ -580,6 +582,7 @@ export function script(css: string): () => void {
     arrows(current);
     view = current;
     document.body.append(dialog);
+    dialog.showModal();
     thumbs(current);
     lock();
     render(current);
@@ -590,6 +593,17 @@ export function script(css: string): () => void {
       const around = event.target === stage || event.target === backdrop;
       if (around && current.pressed === event.target) void shut();
     });
+    // Escape asks to close, and the close animates. A browser that won't let the request be refused, as Chrome does
+    // after a second Escape with no click or key between, has already closed the dialog by then; it still animates,
+    // since its styles keep it shown until shut() removes it.
+    dialog.addEventListener("cancel", (event) => {
+      event.preventDefault();
+      if (view === current) void shut();
+    });
+    // The close event comes a task later, when another zoom may already be open.
+    dialog.addEventListener("close", () => view === current && void shut());
+    // showModal() focuses the close button, and Chromium ignores `autofocus` on the dialog itself. Arrow keys and
+    // Escape work from the dialog, and a ring on the close button would read as a choice the reader didn't make.
     dialog.focus({ preventScroll: true });
 
     // Back closes the zoom, like a photo viewer. A frame with an opaque origin can't push history; Escape still works.
@@ -683,6 +697,8 @@ export function script(css: string): () => void {
       await Promise.all(animations.map((animation) => animation.finished.catch(() => {})));
     }
     for (const node of current.items) node.style.visibility = "";
+    // Removed rather than closed: close() would focus the element focused before it opened, scrolling to it, while
+    // Up and Down may have moved on to another figure.
     current.dialog.remove();
     unlock();
     view = null;
@@ -727,35 +743,12 @@ export function script(css: string): () => void {
         event.defaultPrevented ||
         (event.target instanceof Element &&
           event.target.closest("[role=slider],input,textarea,select,[contenteditable]"));
-      if (event.key === "Escape") {
-        event.preventDefault();
-        void shut();
-      } else if (own && event.key.startsWith("Arrow")) return;
-      else if (event.key === "ArrowLeft" && view.items.length > 1) go(view.index - 1);
+      if (own && event.key.startsWith("Arrow")) return;
+      if (event.key === "ArrowLeft" && view.items.length > 1) go(view.index - 1);
       else if (event.key === "ArrowRight" && view.items.length > 1) go(view.index + 1);
       else if (event.key === "ArrowUp" || event.key === "ArrowDown") {
         event.preventDefault();
         walk(event.key === "ArrowUp" ? -1 : 1);
-      } else if (event.key === "Tab") {
-        // Keep focus in the dialog.
-        const focusable = [
-          ...view.dialog.querySelectorAll<HTMLElement>(
-            "button,input:not([type=hidden]),select,textarea,[href],[tabindex]",
-          ),
-        ].filter((element) => !element.matches(":disabled,[tabindex='-1']"));
-        if (!focusable.length) return;
-        const first = focusable[0]!;
-        const last = focusable[focusable.length - 1]!;
-        if (
-          event.shiftKey &&
-          (document.activeElement === first || document.activeElement === view.dialog)
-        ) {
-          event.preventDefault();
-          last.focus();
-        } else if (!event.shiftKey && document.activeElement === last) {
-          event.preventDefault();
-          first.focus();
-        }
       }
     },
     { signal },

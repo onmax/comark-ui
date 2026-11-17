@@ -1,14 +1,13 @@
 <!-- The properties box for `@comark/svelte`. -->
 <script>
-  import { onMount } from "svelte";
-  import { addStyles, localizeDates } from "comark-properties/client";
+  import { relativize, start } from "comark-properties/client";
 
   let { children } = $props();
   let box = $state();
-  onMount(addStyles);
   $effect(() => {
     const root = box;
     if (!root) return;
+    const stop = start(root);
     // A snippet can update its rows without changing its identity or the box binding.
     const options = {
       subtree: true,
@@ -18,12 +17,14 @@
     };
     const observer = new MutationObserver(() => {
       observer.disconnect();
-      localizeDates(root);
+      relativize(root)();
       observer.observe(root, options);
     });
-    localizeDates(root);
     observer.observe(root, options);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      stop();
+    };
   });
 </script>
 

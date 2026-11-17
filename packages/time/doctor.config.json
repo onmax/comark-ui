@@ -5,6 +5,11 @@
       "ruleId": "vue/lifecycle/require-cleanup",
       "file": "src/client.ts",
       "reason": "client.ts is not a Vue component. start() returns a stop function that aborts every listener, and the Vue component calls it in onBeforeUnmount."
+    },
+    {
+      "ruleId": "typescript/strict/no-runtime-typeof",
+      "file": "src/describe.ts",
+      "reason": "describeTime parses strings with a calendar and offset validator; Date and millisecond inputs are separately converted and checked for a finite instant before formatting."
     }
   ]
 }

@@ -35,6 +35,8 @@ export function start(css: string): () => void {
     `<svg class="${name}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg>`;
   let card: HTMLElement | undefined;
   let current: HTMLAnchorElement | undefined;
+  // Keep the last anchor through the card's exit transition, until another citation takes it.
+  let positioned: HTMLAnchorElement | undefined;
   // A citation whose card Escape closed stays closed until the pointer or focus leaves it.
   let dismissed: HTMLAnchorElement | undefined;
   let opening = 0;
@@ -81,8 +83,10 @@ export function start(css: string): () => void {
         `<span class="cso-card-host"></span>${svg("cso-card-arrow", '<path d="M7 7h10v10"/><path d="M7 17 17 7"/>')}</span>` +
         '<span class="cso-card-title"></span></a>';
     }
-    // An app that replaces the page's body takes the card with it.
-    if (!card.isConnected) document.body.append(card);
+    // Popovers still inherit modal inertness. Keep the shared card with its citation,
+    // and move it back to the page when a later citation is outside a dialog.
+    const parent = link.closest("dialog:modal") ?? document.body;
+    if (card.parentElement !== parent) parent.append(card);
     const anchor = card.querySelector<HTMLAnchorElement>(".cso-card-link");
     const image = card.querySelector<HTMLImageElement>(".cso-card-image");
     const host = card.querySelector(".cso-card-host");
@@ -114,34 +118,44 @@ export function start(css: string): () => void {
     return card;
   }
 
-  // Above the citation, or below it when there's no room, centered on it and kept inside the viewport.
+  // Above the citation, or below it when there's no room, centered on it and kept inside the viewport. CSS anchor
+  // positioning places it where the browser has it, and follows scrolling; elsewhere the script measures.
+  const anchored = CSS.supports(
+    "(anchor-name: --a) and (position-area: top) and (position-try-fallbacks: flip-block) and (justify-self: anchor-center)",
+  );
   function place() {
     if (!card || !current) return;
     const at = current.getBoundingClientRect();
     const { clientWidth: right, clientHeight: bottom } = document.documentElement;
     if (at.bottom < 0 || at.top > bottom) return hide(true);
-    // Measured at the corner, so the width the last place left it doesn't narrow the card.
-    card.style.left = "0";
-    card.style.top = "0";
-    const width = card.offsetWidth;
-    const height = card.offsetHeight;
     const center = at.left + at.width / 2;
-    const left = Math.max(8, Math.min(center - width / 2, right - width - 8));
-    const above = at.top - gap - height >= 8 || at.top > bottom - at.bottom;
-    card.style.left = `${left}px`;
-    card.style.top = `${above ? at.top - gap - height : at.bottom + gap}px`;
-    card.style.transformOrigin = `${center - left}px ${above ? "100%" : "0"}`;
+    if (!anchored) {
+      // Measured at the corner, so the width the last place left it doesn't narrow the card.
+      card.style.left = "0";
+      card.style.top = "0";
+      const width = card.offsetWidth;
+      const height = card.offsetHeight;
+      const above = at.top - gap - height >= 8 || at.top > bottom - at.bottom;
+      card.style.left = `${Math.max(8, Math.min(center - width / 2, right - width - 8))}px`;
+      card.style.top = `${above ? at.top - gap - height : at.bottom + gap}px`;
+    }
+    // It grows from the citation, on whichever side it landed.
+    card.style.transformOrigin = `${center - card.offsetLeft}px ${card.offsetTop < at.top ? "100%" : "0"}`;
   }
 
   function show(link: HTMLAnchorElement, instant: boolean) {
     clearTimeout(opening);
     clearTimeout(closing);
+    if (!link.isConnected) return;
     const filled = fill(link);
     if (!filled) return hide(true);
     if (current && current !== link) {
       current.removeAttribute("aria-describedby");
       current.removeAttribute("data-cso-open");
     }
+    positioned?.removeAttribute("data-cso-anchor");
+    positioned = link;
+    link.setAttribute("data-cso-anchor", "");
     current = link;
     link.setAttribute("aria-describedby", filled.id);
     link.setAttribute("data-cso-open", "");
@@ -251,6 +265,7 @@ export function start(css: string): () => void {
       clearTimeout(opening);
       clearTimeout(closing);
       card?.remove();
+      positioned?.removeAttribute("data-cso-anchor");
       for (const link of document.querySelectorAll(".cso-cite a[data-cso-title]")) {
         link.setAttribute("title", link.getAttribute("data-cso-title") ?? "");
         for (const name of [

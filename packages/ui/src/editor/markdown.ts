@@ -874,6 +874,36 @@ async function readPage(markdown: string, { plugins = [], registerDefaultPlugins
     registerDefaultPlugins,
     plugins: [sourceKey(), ...plugins],
   });
+  // Property tooltip IDs identify rendered occurrences, not document content. Canonicalize only
+  // paired IDs inside generated date rows, preserving their reference relationships for comparison.
+  let tooltip = 0;
+  const normalize = (nodes: AstNode[], properties = false) => {
+    for (const node of nodes) {
+      if (!Array.isArray(node)) continue;
+      const inProperties = properties || node[0] === "properties";
+      if (inProperties && node[0] === "time" && node[1].class === "ctm") {
+        const id = node[1]["aria-describedby"];
+        const tip = node
+          .slice(2)
+          .find(
+            (child) =>
+              Array.isArray(child) &&
+              child[0] === "span" &&
+              child[1].class === "ctm-tip" &&
+              child[1].role === "tooltip" &&
+              child[1].id === id,
+          );
+        if (typeof id === "string" && id.startsWith("cfm-") && Array.isArray(tip)) {
+          const canonical = `cfm-tooltip-${tooltip++}`;
+          node[1]["aria-describedby"] = canonical;
+          tip[1].id = canonical;
+        }
+      }
+      // SAFETY: AST tuples store their tag and attributes first, followed only by child nodes.
+      normalize(node.slice(2) as AstNode[], inProperties);
+    }
+  };
+  normalize(tree.nodes);
   const read = JSON.stringify(
     { nodes: tree.nodes, frontmatter: tree.frontmatter },
     (_, value: unknown) => (key && typeof value === "string" ? value.replaceAll(key, "#") : value),

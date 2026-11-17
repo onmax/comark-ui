@@ -159,7 +159,7 @@ In an open or change listener, `event.detail.copyOf(element)` finds a page eleme
 
 ## Accessibility
 
-Each item is a tab stop that opens a modal dialog, labelled by its title. Focus stays in the dialog while it's open and returns to the item on close. An item inside another one, such as a screenshot in a slide, zooms with it, so only the outer one is a tab stop.
+Each item is a tab stop that opens a native modal `<dialog>`, labelled by its title. The dialog sits in the top layer and the page behind it is inert, so focus stays in the dialog while it's open. Focus returns to the item on close. An item inside another one, such as a screenshot in a slide, zooms with it, so only the outer one is a tab stop.
 
 ### Keyboard interactions
 
@@ -169,7 +169,7 @@ Each item is a tab stop that opens a modal dialog, labelled by its title. Focus 
 | `Escape` | Closes the zoomed view. |
 | `ArrowLeft`, `ArrowRight` | Moves to the previous or next item in a group. |
 | `ArrowUp`, `ArrowDown` | Scrolls a tall item, then moves to the previous or next figure on the page, at its first item. A figure is a group or an item on its own. The page scrolls beneath, so closing lands on the figure shown. A slider keeps these keys while it has focus. |
-| `Tab`, `Shift+Tab` | Moves focus between the dialog's buttons and thumbnails, and wraps around inside the dialog. |
+| `Tab`, `Shift+Tab` | Moves focus between the dialog's buttons and thumbnails. The page behind can't take focus. |
 
 ## API
 
@@ -216,7 +216,7 @@ On the open and change events, `event.detail` is a `ZoomDetail` with these field
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `dialog` | `HTMLElement` | The zoom dialog. |
+| `dialog` | `HTMLDialogElement` | The zoom dialog, open as a modal. The page behind it is inert, so put your own controls inside it. |
 | `header` | `HTMLElement` | The header for controls above the content. |
 | `footer` | `HTMLElement` | The footer for controls below the content. |
 | `layer` | `HTMLElement` | An overlay sized to the zoomed content for pins and outlines. |

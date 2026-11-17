@@ -1,5 +1,5 @@
-import { defineComponent, h, onMounted, onUpdated, shallowRef } from "vue";
-import { addStyles, localizeDates } from "./client.ts";
+import { defineComponent, h, onBeforeUnmount, onMounted, onUpdated, shallowRef } from "vue";
+import { start } from "./client.ts";
 
 export { default } from "./index.ts";
 export type { PropertiesMeta, PropertiesOptions } from "./index.ts";
@@ -10,12 +10,14 @@ export const Properties = defineComponent({
   inheritAttrs: false,
   setup(_, { slots }) {
     const box = shallowRef<HTMLElement>();
-    const localize = () => box.value && localizeDates(box.value);
-    onMounted(() => {
-      addStyles();
-      localize();
-    });
-    onUpdated(localize);
+    let stop: (() => void) | undefined;
+    const refresh = () => {
+      stop?.();
+      stop = box.value ? start(box.value) : undefined;
+    };
+    onMounted(refresh);
+    onUpdated(refresh);
+    onBeforeUnmount(() => stop?.());
     return () => {
       const rows = slots.default?.();
       return rows?.length

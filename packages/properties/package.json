@@ -52,6 +52,9 @@
     "doctor": "vite-doctor . --no-cache --max-warnings 0 --format text",
     "prepack": "pnpm --filter comark-properties... build"
   },
+  "dependencies": {
+    "comark-time": "workspace:*"
+  },
   "devDependencies": {
     "@comark/html": "catalog:",
     "@comark/react": "catalog:",

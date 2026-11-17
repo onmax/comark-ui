@@ -1,16 +1,21 @@
 import { createHtmlRenderer } from "@comark/html";
 import { parseMarkdown } from "comark";
 import { describe, expect, it } from "vite-plus/test";
-import { localizeDates } from "../src/client.ts";
-import properties, { components } from "../src/html.ts";
+import properties, { components, scripts } from "../src/html.ts";
 
 const render = (markdown: string, options = {}) =>
   createHtmlRenderer({ plugins: [properties(options)], components })(markdown).then((html) =>
     html
-      .replace(/<style[^>]*>.*?<\/style>/s, "")
-      .replace(/<script>.*?<\/script>/s, "")
+      .replace(/<style[^>]*>.*?<\/style>/gs, "")
+      .replace(/<script>.*?<\/script>/gs, "")
       .replace(/>\s+/g, ">")
       .replace(/\s+</g, "<"),
+  );
+// comark-time's markup: the date with its year until the script makes it relative, and the full date in the tooltip.
+const date = (datetime: string, label: string, tip: string, extra = "") =>
+  new RegExp(
+    `<time class="ctm" datetime="${datetime}" data-mode="absolute" tabindex="0" aria-describedby="(cfm-[\\w-]+)"${extra}>` +
+      `${label}<span class="ctm-tip" role="tooltip" id="\\1"><span class="ctm-pill">${tip}</span></span></time>`,
   );
 const issues = async (markdown: string, options = {}) =>
   (await parseMarkdown(markdown, { plugins: [properties(options)] })).meta.issues;
@@ -28,46 +33,72 @@ const review = [
 ].join("\n");
 
 describe("comark-properties", () => {
-  it("shows the chosen keys at the top, in order, and inlines the styles once", async () => {
-    const html = await createHtmlRenderer({ plugins: [properties()], components })(review);
-    expect(html.match(/<style data-comark-properties>/g)).toHaveLength(1);
-    expect(await render(review)).toMatch(
-      new RegExp(
-        '^<dl class="cfm" data-comark-frame>' +
-          '<div data-key="status" data-kind="status"><dt>Status</dt><dd><span class="cfm-status">Ready for review</span></dd></div>' +
-          '<div data-key="pr" data-kind="pr"><dt>PR</dt><dd><a href="https://github.com/onmax/comark-ui/pull/111">onmax/comark-ui#111</a></dd></div>' +
-          '<div data-key="author" data-kind="person"><dt>Author</dt><dd>onmax</dd></div>' +
-          '<div data-key="date" data-kind="date"><dt>Date</dt><dd><time datetime="2026-10-23">Oct 23, 2026</time></dd></div>' +
-          '<div data-key="tags" data-kind="tags"><dt>Tags</dt><dd><span class="cfm-tag">colors</span><span class="cfm-tag">docs</span></dd></div>' +
-          "</dl><p>Body</p>",
-      ),
+  it("gives repeated boxes and separate documents their own tooltip IDs", async () => {
+    const markdown = "---\ndate: 2026-11-02\n---\n\n::properties\n::\n\n::properties\n::";
+    const english = await render(markdown);
+    const german = await render(markdown, { locale: "de-DE" });
+    const combined = english + german;
+    const ids = [...combined.matchAll(/role="tooltip" id="([^"]+)"/g)].map((match) => match[1]);
+    const references = [...combined.matchAll(/aria-describedby="([^"]+)"/g)].map(
+      (match) => match[1],
     );
+    expect(ids).toHaveLength(4);
+    expect(new Set(ids).size).toBe(4);
+    expect(references).toEqual(ids);
+  });
+
+  it("shows the chosen keys at the top, in order, and inlines the styles once", async () => {
+    const html = await render(review);
+    expect(html.startsWith('<dl class="cfm" data-comark-frame>')).toBe(true);
+    expect(html.endsWith("</dl><p>Body</p>")).toBe(true);
+    for (const row of [
+      '<div data-key="status" data-kind="status"><dt>Status</dt><dd><span class="cfm-status">Ready for review</span></dd></div>' +
+        '<div data-key="pr" data-kind="pr"><dt>PR</dt><dd><a href="https://github.com/onmax/comark-ui/pull/111">onmax/comark-ui#111</a></dd></div>' +
+        '<div data-key="author" data-kind="person"><dt>Author</dt><dd>onmax</dd></div>' +
+        '<div data-key="date" data-kind="date"><dt>Date</dt><dd><time ',
+      '</time></dd></div><div data-key="tags" data-kind="tags"><dt>Tags</dt><dd><span class="cfm-tag">colors</span><span class="cfm-tag">docs</span></dd></div>',
+    ])
+      expect(html).toContain(row);
+    expect(html).toMatch(date("2026-10-23", "Oct 23, 2026", "Fri, Oct 23, 2026"));
+    const raw = await createHtmlRenderer({ plugins: [properties()], components })(review);
+    expect(raw.match(/<style data-comark-properties>/g)).toHaveLength(1);
     expect(await issues(review)).toEqual([]);
   });
 
-  it("rewrites the dates in the reader's locale unless the locale option fixes one", async () => {
-    const renderer = createHtmlRenderer({ plugins: [properties()], components });
-    expect((await renderer(review)).match(/<\/dl><script>\(function localizeDates/g)).toHaveLength(
-      1,
+  it("writes a date and an instant in comark-time's markup, readable before any script runs", async () => {
+    const html = await render(
+      "---\ndate: 2026-11-15T22:30:00-05:00\nshipped: 2026-11-02T09:30:00Z\nplanned: 2026-12-01 10:00\nwhen: 2026-02-30\n---\n",
+      { keys: ["date", "shipped", "planned", "when"] },
     );
+    // The server's text is the date with its year in UTC, which a cached copy can't get wrong the way "2 days ago" can.
+    expect(html).toMatch(
+      date("2026-11-16T03:30:00Z", "Nov 16, 2026", "Mon, Nov 16, 2026, 3:30\\sAM UTC"),
+    );
+    expect(html).toMatch(
+      date("2026-11-02T09:30:00Z", "Nov 2, 2026", "Mon, Nov 2, 2026, 9:30\\sAM UTC"),
+    );
+    expect(html).toMatch(
+      date("2026-12-01T10:00:00Z", "Dec 1, 2026", "Tue, Dec 1, 2026, 10:00\\sAM UTC"),
+    );
+    expect(html).toContain(
+      '<div data-key="when" data-kind="date"><dt>When</dt><dd><span>2026-02-30</span>',
+    );
+  });
+
+  it("follows each box with the script that makes its dates relative, and carries comark-time's styles once", async () => {
+    const renderer = createHtmlRenderer({ plugins: [properties()], components });
+    const html = await renderer(`${review}\n\n::properties\n::`);
+    const [relativize, escape] = scripts;
+    expect(html.match(/<style data-comark-time>/g)).toHaveLength(1);
+    expect(html.split(`<script>${escape}</script>`)).toHaveLength(2);
+    expect(html.split(`</dl><script>${relativize}</script>`)).toHaveLength(2);
+    expect(relativize).toMatch(/^\(function relativize\(/);
+    expect(relativize).toContain("function describeTime(");
     expect(await renderer("---\nstatus: Draft\n---\n")).not.toContain("<script>");
 
-    const fixed = await createHtmlRenderer({
-      plugins: [properties({ locale: "de-DE" })],
-      components,
-    })(review);
-    expect(fixed).toContain('<time datetime="2026-10-23" lang="de-DE">23. Okt. 2026</time>');
-
-    const time = { dateTime: "2026-10-23", textContent: "Oct 23, 2026" };
-    // SAFETY: `localizeDates` only calls `querySelectorAll` and reads `dateTime` and writes `textContent`.
-    localizeDates({ querySelectorAll: () => [time] } as unknown as ParentNode);
-    expect(time.textContent).toBe(
-      new Date("2026-10-23T00:00:00Z").toLocaleDateString(undefined, {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-        timeZone: "UTC",
-      }),
+    const fixed = await render(review, { locale: "de-DE" });
+    expect(fixed).toMatch(
+      date("2026-10-23", "23\\. Okt\\. 2026", "Fr\\., 23\\. Okt\\. 2026", ' lang="de-DE"'),
     );
   });
 
@@ -79,12 +110,12 @@ describe("comark-properties", () => {
 
   it.each(["en_US", ""])("falls back and reports an invalid locale %j", async (locale) => {
     const options = { locale };
-    expect(await render(review, options)).toContain(
-      '<time datetime="2026-10-23">Oct 23, 2026</time>',
+    expect(await render(review, options)).toMatch(
+      date("2026-10-23", "Oct 23, 2026", "Fri, Oct 23, 2026"),
     );
     const { meta } = await parseMarkdown(review, { plugins: [properties(options)] });
     const message =
-      "properties: `locale` is not a valid language tag, so dates use the reader's locale. Use a tag such as `de-DE`, or leave `locale` unset.";
+      "properties: `locale` is not a valid language tag, so dates are in English. Use a tag such as `de-DE`, or leave `locale` unset.";
     expect(meta.issues).toEqual([message]);
     expect(meta.issueRules[message]).toBe("comark/properties/invalid-locale");
   });
@@ -96,8 +127,9 @@ describe("comark-properties", () => {
       options,
     );
     expect(html).toContain(
-      '<div data-key="owner" data-kind="text"><dt>Owner</dt><dd>maxi</dd></div><div data-key="due" data-kind="date"><dt>Due date</dt><dd><time datetime="2026-11-01">Nov 1, 2026</time></dd>',
+      '<div data-key="owner" data-kind="text"><dt>Owner</dt><dd>maxi</dd></div><div data-key="due" data-kind="date"><dt>Due date</dt><dd><time ',
     );
+    expect(html).toMatch(date("2026-11-01", "Nov 1, 2026", "Sun, Nov 1, 2026"));
     expect(html).toContain(">group/project#7</a>");
     expect(await render(review, { top: false })).not.toContain("cfm");
   });

@@ -231,7 +231,7 @@ export function start(css: string): () => void {
       field.style.position = "fixed";
       field.style.inset = "-9999px auto auto -9999px";
       field.style.opacity = "0";
-      document.body.append(field);
+      (root.closest("dialog:modal") ?? document.body).append(field);
       field.select();
       document.addEventListener("copy", () => field.remove(), { once: true, signal });
       say(root, "Couldn't copy, so the code is selected. Press Ctrl+C or ⌘C.", "failed");
