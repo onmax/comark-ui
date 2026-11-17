@@ -55,6 +55,8 @@ digraph {
 > [!WARNING]
 > The diagram's source leaves your machine. It goes to `kroki.io` unless you [run your own Kroki](#run-your-own-kroki).
 
+In [comark-ui](/getting-started), diagrams stay code until you turn drawing on: `diagrams: true` sends them to `kroki.io`, and `diagrams: { server }` to your own Kroki.
+
 ## Usage
 
 Write a diagram in a fence with its tool's language. Every other fence stays code.
@@ -140,12 +142,12 @@ The plugin keeps the drawing and drops what could run: scripts, event handlers s
 
 ### Options
 
-Pass options under `diagrams` in `comarkUi()`, or to `diagrams()` alone.
+Pass options under `diagrams` in `comarkUi()`, or to `diagrams()` alone. comark-ui passes `{ draw: false }` when you leave `diagrams` out; `true` or any options object draws with the defaults below.
 
 | Option | Default | Description |
 | --- | --- | --- |
 | `server` | `"https://kroki.io"` | The Kroki server that draws the diagrams. Set your own to keep the sources private. |
-| `draw` | `true` | `false` leaves every diagram as code and sends nothing. |
+| `draw` | `true` (`false` in comark-ui) | `false` leaves every diagram as code and sends nothing. |
 
 ### Issues
 

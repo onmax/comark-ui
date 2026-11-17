@@ -81,7 +81,11 @@ export type PresetOptions = {
    * hand-drawn pen unless one sets its own `mark`.
    */
   comments?: CommentsOptions | boolean;
-  /** Sends each diagram's source to `https://kroki.io` unless you pass your own `server`, or `{ draw: false }`. */
+  /**
+   * Off by default: the fences stay code and nothing leaves the process. `true` sends each diagram's source to
+   * `https://kroki.io` to draw it, and `{ server }` to your own Kroki. `false` also drops the check that refuses authored
+   * `::diagram` SVG.
+   */
   diagrams?: DiagramsOptions | boolean;
   /**
    * Draws `mermaid` fences with comark-pele, on the server and offline. A host that renders documents it didn't write
@@ -328,7 +332,12 @@ export function preset<C>(renderer: Renderer<C>, options: PresetOptions = {}): P
   add(renderer.properties, options.properties);
   add(renderer.chips, options.chips);
   add(renderer.colors, options.colors);
-  add(renderer.diagrams, options.diagrams);
+  // Drawing sends the source to a third-party server, so the preset only does it when asked.
+  add(
+    renderer.diagrams,
+    options.diagrams,
+    options.diagrams === undefined ? { draw: false } : optionsOf(options.diagrams),
+  );
   if (on(options.mermaid)) {
     const { maxDiagrams, maxSource, ...pele } = optionsOf(options.mermaid) ?? {};
     add(renderer.mermaid, true, pele);
