@@ -1,5 +1,5 @@
 import { createElement, useEffect } from "react";
-import { addStyles } from "./client.ts";
+import { css, start } from "./client.ts";
 import type { TimeAttributes } from "./index.ts";
 
 export { default, TIME_TAG } from "./index.ts";
@@ -7,7 +7,7 @@ export type { TimeAttributes, TimeMeta, TimeOptions } from "./index.ts";
 
 /** `:time` for `@comark/react`. */
 export function RelativeTime({ id, datetime, mode, label, tip }: TimeAttributes) {
-  useEffect(addStyles, []);
+  useEffect(() => start(css), []);
   if (!datetime || !label) return null;
   return createElement(
     "time",

@@ -24,7 +24,7 @@ Opened :time[2026-11-02], last touched :time[2026-11-04T11:59:56Z], due :time[20
 The first sighting was :time[2026-09-30]{threshold="8w"}.
 ```
 
-`:time[2026-11-02]` reads "2 days ago" and opens "Mon, Nov 2, 2026" in a tooltip. A date alone counts whole days from today; with a time of day, it counts down to the second. The plugin works out the words, the date, and the tooltip while parsing, so it needs no script, and every `:time` in a document is measured from one `now`. Pass `now` to pin it, `locale` and `timeZone` to set the words and the day, and `threshold` to move the switch to a date or write `threshold="none"` to keep a date relative.
+`:time[2026-11-02]` reads "2 days ago" and opens "Mon, Nov 2, 2026" in a tooltip. A date alone counts whole days from today; with a time of day, it counts down to the second. The plugin works out the words, the date, and the tooltip while parsing, and every `:time` in a document is measured from one `now`. The tooltip is CSS; a small script only lets Escape close it. Pass `now` to pin it, `locale` and `timeZone` to set the words and the day, and `threshold` to move the switch to a date or write `threshold="none"` to keep a date relative.
 
 > [!NOTE]
 > Rendered HTML keeps the words it was parsed with. Re-render cached pages, or render in the reader's browser with Vue, React, or Svelte.

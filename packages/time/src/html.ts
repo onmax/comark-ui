@@ -1,27 +1,38 @@
 import type { NodeHandler, State } from "comark";
+import { start } from "./client.ts";
 import { css } from "./styles.ts";
-import { attr } from "../../../shared/html.ts";
+import { attr, inlineScript } from "../../../shared/html.ts";
 
 export { default, TIME_TAG } from "./index.ts";
 export type { TimeAttributes, TimeMeta, TimeOptions } from "./index.ts";
 
-// Each render gets a fresh `state.context`, so a document carries the styles once.
-const styled = new WeakSet<object>();
+const inline = inlineScript(`(${start.toString()})("")`);
 
-const styles = ({ context }: State) => {
-  if (styled.has(context)) return "";
-  styled.add(context);
-  return `<style data-comark-time>${css}</style>`;
+/**
+ * The inline scripts this renderer writes, each exactly as it goes in its `<script>`: the one that lets Escape close a
+ * tooltip. It's the same on every render, so a page with a strict Content Security Policy can allow it by hash or add
+ * its nonce.
+ */
+export const scripts: string[] = [inline];
+
+// Each render gets a fresh `state.context`, so a document carries the styles and the script once.
+const started = new WeakSet<object>();
+
+// The styles come inline before the script, so the script has nothing to add.
+const runtime = ({ context }: State) => {
+  if (started.has(context)) return "";
+  started.add(context);
+  return `<style data-comark-time>${css}</style><script>${inline}</script>`;
 };
 
 const time: NodeHandler = ([, attrs], state) => {
   const { id, datetime, mode, label, tip } = attrs;
   if (!datetime || !label) return "";
   return (
-    `${styles(state)}<time class="ctm" datetime="${attr(datetime)}" data-mode="${attr(mode)}" tabindex="0" aria-describedby="${attr(id)}">` +
+    `${runtime(state)}<time class="ctm" datetime="${attr(datetime)}" data-mode="${attr(mode)}" tabindex="0" aria-describedby="${attr(id)}">` +
     `${attr(label)}<span class="ctm-tip" role="tooltip" id="${attr(id)}"><span class="ctm-pill">${attr(tip)}</span></span></time>`
   );
 };
 
-/** The HTML renderer for `:time`. Pass it as `components`; it inlines the styles once per document. */
+/** The HTML renderer for `:time`. Pass it as `components`; it inlines the styles and the script once per document. */
 export const components: Record<"relative-time", NodeHandler> = { "relative-time": time };
