@@ -5,9 +5,10 @@ import { join } from "node:path";
 import { promisify } from "node:util";
 import { renderHtmlFromDocument } from "@comark/html";
 import { parseMarkdown } from "comark";
+import { scripts as carouselScripts } from "comark-carousel/html";
 import security from "comark/plugins/security";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
-import annotate, { components } from "../src/html.ts";
+import annotate, { components, scripts } from "../src/html.ts";
 import xref from "../../xref/src/index.ts";
 
 async function run(markdown: string, options?: Parameters<typeof annotate>[0]) {
@@ -21,6 +22,9 @@ async function run(markdown: string, options?: Parameters<typeof annotate>[0]) {
 
 // The stylesheet the renderer inlines, so the tests read the CSS a reader's browser gets.
 const styles = (html: string) => /<style>([^]*?)<\/style>/.exec(html)?.[1] ?? "";
+// How many times the page carries comark-annotate's own script, apart from the carousel's and zoom's it lists too.
+const ownScript = scripts.find((script) => !carouselScripts.includes(script));
+const ownScripts = (html: string) => html.split(`<script>${ownScript}</script>`).length - 1;
 
 const compare = `
 ::compare
@@ -109,7 +113,7 @@ describe("comark-annotate", () => {
     const slider = compare.replace("::compare", '::compare{mode="slider"}');
     const { html } = await run(`${slider}\n${slider.replaceAll(".png", "-2.png")}`);
     expect(html.match(/<div class="ca-swipe"/g)).toHaveLength(2);
-    expect(html.match(/<script>\(function start\(\) \{/g)).toHaveLength(1);
+    expect(ownScripts(html)).toBe(1);
   });
 
   it("inlines the styles once per render and keeps ids stable and unique", async () => {
@@ -306,7 +310,7 @@ describe("comark-annotate", () => {
     expect(html).toMatch(
       /<div class="ca-frame"><img src="a.png"[^>]*><span class="ca-mark[^]*?<\/span><label class="ca-hide"[^]*?<\/label><button type="button" class="ca-copy"[^]*?<\/button><span class="ca-copy-status" role="status"><\/span><\/div>/,
     );
-    expect(html.match(/<script>\(function start\(\) \{/g)).toHaveLength(1);
+    expect(ownScripts(html)).toBe(1);
     expect(styles(html)).toContain(".ca-copy{display:none}");
     expect(styles(html)).toContain("[data-annotate-copy] .ca-copy{");
     expect(styles(html)).toContain(

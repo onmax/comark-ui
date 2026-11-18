@@ -82,6 +82,42 @@ test("a zoomed table keeps its header row", async ({ page }) => {
   await expect(page.locator(".cz-dialog th").first()).toHaveText("Attempt");
 });
 
+test("zoom keeps SVG paint colors and remaps local references to unused IDs", async ({ page }) => {
+  const body = await render("::zoom\nSVG fixture\n::");
+  await fixture(
+    page,
+    `<svg width="0" height="0" style="position:absolute"><clipPath id="plot-cz1"/></svg>${body.replace(
+      "SVG fixture",
+      `<svg width="120" height="60" xmlns:xlink="http://www.w3.org/1999/xlink">
+        <defs>
+          <clipPath id="plot"><rect width="120" height="60"/></clipPath>
+          <linearGradient id="f00"><stop stop-color="blue"/></linearGradient>
+        </defs>
+        <rect id="bar" width="60" height="60" fill="#f00" clip-path="url( #plot )"/>
+        <use href="#bar" x="60"/>
+        <use xlink:href="#bar" opacity="0"/>
+        <rect width="10" height="10" fill="url( '#f00' )"/>
+      </svg>`,
+    )}`,
+  );
+  await page.locator("main [data-zoom]").click();
+  const copy = page.locator(".cz-item svg");
+  const clipId = await copy.locator("clipPath").getAttribute("id");
+  const gradientId = await copy.locator("linearGradient").getAttribute("id");
+  const bar = copy.locator(":scope > rect").first();
+  const barId = await bar.getAttribute("id");
+  expect(clipId).not.toBe("plot");
+  expect.soft(clipId).not.toBe("plot-cz1");
+  await expect.soft(bar).toHaveCSS("fill", "rgb(255, 0, 0)");
+  await expect.soft(bar).toHaveAttribute("clip-path", `url(#${clipId})`);
+  await expect(copy.locator("use").first()).toHaveAttribute("href", `#${barId}`);
+  await expect(copy.locator("use").last()).toHaveAttribute("xlink:href", `#${barId}`);
+  await expect(copy.locator(":scope > rect").last()).toHaveAttribute(
+    "fill",
+    `url('#${gradientId}')`,
+  );
+});
+
 test("a zoomed block keeps its text styles, so it closes onto the original without a jump", async ({
   page,
 }) => {
@@ -162,6 +198,10 @@ test("grouped blocks stand apart, and their view fits the item between the arrow
 
   await blocks.first().click();
   await expect(page.locator(".cz-nav svg")).toHaveCount(2);
+  const strip = await rect(page, ".cz-strip");
+  const firstThumb = await rect(page, ".cz-thumb:first-child");
+  const lastThumb = await rect(page, ".cz-thumb:last-child");
+  expect(firstThumb.left - strip.left).toBeCloseTo(strip.right - lastThumb.right);
   const zoomed = await rect(page, ".cz-item");
   expect(zoomed.left).toBeGreaterThan((await rect(page, ".cz-prev")).right);
   expect(zoomed.right).toBeLessThan((await rect(page, ".cz-next")).left);
@@ -694,4 +734,51 @@ test("Up and Down move between the page's figures, scroll a tall one first, and 
   await expect(dialog).toHaveCount(0);
   const first = page.locator("main [data-zoom-gallery] [data-zoom]").first();
   await expect(first).toBeInViewport();
+});
+
+test("on a phone, a long title stays on the screen and keeps the close button there", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await fixture(
+    page,
+    await render(
+      "![The booking page with the departure station, the arrival station, and the travel date filled in](/dashboard.png)",
+    ),
+  );
+  await page.locator("main img[data-zoom]").click();
+  await expect(page.locator(".cz-dialog")).toBeVisible();
+  for (const part of [".cz-stage", ".cz-header"])
+    expect((await rect(page, part)).right).toBeLessThanOrEqual(390);
+  const close = await rect(page, ".cz-close");
+  expect(close.right).toBeLessThanOrEqual(390);
+  expect(close.width).toBeCloseTo(2.25 * 16);
+});
+
+test("on a phone, both ends of a wide thumbnail strip are reachable", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await fixture(
+    page,
+    await render(
+      Array.from(
+        { length: 7 },
+        (_, index) => `::zoom{group="tour" title="Item ${index + 1}"}\n${image}\n::`,
+      ).join("\n\n"),
+    ),
+  );
+  await page.locator("[data-zoom-group='tour']").nth(3).click();
+  await expect(page.locator(".cz-title")).toHaveText("Item 4");
+
+  const strip = page.locator(".cz-strip");
+  const thumbs = strip.locator(".cz-thumb");
+  await expect(thumbs).toHaveCount(7);
+  await strip.evaluate((node) => (node.scrollLeft = 0));
+  await expect(thumbs.first()).toBeInViewport({ ratio: 1 });
+  await thumbs.first().click();
+  await expect(page.locator(".cz-title")).toHaveText("Item 1");
+
+  await strip.evaluate((node) => (node.scrollLeft = node.scrollWidth));
+  await expect(thumbs.last()).toBeInViewport({ ratio: 1 });
+  await thumbs.last().click();
+  await expect(page.locator(".cz-title")).toHaveText("Item 7");
 });

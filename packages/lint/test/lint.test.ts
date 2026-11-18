@@ -493,37 +493,26 @@ describe("lint()", () => {
       },
     };
     const found = await lint("::compare\n", { plugins: [broken] });
+    // Each crash names its rule, then the error it threw.
+    const crashed = (rule: string) => [
+      rule,
+      expect.stringMatching(new RegExp(`^lint-comark crashed while checking \`${rule}\`: .+`)),
+    ];
     expect(found.map(({ rule, message }) => [rule, message])).toEqual([
-      [
-        "comark/broken-anchor",
-        "lint-comark crashed while checking `comark/broken-anchor`: Cannot read properties of null (reading 'id').",
-      ],
-      [
-        "comark/unsafe-url",
-        "lint-comark crashed while checking `comark/unsafe-url`: Cannot read properties of null (reading 'href').",
-      ],
-      [
-        "comark/duplicate-id",
-        "lint-comark crashed while checking `comark/duplicate-id`: Cannot read properties of null (reading 'id').",
-      ],
-      [
-        "comark/missing-alt",
-        "lint-comark crashed while checking `comark/missing-alt`: Cannot read properties of null (reading 'src').",
-      ],
-      [
-        "comark/empty-link",
-        "lint-comark crashed while checking `comark/empty-link`: Cannot read properties of null (reading 'href').",
-      ],
-      [
-        "comark/broken-link",
-        "lint-comark crashed while checking `comark/broken-link`: Cannot read properties of null (reading 'href').",
-      ],
+      crashed("comark/broken-anchor"),
+      crashed("comark/unsafe-url"),
+      crashed("comark/duplicate-id"),
+      crashed("comark/missing-alt"),
+      crashed("comark/empty-link"),
+      crashed("comark/broken-link"),
       ["comark/unclosed-block", "`::compare` opened on line 1 is never closed."],
     ]);
     for (const diagnostic of found.filter(({ message }) =>
       message.startsWith("lint-comark crashed"),
-    ))
+    )) {
       expect(diagnostic.cause).toBeInstanceOf(TypeError);
+      expect(diagnostic.message).toContain((diagnostic.cause as TypeError).message);
+    }
   });
 });
 

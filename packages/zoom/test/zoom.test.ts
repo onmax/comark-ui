@@ -30,6 +30,12 @@ describe("comark-zoom", () => {
     expect(html).not.toContain("<script>");
   });
 
+  it("zooms the images in a block named carousel when comark-carousel doesn't draw it", async () => {
+    const html = await render("::carousel\n1. A step\n\n   ![One](a.png)\n::");
+    expect(html).toContain('<img src="a.png" alt="One" data-zoom="" tabindex="0">');
+    expect(html.match(/<script>/g)).toHaveLength(1);
+  });
+
   it("can leave every image alone", async () => {
     const html = await render("![One](a.png)", { images: false });
     expect(html).not.toContain("data-zoom");

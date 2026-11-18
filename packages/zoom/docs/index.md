@@ -119,7 +119,7 @@ Use the `data-zoom-src` attribute to load a larger file when the view opens. Unt
 
 ### Turn zoom off
 
-Use `zoom=false` to keep one image from zooming. Images inside links never zoom.
+Use `zoom=false` to keep one image from zooming. Images inside links never zoom, and images inside a `::zoom`, a carousel slide, or a screenshot zoom with it. A `::carousel` or `::screenshot` counts only when comark-carousel or comark-annotate is registered, so a block of your own with that name keeps its images zoomable.
 
 ```md
 ![Company logo](/logo.png){zoom=false}

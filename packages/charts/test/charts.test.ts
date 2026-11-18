@@ -149,7 +149,7 @@ ${sizes.trim()}
     ).toEqual(["table", "markdown"]);
   });
 
-  it("draws a section under a hairline, with its title and what to read in it at the start", async () => {
+  it("draws a section with its title and what to read in it at the start, and no rule over it", async () => {
     const html = await render(
       chart(sizes, '{title="Bundle size" description="The two packages most pages load."}'),
     );
@@ -157,7 +157,7 @@ ${sizes.trim()}
       '<figure class="cch" data-type="bar"><figcaption>Bundle size</figcaption><p class="cch-description">The two packages most pages load.</p><div class="cch-plot">',
     );
     expect(html).toContain(":where(.cch){--cch-padding:0}");
-    expect(html).toMatch(/\.cch\{[^}]*border-top:1px solid var\(--_comark-border\)/);
+    expect(html).not.toMatch(/\.cch\{[^}]*border/);
     expect(html).not.toContain("data-comark-frame");
     expect(await issues(chart(sizes, '{description="Read the first bar."}'))).toEqual([]);
   });

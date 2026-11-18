@@ -14,7 +14,7 @@ export const css = `@layer comark{${[
   "[data-zoom]:focus-visible{outline:2px solid var(--_comark-ring);outline-offset:3px}",
   // The dialog fills the window in place of the browser's centered box. Its styles keep it shown after a close, so the
   // closing animation runs to its end whatever closed it.
-  ".cz-dialog{position:fixed;inset:0;z-index:2147483000;display:grid;grid-template-rows:auto minmax(0,1fr) auto;width:auto;height:auto;max-width:none;max-height:none;margin:0;padding:0;overflow:visible;border:0;background:none;color:var(--_comark-foreground);font:13px/1.4 var(--_comark-font);outline:none}",
+  ".cz-dialog{position:fixed;inset:0;z-index:2147483000;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;width:auto;height:auto;max-width:none;max-height:none;margin:0;padding:0;overflow:visible;border:0;background:none;color:var(--_comark-foreground);font:13px/1.4 var(--_comark-font);outline:none}",
   // .cz-backdrop is the backdrop, so it fades with the rest of the view.
   ".cz-dialog::backdrop{background:none}",
   ".cz-backdrop{position:absolute;inset:0;background:var(--cz-backdrop,color-mix(in srgb,var(--_comark-background) var(--cz-backdrop-opacity,96%),transparent))}",
@@ -27,7 +27,7 @@ export const css = `@layer comark{${[
   "@media (hover:none){.cz-place{display:none}.cz-place+.cz-close{margin-left:auto}}",
   ".cz-dialog button{display:inline-grid;place-items:center;border:0;border-radius:calc(var(--_comark-radius) - 2px);background:none;color:inherit;font:inherit;cursor:pointer}",
   ".cz-dialog button:focus-visible{outline:2px solid var(--_comark-ring);outline-offset:1px}",
-  ".cz-close{width:2.25rem;height:2.25rem;margin-left:auto;font-size:18px}",
+  ".cz-close{flex-shrink:0;width:2.25rem;height:2.25rem;margin-left:auto;font-size:18px}",
   // The track keeps the stage's size, so an item taller than the stage doesn't grow it and move its center down.
   ".cz-stage{position:relative;display:grid;grid-template:minmax(0,1fr)/minmax(0,1fr);place-items:center;overflow:hidden}",
   ".cz-stage[data-scroll]{grid-template-rows:auto;align-items:start;overflow-y:auto}",
@@ -57,7 +57,7 @@ export const css = `@layer comark{${[
   ".cz-dialog[data-aside]{grid-template-columns:minmax(0,1fr) minmax(14rem,22rem)}",
   ".cz-dialog[data-aside] .cz-aside{position:relative;display:block;grid-row:2;grid-column:2;align-self:center;max-height:100%;overflow:auto;padding:1rem 1.5rem 1rem .5rem}",
   "@media (max-width:48rem){.cz-dialog[data-aside]{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto auto}.cz-dialog[data-aside] .cz-aside{grid-row:3;grid-column:1;align-self:auto;max-height:30vh;padding:.5rem 1rem}.cz-dialog[data-aside] .cz-footer{grid-row:4}}",
-  ".cz-strip{display:flex;gap:.5rem;justify-content:center;overflow-x:auto;padding:.75rem 1rem 1rem}",
+  ".cz-strip{display:flex;gap:.5rem;justify-content:safe center;overflow-x:auto;padding:.75rem 1rem 1rem}",
   ".cz-strip .cz-thumb{position:relative;flex:none;width:6rem;height:4rem;overflow:hidden;border:1px solid var(--_comark-border);border-radius:calc(var(--_comark-radius) - 2px);background:var(--_comark-background);opacity:.55;transition:opacity .15s}",
   ".cz-thumb:hover{opacity:.85}",
   ".cz-thumb[aria-current=true]{opacity:1;border-color:var(--_comark-foreground)}",
