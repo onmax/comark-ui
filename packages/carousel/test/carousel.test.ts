@@ -33,6 +33,20 @@ describe("comark-carousel", () => {
     expect(html.match(/<script>/g)).toHaveLength(2);
   });
 
+  it("zooms the slide, not the image in it, whichever plugin comes first", async () => {
+    for (const plugins of [
+      [carousel(), zoom()],
+      [zoom(), carousel()],
+    ]) {
+      const html = await createHtmlRenderer({
+        plugins,
+        components: { ...components, ...zoomComponents },
+      })("::carousel\n![One](a.png)\n\nTwo\n::");
+      expect(html).toContain('<img src="a.png" alt="One">');
+      expect(html.match(/class="cc-slide"[^>]*data-zoom/g)).toHaveLength(2);
+    }
+  });
+
   it("inlines styles a site can theme with --cc-* variables, with today's look as the fallback", async () => {
     const style = /<style data-comark-carousel>(.*?)<\/style>/s.exec(
       await render("::carousel\nOne\n\nTwo\n::"),
