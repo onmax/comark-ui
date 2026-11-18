@@ -58,7 +58,9 @@ export const css = `@layer comark{${[
   // Lucide's tag icon, as a mask over the muted color.
   `.cgg-tag::before{width:.75rem;height:.75rem;vertical-align:-2px;background:var(--_comark-muted);-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12.6 2.6A2 2 0 0 0 11.2 2H4a2 2 0 0 0-2 2v7.2a2 2 0 0 0 .6 1.4l8.7 8.7a2.4 2.4 0 0 0 3.4 0l6.6-6.6a2.4 2.4 0 0 0 0-3.4z'/%3E%3Ccircle cx='7.5' cy='7.5' r='1.2'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12.6 2.6A2 2 0 0 0 11.2 2H4a2 2 0 0 0-2 2v7.2a2 2 0 0 0 .6 1.4l8.7 8.7a2.4 2.4 0 0 0 3.4 0l6.6-6.6a2.4 2.4 0 0 0 0-3.4z'/%3E%3Ccircle cx='7.5' cy='7.5' r='1.2'/%3E%3C/svg%3E") center/contain no-repeat}`,
   // A `#commit-<sha>` slot's Markdown, one line under its commit, since the row's height is fixed.
-  ".cgg-note{min-width:0;overflow:hidden;color:var(--_comark-muted);font-size:.75rem;line-height:1rem;white-space:nowrap;text-overflow:ellipsis}",
+  ".cgg-row[data-notes] :is(.cgg-line,.cgg-subject){line-height:24px!important}",
+  ".cgg-note{flex:none;min-width:0;overflow:hidden;color:var(--_comark-muted);font-size:12px!important;line-height:18px!important;white-space:nowrap;text-overflow:ellipsis}",
+  ".cgg-note :where(*){line-height:inherit!important}",
   ".cgg-note>*{display:inline;margin:0}",
   `.cgg-note code{font:.75rem/1 ${MONO}}`,
   ".cgg-key{display:inline-flex;align-items:center;gap:.375rem}",

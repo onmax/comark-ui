@@ -83,8 +83,8 @@ export interface Drawing {
 }
 
 /** Lays out a graph newest first, as git prints it, or oldest first with `reverse`. `notes` holds each `#commit-<sha>`
- * slot's Markdown by the commit's row, drawn as a second line under it. */
-export function draw(graph: Graph, reverse: boolean, notes: Map<number, Node[]>): Drawing {
+ * slot's Markdown by the commit's printed hash, drawn as a second line under it. */
+export function draw(graph: Graph, reverse: boolean, notes: Map<string, Node[]>): Drawing {
   const { commits, lanes } = graph;
   const { spans, column, columns: count } = columns(graph);
   const display = commits.map((_, i) => i);
@@ -93,7 +93,7 @@ export function draw(graph: Graph, reverse: boolean, notes: Map<number, Node[]>)
   display.forEach((row, k) => {
     pos[row] = k;
   });
-  const heights = display.map((row) => (notes.has(row) ? NOTES_ROW : ROW));
+  const heights = display.map((row) => (notes.has(commits[row].sha) ? NOTES_ROW : ROW));
   const tops: number[] = [];
   heights.forEach((h, k) => {
     tops[k] = k ? tops[k - 1] + heights[k - 1] : 0;
@@ -186,9 +186,9 @@ export function draw(graph: Graph, reverse: boolean, notes: Map<number, Node[]>)
       if (other.deleted && other.ref) line.push(["span", { class: "cgg-muted" }, `#${other.ref}`]);
     });
     for (const tag of commit.tags) line.push(["span", { class: "cgg-tag" }, tag]);
-    line.push(["span", { class: "cgg-sha" }, commit.sha]);
+    line.push(["span", { class: "cgg-sha" }, commit.sha.slice(0, 7)]);
     const row: Node[] = [["div", { class: "cgg-line" }, ...line]];
-    const note = notes.get(i);
+    const note = notes.get(commit.sha);
     if (note) row.push(["div", { class: "cgg-note" }, ...note]);
     return ["div", attrs, ...row];
   });

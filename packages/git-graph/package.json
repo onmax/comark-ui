@@ -1,7 +1,7 @@
 {
   "name": "comark-git-graph",
   "version": "0.13.0",
-  "description": "Commit graphs from pasted git output: branches, merges, tags, and which branches have each fix. A Comark plugin.",
+  "description": "Commit graphs from pasted git log output, with per-commit Markdown notes for backports and more. A Comark plugin.",
   "keywords": [
     "backport",
     "cherry-pick",

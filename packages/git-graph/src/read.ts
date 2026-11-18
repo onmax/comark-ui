@@ -49,7 +49,6 @@ interface Logged {
   subject: string;
 }
 
-const short = (sha: string) => sha.slice(0, 7);
 const GRAPH = String.raw`[\s*|\\/_.-]*?`;
 // `* 69a6efb a002d09 (release/2.4) Stop polling` from `--oneline`, with parents and labels when they were asked for.
 const ONELINE = new RegExp(
@@ -78,12 +77,12 @@ function readLog(lines: string[]): Logged[] {
       .split(",")
       .map((ref) => ref.trim())
       .filter(Boolean);
-  const parents = (list: string) => list.trim().split(/\s+/).filter(Boolean).map(short);
+  const parents = (list: string) => list.trim().split(/\s+/).filter(Boolean);
   for (const line of lines) {
     const long = LONG.exec(line);
     if (long) {
       pending = {
-        sha: short(long[1]),
+        sha: long[1],
         parents: parents(long[2]),
         refs: split(long[3]),
         subject: "",
@@ -105,7 +104,7 @@ function readLog(lines: string[]): Logged[] {
     const one = ONELINE.exec(line);
     if (one)
       out.push({
-        sha: short(one[1]),
+        sha: one[1],
         parents: parents(one[2]),
         refs: split(one[3]),
         subject: one[4] ?? "",
@@ -122,18 +121,28 @@ const MERGE_BRANCH = /^Merge (?:remote-tracking )?branch '([^']+)'/;
 export function readGraph(source: string): Graph {
   const problems: Problem[] = [];
   const all = sections(source);
+  const unread = [
+    ...new Set(
+      all
+        .slice(1)
+        .filter((section) => section.argv[0] !== "log")
+        .map((section) => `git ${section.argv[0]}`),
+    ),
+  ];
+  if (unread.length) problems.push({ kind: "unread-commands", commands: unread });
   const logged = all
     .filter((section) => section.argv[0] === "log")
     .flatMap((section) => readLog(section.lines));
   const seen = new Set<string>();
   const unique = logged.filter((entry) => !seen.has(entry.sha) && seen.add(entry.sha));
-  if (!unique.length) return { commits: [], lanes: [], problems: [{ kind: "no-commits" }] };
+  if (!unique.length)
+    return { commits: [], lanes: [], problems: [{ kind: "no-commits" }, ...problems] };
 
   const order = [...unique].reverse();
   const index = new Map(order.map((entry, i) => [entry.sha, i]));
   const noParents = order.length > 1 && order.every((entry) => !entry.parents.length);
   if (noParents) {
-    problems.push({ kind: "no-parents" });
+    problems.unshift({ kind: "no-parents" });
     // Without parents the best guess is the order git printed: each commit on top of the one below it.
     order.forEach((entry, i) => {
       if (i) entry.parents = [order[i - 1].sha];
@@ -221,7 +230,7 @@ export function readGraph(source: string): Graph {
     }
   });
   for (let i = commits.length - 1; i >= 0; i--)
-    if (commits[i].lane < 0) claim(commits[i].sha, i, { deleted: true });
+    if (commits[i].lane < 0) claim(commits[i].sha.slice(0, 7), i, { deleted: true });
   commits.forEach((commit, i) => {
     const second = parentsOf(i)[1];
     if (second !== undefined && commits[second].lane !== commit.lane) commit.mergeFrom = second;
@@ -232,15 +241,6 @@ export function readGraph(source: string): Graph {
     }
   });
 
-  const unread = [
-    ...new Set(
-      all
-        .slice(1)
-        .filter((section) => section.argv[0] !== "log")
-        .map((section) => `git ${section.argv[0]}`),
-    ),
-  ];
-  if (unread.length) problems.push({ kind: "unread-commands", commands: unread });
   return { commits, lanes, problems };
 }
 

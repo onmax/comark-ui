@@ -39,7 +39,7 @@ A fence takes no other prop, since Comark drops a code block's `{…}` attribute
 | `reverse` | Oldest commit first, as `git log --reverse`. Without it, rows keep git's order, newest first. |
 | `max-count` | Keeps the newest commits, as `git log -n`, and folds the rest into one "n more commits" row. |
 
-A `#commit-<sha>` slot puts one line of Markdown under that commit: a review, a CI result, or whether a backport applies. Write the hash as the log prints it, or its first four characters or more. A `#footer` slot puts Markdown under the graph, such as a task list.
+A `#commit-<sha>` slot puts one line of Markdown under that commit: a review, a CI result, or whether a backport applies. Use the hash as printed in the log or a unique prefix of at least four characters. A `#footer` slot puts Markdown under the graph, such as a task list.
 
 ## Show a backport
 

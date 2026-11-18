@@ -33,10 +33,9 @@ const LOG = "`git log --graph --oneline --decorate --parents`";
 const isContent = (node: Node) => (Array.isArray(node) ? node[0] !== null : node.trim() !== "");
 const textOf = (node: Node): string =>
   !Array.isArray(node) ? node : isElement(node) ? childrenOf(node).map(textOf).join("") : "";
-const isTemplate = (node: Node, name: string | RegExp): node is ElementNode =>
-  isElement(node) &&
-  node[0] === "template" &&
-  (typeof name === "string" ? node[1].name === name : name.test(text(node[1].name)));
+const isTemplate = (node: Node): node is ElementNode => isElement(node) && node[0] === "template";
+const namedSlot = (node: Node, name: string): node is ElementNode =>
+  isTemplate(node) && node[1].name === name;
 // Comark drops a slot whose name starts with a digit, as many short hashes do, hence the `commit-` prefix.
 const COMMIT_SLOT = /^commit-(.*)$/;
 // The paragraphs Comark wraps around a slot's lines, which a title or a commit's note, drawn inline, can't hold.
@@ -81,22 +80,31 @@ interface Figure {
   maxCount: unknown;
 }
 
-// A slot names a commit by its hash, as short as git's four characters or as long as all forty.
-const names = (sha: string, key: string) =>
-  key.length >= 4 && sha !== "" && (sha.startsWith(key) || key.startsWith(sha));
-
 function figure(input: Figure, issues: Issue[]): ElementNode | undefined {
   const { name } = input;
   let graph = readGraph(input.source);
   for (const found of graph.problems) issues.push(problem(name, found, input.fence));
   if (!graph.commits.length) return undefined;
 
-  for (const [key] of input.notes)
-    if (!graph.commits.some((commit) => names(commit.sha, key)))
+  const notes = new Map<string, Node[]>();
+  for (const [key, note] of input.notes) {
+    const matches = key.length >= 4 ? graph.commits.filter(({ sha }) => sha.startsWith(key)) : [];
+    if (!matches.length)
       issues.push({
         rule: "comark/git-graph/unknown-commit",
         message: `${name}: \`#commit-${key}\` names ${key}, a commit the \`git log\` above doesn't show. Write a hash from the log, or widen the \`git log\` so it includes that commit.`,
       });
+    else if (matches.length > 1)
+      issues.push({
+        rule: "comark/git-graph/ambiguous-commit",
+        message: `${name}: \`#commit-${key}\` matches more than one commit in the \`git log\` above. Use a longer prefix that names only one commit.`,
+      });
+    else {
+      const { sha } = matches[0];
+      const previous = notes.get(sha);
+      notes.set(sha, previous ? [...previous, " ", ...note] : note);
+    }
+  }
 
   const raw = input.maxCount;
   if (raw !== undefined) {
@@ -107,13 +115,6 @@ function figure(input: Figure, issues: Issue[]): ElementNode | undefined {
         rule: "comark/git-graph/invalid-max-count",
         message: `${name}: \`max-count\` is "${text(raw)}", so every commit shows. Write a whole number from 1, as with \`git log -n\`.`,
       });
-  }
-  // A note on a commit `max-count` left out goes with it.
-  const notes = new Map<number, Node[]>();
-  for (const [key, note] of input.notes) {
-    const row = graph.commits.findIndex((commit) => names(commit.sha, key));
-    if (row >= 0)
-      notes.set(row, [...(notes.get(row) ?? []), ...(notes.has(row) ? [" "] : []), ...note]);
   }
   const drawing = draw(graph, input.reverse, notes);
   const { title, footer } = input;
@@ -152,16 +153,17 @@ function block(node: ElementNode, number: number, data: Data, issues: Issue[]): 
       });
   }
   const children = childrenOf(node);
-  const titleSlot = children.find((child) => isTemplate(child, "title"));
-  const footerSlot = children.find((child) => isTemplate(child, "footer"));
-  const commitSlots = children.filter((child): child is ElementNode =>
-    isTemplate(child, COMMIT_SLOT),
-  );
+  const titleSlot = children.find((child) => namedSlot(child, "title"));
+  const footerSlot = children.find((child) => namedSlot(child, "footer"));
+  const commitSlots = children.filter(isTemplate).flatMap((slot) => {
+    const match = COMMIT_SLOT.exec(text(slot[1].name));
+    return match ? [{ slot, key: match[1].toLowerCase() }] : [];
+  });
   const content = children
     .flatMap((child) =>
-      child === titleSlot || child === footerSlot || commitSlots.some((slot) => slot === child)
+      child === titleSlot || child === footerSlot || commitSlots.some(({ slot }) => slot === child)
         ? []
-        : isTemplate(child, "default")
+        : namedSlot(child, "default")
           ? childrenOf(child)
           : [child],
     )
@@ -185,10 +187,7 @@ function block(node: ElementNode, number: number, data: Data, issues: Issue[]): 
           ? [text(attrs.title)]
           : [],
       footer: footerSlot ? childrenOf(footerSlot).filter(isContent) : [],
-      notes: commitSlots.map((slot) => [
-        (COMMIT_SLOT.exec(text(slot[1].name))?.[1] ?? "").toLowerCase(),
-        unwrap(childrenOf(slot)),
-      ]),
+      notes: commitSlots.map(({ slot, key }) => [key, unwrap(childrenOf(slot))]),
       reverse: flag(attrs.reverse),
       maxCount: attrs["max-count"],
     },

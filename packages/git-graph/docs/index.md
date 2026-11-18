@@ -199,7 +199,7 @@ Use the `max-count` prop to keep the newest commits, as `git log -n` does. The r
 
 ### Notes on commits
 
-Use a `#commit-<sha>` slot to write Markdown under a commit, such as a review, a CI result, or whether a backport applies. Name the commit by its hash as the log prints it, or any part of it from the start, at least four characters. The note takes one line, so keep it short.
+Use a `#commit-<sha>` slot to write Markdown under a commit, such as a review, a CI result, or whether a backport applies. Use the hash as printed in the log, or a unique prefix of at least four characters. The note takes one line, so keep it short.
 
 ::example
 ````md
@@ -324,7 +324,7 @@ The props and slots need `::git-graph`. A `git-graph` fence takes only a title, 
 | Slot | Description |
 | --- | --- |
 | `title` | Markdown for the header, in place of the `title` prop. |
-| `commit-<sha>` | Markdown under the commit whose hash starts with `<sha>`, on one line. A note on a commit `max-count` leaves out isn't shown. |
+| `commit-<sha>` | One line of Markdown under the only commit whose printed hash starts with `<sha>`. Matching uses the whole pasted log, even when `max-count` hides some rows. |
 | `footer` | Markdown under the graph, such as the steps after a backport. |
 
 ### What it reads
@@ -341,7 +341,7 @@ The plugin adds these problems to `meta.issues`, as [Validation](/guide/validati
 - A block or fence with no `git log` output. A fence with none stays a code block.
 - `git log` output without `--parents`. It draws the commits in one line.
 - Output of a command other than `git log`, such as `git cherry-pick`. It isn't drawn.
-- A `#commit-<sha>` slot whose hash the `git log` above doesn't show.
+- A `#commit-<sha>` slot that matches no commits or more than one commit in the pasted log.
 - A `max-count` that isn't a whole number from 1.
 - Text beside the fence. The block drops it.
 - A prop it doesn't read. It's ignored.

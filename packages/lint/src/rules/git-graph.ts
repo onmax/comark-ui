@@ -24,4 +24,8 @@ export default {
     code: "COMARK4708",
     title: "Paste only `git log` in a git graph",
   },
+  "comark/git-graph/ambiguous-commit": {
+    code: "COMARK4709",
+    title: "Use an unambiguous commit prefix",
+  },
 } satisfies Record<`comark/git-graph/${string}`, RuleInfo>;

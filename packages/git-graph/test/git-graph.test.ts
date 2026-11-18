@@ -66,7 +66,7 @@ describe("comark-git-graph", () => {
   it("puts each #commit-<sha> slot's Markdown under that commit", async () => {
     const html = flat(
       await render(
-        `::git-graph{reverse}\n\`\`\`\n${fixture("backport")}\n\`\`\`\n\n#commit-a94037c\n**2.4** applies clean\n\n#commit-d73449fafcc0d981eea22a5170adf6c1e0c453b8\nConflict in \`src/Table.vue\`\n\nTry it on 2.3\n::`,
+        `::git-graph{reverse}\n\`\`\`\n${fixture("backport")}\n\`\`\`\n\n#commit-a94037c\n**2.4** applies clean\n\n#commit-d734\nConflict in \`src/Table.vue\`\n\nTry it on 2.3\n::`,
       ),
     );
     expect(rows(html)[0]).toBe("5de6be0");
@@ -85,6 +85,41 @@ describe("comark-git-graph", () => {
     const markdown = `::git-graph{max-count=2}\n\`\`\`\n${fixture("stack")}\n\`\`\`\n\n#commit-676e7b8\nThe release\n::`;
     expect(flat(await render(markdown))).not.toContain('<div class="cgg-note">');
     expect((await parse(markdown)).meta.issues ?? []).toEqual([]);
+  });
+
+  it.each(["", "{max-count=1}"])(
+    "rejects ambiguous prefixes before applying max-count %s",
+    async (props) => {
+      const markdown = `::git-graph${props}\n\`\`\`\n* a123bc0 a123ab0 (HEAD -> main) Newer\n* a123ab0 Older\n\`\`\`\n\n#commit-a123\nAmbiguous note\n::`;
+      expect(await render(markdown)).not.toContain("Ambiguous note");
+      expect(Object.values((await parse(markdown)).meta.issueRules ?? {})).toEqual([
+        "comark/git-graph/ambiguous-commit",
+      ]);
+    },
+  );
+
+  it("matches the printed full hashes without confusing identical display abbreviations", async () => {
+    const older = `a123abc${"0".repeat(33)}`;
+    const newer = `a123abc${"1".repeat(33)}`;
+    const absent = `a123abc${"2".repeat(33)}`;
+    const markdown = `::git-graph\n\`\`\`\n* ${newer} ${older} (HEAD -> main) Newer\n* ${older} Older\n\`\`\`\n\n#commit-${older}\nOlder note\n\n#commit-${absent}\nAbsent note\n::`;
+    const html = flat(await render(markdown));
+    expect(rows(html)).toEqual(["a123abc", "a123abc"]);
+    expect(html).toMatch(
+      />Older<\/span><span class="cgg-sha">a123abc<\/span><\/div><div class="cgg-note">Older note/,
+    );
+    expect(html).not.toContain("Absent note");
+    expect(Object.values((await parse(markdown)).meta.issueRules ?? {})).toEqual([
+      "comark/git-graph/unknown-commit",
+    ]);
+  });
+
+  it("reports unsupported commands even when no log was pasted", async () => {
+    const markdown = "```git-graph\n$ git cherry -v main\n+ a123ab0 Fix\n```";
+    expect(Object.values((await parse(markdown)).meta.issueRules ?? {})).toEqual([
+      "comark/git-graph/missing-log",
+      "comark/git-graph/unread-command",
+    ]);
   });
 
   it("draws a ```git-graph fence like the block, with its [label] as the title", async () => {

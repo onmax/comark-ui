@@ -19,7 +19,7 @@ const prose = `<style>
 
 // Long enough to run past a phone's width, so the note must keep to its one line.
 const NOTES =
-  "#commit-fe1aa79\n**2.4** applies clean · **2.3** applies clean · **2.2** conflict in `src/errors.ts` and `src/settings.ts`\n\n#commit-a94037c\n**2.4** applies clean\n";
+  "\n#commit-fe1aa79\n**2.4** applies clean · **2.3** applies clean · **2.2** conflict in `src/errors.ts` and `src/settings.ts`\n\n#commit-a94037c\n**Approved**\n";
 
 test("every commit dot sits on its row's middle, at any width, in a host's prose, light and dark", async ({
   page,
@@ -71,17 +71,25 @@ test("a commit's note keeps to one line under its commit, so the row keeps its h
     { plugins: [gitGraph()] },
   );
   await page.setViewportSize({ width: 360, height: 900 });
-  await page.setContent(await renderHtmlFromDocument(parsed, { components }));
+  const html = await renderHtmlFromDocument(parsed, { components });
+  await page.setContent(`${prose}<main class="prose">${html}</main>`);
+  await expect(page.locator(".cgg-note").filter({ hasText: "Approved" })).toHaveText("Approved");
   const notes = await page.locator(".cgg-note").evaluateAll((elements) =>
-    elements.map((note) => ({
-      row: note.parentElement!.getBoundingClientRect().height,
-      lines: Math.round(
-        note.getBoundingClientRect().height / parseFloat(getComputedStyle(note).lineHeight),
-      ),
-    })),
+    elements.map((note) => {
+      const range = document.createRange();
+      range.selectNodeContents(note.querySelector("strong") ?? note);
+      const content = range.getBoundingClientRect();
+      const box = note.getBoundingClientRect();
+      return {
+        row: note.parentElement!.getBoundingClientRect().height,
+        oneLine: box.height === parseFloat(getComputedStyle(note).lineHeight),
+        visible: content.top >= box.top && content.bottom <= box.bottom,
+        truncated: note.scrollWidth > note.clientWidth,
+      };
+    }),
   );
   expect(notes).toEqual([
-    { row: 52, lines: 1 },
-    { row: 52, lines: 1 },
+    { row: 52, oneLine: true, visible: true, truncated: true },
+    { row: 52, oneLine: true, visible: true, truncated: false },
   ]);
 });

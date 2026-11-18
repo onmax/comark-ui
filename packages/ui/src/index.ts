@@ -136,7 +136,7 @@ export type PresetOptions = {
   xref?: XrefOptions | boolean;
   /** Reads no JUnit reports unless you pass `{ root }` or `{ read }`; inline reports render either way. */
   tests?: TestsOptions | boolean;
-  /** `::git-graph` around pasted `git log --graph --oneline --decorate --parents` output, with picks from `git cherry` and `git cherry-pick`. */
+  /** `::git-graph` around pasted `git log --graph --oneline --decorate --parents` output, with `#commit-<sha>` notes for backports and more. */
   gitGraph?: boolean;
   /** Reads no builds unless you pass `{ root }`, or `{ read, list }` in a runtime without a disk. */
   bundle?: BundleOptions | boolean;
