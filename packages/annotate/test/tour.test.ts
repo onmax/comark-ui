@@ -4,9 +4,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
 import { createCanvas, loadImage } from "@napi-rs/canvas";
-import { describe, expect, it, vi } from "vite-plus/test";
+import { describe, expect, it } from "vite-plus/test";
 import { plan, toScreen, cameraAt, type TourNote } from "../src/tour/plan.ts";
-import * as marks from "../src/marks.ts";
 import { tour } from "../src/tour.ts";
 
 // A light page with a dark bar where the change is, as a data URI.
@@ -70,23 +69,38 @@ describe("tour", () => {
     expect(video.duration).toBeGreaterThan(video.shots.at(-1)!.end);
   });
 
-  it.each([
-    ['x=10 y=20 w=70 h=5 side="top"', "top"],
-    ['x=10 y=20 w=70 h=5 side="left" at=80', "bottom"],
-  ])("preserves bracket orientation: %s", async (attributes, edge) => {
-    const source = page({ x: 90, y: 72 });
-    const annotation = `::::annotation{${attributes} mark="bracket"}\nBracket\n::::`;
-    const screenshot = `:::screenshot{src="${source}" alt="Page" viewport="900x360"}\n${annotation}\n:::`;
-    const video = await tour(`::compare\n${screenshot}\n${screenshot}\n::`);
-    const draw = vi.spyOn(marks, "draw");
-    try {
-      for (const shot of video.shots) await video.frame(shot.end - 0.1);
-      await video.frame(video.duration - 1);
-      expect(draw.mock.calls.length).toBeGreaterThanOrEqual(3);
-      expect(draw.mock.calls.every((call) => call[4] === edge)).toBe(true);
-    } finally {
-      draw.mockRestore();
-    }
+  it("draws a bracket across the edge that faces its note, as the page does", async () => {
+    const canvas = createCanvas(900, 360);
+    const context = canvas.getContext("2d");
+    context.fillStyle = "#fff";
+    context.fillRect(0, 0, 900, 360);
+    const source = canvas.toDataURL();
+    // The rows of each shot's last frame that the bracket's spine crosses: blue for more than half the width.
+    const spines = async (attributes: string) => {
+      const annotation = `::::annotation{x=10 y=20 w=70 h=5 ${attributes} mark="bracket" color="#0000ff"}\nBracket\n::::`;
+      const screenshot = `:::screenshot{src="${source}" alt="Page" viewport="900x360"}\n${annotation}\n:::`;
+      const video = await tour(`::compare\n${screenshot}\n${screenshot}\n::`);
+      const rows: number[] = [];
+      for (const shot of video.shots) {
+        const frame = await loadImage(await video.frame(shot.end - 0.1));
+        const canvas = createCanvas(frame.width, frame.height);
+        const context = canvas.getContext("2d");
+        context.drawImage(frame, 0, 0);
+        const { data, width, height } = context.getImageData(0, 0, frame.width, frame.height);
+        for (let y = 0; y < height; y++) {
+          let blue = 0;
+          for (let i = y * width * 4; i < (y + 1) * width * 4; i += 4)
+            if (data[i + 2]! - Math.max(data[i]!, data[i + 1]!) > 60) blue++;
+          if (blue > width / 2) rows.push(y);
+        }
+      }
+      return rows;
+    };
+    const top = await spines('side="top"');
+    const bottom = await spines('side="left" at=80');
+    expect(top).not.toEqual([]);
+    expect(bottom).not.toEqual([]);
+    expect(Math.max(...top)).toBeLessThan(Math.min(...bottom));
   });
 
   it.each(["before", "after"])("shows both states for %s-only changes", async (side) => {
