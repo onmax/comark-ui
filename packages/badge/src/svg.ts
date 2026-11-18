@@ -50,7 +50,7 @@ export type BadgeSpec = {
   workflow: string;
   branch: string;
   period: "day" | "week" | "month";
-} & CustomStyle;
+} & Partial<CustomStyle>;
 export type BadgeImage = Pick<
   BadgeSpec,
   "label" | "value" | "color" | "labelColor" | "icon" | "theme" | "style"
@@ -80,9 +80,7 @@ const validColor = (value: string) =>
   Object.hasOwn(badgeColors, value) || /^#[\da-f]{6}$/i.test(value);
 const hasControl = (value: string) =>
   Array.from(value).some((char) => char.charCodeAt(0) < 32 || char.charCodeAt(0) === 127);
-// `:radius="4"` reaches here as a number.
-const plain = (value: unknown) =>
-  typeof value === "string" ? value.trim() : typeof value === "number" ? String(value) : "";
+const plain = (value: unknown) => (typeof value === "string" ? value.trim() : "");
 
 export function badgeDefaultIcon({
   source,
@@ -96,7 +94,7 @@ export function badgeDefaultIcon({
 /** Reads the same options from Markdown, the builder, and an image URL. */
 export function readBadge(
   input: Record<string, unknown>,
-): { ok: true; value: BadgeSpec } | { ok: false; error: string; field: string } {
+): { ok: true; value: BadgeSpec & CustomStyle } | { ok: false; error: string; field: string } {
   const field = (key: string, fallback = "") => plain(input[key]) || fallback;
   const source = field("source", "static");
   if (!oneOf(sources, source))
@@ -146,8 +144,32 @@ export function readBadge(
       error: "Use icon none, package, npm, npmx, nuxt, github, comark, shadcn, or check.",
     };
   const theme = field("theme", "auto");
+  const custom = { ...customDefaults };
+  let customized: keyof CustomStyle | undefined;
+  if (preset === "default") {
+    for (const key of customStyleKeys) {
+      const raw = input[key];
+      if (raw === undefined) continue;
+      const numeric = key === "radius" || key === "padding";
+      const value =
+        typeof raw === "string"
+          ? raw.trim()
+          : numeric && typeof raw === "number"
+            ? String(raw)
+            : null;
+      if (value === null)
+        return {
+          ok: false,
+          field: key,
+          error: `Set ${key} to ${numeric ? "a whole number" : "a text value"}, or remove it.`,
+        };
+      if (value) {
+        customized ??= key;
+        custom[key] = value;
+      }
+    }
+  }
   // Any custom field picks the custom style, so `radius="0"` alone is enough.
-  const customized = customStyleKeys.find((key) => field(key));
   const style = preset === "default" ? field("style", customized ? "custom" : "shadcn") : "shadcn";
   const period = field("period", "month");
   if (theme !== "auto" && theme !== "light" && theme !== "dark")
@@ -160,17 +182,15 @@ export function readBadge(
       field: "style",
       error: `Set style to custom to use ${customized}, or remove ${customized}.`,
     };
-  const custom = { ...customDefaults };
   if (style === "custom") {
-    for (const key of customStyleKeys) custom[key] = field(key, customDefaults[key]);
-    const whole = (key: "radius" | "padding", min: number, max: number) => {
-      const value = Number(custom[key]);
-      return /^\d+$/.test(custom[key]) && value >= min && value <= max;
-    };
-    if (!whole("radius", 0, 13))
+    const radius = Number(custom.radius);
+    const padding = Number(custom.padding);
+    if (!/^\d+$/.test(custom.radius) || radius < 0 || radius > 13)
       return { ok: false, field: "radius", error: "Use a radius from 0 to 13 pixels." };
-    if (!whole("padding", 4, 16))
+    if (!/^\d+$/.test(custom.padding) || padding < 4 || padding > 16)
       return { ok: false, field: "padding", error: "Use a padding from 4 to 16 pixels." };
+    custom.radius = String(radius);
+    custom.padding = String(padding);
     if (!oneOf(badgeFonts, custom.font))
       return { ok: false, field: "font", error: "Use font sans or mono." };
     const color = (["border", "labelText", "valueText"] as const).find(
@@ -256,11 +276,12 @@ export function badgeParams(spec: BadgeSpec): URLSearchParams {
     period: "month",
     ...customDefaults,
   };
-  return new URLSearchParams(
-    badgeKeys
-      .filter((key) => spec[key] !== "" && spec[key] !== defaults[key])
-      .map((key) => [key, spec[key]]),
-  );
+  const params = new URLSearchParams();
+  for (const key of badgeKeys) {
+    const value = spec[key];
+    if (value && value !== defaults[key]) params.set(key, value);
+  }
+  return params;
 }
 
 const xml = (text: string) =>
