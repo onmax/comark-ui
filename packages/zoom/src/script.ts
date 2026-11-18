@@ -161,11 +161,46 @@ export function script(css: string): () => void {
     );
   }
 
-  // A copy that can't open another zoom, steal focus, or repeat an id from the page.
+  // A copy that can't open another zoom, steal focus, or repeat an id from the page. An SVG finds its clip paths and
+  // gradients by id, so its ids are renamed rather than dropped: the original's sit in an item hidden while zoomed,
+  // and a hidden clip path clips everything away.
+  let copies = 0;
   function strip(node: HTMLElement) {
-    for (const part of [node, ...node.querySelectorAll<HTMLElement>("*")]) {
+    const parts = [node, ...node.querySelectorAll("*")];
+    const svg = parts.filter((part) => part instanceof SVGElement);
+    const withIds = svg.filter((part) => part.id);
+    if (withIds.length) {
+      let suffix: string;
+      do {
+        suffix = `-cz${++copies}`;
+      } while (withIds.some((part) => document.getElementById(part.id + suffix)));
+      const renamed = new Map<string, string>();
+      for (const part of withIds) {
+        renamed.set(part.id, part.id + suffix);
+        part.id += suffix;
+      }
+      for (const part of svg)
+        for (const attribute of part.attributes) {
+          const { name, value } = attribute;
+          if (name === "id") continue;
+          if (name === "href" || name === "xlink:href") {
+            const id = value.startsWith("#") && renamed.get(value.slice(1));
+            if (id) attribute.value = `#${id}`;
+          } else {
+            const updated = value.replace(
+              /url\(\s*(?:(["'])#([^"')]+)\1|#([^"')\s]+))\s*\)/g,
+              (match, quote: string = "", quotedId: string, bareId: string) => {
+                const id = renamed.get(quotedId ?? bareId);
+                return id ? `url(${quote}#${id}${quote})` : match;
+              },
+            );
+            if (updated !== value) attribute.value = updated;
+          }
+        }
+    }
+    for (const part of parts) {
       for (const name of [
-        "id",
+        ...(part instanceof SVGElement ? [] : ["id"]),
         "data-zoom",
         "data-zoom-group",
         "data-zoom-context",
