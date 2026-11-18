@@ -52,7 +52,7 @@ Use the [builder](https://comark-ui.onmax.me/badges) to preview, share, and expo
 :badge{source="github-actions" repository="onmax/comark-ui" workflow="ci.yml"}
 ```
 
-`preset="npmx"` uses monospace text and a colored slash; `preset="nuxt"` uses navy and green. npm sources pick the matching logo automatically. Set `icon="none"` to hide it or choose `npm`, `npmx`, `nuxt`, `github`, `comark`, `shadcn`, `package`, or `check`. `preset="flat"` draws a compact 20px badge; `preset="for-the-badge"` draws a larger 28px badge with uppercase text. The default preset keeps its existing `style` and `labelColor` options; other presets ignore them.
+`preset="npmx"` uses monospace text and a colored slash; `preset="nuxt"` uses navy and green. npm sources pick the matching logo automatically. Set `icon="none"` to hide it or choose `npm`, `npmx`, `nuxt`, `github`, `comark`, `shadcn`, `package`, or `check`. `preset="flat"` draws a compact 20px badge; `preset="for-the-badge"` draws a larger 28px badge with uppercase text. The default preset keeps its `style` and `labelColor` options, and `style="custom"` adds `radius`, `padding`, `border`, `font`, `labelText`, and `valueText` for a look of your own; other presets ignore them.
 
 Static badges embed their SVG locally. Live badges fetch their data while parsing and embed it too, so a page loads no badge. With `download: false`, or when the data is unavailable, they load from `https://comark-ui.onmax.me/badge.svg`, configurable with `badge({ endpoint })` or `comarkUi({ badge: { endpoint } })`. Public npm and GitHub Actions data is cached; unavailable data displays `unavailable`. Downloads are snapshots.
 

@@ -2,7 +2,8 @@ import { createHtmlRenderer } from "@comark/html";
 import { parseMarkdown } from "comark";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 import badge, { components } from "../src/html.ts";
-import { badgeParams, readBadge } from "../src/svg.ts";
+import { createBadgeHandler } from "../src/server.ts";
+import { badgeParams, badgeSvg, readBadge, type BadgeSpec } from "../src/svg.ts";
 const render = createHtmlRenderer({ plugins: [badge()], components });
 
 describe("image badges", () => {
@@ -253,5 +254,138 @@ describe("image badges", () => {
     expect(document.meta.issues).toEqual([]);
     const html = await render(source);
     expect(html).toContain("日本語 🚀");
+  });
+  it("draws a custom style from its radius, padding, border, font, and colors", async () => {
+    const svgOf = async (markdown: string) =>
+      decodeURIComponent(/src="data:image\/svg\+xml,([^"]+)"/.exec(await render(markdown))![1]!);
+    const svg = await svgOf(
+      ':badge[ready]{label="release" radius="0" padding="4" border="#a3a3a3" font="mono" labelColor="#fafafa" color="success" labelText="error"}',
+    );
+    expect(svg).toContain('<rect width="');
+    expect(svg).toContain('rx="0"/></clipPath>');
+    expect(svg).toContain('fill="none" stroke="#a3a3a3"/>');
+    expect(svg).toContain('<path d="M0 0h58v26H0Z" fill="#fafafa"/>');
+    expect(svg).toContain('fill="#15803d"/>');
+    // The label's text takes its color; the value's, unset, turns white on the dark green.
+    expect(svg).toContain(
+      '<text x="4" y="17" fill="#b91c1c" font-family="DejaVu Sans Mono,monospace"',
+    );
+    expect(svg).toContain('fill="#ffffff" font-family="DejaVu Sans Mono,monospace"');
+    const sans = await svgOf(':badge[ready]{style="custom" padding="" font=""}');
+    expect(sans).toContain('rx="6"/></clipPath>');
+    expect(sans).toContain('font-family="Arial,Helvetica,sans-serif"');
+    expect(sans).not.toContain("stroke=");
+  });
+  it("accepts legacy badge specs without custom fields", async () => {
+    const spec: BadgeSpec = {
+      source: "static",
+      label: "",
+      value: "ready",
+      color: "primary",
+      labelColor: "neutral",
+      icon: "none",
+      theme: "auto",
+      style: "shadcn",
+      preset: "default",
+      package: "",
+      repository: "",
+      workflow: "",
+      branch: "",
+      period: "month",
+    };
+    const query = badgeParams(spec).toString();
+    const response = await createBadgeHandler()(
+      new Request(`https://badges.example/badge.svg?${query}`),
+    );
+    expect(response.status).toBe(200);
+    expect(query).toBe("value=ready&icon=none");
+  });
+  it("keeps the custom style in the image URL, so a link brings the same look back", async () => {
+    const parsed = readBadge({
+      source: "npm-version",
+      package: "comark-ui",
+      radius: 13,
+      padding: "16",
+      border: "neutral",
+      font: "mono",
+      valueText: "#fafafa",
+    });
+    if (!parsed.ok) throw new Error(parsed.error);
+    expect(parsed.value.style).toBe("custom");
+    const params = badgeParams(parsed.value);
+    expect(params.toString()).toBe(
+      "source=npm-version&label=npm&icon=npm&style=custom&package=comark-ui&radius=13&padding=16&border=neutral&font=mono&valueText=%23fafafa",
+    );
+    expect(readBadge(Object.fromEntries(params))).toEqual(parsed);
+    // Another preset ignores the custom props, as it does `style`.
+    const npmx = readBadge({ source: "npm-version", package: "x", preset: "npmx", radius: true });
+    if (!npmx.ok) throw new Error(npmx.error);
+    expect(badgeParams(npmx.value).has("radius")).toBe(false);
+  });
+  it("canonicalizes numeric fields before exporting a hosted image URL", async () => {
+    const hosted = createHtmlRenderer({ plugins: [badge({ download: false })], components });
+    const zeroes = "0".repeat(4096);
+    const html = await hosted(
+      `:badge{source="npm-version" package="comark-ui" radius="${zeroes}4" padding="${zeroes}12"}`,
+    );
+    const url = /src="([^"]+)"/.exec(html)?.[1]?.replaceAll("&amp;", "&");
+    expect(url).toBeDefined();
+    const fetch = vi
+      .fn<typeof globalThis.fetch>()
+      .mockResolvedValue(Response.json({ latest: "1.2.3" }));
+    const response = await createBadgeHandler({ fetch })(new Request(url!));
+    expect(response.status).toBe(200);
+    expect(new URL(url!).searchParams.get("radius")).toBe("4");
+    expect(new URL(url!).searchParams.get("padding")).toBe("12");
+  });
+  it("reports a custom prop it can't draw, and one beside another style", async () => {
+    const cases: [Record<string, unknown>, string, string][] = [
+      [{ value: "x", radius: "14" }, "radius", "Use a radius from 0 to 13 pixels."],
+      [{ value: "x", padding: "2.5" }, "padding", "Use a padding from 4 to 16 pixels."],
+      [{ value: "x", font: "serif" }, "font", "Use font sans or mono."],
+      [
+        { value: "x", border: "red" },
+        "border",
+        "Use a semantic color or a six-digit hex color for border, or none.",
+      ],
+      [
+        { value: "x", style: "solid", radius: "0" },
+        "style",
+        "Set style to custom to use radius, or remove radius.",
+      ],
+    ];
+    for (const [input, field, error] of cases)
+      expect(readBadge(input)).toEqual({ ok: false, field, error });
+    const { meta } = await parseMarkdown(':badge[x]{radius="99"}', { plugins: [badge()] });
+    expect(meta.issues).toEqual(['`:badge` 1 ("x"): Use a radius from 0 to 13 pixels.']);
+  });
+  it.each([
+    [":badge[ready]{radius}", "Set radius to a whole number, or remove it."],
+    [
+      ':badge[ready]{style="custom" :padding="[4]"}',
+      "Set padding to a whole number, or remove it.",
+    ],
+    [':badge[ready]{:font="false"}', "Set font to a text value, or remove it."],
+  ])("reports wrongly typed custom fields in %s", async (markdown, fix) => {
+    const { meta } = await parseMarkdown(markdown, { plugins: [badge()] });
+    expect(meta.issueRules).toEqual({
+      [`\`:badge\` 1 ("ready"): ${fix}`]: "comark/badge/invalid-image",
+    });
+  });
+  it("draws the defaults for custom values it didn't read, so markup can't get in", () => {
+    const svg = badgeSvg({
+      label: "a",
+      value: "b",
+      color: "primary",
+      labelColor: "neutral",
+      icon: "none",
+      theme: "auto",
+      style: "custom",
+      radius: '"/><script>',
+      border: '"/><script>',
+      labelText: '"/><script>',
+    });
+    expect(svg).not.toContain("<script");
+    expect(svg).toContain('rx="6"/></clipPath>');
   });
 });

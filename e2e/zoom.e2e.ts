@@ -82,6 +82,42 @@ test("a zoomed table keeps its header row", async ({ page }) => {
   await expect(page.locator(".cz-dialog th").first()).toHaveText("Attempt");
 });
 
+test("zoom keeps SVG paint colors and remaps local references to unused IDs", async ({ page }) => {
+  const body = await render("::zoom\nSVG fixture\n::");
+  await fixture(
+    page,
+    `<svg width="0" height="0" style="position:absolute"><clipPath id="plot-cz1"/></svg>${body.replace(
+      "SVG fixture",
+      `<svg width="120" height="60" xmlns:xlink="http://www.w3.org/1999/xlink">
+        <defs>
+          <clipPath id="plot"><rect width="120" height="60"/></clipPath>
+          <linearGradient id="f00"><stop stop-color="blue"/></linearGradient>
+        </defs>
+        <rect id="bar" width="60" height="60" fill="#f00" clip-path="url( #plot )"/>
+        <use href="#bar" x="60"/>
+        <use xlink:href="#bar" opacity="0"/>
+        <rect width="10" height="10" fill="url( '#f00' )"/>
+      </svg>`,
+    )}`,
+  );
+  await page.locator("main [data-zoom]").click();
+  const copy = page.locator(".cz-item svg");
+  const clipId = await copy.locator("clipPath").getAttribute("id");
+  const gradientId = await copy.locator("linearGradient").getAttribute("id");
+  const bar = copy.locator(":scope > rect").first();
+  const barId = await bar.getAttribute("id");
+  expect(clipId).not.toBe("plot");
+  expect.soft(clipId).not.toBe("plot-cz1");
+  await expect.soft(bar).toHaveCSS("fill", "rgb(255, 0, 0)");
+  await expect.soft(bar).toHaveAttribute("clip-path", `url(#${clipId})`);
+  await expect(copy.locator("use").first()).toHaveAttribute("href", `#${barId}`);
+  await expect(copy.locator("use").last()).toHaveAttribute("xlink:href", `#${barId}`);
+  await expect(copy.locator(":scope > rect").last()).toHaveAttribute(
+    "fill",
+    `url('#${gradientId}')`,
+  );
+});
+
 test("a zoomed block keeps its text styles, so it closes onto the original without a jump", async ({
   page,
 }) => {

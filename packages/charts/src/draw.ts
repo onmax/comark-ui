@@ -165,8 +165,8 @@ const endLabeled = (chart: Chart) =>
 // A line marks each of its points while they're few enough to stay apart.
 const MOST_POINTS = 40;
 
-// A plot's widest, and the room it shares with its labels: about a report column's width, which the stylesheet then
-// fills, so a chart spans the column as a dashboard's does.
+// A plot's widest, and the room it shares with its labels: about a report column's width, so a chart spans a typical
+// column as a dashboard's does, and a narrower one shrinks it.
 const PLOT = 640;
 const ROOM = 720;
 // A plot's height, about half its width, so a trend's slope reads as it does on a dashboard.
@@ -1378,8 +1378,8 @@ export async function draw(chart: Chart): Promise<{ svg: string; boxes: Map<numb
   spec.padding = chart.marks.some((mark) => mark.mark === "circle")
     ? { ...PADDING, bottom: PADDING.bottom + RING_ROOM }
     : PADDING;
-  // Every chart over axes is drawn exactly as wide, labels and padding included, so the stylesheet scales them all by
-  // the same factor to fill the column, and their text matches from chart to chart. Names at the ends of lines sit
+  // Every chart over axes is drawn exactly as wide, labels and padding included, so a narrower column shrinks them all
+  // by the same factor, and their text matches from chart to chart. Names at the ends of lines sit
   // past the plot, in room kept on its right.
   if (chart.type !== "pie") {
     const ends = endLabeled(chart)
