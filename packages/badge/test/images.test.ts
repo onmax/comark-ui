@@ -2,7 +2,7 @@ import { createHtmlRenderer } from "@comark/html";
 import { parseMarkdown } from "comark";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 import badge, { components } from "../src/html.ts";
-import { badgeParams, readBadge } from "../src/svg.ts";
+import { badgeParams, badgeSvg, readBadge } from "../src/svg.ts";
 const render = createHtmlRenderer({ plugins: [badge()], components });
 
 describe("image badges", () => {
@@ -253,5 +253,85 @@ describe("image badges", () => {
     expect(document.meta.issues).toEqual([]);
     const html = await render(source);
     expect(html).toContain("日本語 🚀");
+  });
+  it("draws a custom style from its radius, padding, border, font, and colors", async () => {
+    const svgOf = async (markdown: string) =>
+      decodeURIComponent(/src="data:image\/svg\+xml,([^"]+)"/.exec(await render(markdown))![1]!);
+    const svg = await svgOf(
+      ':badge[ready]{label="release" radius="0" padding="4" border="#a3a3a3" font="mono" labelColor="#fafafa" color="success" labelText="error"}',
+    );
+    expect(svg).toContain('<rect width="');
+    expect(svg).toContain('rx="0"/></clipPath>');
+    expect(svg).toContain('fill="none" stroke="#a3a3a3"/>');
+    expect(svg).toContain('<path d="M0 0h58v26H0Z" fill="#fafafa"/>');
+    expect(svg).toContain('fill="#15803d"/>');
+    // The label's text takes its color; the value's, unset, turns white on the dark green.
+    expect(svg).toContain(
+      '<text x="4" y="17" fill="#b91c1c" font-family="DejaVu Sans Mono,monospace"',
+    );
+    expect(svg).toContain('fill="#ffffff" font-family="DejaVu Sans Mono,monospace"');
+    const sans = await svgOf(':badge[ready]{style="custom"}');
+    expect(sans).toContain('rx="6"/></clipPath>');
+    expect(sans).toContain('font-family="Arial,Helvetica,sans-serif"');
+    expect(sans).not.toContain("stroke=");
+  });
+  it("keeps the custom style in the image URL, so a link brings the same look back", async () => {
+    const parsed = readBadge({
+      source: "npm-version",
+      package: "comark-ui",
+      radius: 13,
+      padding: "16",
+      border: "neutral",
+      font: "mono",
+      valueText: "#fafafa",
+    });
+    if (!parsed.ok) throw new Error(parsed.error);
+    expect(parsed.value.style).toBe("custom");
+    const params = badgeParams(parsed.value);
+    expect(params.toString()).toBe(
+      "source=npm-version&label=npm&icon=npm&style=custom&package=comark-ui&radius=13&padding=16&border=neutral&font=mono&valueText=%23fafafa",
+    );
+    expect(readBadge(Object.fromEntries(params))).toEqual(parsed);
+    // Another preset ignores the custom props, as it does `style`.
+    const npmx = readBadge({ source: "npm-version", package: "x", preset: "npmx", radius: "0" });
+    if (!npmx.ok) throw new Error(npmx.error);
+    expect(badgeParams(npmx.value).has("radius")).toBe(false);
+  });
+  it("reports a custom prop it can't draw, and one beside another style", async () => {
+    const cases: [Record<string, unknown>, string, string][] = [
+      [{ value: "x", radius: "14" }, "radius", "Use a radius from 0 to 13 pixels."],
+      [{ value: "x", padding: "2.5" }, "padding", "Use a padding from 4 to 16 pixels."],
+      [{ value: "x", font: "serif" }, "font", "Use font sans or mono."],
+      [
+        { value: "x", border: "red" },
+        "border",
+        "Use a semantic color or a six-digit hex color for border, or none.",
+      ],
+      [
+        { value: "x", style: "solid", radius: "0" },
+        "style",
+        "Set style to custom to use radius, or remove radius.",
+      ],
+    ];
+    for (const [input, field, error] of cases)
+      expect(readBadge(input)).toEqual({ ok: false, field, error });
+    const { meta } = await parseMarkdown(':badge[x]{radius="99"}', { plugins: [badge()] });
+    expect(meta.issues).toEqual(['`:badge` 1 ("x"): Use a radius from 0 to 13 pixels.']);
+  });
+  it("draws the defaults for custom values it didn't read, so markup can't get in", () => {
+    const svg = badgeSvg({
+      label: "a",
+      value: "b",
+      color: "primary",
+      labelColor: "neutral",
+      icon: "none",
+      theme: "auto",
+      style: "custom",
+      radius: '"/><script>',
+      border: '"/><script>',
+      labelText: '"/><script>',
+    });
+    expect(svg).not.toContain("<script");
+    expect(svg).toContain('rx="6"/></clipPath>');
   });
 });

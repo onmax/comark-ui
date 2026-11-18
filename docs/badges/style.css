@@ -167,6 +167,9 @@
 .badge-builder .pair:has([hidden]) {
   grid-template-columns: minmax(0, 1fr);
 }
+.badge-builder .custom-style {
+  margin-top: 1.25rem;
+}
 .badge-builder .error {
   color: light-dark(#b91c1c, #fca5a5);
   font-size: 0.875rem;

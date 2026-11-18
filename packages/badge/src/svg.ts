@@ -20,6 +20,19 @@ export const icons = [
   "check",
 ] as const;
 export const badgePresets = ["default", "npmx", "nuxt", "flat", "for-the-badge"] as const;
+const badgeStyles = ["shadcn", "subtle", "solid", "custom"] as const;
+const badgeFonts = ["sans", "mono"] as const;
+/** The options `style="custom"` reads, so a badge can take a look no preset has. */
+const customStyleKeys = ["radius", "padding", "border", "font", "labelText", "valueText"] as const;
+type CustomStyle = Record<(typeof customStyleKeys)[number], string>;
+const customDefaults: CustomStyle = {
+  radius: "6",
+  padding: "10",
+  border: "none",
+  font: "sans",
+  labelText: "",
+  valueText: "",
+};
 type BadgePreset = (typeof badgePresets)[number];
 type BadgeSource = (typeof sources)[number];
 export type BadgeSpec = {
@@ -30,18 +43,18 @@ export type BadgeSpec = {
   labelColor: string;
   icon: (typeof icons)[number];
   theme: "auto" | "light" | "dark";
-  style: "shadcn" | "subtle" | "solid";
+  style: (typeof badgeStyles)[number];
   preset: BadgePreset;
   package: string;
   repository: string;
   workflow: string;
   branch: string;
   period: "day" | "week" | "month";
-};
+} & CustomStyle;
 export type BadgeImage = Pick<
   BadgeSpec,
   "label" | "value" | "color" | "labelColor" | "icon" | "theme" | "style"
-> & { preset?: BadgePreset };
+> & { preset?: BadgePreset } & Partial<CustomStyle>;
 export const badgeKeys = [
   "source",
   "label",
@@ -57,6 +70,7 @@ export const badgeKeys = [
   "workflow",
   "branch",
   "period",
+  ...customStyleKeys,
 ] as const;
 const palette = (value: string) =>
   Object.entries(badgeColors).find(([name]) => name === value)?.[1] ?? value;
@@ -66,7 +80,9 @@ const validColor = (value: string) =>
   Object.hasOwn(badgeColors, value) || /^#[\da-f]{6}$/i.test(value);
 const hasControl = (value: string) =>
   Array.from(value).some((char) => char.charCodeAt(0) < 32 || char.charCodeAt(0) === 127);
-const plain = (value: unknown) => (typeof value === "string" ? value.trim() : "");
+// `:radius="4"` reaches here as a number.
+const plain = (value: unknown) =>
+  typeof value === "string" ? value.trim() : typeof value === "number" ? String(value) : "";
 
 export function badgeDefaultIcon({
   source,
@@ -130,12 +146,46 @@ export function readBadge(
       error: "Use icon none, package, npm, npmx, nuxt, github, comark, shadcn, or check.",
     };
   const theme = field("theme", "auto");
-  const style = preset === "default" ? field("style", "shadcn") : "shadcn";
+  // Any custom field picks the custom style, so `radius="0"` alone is enough.
+  const customized = customStyleKeys.find((key) => field(key));
+  const style = preset === "default" ? field("style", customized ? "custom" : "shadcn") : "shadcn";
   const period = field("period", "month");
   if (theme !== "auto" && theme !== "light" && theme !== "dark")
     return { ok: false, field: "theme", error: "Use theme auto, light, or dark." };
-  if (style !== "shadcn" && style !== "subtle" && style !== "solid")
-    return { ok: false, field: "style", error: "Use style shadcn, subtle, or solid." };
+  if (!oneOf(badgeStyles, style))
+    return { ok: false, field: "style", error: "Use style shadcn, subtle, solid, or custom." };
+  if (preset === "default" && customized && style !== "custom")
+    return {
+      ok: false,
+      field: "style",
+      error: `Set style to custom to use ${customized}, or remove ${customized}.`,
+    };
+  const custom = { ...customDefaults };
+  if (style === "custom") {
+    for (const key of customStyleKeys) custom[key] = field(key, customDefaults[key]);
+    const whole = (key: "radius" | "padding", min: number, max: number) => {
+      const value = Number(custom[key]);
+      return /^\d+$/.test(custom[key]) && value >= min && value <= max;
+    };
+    if (!whole("radius", 0, 13))
+      return { ok: false, field: "radius", error: "Use a radius from 0 to 13 pixels." };
+    if (!whole("padding", 4, 16))
+      return { ok: false, field: "padding", error: "Use a padding from 4 to 16 pixels." };
+    if (!oneOf(badgeFonts, custom.font))
+      return { ok: false, field: "font", error: "Use font sans or mono." };
+    const color = (["border", "labelText", "valueText"] as const).find(
+      (key) =>
+        custom[key] !== customDefaults[key] &&
+        !(key === "border" && custom[key] === "none") &&
+        !validColor(custom[key]),
+    );
+    if (color)
+      return {
+        ok: false,
+        field: color,
+        error: `Use a semantic color or a six-digit hex color for ${color}${color === "border" ? ", or none" : ""}.`,
+      };
+  }
   if (period !== "day" && period !== "week" && period !== "month")
     return { ok: false, field: "period", error: "Use period day, week, or month." };
   const pkg = field("package");
@@ -189,6 +239,7 @@ export function readBadge(
       workflow: source === "github-actions" ? workflow : "",
       branch: source === "github-actions" ? branch : "",
       period: source === "npm-downloads" ? period : "month",
+      ...custom,
     },
   };
 }
@@ -203,6 +254,7 @@ export function badgeParams(spec: BadgeSpec): URLSearchParams {
     style: "shadcn",
     preset: "default",
     period: "month",
+    ...customDefaults,
   };
   return new URLSearchParams(
     badgeKeys
@@ -420,6 +472,43 @@ function shields({ label, value, color, icon, theme }: PresetImage, tall: boolea
   return `${imageHead(width, label, value, style, height)}${shapes}${gloss}${icon ? `<g transform="translate(${iconX} ${(height - 14) / 2}) scale(.875)" color="${label ? "#ffffff" : ink}" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${icon}</g>` : ""}${label ? text(shown(label), start, "#ffffff") : ""}${text(shown(value), valueX, ink, tall)}<rect x=".5" y=".5" width="${width - 1}" height="${height - 1}" rx="${Math.max(rx - 0.5, 0)}" fill="none" class="e"/></svg>`;
 }
 
+/**
+ * The default preset's shape with every measure the reader set: corner radius, padding, an optional border, sans or
+ * mono text, and both halves' fill and text colors. Text left unset picks black or white for contrast, as solid does.
+ * The colors are the reader's, so `theme` doesn't swap them.
+ */
+function custom(
+  label: string,
+  value: string,
+  fill: string,
+  labelFill: string,
+  icon: string,
+  style: CustomStyle,
+) {
+  // badgeSvg() is public, so a value readBadge() didn't check falls back to the default instead of reaching the markup.
+  const within = (raw: string, min: number, max: number, fallback: number) => {
+    const number = Number(raw);
+    return /^\d+$/.test(raw) ? Math.min(max, Math.max(min, number)) : fallback;
+  };
+  const radius = within(style.radius, 0, 13, 6);
+  const pad = within(style.padding, 4, 16, 10);
+  const mono = style.font === "mono";
+  const size = (text: string) => (mono ? Array.from(text).length * 7.2 : measure(text));
+  const ink = (set: string, behind: string) => (validColor(set) ? palette(set) : textColor(behind));
+  const labelInk = ink(style.labelText, labelFill);
+  const valueInk = ink(style.valueText, fill);
+  const iconSpace = icon ? 22 : 0;
+  const left = label ? Math.round(pad + iconSpace + size(label) + pad) : 0;
+  const valueX = left + pad + (label ? 0 : iconSpace);
+  const width = Math.ceil(valueX + size(value) + pad);
+  const text = (content: string, x: number, paint: string) =>
+    `<text x="${x}" y="17" fill="${paint}" font-family="${mono ? "DejaVu Sans Mono,monospace" : "Arial,Helvetica,sans-serif"}" font-size="12" textLength="${size(content).toFixed(1)}" lengthAdjust="spacingAndGlyphs">${xml(content)}</text>`;
+  const border = !validColor(style.border)
+    ? ""
+    : `<rect x=".5" y=".5" width="${width - 1}" height="25" rx="${Math.max(radius - 0.5, 0)}" fill="none" stroke="${palette(style.border)}"/>`;
+  return `${imageHead(width, label, value, "")}<clipPath id="r"><rect width="${width}" height="26" rx="${radius}"/></clipPath><g clip-path="url(#r)">${left ? `<path d="M0 0h${left}v26H0Z" fill="${labelFill}"/>` : ""}<path d="M${left} 0H${width}v26H${left}Z" fill="${fill}"/></g>${border}${icon ? `<g transform="translate(${pad} 5)" color="${label ? labelInk : valueInk}" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${icon}</g>` : ""}${label ? text(label, pad + iconSpace, labelInk) : ""}${text(value, valueX, valueInk)}</svg>`;
+}
+
 /** A self-contained SVG. Text uses fixed advances, so no font download or canvas is needed. */
 export function badgeSvg(input: BadgeImage): string {
   const label = input.label.slice(0, 80);
@@ -438,6 +527,8 @@ export function badgeSvg(input: BadgeImage): string {
     if (input.preset === "npmx") return npmx(image);
     return input.preset === "nuxt" ? nuxt(image) : shields(image, input.preset === "for-the-badge");
   }
+  if (input.style === "custom")
+    return custom(label, value, color, labelColor, icon, { ...customDefaults, ...input });
   const iconSpace = icon ? 22 : 0;
   const left = label ? Array.from(label).length * 7.2 + 20 + iconSpace : 0;
   const right = Array.from(value).length * 7.2 + 20 + (label ? 0 : iconSpace);

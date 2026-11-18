@@ -61,6 +61,13 @@ export function startBadgeBuilder(root: HTMLElement): () => void {
     control("style").disabled = style.hidden;
     labelColor.hidden = style.hidden || control("style").value === "shadcn";
     control("labelColor").disabled = labelColor.hidden;
+    // The custom style's own fields, which only it reads.
+    const custom = root.querySelector<HTMLElement>("[data-custom]")!;
+    custom.hidden = style.hidden || control("style").value !== "custom";
+    for (const input of custom.querySelectorAll<HTMLInputElement | HTMLSelectElement>(
+      "input,select",
+    ))
+      input.disabled = custom.hidden;
     for (const button of form.querySelectorAll<HTMLButtonElement>("[data-look]"))
       button.setAttribute("aria-pressed", String(button.dataset.look === control("preset").value));
     for (const button of form.querySelectorAll<HTMLButtonElement>("[data-preset]")) {

@@ -100,6 +100,7 @@
                 <option value="shadcn">shadcn</option>
                 <option value="subtle">Subtle</option>
                 <option value="solid">Solid</option>
+                <option value="custom">Custom</option>
               </select></label
             >
             <label
@@ -155,6 +156,56 @@
           <p id="color-help" class="hint">
             Color name or hex, e.g. #15803d. CI uses its status color.
           </p>
+          <div class="custom-style" data-custom hidden>
+            <div class="pair">
+              <label
+                >Radius<input name="radius" type="number" value="6" min="0" max="13" step="1"
+              /></label>
+              <label
+                >Padding<input name="padding" type="number" value="10" min="4" max="16" step="1"
+              /></label>
+            </div>
+            <div class="pair">
+              <label
+                >Border<input
+                  name="border"
+                  value="none"
+                  list="badge-borders"
+                  spellcheck="false"
+                  maxlength="20"
+              /></label>
+              <label
+                >Font<select name="font">
+                  <option value="sans">Sans</option>
+                  <option value="mono">Mono</option>
+                </select></label
+              >
+            </div>
+            <div class="pair">
+              <label
+                >Label text<input
+                  name="labelText"
+                  placeholder="Auto"
+                  list="badge-colors"
+                  spellcheck="false"
+                  maxlength="20"
+              /></label>
+              <label
+                >Value text<input
+                  name="valueText"
+                  placeholder="Auto"
+                  list="badge-colors"
+                  spellcheck="false"
+                  maxlength="20"
+              /></label>
+            </div>
+            <datalist id="badge-borders">
+              <option value="none"></option>
+              <option value="neutral"></option>
+              <option value="primary"></option>
+            </datalist>
+            <p class="hint">Text left on Auto turns black or white to stay readable.</p>
+          </div>
         </fieldset>
         <p id="form-error" class="error" role="alert"></p>
       </div>
