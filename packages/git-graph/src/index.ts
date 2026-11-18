@@ -88,7 +88,10 @@ function figure(input: Figure, issues: Issue[]): ElementNode | undefined {
 
   const notes = new Map<string, Node[]>();
   for (const [key, note] of input.notes) {
-    const matches = key.length >= 4 ? graph.commits.filter(({ sha }) => sha.startsWith(key)) : [];
+    const matches =
+      key.length >= 4
+        ? graph.commits.filter(({ hashes }) => hashes.some((hash) => hash.startsWith(key)))
+        : [];
     if (!matches.length)
       issues.push({
         rule: "comark/git-graph/unknown-commit",

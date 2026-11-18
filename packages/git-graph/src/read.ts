@@ -4,6 +4,7 @@
 
 export interface Commit {
   sha: string;
+  hashes: string[];
   /** The PR number from a subject that ends in `(#123)` or a `Merge pull request #123` message. */
   ref: string;
   text: string;
@@ -117,6 +118,20 @@ const PR = /\s*\(#(\d+)\)$/;
 const MERGE_PR = /^Merge pull request #(\d+) from [^/\s]+\/(\S+)/;
 const MERGE_BRANCH = /^Merge (?:remote-tracking )?branch '([^']+)'/;
 
+/** Each proper prefix maps to its sole longest spelling, or null if several hashes share it. */
+function expansions(logged: Logged[]): Map<string, string | null> {
+  const hashes = new Set(logged.flatMap(({ sha, parents }) => [sha, ...parents]));
+  const prefixes = new Map<string, string | null>();
+  for (const hash of [...hashes].sort((a, b) => b.length - a.length)) {
+    if (prefixes.has(hash)) continue;
+    for (let length = 7; length < hash.length; length++) {
+      const prefix = hash.slice(0, length);
+      prefixes.set(prefix, prefixes.has(prefix) ? null : hash);
+    }
+  }
+  return prefixes;
+}
+
 /** Reads a pasted transcript of git commands and their output. */
 export function readGraph(source: string): Graph {
   const problems: Problem[] = [];
@@ -133,21 +148,27 @@ export function readGraph(source: string): Graph {
   const logged = all
     .filter((section) => section.argv[0] === "log")
     .flatMap((section) => readLog(section.lines));
-  const seen = new Set<string>();
-  const unique = logged.filter((entry) => !seen.has(entry.sha) && seen.add(entry.sha));
+  const prefixes = expansions(logged);
+  const bySha = new Map<string, Logged & { hashes: string[] }>();
+  for (const entry of logged) {
+    const sha = prefixes.get(entry.sha) ?? entry.sha;
+    const existing = bySha.get(sha);
+    if (!existing) bySha.set(sha, { ...entry, sha, hashes: [entry.sha] });
+    else {
+      if (!existing.hashes.includes(entry.sha)) existing.hashes.push(entry.sha);
+      existing.refs = [...new Set([...existing.refs, ...entry.refs])];
+      if (!existing.parents.length) existing.parents = entry.parents;
+      if (!existing.subject) existing.subject = entry.subject;
+    }
+  }
+  const unique = [...bySha.values()];
   if (!unique.length)
     return { commits: [], lanes: [], problems: [{ kind: "no-commits" }, ...problems] };
 
   const order = [...unique].reverse();
   const index = new Map(order.map((entry, i) => [entry.sha, i]));
   const noParents = order.length > 1 && order.every((entry) => !entry.parents.length);
-  if (noParents) {
-    problems.unshift({ kind: "no-parents" });
-    // Without parents the best guess is the order git printed: each commit on top of the one below it.
-    order.forEach((entry, i) => {
-      if (i) entry.parents = [order[i - 1].sha];
-    });
-  }
+  if (noParents) problems.unshift({ kind: "no-parents" });
   const tips = new Map<string, string>();
   const tags = new Map<string, string[]>();
   for (const entry of unique)
@@ -169,6 +190,7 @@ export function readGraph(source: string): Graph {
     const pr = PR.exec(entry.subject);
     return {
       sha: entry.sha,
+      hashes: entry.hashes,
       ref: pr?.[1] ?? "",
       text: pr ? entry.subject.slice(0, pr.index) : entry.subject,
       lane: -1,
@@ -177,26 +199,32 @@ export function readGraph(source: string): Graph {
       elided: 0,
     };
   });
-  const parentsOf = (i: number) =>
-    order[i].parents
-      .map((parent) => index.get(parent))
-      .filter((row): row is number => row !== undefined);
+  const parentsOf = (i: number) => {
+    // Without parents the best guess is the order git printed: each commit on top of the one below it.
+    if (noParents) return i ? [i - 1] : [];
+    return order[i].parents
+      .map((parent) => {
+        const expanded = prefixes.get(parent);
+        return expanded === null ? undefined : index.get(expanded ?? parent);
+      })
+      .filter((row): row is number => row !== undefined && row !== i);
+  };
 
   // The trunk walks first-parent from its tip. Each other branch walks first-parent until it reaches a commit a lane
   // owns, shortest walk first, so a stack of branches splits into one lane per branch.
   const lanes: Lane[] = [];
   const walk = (start: number) => {
-    const rows: number[] = [];
+    const rows = new Set<number>();
     let row: number | undefined = start;
-    while (row !== undefined && commits[row].lane < 0) {
-      rows.push(row);
+    while (row !== undefined && commits[row].lane < 0 && !rows.has(row)) {
+      rows.add(row);
       row = parentsOf(row)[0];
     }
-    return { rows, stop: row };
+    return { rows, stop: row !== undefined && !rows.has(row) ? row : undefined };
   };
   const claim = (name: string, start: number, extra: Partial<Lane> = {}) => {
     const { rows, stop } = walk(start);
-    if (!rows.length) return;
+    if (!rows.size) return;
     for (const row of rows) commits[row].lane = lanes.length;
     lanes.push({ name, ref: "", deleted: false, from: stop, ...extra });
   };
@@ -210,8 +238,8 @@ export function readGraph(source: string): Graph {
   while (rest.length) {
     rest.sort(
       (a, b) =>
-        walk(index.get(tips.get(a) ?? "") ?? 0).rows.length -
-        walk(index.get(tips.get(b) ?? "") ?? 0).rows.length,
+        walk(index.get(tips.get(a) ?? "") ?? 0).rows.size -
+        walk(index.get(tips.get(b) ?? "") ?? 0).rows.size,
     );
     const name = rest.shift() ?? "";
     claim(name, index.get(tips.get(name) ?? "") ?? 0);
@@ -252,6 +280,7 @@ export function limit(graph: Graph, count: number): Graph {
     row === undefined || row < cut ? undefined : row - cut + 1;
   const elided: Commit = {
     sha: "",
+    hashes: [],
     ref: "",
     text: "",
     lane: 0,

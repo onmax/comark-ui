@@ -114,6 +114,58 @@ describe("comark-git-graph", () => {
     ]);
   });
 
+  it("connects abbreviated parents to full commit hashes across log sections", async () => {
+    const parent = `bbbbbbb${"0".repeat(33)}`;
+    const log = [
+      "$ git log --oneline --parents -1 HEAD",
+      "aaaaaaa bbbbbbb (HEAD -> main) Newer",
+      "$ git log --parents -1 HEAD^",
+      `commit ${parent}`,
+      "",
+      "    Older",
+    ].join("\n");
+    const html = flat(await render(block(log)));
+    expect(rows(html)).toEqual(["aaaaaaa", "bbbbbbb"]);
+    expect(html).toContain('<span class="cgg-count">1 branch · 2 commits</span>');
+  });
+
+  it("draws short and full spellings of a commit once and accepts notes using either", async () => {
+    const sha = `aaaaaaa${"0".repeat(33)}`;
+    const log = [
+      "$ git log --oneline --parents -1 HEAD",
+      "aaaaaaa Subject",
+      "$ git log --parents --decorate -1 HEAD",
+      `commit ${sha} (HEAD -> main, tag: v1)`,
+      "",
+      "    Subject",
+    ].join("\n");
+    const markdown = `::git-graph\n\`\`\`\n${log}\n\`\`\`\n\n#commit-aaaaaaa\nShort note\n\n#commit-${sha}\nFull note\n::`;
+    const html = flat(await render(markdown));
+    expect(rows(html)).toEqual(["aaaaaaa"]);
+    expect(html).toContain('<span class="cgg-tag">v1</span>');
+    expect(html).toContain('<div class="cgg-note">Short note Full note</div>');
+    expect((await parse(markdown)).meta.issues ?? []).toEqual([]);
+  });
+
+  it("does not guess which full hash an ambiguous parent abbreviation refers to", async () => {
+    const first = `bbbbbbb${"0".repeat(33)}`;
+    const second = `bbbbbbb${"1".repeat(33)}`;
+    const log = [
+      "$ git log --oneline --parents -1 HEAD",
+      "aaaaaaa bbbbbbb (HEAD -> main) Newer",
+      "$ git log --parents -2 other",
+      `commit ${second} ${first} (other)`,
+      "",
+      "    Second",
+      `commit ${first}`,
+      "",
+      "    First",
+    ].join("\n");
+    const html = flat(await render(block(log)));
+    expect(rows(html)).toEqual(["aaaaaaa", "bbbbbbb", "bbbbbbb"]);
+    expect(html).toContain('<span class="cgg-count">2 branches · 3 commits</span>');
+  });
+
   it("reports unsupported commands even when no log was pasted", async () => {
     const markdown = "```git-graph\n$ git cherry -v main\n+ a123ab0 Fix\n```";
     expect(Object.values((await parse(markdown)).meta.issueRules ?? {})).toEqual([
