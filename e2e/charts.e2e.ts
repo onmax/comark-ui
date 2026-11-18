@@ -371,6 +371,54 @@ test("a wrapped chart caption stays clear of the focused Copy button", async ({ 
   expect(textBox.x + textBox.width).toBeLessThanOrEqual(barBox.x);
 });
 
+test("the Copy menu fits inside a narrow right-to-left viewport", async ({ page }) => {
+  const width = 336;
+  await page.setViewportSize({ width, height: 600 });
+  const render = createHtmlRenderer({ plugins: [charts()], components });
+  const body = await render(
+    '::chart{title="Pigeons"}\n| day | pigeons |\n| --- | --: |\n| Monday | 3 |\n| Friday | 14 |\n::',
+  );
+  await page.setContent(`<!doctype html><main dir="rtl" style="width:320px">${body}</main>`);
+  const more = page.getByRole("button", { name: "More ways to copy" });
+  await more.focus();
+  await more.press("Enter");
+  const menu = page.getByRole("menu");
+  await expect(menu).toBeInViewport({ ratio: 1 });
+  await expect(menu.getByRole("menuitem", { name: /Table/ })).toBeFocused();
+  await expect(menu.getByRole("menuitem", { name: /Markdown/ })).toBeInViewport({ ratio: 1 });
+});
+
+test("Copy feedback does not move the plot or resize a wrapped caption", async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  const render = createHtmlRenderer({ plugins: [charts()], components });
+  const body = await render(
+    '::chart{title="Monthly pigeon counts in the city center"}\n| day | pigeons |\n| --- | --: |\n| Monday | 3 |\n| Friday | 14 |\n::',
+  );
+  await page.route("**/fixture/", (route) =>
+    route.fulfill({
+      contentType: "text/html",
+      body: `<!doctype html><meta charset="utf-8"><main style="width:320px">${body}</main>`,
+    }),
+  );
+  await page.goto("/fixture/", { waitUntil: "domcontentloaded" });
+  const copy = page.getByRole("button", { name: "Copy the chart as an image" });
+  await copy.focus();
+  await expect(page.locator(".cch-bar")).toHaveCSS("opacity", "1");
+  const caption = page.locator(".cch > figcaption");
+  const plot = page.locator(".cch-plot");
+  const captionBox = await caption.boundingBox();
+  const plotBox = await plot.boundingBox();
+  await copy.click();
+  const status = page.getByRole("status");
+  await expect(status).toHaveText("Copied as image");
+  await expect(status).toBeInViewport({ ratio: 1 });
+  expect(await caption.boundingBox()).toEqual(captionBox);
+  expect(await plot.boundingBox()).toEqual(plotBox);
+});
+
 test("a chart copies as an image in the page's colors, and its data as a table or Markdown", async ({
   page,
   context,
