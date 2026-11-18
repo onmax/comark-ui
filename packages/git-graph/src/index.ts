@@ -15,7 +15,8 @@ export type GitGraphMeta = {
 
 /**
  * What a `::git-graph` or a ```` ```git-graph ```` fence becomes. `label` names the figure for screen readers. Its
- * children are plain elements: the header, a `git-graph-lines` node beside the rows, the legend, and the `#footer` slot.
+ * children are plain elements: the header, a `git-graph-lines` node beside the rows, each `#commit-<sha>` slot as a
+ * `.cgg-note` under its commit, the legend, and the `#footer` slot.
  */
 export type GitGraphAttributes = { label?: string };
 
@@ -32,13 +33,19 @@ const LOG = "`git log --graph --oneline --decorate --parents`";
 const isContent = (node: Node) => (Array.isArray(node) ? node[0] !== null : node.trim() !== "");
 const textOf = (node: Node): string =>
   !Array.isArray(node) ? node : isElement(node) ? childrenOf(node).map(textOf).join("") : "";
-const isTemplate = (node: Node, name: string): node is ElementNode =>
-  isElement(node) && node[0] === "template" && node[1].name === name;
-// A paragraph Comark wraps around a slot's only line, which a title, drawn inline, can't hold.
+const isTemplate = (node: Node, name: string | RegExp): node is ElementNode =>
+  isElement(node) &&
+  node[0] === "template" &&
+  (typeof name === "string" ? node[1].name === name : name.test(text(node[1].name)));
+// Comark drops a slot whose name starts with a digit, as many short hashes do, hence the `commit-` prefix.
+const COMMIT_SLOT = /^commit-(.*)$/;
+// The paragraphs Comark wraps around a slot's lines, which a title or a commit's note, drawn inline, can't hold.
 const unwrap = (nodes: Node[]) =>
   nodes
     .filter(isContent)
-    .flatMap((node) => (isElement(node) && node[0] === "p" ? childrenOf(node) : [node]));
+    .flatMap((node, i) =>
+      isElement(node) && node[0] === "p" ? [...(i ? [" "] : []), ...childrenOf(node)] : [node],
+    );
 const flag = (value: unknown) => value === true || value === "" || value === "true";
 
 function problem(name: string, found: Problem, fence: boolean): Issue {
@@ -53,15 +60,10 @@ function problem(name: string, found: Problem, fence: boolean): Issue {
         rule: "comark/git-graph/missing-parents",
         message: `${name}'s \`git log\` was run without \`--parents\`, so it shows the commits in one line and draws no merges. Run ${LOG} again and paste that.`,
       };
-    case "unknown-branch":
+    case "unread-commands":
       return {
-        rule: "comark/git-graph/unknown-branch",
-        message: `${name}: \`${found.command}\` names \`${found.branch}\`, a branch the \`git log\` above doesn't show. Add the branch to the \`git log\` command, or add \`--all\`.`,
-      };
-    case "unknown-commit":
-      return {
-        rule: "comark/git-graph/unknown-commit",
-        message: `${name}: \`${found.command}\` names ${found.sha}, a commit the \`git log\` above doesn't show. Widen the \`git log\` so it includes that commit.`,
+        rule: "comark/git-graph/unread-command",
+        message: `${name} reads only \`git log\`, so it leaves out what ${new Intl.ListFormat("en").format(found.commands.map((command) => `\`${command}\``))} printed. Leave the other commands out, and say what happened to a commit in a \`#commit-<sha>\` slot${fence ? ", which needs the fence inside `::git-graph`" : ""}.`,
       };
   }
 }
@@ -73,15 +75,28 @@ interface Figure {
   fence: boolean;
   title: Node[];
   footer: Node[];
+  /** Each `#commit-<sha>` slot: the hash as written, and its Markdown. */
+  notes: [string, Node[]][];
   reverse: boolean;
   maxCount: unknown;
 }
+
+// A slot names a commit by its hash, as short as git's four characters or as long as all forty.
+const names = (sha: string, key: string) =>
+  key.length >= 4 && sha !== "" && (sha.startsWith(key) || key.startsWith(sha));
 
 function figure(input: Figure, issues: Issue[]): ElementNode | undefined {
   const { name } = input;
   let graph = readGraph(input.source);
   for (const found of graph.problems) issues.push(problem(name, found, input.fence));
   if (!graph.commits.length) return undefined;
+
+  for (const [key] of input.notes)
+    if (!graph.commits.some((commit) => names(commit.sha, key)))
+      issues.push({
+        rule: "comark/git-graph/unknown-commit",
+        message: `${name}: \`#commit-${key}\` names ${key}, a commit the \`git log\` above doesn't show. Write a hash from the log, or widen the \`git log\` so it includes that commit.`,
+      });
 
   const raw = input.maxCount;
   if (raw !== undefined) {
@@ -93,7 +108,14 @@ function figure(input: Figure, issues: Issue[]): ElementNode | undefined {
         message: `${name}: \`max-count\` is "${text(raw)}", so every commit shows. Write a whole number from 1, as with \`git log -n\`.`,
       });
   }
-  const drawing = draw(graph, input.reverse);
+  // A note on a commit `max-count` left out goes with it.
+  const notes = new Map<number, Node[]>();
+  for (const [key, note] of input.notes) {
+    const row = graph.commits.findIndex((commit) => names(commit.sha, key));
+    if (row >= 0)
+      notes.set(row, [...(notes.get(row) ?? []), ...(notes.has(row) ? [" "] : []), ...note]);
+  }
+  const drawing = draw(graph, input.reverse, notes);
   const { title, footer } = input;
   const label = title.map(textOf).join("").trim();
   return [
@@ -132,9 +154,12 @@ function block(node: ElementNode, number: number, data: Data, issues: Issue[]): 
   const children = childrenOf(node);
   const titleSlot = children.find((child) => isTemplate(child, "title"));
   const footerSlot = children.find((child) => isTemplate(child, "footer"));
+  const commitSlots = children.filter((child): child is ElementNode =>
+    isTemplate(child, COMMIT_SLOT),
+  );
   const content = children
     .flatMap((child) =>
-      child === titleSlot || child === footerSlot
+      child === titleSlot || child === footerSlot || commitSlots.some((slot) => slot === child)
         ? []
         : isTemplate(child, "default")
           ? childrenOf(child)
@@ -160,6 +185,10 @@ function block(node: ElementNode, number: number, data: Data, issues: Issue[]): 
           ? [text(attrs.title)]
           : [],
       footer: footerSlot ? childrenOf(footerSlot).filter(isContent) : [],
+      notes: commitSlots.map((slot) => [
+        (COMMIT_SLOT.exec(text(slot[1].name))?.[1] ?? "").toLowerCase(),
+        unwrap(childrenOf(slot)),
+      ]),
       reverse: flag(attrs.reverse),
       maxCount: attrs["max-count"],
     },
@@ -180,6 +209,7 @@ function fence(node: ElementNode, number: number, issues: Issue[]): ElementNode 
         fence: true,
         title: title ? [title] : [],
         footer: [],
+        notes: [],
         reverse: false,
         maxCount: undefined,
       },
@@ -189,10 +219,9 @@ function fence(node: ElementNode, number: number, issues: Issue[]): ElementNode 
 }
 
 /**
- * Turns pasted git output, in a ```` ```git-graph ```` fence or a `::git-graph` around a fence, into a commit graph:
- * `git log --graph --oneline --decorate --parents` for the commits, branches, merges, and tags, then `git cherry -v`
- * and a `git cherry-pick` dry run for which branches have each change, numbered in the order they were picked.
- * Problems are added to `meta.issues`.
+ * Turns pasted `git log --graph --oneline --decorate --parents` output, in a ```` ```git-graph ```` fence or a
+ * `::git-graph` around a fence, into a commit graph with its branches, merges, and tags. A `#commit-<sha>` slot puts
+ * Markdown under that commit, such as whether a backport applies. Problems are added to `meta.issues`.
  */
 export default defineComarkPlugin<void, GitGraphMeta>(() => ({
   name: "comark-git-graph",

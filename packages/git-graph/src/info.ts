@@ -21,6 +21,8 @@ export const componentInfo = {
     slots: {
       title: "Markdown for the header, in place of the title prop.",
       footer: "Markdown under the graph, such as the next steps.",
+      "commit-<sha>":
+        "Markdown under the commit whose hash starts with <sha>, such as whether a backport applies.",
     },
   },
 } satisfies Record<string, ComponentInfo>;

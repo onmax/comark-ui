@@ -32,7 +32,6 @@ g switch feat/billing; g rebase main; c "Charge in cents" src/billing.ts
 g switch -c fix/footer main; c "Fix a typo in the footer" src/footer.ts
 g switch main; g merge --no-ff fix/footer -m "Merge pull request #97 from acme/fix/footer"; g branch -D fix/footer
 rec "$out/history.txt" log --all --graph --oneline --decorate --parents
-rec "$out/history.txt" cherry -v main release/1.5
 
 # --- stack: three PRs, the bottom one squash-merged, the rest restacked
 cd "$work" && mkdir stack && cd stack && g init
@@ -43,7 +42,7 @@ g switch -c stack/sign-in-docs; c "Document signing in" docs/sign-in.md
 g switch main; c "Bump Vite to 8" package.json
 rec "$out/stack.txt" log --all --graph --oneline --decorate --parents
 
-# --- backport: fixes on main, tried on three release branches
+# --- backport: fixes on main, and three release branches to take them
 cd "$work" && mkdir backport && cd backport && g init
 printf 'props: rows\n' > src_table.txt; mkdir -p src && mv src_table.txt src/Table.vue
 printf 'settings\nsession\n' > src/settings.ts; printf 'errors\n' > src/errors.ts; g add -A; g commit -qm "Release 2.2.14"; g tag v2.2.14
@@ -62,10 +61,4 @@ c "Engine 422s name the field (#827)" src/engine.ts
 # release/2.4 already has the first two fixes.
 g switch release/2.4; for s in "Alert links keep their filters (#812)" "Stop polling closed flows (#815)"; do g cherry-pick "$(sha "$s")"; done
 g switch main
-o="$out/backport.txt"
-rec "$o" log --graph --oneline --decorate --parents main release/2.4 release/2.3-enterprise-bundle release/2.2
-pick() { local b="$1"; shift; rec "$o" switch "$b"; local args=(); for s in "$@"; do args+=("$(sha "$s")"); done; rec "$o" cherry-pick "${args[@]}"; while [ -f .git/CHERRY_PICK_HEAD ] || [ -d .git/sequencer ]; do rec "$o" cherry-pick --skip; done; }
-rec "$o" cherry -v release/2.4 main
-pick release/2.4 "Quiet expected" "Empty replacement" "Release memory" "Engine 422s"
-pick release/2.3-enterprise-bundle "Stop polling" "Quiet expected" "Release memory" "Engine 422s"
-pick release/2.2 "Stop polling" "Quiet expected" "Release memory"
+rec "$out/backport.txt" log --graph --oneline --decorate --parents main release/2.4 release/2.3-enterprise-bundle release/2.2

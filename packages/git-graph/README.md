@@ -5,7 +5,7 @@
 [![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-git-graph)
 [![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/git-graph)
 
-Commit graphs from pasted git output: branches, merges, tags, and which branches have each fix. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
+Commit graphs from pasted git output: branches, merges, tags, and a Markdown note on any commit. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
 
 ```sh
 pnpm add comark comark-git-graph
@@ -32,9 +32,9 @@ Run `git log --all --graph --oneline --decorate --parents` and paste what it pri
 ```
 ````
 
-Forks and merges come from the parent hashes, branch pills and tags from `--decorate`. Where the plugin doesn't run, as on GitHub, the fence still shows the log. Put the fence inside `::git-graph` for the props and slots: `reverse` shows the oldest commit first and `max-count` keeps the newest commits, as `git log --reverse` and `git log -n` do, and `#footer` adds Markdown under the graph. For a backport, paste the whole terminal: `git cherry -v` and a `git cherry-pick` dry run mark which branches have each fix. The page shows the graph with no script.
+Forks and merges come from the parent hashes, branch pills and tags from `--decorate`. Where the plugin doesn't run, as on GitHub, the fence still shows the log. Put the fence inside `::git-graph` for the props and slots: `reverse` shows the oldest commit first and `max-count` keeps the newest commits, as `git log --reverse` and `git log -n` do, `#commit-<sha>` adds a note under that commit, such as whether a backport applies, and `#footer` adds Markdown under the graph. The page shows the graph with no script.
 
-The plugin adds every problem to `meta.issues`, so a host can reject a document before publishing it: no `git log` output, a log without `--parents`, a branch or commit the log doesn't show, and a bad `max-count`. Each issue names the block and says how to fix it.
+The plugin adds every problem to `meta.issues`, so a host can reject a document before publishing it: no `git log` output, a log without `--parents`, output of another git command, a `#commit-<sha>` slot for a commit the log doesn't show, and a bad `max-count`. Each issue names the block and says how to fix it.
 
 ## Renderers
 

@@ -1,5 +1,5 @@
 import type { ElementNode, Node } from "comark";
-import type { Graph, PickStatus } from "./read.ts";
+import type { Graph } from "./read.ts";
 
 // The geometry every renderer shares: rows are a fixed height, so the lines drawn here meet the rows the renderers lay out.
 export const ROW = 34;
@@ -7,12 +7,6 @@ export const NOTES_ROW = 52;
 const LANE = 18;
 const PAD = 14;
 const LANE_COLORS = 7;
-
-export const STATUS_WORDS: Record<PickStatus, string> = {
-  clean: "applies clean",
-  conflict: "conflict",
-  has: "already there",
-};
 
 interface Span {
   start: number;
@@ -29,7 +23,6 @@ function columns(graph: Graph) {
   const rows: number[][] = lanes.map(() => []);
   commits.forEach((commit, i) => {
     rows[commit.lane].push(i);
-    for (const lane of commit.picks.keys()) rows[lane].push(i);
   });
   const spans: (Span | undefined)[] = lanes.map((lane, l) => {
     const own = rows[l];
@@ -76,18 +69,8 @@ function columns(graph: Graph) {
     (taken[c] ??= []).push({ lane: l, span });
     column[l] = c;
   }
-  const steps: Map<number, number>[] = lanes.map(() => new Map());
-  const count = lanes.map(() => 0);
-  commits.forEach((commit, i) => {
-    for (const [lane, pick] of commit.picks)
-      if (pick.status !== "has") steps[lane].set(i, ++count[lane]);
-  });
-  return { spans, column, columns: Math.max(0, ...column) + 1, steps, count };
+  return { spans, column, columns: Math.max(0, ...column) + 1 };
 }
-
-const esc = (value: string) =>
-  value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-const short = (name: string) => name.split("/").pop() || name;
 
 export interface Drawing {
   /** The lines and dots, an SVG string the renderers place beside the rows. */
@@ -99,22 +82,18 @@ export interface Drawing {
   summary: string;
 }
 
-/** Lays out a graph newest first, as git prints it, or oldest first with `reverse`. */
-export function draw(graph: Graph, reverse: boolean): Drawing {
+/** Lays out a graph newest first, as git prints it, or oldest first with `reverse`. `notes` holds each `#commit-<sha>`
+ * slot's Markdown by the commit's row, drawn as a second line under it. */
+export function draw(graph: Graph, reverse: boolean, notes: Map<number, Node[]>): Drawing {
   const { commits, lanes } = graph;
-  const { spans, column, columns: count, steps, count: picks } = columns(graph);
+  const { spans, column, columns: count } = columns(graph);
   const display = commits.map((_, i) => i);
   if (!reverse) display.reverse();
   const pos: number[] = [];
   display.forEach((row, k) => {
     pos[row] = k;
   });
-  // Notes and picks read left to right, in the order of their columns.
-  const picksOf = (i: number) =>
-    [...commits[i].picks].sort(([a], [b]) => column[a] - column[b] || a - b);
-  const notes = (i: number) =>
-    picksOf(i).filter(([, pick]) => pick.status === "conflict" || pick.files);
-  const heights = display.map((row) => (notes(row).length ? NOTES_ROW : ROW));
+  const heights = display.map((row) => (notes.has(row) ? NOTES_ROW : ROW));
   const tops: number[] = [];
   heights.forEach((h, k) => {
     tops[k] = k ? tops[k - 1] + heights[k - 1] : 0;
@@ -159,16 +138,6 @@ export function draw(graph: Graph, reverse: boolean): Drawing {
       dots.push(`<circle class="cgg-merge ${color(commit.lane)}" cx="${x}" cy="${y}" r="5"/>`);
     else
       dots.push(`<circle class="cgg-commit ${color(commit.lane)}" cx="${x}" cy="${y}" r="4.5"/>`);
-    for (const [lane, pick] of commit.picks) {
-      const px = X(lane);
-      const tip = `<title>${esc(`${commit.ref ? `#${commit.ref} ` : ""}${commit.text} → ${lanes[lane].name}: ${STATUS_WORDS[pick.status]}${pick.files ? ` (${pick.files})` : ""}`)}</title>`;
-      if (pick.status === "has")
-        dots.push(`<circle class="cgg-has" cx="${px}" cy="${y}" r="3.5">${tip}</circle>`);
-      else
-        dots.push(
-          `<g class="cgg-pick" data-status="${pick.status}"><circle cx="${px}" cy="${y}" r="8"/><text x="${px}" y="${y}">${steps[lane].get(i) ?? ""}</text>${tip}</g>`,
-        );
-    }
   });
   const svg = `<svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" aria-hidden="true" focusable="false"><g class="cgg-edges">${lines.join("")}</g>${dots.join("")}</svg>`;
 
@@ -177,7 +146,6 @@ export function draw(graph: Graph, reverse: boolean): Drawing {
   );
   const rows: ElementNode[] = display.map((i, k) => {
     const commit = commits[i];
-    const lane = lanes[commit.lane];
     const attrs = { class: "cgg-row", ...(heights[k] === NOTES_ROW && { "data-notes": "" }) };
     if (commit.elided)
       return [
@@ -220,46 +188,16 @@ export function draw(graph: Graph, reverse: boolean): Drawing {
     for (const tag of commit.tags) line.push(["span", { class: "cgg-tag" }, tag]);
     line.push(["span", { class: "cgg-sha" }, commit.sha]);
     const row: Node[] = [["div", { class: "cgg-line" }, ...line]];
-    const shown = notes(i);
-    if (shown.length)
-      row.push([
-        "div",
-        { class: "cgg-notes" },
-        ...shown.map(([l, pick]): ElementNode => [
-          "span",
-          {
-            class: "cgg-note",
-            "data-status": pick.status,
-            title: `${lanes[l].name}: ${STATUS_WORDS[pick.status]}${pick.files ? `, ${pick.files}` : ""}`,
-          },
-          ["b", {}, short(lanes[l].name)],
-          ` ${STATUS_WORDS[pick.status]}${pick.files ? ` · ${pick.files}` : ""}`,
-        ]),
-      ]);
-    // The dots are hidden from screen readers, so each pick is said in words.
-    const said = picksOf(i).map(
-      ([l, pick]) =>
-        `${lanes[l].name}: ${STATUS_WORDS[pick.status]}${steps[l].get(i) ? `, pick ${steps[l].get(i)}` : ""}${pick.files ? ` in ${pick.files}` : ""}`,
-    );
-    if (lane && said.length) row.push(["span", { class: "cgg-sr" }, `${said.join("; ")}.`]);
+    const note = notes.get(i);
+    if (note) row.push(["div", { class: "cgg-note" }, ...note]);
     return ["div", attrs, ...row];
   });
 
-  const used = new Set(
-    commits.flatMap((commit) => [...commit.picks.values()].map((pick) => pick.status)),
-  );
-  const legend: ElementNode[] = (["clean", "conflict", "has"] as const)
-    .filter((status) => used.has(status))
-    .map((status) => [
-      "span",
-      { class: "cgg-key", "data-status": status },
-      STATUS_WORDS[status][0].toUpperCase() + STATUS_WORDS[status].slice(1),
-    ]);
-  if (commits.some((commit) => commit.elided))
-    legend.push(["span", { class: "cgg-key", "data-status": "elided" }, "Commits left out"]);
+  const legend: ElementNode[] = commits.some((commit) => commit.elided)
+    ? [["span", { class: "cgg-key", "data-status": "elided" }, "Commits left out"]]
+    : [];
   const branches = lanes.filter((_, l) => spans[l]).length;
-  const total = picks.reduce((a, b) => a + b, 0);
   const real = commits.filter((commit) => !commit.elided).length;
-  const summary = `${branches} ${branches === 1 ? "branch" : "branches"} · ${total ? `${total} ${total === 1 ? "pick" : "picks"}` : `${real} ${real === 1 ? "commit" : "commits"}`}`;
+  const summary = `${branches} ${branches === 1 ? "branch" : "branches"} · ${real} ${real === 1 ? "commit" : "commits"}`;
   return { svg, width, height, rows, legend, summary };
 }

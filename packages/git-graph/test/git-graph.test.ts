@@ -21,7 +21,7 @@ describe("comark-git-graph", () => {
   it("draws git log --graph --oneline --decorate --parents newest first, with branch pills at their tips", async () => {
     const html = flat(await render(block(fixture("history"), '{title="How 1.5 shipped"}')));
     expect(html).toContain(
-      '<figure class="cgg" data-comark-frame data-not-typeset aria-label="How 1.5 shipped"><div class="cgg-head"><span class="cgg-title">How 1.5 shipped</span><span class="cgg-count">5 branches · 20 commits</span></div>',
+      '<figure class="cgg" data-comark-frame data-not-typeset aria-label="How 1.5 shipped"><div class="cgg-head"><span class="cgg-title">How 1.5 shipped</span><span class="cgg-count">5 branches · 21 commits</span></div>',
     );
     expect(rows(html)[0]).toBe("734e0a0");
     expect(rows(html).at(-1)).toBe("27a1a3e");
@@ -47,22 +47,10 @@ describe("comark-git-graph", () => {
     expect(html.match(/class="cgg-merge /g)).toHaveLength(3);
   });
 
-  it("marks a commit that git cherry says another branch has", async () => {
-    const html = flat(await render(block(fixture("history"))));
-    expect(html).toContain('<circle class="cgg-has"');
-    expect(html).toContain(
-      "<title>Fix the RC&#39;s broken migration → main: already there</title>".replace(
-        "&#39;",
-        "'",
-      ),
-    );
-    expect(html).toContain('<span class="cgg-sr">main: already there.</span>');
-  });
-
   it("keeps the newest commits with max-count, like git log -n, and folds the rest into one row", async () => {
     const html = flat(await render(block(fixture("history"), "{max-count=14}")));
     expect(rows(html)).toHaveLength(14);
-    expect(html).toContain('<span class="cgg-subject cgg-muted">6 more commits</span>');
+    expect(html).toContain('<span class="cgg-subject cgg-muted">7 more commits</span>');
     expect(html).toContain('<span class="cgg-key" data-status="elided">Commits left out</span>');
   });
 
@@ -75,19 +63,28 @@ describe("comark-git-graph", () => {
     expect(html).toContain('<svg viewBox="0 0 46 ');
   });
 
-  it("reads a backport's git cherry and cherry-pick dry run into numbered picks, oldest first with reverse", async () => {
-    const html = flat(await render(block(fixture("backport"), "{reverse}")));
+  it("puts each #commit-<sha> slot's Markdown under that commit", async () => {
+    const html = flat(
+      await render(
+        `::git-graph{reverse}\n\`\`\`\n${fixture("backport")}\n\`\`\`\n\n#commit-a94037c\n**2.4** applies clean\n\n#commit-d73449fafcc0d981eea22a5170adf6c1e0c453b8\nConflict in \`src/Table.vue\`\n\nTry it on 2.3\n::`,
+      ),
+    );
     expect(rows(html)[0]).toBe("5de6be0");
-    expect(html).toContain('<span class="cgg-count">4 branches · 11 picks</span>');
-    // release/2.4's own copies of the first two fixes fold into main's rows.
-    expect(html.match(/Alert links keep their filters/g)).toHaveLength(2);
+    expect(html).toContain('<span class="cgg-count">4 branches · 14 commits</span>');
     expect(html).toContain(
-      '<span class="cgg-note" data-status="conflict" title="release/2.2: conflict, src/settings.ts"><b>2.2</b> conflict · src/settings.ts</span><span class="cgg-note" data-status="conflict" title="release/2.4: conflict, src/Table.vue"><b>2.4</b> conflict · src/Table.vue</span>',
+      '<span class="cgg-sha">a94037c</span></div><div class="cgg-note"><strong>2.4</strong> applies clean</div></div>',
     );
-    expect(html).toContain('<g class="cgg-pick" data-status="clean"><circle cx="');
+    // A whole hash finds its commit too, and two paragraphs read as one line.
     expect(html).toContain(
-      '<span class="cgg-key" data-status="clean">Applies clean</span><span class="cgg-key" data-status="conflict">Conflict</span><span class="cgg-key" data-status="has">Already there</span>',
+      '<span class="cgg-sha">d73449f</span></div><div class="cgg-note">Conflict in <code>src/Table.vue</code> Try it on 2.3</div></div>',
     );
+    expect(html.match(/<div class="cgg-row" data-notes="">/g)).toHaveLength(2);
+  });
+
+  it("drops a note on a commit max-count leaves out, and reports none for it", async () => {
+    const markdown = `::git-graph{max-count=2}\n\`\`\`\n${fixture("stack")}\n\`\`\`\n\n#commit-676e7b8\nThe release\n::`;
+    expect(flat(await render(markdown))).not.toContain('<div class="cgg-note">');
+    expect((await parse(markdown)).meta.issues ?? []).toEqual([]);
   });
 
   it("draws a ```git-graph fence like the block, with its [label] as the title", async () => {
@@ -130,7 +127,7 @@ describe("comark-git-graph", () => {
     expect(meta.issueRules?.[meta.issues?.[0] ?? ""]).toBe("comark/git-graph/missing-log");
   });
 
-  it("reads git's long format and a conflict printed in another language", async () => {
+  it("reads git's long format", async () => {
     const log = [
       "$ git log --graph --decorate --parents --all",
       "* commit 2222222aaaa 1111111bbbb (HEAD -> main)",
@@ -148,17 +145,11 @@ describe("comark-git-graph", () => {
       "  Author: Ada <ada@example.com>",
       "",
       "      Release 2.2.14",
-      "$ git switch release/2.2",
-      "$ git cherry-pick 2222222",
-      "Auto-fusionando src/errors.ts",
-      "CONFLICTO (contenido): Conflicto de fusión en src/errors.ts",
-      "error: no se pudo aplicar 2222222... Quiet expected 4xx errors (#818)",
     ].join("\n");
     const html = flat(await render(block(log)));
     expect(html).toContain(
       '<span class="cgg-subject"><span class="cgg-ref">#818</span> Quiet expected 4xx errors</span>',
     );
-    expect(html).toContain("<b>2.2</b> conflict · src/errors.ts</span>");
     expect(html).toContain("Retry the webhook");
   });
 
@@ -194,14 +185,16 @@ describe("comark-git-graph", () => {
         /run without `--parents`/,
       ],
       [
-        block(`${fixture("stack")}\n$ git switch release/9\n$ git cherry-pick 0d65aff`),
-        "comark/git-graph/unknown-branch",
-        /`git switch release\/9` names `release\/9`, a branch the `git log` above doesn't show/,
+        block(
+          `${fixture("stack")}\n$ git switch main\n$ git cherry-pick 45a57b9\n$ git switch main`,
+        ),
+        "comark/git-graph/unread-command",
+        /reads only `git log`, so it leaves out what `git switch` and `git cherry-pick` printed. Leave the other commands out, and say what happened to a commit in a `#commit-<sha>` slot\./,
       ],
       [
-        block(`${fixture("stack")}\n$ git cherry -v main stack/sign-in-docs\n- 9999999aaaa Gone`),
+        `::git-graph\n\`\`\`\n${fixture("stack")}\n\`\`\`\n#commit-9999999\nGone\n::`,
         "comark/git-graph/unknown-commit",
-        /names 9999999, a commit the `git log` above doesn't show/,
+        /`#commit-9999999` names 9999999, a commit the `git log` above doesn't show/,
       ],
       [
         block(fixture("stack"), '{order="oldest"}'),

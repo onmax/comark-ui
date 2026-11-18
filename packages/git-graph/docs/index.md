@@ -1,7 +1,7 @@
 ---
 title: Git graph
 description: A commit graph in Markdown, drawn from pasted git output.
-keywords: git, git log, graph, branches, merge, cherry-pick, backport, release branch, stacked PRs, rebase, tags
+keywords: git, git log, graph, branches, merge, commit notes, backport, release branch, stacked PRs, rebase, tags
 tagline: A commit graph drawn from what git printed, with branches, merges, and tags.
 group: Review blocks
 icon: git-graph
@@ -197,6 +197,34 @@ Use the `max-count` prop to keep the newest commits, as `git log -n` does. The r
 ````
 ::
 
+### Notes on commits
+
+Use a `#commit-<sha>` slot to write Markdown under a commit, such as a review, a CI result, or whether a backport applies. Name the commit by its hash as the log prints it, or any part of it from the start, at least four characters. The note takes one line, so keep it short.
+
+::example
+````md
+::git-graph
+```
+* 0d65aff 676e7b8 (HEAD -> main) Bump Vite to 8
+| * 45a57b9 67cab57 (stack/sign-in-docs) Document signing in
+| * 67cab57 8bb4fd2 (stack/sign-in-form) Remember the last email
+| * 8bb4fd2 706c526 Sign-in form
+| * 706c526 676e7b8 (stack/session-api) Add the session endpoint
+|/  
+* 676e7b8 Release 1.4
+```
+
+#commit-706c526
+**Approved**, merge first
+
+#commit-67cab57
+Waiting on review
+::
+````
+::
+
+The slot needs the `commit-` prefix because Comark drops a slot name that starts with a digit, as many hashes do.
+
 ### Footer
 
 Use the `#footer` slot to write Markdown under the graph, such as the next steps for a stack.
@@ -232,17 +260,11 @@ Use the `#footer` slot to write Markdown under the graph, such as the next steps
 
 ### Backport fixes to release branches
 
-The block also reads a backport's dry run, when you paste the whole terminal with each command after a `$`: `git cherry -v <branch> main` for the fixes a branch already has, then `git switch` and `git cherry-pick` for each branch, with `git cherry-pick --skip` after a conflict. The `git log` output goes first, and needs no `$` line.
+Paste the `git log` of `main` and the release branches, then try each fix on each branch and write what happened in its `#commit-<sha>` slot. The block reads only `git log`, so a `git cherry-pick` dry run goes in your words, not as pasted output.
 
 ```sh
-git log --graph --oneline --decorate --parents main release/2.4 release/2.3
-git cherry -v release/2.4 main
-git switch release/2.4
-git cherry-pick cc4127a 378f25e 978ebb9
-git cherry-pick --skip
+git log --graph --oneline --decorate --parents main release/2.4 release/2.3-enterprise-bundle release/2.2
 ```
-
-Each fix on `main` gets one row. A pick that applied is a green dot in the branch's lane, a conflict an amber one, numbered in the order you picked, and the conflicting files show under the commit. A `-` from `git cherry` is a ring: the branch already has that change, so its own copy folds into the fix's row. Reset the branches afterwards; the graph keeps what the dry run printed.
 
 ::example
 ````md
@@ -265,85 +287,22 @@ Each fix on `main` gets one row. A pick that applied is a green dot in the branc
 | * 66267ed 5de6be0 (release/2.2) Retry the webhook once on a 502
 |/  
 * 5de6be0 (tag: v2.2.14) Release 2.2.14
-$ git cherry -v release/2.4 main
-- db5f4512c9c358eb843b736d3aa3063ade681869 Alert links keep their filters (#812)
-- 8ca9d7ef7a2b98a2c470ff5d4873c4f45dce3adf Stop polling closed flows (#815)
-+ fe1aa79cdf483fe0ef3def6a8a07ca77a2854836 Quiet expected 4xx errors (#818)
-+ a94037cbb17286cfedcad6a92232970fd8af6a7b Empty replacement no longer crashes the table (#821)
-+ d73449fafcc0d981eea22a5170adf6c1e0c453b8 Release memory after a long session (#826)
-+ 5595de735b843dd7542e2142a950148045807fa9 Engine 422s name the field (#827)
-$ git switch release/2.4
-Switched to branch 'release/2.4'
-$ git cherry-pick fe1aa79 a94037c d73449f 5595de7
-[release/2.4 3e0d819] Quiet expected 4xx errors (#818)
- Date: Mon Jan 5 01:00:00 2026 +0000
- 1 file changed, 1 insertion(+)
-[release/2.4 4a566e1] Empty replacement no longer crashes the table (#821)
- Date: Mon Jan 5 03:00:00 2026 +0000
- 1 file changed, 1 insertion(+)
- create mode 100644 src/replace.ts
-Auto-merging src/Table.vue
-CONFLICT (content): Merge conflict in src/Table.vue
-error: could not apply d73449f... Release memory after a long session (#826)
-hint: After resolving the conflicts, mark them with
-hint: "git add/rm <pathspec>", then run
-hint: "git cherry-pick --continue".
-hint: You can instead skip this commit with "git cherry-pick --skip".
-hint: To abort and get back to the state before "git cherry-pick",
-hint: run "git cherry-pick --abort".
-hint: Disable this message with "git config set advice.mergeConflict false"
-$ git cherry-pick --skip
-[release/2.4 cfa1496] Engine 422s name the field (#827)
- Date: Mon Jan 5 06:00:00 2026 +0000
- 1 file changed, 1 insertion(+)
- create mode 100644 src/engine.ts
-$ git switch release/2.3-enterprise-bundle
-Switched to branch 'release/2.3-enterprise-bundle'
-$ git cherry-pick 8ca9d7e fe1aa79 d73449f 5595de7
-[release/2.3-enterprise-bundle 8525458] Stop polling closed flows (#815)
- Date: Mon Jan 5 00:00:00 2026 +0000
- 1 file changed, 1 insertion(+)
- create mode 100644 src/flows.ts
-[release/2.3-enterprise-bundle 8b348a3] Quiet expected 4xx errors (#818)
- Date: Mon Jan 5 01:00:00 2026 +0000
- 1 file changed, 1 insertion(+)
-[release/2.3-enterprise-bundle bd84b61] Release memory after a long session (#826)
- Date: Mon Jan 5 04:00:00 2026 +0000
- 2 files changed, 2 insertions(+)
-[release/2.3-enterprise-bundle 3e52a07] Engine 422s name the field (#827)
- Date: Mon Jan 5 06:00:00 2026 +0000
- 1 file changed, 1 insertion(+)
- create mode 100644 src/engine.ts
-$ git switch release/2.2
-Switched to branch 'release/2.2'
-$ git cherry-pick 8ca9d7e fe1aa79 d73449f
-[release/2.2 b086e43] Stop polling closed flows (#815)
- Date: Mon Jan 5 00:00:00 2026 +0000
- 1 file changed, 1 insertion(+)
- create mode 100644 src/flows.ts
-Auto-merging src/errors.ts
-CONFLICT (content): Merge conflict in src/errors.ts
-error: could not apply fe1aa79... Quiet expected 4xx errors (#818)
-hint: After resolving the conflicts, mark them with
-hint: "git add/rm <pathspec>", then run
-hint: "git cherry-pick --continue".
-hint: You can instead skip this commit with "git cherry-pick --skip".
-hint: To abort and get back to the state before "git cherry-pick",
-hint: run "git cherry-pick --abort".
-hint: Disable this message with "git config set advice.mergeConflict false"
-$ git cherry-pick --skip
-Auto-merging src/settings.ts
-CONFLICT (content): Merge conflict in src/settings.ts
-error: could not apply d73449f... Release memory after a long session (#826)
-hint: After resolving the conflicts, mark them with
-hint: "git add/rm <pathspec>", then run
-hint: "git cherry-pick --continue".
-hint: You can instead skip this commit with "git cherry-pick --skip".
-hint: To abort and get back to the state before "git cherry-pick",
-hint: run "git cherry-pick --abort".
-hint: Disable this message with "git config set advice.mergeConflict false"
-$ git cherry-pick --skip
 ```
+
+#commit-8ca9d7e
+**2.4** has it · **2.3** applies clean · **2.2** applies clean
+
+#commit-fe1aa79
+**2.4** applies clean · **2.3** applies clean · **2.2** conflict in `src/errors.ts`
+
+#commit-a94037c
+**2.4** applies clean
+
+#commit-d73449f
+**2.4** conflict in `src/Table.vue` · **2.3** applies clean · **2.2** conflict in `src/settings.ts`
+
+#commit-5595de7
+**2.4** applies clean · **2.3** applies clean
 ::
 ````
 ::
@@ -365,13 +324,13 @@ The props and slots need `::git-graph`. A `git-graph` fence takes only a title, 
 | Slot | Description |
 | --- | --- |
 | `title` | Markdown for the header, in place of the `title` prop. |
+| `commit-<sha>` | Markdown under the commit whose hash starts with `<sha>`, on one line. A note on a commit `max-count` leaves out isn't shown. |
 | `footer` | Markdown under the graph, such as the steps after a backport. |
 
 ### What it reads
 
 - **`git log`**, with `--parents`: each commit, its parents, and the `(…)` labels `--decorate` prints for branches and tags. `--oneline` or the long format, with or without `--graph`. A local branch wins over its `origin/` copy.
-- **`git cherry -v <branch> <source>`**: each `-` line marks a commit `<branch>` already has.
-- **`git switch` or `git checkout`**, then **`git cherry-pick`**: `[branch sha] subject` is a pick that applied, and `CONFLICT … in <file>` followed by `error: could not apply <sha>…` a conflict in those files. A pick finished with `--continue` stays a conflict. Git's messages in another language read too.
+- A pasted terminal: lines that start with `$ git log` begin more `git log` output. The output of any other command isn't read, and the plugin reports it.
 
 Lanes come from the branch tips: `main`, `master`, or `trunk` first, then each branch back along its first parents until it meets a commit another lane owns. What git doesn't print isn't drawn, such as a branch's place before a rebase.
 
@@ -381,7 +340,8 @@ The plugin adds these problems to `meta.issues`, as [Validation](/guide/validati
 
 - A block or fence with no `git log` output. A fence with none stays a code block.
 - `git log` output without `--parents`. It draws the commits in one line.
-- A branch or a commit, named by `git switch`, `git cherry`, or `git cherry-pick`, that the `git log` above doesn't show.
+- Output of a command other than `git log`, such as `git cherry-pick`. It isn't drawn.
+- A `#commit-<sha>` slot whose hash the `git log` above doesn't show.
 - A `max-count` that isn't a whole number from 1.
 - Text beside the fence. The block drops it.
 - A prop it doesn't read. It's ignored.
@@ -390,7 +350,7 @@ Each issue names the block and the fix, and has its own rule in [Doctor](/doctor
 
 ```txt
 The ```git-graph fence 1's `git log` was run without `--parents`, so it shows the commits in one line and draws no merges. Run `git log --graph --oneline --decorate --parents` again and paste that.
-`::git-graph` 2: `git switch release/9` names `release/9`, a branch the `git log` above doesn't show. Add the branch to the `git log` command, or add `--all`.
+`::git-graph` 2: `#commit-9999999` names 9999999, a commit the `git log` above doesn't show. Write a hash from the log, or widen the `git log` so it includes that commit.
 ```
 
 ### Package
@@ -414,7 +374,7 @@ For Vue, React, or Svelte, import from `comark-git-graph/vue`, `comark-git-graph
 
 ## Theme
 
-The graph sits in a bordered card with a quiet header, like [Diff](/diff). Each branch keeps one of seven colors down its lane, on its pill too; the trunk's is neutral. Picks use the status colors. The rules sit in a `comark` CSS layer, so any plain rule of yours wins.
+The graph sits in a bordered card with a quiet header, like [Diff](/diff). Each branch keeps one of seven colors down its lane, on its pill too; the trunk's is neutral. The rules sit in a `comark` CSS layer, so any plain rule of yours wins.
 
 ### Shared tokens
 
@@ -424,11 +384,9 @@ The graph reads these [shared tokens](/guide/theming):
 | --- | --- |
 | `--comark-background` | The card, and the ring around each dot |
 | `--comark-foreground` | The commit text, mixed into the trunk's color |
-| `--comark-muted` | Hashes, PR numbers, notes, and the legend |
+| `--comark-muted` | Hashes, PR numbers, commit notes, and the legend |
 | `--comark-border` | The card's edge, the header, and the branch pills |
 | `--comark-accent` | The header, tags, and a hovered row |
-| `--comark-success` | A pick that applied |
-| `--comark-warning` | A pick with a conflict |
 | `--comark-radius` | The card's corners |
 | `--comark-font` | The text |
 
@@ -448,10 +406,10 @@ Set them on `.cgg`:
 | `.cgg` | The card, a `<figure>` |
 | `.cgg-head`, `.cgg-title`, `.cgg-count` | The header, its title, and the counts |
 | `.cgg-lines` | The lines and dots, an SVG |
-| `.cgg-row` | A commit's row; `[data-notes]` on one with a line of notes |
+| `.cgg-row` | A commit's row; `[data-notes]` on one with a note |
 | `.cgg-branch` | A branch's pill; `[data-lane]` picks its color and `[data-deleted]` dashes it |
 | `.cgg-tag` | A tag |
-| `.cgg-note` | A pick's note; `[data-status]` is `clean`, `conflict`, or `has` |
+| `.cgg-note` | A `#commit-<sha>` slot's Markdown, under its commit |
 | `.cgg-legend`, `.cgg-footer` | The legend, and the `#footer` slot |
 
 ```css

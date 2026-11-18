@@ -29,5 +29,3 @@ $ git log --all --graph --oneline --decorate --parents
 * 8d269bc 00a0dfb Cache the font files
 * 00a0dfb 27a1a3e Bump Vite to 8
 * 27a1a3e (tag: v1.4.0) Release 1.4
-$ git cherry -v main release/1.5
-- 1f298c4cb9c1a6bc84e8b227fc3e79d07046be11 Fix the RC's broken migration
