@@ -104,7 +104,7 @@ credits: 'Laid out by Microsoft Research''s <a href="https://github.com/microsof
 - A Copy button copies the chart as a PNG, and its menu copies the data as a table for a spreadsheet or as Markdown.
 - [Notes](/charts/notes) mark a row or a value, or draw a line across the chart at a target.
 - Eleven types cover bars, lines, pies, [heatmaps](#heatmap), [gantt charts](#gantt-charts), and [sankeys](#sankey). A [Vega-Lite spec](#vega-lite) draws anything else in the same frame, colors, and type.
-- Charts read like a report's: a section under a hairline with its title and what to read in it, values on the bars, lines named where they end, [units](#unit) such as `$22.2k`, and [log scales](#log-scale) for numbers that span orders of magnitude.
+- Charts read like a report's: a section with its title and what to read in it, values on the bars, lines named where they end, [units](#unit) such as `$22.2k`, and [log scales](#log-scale) for numbers that span orders of magnitude.
 - Without the plugin, the table still renders as a table.
 
 ## Usage
@@ -582,9 +582,9 @@ To check documents without drawing them, as comark-linter does, pass `charts({ d
 
 ### Fit the column
 
-Charts span the column, as a dashboard's do, and look alike anywhere:
+Charts are drawn about a report column's width, and look alike anywhere:
 
-- Every chart over axes is drawn 744px wide, labels included, and scales to the column's width. Its text scales with it, so labels read the same size in every chart on a page.
+- Every chart over axes is drawn 744px wide, labels included. A narrower column shrinks it to fit, text and all, so labels read the same size in every chart on a page. A wider column leaves it at 744px, so its text never grows past the page's.
 - Upright bars stay about 40px wide however few there are, or 22px each side by side, so a short table doesn't draw slabs.
 - A pie and a heatmap keep their own size, shrinking only in a narrower column.
 - No row is ever dropped. A long sideways chart grows taller.
@@ -706,7 +706,7 @@ The comark-ui agent skill knows the table shape for each chart type and how to c
 
 ## Theme
 
-A chart is a section of a report, as a dashboard lays out its charts: a hairline over it, its title and description at the start, the chart, and its data folded under it, with no card around it. It switches with the page's dark mode. The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
+A chart is a section of a report, as a dashboard lays out its charts: its title and description at the start, the chart, and its data folded under it, with no card or rule around it. It switches with the page's dark mode. The rules sit in a `comark` CSS layer, so any plain rule of your own wins.
 
 ### Shared tokens
 
@@ -716,7 +716,7 @@ Charts read these [shared tokens](/guide/theming), and their series read Nuxt UI
 | --- | --- | --- |
 | `--comark-foreground` | `--ui-text-highlighted`, `--foreground` | Values, the caption, the data table |
 | `--comark-muted` | `--ui-text-muted`, `--muted-foreground` | Axis labels, the description, the **Data** toggle, waterfall totals, the copy buttons' icons and the menu's hints |
-| `--comark-border` | `--ui-border`, `--border` | The hairline over the chart, dotted grid lines, a heatmap's empty cells, the data table's rules, and the copy buttons' and the menu's outline |
+| `--comark-border` | `--ui-border`, `--border` | Dotted grid lines, a heatmap's empty cells, the data table's rules, and the copy buttons' and the menu's outline |
 | `--comark-background` | `--ui-bg`, `--background` | The edges between slices, the copy buttons, the menu, and a copied PNG's background |
 | `--comark-accent` | `--ui-bg-elevated`, `--accent` | A hovered copy button or menu item, and the arrow while its menu is open |
 | `--comark-ring` | `--ui-primary`, `--ring` | The focus ring on the **Data** toggle and the copy buttons |
