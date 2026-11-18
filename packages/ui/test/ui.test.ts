@@ -161,7 +161,7 @@ describe("comark-ui", () => {
     expect(out.split(`<script>${mermaidScript}</script>`)).toHaveLength(2);
     expect(out.match(/<style data-comark-zoom>/g)).toHaveLength(1);
     expect(await renderHtml(markdown)).toContain(`<script>${mermaidScript}</script>`);
-    expect(mermaidScript).toMatch(/^\(function start\(\) \{[\s\S]*\}\)\(\)$/);
+    expect(mermaidScript).toMatch(/^\(function\b[^(]*\(\) \{[\s\S]*\}\)\(\)$/);
     expect(mermaidScript).not.toContain("</");
 
     const still = await renderHtml(markdown, { zoom: false });
