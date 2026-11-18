@@ -116,7 +116,7 @@ A [before/after comparison](/annotate/components/compare), a Mermaid diagram wid
 | --- | --- | --- |
 | `--comark-wide-start` | `0px` | How far a wide block may grow before the column, on the left in a left-to-right page. `100%` in it is the column's width. |
 | `--comark-wide-end` | `0px` | How far it may grow after the column. Keep it clear of what sits beside the text, such as a side panel or an [outline](/outline). |
-| `--comark-wide-max` | `72rem` | The widest a wide block grows, however much room there is. |
+| `--comark-wide-max` | `72rem` | The widest a wide block grows, however much room there is. A wide table isn't held to the default, since each em it gains saves its prose lines, but a value you set caps it too. |
 | `--comark-wide-width` | Set by the block | A block's own width, which a diagram never grows past. Your own blocks can set it too. |
 
 A wide block stays centered on the column. When one side has less room, such as beside a panel, it shifts toward the side with more, so a diagram keeps its size. The [side outline](/outline#side-outline) tells the page when it needs a column beside wide blocks. Only top-level blocks grow, so a diagram inside tabs or a list keeps to its parent. A `##`, `###`, or `####` heading right above a comparison grows with it, so it starts where Before does and reads as the comparison's title. To make your own block wide, put `data-wide` on its outer element.
@@ -125,9 +125,11 @@ A wide block stays centered on the column. When one side has less room, such as 
 
 A Markdown table gets its layout from its cells, with nothing to write:
 
-- A column whose longest cell is 24 characters or fewer, such as an id, a date, a status, or links, stays on one line. A chip in it keeps its label whole, so `portal #1596` never breaks into `#159` and `6`.
+- A column whose cells are 24 characters or fewer, such as an id, a date, a status, or links, takes only the room its cells need, each on one line. A chip keeps its label whole, so `portal #1596` never breaks into `#159` and `6`. A cell of two chips may put the second under the first.
 - A table wider than a readable column grows into the room beside the text, up to the width its cells need, like any [wide block](#wide-blocks).
-- A table with two or more prose columns stacks them when it gets well under the width it needs: the later ones move under the first, in muted text, so a row reads as a summary with its detail below. On a phone, each row becomes one column.
+- The longer columns share the rest by how much they make rows tall: a status that runs three times as long as its summary gets the wider column, so the table comes out as short as it can.
+- When the narrowest prose column would read only a few words a line, the longer columns stack instead: the later ones move under the first, in muted text, so a row reads as a summary with its detail below.
+- On a phone, each row of a table with prose becomes one column. A table of numbers or other short values scrolls sideways instead, as on GitHub, so each value stays under its header.
 
 | Wide enough | Cramped |
 | --- | --- |

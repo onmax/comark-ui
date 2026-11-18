@@ -20,6 +20,15 @@ const prs = `| PR | Summary | Status / your next step | Links |
 | website #33 | Planning guides and a Netstock comparison | Green, no reviewer. Request Christopher. | |
 `;
 
+// A review report's table: the status holds the most text, the summary less, and the working note the least; the
+// preview column has a cell with two chips.
+const report = `| PR | Summary | Status / your next step | Preview | Working now |
+|---|---|---|---|---|
+| [#1610](https://github.com/acme/portal/pull/1610) | Stock warnings explain unusual order lines: the quantity against the item's average per order line. | Priya requested changes again this morning. The percentages look noisy with big numbers, so go back to the multiplier in the table and keep the percentage in the hover. The links point to a reservation, but the row shows past order lines. | [preview](https://example.com/1610) | Yes: an agent pushed at 08:57 and is watching the PR. |
+| [#1596](https://github.com/acme/portal/pull/1596) | Each user keeps their own column layout in every table. | The feedback is pushed: a Columns menu with Reset to default, a dot when the layout differs, and column reordering. Checks are running. Check the preview, then ask Priya again. | [preview](https://example.com/1596) | No |
+| [#1618](https://github.com/acme/portal/pull/1618) | The outlook chart reads from the solver's weekly table instead of building it in the warehouse. | Green. No reviewer. Ask Priya, and line it up with the solver release so both merge on the same day. | [preview](https://example.com/1618), [Nova](https://example.com/nova) | No |
+`;
+
 describe("table layout", () => {
   it.each(['note="Check"', ':note="data.note"'])(
     "lays out tables through comments with %s",
@@ -57,7 +66,12 @@ describe("table layout", () => {
   it("puts a wide table in a div that grows, and stacks its prose columns in order", async () => {
     const [wrapper] = await nodes(prs);
     expect(wrapper![0]).toBe("div");
-    expect(wrapper![1]).toEqual({ "data-wide": "", "data-width": "72", "data-stack": "3-2" });
+    expect(wrapper![1]).toMatchObject({
+      "data-wide": "",
+      "data-width": "72",
+      "data-cols": "4",
+      "data-stack": "3-2",
+    });
     const table = wrapper![2] as unknown[];
     const tbody = table[3] as unknown[];
     const row = tbody[2] as [string, Record<string, string>, ...[string, Record<string, string>][]];
@@ -78,6 +92,52 @@ describe("table layout", () => {
     expect(row[1].role).toBe("row");
   });
 
+  it("gives each long column a weight by how tall its text makes the rows, and short columns none", async () => {
+    const [wrapper] = await nodes(report);
+    const attrs = (wrapper as [string, Record<string, string>])[1];
+    expect(attrs["data-cols"]).toBe("5");
+    expect(attrs["data-w1"]).toBeUndefined();
+    expect(attrs["data-w4"]).toBeUndefined();
+    const [summary, status, working] = ["data-w2", "data-w3", "data-w5"].map((key) =>
+      Number(attrs[key]),
+    );
+    // The status holds about twice the summary's text and the working note the least.
+    expect(status).toBe(12);
+    expect(summary).toBeGreaterThan(working!);
+    expect(summary).toBeLessThan(status!);
+  });
+
+  it("stacks a table whose narrowest prose column gets a small share at a wider width than an even one", async () => {
+    const fold = async (markdown: string) =>
+      Number(((await nodes(markdown))[0] as [string, Record<string, string>])[1]["data-fold"]);
+    expect(await fold(report)).toBeGreaterThan(await fold(prs));
+  });
+
+  it("lets a cell of two chips break between them, and keeps a one-chip cell whole", async () => {
+    const [wrapper] = await nodes(report);
+    const json = JSON.stringify(wrapper);
+    expect(json).toContain('"data-short":"chips"');
+    expect(json).toMatch(/"data-short":""[^\]]*\["chip"/);
+  });
+
+  it("keeps a short column's header on one line only when it's no longer than its cells", async () => {
+    const output = await createHtmlRenderer(html(offline))(
+      "| Server | Peak memory (megabytes) |\n|---|---|\n| node | 182 |\n| bun | 141 |",
+    );
+    expect(output).toContain('<th data-short="">Server</th>');
+    expect(output).toContain("<th>Peak memory (megabytes)</th>");
+    expect(output).toMatch(/<td data-short="">182<\/td>/);
+  });
+
+  it("wraps a table with prose that fits the column for its phone layout only, without a width", async () => {
+    const [wrapper] = await nodes(
+      "| Id | Description | Owner |\n|---|---|---|\n| T-1 | The import job keeps going past a bad row and lists it in the report. | Lena |\n",
+    );
+    expect(wrapper![0]).toBe("div");
+    expect(wrapper![1]).toEqual({ "data-fit": "" });
+    expect((wrapper![2] as [string, Record<string, string>])[1].role).toBe("table");
+  });
+
   it("leaves tables inside a list item alone", async () => {
     const [list] = await nodes(`- One\n\n  ${prs.replaceAll("\n", "\n  ")}`);
     expect(JSON.stringify(list)).not.toContain("data-wide");
@@ -89,10 +149,13 @@ describe("table layout", () => {
     expect(table![0]).toBe("table");
   });
 
-  it("styles every step and stacks below 85% of its width", async () => {
-    const output = await createHtmlRenderer(html(offline))(prs);
-    expect(output).toContain('<div data-wide="" data-width="72" data-stack="3-2">');
-    expect(typesetCss).toContain('[data-width="72"]{--comark-wide-width:72em;}');
-    expect(typesetCss).toContain("@container(max-width:60.99em)");
+  it("styles every step, grows past the wide blocks' maximum, and stacks below its fold", async () => {
+    const output = await createHtmlRenderer(html(offline))(report);
+    const fold = /data-fold="(\d+)"/.exec(output)![1];
+    expect(output).toContain('data-width="96"');
+    expect(typesetCss).toContain('[data-width="96"]{--comark-wide-width:96em;}');
+    expect(typesetCss).toContain("var(--comark-wide-max,var(--comark-wide-width))");
+    expect(typesetCss).toContain(`@container(max-width:${Number(fold) - 0.01}em){`);
+    expect(typesetCss).toContain('[data-w3="12"]{--_ty-c3:12fr;}');
   });
 });
