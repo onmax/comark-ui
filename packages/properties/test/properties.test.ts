@@ -1,5 +1,6 @@
 import { createHtmlRenderer } from "@comark/html";
 import { parseMarkdown } from "comark";
+import { describeTime } from "comark-time/client";
 import { describe, expect, it } from "vite-plus/test";
 import properties, { components, scripts } from "../src/html.ts";
 
@@ -92,8 +93,9 @@ describe("comark-properties", () => {
     expect(html.match(/<style data-comark-time>/g)).toHaveLength(1);
     expect(html.split(`<script>${escape}</script>`)).toHaveLength(2);
     expect(html.split(`</dl><script>${relativize}</script>`)).toHaveLength(2);
-    expect(relativize).toMatch(/^\(function relativize\(/);
-    expect(relativize).toContain("function describeTime(");
+    expect(relativize).toMatch(/^\(function\b[^(]*\(/);
+    // An inlined script can't import, so comark-time's describeTime goes in whole.
+    expect(relativize.replaceAll("\u2028", "\n")).toContain(describeTime.toString());
     expect(await renderer("---\nstatus: Draft\n---\n")).not.toContain("<script>");
 
     const fixed = await render(review, { locale: "de-DE" });

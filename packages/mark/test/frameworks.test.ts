@@ -52,13 +52,20 @@ describe("comark-mark renderers", () => {
     expect(html).toContain("@layer comark{");
   });
 
-  it("ships Svelte components that compile", async () => {
+  it("ships Svelte components that compile, and every component they import", async () => {
     const folder = new URL("../src/svelte/", import.meta.url);
     const files = (await readdir(folder)).filter((file) => file.endsWith(".svelte"));
-    expect(files).toHaveLength(3);
     for (const file of files) {
       const source = await readFile(new URL(file, folder), "utf8");
       expect(() => compile(source, { filename: file, generate: "server" })).not.toThrow();
     }
+    const imported = new Set<string>();
+    for (const file of [...files, "index.js"])
+      for (const [, name = ""] of (await readFile(new URL(file, folder), "utf8")).matchAll(
+        /from "\.\/(\w+\.svelte)"/g,
+      ))
+        imported.add(name);
+    expect(imported.size).toBeGreaterThan(0);
+    expect([...imported].filter((name) => !files.includes(name))).toEqual([]);
   });
 });

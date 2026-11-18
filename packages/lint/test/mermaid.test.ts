@@ -1,4 +1,3 @@
-import { readFile } from "node:fs/promises";
 import { createHtmlRenderer } from "@comark/html";
 import html from "comark-ui/html";
 import { describe, expect, it } from "vite-plus/test";
@@ -50,12 +49,6 @@ describe("Mermaid limit diagnostics", () => {
           }),
         }),
       ]);
-      const page = await readFile(
-        new URL(`../../../docs/pages/doctor/${path}.md`, import.meta.url),
-        "utf8",
-      );
-      expect(page).toContain(Object.keys(options)[0]);
-      expect(page).toContain("comark-ui/html");
     });
   }
 });

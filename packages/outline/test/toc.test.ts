@@ -113,7 +113,8 @@ describe("comark-outline", () => {
       expect(html.trimEnd().endsWith(`<script>${railScript}</script>`)).toBe(true);
       expect(html.split(railScript)).toHaveLength(2);
       expect(html.match(/<style data-comark-outline>/g)).toHaveLength(1);
-      expect(railScript).toMatch(/^\(function start\(\)/);
+      // A function that calls itself, so the script runs where the page inlines it.
+      expect(railScript).toMatch(/^\(function\b[^(]*\(\) \{[\s\S]*\}\)\(\)$/);
     });
 
     it("needs the option and two headings to list", async () => {
