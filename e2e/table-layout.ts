@@ -56,7 +56,8 @@ async function page(
     const main = box(document.querySelector("main")!);
     const table = document.querySelector("main table")!;
     const row = table.querySelectorAll("tbody tr")[0]!;
-    const [id, summary, status, links] = [...row.children].map(box);
+    const rowCells = [...row.children].map(box);
+    const [id, summary, status, links] = rowCells;
     const header = [...table.querySelectorAll("thead th")].map(box);
     return {
       main,
@@ -66,6 +67,7 @@ async function page(
       summary: summary!,
       status: status!,
       links: links!,
+      rowCells,
       header,
       // Each chip as its line boxes' tops: one box each, so no chip breaks inside.
       chips: [...table.querySelectorAll(".cp")].map((chip) =>
@@ -157,6 +159,22 @@ export function tableLayouts() {
     expect(shown.status.top).toBeCloseTo(shown.summary.top, 0);
   });
 
+  test("folded prose keeps its track beside several long numeric headings", async ({
+    page: tab,
+  }) => {
+    const shown = await page(tab, 720, {
+      markdown: `| Summary | Status | Average response time (milliseconds) | Successful requests per second | Peak memory usage (megabytes) | Average disk throughput (megabytes) |
+|---|---|---|---|---|---|
+| The report lists skipped supplier files so the importer can retry them later. | Checks are running; request a review after the preview deploys. | 20 | 100 | 182 | 300 |`,
+    });
+    expect(shown.status.left).toBeCloseTo(shown.id.left, 0);
+    expect(shown.id.width).toBeGreaterThanOrEqual(8 * 16);
+    expect(shown.id.right).toBeLessThanOrEqual(shown.status.right);
+    expect(shown.id.right).toBeLessThanOrEqual(shown.rowCells[2]!.left);
+    expect(shown.rowCells[2]!.left).toBeCloseTo(shown.header[2]!.left, 0);
+    expect(shown.overflow).toBe(0);
+  });
+
   test("on a phone each row becomes one column: the id, the summary, the status, then the links", async ({
     page: tab,
   }) => {
@@ -183,6 +201,23 @@ export function tableLayouts() {
     expect(phone.summary.width).toBeCloseTo(phone.table.width, 0);
     expect(phone.summary.top).toBeGreaterThanOrEqual(phone.id.bottom - 1);
     expect(phone.overflow).toBe(0);
+  });
+
+  test("a grid without prose keeps its headers and scrolls on a phone", async ({ page: tab }) => {
+    await page(tab, 390, {
+      markdown: `| Task | Trace | Started | Finished | Status |
+|---|---|---|---|---|
+| 01K1B7R0JKVTH9X2MB3VMQZP4Y | 01K1B7R0M5B1H1PR3PZ1MGQ0DW | 2026-11-18 10:01:00 UTC | 2026-11-18 10:02:00 UTC | Success |`,
+    });
+    const table = tab.getByRole("table");
+    await expect(table).toHaveAttribute("role", "table");
+    await expect(table.getByRole("columnheader", { name: "Task" })).toBeInViewport();
+    expect(
+      await table.evaluate((node) => {
+        const wrapper = node.parentElement!;
+        return wrapper.scrollWidth - wrapper.clientWidth;
+      }),
+    ).toBeGreaterThan(1);
   });
 
   for (const binding of ['note="Check"', ':note="data.note"']) {

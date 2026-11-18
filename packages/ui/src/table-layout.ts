@@ -39,61 +39,6 @@ const cellsOf = (row: ElementNode): ElementNode[] =>
     .filter((cell) => cell[0] === "td" || cell[0] === "th");
 const sum = (values: number[]) => values.reduce((total, value) => total + value, 0);
 
-/** No long column gets less than this share of the room they share, so each keeps a few words a line. */
-const LEAST = 0.05;
-
-/**
- * How tall a table is, in lines, with each long column given `share` of `free` characters: each row is as tall as its
- * tallest cell, at least one line for the short cells beside it, and the tallest row counts twice, so no one row grows
- * far taller to save a line elsewhere.
- */
-function heightOf(rows: number[][], share: number[], free: number) {
-  let total = 0;
-  let tallest = 0;
-  for (const row of rows) {
-    const height = Math.max(1, ...row.map((length, column) => length / (share[column]! * free)));
-    total += height;
-    tallest = Math.max(tallest, height);
-  }
-  return total + tallest;
-}
-
-/**
- * How much of the room the long columns share each one gets, from the length of each cell, `rows[row][column]`, so the
- * table is as short as it can be (`heightOf`). The height only grows as a column narrows, so the loop moves room between
- * each pair of columns to where the height is lowest, until no move helps. `free` is a typical room for these columns,
- * in characters; the shares hold at any other, apart from the rows of one line.
- */
-function shares(rows: number[][], free = 80): number[] {
-  const count = rows[0]!.length;
-  let share = Array.from({ length: count }, () => 1 / count);
-  for (let sweep = 0; sweep < 30; sweep++) {
-    let moved = 0;
-    for (let from = 0; from < count; from++)
-      for (let to = from + 1; to < count; to++) {
-        const shift = (by: number) =>
-          share.map((value, column) =>
-            column === from ? value + by : column === to ? value - by : value,
-          );
-        let low = LEAST - share[from]!;
-        let high = share[to]! - LEAST;
-        for (let step = 0; step < 24 && high > low; step++) {
-          const a = low + (high - low) / 3;
-          const b = high - (high - low) / 3;
-          if (heightOf(rows, shift(a), free) <= heightOf(rows, shift(b), free)) high = b;
-          else low = a;
-        }
-        const by = (low + high) / 2;
-        if (heightOf(rows, shift(by), free) < heightOf(rows, share, free) - 1e-9) {
-          moved += Math.abs(by);
-          share = shift(by);
-        }
-      }
-    if (moved < 1e-4) break;
-  }
-  return share;
-}
-
 /**
  * Reads a Markdown table's cells and returns how the typeset lays it out: the table itself, or the table in a `div`
  * that lets it grow. Every mark is a data attribute `typeset-css.ts` styles, so the page needs no script and the
@@ -114,35 +59,38 @@ function shares(rows: number[][], free = 80): number[] {
  *   phone it becomes one column per row.
  */
 function layoutTable(table: ElementNode): ElementNode {
+  if (childrenOf(table).some((part) => isElement(part) && part[0] === "caption")) return table;
   const rows = rowsOf(table);
   // Grid placement cannot preserve native occupied slots from spanning cells.
   if (rows.some((row) => cellsOf(row).some((cell) => "colspan" in cell[1] || "rowspan" in cell[1])))
     return table;
   const head = rows.find((row) => cellsOf(row).every((cell) => cell[0] === "th"));
   const body = rows.filter((row) => row !== head).map(cellsOf);
-  const count = Math.max(0, ...rows.map((row) => cellsOf(row).length));
+  const headers = head ? cellsOf(head) : [];
+  const count = body.reduce((max, cells) => Math.max(max, cells.length), headers.length);
   if (!body.length || count < 2) return table;
 
   const columns = Array.from({ length: count }, (_, index) => {
     const cells = body.map((cells) => cells[index]).filter((cell) => cell !== undefined);
     const lengths = cells.map(lengthOf);
-    const header = head && cellsOf(head)[index];
+    const header = headers[index];
     const own = header ? lengthOf(header) : 0;
-    const longest = Math.max(0, ...lengths);
-    const average = sum(lengths) / Math.max(1, lengths.length);
+    const longest = lengths.reduce((max, length) => Math.max(max, length), 0);
+    const total = sum(lengths);
+    const average = total / Math.max(1, lengths.length);
     const short = longest <= SHORT;
     // Where a cell's chips may break apart, the column needs only its widest chip.
-    const tightest = Math.max(
-      0,
-      ...cells.map((cell) => {
-        const chips = chipsOf(cell);
-        return chips.length > 1 ? Math.max(...chips.map(lengthOf)) : lengthOf(cell);
-      }),
-    );
+    const tightest = short
+      ? cells.reduce((max, cell, at) => {
+          const chips = chipsOf(cell);
+          return Math.max(max, chips.length > 1 ? Math.max(...chips.map(lengthOf)) : lengths[at]!);
+        }, 0)
+      : 0;
     return {
       short,
       prose: !short && average >= PROSE,
       longest: Math.max(longest, own),
+      demand: total + own + Math.max(longest, own),
       // A header no longer than its cells, or a word or two, keeps to one line beside them.
       headerShort: short && own <= Math.max(longest, 12),
       tight: Math.max(tightest, Math.min(own, 12)),
@@ -179,11 +127,13 @@ function layoutTable(table: ElementNode): ElementNode {
   ];
   const grid = long.length >= 2 && count <= GRID_COLUMNS;
   if (!grid && !prose.length) return wrapper;
+  if (prose.length) wrapper[1]["data-prose"] = "";
 
   // As a grid, or a column on a phone, some browsers drop the table's semantics, so it states them.
   table[1].role = "table";
   for (const part of childrenOf(table).filter(isElement))
-    if (part[0] !== "tr") part[1].role = "rowgroup";
+    if (part[0] === "thead" || part[0] === "tbody" || part[0] === "tfoot")
+      part[1].role = "rowgroup";
   for (const row of rows) {
     row[1].role = "row";
     for (const cell of cellsOf(row))
@@ -191,15 +141,12 @@ function layoutTable(table: ElementNode): ElementNode {
   }
   if (!grid) return wrapper;
 
-  const share = shares(
-    rows.map((row) => long.map((index) => lengthOf(cellsOf(row)[index] ?? ["td", {}]))),
-  );
-  const top = Math.max(...share);
+  const demands = long.map((index) => columns[index]!.demand);
+  const top = Math.max(...demands);
+  const weights = demands.map((demand) => Math.max(1, Math.round((WEIGHTS * demand) / top)));
   wrapper[1]["data-cols"] = String(count);
   long.forEach((index, at) => {
-    wrapper[1][`data-w${index + 1}`] = String(
-      Math.max(1, Math.round((WEIGHTS * share[at]!) / top)),
-    );
+    wrapper[1][`data-w${index + 1}`] = String(weights[at]);
   });
   const stacked = count - long.length + 1;
   if (!prose.length || long.length > STACK_ROWS || stacked > STACK_COLUMNS) return wrapper;
@@ -207,7 +154,9 @@ function layoutTable(table: ElementNode): ElementNode {
   // Side by side, each long column gets its share of what the short ones leave. The table stacks below the width where
   // the narrowest prose column would read only a few words a line.
   const fixed = sum(columns.map((column) => (column.short ? column.tight * 0.55 + 2 : 0)));
-  const fold = fixed + READABLE / Math.min(...prose.map((index) => share[long.indexOf(index)]!));
+  const fold =
+    fixed +
+    (READABLE * sum(weights)) / Math.min(...prose.map((index) => weights[long.indexOf(index)]!));
   const threshold = FOLD_WIDTHS.reduce((best, value) =>
     Math.abs(value - fold) < Math.abs(best - fold) ? value : best,
   );

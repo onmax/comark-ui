@@ -27,8 +27,9 @@ const grid = (selector: string) => `
   ${selector} > :is(thead, tbody, tfoot) { display: contents; }
   ${selector} > * > tr { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; }`;
 const cells = `${table} > table > * > tr >`;
+const proseTable = `${table}[data-prose] > table`;
 // As specific as the stacked rules, so the phone's, which come last, win.
-const card = `${table} > table[role] > * > tr > :is(td, th, [data-col][data-row])`;
+const card = `${proseTable} > * > tr > :is(td, th, [data-col][data-row])`;
 
 /*
  * The tables table-layout.ts marks. A wide one sits in a div that grows like any wide block, up to its own width, past
@@ -61,7 +62,7 @@ const tableRules = [
     range(1, columns).map(
       (prose) =>
         `${table}[data-stack="${columns}-${prose}"] { --_ty-stacked: ${range(1, columns)
-          .map((column) => (column === prose ? "minmax(0, 1fr)" : "min-content"))
+          .map((column) => (column === prose ? "minmax(8em, 1fr)" : "min-content"))
           .join(" ")}; }`,
     ),
   ),
@@ -70,7 +71,7 @@ const tableRules = [
   // first are muted.
   `${table}[data-cols] > table { --_ty-at: auto; --_ty-side: 1; }`,
   // A long column with a narrow share still fits a word or a chip: a chip outside a short column may break anywhere.
-  `${table}[data-cols] > table > * > tr > :not([data-short]) { min-width: 8em; }`,
+  `${table}[data-cols] > table > * > tr > :not([data-short]) { min-width: var(--_ty-cell-min, 8em); }`,
   ...range(1, STACK_COLUMNS).map(
     (column) => `${cells} [data-col="${column}"] { grid-column: var(--_ty-at, ${column}); }`,
   ),
@@ -84,17 +85,17 @@ const tableRules = [
   `${table} > table > thead > tr > [data-row]:not([data-row="1"]) { padding-block-start: calc(var(--_ty-side) * 0.65em); }`,
   ...FOLD_WIDTHS.map(
     (width) =>
-      `@container (max-width: ${width - 0.01}em) { ${table}[data-fold="${width}"] > table { grid-template-columns: var(--_ty-stacked); --_ty-at: initial; --_ty-side: 0; } }`,
+      `@container (max-width: ${width - 0.01}em) { ${table}[data-fold="${width}"] > table { grid-template-columns: var(--_ty-stacked); --_ty-at: initial; --_ty-side: 0; --_ty-cell-min: 0px; } }`,
   ),
   // On a phone even the short columns leave the prose no room, so each row becomes one column: the cells in order, the
   // header kept for screen readers only. Last, so it wins over the rules above.
   `@container (max-width: 31.99em) {
-    ${grid(`${table} > table[role]`)}
-    ${table} > table[role] { grid-template-columns: minmax(0, 1fr); }
+    ${grid(proseTable)}
+    ${proseTable} { grid-template-columns: minmax(0, 1fr); --_ty-cell-min: 0px; }
     ${card} { grid-column: 1; grid-row: auto; padding: 0 0 0.25em; border-block-start: 0; white-space: normal; }
     ${card}:first-child { padding-block-start: 0.75em; border-block-start: 1px solid var(--_ty-rule); }
     ${card}:last-child { padding-block-end: 0.75em; }
-    ${table} > table[role] > thead > tr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+    ${proseTable} > thead > tr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
   }`,
 ].join("\n");
 

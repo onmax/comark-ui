@@ -57,6 +57,15 @@ describe("table layout", () => {
     expect(output).not.toMatch(/<(?:td|th)[^>]*data-short/);
   });
 
+  it("keeps the native caption of a table with several prose columns", async () => {
+    const prose = "Release notes explain the changes and list the next steps for the team.";
+    const output = await createHtmlRenderer(html(offline))(
+      `<table><caption>Release decisions</caption><thead><tr><th>One</th><th>Two</th><th>Three</th><th>Four</th></tr></thead><tbody><tr><td>${prose}</td><td>${prose}</td><td>${prose}</td><td>${prose}</td></tr></tbody></table>`,
+    );
+    expect(output).toMatch(/<table>\s*<caption>Release decisions<\/caption>/);
+    expect(output).not.toMatch(/<div[^>]*data-cols/);
+  });
+
   it("keeps a small table as it is, with its short columns on one line", async () => {
     const [table] = await nodes("| Name | Seen |\n|---|---|\n| Heron | 2 |\n");
     expect(table![0]).toBe("table");
@@ -107,6 +116,20 @@ describe("table layout", () => {
     expect(summary).toBeLessThan(status!);
   });
 
+  it("gives two equally long columns more room than a shorter one", async () => {
+    const long = "Changes will ship once the review passes. ".repeat(3).trim();
+    const shorter = "Ship after the final review passes.";
+    const row = `| ${long} | ${long} | ${shorter} |`;
+    const output = await createHtmlRenderer(html(offline))(
+      `| Summary | Status | Decision |\n|---|---|---|\n${row}\n${row}`,
+    );
+    const wrapper = output.match(/<div[^>]*data-cols="3"[^>]*>/)?.[0] ?? "";
+    const weights = [...wrapper.matchAll(/data-w[123]="(\d+)"/g)].map((match) => Number(match[1]));
+    expect(weights).toHaveLength(3);
+    expect(weights[0]).toBe(weights[1]);
+    expect(weights[1]).toBeGreaterThan(weights[2]!);
+  });
+
   it("stacks a table whose narrowest prose column gets a small share at a wider width than an even one", async () => {
     const fold = async (markdown: string) =>
       Number(((await nodes(markdown))[0] as [string, Record<string, string>])[1]["data-fold"]);
@@ -134,7 +157,7 @@ describe("table layout", () => {
       "| Id | Description | Owner |\n|---|---|---|\n| T-1 | The import job keeps going past a bad row and lists it in the report. | Lena |\n",
     );
     expect(wrapper![0]).toBe("div");
-    expect(wrapper![1]).toEqual({ "data-fit": "" });
+    expect(wrapper![1]).toEqual({ "data-fit": "", "data-prose": "" });
     expect((wrapper![2] as [string, Record<string, string>])[1].role).toBe("table");
   });
 

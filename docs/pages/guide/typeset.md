@@ -127,7 +127,7 @@ A Markdown table gets its layout from its cells, with nothing to write:
 
 - A column whose cells are 24 characters or fewer, such as an id, a date, a status, or links, takes only the room its cells need, each on one line. A chip keeps its label whole, so `portal #1596` never breaks into `#159` and `6`. A cell of two chips may put the second under the first.
 - A table wider than a readable column grows into the room beside the text, up to the width its cells need, like any [wide block](#wide-blocks).
-- The longer columns share the rest by how much they make rows tall: a status that runs three times as long as its summary gets the wider column, so the table comes out as short as it can.
+- The longer columns share the rest in proportion to their text, with the longest cell in each column counting twice. A status that runs longer than its summary gets more room.
 - When the narrowest prose column would read only a few words a line, the longer columns stack instead: the later ones move under the first, in muted text, so a row reads as a summary with its detail below.
 - On a phone, each row of a table with prose becomes one column. A table of numbers or other short values scrolls sideways instead, as on GitHub, so each value stays under its header.
 
