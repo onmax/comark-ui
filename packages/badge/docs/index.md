@@ -149,7 +149,7 @@ Use the `icon` prop to add a built-in symbol or logo, or `none` to remove it. By
 
 ### Label color
 
-Use the `labelColor` prop to change the label's background in the default preset's subtle and solid styles. Image colors take a semantic name or a six-digit hex value, and don't inherit CSS tokens. A CI badge colors its value by status.
+Use the `labelColor` prop to change the label's background in the default preset's subtle, solid, and custom styles. Image colors take a semantic name or a six-digit hex value, and don't inherit CSS tokens. A CI badge colors its value by status.
 
 ::example
 ```md
@@ -167,9 +167,19 @@ Use the `style` prop to choose shadcn outlines, subtle tints, or solid backgroun
 ```
 ::
 
+### Custom style
+
+Use `style="custom"` to draw a look of your own in the default preset. It reads `radius`, `padding`, `border`, and `font`, colors the label with `labelColor` and the value with `color`, and sets the text colors with `labelText` and `valueText`. Text without a color turns black or white for contrast. The colors are yours, so `theme` doesn't change them. Any of these props picks the custom style on its own, so `radius="0"` alone is enough. The [badge builder](/badges) has a control for each.
+
+::example
+```md
+:badge[ready]{label="release" style="custom" radius="13" padding="12" border="#a3a3a3" font="mono" labelColor="#fafafa" color="#171717" labelText="#525252"}
+```
+::
+
 ### Preset
 
-Use the `preset` prop to choose `default`, `npmx`, `nuxt`, `flat`, or `for-the-badge`. npmx has monospace text and a colored slash, and Nuxt a navy label and a green value block. Flat is the compact 20px shape from Shields.io, and For the badge a 28px block with uppercase text. Every preset takes CI status colors and a custom color. Presets other than default ignore `style` and `labelColor`.
+Use the `preset` prop to choose `default`, `npmx`, `nuxt`, `flat`, or `for-the-badge`. npmx has monospace text and a colored slash, and Nuxt a navy label and a green value block. Flat is the compact 20px shape from Shields.io, and For the badge a 28px block with uppercase text. Every preset takes CI status colors and a custom color. Presets other than default ignore `style`, `labelColor`, and the custom style's props.
 
 ::example
 ```md
@@ -213,7 +223,7 @@ The heading's `id` includes the badge's words, since Comark builds ids from all 
 
 ### Build a README badge
 
-Open the [badge builder](/badges), pick Custom, npm version, Downloads, GitHub Actions, License, or Docs, and edit the options. Pick a preset from the Appearance swatches, then a color scheme and logo. Copy Markdown for a README, Comark for a document, or the image URL. Copy builder link keeps the setup and export format in the URL, and Download SVG saves a snapshot.
+Open the [badge builder](/badges), pick Custom, npm version, Downloads, GitHub Actions, License, or Docs, and edit the options. Pick a preset from the Appearance swatches, then a color scheme and logo. The Custom style adds radius, padding, border, font, and text color controls. Copy Markdown for a README, Comark for a document, or the image URL. Copy builder link keeps the setup and export format in the URL, and Download SVG saves a snapshot.
 
 The hosted endpoint takes the same image options as query parameters:
 
@@ -290,9 +300,15 @@ Test from the client that failed. A badge request should return HTTP 200 with `C
 | `workflow` | — | Workflow filename, such as `ci.yml`. |
 | `branch` | — | Optional workflow branch filter. |
 | `icon` | Source icon | `none`, `package`, `npm`, `npmx`, `nuxt`, `github`, `comark`, `shadcn`, or `check`. npm sources default to the preset's logo, and GitHub Actions to GitHub. The SVG embeds brand marks. |
-| `labelColor` | `neutral` | Semantic or six-digit hex color for the label background in the default preset's subtle and solid styles. |
-| `preset` | `default` | `default`, `npmx`, `nuxt`, `flat`, or `for-the-badge`. All but default ignore `style` and `labelColor`. |
-| `style` | `shadcn` | In the default preset: `shadcn`, `subtle`, or `solid`. shadcn uses a neutral outline and text, with a dot in the value's color unless it is primary, secondary, or neutral. Solid picks black or white text for contrast. |
+| `labelColor` | `neutral` | Semantic or six-digit hex color for the label background in the default preset's subtle, solid, and custom styles. |
+| `preset` | `default` | `default`, `npmx`, `nuxt`, `flat`, or `for-the-badge`. All but default ignore `style`, `labelColor`, and the custom style's props. |
+| `style` | `shadcn` | In the default preset: `shadcn`, `subtle`, `solid`, or `custom`. shadcn uses a neutral outline and text, with a dot in the value's color unless it is primary, secondary, or neutral. Solid picks black or white text for contrast. Custom reads the six props below, and any of them picks it. |
+| `radius` | `6` | Custom style: the corner radius, a whole number of pixels from 0 to 13. |
+| `padding` | `10` | Custom style: the space before and after each text, from 4 to 16 pixels. |
+| `border` | `none` | Custom style: a semantic or six-digit hex color for a 1px border, or `none`. |
+| `font` | `sans` | Custom style: `sans` or `mono`. |
+| `labelText` | Black or white | Custom style: a semantic or six-digit hex color for the label's text. |
+| `valueText` | Black or white | Custom style: a semantic or six-digit hex color for the value's text. |
 | `theme` | `auto` | `auto` follows the page's light or dark theme. `light` or `dark` locks the image to one. |
 
 ### Options

@@ -51,8 +51,36 @@ export const componentInfo = {
       },
       style: {
         type: "string",
-        options: ["shadcn", "subtle", "solid"],
-        description: "The image's look in the default preset.",
+        options: ["shadcn", "subtle", "solid", "custom"],
+        description: "The image's look in the default preset. custom reads the props below.",
+      },
+      radius: {
+        type: "number",
+        description: "The custom style's corner radius, from 0 to 13 pixels. 6 by default.",
+      },
+      padding: {
+        type: "number",
+        description:
+          "The custom style's space around each text, from 4 to 16 pixels. 10 by default.",
+      },
+      border: {
+        type: "string",
+        description: "The custom style's border: a color name, a hex color, or none, the default.",
+      },
+      font: {
+        type: "string",
+        options: ["sans", "mono"],
+        description: "The custom style's typeface, sans by default.",
+      },
+      labelText: {
+        type: "string",
+        description:
+          "The custom style's label text color. Without it, black or white for contrast.",
+      },
+      valueText: {
+        type: "string",
+        description:
+          "The custom style's value text color. Without it, black or white for contrast.",
       },
       theme: {
         type: "string",
