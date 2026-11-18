@@ -167,25 +167,37 @@ export function script(css: string): () => void {
   let copies = 0;
   function strip(node: HTMLElement) {
     const parts = [node, ...node.querySelectorAll("*")];
-    const renamed = new Map<string, string>();
-    const suffix = `-cz${++copies}`;
-    for (const part of parts)
-      if (part instanceof SVGElement && part.id) {
+    const svg = parts.filter((part) => part instanceof SVGElement);
+    const withIds = svg.filter((part) => part.id);
+    if (withIds.length) {
+      let suffix: string;
+      do {
+        suffix = `-cz${++copies}`;
+      } while (withIds.some((part) => document.getElementById(part.id + suffix)));
+      const renamed = new Map<string, string>();
+      for (const part of withIds) {
         renamed.set(part.id, part.id + suffix);
         part.id += suffix;
       }
-    if (renamed.size)
-      for (const part of parts) {
-        if (!(part instanceof SVGElement)) continue;
-        for (const attribute of part.attributes)
-          attribute.value = attribute.value
-            .replace(/url\(\s*(["']?)#([^"')]+)\1\s*\)/g, (match, _, id: string) =>
-              renamed.has(id) ? `url(#${renamed.get(id)})` : match,
-            )
-            .replace(/^#(.+)$/, (match, id: string) =>
-              renamed.has(id) ? `#${renamed.get(id)}` : match,
+      for (const part of svg)
+        for (const attribute of part.attributes) {
+          const { name, value } = attribute;
+          if (name === "id") continue;
+          if (name === "href" || name === "xlink:href") {
+            const id = value.startsWith("#") && renamed.get(value.slice(1));
+            if (id) attribute.value = `#${id}`;
+          } else {
+            const updated = value.replace(
+              /url\(\s*(?:(["'])#([^"')]+)\1|#([^"')\s]+))\s*\)/g,
+              (match, quote: string = "", quotedId: string, bareId: string) => {
+                const id = renamed.get(quotedId ?? bareId);
+                return id ? `url(${quote}#${id}${quote})` : match;
+              },
             );
-      }
+            if (updated !== value) attribute.value = updated;
+          }
+        }
+    }
     for (const part of parts) {
       for (const name of [
         ...(part instanceof SVGElement ? [] : ["id"]),
