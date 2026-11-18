@@ -1,5 +1,5 @@
 import { createHtmlRenderer } from "@comark/html";
-import { expect, test } from "@playwright/test";
+import { expect, type Locator, test } from "@playwright/test";
 import annotate, { components as annotateComponents } from "../packages/annotate/src/html.ts";
 import charts, { components } from "../packages/charts/src/html.ts";
 import chips, { components as chipsComponents } from "../packages/chips/src/html.ts";
@@ -585,4 +585,65 @@ test("a side note on a chart narrower than its card starts where its arrow ends"
     }),
   );
   expect(gaps).toEqual([0, 0]);
+});
+
+// A stacked chart clips its bars to round their ends, by id. The original sits hidden while it's zoomed, and a hidden
+// clip path clips everything away, so the copy must keep clip paths of its own.
+test("a zoomed chart draws its bars, stacked and grouped", async ({ page }) => {
+  const render = createHtmlRenderer({ plugins: [charts()], components });
+  const body = await render(
+    [
+      '::chart{type="stacked" horizontal title="Pigeons"}\n| Loft | Home | Away |\n| --- | --: | --: |\n| North | 90 | 9 |\n| South | 0 | 100 |\n:::annotation{at="North" series="Away" color="red" side="top"}\nStill flying\n:::\n::',
+      '::chart{type="grouped" title="Weeks"}\n| Week | North | South |\n| --- | --: | --: |\n| 1 | 30 | 32 |\n| 2 | 40 | 40 |\n:::annotation{at="1" series="North" color="red"}\nA late return\n:::\n::',
+    ].join("\n\n"),
+  );
+  await page.route("**/fixture/", (route) =>
+    route.fulfill({
+      contentType: "text/html",
+      body: `<!doctype html><meta charset="utf-8"><main style="max-width:768px;margin:auto">${body}</main>`,
+    }),
+  );
+  await page.goto("/fixture/", { waitUntil: "domcontentloaded" });
+  // Counts the pixels of a bar's color in a screenshot of an element.
+  const painted = async (element: Locator, color: string) => {
+    const png = (await element.screenshot()).toString("base64");
+    return page.evaluate(
+      async ({ png, color }) => {
+        const image = new Image();
+        image.src = `data:image/png;base64,${png}`;
+        await image.decode();
+        const canvas = new OffscreenCanvas(image.width, image.height);
+        const context = canvas.getContext("2d")!;
+        context.drawImage(image, 0, 0);
+        const rgb = color.match(/\d+/g)!.slice(0, 3).map(Number);
+        const data = context.getImageData(0, 0, image.width, image.height).data;
+        let count = 0;
+        for (let at = 0; at < data.length; at += 4)
+          if (rgb.every((value, i) => Math.abs(data[at + i]! - value) < 8)) count++;
+        return count;
+      },
+      { png, color },
+    );
+  };
+  const stages = page.locator("figure.cch [data-zoom]");
+  await expect(stages).toHaveCount(2);
+  for (const stage of await stages.all()) {
+    const color = await stage
+      .locator(".mark-rect path")
+      .last()
+      .evaluate((bar) => getComputedStyle(bar).fill);
+    expect(await painted(stage, color)).toBeGreaterThan(1000);
+    await stage.click();
+    const zoomed = page.locator(".cz-item");
+    await expect(zoomed).toBeVisible();
+    await page.waitForFunction(() =>
+      document
+        .querySelector(".cz-dialog")!
+        .getAnimations({ subtree: true })
+        .every((animation) => animation.playState !== "running"),
+    );
+    expect(await painted(zoomed, color)).toBeGreaterThan(1000);
+    await page.keyboard.press("Escape");
+    await expect(zoomed).toHaveCount(0);
+  }
 });

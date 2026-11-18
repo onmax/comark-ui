@@ -161,11 +161,34 @@ export function script(css: string): () => void {
     );
   }
 
-  // A copy that can't open another zoom, steal focus, or repeat an id from the page.
+  // A copy that can't open another zoom, steal focus, or repeat an id from the page. An SVG finds its clip paths and
+  // gradients by id, so its ids are renamed rather than dropped: the original's sit in an item hidden while zoomed,
+  // and a hidden clip path clips everything away.
+  let copies = 0;
   function strip(node: HTMLElement) {
-    for (const part of [node, ...node.querySelectorAll<HTMLElement>("*")]) {
+    const parts = [node, ...node.querySelectorAll("*")];
+    const renamed = new Map<string, string>();
+    const suffix = `-cz${++copies}`;
+    for (const part of parts)
+      if (part instanceof SVGElement && part.id) {
+        renamed.set(part.id, part.id + suffix);
+        part.id += suffix;
+      }
+    if (renamed.size)
+      for (const part of parts) {
+        if (!(part instanceof SVGElement)) continue;
+        for (const attribute of part.attributes)
+          attribute.value = attribute.value
+            .replace(/url\(\s*(["']?)#([^"')]+)\1\s*\)/g, (match, _, id: string) =>
+              renamed.has(id) ? `url(#${renamed.get(id)})` : match,
+            )
+            .replace(/^#(.+)$/, (match, id: string) =>
+              renamed.has(id) ? `#${renamed.get(id)}` : match,
+            );
+      }
+    for (const part of parts) {
       for (const name of [
-        "id",
+        ...(part instanceof SVGElement ? [] : ["id"]),
         "data-zoom",
         "data-zoom-group",
         "data-zoom-context",
