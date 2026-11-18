@@ -14,7 +14,7 @@ export const css = `@layer comark{${[
   "[data-zoom]:focus-visible{outline:2px solid var(--_comark-ring);outline-offset:3px}",
   // The dialog fills the window in place of the browser's centered box. Its styles keep it shown after a close, so the
   // closing animation runs to its end whatever closed it.
-  ".cz-dialog{position:fixed;inset:0;z-index:2147483000;display:grid;grid-template-rows:auto minmax(0,1fr) auto;width:auto;height:auto;max-width:none;max-height:none;margin:0;padding:0;overflow:visible;border:0;background:none;color:var(--_comark-foreground);font:13px/1.4 var(--_comark-font);outline:none}",
+  ".cz-dialog{position:fixed;inset:0;z-index:2147483000;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;width:auto;height:auto;max-width:none;max-height:none;margin:0;padding:0;overflow:visible;border:0;background:none;color:var(--_comark-foreground);font:13px/1.4 var(--_comark-font);outline:none}",
   // .cz-backdrop is the backdrop, so it fades with the rest of the view.
   ".cz-dialog::backdrop{background:none}",
   ".cz-backdrop{position:absolute;inset:0;background:var(--cz-backdrop,color-mix(in srgb,var(--_comark-background) var(--cz-backdrop-opacity,96%),transparent))}",

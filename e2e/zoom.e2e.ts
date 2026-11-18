@@ -695,3 +695,20 @@ test("Up and Down move between the page's figures, scroll a tall one first, and 
   const first = page.locator("main [data-zoom-gallery] [data-zoom]").first();
   await expect(first).toBeInViewport();
 });
+
+test("on a phone, a long title stays on the screen and keeps the close button there", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await fixture(
+    page,
+    await render(
+      "![The booking page with the departure station, the arrival station, and the travel date filled in](/dashboard.png)",
+    ),
+  );
+  await page.locator("main img[data-zoom]").click();
+  await expect(page.locator(".cz-dialog")).toBeVisible();
+  for (const part of [".cz-stage", ".cz-header"])
+    expect((await rect(page, part)).right).toBeLessThanOrEqual(390);
+  expect((await rect(page, ".cz-close")).right).toBeLessThanOrEqual(390);
+});
