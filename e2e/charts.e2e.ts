@@ -297,7 +297,7 @@ test("hundreds of worst-case charts draw with no text colliding, clipped, or pas
   expect(problems).toEqual([]);
 });
 
-test("a chart beside a link keeps its own hairline, light and dark", async ({ page }) => {
+test("a chart beside a link draws no rule or card, light and dark", async ({ page }) => {
   const render = createHtmlRenderer({
     plugins: [charts(), chips({ download: false })],
     components: { ...components, ...chipsComponents },
@@ -314,15 +314,109 @@ test("a chart beside a link keeps its own hairline, light and dark", async ({ pa
   await page.goto("/fixture/", { waitUntil: "domcontentloaded" });
   const figure = page.locator("figure.cch");
   await expect(page.locator("main a").first()).toHaveCSS("border-top-left-radius", "6px");
-  for (const [scheme, border] of [
-    ["light", "rgb(229, 229, 229)"],
-    ["dark", "rgba(255, 255, 255, 0.1)"],
-  ] as const) {
+  for (const scheme of ["light", "dark"] as const) {
     await page.emulateMedia({ colorScheme: scheme });
-    await expect(figure).toHaveCSS("border-top-color", border);
+    await expect(figure).toHaveCSS("border-top-width", "0px");
     await expect(figure).toHaveCSS("border-left-width", "0px");
     await expect(figure).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   }
+});
+
+test("a chart keeps its drawn width in a wide column and shrinks in a narrow one", async ({
+  page,
+}) => {
+  const render = createHtmlRenderer({ plugins: [charts()], components });
+  const body = await render(
+    '::chart{title="Pigeons"}\n| day | pigeons |\n| --- | --: |\n| Monday | 3 |\n| Friday | 14 |\n::',
+  );
+  const width = async (column: number) => {
+    await page.route("**/fixture/", (route) =>
+      route.fulfill({
+        contentType: "text/html",
+        body: `<!doctype html><meta charset="utf-8"><main style="width:${column}px">${body}</main>`,
+      }),
+    );
+    await page.goto("/fixture/", { waitUntil: "domcontentloaded" });
+    const box = await page.locator(".cch-plot>svg").boundingBox();
+    await page.unroute("**/fixture/");
+    return Math.round(box!.width);
+  };
+  expect(await width(1280)).toBe(744);
+  expect(await width(480)).toBe(480);
+});
+
+test("a wrapped chart caption stays clear of the focused Copy button", async ({ page }) => {
+  const render = createHtmlRenderer({ plugins: [charts()], components });
+  const title =
+    "Pigeons from Monday through Friday were monitored during the busiest hours of the study";
+  const body = await render(
+    `::chart{title="${title}"}\n| day | pigeons |\n| --- | --: |\n| Monday | 3 |\n| Friday | 14 |\n::`,
+  );
+  await page.setContent(`<main style="width:380px">${body}</main>`);
+  const copy = page.locator(".cch-copy-main");
+  await copy.focus();
+  await expect(copy).toBeFocused();
+  const toolbar = page.locator(".cch-bar");
+  await expect(toolbar).toHaveCSS("opacity", "1");
+
+  const caption = page.locator(".cch > figcaption");
+  const lines = await caption.evaluate((element) => {
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    return range.getClientRects().length;
+  });
+  expect(lines).toBeGreaterThan(1);
+  const textBox = (await caption.boundingBox())!;
+  const barBox = (await toolbar.boundingBox())!;
+  expect(textBox.x + textBox.width).toBeLessThanOrEqual(barBox.x);
+});
+
+test("the Copy menu fits inside a narrow right-to-left viewport", async ({ page }) => {
+  const width = 336;
+  await page.setViewportSize({ width, height: 600 });
+  const render = createHtmlRenderer({ plugins: [charts()], components });
+  const body = await render(
+    '::chart{title="Pigeons"}\n| day | pigeons |\n| --- | --: |\n| Monday | 3 |\n| Friday | 14 |\n::',
+  );
+  await page.setContent(`<!doctype html><main dir="rtl" style="width:320px">${body}</main>`);
+  const more = page.getByRole("button", { name: "More ways to copy" });
+  await more.focus();
+  await more.press("Enter");
+  const menu = page.getByRole("menu");
+  await expect(menu).toBeInViewport({ ratio: 1 });
+  await expect(menu.getByRole("menuitem", { name: /Table/ })).toBeFocused();
+  await expect(menu.getByRole("menuitem", { name: /Markdown/ })).toBeInViewport({ ratio: 1 });
+});
+
+test("Copy feedback does not move the plot or resize a wrapped caption", async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  const render = createHtmlRenderer({ plugins: [charts()], components });
+  const body = await render(
+    '::chart{title="Monthly pigeon counts in the city center"}\n| day | pigeons |\n| --- | --: |\n| Monday | 3 |\n| Friday | 14 |\n::',
+  );
+  await page.route("**/fixture/", (route) =>
+    route.fulfill({
+      contentType: "text/html",
+      body: `<!doctype html><meta charset="utf-8"><main style="width:320px">${body}</main>`,
+    }),
+  );
+  await page.goto("/fixture/", { waitUntil: "domcontentloaded" });
+  const copy = page.getByRole("button", { name: "Copy the chart as an image" });
+  await copy.focus();
+  await expect(page.locator(".cch-bar")).toHaveCSS("opacity", "1");
+  const caption = page.locator(".cch > figcaption");
+  const plot = page.locator(".cch-plot");
+  const captionBox = await caption.boundingBox();
+  const plotBox = await plot.boundingBox();
+  await copy.click();
+  const status = page.getByRole("status");
+  await expect(status).toHaveText("Copied as image");
+  await expect(status).toBeInViewport({ ratio: 1 });
+  expect(await caption.boundingBox()).toEqual(captionBox);
+  expect(await plot.boundingBox()).toEqual(plotBox);
 });
 
 test("a chart copies as an image in the page's colors, and its data as a table or Markdown", async ({
