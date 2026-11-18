@@ -162,6 +162,10 @@ test("grouped blocks stand apart, and their view fits the item between the arrow
 
   await blocks.first().click();
   await expect(page.locator(".cz-nav svg")).toHaveCount(2);
+  const strip = await rect(page, ".cz-strip");
+  const firstThumb = await rect(page, ".cz-thumb:first-child");
+  const lastThumb = await rect(page, ".cz-thumb:last-child");
+  expect(firstThumb.left - strip.left).toBeCloseTo(strip.right - lastThumb.right);
   const zoomed = await rect(page, ".cz-item");
   expect(zoomed.left).toBeGreaterThan((await rect(page, ".cz-prev")).right);
   expect(zoomed.right).toBeLessThan((await rect(page, ".cz-next")).left);
@@ -710,5 +714,35 @@ test("on a phone, a long title stays on the screen and keeps the close button th
   await expect(page.locator(".cz-dialog")).toBeVisible();
   for (const part of [".cz-stage", ".cz-header"])
     expect((await rect(page, part)).right).toBeLessThanOrEqual(390);
-  expect((await rect(page, ".cz-close")).right).toBeLessThanOrEqual(390);
+  const close = await rect(page, ".cz-close");
+  expect(close.right).toBeLessThanOrEqual(390);
+  expect(close.width).toBeCloseTo(2.25 * 16);
+});
+
+test("on a phone, both ends of a wide thumbnail strip are reachable", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await fixture(
+    page,
+    await render(
+      Array.from(
+        { length: 7 },
+        (_, index) => `::zoom{group="tour" title="Item ${index + 1}"}\n${image}\n::`,
+      ).join("\n\n"),
+    ),
+  );
+  await page.locator("[data-zoom-group='tour']").nth(3).click();
+  await expect(page.locator(".cz-title")).toHaveText("Item 4");
+
+  const strip = page.locator(".cz-strip");
+  const thumbs = strip.locator(".cz-thumb");
+  await expect(thumbs).toHaveCount(7);
+  await strip.evaluate((node) => (node.scrollLeft = 0));
+  await expect(thumbs.first()).toBeInViewport({ ratio: 1 });
+  await thumbs.first().click();
+  await expect(page.locator(".cz-title")).toHaveText("Item 1");
+
+  await strip.evaluate((node) => (node.scrollLeft = node.scrollWidth));
+  await expect(thumbs.last()).toBeInViewport({ ratio: 1 });
+  await thumbs.last().click();
+  await expect(page.locator(".cz-title")).toHaveText("Item 7");
 });
