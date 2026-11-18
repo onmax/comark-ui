@@ -17,14 +17,19 @@ export interface ZoomOptions {
 /** The node that starts the zoom script. The plugin adds one at the end of a document that has anything to zoom. */
 export const RUNTIME_TAG = "zoom-runtime";
 
-// Blocks that zoom as a whole, so the images inside them don't zoom on their own.
-const WHOLE = new Set(["zoom", "carousel", "slide", "screenshot", "compare"]);
+// Blocks that zoom as a whole, by the plugin that draws them; without it, a block of that name is the app's own.
+const WHOLE = {
+  carousel: "comark-carousel",
+  slide: "comark-carousel",
+  screenshot: "comark-annotate",
+  compare: "comark-annotate",
+};
 
 const off = (value: unknown) => value === false || value === "false";
 
 // Marks images with the same attributes a `::zoom` block gets, so every renderer outputs zoomable images unchanged.
 // An element marked by hand gets the same; `{zoom=false}` on an image, or `data-zoom=false` anywhere, opts out.
-function mark(nodes: Node[], images: boolean, skip = false): boolean {
+function mark(nodes: Node[], images: boolean, whole: Set<string>, skip = false): boolean {
   let found = false;
   for (const node of nodes) {
     if (!isElement(node)) continue;
@@ -44,7 +49,8 @@ function mark(nodes: Node[], images: boolean, skip = false): boolean {
       found = true;
     }
     // SAFETY: an element node is [tag, attributes, ...children], so everything after index 1 is a child node.
-    if (mark(node.slice(2) as Node[], images, skip || tag === "a" || WHOLE.has(tag))) found = true;
+    if (mark(node.slice(2) as Node[], images, whole, skip || tag === "a" || whole.has(tag)))
+      found = true;
   }
   return found;
 }
@@ -86,7 +92,10 @@ export default /* @__PURE__ */ defineComarkPlugin<ZoomOptions>((options) => ({
   name: "comark-zoom",
   async post(state) {
     const { nodes } = state.tree;
-    if (mark(nodes, options?.images ?? true)) nodes.push([RUNTIME_TAG, {}]);
+    const plugins = new Set(state.options.plugins?.map((plugin) => plugin.name));
+    const drawn = Object.entries(WHOLE).filter(([, plugin]) => plugins.has(plugin));
+    const whole = new Set(["zoom", ...drawn.map(([tag]) => tag)]);
+    if (mark(nodes, options?.images ?? true, whole)) nodes.push([RUNTIME_TAG, {}]);
     if (options?.size !== false)
       await Promise.all(images(nodes).map((node) => size(node, options?.size === true)));
   },

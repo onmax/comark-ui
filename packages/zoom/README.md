@@ -18,7 +18,7 @@ import zoom, { components } from "comark-zoom/html";
 const render = createHtmlRenderer({ plugins: [zoom()], components });
 ```
 
-Content images zoom on their own, except images inside links. Wrap any other block in `::zoom` to make it zoomable, and give blocks the same `group` to page through them in one zoomed view with a strip at the bottom:
+Content images zoom on their own, except images inside links and inside a block that zooms as a whole: `::zoom`, and comark-carousel's and comark-annotate's blocks when those plugins are registered. Wrap any other block in `::zoom` to make it zoomable, and give blocks the same `group` to page through them in one zoomed view with a strip at the bottom:
 
 ```md
 ![Dashboard](dashboard.png)

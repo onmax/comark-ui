@@ -16,7 +16,7 @@ comark-zoom lets the reader click an image or a `::zoom` block to see it large, 
 
 - `::zoom` zooms everything inside it as one item. `title` heads the zoomed view. Items with the same `group` page through one zoomed view, with a strip of them below. `#id` and `.class` go on the block.
 - Every content image zooms on its own, with its alt text as the zoomed view's heading. It grows no larger than its file, so give a small image a larger file to open with `{data-zoom-src="dashboard@2x.png"}`.
-- An image inside a link keeps its link and doesn't zoom. Images inside `::zoom`, `::carousel`, `::screenshot`, or `::compare` zoom with their block.
+- An image inside a link keeps its link and doesn't zoom. Images inside `::zoom` zoom with their block, and so do images inside `::carousel`, `::screenshot`, or `::compare` when comark-carousel or comark-annotate draws it. A block of your own with one of those names leaves its images to zoom on their own.
 - `{zoom=false}` keeps an image from zooming, and `{data-zoom}` makes any element zoom on its own.
 
 comark-zoom reports no problems, so a misspelled prop such as `titel` is dropped silently and passes the linter. Spell `title` and `group` as written here.
