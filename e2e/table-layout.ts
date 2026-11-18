@@ -52,7 +52,10 @@ async function page(
     `<!doctype html><meta charset="utf-8"><style>body{margin:0}</style><main style="width:min(46rem, 100% - 2rem);margin:auto;${wide}${style}">${await render(markdown)}</main>`,
   );
   return page.evaluate(() => {
-    const box = (node: Element) => node.getBoundingClientRect();
+    const box = (node: Element) => {
+      const { left, right, top, bottom, width, height } = node.getBoundingClientRect();
+      return { left, right, top, bottom, width, height };
+    };
     const main = box(document.querySelector("main")!);
     const table = document.querySelector("main table")!;
     const row = table.querySelectorAll("tbody tr")[0]!;
