@@ -167,11 +167,12 @@ export function tableLayouts() {
 |---|---|---|---|---|---|
 | The report lists skipped supplier files so the importer can retry them later. | Checks are running; request a review after the preview deploys. | 20 | 100 | 182 | 300 |`,
     });
-    expect(shown.status.left).toBeCloseTo(shown.id.left, 0);
-    expect(shown.id.width).toBeGreaterThanOrEqual(8 * 16);
-    expect(shown.id.right).toBeLessThanOrEqual(shown.status.right);
-    expect(shown.id.right).toBeLessThanOrEqual(shown.rowCells[2]!.left);
-    expect(shown.rowCells[2]!.left).toBeCloseTo(shown.header[2]!.left, 0);
+    const [summary, status, firstNumeric] = shown.rowCells;
+    expect(status!.left).toBeCloseTo(summary!.left, 0);
+    expect(status!.top).toBeGreaterThanOrEqual(summary!.bottom - 1);
+    expect(summary!.width).toBeGreaterThanOrEqual(8 * 16);
+    expect(Math.max(summary!.right, status!.right)).toBeLessThanOrEqual(firstNumeric!.left);
+    expect(firstNumeric!.left).toBeCloseTo(shown.header[2]!.left, 0);
     expect(shown.overflow).toBe(0);
   });
 
