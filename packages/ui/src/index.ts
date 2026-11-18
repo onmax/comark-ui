@@ -157,9 +157,10 @@ export type PresetOptions = {
    */
   typeset?: boolean;
   /**
-   * Lays out the document's Markdown tables from their cells: short columns stay on one line, a table wider than the
-   * text grows into the room beside it, and one with two or more prose columns stacks them when it's cramped. It only
-   * adds data attributes and a wrapping `div`, which the typeset styles.
+   * Lays out the document's Markdown tables from their cells: short columns stay on one line and as narrow as their
+   * cells, long ones share the rest by how much text they hold, a table wider than the text grows into the room beside
+   * it, and one whose prose would read a few words a line stacks it. It only adds data attributes and a wrapping `div`,
+   * which the typeset styles.
    */
   tableLayout?: boolean;
 };
