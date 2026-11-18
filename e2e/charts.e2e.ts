@@ -345,6 +345,32 @@ test("a chart keeps its drawn width in a wide column and shrinks in a narrow one
   expect(await width(480)).toBe(480);
 });
 
+test("a wrapped chart caption stays clear of the focused Copy button", async ({ page }) => {
+  const render = createHtmlRenderer({ plugins: [charts()], components });
+  const title =
+    "Pigeons from Monday through Friday were monitored during the busiest hours of the study";
+  const body = await render(
+    `::chart{title="${title}"}\n| day | pigeons |\n| --- | --: |\n| Monday | 3 |\n| Friday | 14 |\n::`,
+  );
+  await page.setContent(`<main style="width:380px">${body}</main>`);
+  const copy = page.locator(".cch-copy-main");
+  await copy.focus();
+  await expect(copy).toBeFocused();
+  const toolbar = page.locator(".cch-bar");
+  await expect(toolbar).toHaveCSS("opacity", "1");
+
+  const caption = page.locator(".cch > figcaption");
+  const lines = await caption.evaluate((element) => {
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    return range.getClientRects().length;
+  });
+  expect(lines).toBeGreaterThan(1);
+  const textBox = (await caption.boundingBox())!;
+  const barBox = (await toolbar.boundingBox())!;
+  expect(textBox.x + textBox.width).toBeLessThanOrEqual(barBox.x);
+});
+
 test("a chart copies as an image in the page's colors, and its data as a table or Markdown", async ({
   page,
   context,

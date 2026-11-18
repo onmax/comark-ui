@@ -584,7 +584,8 @@ To check documents without drawing them, as comark-linter does, pass `charts({ d
 
 Charts are drawn about a report column's width, and look alike anywhere:
 
-- Every chart over axes is drawn 744px wide, labels included. A narrower column shrinks it to fit, text and all, so labels read the same size in every chart on a page. A wider column leaves it at 744px, so its text never grows past the page's.
+- Built-in charts with axes are drawn 744px wide, labels included. A narrower column shrinks them to fit, text and all. A wider column leaves them at 744px, so their text never grows past the page's.
+- A Vega-Lite chart keeps the width its spec produces, shrinking only to fit a narrower column.
 - Upright bars stay about 40px wide however few there are, or 22px each side by side, so a short table doesn't draw slabs.
 - A pie and a heatmap keep their own size, shrinking only in a narrower column.
 - No row is ever dropped. A long sideways chart grows taller.

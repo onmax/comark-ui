@@ -16,7 +16,9 @@ export const css = `@layer comark{${[
   // A section of a report, as a dashboard lays its charts out: the title and what to read in it at the start, the
   // chart, and the data folded under it. No card and no rule over it, so charts sit in a column or a grid like text.
   ":where(.cch){--cch-padding:0}",
-  ".cch{margin:2rem 0;padding:0 var(--cch-padding);color:var(--_comark-foreground);font-family:var(--_comark-font)}",
+  ".cch{display:grid;grid-template-columns:minmax(0,1fr) auto;margin:2rem 0;padding:0 var(--cch-padding);color:var(--_comark-foreground);font-family:var(--_comark-font)}",
+  ".cch>:is(.cch-description,.cch-plot,.cch-data){grid-column:1/-1}",
+  ".cch>:is(figcaption,.cch-description:first-child){grid-area:1/1}",
   // Only the chart's own caption: a marked chart's notes sit in comark-annotate's figcaption inside it. A page's
   // typeset may center captions and mute them, as it does an image's.
   ".cch>figcaption{margin:0 0 1rem;color:var(--_comark-foreground);font-weight:500;font-size:.9375rem;line-height:1.375rem;text-align:start}",
@@ -57,10 +59,8 @@ export const css = `@layer comark{${[
       `var(--comark-chart-${index + 1},var(--ui-chart-${index + 1},var(--chart-${index + 1},${hex})))`,
     ),
   ),
-  // The Copy bar sits over the section's top corner and shows on hover or focus, as a screenshot's Copy button does, so
-  // a chart keeps its height. A screen with no hover always shows it.
-  ".cch{position:relative}",
-  ".cch-bar{position:absolute;top:.75rem;right:0;z-index:1;display:flex;align-items:center;gap:.25rem;font:500 .75rem/1rem var(--_comark-font);opacity:0;transition:opacity .15s}",
+  // The Copy bar gets its own space beside the caption and shows on hover or focus. A screen with no hover always shows it.
+  ".cch-bar{grid-area:1/2;align-self:start;margin-inline-start:.5rem;z-index:1;display:flex;align-items:center;gap:.25rem;font:500 .75rem/1rem var(--_comark-font);opacity:0;transition:opacity .15s}",
   "html:not([data-charts-ready]) .cch-bar{display:none}",
   ".cch:is(:hover,:focus-within)>.cch-bar,.cch-bar:has([aria-expanded=true],.cch-status:not(:empty)){opacity:1}",
   "@media (hover:none){.cch-bar{opacity:1}}",
