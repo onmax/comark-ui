@@ -202,12 +202,11 @@ export function readGraph(source: string): Graph {
   const parentsOf = (i: number) => {
     // Without parents the best guess is the order git printed: each commit on top of the one below it.
     if (noParents) return i ? [i - 1] : [];
-    return order[i].parents
-      .map((parent) => {
-        const expanded = prefixes.get(parent);
-        return expanded === null ? undefined : index.get(expanded ?? parent);
-      })
-      .filter((row): row is number => row !== undefined && row !== i);
+    return order[i].parents.map((parent) => {
+      const expanded = prefixes.get(parent);
+      const row = expanded === null ? undefined : index.get(expanded ?? parent);
+      return row === i ? undefined : row;
+    });
   };
 
   // The trunk walks first-parent from its tip. Each other branch walks first-parent until it reaches a commit a lane
@@ -247,7 +246,7 @@ export function readGraph(source: string): Graph {
   // A merged branch with no label left gets its name from the merge's message.
   commits.forEach((commit, i) => {
     for (const parent of parentsOf(i).slice(1)) {
-      if (commits[parent].lane >= 0) continue;
+      if (parent === undefined || commits[parent].lane >= 0) continue;
       const message = `${commit.text}${commit.ref ? ` (#${commit.ref})` : ""}`;
       const pr = MERGE_PR.exec(message);
       const branch = MERGE_BRANCH.exec(message);

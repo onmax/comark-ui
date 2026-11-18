@@ -166,6 +166,28 @@ describe("comark-git-graph", () => {
     expect(html).toContain('<span class="cgg-count">2 branches · 3 commits</span>');
   });
 
+  it.each([
+    [" (side)", 'title="side">side</span>'],
+    ["", 'title="side, merged and deleted">side</span>'],
+  ])("keeps the merge edge when the first parent is ambiguous (%j)", async (ref, pill) => {
+    const log = [
+      "$ git log --oneline --abbrev=7 --parents --decorate --topo-order main",
+      "f2d2ce8 c9e2d68 20fd013 (HEAD -> main) Merge branch 'side'",
+      `20fd013${ref} Side commit`,
+      "c9e2d68 Main commit",
+      "$ git log --parents --decorate --no-walk",
+      "commit c9e2d68f1a04522dd73a62d0dda656b917ee5b18",
+      "",
+      "    Main commit",
+      "commit c9e2d6812a18a4ce5a7e698a98eb092eac809fc2",
+      "",
+      "    Unrelated commit",
+    ].join("\n");
+    const html = flat(await render(block(log)));
+    expect(html).toContain('<circle class="cgg-merge ');
+    expect(html).toContain(pill);
+  });
+
   it("reports unsupported commands even when no log was pasted", async () => {
     const markdown = "```git-graph\n$ git cherry -v main\n+ a123ab0 Fix\n```";
     expect(Object.values((await parse(markdown)).meta.issueRules ?? {})).toEqual([
