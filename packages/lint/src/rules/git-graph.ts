@@ -1,6 +1,6 @@
 import type { RuleInfo } from "./types.ts";
 
-// comark-git-graph's issues, COMARK4701 on.
+// comark-git-graph's issues, COMARK4701 on. COMARK4703 was `unknown-branch`, gone with the cherry-pick parsing.
 export default {
   "comark/git-graph/missing-log": {
     code: "COMARK4701",
@@ -9,10 +9,6 @@ export default {
   "comark/git-graph/missing-parents": {
     code: "COMARK4702",
     title: "Run `git log` with `--parents`",
-  },
-  "comark/git-graph/unknown-branch": {
-    code: "COMARK4703",
-    title: "Pick onto branches the log shows",
   },
   "comark/git-graph/unknown-commit": { code: "COMARK4704", title: "Name commits the log shows" },
   "comark/git-graph/unknown-prop": { code: "COMARK4705", title: "Use only `::git-graph`'s props" },
@@ -23,5 +19,13 @@ export default {
   "comark/git-graph/content-dropped": {
     code: "COMARK4707",
     title: "Put only git's output in `::git-graph`",
+  },
+  "comark/git-graph/unread-command": {
+    code: "COMARK4708",
+    title: "Paste only `git log` in a git graph",
+  },
+  "comark/git-graph/ambiguous-commit": {
+    code: "COMARK4709",
+    title: "Use an unambiguous commit prefix",
   },
 } satisfies Record<`comark/git-graph/${string}`, RuleInfo>;

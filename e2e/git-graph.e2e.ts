@@ -17,16 +17,20 @@ const prose = `<style>
   .prose figure { margin:2em 0 }
 </style>`;
 
+// Long enough to run past a phone's width, so the note must keep to its one line.
+const NOTES =
+  "\n#commit-fe1aa79\n**2.4** applies clean · **2.3** applies clean · **2.2** conflict in `src/errors.ts` and `src/settings.ts`\n\n#commit-a94037c\n**Approved**\n";
+
 test("every commit dot sits on its row's middle, at any width, in a host's prose, light and dark", async ({
   page,
 }) => {
-  for (const [name, props] of [
-    ["backport", "{reverse}"],
-    ["history", ""],
-    ["stack", ""],
+  for (const [name, props, slots] of [
+    ["backport", "{reverse}", NOTES],
+    ["history", "", ""],
+    ["stack", "", ""],
   ]) {
     const parsed = await parseMarkdown(
-      `::git-graph${props}\n\`\`\`\n${fixture(name)}\n\`\`\`\n::`,
+      `::git-graph${props}\n\`\`\`\n${fixture(name)}\n\`\`\`\n${slots}::`,
       { plugins: [gitGraph()] },
     );
     const html = await renderHtmlFromDocument(parsed, { components });
@@ -59,22 +63,33 @@ test("every commit dot sits on its row's middle, at any width, in a host's prose
   }
 });
 
-test("a pick's colors keep their number readable in both schemes", async ({ page }) => {
-  const parsed = await parseMarkdown(`::git-graph\n\`\`\`\n${fixture("backport")}\n\`\`\`\n::`, {
-    plugins: [gitGraph()],
-  });
-  await page.setContent(await renderHtmlFromDocument(parsed, { components }));
-  for (const colorScheme of ["light", "dark"] as const) {
-    await page.emulateMedia({ colorScheme });
-    const fills = await page
-      .locator(".cgg-pick")
-      .evaluateAll((picks) =>
-        picks.map((pick) => [
-          getComputedStyle(pick.querySelector("circle")!).fill,
-          getComputedStyle(pick.querySelector("text")!).fill,
-        ]),
-      );
-    expect(fills.length).toBeGreaterThan(0);
-    for (const [circle, text] of fills) expect(circle).not.toBe(text);
-  }
+test("a commit's note keeps to one line under its commit, so the row keeps its height", async ({
+  page,
+}) => {
+  const parsed = await parseMarkdown(
+    `::git-graph{reverse}\n\`\`\`\n${fixture("backport")}\n\`\`\`\n${NOTES}::`,
+    { plugins: [gitGraph()] },
+  );
+  await page.setViewportSize({ width: 360, height: 900 });
+  const html = await renderHtmlFromDocument(parsed, { components });
+  await page.setContent(`${prose}<main class="prose">${html}</main>`);
+  await expect(page.locator(".cgg-note").filter({ hasText: "Approved" })).toHaveText("Approved");
+  const notes = await page.locator(".cgg-note").evaluateAll((elements) =>
+    elements.map((note) => {
+      const range = document.createRange();
+      range.selectNodeContents(note.querySelector("strong") ?? note);
+      const content = range.getBoundingClientRect();
+      const box = note.getBoundingClientRect();
+      return {
+        row: note.parentElement!.getBoundingClientRect().height,
+        oneLine: box.height === parseFloat(getComputedStyle(note).lineHeight),
+        visible: content.top >= box.top && content.bottom <= box.bottom,
+        truncated: note.scrollWidth > note.clientWidth,
+      };
+    }),
+  );
+  expect(notes).toEqual([
+    { row: 52, oneLine: true, visible: true, truncated: true },
+    { row: 52, oneLine: true, visible: true, truncated: false },
+  ]);
 });

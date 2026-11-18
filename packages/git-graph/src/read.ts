@@ -1,25 +1,16 @@
-// Reads what the git CLI printed into commits, branches, and picks. A transcript starts each command with `$ git …`;
-// text before the first one is read as `git log` output.
-
-/** A pick's result on one branch: `[branch sha] subject` is clean, `error: could not apply` a conflict, and a `-` line
- * from `git cherry` means the branch already has an equivalent commit. */
-export type PickStatus = "clean" | "conflict" | "has";
-
-export interface Pick {
-  status: PickStatus;
-  /** The files in conflict, comma-separated. */
-  files: string;
-}
+// Reads what `git log --parents` printed into commits and branches. A transcript starts each command with `$ git …`;
+// text before the first one is read as `git log` output, and so is every `$ git log` after it. The other commands'
+// output isn't read: a `#commit-<sha>` slot says what happened to a commit.
 
 export interface Commit {
   sha: string;
+  hashes: string[];
   /** The PR number from a subject that ends in `(#123)` or a `Merge pull request #123` message. */
   ref: string;
   text: string;
   lane: number;
   /** The row of its second parent, for a merge. */
   mergeFrom: number | undefined;
-  picks: Map<number, Pick>;
   tags: string[];
   /** How many older commits this row stands for, when `max-count` folded them. */
   elided: number;
@@ -45,8 +36,7 @@ export interface Graph {
 export type Problem =
   | { kind: "no-commits" }
   | { kind: "no-parents" }
-  | { kind: "unknown-branch"; command: string; branch: string }
-  | { kind: "unknown-commit"; command: string; sha: string };
+  | { kind: "unread-commands"; commands: string[] };
 
 interface Section {
   argv: string[];
@@ -60,7 +50,6 @@ interface Logged {
   subject: string;
 }
 
-const short = (sha: string) => sha.slice(0, 7);
 const GRAPH = String.raw`[\s*|\\/_.-]*?`;
 // `* 69a6efb a002d09 (release/2.4) Stop polling` from `--oneline`, with parents and labels when they were asked for.
 const ONELINE = new RegExp(
@@ -89,12 +78,12 @@ function readLog(lines: string[]): Logged[] {
       .split(",")
       .map((ref) => ref.trim())
       .filter(Boolean);
-  const parents = (list: string) => list.trim().split(/\s+/).filter(Boolean).map(short);
+  const parents = (list: string) => list.trim().split(/\s+/).filter(Boolean);
   for (const line of lines) {
     const long = LONG.exec(line);
     if (long) {
       pending = {
-        sha: short(long[1]),
+        sha: long[1],
         parents: parents(long[2]),
         refs: split(long[3]),
         subject: "",
@@ -116,7 +105,7 @@ function readLog(lines: string[]): Logged[] {
     const one = ONELINE.exec(line);
     if (one)
       out.push({
-        sha: short(one[1]),
+        sha: one[1],
         parents: parents(one[2]),
         refs: split(one[3]),
         subject: one[4] ?? "",
@@ -129,27 +118,57 @@ const PR = /\s*\(#(\d+)\)$/;
 const MERGE_PR = /^Merge pull request #(\d+) from [^/\s]+\/(\S+)/;
 const MERGE_BRANCH = /^Merge (?:remote-tracking )?branch '([^']+)'/;
 
+/** Each proper prefix maps to its sole longest spelling, or null if several hashes share it. */
+function expansions(logged: Logged[]): Map<string, string | null> {
+  const hashes = new Set(logged.flatMap(({ sha, parents }) => [sha, ...parents]));
+  const prefixes = new Map<string, string | null>();
+  for (const hash of [...hashes].sort((a, b) => b.length - a.length)) {
+    if (prefixes.has(hash)) continue;
+    for (let length = 7; length < hash.length; length++) {
+      const prefix = hash.slice(0, length);
+      prefixes.set(prefix, prefixes.has(prefix) ? null : hash);
+    }
+  }
+  return prefixes;
+}
+
 /** Reads a pasted transcript of git commands and their output. */
 export function readGraph(source: string): Graph {
   const problems: Problem[] = [];
   const all = sections(source);
+  const unread = [
+    ...new Set(
+      all
+        .slice(1)
+        .filter((section) => section.argv[0] !== "log")
+        .map((section) => `git ${section.argv[0]}`),
+    ),
+  ];
+  if (unread.length) problems.push({ kind: "unread-commands", commands: unread });
   const logged = all
     .filter((section) => section.argv[0] === "log")
     .flatMap((section) => readLog(section.lines));
-  const seen = new Set<string>();
-  const unique = logged.filter((entry) => !seen.has(entry.sha) && seen.add(entry.sha));
-  if (!unique.length) return { commits: [], lanes: [], problems: [{ kind: "no-commits" }] };
+  const prefixes = expansions(logged);
+  const bySha = new Map<string, Logged & { hashes: string[] }>();
+  for (const entry of logged) {
+    const sha = prefixes.get(entry.sha) ?? entry.sha;
+    const existing = bySha.get(sha);
+    if (!existing) bySha.set(sha, { ...entry, sha, hashes: [entry.sha] });
+    else {
+      if (!existing.hashes.includes(entry.sha)) existing.hashes.push(entry.sha);
+      existing.refs = [...new Set([...existing.refs, ...entry.refs])];
+      if (!existing.parents.length) existing.parents = entry.parents;
+      if (!existing.subject) existing.subject = entry.subject;
+    }
+  }
+  const unique = [...bySha.values()];
+  if (!unique.length)
+    return { commits: [], lanes: [], problems: [{ kind: "no-commits" }, ...problems] };
 
   const order = [...unique].reverse();
   const index = new Map(order.map((entry, i) => [entry.sha, i]));
   const noParents = order.length > 1 && order.every((entry) => !entry.parents.length);
-  if (noParents) {
-    problems.push({ kind: "no-parents" });
-    // Without parents the best guess is the order git printed: each commit on top of the one below it.
-    order.forEach((entry, i) => {
-      if (i) entry.parents = [order[i - 1].sha];
-    });
-  }
+  if (noParents) problems.unshift({ kind: "no-parents" });
   const tips = new Map<string, string>();
   const tags = new Map<string, string[]>();
   for (const entry of unique)
@@ -171,35 +190,40 @@ export function readGraph(source: string): Graph {
     const pr = PR.exec(entry.subject);
     return {
       sha: entry.sha,
+      hashes: entry.hashes,
       ref: pr?.[1] ?? "",
       text: pr ? entry.subject.slice(0, pr.index) : entry.subject,
       lane: -1,
       mergeFrom: undefined,
-      picks: new Map(),
       tags: tags.get(entry.sha) ?? [],
       elided: 0,
     };
   });
-  const parentsOf = (i: number) =>
-    order[i].parents
-      .map((parent) => index.get(parent))
-      .filter((row): row is number => row !== undefined);
+  const parentsOf = (i: number) => {
+    // Without parents the best guess is the order git printed: each commit on top of the one below it.
+    if (noParents) return i ? [i - 1] : [];
+    return order[i].parents.map((parent) => {
+      const expanded = prefixes.get(parent);
+      const row = expanded === null ? undefined : index.get(expanded ?? parent);
+      return row === i ? undefined : row;
+    });
+  };
 
   // The trunk walks first-parent from its tip. Each other branch walks first-parent until it reaches a commit a lane
   // owns, shortest walk first, so a stack of branches splits into one lane per branch.
   const lanes: Lane[] = [];
   const walk = (start: number) => {
-    const rows: number[] = [];
+    const rows = new Set<number>();
     let row: number | undefined = start;
-    while (row !== undefined && commits[row].lane < 0) {
-      rows.push(row);
+    while (row !== undefined && commits[row].lane < 0 && !rows.has(row)) {
+      rows.add(row);
       row = parentsOf(row)[0];
     }
-    return { rows, stop: row };
+    return { rows, stop: row !== undefined && !rows.has(row) ? row : undefined };
   };
   const claim = (name: string, start: number, extra: Partial<Lane> = {}) => {
     const { rows, stop } = walk(start);
-    if (!rows.length) return;
+    if (!rows.size) return;
     for (const row of rows) commits[row].lane = lanes.length;
     lanes.push({ name, ref: "", deleted: false, from: stop, ...extra });
   };
@@ -213,8 +237,8 @@ export function readGraph(source: string): Graph {
   while (rest.length) {
     rest.sort(
       (a, b) =>
-        walk(index.get(tips.get(a) ?? "") ?? 0).rows.length -
-        walk(index.get(tips.get(b) ?? "") ?? 0).rows.length,
+        walk(index.get(tips.get(a) ?? "") ?? 0).rows.size -
+        walk(index.get(tips.get(b) ?? "") ?? 0).rows.size,
     );
     const name = rest.shift() ?? "";
     claim(name, index.get(tips.get(name) ?? "") ?? 0);
@@ -222,7 +246,7 @@ export function readGraph(source: string): Graph {
   // A merged branch with no label left gets its name from the merge's message.
   commits.forEach((commit, i) => {
     for (const parent of parentsOf(i).slice(1)) {
-      if (commits[parent].lane >= 0) continue;
+      if (parent === undefined || commits[parent].lane >= 0) continue;
       const message = `${commit.text}${commit.ref ? ` (#${commit.ref})` : ""}`;
       const pr = MERGE_PR.exec(message);
       const branch = MERGE_BRANCH.exec(message);
@@ -233,7 +257,7 @@ export function readGraph(source: string): Graph {
     }
   });
   for (let i = commits.length - 1; i >= 0; i--)
-    if (commits[i].lane < 0) claim(commits[i].sha, i, { deleted: true });
+    if (commits[i].lane < 0) claim(commits[i].sha.slice(0, 7), i, { deleted: true });
   commits.forEach((commit, i) => {
     const second = parentsOf(i)[1];
     if (second !== undefined && commits[second].lane !== commit.lane) commit.mergeFrom = second;
@@ -244,127 +268,7 @@ export function readGraph(source: string): Graph {
     }
   });
 
-  // git cherry and git cherry-pick, in the order they ran.
-  const laneOf = (name: string | undefined) => lanes.findIndex((lane) => lane.name === name);
-  const headLane = lanes.findIndex(
-    (lane) =>
-      lane.name ===
-      [...unique]
-        .find((entry) => entry.refs.some((ref) => ref.startsWith("HEAD -> ")))
-        ?.refs.find((ref) => ref.startsWith("HEAD -> "))
-        ?.slice(8),
-  );
-  let current = headLane;
-  const folded = new Set<number>();
-  const find = (sha: string) => {
-    const key = short(sha);
-    return [...index.entries()].find(
-      ([known]) => known.startsWith(key) || key.startsWith(known),
-    )?.[1];
-  };
-  const bySubject = (subject: string, not: number) => {
-    const text = subject.replace(PR, "");
-    return commits.findIndex(
-      (commit, i) => commit.lane !== not && !folded.has(i) && commit.text === text,
-    );
-  };
-  for (const section of all.slice(1)) {
-    const [command, ...args] = section.argv;
-    const named = args.filter((arg) => !arg.startsWith("-"));
-    if (command === "switch" || command === "checkout") {
-      current = laneOf(named.at(-1));
-      if (current < 0)
-        problems.push({
-          kind: "unknown-branch",
-          command: `git ${section.argv.join(" ")}`,
-          branch: named.at(-1) ?? "",
-        });
-    } else if (command === "cherry") {
-      const [upstream] = named;
-      const target = laneOf(upstream);
-      if (target < 0) {
-        problems.push({
-          kind: "unknown-branch",
-          command: `git cherry ${args.join(" ")}`,
-          branch: upstream ?? "",
-        });
-        continue;
-      }
-      for (const line of section.lines) {
-        const match = /^([+-]) ([0-9a-f]{7,40})/.exec(line.trim());
-        if (!match || match[1] !== "-") continue;
-        const row = find(match[2]);
-        if (row === undefined) {
-          problems.push({
-            kind: "unknown-commit",
-            command: `git cherry ${args.join(" ")}`,
-            sha: short(match[2]),
-          });
-          continue;
-        }
-        commits[row].picks.set(target, { status: "has", files: "" });
-        // Its copy on the target branch folds into this row, so a pick reads across one row.
-        const twin = commits.findIndex(
-          (commit, i) =>
-            i !== row &&
-            commit.lane === target &&
-            commit.text === commits[row].text &&
-            commit.ref === commits[row].ref,
-        );
-        if (twin >= 0) folded.add(twin);
-      }
-    } else if (command === "cherry-pick") {
-      if (current < 0) continue;
-      const files: string[] = [];
-      for (const line of section.lines) {
-        let match: RegExpExecArray | null;
-        if ((match = /^\[(\S+) ([0-9a-f]{7,40})\] (.*)$/.exec(line.trim()))) {
-          const row = bySubject(match[3], current);
-          // A pick resolved with --continue stays a conflict.
-          if (row >= 0 && commits[row].picks.get(current)?.status !== "conflict")
-            commits[row].picks.set(current, { status: "clean", files: "" });
-          files.length = 0;
-        } else if ((match = /^CONFL\S*\s+\([^)]*\):.*\s(\S+)$/.exec(line.trim())))
-          files.push(match[1]);
-        else if ((match = /^error: .*?\b([0-9a-f]{7,40})\.\.\./.exec(line.trim()))) {
-          const row = find(match[1]);
-          if (row === undefined)
-            problems.push({
-              kind: "unknown-commit",
-              command: `git cherry-pick ${args.join(" ")}`,
-              sha: short(match[1]),
-            });
-          else commits[row].picks.set(current, { status: "conflict", files: files.join(", ") });
-          files.length = 0;
-        }
-      }
-    }
-  }
-  return { ...fold(commits, lanes, folded), problems };
-}
-
-function fold(
-  commits: Commit[],
-  lanes: Lane[],
-  folded: Set<number>,
-): { commits: Commit[]; lanes: Lane[] } {
-  if (!folded.size) return { commits, lanes };
-  const map: (number | undefined)[] = [];
-  let next = 0;
-  commits.forEach((_, i) => {
-    map[i] = folded.has(i) ? undefined : next++;
-  });
-  const near = (row: number | undefined) => {
-    let at = row;
-    while (at !== undefined && at >= 0 && map[at] === undefined) at--;
-    return at === undefined || at < 0 ? undefined : map[at];
-  };
-  return {
-    commits: commits.flatMap((commit, i) =>
-      folded.has(i) ? [] : [{ ...commit, mergeFrom: near(commit.mergeFrom) }],
-    ),
-    lanes: lanes.map((lane) => ({ ...lane, from: near(lane.from) })),
-  };
+  return { commits, lanes, problems };
 }
 
 /** `max-count`, as in `git log -n`: keeps the newest `count` commits and folds the rest into one row. */
@@ -375,11 +279,11 @@ export function limit(graph: Graph, count: number): Graph {
     row === undefined || row < cut ? undefined : row - cut + 1;
   const elided: Commit = {
     sha: "",
+    hashes: [],
     ref: "",
     text: "",
     lane: 0,
     mergeFrom: undefined,
-    picks: new Map(),
     tags: [],
     elided: cut,
   };

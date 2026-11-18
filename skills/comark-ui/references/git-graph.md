@@ -39,26 +39,30 @@ A fence takes no other prop, since Comark drops a code block's `{…}` attribute
 | `reverse` | Oldest commit first, as `git log --reverse`. Without it, rows keep git's order, newest first. |
 | `max-count` | Keeps the newest commits, as `git log -n`, and folds the rest into one "n more commits" row. |
 
-A `#footer` slot puts Markdown under the graph, such as a task list.
+A `#commit-<sha>` slot puts one line of Markdown under that commit: a review, a CI result, or whether a backport applies. Use the hash as printed in the log or a unique prefix of at least four characters. A `#footer` slot puts Markdown under the graph, such as a task list.
 
 ## Show a backport
 
-Run it as a dry run and paste the whole terminal, then reset the branches. Start each command after the `git log` output with `$ git`, as a terminal shows it:
+Paste the `git log` of `main` and every release branch, with `reverse` so the plan reads oldest first. Try each fix as a dry run, reset the branches, and write the results in the fix's `#commit-<sha>` slot. The block reads only `git log`: it reports the output of `git cherry`, `git switch`, or `git cherry-pick` and doesn't draw it.
 
-```sh
-git log --graph --oneline --decorate --parents main release/2.4 release/2.3
-git cherry -v release/2.4 main          # "-" lines: release/2.4 already has that fix
-git switch release/2.4
-git cherry-pick cc4127a 378f25e 978ebb9  # in the order you'd pick them
-git cherry-pick --skip                   # after a conflict, to try the rest
+````md
+::git-graph{title="Backport the January fixes" reverse}
+```
+* 8ca9d7e db5f451 (HEAD -> main) Stop polling closed flows (#815)
+* db5f451 afb1a3b Alert links keep their filters (#812)
+| * 66267ed afb1a3b (release/2.2) Retry the webhook once on a 502
+|/  
+* afb1a3b (tag: v2.2.14) Release 2.2.14
 ```
 
-Each fix gets one row on `main`. A pick that applied is a numbered green dot in the branch's lane, a conflict an amber one with its files under the commit, and a fix the branch already has a ring. Add `reverse` so the plan reads oldest first.
+#commit-8ca9d7e
+**2.2** conflict in `src/flows.ts`
+::
+````
 
 - `--parents` is required: without it the graph is one line, and the plugin reports it.
-- Name every branch the transcript switches to or picks onto in the `git log` command, or the plugin reports it and leaves its picks out.
-- In `::git-graph`, write explanations outside the block or in `#footer`; text beside the fence is dropped.
-- What git doesn't print isn't drawn: a pick you haven't tried, or where a branch was before a rebase.
+- In `::git-graph`, write explanations outside the block, in a `#commit-<sha>` slot, or in `#footer`; text beside the fence is dropped.
+- A note takes one line. Keep it to a few words per branch.
 
 ## Register
 
