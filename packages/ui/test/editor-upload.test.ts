@@ -192,7 +192,8 @@ describe("chooseFiles", () => {
       multiple: true,
       accept: "image/*,video/*,audio/*",
     });
-    await Promise.resolve();
+    // WebKit needs the input attached for as long as the picker is open, not just for a microtask.
+    await new Promise((resolve) => setTimeout(resolve, 20));
     expect(input.isConnected).toBe(true);
     input.dispatchEvent(new Event("change"));
     expect(input.isConnected).toBe(false);
