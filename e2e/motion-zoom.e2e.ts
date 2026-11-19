@@ -7,9 +7,10 @@ const offline = { chips: { download: false }, badge: { download: false }, icon: 
 async function open(page: Page, markdown: string, after = "", style = "", optedOut = false) {
   const { plugins, components } = comarkUi(offline);
   const html = await createHtmlRenderer({ plugins, components })(markdown);
+  const content = optedOut ? `<article data-motion="none">${html}${after}</article>` : html + after;
   await page.goto("/no-such-page");
   await page.setContent(
-    `<!doctype html><html><head><style>body{width:36rem;margin:2rem}${style}</style></head><body><article${optedOut ? ' data-motion="none"' : ""}>${html}${after}</article></body></html>`,
+    `<!doctype html><html><head><style>body{width:36rem;margin:2rem}${style}</style></head><body>${content}</body></html>`,
   );
   await page.waitForFunction(() => window.__comarkMotion);
   await page

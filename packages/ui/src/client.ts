@@ -45,6 +45,7 @@ export const mermaidCss = `@layer comark{${[
   "@media (hover:hover){.cmm-bar>button:hover{background:var(--_comark-accent);color:var(--_comark-foreground)}}",
   ".cmm-bar>button:focus-visible{outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--_comark-ring) 50%,transparent)}",
   ".cmm-bar svg{width:.75rem;height:.75rem;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}",
+  ".cmm-bar>button>svg{pointer-events:none}",
   // With the motion layer the script swaps the icons itself and marks the button `data-icon-swap`.
   ".cmm-bar>:not([data-icon-swap]) .cmm-done,.cmm-bar>:not([data-icon-swap])[data-state=done] .cmm-idle{display:none}",
   ".cmm-bar>[data-state=done] .cmm-done{display:block}",

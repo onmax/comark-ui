@@ -96,7 +96,7 @@ test("a host can opt out of the code move", async ({ page }) => {
   await page.locator("body").evaluate((body) => body.setAttribute("data-motion", "none"));
   await tab(page, "Extract").click();
   await expect(step(page, "Extract")).toBeVisible();
-  expect(await moving(page)).toEqual({});
+  expect(await moving(page)).toEqual({ move: [], fade: [] });
   await expect(page.locator(".cmv-ghost")).toHaveCount(0);
 });
 

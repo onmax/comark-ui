@@ -69,3 +69,31 @@ test("a zoomed copy button still swaps icons after the original has copied", asy
     await copy.locator(".ck-copy-idle").evaluate((icon: SVGElement) => icon.style.position),
   ).toBe("");
 });
+
+test("the first click on a zoomed table's Copy button copies and swaps its icon", async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await open(page, "::zoom\n:::table\n```csv\nBird,Seen\nPigeon,2\n```\n:::\n::");
+  const original = page.getByRole("button", { name: "Copy table" });
+  await original.click();
+  await expect(original).toHaveAttribute("data-state", "done");
+  await expect(original).not.toHaveAttribute("data-state", "done");
+  await expect(original.locator("svg")).toHaveCount(1);
+  await page.evaluate(() => navigator.clipboard.writeText("before zoomed copy"));
+
+  await page.locator(".cz").press("Enter");
+  const dialog = page.locator(".cz-dialog");
+  const copy = dialog.getByRole("button", { name: "Copy table" });
+  const icon = copy.locator("svg");
+  const idle = await icon.innerHTML();
+  await copy.click();
+  await expect(dialog.locator(".ctb-status")).toHaveText("Copied as table");
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("Bird\tSeen\nPigeon\t2");
+  await expect(icon).toHaveCount(1);
+  expect(await icon.innerHTML()).not.toBe(idle);
+  await expect(copy).not.toHaveAttribute("data-state", "done");
+  await expect(icon).toHaveCount(1);
+  expect(await icon.innerHTML()).toBe(idle);
+});

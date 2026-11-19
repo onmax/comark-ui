@@ -49,6 +49,7 @@ export const css = `${icons}@layer comark{${[
   ".ck-wrap[aria-pressed='true']{background:var(--_comark-accent);color:var(--_comark-foreground)}",
   ".ck-bar>button:focus-visible{outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--_comark-ring) 50%,transparent)}",
   ".ck-bar svg{width:.75rem;height:.75rem;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}",
+  ".ck-copy>svg{pointer-events:none}",
   ".ck-bar .ci{--comark-icon-size:.75rem;vertical-align:0}",
   // With the motion layer the script swaps the icons itself and marks the button `data-icon-swap`.
   ".ck-copy:not([data-icon-swap]) .ck-copy-done,.ck-copy:not([data-icon-swap])[data-state=done] .ck-copy-idle{display:none}",

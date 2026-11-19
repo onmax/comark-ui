@@ -185,8 +185,8 @@ export function start(css: string): () => void {
   };
   const swap = (button: HTMLElement, done: boolean) => {
     const layer = motion();
-    const icon = layer && claim(button)?.children[done ? 1 : 0];
-    if (layer && icon) layer.swapIcon(button, icon.cloneNode(true) as Element);
+    const icon = layer && claim(button)?.children[done ? 1 : 0]?.cloneNode(true);
+    if (layer && icon instanceof Element) layer.swapIcon(button, icon);
   };
   // The layer squashes the icon of an icon-only control, so the button gives up its hidden icon before the layer's
   // listener on the document sees the press: a listener on the window hears it first.

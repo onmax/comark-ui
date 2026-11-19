@@ -15,6 +15,7 @@ export const css = `@layer comark{${[
   ".ctb-copy{position:relative;display:inline-flex;border:1px solid var(--_comark-border);border-radius:calc(var(--_comark-radius) - 4px);background:var(--_comark-background)}",
   ".ctb-copy>button{display:inline-grid;place-items:center;height:1.625rem;padding:0;border:0;background:none;color:var(--_comark-muted);font:inherit;cursor:pointer;transition:background-color .15s,color .15s}",
   ".ctb-copy-main{width:1.75rem;border-radius:calc(var(--_comark-radius) - 5px) 0 0 calc(var(--_comark-radius) - 5px)}",
+  ".ctb-copy-main>svg{pointer-events:none}",
   ".ctb-copy>.ctb-copy-more{width:1.25rem;border-inline-start:1px solid var(--_comark-border);border-radius:0 calc(var(--_comark-radius) - 5px) calc(var(--_comark-radius) - 5px) 0}",
   ".ctb-copy-more svg{width:.75rem;height:.75rem}",
   ".ctb-copy-more[aria-expanded=true]{background:var(--_comark-accent);color:var(--_comark-foreground)}",
