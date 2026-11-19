@@ -360,17 +360,20 @@ The top right corner.
   await page.locator(".ca-screenshot .ca-stage").first().click();
   await expect(page.locator(".cz-dialog")).toBeVisible();
 
-  const copy = page.locator(".cz-header .ca-zoom-copy .ca-copy");
+  const copy = page.locator(".cz-header .ca-zoom-tools .ca-copy");
   await expect(copy).toBeVisible();
-  await expect(page.locator(".cz-item :is(.ca-copy,.ca-copy-status)")).toHaveCount(0);
+  await expect(page.locator(".cz-header .ca-zoom-tools .ca-hide")).toBeVisible();
+  await expect(page.locator(".cz-item :is(.ca-copy,.ca-copy-status,.ca-hide)")).toHaveCount(0);
   expect(
     await page
       .locator(".cz-header")
       .evaluate((header) => [...header.children].map((child) => child.className).slice(-2)),
-  ).toEqual(["ca-zoom-copy", "cz-close"]);
-  const button = await copy.boundingBox();
+  ).toEqual(["ca-zoom-tools", "cz-close"]);
   const frame = await page.locator(".cz-item .ca-frame").boundingBox();
-  expect(button!.y + button!.height).toBeLessThanOrEqual(frame!.y);
+  for (const part of [copy, page.locator(".cz-header .ca-hide")]) {
+    const button = await part.boundingBox();
+    expect(button!.y + button!.height).toBeLessThanOrEqual(frame!.y);
+  }
 
   await copy.click();
   await expect(copy).toHaveAttribute("data-state", "done");
@@ -577,7 +580,7 @@ Apply sits low.
   await figure.locator(".ca-stage").click({ position: { x: 10, y: 10 } });
   await expect(page.locator(".cz-item .ca-mark")).toHaveCount(2);
   for (const mark of await page.locator(".cz-item .ca-mark").all()) await expect(mark).toBeHidden();
-  const zoomedToggle = page.locator(".cz-item .ca-hide input");
+  const zoomedToggle = page.locator(".cz-header .ca-hide input");
   // Native dialog focus wrapping varies; check that forward Tab reaches Hide marks.
   for (let tabs = 0; tabs < 4; tabs++) {
     await page.keyboard.press("Tab");
@@ -588,9 +591,13 @@ Apply sits low.
   await expect(zoomedToggle).not.toBeChecked();
   for (const mark of await page.locator(".cz-item .ca-mark").all())
     await expect(mark).toBeVisible();
-  await page.keyboard.press("Shift+Tab");
-  await expect(page.locator(".cz-close")).toBeFocused();
+  // In the header it comes before Copy and Close.
   await page.keyboard.press("Tab");
+  await expect(page.locator(".cz-header .ca-copy")).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(page.locator(".cz-close")).toBeFocused();
+  await page.keyboard.press("Shift+Tab");
+  await page.keyboard.press("Shift+Tab");
   await expect(zoomedToggle).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(page.locator(".cz-dialog")).toHaveCount(0);
