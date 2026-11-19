@@ -5,7 +5,7 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join, relative, resolve } from "node:path";
+import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { chromium } from "@playwright/test";
@@ -24,6 +24,22 @@ const { values: flags } = parseArgs({
     out: { type: "string" },
   },
 });
+
+function resolveBase(ref) {
+  try {
+    return execFileSync("git", ["rev-parse", "--verify", "--end-of-options", `${ref}^{commit}`], {
+      cwd: repo,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+  } catch (cause) {
+    throw new Error(`Cannot resolve benchmark baseline ${JSON.stringify(ref)} to a commit`, {
+      cause,
+    });
+  }
+}
+
+const baseCommit = resolveBase(flags.base);
 
 // The SIMD document from Pierre's Words benchmark: 39,898 bytes with 38 Python fences and 105 headings.
 const SIMD = {
@@ -86,9 +102,12 @@ function observeCommit(code) {
 
 // Our own files outside the benchmark come from `ref` when it's set, so one checkout builds both sides.
 function atRef(ref, id) {
-  if (!ref || id.includes("node_modules") || id.startsWith(here)) return undefined;
-  const path = relative(repo, id.split("?")[0]);
-  if (path.startsWith("..")) return undefined;
+  const file = id.split("?")[0];
+  if (!ref || !isAbsolute(file)) return undefined;
+  const path = relative(repo, file);
+  if (path === ".." || path.startsWith(`..${sep}`) || isAbsolute(path)) return undefined;
+  if (path.split(sep).includes("node_modules") || file.startsWith(`${here}${sep}`))
+    return undefined;
   try {
     return execFileSync("git", ["show", `${ref}:${path}`], {
       cwd: repo,
@@ -96,8 +115,8 @@ function atRef(ref, id) {
       stdio: ["ignore", "pipe", "ignore"],
       maxBuffer: 64 * 1024 * 1024,
     });
-  } catch {
-    return undefined;
+  } catch (cause) {
+    throw new Error(`Cannot read ${path} from baseline ${ref}`, { cause });
   }
 }
 
@@ -186,9 +205,9 @@ const withoutTypeset = (html) =>
     .replace(/<span style="[^"]*pulse;">[^<]*<\/span>/g, "")
     .replaceAll(' style=""', "");
 
-const builds = { base: await bundle(flags.base), head: await bundle() };
+const builds = { base: await bundle(baseCommit), head: await bundle() };
 const sides = Object.keys(builds);
-const source = await fixture(flags.fixture);
+const source = flags.mode === "chat" ? undefined : await fixture(flags.fixture);
 
 async function replay(side, options) {
   const { browser, page, errors, cdp } = await open(builds[side]);
@@ -302,6 +321,16 @@ if (flags.mode === "time") {
     const record = { side, ...rest };
     console.log(JSON.stringify(record));
     records.push(record);
+    assert.ok(
+      rest.actedAt >= 0 && rest.actedAt < rest.updates - 1,
+      `${side}: no interaction before the stream ended`,
+    );
+    assert.equal(rest.counter, "Clicked 2", `${side}: counter did not retain its state`);
+    assert.equal(
+      rest.selectedTab,
+      "install.ts",
+      `${side}: code group did not retain its selected tab`,
+    );
   }
   const same = withoutTypeset(results.base.html) === withoutTypeset(results.head.html);
   console.log(JSON.stringify({ sameFinalDom: same }));

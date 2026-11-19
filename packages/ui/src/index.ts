@@ -227,6 +227,7 @@ export type Renderer<C> = {
   codeNotes: Part<C>;
   /** The component that writes the typeset styles into the document, as `typeset-styles`. */
   typeset: C;
+  typesetCaretFallback?: boolean;
 };
 
 export type Preset<C> = {
@@ -411,7 +412,7 @@ export function preset<C>(renderer: Renderer<C>, options: PresetOptions = {}): P
   // After comments, which may wrap the tables in its root.
   parse(tableLayout, options.tableLayout);
   if (on(options.typeset)) {
-    plugins.push(typeset());
+    plugins.push(typeset({ caretFallback: renderer.typesetCaretFallback }));
     components[TYPESET_TAG] = renderer.typeset;
   }
   // Annotate, comments, diff, and quiz have no Vue, React, or Svelte renderer, so those presets leave them out.

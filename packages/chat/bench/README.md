@@ -15,4 +15,4 @@ node packages/chat/bench/stream.mjs --mode chat    # a short reply keeps its com
 
 `check` compares the DOM between the two sides after every tenth update and at the end. It ignores where the typeset `<style>` and the streaming caret sit, and the empty `style` React leaves on a span the caret moved out of. `chat` streams `mixed.md` 32 units at a time. Once the table starts arriving, it clicks a stateful component and picks a code group's second tab. It then checks that both survive the rest of the stream, and where the caret sits while streaming.
 
-Pass `--base <ref>` to compare another commit, `--runs`, `--interval`, `--fixture <file.md>`, and `--out <file.json>` for the raw samples.
+Pass `--base <ref>` to compare another commit, `--runs`, `--interval`, `--fixture <file.md>`, and `--out <file.json>` for the raw samples. An invalid ref or a missing baseline source fails the comparison rather than substituting the working-tree file.
