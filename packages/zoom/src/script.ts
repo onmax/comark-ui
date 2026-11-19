@@ -16,7 +16,7 @@ export interface ZoomDetail {
   items: HTMLElement[];
   /** The copy in the zoomed view of an element of the item or its aside, or null when it isn't one of them. */
   copyOf: (node: Element) => Element | null;
-  /** The element on the page that a node of the zoomed copy or the aside copies, or null when it isn't one of them. */
+  /** The original element on the page for a copy in the zoomed view, or null when it isn't one of them. */
   originalOf: (node: Element) => Element | null;
   /**
    * How much the zoomed copy, and `layer` with it, is scaled. It changes when the window resizes or a larger image
@@ -66,6 +66,11 @@ export function script(css: string): () => void {
   const motion = matchMedia("(prefers-reduced-motion: reduce)");
   const easing = "cubic-bezier(.22,1,.36,1)";
 
+  type Mapping = {
+    copies: WeakMap<Element, Element>;
+    originals: WeakMap<Element, Element>;
+  };
+
   type View = {
     dialog: HTMLDialogElement;
     header: HTMLElement;
@@ -76,8 +81,8 @@ export function script(css: string): () => void {
     aside: HTMLElement;
     footer: HTMLElement;
     frame: HTMLElement;
-    // Each original shown, with its copy: the item, and its aside when it has one.
-    pairs: Array<[Element, Element]>;
+    content: HTMLElement | null;
+    mapping: Mapping;
     items: HTMLElement[];
     index: number;
     scale: number;
@@ -252,9 +257,19 @@ export function script(css: string): () => void {
   }
 
   // The copy goes inside empty copies of the item's contexts. `node` is the item, or its aside, which needs them too.
-  function copy(item: HTMLElement, into: HTMLElement, node: HTMLElement = item) {
+  function copy(item: HTMLElement, into: HTMLElement, node: HTMLElement = item, mapping?: Mapping) {
     // SAFETY: a deep clone of an HTMLElement is an HTMLElement of the same kind.
     const clone = strip(node.cloneNode(true) as HTMLElement);
+    if (mapping) {
+      mapping.copies.set(node, clone);
+      mapping.originals.set(clone, node);
+      const elements = clone.querySelectorAll("*");
+      node.querySelectorAll("*").forEach((original, index) => {
+        const element = elements[index]!;
+        mapping.copies.set(original, element);
+        mapping.originals.set(element, original);
+      });
+    }
     const around = contexts(item);
     const parent = (around[0] ?? item).parentElement;
     if (parent) {
@@ -287,40 +302,28 @@ export function script(css: string): () => void {
     );
   }
 
-  // A copy has its original's tree, so the same child positions lead from one to the other.
-  function across(pairs: Array<[Element, Element]>, node: Element, from: 0 | 1) {
-    for (const pair of pairs) {
-      const start = pair[from];
-      if (!start.contains(node)) continue;
-      const path: number[] = [];
-      for (let at = node; at !== start && at.parentElement; at = at.parentElement)
-        path.unshift([...at.parentElement.children].indexOf(at));
-      let out: Element | undefined = pair[from === 0 ? 1 : 0];
-      for (const index of path) out = out?.children[index];
-      return out ?? null;
-    }
-    return null;
-  }
-
   function measure(item: HTMLElement) {
     const rect = item.getBoundingClientRect();
     return { width: rect.width || 1, height: rect.height || 1, rect };
   }
 
   function detail(current: View): ZoomDetail {
+    const { copies, originals } = current.mapping;
     return {
       dialog: current.dialog,
       header: current.header,
       footer: current.footer,
       layer: current.frame.querySelector<HTMLElement>(".cz-layer")!,
-      // SAFETY: render() always pairs the item with its copy first, and the copy of an HTMLElement is one too.
-      content: current.pairs[0]![1] as HTMLElement,
+      content: current.content!,
       aside: current.aside.firstElementChild ? current.aside : null,
       item: current.items[current.index]!,
       index: current.index,
       items: current.items,
-      copyOf: (node) => across(current.pairs, node, 0),
-      originalOf: (node) => across(current.pairs, node, 1),
+      copyOf: (node) => {
+        const clone = copies.get(node);
+        return clone && current.dialog.contains(clone) ? clone : null;
+      },
+      originalOf: (node) => (current.dialog.contains(node) ? (originals.get(node) ?? null) : null),
       get scale() {
         return current.scale;
       },
@@ -413,13 +416,14 @@ export function script(css: string): () => void {
     const item = current.items[current.index]!;
     current.frame.replaceChildren();
     current.stage.scrollTop = 0;
-    current.pairs = [[item, copy(item, current.frame)]];
+    current.mapping = { copies: new WeakMap(), originals: new WeakMap() };
+    current.content = copy(item, current.frame, item, current.mapping);
     current.frame.append(el("div", "cz-layer"));
     // Set before place() measures the stage, which the aside's column narrows.
     const aside = asideOf(item);
     current.aside.replaceChildren();
     current.dialog.toggleAttribute("data-aside", Boolean(aside));
-    if (aside) current.pairs.push([aside, copy(item, current.aside, aside)]);
+    if (aside) copy(item, current.aside, aside, current.mapping);
     for (const image of current.frame.querySelectorAll("img")) {
       image.loading = "eager";
       image.addEventListener("load", () => showing(current, image) && place(current));
@@ -605,7 +609,8 @@ export function script(css: string): () => void {
       aside,
       footer,
       frame,
-      pairs: [],
+      content: null,
+      mapping: { copies: new WeakMap(), originals: new WeakMap() },
       items,
       index: Math.max(0, items.indexOf(item)),
       scale: 1,
