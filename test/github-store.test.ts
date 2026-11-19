@@ -46,7 +46,7 @@ function fakeGitHub() {
 
 async function readAll() {
   const store = createGitHubWorkspaceStore(
-    { provider: "github", repo: "o/r", token: "t", root: "", branch: "b" },
+    { driver: "github", repo: "o/r", token: "t", root: "", branch: "b" },
     "docs",
   );
   const texts: string[] = [];

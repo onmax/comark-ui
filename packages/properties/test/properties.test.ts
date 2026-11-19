@@ -50,7 +50,9 @@ describe("comark-properties", () => {
 
   it("shows the chosen keys at the top, in order, and inlines the styles once", async () => {
     const html = await render(review);
-    expect(html.startsWith('<dl class="cfm" data-comark-frame>')).toBe(true);
+    expect(html.startsWith('<dl class="cfm" data-comark-frame data-comark-properties-dates>')).toBe(
+      true,
+    );
     expect(html.endsWith("</dl><p>Body</p>")).toBe(true);
     for (const row of [
       '<div data-key="status" data-kind="status"><dt>Status</dt><dd><span class="cfm-status">Ready for review</span></dd></div>' +
@@ -86,13 +88,14 @@ describe("comark-properties", () => {
     );
   });
 
-  it("follows each box with the script that makes its dates relative, and carries comark-time's styles once", async () => {
+  it("includes the date refresh script and comark-time's styles once", async () => {
     const renderer = createHtmlRenderer({ plugins: [properties()], components });
-    const html = await renderer(`${review}\n\n::properties\n::`);
+    const html = await renderer(`${review}\n\n::properties\n::\n\n::properties\n::`);
     const [relativize, escape] = scripts;
     expect(html.match(/<style data-comark-time>/g)).toHaveLength(1);
     expect(html.split(`<script>${escape}</script>`)).toHaveLength(2);
     expect(html.split(`</dl><script>${relativize}</script>`)).toHaveLength(2);
+    expect(html.match(/data-comark-properties-dates>/g)).toHaveLength(2);
     expect(relativize).toMatch(/^\(function\b[^(]*\(/);
     // An inlined script can't import, so comark-time's describeTime goes in whole.
     expect(relativize.replaceAll("\u2028", "\n")).toContain(describeTime.toString());
@@ -106,7 +109,9 @@ describe("comark-properties", () => {
 
   it("goes where ::properties sits instead", async () => {
     const html = await render(review.replace("Body", "# Palette\n\n::properties\n::\n\nBody"));
-    expect(html).toMatch(/^<h1 id="palette">Palette<\/h1><dl class="cfm" data-comark-frame>/);
+    expect(html).toMatch(
+      /^<h1 id="palette">Palette<\/h1><dl class="cfm" data-comark-frame data-comark-properties-dates>/,
+    );
     expect(html.match(/class="cfm"/g)).toHaveLength(1);
   });
 
