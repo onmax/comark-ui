@@ -22,6 +22,7 @@ Extra filters collapse into **+2 filters**.
 - A click anywhere on the screenshot zooms it, with its notes beside it.
 - The Copy button copies it as a PNG with its marks and notes drawn in.
 - The Hide marks toggle beside it hides the marks and arrows, so readers can see what's under them.
+- Zoomed, both move into the header beside Close, so neither covers the image.
 - Hovering a mark or its note fades the other marks.
 
 ## Usage
