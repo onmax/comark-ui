@@ -231,9 +231,9 @@ On the open and change events, `event.detail` is a `ZoomDetail` with these field
 | Method | Returns | Description |
 | --- | --- | --- |
 | `event.detail.copyOf(element)` | `Element \| null` | The zoomed copy of an element in the item or its aside. |
-| `event.detail.originalOf(element)` | `Element \| null` | The original page element for a copy in the zoomed item or aside. |
+| `event.detail.originalOf(element)` | `Element \| null` | The original page element for a copy in the zoomed view. |
 
-Both return `null` for anything the zoom doesn't show. The close event has only `event.detail.item`, the item that closed.
+The lookups still work if a copied element moves elsewhere in the dialog, such as into the header. Both return `null` for anything the zoom doesn't show. The close event has only `event.detail.item`, the item that closed.
 
 ### Package
 

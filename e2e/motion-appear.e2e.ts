@@ -148,6 +148,14 @@ test("a citation's card rises from its citation, slides to the next, and sinks b
   // The open card moves to the next citation: it slides there rather than rising again.
   await two.hover();
   await expect(page.locator(card).locator(".cso-card-title")).toHaveText("Homing");
+  await page.waitForFunction(
+    () =>
+      (window as unknown as { frames_: Frame[] }).frames_.some(
+        (frame) => !frame.ghost && frame.translate,
+      ),
+    undefined,
+    { timeout: 10_000 },
+  );
   await landed(page, card);
   const second = await rectOf(page, card);
   expect(Math.abs(second.left - first.left)).toBeGreaterThan(20);

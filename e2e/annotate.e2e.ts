@@ -75,31 +75,74 @@ test("a comparison lines up its screenshots and zooms them with their marks and 
 test("the zoom maps its copies to the page and back", async ({ page }) => {
   await open(page, compare);
   await page.evaluate(() => {
-    document.addEventListener("comark-zoom:open", (event) => {
-      const { content, aside, copyOf, originalOf } = event.detail;
+    const checkMapping = (event: DocumentEventMap["comark-zoom:open"]) => {
+      const { content, aside, header, copyOf, originalOf } = event.detail;
       const image = content.querySelector(".ca-frame img")!;
       const note = aside!.querySelector(".ca-notes li")!;
+      const toggle = header.querySelector(".ca-hide input")!;
+      const originalToggle = event.detail.item.querySelector(".ca-hide input")!;
       const figure = event.detail.item.closest(".ca-screenshot")!;
       Object.assign(window, {
         mapped: {
+          index: event.detail.index,
           content: content.matches(".ca-stage"),
           image: originalOf(image) === event.detail.item.querySelector(".ca-frame img"),
           back: copyOf(originalOf(image)!) === image,
           note: originalOf(note) === figure.querySelector(".ca-notes li"),
+          toggle: copyOf(originalToggle) === toggle && originalOf(toggle) === originalToggle,
           outside: originalOf(document.body),
         },
       });
-    });
+    };
+    document.addEventListener("comark-zoom:open", checkMapping);
+    document.addEventListener("comark-zoom:change", checkMapping);
   });
   await page.locator("main .ca-compare .ca-stage").first().click();
   await expect(page.locator(".cz-dialog")).toBeVisible();
-  expect(await page.evaluate(() => (window as unknown as { mapped: unknown }).mapped)).toEqual({
+  const mapped = () => page.evaluate(() => (window as unknown as { mapped: unknown }).mapped);
+  const expected = {
     content: true,
     image: true,
     back: true,
     note: true,
+    toggle: true,
     outside: null,
-  });
+  };
+  expect(await mapped()).toEqual({ ...expected, index: 0 });
+  await page.keyboard.press("ArrowRight");
+  await expect(page.locator(".cz-count")).toHaveText("2 / 2");
+  expect(await mapped()).toEqual({ ...expected, index: 1 });
+});
+
+test("the entire Hide marks button stays above a scrolling zoom stage", async ({ page }) => {
+  await page.setViewportSize({ width: 700, height: 600 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.route("**/tall.svg", (route) =>
+    route.fulfill({
+      contentType: "image/svg+xml",
+      body: '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="1000"><rect width="400" height="1000" fill="white"/></svg>',
+    }),
+  );
+  await open(
+    page,
+    `::screenshot{src="/tall.svg" alt="Dashboard" viewport="400x1000"}
+:::annotation{x=80 y=2 w=18 h=8}
+The top right corner.
+:::
+::`,
+  );
+  await page.locator("main .ca-stage").click();
+  const stage = page.locator(".cz-stage[data-scroll]");
+  await expect(stage).toBeVisible();
+  await stage.evaluate((node) => (node.scrollTop = node.scrollHeight));
+  expect(await stage.evaluate((node) => node.scrollTop)).toBeGreaterThan(0);
+
+  const hide = page.locator(".cz-header .ca-hide");
+  const button = (await hide.boundingBox())!;
+  expect(button.y + button.height).toBeLessThanOrEqual((await stage.boundingBox())!.y);
+  await page.mouse.click(button.x + button.width / 2, button.y + button.height - 1);
+  await expect(hide.locator("input")).toBeChecked();
+  await expect(page.locator(".cz-item .ca-mark")).toBeHidden();
 });
 
 test("a host's `.ca` rule sets the default mark color, on the page and zoomed", async ({
@@ -358,17 +401,20 @@ The top right corner.
   await page.locator(".ca-screenshot .ca-stage").first().click();
   await expect(page.locator(".cz-dialog")).toBeVisible();
 
-  const copy = page.locator(".cz-header .ca-zoom-copy .ca-copy");
+  const copy = page.locator(".cz-header .ca-zoom-tools .ca-copy");
   await expect(copy).toBeVisible();
-  await expect(page.locator(".cz-item :is(.ca-copy,.ca-copy-status)")).toHaveCount(0);
+  await expect(page.locator(".cz-header .ca-zoom-tools .ca-hide")).toBeVisible();
+  await expect(page.locator(".cz-item :is(.ca-copy,.ca-copy-status,.ca-hide)")).toHaveCount(0);
   expect(
     await page
       .locator(".cz-header")
       .evaluate((header) => [...header.children].map((child) => child.className).slice(-2)),
-  ).toEqual(["ca-zoom-copy", "cz-close"]);
-  const button = await copy.boundingBox();
+  ).toEqual(["ca-zoom-tools", "cz-close"]);
   const frame = await page.locator(".cz-item .ca-frame").boundingBox();
-  expect(button!.y + button!.height).toBeLessThanOrEqual(frame!.y);
+  for (const part of [copy, page.locator(".cz-header .ca-hide")]) {
+    const button = await part.boundingBox();
+    expect(button!.y + button!.height).toBeLessThanOrEqual(frame!.y);
+  }
 
   await copy.click();
   await expect(copy).toHaveAttribute("data-state", "done");
@@ -575,7 +621,7 @@ Apply sits low.
   await figure.locator(".ca-stage").click({ position: { x: 10, y: 10 } });
   await expect(page.locator(".cz-item .ca-mark")).toHaveCount(2);
   for (const mark of await page.locator(".cz-item .ca-mark").all()) await expect(mark).toBeHidden();
-  const zoomedToggle = page.locator(".cz-item .ca-hide input");
+  const zoomedToggle = page.locator(".cz-header .ca-hide input");
   // Native dialog focus wrapping varies; check that forward Tab reaches Hide marks.
   for (let tabs = 0; tabs < 4; tabs++) {
     await page.keyboard.press("Tab");
@@ -586,9 +632,13 @@ Apply sits low.
   await expect(zoomedToggle).not.toBeChecked();
   for (const mark of await page.locator(".cz-item .ca-mark").all())
     await expect(mark).toBeVisible();
-  await page.keyboard.press("Shift+Tab");
-  await expect(page.locator(".cz-close")).toBeFocused();
+  // In the header it comes before Copy and Close.
   await page.keyboard.press("Tab");
+  await expect(page.locator(".cz-header .ca-copy")).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(page.locator(".cz-close")).toBeFocused();
+  await page.keyboard.press("Shift+Tab");
+  await page.keyboard.press("Shift+Tab");
   await expect(zoomedToggle).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(page.locator(".cz-dialog")).toHaveCount(0);
