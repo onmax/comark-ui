@@ -101,7 +101,7 @@ export const css = `@layer comark{${[
   ".cz-header .ca-zoom-tools{position:relative;display:flex;align-items:center;gap:.5rem;min-width:0;margin-left:auto}",
   "[data-annotate-copy] .cz-header .ca-copy{position:static;flex:none;width:2.25rem;height:2.25rem;border:0;border-radius:calc(var(--_comark-radius) - 2px);background:none;box-shadow:none;opacity:1;transition:none}",
   "[data-annotate-copy] .cz-header .ca-copy:hover{background:var(--_comark-accent)}",
-  ".cz-header .ca-hide{position:relative;flex:none;width:2.25rem;height:2.25rem;border:0;border-radius:calc(var(--_comark-radius) - 2px);background:none;opacity:1;transition:none}",
+  ".cz-header .ca-hide{position:relative;inset:auto;flex:none;width:2.25rem;height:2.25rem;border:0;border-radius:calc(var(--_comark-radius) - 2px);background:none;opacity:1;transition:none}",
   ".cz-header .ca-hide:hover{background:var(--_comark-accent)}",
   // The toggle left the frame, so it hides the marks of the zoomed screenshot from the header.
   ".cz-dialog:has(.ca-zoom-tools .ca-hide>:checked) .cz-item :is(.ca-mark,.ca-arrow){visibility:hidden}",

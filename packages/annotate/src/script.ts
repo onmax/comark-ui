@@ -720,13 +720,14 @@ export function start(): () => void {
       status.textContent = "";
     // Zoomed, Hide marks and Copy sit in the header beside Close, clear of the image and its marks.
     if (!zoomed || !header || !content) return;
-    const tools = [".ca-hide", ".ca-copy", ".ca-copy-status"]
-      .map((selector) => content.querySelector<HTMLElement>(selector))
-      .filter((part): part is HTMLElement => part !== null);
-    if (!tools.length) return;
-    zoomCopy = document.createElement("div");
+    const tools = document.createElement("div");
+    for (const selector of [".ca-hide", ".ca-copy", ".ca-copy-status"]) {
+      const part = content.querySelector(selector);
+      if (part) tools.append(part);
+    }
+    if (!tools.childElementCount) return;
+    zoomCopy = tools;
     zoomCopy.className = "ca-zoom-tools";
-    zoomCopy.append(...tools);
     header.insertBefore(zoomCopy, header.querySelector(".cz-close"));
     for (const part of content.querySelectorAll(".ca-copy,.ca-copy-status,.ca-hide")) part.remove();
     if (focused) zoomCopy.querySelector<HTMLElement>(focused)?.focus({ preventScroll: true });
