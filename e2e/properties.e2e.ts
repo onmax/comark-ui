@@ -67,6 +67,23 @@ test("hover opens the full date on a date row", async ({ page }) => {
     .toBe(1);
 });
 
+test("dates refresh when the HTML bridge moves scripts to the end of the page", async ({
+  page,
+}) => {
+  const assets: string[] = [];
+  const html = (await render(review)).replace(/<script>.*?<\/script>/gs, (script) => {
+    assets.push(script);
+    return "";
+  });
+  await page.clock.install({ time: now });
+  await page.setContent(`<main>${html}</main><span>${assets.join("")}</span>`);
+  expect(await label(page, "date")).toBe("2 days ago");
+
+  const date = page.locator('.cfm [data-key="date"] time');
+  await page.locator("main").evaluate((root, next) => (root.innerHTML = next), html);
+  await expect(date).toHaveAttribute("data-mode", "relative");
+});
+
 test("the words move on with the clock while the page is open, and when it shows again", async ({
   page,
 }) => {
