@@ -10,8 +10,11 @@ const offline = {
   icon: { fetch: false },
   diagrams: { draw: false },
 } as const;
+// The document's blocks, without the typeset styles that open it.
 const nodes = async (markdown: string, options = {}) =>
-  (await parseMarkdown(markdown, html({ ...offline, ...options }))).nodes;
+  (await parseMarkdown(markdown, html({ ...offline, ...options }))).nodes.filter(
+    (node) => !Array.isArray(node) || node[0] !== "typeset-styles",
+  );
 
 const prs = `| PR | Summary | Status / your next step | Links |
 |---|---|---|---|

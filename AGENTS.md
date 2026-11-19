@@ -43,6 +43,7 @@ How most packages work, so the bullets below don't repeat it:
   - Parts come from the model, so `read()` never throws and links only safe URLs.
   - `src/vue.ts`, `src/react.ts`, and `src/svelte/` render the same markup. Text goes through the framework's Comark `Markdown` with the caller's plugins; React uses `MarkdownClient`, since its `Markdown` is a server component.
   - There is no HTML renderer, because a chat runs in an app.
+  - `bench/stream.mjs` streams a long reply into the React `MessageParts` with comark-ui's preset and Shiki in Chromium, built once from `--base` and once from the working tree, and compares commit time, main-thread time, the DOM, and a stateful component's state. Its README has the modes.
 - `packages/chips` is `comark-chips`.
   - Its parse plugin turns every web link, `@user`, and `:chip` into a `chip` node with `href`, `kind` (`favicon` or `avatar`), `src`, and `title`. `chipNode()` builds the same node for a host that adds links after parsing.
   - `src/images.ts` downloads each image while parsing and inlines it as a data URI, cached per process. An HTTP error maps to its status; any other failure keeps the URL for the reader's browser.
@@ -211,7 +212,7 @@ How most packages work, so the bullets below don't repeat it:
   - `src/info.ts` is `comark-ui/info`. `componentInfo(options)` collects the packages' `componentInfo` for the plugins those options turn on, and each preset returns it as `componentInfo`, without the blocks its renderer leaves out. Add a new package's map there.
   - It re-exports comark-critic's `css` as `criticCss`, since a project can't import a dependency of a dependency.
   - Its build writes `comark-ui/style.css`: every dependency's `style.css` and the Mermaid wrapper's styles, all in the `comark` layer, for a server-rendered page to link. `test/style.test.ts` checks it through the package's exports.
-  - Typeset: `src/typeset-css.ts` is the text around the blocks, shadcn/typeset on the `--comark-*` tokens, with no imports but the theme, so `comark-ui/client` exports it to browsers too. `src/typeset.ts` is its plugin, on by default, which appends one `typeset-styles` node.
+  - Typeset: `src/typeset-css.ts` is the text around the blocks, shadcn/typeset on the `--comark-*` tokens, with no imports but the theme, so `comark-ui/client` exports it to browsers too. `src/typeset.ts` is its plugin, on by default, which puts one `typeset-styles` node first in the document, so a streaming renderer that matches blocks by index never replaces the `<style>`.
     - Every renderer, Vue, React, and Svelte included, writes that node as a `<style>` in the document rather than on mount, because its `@scope` with no selector scopes to the style's parent. A server render therefore arrives styled.
     - It paints T3 Code's grain as the root's `background-image` through `--comark-grain` (`none` turns it off).
     - It sits in `@layer comark { @layer typeset }`, below every block's rules in `comark` itself, whatever order the styles load in.

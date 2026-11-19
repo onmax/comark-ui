@@ -150,6 +150,7 @@ export default (options?: PresetOptions): Preset<Component> =>
       bundle,
       time,
       typeset,
+      typesetCaretFallback: true,
       zoom,
     },
     options,
