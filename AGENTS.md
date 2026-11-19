@@ -43,6 +43,7 @@ How most packages work, so the bullets below don't repeat it:
   - Parts come from the model, so `read()` never throws and links only safe URLs.
   - `src/vue.ts`, `src/react.ts`, and `src/svelte/` render the same markup. Text goes through the framework's Comark `Markdown` with the caller's plugins; React uses `MarkdownClient`, since its `Markdown` is a server component.
   - There is no HTML renderer, because a chat runs in an app.
+  - `bench/stream.mjs` streams a long reply into the React `MessageParts` with comark-ui's preset and Shiki in Chromium, built once from `--base` and once from the working tree, and compares commit time, main-thread time, the DOM, and a stateful component's state. Its README has the modes.
 - `packages/chips` is `comark-chips`.
   - Its parse plugin turns every web link, `@user`, and `:chip` into a `chip` node with `href`, `kind` (`favicon` or `avatar`), `src`, and `title`. `chipNode()` builds the same node for a host that adds links after parsing.
   - `src/images.ts` downloads each image while parsing and inlines it as a data URI, cached per process. An HTTP error maps to its status; any other failure keeps the URL for the reader's browser.
