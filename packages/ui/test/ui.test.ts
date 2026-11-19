@@ -2,7 +2,7 @@ import { fileURLToPath } from "node:url";
 import { createHtmlRenderer } from "@comark/html";
 import { MarkdownDocument as ReactDocument } from "@comark/react";
 import { MarkdownDocument as VueDocument } from "@comark/vue";
-import { parseMarkdown } from "comark";
+import { createSerializedMarkdownParser, parseMarkdown } from "comark";
 import { createElement } from "react";
 import { renderToString as renderReact } from "react-dom/server";
 import type { LanguageRegistration } from "shiki";
@@ -322,8 +322,8 @@ describe("comark-ui", () => {
     const markdown = "# Title\n\nSome `code`.\n\n| A | B |\n| - | - |\n| 1 | 2 |";
     const out = await renderHtml(markdown);
     expect(out.match(/<style data-comark-typeset>/g)).toHaveLength(1);
-    // The styles come last, so the first heading is still the first child and adds no space above.
-    expect(out.trimEnd()).toMatch(/<style data-comark-typeset>[^<]*<\/style>$/);
+    // The styles come first, so a stream that adds blocks never replaces them.
+    expect(out.trimStart()).toMatch(/^<style data-comark-typeset>[^<]*<\/style><h1/);
     const css = out.slice(out.indexOf("<style data-comark-typeset>"));
     // Under every block's rules, which sit in `comark` itself, and on the tokens shared with them.
     expect(css).toContain("@layer comark{@layer typeset{@scope{");
@@ -345,6 +345,22 @@ describe("comark-ui", () => {
     expect(Object.keys(html({ ...offline, typeset: false }).components)).not.toContain(
       "typeset-styles",
     );
+  });
+
+  it("keeps one typeset node first while a document streams, so the caret ends the text", async () => {
+    const { plugins, components } = react(offline);
+    const parse = createSerializedMarkdownParser({ plugins });
+    const source = "# Plan\n\nFirst step.\n\n## Then\n\n- one\n- two\n\nLast words";
+    let value;
+    for (let start = 0; start < source.length; start += 4) {
+      value = await parse(source.slice(0, start + 4), { streaming: true });
+      expect(value.nodes.filter((node) => node[0] === "typeset-styles")).toHaveLength(1);
+      expect(value.nodes[0]?.[0]).toBe("typeset-styles");
+    }
+    const out = renderReact(
+      createElement(ReactDocument, { value, components, streaming: true, caret: true }),
+    );
+    expect(out).toMatch(/<p>Last words<span style="[^"]*">[^<]*<\/span><\/p><\/div>$/);
   });
 
   it("leaves Kroki diagrams as code and sends nothing unless asked", async () => {
@@ -432,7 +448,7 @@ describe("comark-ui", () => {
       // In the server's HTML, unescaped, so the page arrives styled.
       expect(out, name).toContain("<style data-comark-typeset");
       expect(out, name).toContain("@scope{:where(:scope){");
-      expect(out, name).toContain(":scope>:where(:first-child)");
+      expect(out, name).toContain(":scope>:where(:nth-child(1 of :not(style,script)))");
     }
   });
 

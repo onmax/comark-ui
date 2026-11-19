@@ -297,9 +297,9 @@ ${documentRoot} > [data-wide],
 
 ${tableRules}
 
-/* The first child adds no space above. Last, so it wins ties. */
-:scope > :where(:first-child):not(${own}),
-:scope > :where(:first-child) > :where(:first-child):not(${own}),
+/* The first child adds no space above. Last, so it wins ties. The typeset styles themselves come first. */
+:scope > :where(:nth-child(1 of :not(style, script))):not(${own}),
+:scope > :where(:nth-child(1 of :not(style, script))) > :where(:first-child):not(${own}),
 :scope :where(
   li > :first-child, blockquote > :first-child, td > :first-child, th > :first-child, dd > :first-child,
   figure > :first-child, figure > picture > img
