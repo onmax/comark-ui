@@ -34,6 +34,7 @@ import * as gitGraph from "comark-git-graph/vue";
 import * as bundle from "comark-bundle/vue";
 import * as time from "comark-time/vue";
 import * as zoom from "comark-zoom/vue";
+import * as motion from "comark-motion/vue";
 import { type Preset, type PresetOptions, preset } from "./index.ts";
 import { issuesCss, issuesInner, issuesOf, type IssuesOptions } from "./issues.ts";
 import { Mermaid } from "./vue-mermaid.ts";
@@ -105,6 +106,7 @@ export const components = {
   ...bundle.components,
   ...time.components,
   ...zoom.components,
+  ...motion.components,
   ...magicMove.components,
   ...code.components,
   ...codeNotes.components,
@@ -152,6 +154,7 @@ export default (options?: PresetOptions): Preset<Component> =>
       typeset,
       typesetCaretFallback: true,
       zoom,
+      motion,
     },
     options,
   );

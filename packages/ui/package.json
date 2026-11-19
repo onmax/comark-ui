@@ -96,6 +96,7 @@
     "comark-mathml": "workspace:^",
     "comark-media": "workspace:^",
     "comark-metrics": "workspace:^",
+    "comark-motion": "workspace:^",
     "comark-outline": "workspace:^",
     "comark-pele": "catalog:",
     "comark-properties": "workspace:^",

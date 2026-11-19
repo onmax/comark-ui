@@ -177,6 +177,7 @@ const packages = [
   ],
   ["comark-outline/html", () => import("comark-outline/html"), []],
   ["comark-zoom/html", () => import("comark-zoom/html"), []],
+  ["comark-motion/html", () => import("comark-motion/html"), []],
 ] as const;
 
 const missing = (error: unknown, name: string) =>

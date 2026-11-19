@@ -38,6 +38,7 @@ import * as gitGraph from "comark-git-graph/html";
 import * as bundle from "comark-bundle/html";
 import * as time from "comark-time/html";
 import * as zoom from "comark-zoom/html";
+import * as motion from "comark-motion/html";
 import { mermaidBar, mermaidCss } from "./client.ts";
 import { type Preset, type PresetOptions, preset } from "./index.ts";
 import { issuesCss, issuesInner, issuesOf, type IssuesOptions } from "./issues.ts";
@@ -147,6 +148,7 @@ export default (options?: PresetOptions): Preset<NodeHandler> =>
       time,
       typeset,
       zoom,
+      motion,
     },
     options,
   );

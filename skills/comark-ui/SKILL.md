@@ -131,6 +131,7 @@ Read the reference for each block you use before you write it. Mix the blocks fr
 | A table of contents of the page's headings | `::toc` | [outline](references/outline.md) |
 | Figures and tables numbered and referred to by number | `{#fig-name}`, `:ref{#fig-name}` | [xref](references/xref.md) |
 | Word count and reading time, for the page's layout | nothing; it writes `meta.readingTime` | [reading-time](references/reading-time.md) |
+| Springs on presses, tabs, chevrons, tooltips, and zoom | nothing; the blocks get it by their roles | [motion](references/motion.md) |
 
 ### Chat
 
