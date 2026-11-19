@@ -225,37 +225,33 @@ test("a diff copies as the code after it, and a collapsed range opens on a click
   expect(new Set(heights).size).toBe(1);
 });
 
-test("opening a folded range never pulls following lines above the placeholder", async ({
+test("opening a folded range opens it at once, with the following lines below its lines", async ({
   page,
 }) => {
-  await page.emulateMedia({ reducedMotion: "no-preference" });
   await open(page, "```ts collapse={2-4}\nfirst()\nsecond()\nthird()\nfourth()\nlast()\n```");
   await page.addStyleTag({ content: "pre{font:16px/24px monospace}" });
   const fold = page.locator(".ck-fold");
-  const motion = await fold.evaluate(async (element) => {
+  const opened = await fold.evaluate(async (element) => {
     const following = element.nextElementSibling!;
     const closed = element.getBoundingClientRect().height;
     const followingTop = following.getBoundingClientRect().top;
     element.querySelector("summary")!.click();
-    // Include the first opening layout, before an animation frame can advance the transition.
-    const frames = [];
-    for (let i = 0; i < 4; i++) {
-      frames.push({
-        height: element.getBoundingClientRect().height,
-        followingTop: following.getBoundingClientRect().top,
-      });
-      await new Promise(requestAnimationFrame);
-    }
-    return { closed, followingTop, frames };
+    // The first layout after the click, and one a frame later: the content reads at once and stays put.
+    const first = {
+      height: element.getBoundingClientRect().height,
+      followingTop: following.getBoundingClientRect().top,
+    };
+    await new Promise(requestAnimationFrame);
+    const later = {
+      height: element.getBoundingClientRect().height,
+      followingTop: following.getBoundingClientRect().top,
+    };
+    return { closed, followingTop, first, later };
   });
-  for (const frame of motion.frames) {
-    expect(frame.height).toBeGreaterThanOrEqual(motion.closed);
-    expect(frame.followingTop).toBeGreaterThanOrEqual(motion.followingTop);
+  for (const at of [opened.first, opened.later]) {
+    expect(at.height).toBe(3 * opened.closed);
+    expect(at.followingTop).toBe(opened.followingTop + 2 * opened.closed);
   }
-  expect(motion.frames[0].height).toBe(motion.closed);
-  await expect
-    .poll(() => fold.evaluate((element) => element.getBoundingClientRect().height))
-    .toBe(3 * motion.closed);
   await expect(fold.locator("summary")).toBeHidden();
 });
 

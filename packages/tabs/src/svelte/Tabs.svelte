@@ -22,7 +22,7 @@
         id="{id}-tab-{at + 1}"
         aria-controls="{id}-panel-{at + 1}"
         aria-selected={String(at === 0)}
-        tabindex={at === 0 ? 0 : -1}>{#if icons[at]}<Icon {...icons[at]} />{/if}{label}</button>
+        tabindex={at === 0 ? 0 : -1}><span class="ct-indicator" data-motion-indicator="" aria-hidden="true"></span>{#if icons[at]}<Icon {...icons[at]} />{/if}{label}</button>
     {/each}
   </div>
   {@render children?.()}

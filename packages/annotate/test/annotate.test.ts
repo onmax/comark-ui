@@ -95,7 +95,7 @@ describe("comark-annotate", () => {
       '<div class="ca-side ca-side-after"><div class="ca-heading"><span class="ca-label">After</span> <a href="https://pr2.example.com/plan"',
     );
     expect(html).toContain(
-      '<div class="ca-handle" role="slider" tabindex="0" aria-label="Divider between Before and After" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" aria-valuetext="Before 50%, After 50%">',
+      '<div class="ca-handle" role="separator" aria-orientation="vertical" tabindex="0" aria-label="Divider between Before and After" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" aria-valuetext="Before 50%, After 50%">',
     );
     // A side note would point across the divider, so it joins the numbered list.
     expect(html).not.toContain('class="ca-callout');

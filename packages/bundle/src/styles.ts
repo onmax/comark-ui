@@ -57,8 +57,9 @@ export const css = `@layer comark{${[
   ".cbr-more>summary{display:flex;align-items:baseline;gap:.5rem;padding:.75rem .875rem;cursor:pointer;font-weight:500;list-style:none}",
   ".cbr-more:not([open])>summary{border-radius:0 0 var(--_comark-radius) var(--_comark-radius)}",
   ".cbr-more>summary::-webkit-details-marker{display:none}",
-  ".cbr-more>summary::before{content:'';align-self:center;flex:none;width:.375rem;height:.375rem;margin:0 .125rem;border:solid var(--_comark-muted);border-width:0 1.5px 1.5px 0;transform:rotate(-45deg);transition:transform .15s}",
-  ".cbr-more[open]>summary::before{transform:rotate(45deg)}",
+  // No transition, so comark-motion's disclosure effect turns the chevron with a spring when a person presses the summary.
+  ".cbr-chevron{align-self:center;flex:none;width:.375rem;height:.375rem;margin:0 .125rem;border:solid var(--_comark-muted);border-width:0 1.5px 1.5px 0;rotate:-45deg}",
+  ".cbr-more[open]>summary>.cbr-chevron{rotate:45deg}",
   "@media (hover:hover){.cbr-more>summary:hover{background:color-mix(in srgb,var(--_comark-accent) 50%,transparent)}}",
   ".cbr-more>summary:focus-visible{outline:2px solid var(--_comark-ring);outline-offset:-2px}",
   ".cbr-count{color:var(--_comark-muted);font-weight:400}",

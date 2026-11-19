@@ -1,5 +1,4 @@
 import { theme } from "comark-zoom/theme";
-import { disclosureMotion } from "../../../shared/disclosure.ts";
 
 /**
  * A message as a column: text, files, and each trace of steps as a list of quiet lines, a reasoning or a tool call
@@ -8,7 +7,6 @@ import { disclosureMotion } from "../../../shared/disclosure.ts";
  * layer, so any unlayered rule of the host's wins.
  */
 export const css = `@layer comark{${[
-  disclosureMotion(".cht-step>details"),
   theme(".cht", "status"),
   ":where(.cht){--cht-error:var(--_comark-danger)}",
   ".cht{display:flex;flex-direction:column;gap:.75rem;min-width:0;color:var(--_comark-foreground);font-family:var(--_comark-font)}",
@@ -26,9 +24,10 @@ export const css = `@layer comark{${[
   ".cht-step[data-status=error] .cht-line{color:var(--cht-error)}",
   ".cht-title{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}",
   ".cht-state{flex:none;font-size:.75rem;opacity:.8}",
-  // The chevron is a border, so it takes the line's color and needs no icon.
-  "summary.cht-line::after{content:'';flex:none;width:.3125rem;height:.3125rem;margin-inline:.125rem .25rem;border:solid currentColor;border-width:0 1.5px 1.5px 0;opacity:.6;transform:rotate(-45deg);transition:transform .15s}",
-  "details[open]>summary.cht-line::after{transform:rotate(45deg)}",
+  // The chevron is a border, so it takes the line's color and needs no icon. It has no transition, so comark-motion's
+  // disclosure effect turns it with a spring when a person presses the line.
+  ".cht-chevron{flex:none;width:.3125rem;height:.3125rem;margin-inline:.125rem .25rem;border:solid currentColor;border-width:0 1.5px 1.5px 0;opacity:.6;rotate:-45deg}",
+  "details[open]>summary.cht-line>.cht-chevron{rotate:45deg}",
   ".cht-detail{display:flex;flex-direction:column;gap:.5rem;margin:.25rem 0 .5rem .1875rem;padding-inline-start:1rem;border-inline-start:1px solid var(--_comark-border)}",
   ".cht-detail>.cht-text{color:var(--_comark-muted)}",
   ".cht-value{overflow:hidden;border:1px solid var(--_comark-border);border-radius:calc(var(--_comark-radius) - 2px)}",
@@ -40,6 +39,5 @@ export const css = `@layer comark{${[
   ".cht-file-name{overflow:hidden;font-weight:500;text-overflow:ellipsis;white-space:nowrap}",
   ".cht-file-type{color:var(--_comark-muted);font-size:.75rem}",
   ".cht-image{display:block;align-self:flex-start;max-width:min(100%,24rem);max-height:20rem;border:1px solid var(--_comark-border);border-radius:calc(var(--_comark-radius) - 2px);object-fit:contain}",
-  "@media (prefers-reduced-motion:reduce){summary.cht-line::after{transition:none}}",
   "@media (forced-colors:active){.cht-dot{background:CanvasText}}",
 ].join("")}}`;

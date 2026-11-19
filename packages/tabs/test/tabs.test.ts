@@ -12,6 +12,8 @@ const issues = async (markdown: string) =>
 const markup = async (markdown: string) =>
   (await render(markdown)).replace(/<style[^>]*>.*?<\/style><script>.*?<\/script>/s, "");
 
+// Every tab starts with the surface that shows while it's open, which the motion layer slides between tabs.
+const surface = '<span class="ct-indicator" data-motion-indicator aria-hidden="true"></span>';
 const os =
   '::tabs{sync="os"}\n:::tabs-item{label="macOS"}\nPress **⌘K**.\n:::\n\n:::tabs-item{label="Windows"}\nPress Ctrl+K.\n:::\n::';
 const pm =
@@ -23,8 +25,8 @@ describe("comark-tabs", () => {
     const [, id] = /id="(ct-[a-z0-9]+-1)-tab-1"/.exec(html) ?? [];
     expect(html).toContain(
       '<div class="ct" data-comark-frame data-tabs-sync="os"><div class="ct-list" role="tablist">' +
-        `<button type="button" class="ct-tab" role="tab" id="${id}-tab-1" aria-controls="${id}-panel-1" aria-selected="true" tabindex="0">macOS</button>` +
-        `<button type="button" class="ct-tab" role="tab" id="${id}-tab-2" aria-controls="${id}-panel-2" aria-selected="false" tabindex="-1">Windows</button></div>`,
+        `<button type="button" class="ct-tab" role="tab" id="${id}-tab-1" aria-controls="${id}-panel-1" aria-selected="true" tabindex="0">${surface}macOS</button>` +
+        `<button type="button" class="ct-tab" role="tab" id="${id}-tab-2" aria-controls="${id}-panel-2" aria-selected="false" tabindex="-1">${surface}Windows</button></div>`,
     );
     expect(html).toContain(
       `<div class="ct-panel" role="tabpanel" id="${id}-panel-1" aria-labelledby="${id}-tab-1" tabindex="0"><div class="ct-caption">macOS</div>`,
@@ -33,7 +35,7 @@ describe("comark-tabs", () => {
     expect(html).toContain(
       `<div class="ct-panel" role="tabpanel" id="${id}-panel-2" aria-labelledby="${id}-tab-2" tabindex="0" data-inactive><div class="ct-caption">Windows</div>`,
     );
-    expect(await markup(os)).not.toContain("hidden");
+    expect(await markup(os)).not.toMatch(/\shidden[\s=>]/);
     expect(html).toContain("<strong>⌘K</strong>");
     expect(html.match(/<script>/g)).toHaveLength(1);
   });
@@ -74,8 +76,8 @@ describe("comark-tabs", () => {
     expect(html).toContain(
       '<div class="ct" data-comark-frame data-tabs-code data-code-header data-tabs-magic="auto" data-tabs-sync="pm">',
     );
-    expect(html).toContain('aria-selected="true" tabindex="0">pnpm</button>');
-    expect(html).toContain('aria-selected="false" tabindex="-1">npm</button>');
+    expect(html).toContain(`aria-selected="true" tabindex="0">${surface}pnpm</button>`);
+    expect(html).toContain(`aria-selected="false" tabindex="-1">${surface}npm</button>`);
     expect(html).toContain('<div class="ct-caption">npm</div><pre data-language="bash">');
     // The tab names the block, so the block's own chrome doesn't repeat it.
     expect(html).not.toContain("filename");
@@ -217,7 +219,11 @@ ${pm.replace('sync="pm"', flag)}`;
         '<div class="ct" data-comark-frame data-tabs-code data-code-header data-tabs-magic="auto" data-tabs-sync="pm">',
       );
       expect(
-        [...html.matchAll(/role="tab"[^>]*>([^<]+)<\/button>/g)].map(([, label]) => label),
+        [
+          ...html.matchAll(
+            /role="tab"[^>]*><span class="ct-indicator"[^>]*><\/span>([^<]+)<\/button>/g,
+          ),
+        ].map(([, label]) => label),
       ).toEqual(["npm", "pnpm", "yarn", "bun"]);
       expect(await panels(markdown)).toEqual([
         ["npm", "npm i -D vitest\ncd my-npm-app && npm run dev"],
@@ -491,12 +497,12 @@ ${pm.replace('sync="pm"', flag)}`;
       const out = page.replace(/<style[^>]*>.*?<\/style>|<script>.*?<\/script>/gs, "");
       const mask =
         /<span class="ci" data-mask aria-hidden="true" style="--ci:url\(&quot;data:image\/svg\+xml,[^"]*currentColor[^"]*&quot;\)"><\/span>macOS/;
-      expect(out).toMatch(new RegExp(`tabindex="0">${mask.source}</button>`));
+      expect(out).toMatch(new RegExp(`tabindex="0">${surface}${mask.source}</button>`));
       expect(out).toMatch(new RegExp(`<div class="ct-caption">${mask.source}</div>`));
       expect(out).toMatch(
-        /tabindex="-1"><span class="ci" aria-hidden="true" style="--ci:url\(&quot;data:image\/svg\+xml,[^"]*viewBox='0 0 32 32'[^"]*%23f9ad00[^"]*&quot;\)"><\/span>pnpm<\/button>/,
+        /tabindex="-1"><span class="ct-indicator" data-motion-indicator aria-hidden="true"><\/span><span class="ci" aria-hidden="true" style="--ci:url\(&quot;data:image\/svg\+xml,[^"]*viewBox='0 0 32 32'[^"]*%23f9ad00[^"]*&quot;\)"><\/span>pnpm<\/button>/,
       );
-      expect(out).toContain('tabindex="-1">Plain</button>');
+      expect(out).toContain(`tabindex="-1">${surface}Plain</button>`);
       expect(out).toContain('<div class="ct-caption">Plain</div>');
     });
 
@@ -539,7 +545,7 @@ ${pm.replace('sync="pm"', flag)}`;
       expect(out).toMatch(drawn("cb3837", "package.json"));
       expect(out).toMatch(drawn("f9ad00", "App.vue"));
       expect(out).toMatch(/data-mask aria-hidden="true" style="[^"]*"><\/span>main\.ts<\/button>/);
-      expect(out).toMatch(/tabindex="-1">pnpm<\/button>/);
+      expect(out).toContain(`tabindex="-1">${surface}pnpm</button>`);
       // `main.ts` has its own icon, so the set's missing TypeScript icon goes unreported.
       expect((await parse(group, { iconResolver })).meta.issues).toEqual([]);
       // `::tabs` labels aren't file names.
@@ -577,7 +583,7 @@ ${pm.replace('sync="pm"', flag)}`;
     it("gives tabs without one an icon by label, set once for every block", async () => {
       const out = await html(pm, { iconResolver, icons: { PNPM: "logos:pnpm", "./npm.svg": "x" } });
       expect(out).toMatch(/<span class="ci"[^>]*><\/span>pnpm<\/button>/);
-      expect(out).toContain('tabindex="-1">npm</button>');
+      expect(out).toContain(`tabindex="-1">${surface}npm</button>`);
     });
 
     it("fetches icons from the Iconify API by default, once per icon", async () => {

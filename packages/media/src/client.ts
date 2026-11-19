@@ -204,23 +204,25 @@ export function start(css: string): () => void {
     seek.setAttribute("aria-valuetext", `${clock(at)} of ${clock(total)}`);
   }
 
-  // timeupdate fires a few times a second, which makes a short clip's bar jump.
-  const moving = new WeakSet<Element>();
-  function animate(player: HTMLElement) {
-    if (moving.has(player)) return;
-    moving.add(player);
+  // timeupdate fires a few times a second, which makes a short clip's bar jump, so a video also draws its bar with each
+  // frame it shows. The browser calls back only when a new frame is on screen, so a paused video costs nothing. Audio
+  // has no frames and steps with timeupdate.
+  const following = new WeakSet<Element>();
+  function follow(player: HTMLElement) {
+    const media = mediaOf(player);
+    if (!(media instanceof HTMLVideoElement) || following.has(player)) return;
+    following.add(player);
     const frame = () => {
       draw(player);
-      if (!signal.aborted && player.isConnected && !mediaOf(player)?.paused)
-        requestAnimationFrame(frame);
-      else moving.delete(player);
+      if (!signal.aborted && player.isConnected) media.requestVideoFrameCallback(frame);
+      else following.delete(player);
     };
-    frame();
+    media.requestVideoFrameCallback(frame);
   }
   const sync = () =>
     document.querySelectorAll<HTMLElement>(players).forEach((player) => {
       draw(player);
-      if (mediaOf(player)?.paused === false) animate(player);
+      if (mediaOf(player)?.paused === false) follow(player);
     });
 
   const pauseAudible = (except: HTMLMediaElement) =>
@@ -257,7 +259,8 @@ export function start(css: string): () => void {
       if (!player || !started) return;
       // One recording with sound at a time, since two can't be followed. A muted loop reads like a picture, so it plays on.
       if (!started.muted) pauseAudible(started);
-      animate(player);
+      draw(player);
+      follow(player);
     },
     { capture: true, signal },
   );

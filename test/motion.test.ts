@@ -9,7 +9,12 @@
 // motion. A spinner that turns forever and a skeleton pulse show that work runs, so they are allowed too.
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
-import { createSourceFile, getLeadingCommentRanges, getTrailingCommentRanges, ScriptTarget } from "typescript";
+import {
+  createSourceFile,
+  getLeadingCommentRanges,
+  getTrailingCommentRanges,
+  ScriptTarget,
+} from "typescript";
 import type { Node } from "typescript";
 import { describe, expect, it } from "vite-plus/test";
 
@@ -25,7 +30,13 @@ const surfaces = [
  * root, so the motion layer skips it, and the rule skips its files. A control, a label, or a list next to a figure still
  * gets its motion from the layer. Keep this list as short as the truth allows, and give each entry its reason.
  */
-const ownMotionFigures: Array<{ path: string; reason: string }> = [];
+const ownMotionFigures: Array<{ path: string; reason: string }> = [
+  {
+    path: "shared/code-motion.ts",
+    reason:
+      "The code move of `::magic-move`, and of tabs with `magic`, is a picture of code changing, as Shiki Magic Move draws it: each word of the old step travels to its place in the new one, the words of one step only fade, and the panel takes the new height, in one timeline. A spring per word would measure each of hundreds of words. The mover sets `data-motion=\"none\"` on the code it moves. The tabs that start it get the layer's select and press, and the code bar's buttons their press.",
+  },
+];
 
 const ignoreDirs = new Set(["dist", "node_modules", ".nuxt", ".output", "content"]);
 const sourceFile = /\.(vue|ts|css|svelte)$/;
@@ -158,7 +169,10 @@ function declarations(source: string, property: "transition" | "animation") {
     new RegExp(`${name}\\s*:\\s*(?![\\s"'\`])((?:(?!\\n\\s*[\\w-]+\\s*:)[^;{}"'\`])+)`, "g"),
     new RegExp(`${name}\\s*[:=]\\s*(["'\`])((?:(?!\\1)[^\\\\]|\\\\[\\s\\S])*)\\1`, "g"),
     new RegExp(`${name}\\s*=\\s*(?![\\s"'\`])([^;{}"'\`\\n]+)`, "g"),
-    new RegExp(`setProperty\\(\\s*["'\`]${property}(?:${long})?["'\`]\\s*,\\s*["'\`]([^"'\`]*)`, "g"),
+    new RegExp(
+      `setProperty\\(\\s*["'\`]${property}(?:${long})?["'\`]\\s*,\\s*["'\`]([^"'\`]*)`,
+      "g",
+    ),
   ];
   return forms.flatMap((form) =>
     [...source.matchAll(form)].map((match) => ({
@@ -212,8 +226,14 @@ function scan(file: string, text: string, keyframes: Map<string, boolean>): Find
     /:(?:active|hover)\b[^{};]*\{[^}]*?(?<![\w-])(?:transform|scale|translate|rotate)\s*:(?!\s*none\b)[^;}]+/g,
   ))
     add(match.index, match[0]);
-  for (const match of source.matchAll(/<(?:Transition|TransitionGroup|transition|transition-group)\b([^>]*)>/g))
-    if (/(?<![\w-])-?(?:translate|scale|rotate)-|transition-(?:transform|all)\b|move-class/.test(match[1]!))
+  for (const match of source.matchAll(
+    /<(?:Transition|TransitionGroup|transition|transition-group)\b([^>]*)>/g,
+  ))
+    if (
+      /(?<![\w-])-?(?:translate|scale|rotate)-|transition-(?:transform|all)\b|move-class/.test(
+        match[1]!,
+      )
+    )
       add(match.index, match[0]);
   for (const match of source.matchAll(/\.animate\(/g))
     if (
@@ -253,7 +273,9 @@ function scanSurfaces(): Finding[] {
 
 describe("motion", () => {
   it("has no hand-written motion outside the motion layer and the own-motion figures", () => {
-    const found = scanSurfaces().map((finding) => `${finding.file}:${finding.line} ${finding.text}`);
+    const found = scanSurfaces().map(
+      (finding) => `${finding.file}:${finding.line} ${finding.text}`,
+    );
     expect(
       found,
       `${found.length} × hand-written motion. Use the motion layer, which comark-motion runs, or a motion helper from window.__comarkMotion. See packages/motion/docs/index.md.\n${found.join("\n")}`,

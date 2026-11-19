@@ -1,6 +1,5 @@
 import { css as icons } from "comark-icon/client";
 import { theme } from "comark-zoom/theme";
-import { disclosureMotion } from "../../../shared/disclosure.ts";
 import { shikiDark } from "../../../shared/shiki.ts";
 
 // Lucide's chevrons-up-down, drawn as a mask in the text's color.
@@ -23,7 +22,6 @@ const terminal = `${own}[data-code-frame=terminal]`;
  * the header's right end.
  */
 export const css = `${icons}@layer comark{${[
-  disclosureMotion(".ck[data-code-lines] .ck-fold"),
   theme(".ck", "status"),
   ".ck>pre{border-radius:var(--_comark-radius)}",
   // No padding, border, or new formatting context, so the block's own margins collapse through the wrapper and the
@@ -49,11 +47,11 @@ export const css = `${icons}@layer comark{${[
   ".ck-bar>.ck-action:not([aria-label]):has(.ci){padding-left:.375rem}",
   "@media (hover:hover){.ck-bar>button:hover{background:var(--_comark-accent);color:var(--_comark-foreground)}}",
   ".ck-wrap[aria-pressed='true']{background:var(--_comark-accent);color:var(--_comark-foreground)}",
-  "@media (prefers-reduced-motion:no-preference){.ck-bar>button{transition:background-color .15s ease,color .15s ease,scale .15s ease-out}.ck-bar>button:active{scale:.96}}",
   ".ck-bar>button:focus-visible{outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--_comark-ring) 50%,transparent)}",
   ".ck-bar svg{width:.75rem;height:.75rem;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}",
   ".ck-bar .ci{--comark-icon-size:.75rem;vertical-align:0}",
-  ".ck-copy-done,.ck-copy[data-state=done] .ck-copy-idle{display:none}",
+  // With the motion layer the script swaps the icons itself and marks the button `data-icon-swap`.
+  ".ck-copy:not([data-icon-swap]) .ck-copy-done,.ck-copy:not([data-icon-swap])[data-state=done] .ck-copy-idle{display:none}",
   ".ck-copy[data-state=done] .ck-copy-done{display:block}",
   ".ck-status{position:absolute;top:calc(100% + .25rem);right:var(--_ck-inset);z-index:1;width:max-content;max-width:18rem;padding:.25rem .5rem;border-radius:calc(var(--_comark-radius) - 4px);background:var(--_comark-foreground);color:var(--_comark-background);font:.75rem/1.25rem var(--_comark-font);pointer-events:none}",
   ".ck-status:empty{display:none}",

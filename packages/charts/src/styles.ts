@@ -1,5 +1,4 @@
 import { theme } from "comark-zoom/theme";
-import { disclosureMotion } from "../../../shared/disclosure.ts";
 import { INK, SERIES } from "./colors.ts";
 
 // Rules of the host's stylesheet beat an SVG's presentation attributes, so each ink is swapped by its color.
@@ -11,7 +10,6 @@ const swap = (hex: string, color: string, props = ["fill", "stroke"]) =>
  * Nuxt UI's `--ui-chart-1` to `-6`, then shadcn/ui's `--chart-1` to `-6`. The rules sit in the `comark` layer, so any unlayered rule of the host's wins.
  */
 export const css = `@layer comark{${[
-  disclosureMotion(".cch-data"),
   theme(".cch", "shadow"),
   // A section of a report, as a dashboard lays its charts out: the title and what to read in it at the start, the
   // chart, and the data folded under it. No card and no rule over it, so charts sit in a column or a grid like text.
@@ -73,7 +71,8 @@ export const css = `@layer comark{${[
   ".cch-copy-more svg{width:.75rem;height:.75rem}",
   ".cch-copy-more[aria-expanded=true]{background:var(--_comark-accent);color:var(--_comark-foreground)}",
   "@media (hover:hover){.cch-copy>button:hover,.cch-menu button:hover{background:var(--_comark-accent);color:var(--_comark-foreground)}}",
-  ".cch-copy-main svg+svg,.cch-copy-main[data-state=done] svg:first-child{display:none}",
+  // With the motion layer the script swaps the icons itself and marks the button `data-icon-swap`.
+  ".cch-copy-main:not([data-icon-swap]) svg+svg,.cch-copy-main:not([data-icon-swap])[data-state=done] svg:first-child{display:none}",
   ".cch-copy-main[data-state=done] svg+svg{display:block}",
   ".cch-copy>button:focus-visible{outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--_comark-ring) 50%,transparent)}",
   ".cch-menu{position:absolute;top:calc(100% + .25rem);inset-inline-end:-1px;display:grid;min-width:15rem;padding:.25rem;border:1px solid var(--_comark-border);border-radius:var(--_comark-radius);background:var(--_comark-background);box-shadow:var(--_comark-shadow)}",

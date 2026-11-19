@@ -54,6 +54,11 @@ export function Tabs({ labels = [], icons = [], sync, code, magic, children }: T
               "aria-selected": at === 0,
               tabIndex: at === 0 ? 0 : -1,
             },
+            createElement("span", {
+              className: "ct-indicator",
+              "data-motion-indicator": "",
+              "aria-hidden": "true",
+            }),
             icon(icons[at]),
             label,
           ),

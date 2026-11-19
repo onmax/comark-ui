@@ -3,6 +3,7 @@ import {
   buttonIconEffect,
   createProgress,
   disclosureEffect,
+  dividerEffect,
   forceReducedMotion,
   installMotion,
   labelEffect,
@@ -17,12 +18,19 @@ import {
   tooltipEffect,
   travel,
 } from "@vite-hub/ui/motion/core";
-import type { MotionEffect, Progress, Travel, TravelBox, TravelOptions } from "@vite-hub/ui/motion/core";
+import type {
+  MotionEffect,
+  Progress,
+  Travel,
+  TravelBox,
+  TravelOptions,
+} from "@vite-hub/ui/motion/core";
 
 /**
  * The effects that Comark's blocks need, one per interaction of ViteHub's motion rules: a press on every button, link,
  * and summary; a selected tab; a chevron that turns; a tooltip or a card that rises from its trigger; a label or an
- * icon of a button that changes; and a handle that a person drags.
+ * icon of a button that changes; a handle that a person drags; and a divider that bends past its edge, as the line
+ * of a before and after swipe does.
  */
 export const effects: readonly MotionEffect[] = [
   pressEffect,
@@ -33,6 +41,7 @@ export const effects: readonly MotionEffect[] = [
   labelEffect,
   buttonIconEffect,
   sliderEffect,
+  dividerEffect,
 ];
 
 /**

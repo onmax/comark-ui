@@ -66,8 +66,8 @@ describe("preset scripts", () => {
     const out = await createHtmlRenderer(preset)(document);
     const written = new Set(scriptsIn(out));
     // Zoom, carousel, annotate, charts, sources, table, code, tabs, magic move, media, embed, quiz, outline,
-    // properties, time, and Mermaid.
-    expect(written.size).toBe(16);
+    // properties, time, Mermaid, and motion.
+    expect(written.size).toBe(17);
     expect(preset.scripts.toSorted()).toEqual([...written].toSorted());
     expect(preset.scripts).toContain(mermaidScript);
   });

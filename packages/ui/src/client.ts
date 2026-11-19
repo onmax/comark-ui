@@ -43,10 +43,10 @@ export const mermaidCss = `@layer comark{${[
   ".cmm:has(>.pele-diagram[data-error]) .cmm-image{display:none}",
   ".cmm-bar>button{display:inline-flex;align-items:center;justify-content:center;width:1.5rem;height:1.5rem;margin:0;padding:0;border:1px solid transparent;border-radius:calc(var(--_comark-radius) - 2px);background:transparent;color:var(--_comark-muted);position:relative;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:background-color .15s ease,color .15s ease}",
   "@media (hover:hover){.cmm-bar>button:hover{background:var(--_comark-accent);color:var(--_comark-foreground)}}",
-  "@media (prefers-reduced-motion:no-preference){.cmm-bar>button{transition:background-color .15s ease,color .15s ease,scale .15s ease-out}.cmm-bar>button:active{scale:.96}}",
   ".cmm-bar>button:focus-visible{outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--_comark-ring) 50%,transparent)}",
   ".cmm-bar svg{width:.75rem;height:.75rem;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}",
-  ".cmm-done,.cmm-bar>[data-state=done] .cmm-idle{display:none}",
+  // With the motion layer the script swaps the icons itself and marks the button `data-icon-swap`.
+  ".cmm-bar>:not([data-icon-swap]) .cmm-done,.cmm-bar>:not([data-icon-swap])[data-state=done] .cmm-idle{display:none}",
   ".cmm-bar>[data-state=done] .cmm-done{display:block}",
   ".cmm-open{padding:0 .375rem;color:var(--_comark-foreground);font:500 .75rem/1.5rem var(--_comark-font);text-decoration:underline;text-underline-offset:2px}",
   ".cmm-open[hidden]{display:none}",

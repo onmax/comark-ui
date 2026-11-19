@@ -148,6 +148,41 @@ export function script(config: ScriptConfig): void {
     if (el) el.toggleAttribute(name, on);
   }
 
+  type Box = { left: number; top: number; width: number; height: number };
+  type Layer = {
+    travel: (element: HTMLElement, options: { from?: Box }) => unknown;
+    rollNumber: (element: HTMLElement, value: number, format?: (value: number) => string) => void;
+  };
+  // comark-motion's runtime, looked up at each paint since its script may come later in the page. Without it, and in a
+  // paint that restores state, results land at once.
+  let layer: Layer | undefined;
+  // Where each bar of the block being painted was before the paint, so it can grow from there to its share.
+  let barsBefore: (Box | undefined)[] = [];
+  const percentText = (n: number) => `${n}%`;
+
+  function setPercent(option: HTMLElement, value: number | null) {
+    let el = $(option, ".cqz-percent");
+    if (!el) return;
+    if (layer && value !== null) {
+      // A percent that appears rolls up from 0, as its bar grows from the start.
+      if (!el.textContent) {
+        el.textContent = percentText(0);
+        layer.rollNumber(el, 0, percentText);
+      }
+      layer.rollNumber(el, value, percentText);
+      return;
+    }
+    // A roll in flight would write its number back when it ends, so a fresh element takes its place.
+    if (el.firstElementChild) {
+      // SAFETY: a shallow clone of an HTMLElement is an HTMLElement of the same tag.
+      const fresh = el.cloneNode(false) as HTMLElement;
+      fresh.removeAttribute("style");
+      el.replaceWith(fresh);
+      el = fresh;
+    }
+    el.textContent = value === null ? "" : percentText(value);
+  }
+
   function paintQuestion(model: Model) {
     const { labels, result } = model;
     model.el.dataset.state = result ?? (model.selected.size ? "selected" : "idle");
@@ -300,8 +335,10 @@ export function script(config: ScriptConfig): void {
       const share = shown && total ? Math.min(1, n / total) : 0;
       option.style.setProperty("--_cqz-share", String(share));
       setBool(option, "data-leading", shown && most > 0 && n === most);
-      const percent = $(option, ".cqz-percent");
-      if (percent) percent.textContent = shown ? `${Math.round(share * 100)}%` : "";
+      setPercent(option, shown ? Math.round(share * 100) : null);
+      const bar = $(option, ".cqz-bar");
+      const from = barsBefore[at];
+      if (layer && bar && from && shown) layer.travel(bar, { from });
     }
     const words = shown ? count(total === 1 ? one : many, total) : "";
     const sum = part(model, ".cqz-total");
@@ -311,9 +348,16 @@ export function script(config: ScriptConfig): void {
 
   function paint(model: Model, instant: boolean) {
     if (instant) model.el.setAttribute("data-instant", "");
+    // SAFETY: comark-motion's runtime sets it, and this package doesn't depend on comark-motion.
+    layer = instant ? undefined : (window as { __comarkMotion?: Layer }).__comarkMotion;
+    barsBefore = layer
+      ? model.options.map((option) => $(option, ".cqz-bar")?.getBoundingClientRect())
+      : [];
     if (model.kind === "question") paintQuestion(model);
     else if (model.kind === "poll") paintPoll(model);
     else paintRecall(model);
+    layer = undefined;
+    barsBefore = [];
     if (instant) {
       // The new styles land while transitions are off, so nothing moves when they come back.
       void model.el.offsetWidth;

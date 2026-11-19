@@ -18,30 +18,6 @@ const filler = "Pigeons home from far away. ".repeat(300);
 const image = `[Skip to the end](#end)\n\n![Office correlations dashboard](/dashboard.png)\n\n${filler}`;
 const gallery = `[Skip to the end](#end)\n\n::carousel{title="Filters"}\n![Filter toolbar wrapping](/before.png)\n\n![Filter toolbar on one row](/after.png)\n::\n\n${filler}`;
 
-// Records the animations running once the zoom has opened, and once Escape has started closing it, by the class of
-// the element each runs on. The cancel listener goes on after the zoom's own, so it runs after the close has begun.
-async function recordAnimations(page: Page) {
-  await page.evaluate(() => {
-    const seen: string[] = [];
-    Object.assign(window, { animated: seen });
-    const record = () => {
-      for (const animation of document.getAnimations())
-        if (animation.effect instanceof KeyframeEffect && animation.effect.target)
-          seen.push(animation.effect.target.className);
-    };
-    document.addEventListener("comark-zoom:open", ({ detail }) => {
-      record();
-      detail.dialog.addEventListener("cancel", record);
-    });
-  });
-}
-
-const animated = (page: Page) =>
-  page.evaluate(() => {
-    const seen = (window as Window & { animated?: string[] }).animated ?? [];
-    return seen.splice(0);
-  });
-
 const settle = (page: Page) =>
   page.evaluate(() => {
     for (const animation of document.getAnimations()) animation.finish();
@@ -157,19 +133,16 @@ export function dialogTests() {
     expect(await dialog.evaluate((node) => node.matches("dialog:modal"))).toBe(true);
   });
 
-  test("opening and closing animate the copy between the page and the stage, and the page doesn't scroll", async ({
+  // Without comark-motion's runtime the view opens and closes at once; e2e/motion-zoom.e2e.ts tests the travel.
+  test("opening and closing the zoom happen at once without the motion layer, and the page doesn't scroll", async ({
     page,
   }) => {
     await fixture(page, await render(image));
-    await recordAnimations(page);
     const picture = page.locator("main img[data-zoom]");
     await picture.click();
     const dialog = page.locator(".cz-dialog");
     await expect(dialog).toBeVisible();
-    expect(await animated(page)).toEqual(
-      expect.arrayContaining(["cz-item", "cz-backdrop", "cz-header"]),
-    );
-    await settle(page);
+    expect(await page.evaluate(() => document.getAnimations().length)).toBe(0);
 
     const top = await page.evaluate(() => scrollY);
     await page.mouse.move(640, 360);
@@ -179,7 +152,6 @@ export function dialogTests() {
 
     await page.keyboard.press("Escape");
     await expect(dialog).toHaveCount(0);
-    expect(await animated(page)).toEqual(expect.arrayContaining(["cz-item", "cz-backdrop"]));
     expect(await page.evaluate(() => document.documentElement.style.overflow)).toBe("");
     await expect(picture).toBeFocused();
   });

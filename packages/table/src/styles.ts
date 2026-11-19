@@ -19,7 +19,8 @@ export const css = `@layer comark{${[
   ".ctb-copy-more svg{width:.75rem;height:.75rem}",
   ".ctb-copy-more[aria-expanded=true]{background:var(--_comark-accent);color:var(--_comark-foreground)}",
   "@media (hover:hover){.ctb-copy>button:hover,.ctb-menu button:hover{background:var(--_comark-accent);color:var(--_comark-foreground)}}",
-  ".ctb-copy-main svg+svg,.ctb-copy-main[data-state=done] svg:first-child{display:none}",
+  // With the motion layer the script swaps the icons itself and marks the button `data-icon-swap`.
+  ".ctb-copy-main:not([data-icon-swap]) svg+svg,.ctb-copy-main:not([data-icon-swap])[data-state=done] svg:first-child{display:none}",
   ".ctb-copy-main[data-state=done] svg+svg{display:block}",
   // Over the table, not in the bar, so a menu never pushes the table down.
   ".ctb-menu{position:absolute;top:calc(100% + .25rem);right:-1px;z-index:10;display:grid;min-width:15rem;padding:.25rem;border:1px solid var(--_comark-border);border-radius:var(--_comark-radius);background:var(--_comark-background);box-shadow:var(--_comark-shadow)}",

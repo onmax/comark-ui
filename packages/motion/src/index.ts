@@ -12,7 +12,8 @@ export default defineComarkPlugin(() => ({
   name: "motion",
   post(state) {
     const nodes = state.tree.nodes;
-    if (!nodes.length || nodes.some((node) => Array.isArray(node) && node[0] === RUNTIME_TAG)) return;
+    if (!nodes.length || nodes.some((node) => Array.isArray(node) && node[0] === RUNTIME_TAG))
+      return;
     nodes.push([RUNTIME_TAG, {}]);
   },
 }));

@@ -2,12 +2,10 @@ import { createHtmlRenderer } from "@comark/html";
 import { expect, test } from "@playwright/test";
 import details, { components } from "../packages/details/src/html.ts";
 
-// Firefox has neither `interpolate-size` nor transitions on `::details-content`, so it takes the fallback: the
-// content's children fade in. Text alone, which Comark leaves unwrapped, has no element to fade.
 test.use({ browserName: "firefox" });
 
 for (const reducedMotion of ["no-preference", "reduce"] as const) {
-  test(`in Firefox, a details box's content ${reducedMotion === "reduce" ? "appears at once with reduced motion" : "fades in as it opens"}`, async ({
+  test(`in Firefox, a details box's content appears at once (${reducedMotion})`, async ({
     page,
   }) => {
     await page.emulateMedia({ reducedMotion });
@@ -25,7 +23,6 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
       }
       return seen;
     });
-    if (reducedMotion === "reduce") expect(opacities).toEqual([1, 1, 1, 1]);
-    else expect(opacities.some((opacity) => opacity > 0 && opacity < 1)).toBe(true);
+    expect(opacities).toEqual([1, 1, 1, 1]);
   });
 }

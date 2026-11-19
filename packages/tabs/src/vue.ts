@@ -72,7 +72,15 @@ export const Tabs = /* @__PURE__ */ defineComponent({
                   "aria-selected": String(at === 0),
                   tabindex: at === 0 ? "0" : "-1",
                 },
-                [icon(props.icons[at]), label],
+                [
+                  h("span", {
+                    class: "ct-indicator",
+                    "data-motion-indicator": "",
+                    "aria-hidden": "true",
+                  }),
+                  icon(props.icons[at]),
+                  label,
+                ],
               ),
             ),
           ),

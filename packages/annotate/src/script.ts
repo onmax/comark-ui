@@ -10,8 +10,9 @@ declare global {
 }
 
 /**
- * Starts every `.ca-swipe` slider on the page: a drag anywhere on the pair moves the divider and coasts on release,
- * the handle takes arrow keys, and a click that doesn't drag still zooms. Also lets a reader copy a screenshot with its
+ * Starts every `.ca-swipe` slider on the page: a drag anywhere on the pair moves the divider, the handle takes arrow
+ * keys, and a click that doesn't drag still zooms. The handle is a focusable `role="separator"`, a window splitter, so
+ * the motion layer, where the page runs it, bends its line past either edge and springs it back. Also lets a reader copy a screenshot with its
  * marks, by its Copy button, Control or Command+C, or the browser's menu on the image. Returns a function that stops it. The
  * function is self-contained: the HTML renderer inlines its source as a script, so it must not use anything from
  * outside its body.
@@ -26,17 +27,15 @@ export function start(): () => void {
   const signal = listeners.signal;
   const root = document.documentElement;
   root.setAttribute("data-annotate-ready", "");
-  const motion = matchMedia("(prefers-reduced-motion: reduce)");
   // A press that moves less than this is a click, which zooms.
   const SLOP = 4;
 
-  type Drag = { swipe: HTMLElement; id: number; x: number; moved: boolean; t: number; v: number };
+  type Drag = { swipe: HTMLElement; id: number; x: number; moved: boolean };
   let drag: Drag | null = null;
   // Whether the last press on each slider dragged. A browser may send that press's click late, even after the next
   // press starts, so it's dropped when the click comes rather than on a timer.
   const dragged = new WeakMap<HTMLElement, boolean>();
   const splits = new WeakMap<HTMLElement, number>();
-  const coasting = new WeakMap<HTMLElement, number>();
 
   const swipeOf = (target: EventTarget | null) =>
     target instanceof Element ? target.closest<HTMLElement>(".ca-swipe") : null;
@@ -64,43 +63,13 @@ export function start(): () => void {
     return split;
   }
 
-  function stop(swipe: HTMLElement) {
-    cancelAnimationFrame(coasting.get(swipe) ?? 0);
-    coasting.delete(swipe);
-  }
-
-  // The divider keeps the speed it was let go at and slows to a stop, like a flicked list.
-  function coast(swipe: HTMLElement, velocity: number) {
-    if (motion.matches || Math.abs(velocity) < 0.02) return;
-    let v = Math.max(-0.2, Math.min(velocity, 0.2));
-    let last = performance.now();
-    const step = (now: number) => {
-      const dt = Math.min(now - last, 32);
-      last = now;
-      const before = splitOf(swipe);
-      const after = set(swipe, before + v * dt);
-      v *= 0.85 ** (dt / 16);
-      if (Math.abs(v) < 0.005 || after === 0 || after === 100) return stop(swipe);
-      coasting.set(swipe, requestAnimationFrame(step));
-    };
-    coasting.set(swipe, requestAnimationFrame(step));
-  }
-
   document.addEventListener(
     "pointerdown",
     (event) => {
       const swipe = swipeOf(event.target);
       if (!swipe || !event.isPrimary || event.button !== 0) return;
       if (event.target instanceof Element && event.target.closest("a")) return;
-      stop(swipe);
-      drag = {
-        swipe,
-        id: event.pointerId,
-        x: event.clientX,
-        moved: false,
-        t: event.timeStamp,
-        v: 0,
-      };
+      drag = { swipe, id: event.pointerId, x: event.clientX, moved: false };
     },
     { signal },
   );
@@ -115,24 +84,17 @@ export function start(): () => void {
         drag.swipe.setPointerCapture(drag.id);
         drag.swipe.setAttribute("data-dragging", "");
       }
-      const before = splitOf(drag.swipe);
-      const after = set(drag.swipe, at(drag.swipe, event.clientX));
-      const dt = event.timeStamp - drag.t;
-      if (dt > 0) drag.v = 0.8 * ((after - before) / dt) + 0.2 * drag.v;
-      drag.t = event.timeStamp;
+      set(drag.swipe, at(drag.swipe, event.clientX));
     },
     { signal },
   );
 
   const release = (event: PointerEvent) => {
     if (!drag || event.pointerId !== drag.id) return;
-    const { swipe, moved, v, t } = drag;
+    const { swipe, moved } = drag;
     drag = null;
     dragged.set(swipe, moved && event.type === "pointerup");
-    if (!moved) return;
-    swipe.removeAttribute("data-dragging");
-    // A pause before letting go means the reader placed the divider, not flicked it.
-    if (event.type === "pointerup" && event.timeStamp - t < 80) coast(swipe, v);
+    if (moved) swipe.removeAttribute("data-dragging");
   };
   document.addEventListener("pointerup", release, { signal });
   document.addEventListener("pointercancel", release, { signal });
@@ -178,7 +140,6 @@ export function start(): () => void {
       const swipe = swipeOf(handle);
       if (!move || !swipe) return;
       event.preventDefault();
-      stop(swipe);
       set(swipe, move(splitOf(swipe)));
     },
     { signal },
@@ -615,11 +576,15 @@ export function start(): () => void {
   document.addEventListener("contextmenu", () => setTimeout(disarm), { signal });
 
   const say = (frame: Element | null, message: string, state: "done" | "failed") => {
-    const button = frame?.querySelector(".ca-copy");
+    const button = frame?.querySelector<HTMLElement>(".ca-copy");
     const status = frame?.querySelector(".ca-copy-status");
     if (!button || !status) return;
     button.setAttribute("data-state", state);
     status.textContent = message;
+    // SAFETY: comark-motion's runtime sets it, and this package doesn't depend on comark-motion.
+    const layer = (window as { __comarkMotion?: { ring: (element: HTMLElement) => void } })
+      .__comarkMotion;
+    if (state === "done") layer?.ring(button);
     setTimeout(
       () => {
         if (status.textContent !== message) return;

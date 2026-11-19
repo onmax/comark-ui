@@ -358,8 +358,8 @@ async function slider({ id: own, title, shots }: Compare, state: State, id: stri
       notes += `<div class="ca-side-notes ca-notes-${which}">${shot.title ? `<div class="ca-heading"><span class="ca-label">${escapeHtml(shot.title)}</span></div>` : ""}${part.notes}</div>`;
   }
   const handle =
-    `<div class="ca-handle" role="slider" tabindex="0" aria-label="${attr(`Divider between ${names.join(" and ")}`)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" aria-valuetext="${attr(`${names[0]} 50%, ${names[1]} 50%`)}">` +
-    `<span class="ca-grip">${GRIP}</span></div>`;
+    `<div class="ca-handle" role="separator" aria-orientation="vertical" tabindex="0" aria-label="${attr(`Divider between ${names.join(" and ")}`)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" aria-valuetext="${attr(`${names[0]} 50%, ${names[1]} 50%`)}">` +
+    `<span class="ca-line"></span><span class="ca-grip">${GRIP}</span></div>`;
   return (
     `<div${anchor(own)} class="ca ca-compare ca-slider" data-comark-frame data-wide><div class="ca-swipe" data-zoom tabindex="0" data-zoom-context=".ca"${notes ? ' data-zoom-aside=".ca-swipe-notes"' : ""} data-zoom-title="${attr(title ?? names.join(" / "))}">${sides}${shots.length === 2 ? handle : ""}</div>` +
     `${notes && `<div class="ca-swipe-notes">${notes}</div>`}</div>${zoomRuntime(state)}${runtime(state)}`

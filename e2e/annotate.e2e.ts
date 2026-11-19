@@ -202,8 +202,6 @@ test("a slider moves its divider by drag and by key, and a click without a drag 
   await page.mouse.down();
   for (let step = 1; step <= 10; step++)
     await page.mouse.move(box.x + box.width * (0.5 - 0.025 * step), y);
-  // Holding still before letting go places the divider instead of flicking it.
-  await page.waitForTimeout(150);
   await page.mouse.up();
   await expect(handle).toHaveAttribute("aria-valuenow", "25");
   await expect(handle).toHaveAttribute("aria-valuetext", "Before 25%, After 75%");

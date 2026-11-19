@@ -223,7 +223,9 @@ onBeforeUnmount(() => stop?.());
       :open="extraOpen"
       @toggle="extraOpen = ($event.target as HTMLDetailsElement).open"
     >
-      <summary>Extra CSS</summary>
+      <summary>
+        Extra CSS<span class="play-theme-chevron" aria-hidden="true" data-motion-chevron />
+      </summary>
       <p>
         Each plugin's own variables, like <code>--cc-*</code> or <code>--ck-*</code>, or any rule,
         applied to the preview.

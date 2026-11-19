@@ -55,6 +55,9 @@ function line(step: Step, tag = "div", attrs: Record<string, unknown> = {}) {
     h("span", { className: "cht-dot", "aria-hidden": "true" }),
     h("span", { className: "cht-title" }, step.title),
     step.kind === "tool" && step.state ? h("span", { className: "cht-state" }, step.state) : null,
+    tag === "summary"
+      ? h("span", { className: "cht-chevron", "aria-hidden": "true", "data-motion-chevron": "" })
+      : null,
   );
 }
 

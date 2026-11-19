@@ -5,14 +5,13 @@ const track =
   "height:.375rem;border-radius:9999px;background:linear-gradient(var(--_cm-fill),var(--_cm-primary) var(--cm-at,0%),color-mix(in srgb,var(--_comark-foreground) 25%,transparent) var(--cm-at,0%))";
 const thumb =
   "box-sizing:border-box;width:1rem;height:1rem;border:1px solid var(--_cm-primary);border-radius:50%;background:var(--_comark-background)";
-// The volume panel opens fast and closes faster, since the reader has already moved on.
-const level =
-  "opacity:1;scale:1;pointer-events:auto;transition:opacity .15s cubic-bezier(.32,.72,0,1),scale .15s cubic-bezier(.32,.72,0,1)";
+// The volume panel and the settings menu are read, so they open at once. They fade out when they close, since the
+// reader has already moved on.
+const level = "opacity:1;pointer-events:auto;transition:none";
 // Whatever floats over a picture sits on the page's background, nearly opaque, so it reads over a white frame or a black one.
 const glass =
   "border:1px solid var(--_comark-border);background:color-mix(in srgb,var(--_comark-background) 90%,transparent);box-shadow:var(--_comark-shadow);backdrop-filter:blur(8px)";
-const open =
-  "visibility:visible;opacity:1;scale:1;transition:opacity .15s cubic-bezier(.32,.72,0,1),scale .15s cubic-bezier(.32,.72,0,1)";
+const open = "visibility:visible;opacity:1;transition:none";
 const ring = "box-shadow:0 0 0 3px color-mix(in srgb,var(--_comark-ring) 50%,transparent)";
 
 /**
@@ -72,7 +71,7 @@ export const css = `@layer comark{${[
   // width. A touch screen sets the volume with its own buttons, and an iPhone ignores the page's.
   ".cm-sound{position:relative;display:flex;flex:none}",
   // Opacity keeps the slider in both tab directions; disable pointer hits while the panel is closed.
-  ".cm-level{position:absolute;bottom:calc(100% + .5rem);left:50%;translate:-50% 0;display:flex;padding:.75rem .5rem;border:1px solid var(--_comark-border);border-radius:var(--_comark-radius);background:var(--_comark-background);box-shadow:var(--_comark-shadow);transform-origin:bottom;opacity:0;scale:.96;pointer-events:none;transition:opacity .1s ease-in,scale .1s ease-in}",
+  ".cm-level{position:absolute;bottom:calc(100% + .5rem);left:50%;translate:-50% 0;display:flex;padding:.75rem .5rem;border:1px solid var(--_comark-border);border-radius:var(--_comark-radius);background:var(--_comark-background);box-shadow:var(--_comark-shadow);opacity:0;pointer-events:none;transition:opacity .1s ease-in}",
   // Covers the gap down to the button, so the pointer can cross it without closing the panel.
   '.cm-level::before{content:"";position:absolute;inset:100% 0 -.5rem}',
   `.cm-sound:is(:hover,:has(:focus-visible,:active))>.cm-level{${level}}`,
@@ -80,7 +79,7 @@ export const css = `@layer comark{${[
   // The settings panel holds a row of choices for each setting, like shadcn/ui's tabs, and opens on a click so touch
   // screens get it too. Visibility keeps its choices out of the tab order while it's closed.
   ".cm-more{position:relative;display:flex;flex:none}",
-  `.cm-menu{position:absolute;bottom:calc(100% + .5rem);right:0;z-index:1;display:grid;grid-template-columns:auto auto;align-items:center;gap:.375rem 1.5rem;width:max-content;box-sizing:border-box;padding:.5rem .5rem .5rem .75rem;border:1px solid var(--_comark-border);border-radius:var(--_comark-radius);background:var(--_comark-background);box-shadow:var(--_comark-shadow);color:var(--_comark-foreground);transform-origin:bottom right;visibility:hidden;opacity:0;scale:.96;transition:opacity .1s ease-in,scale .1s ease-in,visibility 0s .1s}`,
+  `.cm-menu{position:absolute;bottom:calc(100% + .5rem);right:0;z-index:1;display:grid;grid-template-columns:auto auto;align-items:center;gap:.375rem 1.5rem;width:max-content;box-sizing:border-box;padding:.5rem .5rem .5rem .75rem;border:1px solid var(--_comark-border);border-radius:var(--_comark-radius);background:var(--_comark-background);box-shadow:var(--_comark-shadow);color:var(--_comark-foreground);visibility:hidden;opacity:0;transition:opacity .1s ease-in,visibility 0s .1s}`,
   `[data-menu] .cm-menu{${open}}`,
   ".cm-option{display:flex;align-items:center;gap:.5rem;font-weight:500}",
   ".cm-option svg{color:var(--_comark-muted)}",
@@ -143,7 +142,7 @@ export const css = `@layer comark{${[
     ".cm-video>.cm-bar>.cm-seek+.cm-time{grid-area:3/3;align-self:center;justify-self:end;margin:0}",
     ".cm-video>.cm-bar>.cm-seek+.cm-time::before{content:none}",
     ".cm-video>.cm-bar>.cm-full{grid-area:3/4}",
-    ".cm-video .cm-menu{top:calc(100% + .5rem);bottom:auto;max-width:100cqw;transform-origin:top right}",
+    ".cm-video .cm-menu{top:calc(100% + .5rem);bottom:auto;max-width:100cqw}",
     // A short frame cannot stack all three rows. Play shares the top row, away from sound and settings.
     "@container (height<9.5rem){.cm-video>.cm-bar>.cm-play{grid-area:auto;position:absolute;top:.75rem;left:.75rem}}",
   ].join("")}}`,

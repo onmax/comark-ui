@@ -351,7 +351,15 @@ export function card(
     [
       "details",
       { class: "cbr-more" },
-      ["summary", {}, "What's in the bundle", ["span", { class: "cbr-count" }, holds]],
+      [
+        "summary",
+        {},
+        // Empty, so it says nothing to a screen reader. Comark's HTML renderer writes `aria-hidden="true"` as a bare
+        // `aria-hidden`, which would make the renderers differ.
+        ["span", { class: "cbr-chevron", "data-motion-chevron": "" }],
+        "What's in the bundle",
+        ["span", { class: "cbr-count" }, holds],
+      ],
       [
         "div",
         { class: "cbr-more-body" },
