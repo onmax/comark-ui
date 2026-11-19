@@ -59,6 +59,7 @@ export const components = {
   ...lazy(() => import("comark-bundle/vue"), ["Bundle"]),
   ...lazy(() => import("comark-time/vue"), ["RelativeTime"]),
   ...lazy(() => import("comark-zoom/vue"), ["Zoom", "ZoomRuntime"]),
+  ...lazy(() => import("comark-motion/vue"), ["MotionRuntime"]),
   ...lazy(() => import("comark-magic-move/vue"), ["MagicMove", "MagicMoveStep"]),
   ...lazy(() => import("comark-code/vue"), ["Pre"]),
   ...lazy(() => import("comark-code-notes/vue"), ["CodeNotes"]),

@@ -35,7 +35,7 @@ const isItem = (node: Node): node is ElementNode => Array.isArray(node) && node[
 const iconOf = (icon: unknown) => (icon ? iconHtml(icon as IconData) : "");
 
 function tabHtml(id: string, label: string, index: number, icon: unknown) {
-  return `<button type="button" class="ct-tab" role="tab" id="${id}-tab-${index}" aria-controls="${id}-panel-${index}" aria-selected="${index === 1}" tabindex="${index === 1 ? 0 : -1}">${iconOf(icon)}${escapeHtml(label)}</button>`;
+  return `<button type="button" class="ct-tab" role="tab" id="${id}-tab-${index}" aria-controls="${id}-panel-${index}" aria-selected="${index === 1}" tabindex="${index === 1 ? 0 : -1}"><span class="ct-indicator" data-motion-indicator aria-hidden="true"></span>${iconOf(icon)}${escapeHtml(label)}</button>`;
 }
 
 const tabs: NodeHandler = async ([, attrs, ...children], state) => {

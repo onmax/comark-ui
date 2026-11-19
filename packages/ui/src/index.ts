@@ -144,6 +144,12 @@ export type PresetOptions = {
   time?: TimeOptions | boolean;
   zoom?: ZoomOptions | boolean;
   /**
+   * The motion of ViteHub UI: buttons and links squash when pressed, a selected tab's surface slides to it, a chevron
+   * turns, a tooltip rises from its trigger, and a zoomed picture travels from its place. `false` leaves the blocks
+   * still, as they are without a script.
+   */
+  motion?: boolean;
+  /**
    * Highlights fenced code with your own Shiki, before comark-code. Off unless you pass one, so the preset bundles no
    * grammars. A host that renders documents it didn't write can pass `{ maxBlocks, maxSource }`: the blocks past either
    * limit show without colors, each with an issue.
@@ -223,6 +229,7 @@ export type Renderer<C> = {
   bundle: Part<C, BundleOptions>;
   time: Part<C, TimeOptions>;
   zoom: Part<C, ZoomOptions>;
+  motion: Part<C>;
   code: Part<C, CodeOptions>;
   codeNotes: Part<C>;
   /** The component that writes the typeset styles into the document, as `typeset-styles`. */
@@ -403,6 +410,7 @@ export function preset<C>(renderer: Renderer<C>, options: PresetOptions = {}): P
   add(renderer.bundle, options.bundle, optionsOf(options.bundle) ?? noBuilds);
   add(renderer.time, options.time);
   add(renderer.zoom, options.zoom);
+  add(renderer.motion, options.motion);
   // After every plugin that writes code blocks, and before code, which reads the lines it draws.
   if (options.shiki) plugins.push(shiki(options.shiki));
   add(renderer.code, options.code, { iconResolver: icons, ...optionsOf(options.code) });

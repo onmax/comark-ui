@@ -99,7 +99,8 @@
   }
 }
 
-/* A switch: one soft track and a raised thumb on the choice. With the script, one indicator slides to the choice. */
+/* A switch: one soft track and a raised thumb on the choice. With the script, one indicator sits under the choice, and
+   the motion layer slides it there. */
 .tool .seg {
   position: relative;
   display: inline-flex;
@@ -151,13 +152,6 @@
   left: 0;
   border-radius: var(--r-sm);
   pointer-events: none;
-  transition:
-    transform 200ms var(--ease-out),
-    width 200ms var(--ease-out);
-}
-
-.tool .seg .indicator[data-still] {
-  transition: none;
 }
 
 @media (hover: none) {
@@ -189,12 +183,7 @@
   text-decoration: none;
   transition:
     box-shadow 150ms ease,
-    background-color 150ms ease,
-    scale 160ms var(--ease-out);
-}
-
-.tool .button:active {
-  scale: 0.97;
+    background-color 150ms ease;
 }
 
 @media (hover: hover) {

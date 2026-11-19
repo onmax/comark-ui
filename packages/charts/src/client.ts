@@ -148,18 +148,76 @@ export function start(css: string): () => void {
 
   const named = (format: string) =>
     format === "csv" ? "CSV" : format === "markdown" ? "Markdown" : format;
+  // SAFETY: comark-motion's runtime sets it, and this package doesn't depend on comark-motion.
+  const motion = () =>
+    (
+      window as {
+        __comarkMotion?: {
+          ring: (element: HTMLElement) => void;
+          swapIcon: (container: HTMLElement, icon: Element) => void;
+        };
+      }
+    ).__comarkMotion;
+  // Without the motion layer the styles swap the icons at once by `data-state`. With it, the button holds only the
+  // icon it shows, and the layer blurs the old one out as the new one comes in.
+  const claimed = new WeakSet<HTMLElement>();
+  const claim = (button: HTMLElement) => {
+    const saved = button.nextElementSibling;
+    if (saved instanceof HTMLTemplateElement && saved.hasAttribute("data-copy-icons")) {
+      if (!claimed.has(button)) {
+        const idle = saved.content.firstElementChild;
+        if (!idle) return;
+        button.replaceChildren(idle.cloneNode(true));
+        claimed.add(button);
+      }
+      return saved.content;
+    }
+    const idle = button.querySelector(":scope>svg:first-child");
+    const check = button.querySelector(":scope>svg+svg");
+    if (!idle || !check) return undefined;
+    const template = document.createElement("template");
+    template.setAttribute("data-copy-icons", "");
+    template.content.append(idle.cloneNode(true), check);
+    button.after(template);
+    claimed.add(button);
+    button.setAttribute("data-icon-swap", "");
+    return template.content;
+  };
+  const swap = (button: HTMLElement, done: boolean) => {
+    const layer = motion();
+    const icon = layer && claim(button)?.children[done ? 1 : 0]?.cloneNode(true);
+    if (layer && icon instanceof Element) layer.swapIcon(button, icon);
+  };
+  // The layer squashes the icon of an icon-only control, so the button gives up its hidden icon before the layer's
+  // listener on the document sees the press: a listener on the window hears it first.
+  const pressed = (event: Event) => {
+    const button =
+      event.target instanceof Element
+        ? event.target.closest<HTMLElement>(".cch .cch-copy-main")
+        : null;
+    if (button && motion()) claim(button);
+  };
+  window.addEventListener("pointerdown", pressed, { capture: true, signal: listeners.signal });
+  window.addEventListener("keydown", pressed, { capture: true, signal: listeners.signal });
+
   function copy(figure: Element, format: string) {
     const status = figure.querySelector(".cch-status");
-    const main = figure.querySelector(".cch-copy-main");
+    const main = figure.querySelector<HTMLElement>(".cch-copy-main");
     const table = figure.querySelector<HTMLTableElement>(".cch-data table");
     if (!status) return;
     const say = (message: string, state: string) => {
       status.textContent = message;
       main?.setAttribute("data-state", state);
+      if (main && state === "done") {
+        swap(main, true);
+        const control = main.parentElement;
+        if (control) motion()?.ring(control);
+      }
       setTimeout(() => {
         if (status.textContent !== message) return;
         status.textContent = "";
         main?.removeAttribute("data-state");
+        if (main) swap(main, false);
       }, 1500);
     };
     // SAFETY: `clipboard` is missing outside secure contexts, whatever the DOM types say.

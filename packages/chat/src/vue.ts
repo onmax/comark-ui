@@ -119,6 +119,9 @@ export const MessageParts = defineComponent({
         h("span", { class: "cht-dot", "aria-hidden": "true" }),
         h("span", { class: "cht-title" }, step.title),
         step.kind === "tool" && step.state ? h("span", { class: "cht-state" }, step.state) : null,
+        tag === "summary"
+          ? h("span", { class: "cht-chevron", "aria-hidden": "true", "data-motion-chevron": "" })
+          : null,
       ]);
 
     function stepBody(step: Step): VNodeChild {

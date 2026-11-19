@@ -23,7 +23,7 @@ export const issuesCss = `@layer comark{${[
   ".cis svg{flex:none;width:1rem;height:1rem;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}",
   ".cis-icon{color:var(--_comark-danger)}",
   ".cis-fold{margin-left:auto;color:var(--_comark-muted)}",
-  "@media (prefers-reduced-motion:no-preference){.cis-fold{transition:rotate .15s ease-out}}",
+  // No transition, so comark-motion's disclosure effect turns the fold with a spring when a person presses the summary.
   ".cis:not([open]) .cis-fold{rotate:-90deg}",
   // The muted token alone falls under 4.5:1 on the tint; a fifth of the foreground lifts it past that in both schemes.
   ".cis-hint{margin:.25rem 0 0 1.5rem;color:color-mix(in oklab,var(--_comark-muted) 80%,var(--_comark-foreground));font-size:.8125rem}",

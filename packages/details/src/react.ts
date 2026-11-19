@@ -59,6 +59,11 @@ export function DisclosureSummary({ icon, show, hide, children }: SummaryProps) 
         : null,
       children,
     ),
+    createElement("span", {
+      className: "cdt-chevron",
+      "aria-hidden": "true",
+      "data-motion-chevron": "",
+    }),
   );
 }
 

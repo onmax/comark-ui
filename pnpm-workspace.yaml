@@ -69,29 +69,29 @@ catalog:
   nuxt-agent-discovery: ^0.8.0
   valibot: ^1.4.2
   better-auth: 1.7.15
-  # ViteHub's main from pkg.pr.new. @vite-hub/docs isn't on npm yet. Every @vite-hub/* package names the others by
-  # this commit URL, so the app uses the same one and the tree holds a single commit.
-  vite-hub: https://pkg.pr.new/vite-hub/vitehub/vite-hub@4a6f7c7
-  "@vite-hub/blob": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/blob@4a6f7c7
-  "@vite-hub/connections": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/connections@4a6f7c7
-  "@vite-hub/email": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/email@4a6f7c7
-  "@vite-hub/kv": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/kv@4a6f7c7
-  "@vite-hub/workflow": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/workflow@4a6f7c7
-  "@vite-hub/agent": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/agent@4a6f7c7
-  "@vite-hub/gateways": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/gateways@4a6f7c7
-  "@vite-hub/presets": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/presets@4a6f7c7
-  "@vite-hub/schedule": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/schedule@4a6f7c7
-  "@vite-hub/shell": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/shell@4a6f7c7
-  "@vite-hub/auth": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/auth@4a6f7c7
-  "@vite-hub/cms": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/cms@4a6f7c7
-  "@vite-hub/comments": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/comments@4a6f7c7
-  "@vite-hub/content": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/content@4a6f7c7
-  "@vite-hub/database": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/database@4a6f7c7
-  "@vite-hub/docs": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/docs@4a6f7c7
-  "@vite-hub/realtime": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/realtime@4a6f7c7
-  "@vite-hub/source": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/source@4a6f7c7
-  "@vite-hub/ui": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/ui@4a6f7c7
-  "@vite-hub/workspace": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/workspace@4a6f7c7
+  # ViteHub's motion stack from pkg.pr.new. @vite-hub/docs isn't on npm yet. Every @vite-hub/* package names the others by
+  # this full commit URL, so the app uses the same one and the tree holds a single commit.
+  vite-hub: https://pkg.pr.new/vite-hub/vitehub/vite-hub@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/blob": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/blob@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/connections": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/connections@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/email": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/email@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/kv": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/kv@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/workflow": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/workflow@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/agent": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/agent@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/gateways": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/gateways@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/presets": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/presets@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/schedule": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/schedule@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/shell": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/shell@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/auth": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/auth@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/cms": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/cms@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/comments": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/comments@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/content": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/content@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/database": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/database@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/docs": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/docs@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/realtime": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/realtime@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/source": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/source@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/ui": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/ui@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/workspace": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/workspace@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
   drizzle-kit: 1.0.0-rc.5
   drizzle-orm: 1.0.0-rc.5
   wrangler: ^4.152.0
@@ -124,43 +124,43 @@ overrides:
   katex: "catalog:"
   # The preview packages take each other as peers at "0.1.0 || 0.0.0-preview-…", and pnpm fills a missing peer from
   # npm's 0.1.0. Every @vite-hub/* package comes from the same commit as the catalog's instead.
-  "@vite-hub/agent": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/agent@4a6f7c7
-  "@vite-hub/auth": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/auth@4a6f7c7
-  "@vite-hub/blob": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/blob@4a6f7c7
-  "@vite-hub/browser": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/browser@4a6f7c7
-  "@vite-hub/bundle": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/bundle@4a6f7c7
-  "@vite-hub/channels": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/channels@4a6f7c7
-  "@vite-hub/cli": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/cli@4a6f7c7
-  "@vite-hub/cms": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/cms@4a6f7c7
-  "@vite-hub/comments": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/comments@4a6f7c7
-  "@vite-hub/connections": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/connections@4a6f7c7
-  "@vite-hub/content": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/content@4a6f7c7
-  "@vite-hub/database": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/database@4a6f7c7
-  "@vite-hub/decisions": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/decisions@4a6f7c7
-  "@vite-hub/docs": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/docs@4a6f7c7
-  "@vite-hub/email": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/email@4a6f7c7
-  "@vite-hub/env": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/env@4a6f7c7
-  "@vite-hub/forge": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/forge@4a6f7c7
-  "@vite-hub/forms": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/forms@4a6f7c7
-  "@vite-hub/gateways": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/gateways@4a6f7c7
-  "@vite-hub/i18n": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/i18n@4a6f7c7
-  "@vite-hub/kv": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/kv@4a6f7c7
-  "@vite-hub/markdown-template": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/markdown-template@4a6f7c7
-  "@vite-hub/mcp": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/mcp@4a6f7c7
-  "@vite-hub/presets": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/presets@4a6f7c7
-  "@vite-hub/queue": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/queue@4a6f7c7
-  "@vite-hub/rate-limit": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/rate-limit@4a6f7c7
-  "@vite-hub/realtime": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/realtime@4a6f7c7
-  "@vite-hub/runtime": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/runtime@4a6f7c7
-  "@vite-hub/sandbox": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/sandbox@4a6f7c7
-  "@vite-hub/schedule": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/schedule@4a6f7c7
-  "@vite-hub/shell": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/shell@4a6f7c7
-  "@vite-hub/source": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/source@4a6f7c7
-  "@vite-hub/ui": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/ui@4a6f7c7
-  "@vite-hub/web-container": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/web-container@4a6f7c7
-  "@vite-hub/workflow": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/workflow@4a6f7c7
-  "@vite-hub/workspace": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/workspace@4a6f7c7
-  "vite-hub": https://pkg.pr.new/vite-hub/vitehub/vite-hub@4a6f7c7
+  "@vite-hub/agent": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/agent@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/auth": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/auth@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/blob": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/blob@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/browser": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/browser@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/bundle": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/bundle@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/channels": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/channels@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/cli": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/cli@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/cms": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/cms@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/comments": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/comments@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/connections": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/connections@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/content": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/content@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/database": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/database@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/decisions": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/decisions@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/docs": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/docs@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/email": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/email@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/env": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/env@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/forge": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/forge@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/forms": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/forms@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/gateways": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/gateways@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/i18n": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/i18n@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/kv": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/kv@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/markdown-template": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/markdown-template@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/mcp": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/mcp@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/presets": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/presets@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/queue": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/queue@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/rate-limit": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/rate-limit@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/realtime": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/realtime@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/runtime": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/runtime@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/sandbox": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/sandbox@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/schedule": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/schedule@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/shell": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/shell@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/source": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/source@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/ui": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/ui@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/web-container": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/web-container@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/workflow": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/workflow@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "@vite-hub/workspace": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/workspace@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
+  "vite-hub": https://pkg.pr.new/vite-hub/vitehub/vite-hub@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
 
 minimumReleaseAgeExclude:
   - vite-doctor@0.1.0

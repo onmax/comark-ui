@@ -2,6 +2,7 @@ import { Extension } from "@tiptap/core";
 import type { Node as PMNode } from "@tiptap/pm/model";
 import { type EditorState, Plugin, PluginKey, type Transaction } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
+import { createProgress, type Progress } from "comark-motion/client";
 import { theme } from "comark-zoom/theme";
 import { addStyles } from "../../../../shared/styles.ts";
 
@@ -55,8 +56,8 @@ export const uploadCss = `@layer comark{${[
   `.cue-upload>img,.cue-upload>video{grid-area:1/1;width:100%;max-height:10rem;object-fit:cover;opacity:.55}`,
   `.cue-upload-label{grid-area:1/1;align-self:end;padding:.375rem .5rem .5rem;font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}`,
   `.cue-upload>img~.cue-upload-label,.cue-upload>video~.cue-upload-label{background:color-mix(in srgb,var(--_comark-background) 80%,transparent)}`,
-  `.cue-upload::after{content:"";position:absolute;inset:auto 0 0;height:2px;width:var(--cue-upload);background:var(--_comark-primary);transition:width .2s ease-out}`,
-  `@media (prefers-reduced-motion:reduce){.cue-upload::after{transition:none}}`,
+  // comark-motion's progress bar draws in the primary color, on a rail in the border color.
+  `.cue-upload-bar{grid-area:2/1;padding:0 .5rem .375rem;color:var(--_comark-primary);--vh-progress-rail:var(--_comark-border)}`,
 ].join("")}}`;
 
 // A placeholder's element lives as long as its widget, and progress reports update it in place rather than through a
@@ -81,19 +82,20 @@ function placeholder(pending: PendingUpload) {
   const label = document.createElement("span");
   label.className = "cue-upload-label";
   label.setAttribute("role", "status");
-  root.append(label);
+  const bar = document.createElement("span");
+  bar.className = "cue-upload-bar";
+  root.append(label, bar);
+  const progress = createProgress(bar, { label: `Upload ${pending.file.name}` });
   const show = (fraction: number | null) => {
-    root.style.setProperty(
-      "--cue-upload",
-      fraction === null ? "0%" : `${Math.round(fraction * 100)}%`,
-    );
+    // Before the first report, and once every byte is sent while the server answers, the work has no known total.
+    progress.set(fraction === null || fraction >= 1 ? null : fraction);
     label.textContent =
       fraction === null
         ? `Uploading ${pending.file.name}`
         : `Uploading ${pending.file.name}, ${Math.round(fraction * 100)}%`;
   };
   show(pending.fraction);
-  return { root, show };
+  return { root, show, progress };
 }
 
 /**
@@ -192,6 +194,8 @@ function insertImage(tr: Transaction, pos: number, image: PMNode) {
 let nextId = 1;
 const pendingUploads = new Map<number, PendingUpload>();
 const elements = new Map<number, ReturnType<typeof placeholder>>();
+// The bar's wave runs on every frame until the placeholder goes.
+const bars = new WeakMap<Node, Progress>();
 
 function uploadWidget(pos: number, id: number, batch: symbol) {
   return Decoration.widget(
@@ -201,9 +205,19 @@ function uploadWidget(pos: number, id: number, batch: symbol) {
         pendingUploads.get(id) ?? { id, file: new File([], ""), fraction: null },
       );
       elements.set(id, element);
+      bars.set(element.root, element.progress);
       return element.root;
     },
-    { id, batch, key: String(id), side: -1, destroy: () => elements.delete(id) },
+    {
+      id,
+      batch,
+      key: String(id),
+      side: -1,
+      destroy: (node) => {
+        bars.get(node)?.destroy();
+        if (elements.get(id)?.root === node) elements.delete(id);
+      },
+    },
   );
 }
 

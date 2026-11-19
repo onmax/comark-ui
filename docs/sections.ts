@@ -27,6 +27,7 @@ export const packageOrder = [
   "qr",
   "links",
   "zoom",
+  "motion",
   "carousel",
   "tabs",
   "code",

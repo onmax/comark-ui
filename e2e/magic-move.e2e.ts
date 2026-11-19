@@ -91,6 +91,15 @@ test("shared pieces move into place, new ones fade in, and old ones fade out whe
   await expect(page.locator(".cmv-ghost")).toHaveCount(0);
 });
 
+test("a host can opt out of the code move", async ({ page }) => {
+  await open(page);
+  await page.locator("body").evaluate((body) => body.setAttribute("data-motion", "none"));
+  await tab(page, "Extract").click();
+  await expect(step(page, "Extract")).toBeVisible();
+  expect(await moving(page)).toEqual({ move: [], fade: [] });
+  await expect(page.locator(".cmv-ghost")).toHaveCount(0);
+});
+
 test("with reduced motion, the step changes without moving anything", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await open(page);

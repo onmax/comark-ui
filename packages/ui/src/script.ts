@@ -109,22 +109,79 @@ export function start(): () => void {
   const part = <T extends Element>(root: Element, selector: string) =>
     root.querySelector<T>(`:scope>.cmm-bar>${selector}`);
 
-  function say(root: Element, button: Element, message: string, state: "done" | "failed") {
+  // Without the motion layer the styles swap the icons at once by `data-state`. With it, the button holds only the
+  // icon it shows, and the layer blurs the old one out as the new one comes in.
+  const claimed = new WeakSet<HTMLElement>();
+  const claim = (button: HTMLElement) => {
+    const saved = button.nextElementSibling;
+    if (saved instanceof HTMLTemplateElement && saved.hasAttribute("data-copy-icons")) {
+      if (!claimed.has(button)) {
+        const idle = saved.content.firstElementChild;
+        if (!idle) return;
+        button.replaceChildren(idle.cloneNode(true));
+        claimed.add(button);
+      }
+      return saved.content;
+    }
+    const idle = button.querySelector(":scope>.cmm-idle");
+    const check = button.querySelector(":scope>.cmm-done");
+    if (!idle || !check) return undefined;
+    const template = document.createElement("template");
+    template.setAttribute("data-copy-icons", "");
+    template.content.append(idle.cloneNode(true), check);
+    button.after(template);
+    claimed.add(button);
+    button.setAttribute("data-icon-swap", "");
+    return template.content;
+  };
+  // SAFETY: comark-motion's runtime sets it. The script is inlined, so it reads it at the time of each change.
+  const motion = () =>
+    (
+      window as {
+        __comarkMotion?: {
+          ring: (element: HTMLElement) => void;
+          swapIcon: (container: HTMLElement, icon: Element) => void;
+        };
+      }
+    ).__comarkMotion;
+  const swap = (button: HTMLElement, done: boolean) => {
+    const layer = motion();
+    const icon = layer && claim(button)?.children[done ? 1 : 0]?.cloneNode(true);
+    if (layer && icon instanceof Element) layer.swapIcon(button, icon);
+  };
+  // The layer squashes the icon of an icon-only control, so the button gives up its hidden icon before the layer's
+  // listener on the document sees the press: a listener on the window hears it first.
+  const pressed = (event: Event) => {
+    const button =
+      event.target instanceof Element
+        ? event.target.closest<HTMLElement>(".cmm>.cmm-bar>button")
+        : null;
+    if (button && motion()) claim(button);
+  };
+  window.addEventListener("pointerdown", pressed, { capture: true, signal });
+  window.addEventListener("keydown", pressed, { capture: true, signal });
+
+  function say(root: Element, button: HTMLElement, message: string, state: "done" | "failed") {
     const status = part(root, ".cmm-status");
     if (!status) return;
     button.setAttribute("data-state", state);
     status.textContent = message;
+    if (state === "done") {
+      swap(button, true);
+      motion()?.ring(button);
+    }
     setTimeout(
       () => {
         if (status.textContent !== message) return;
         button.removeAttribute("data-state");
         status.textContent = "";
+        swap(button, false);
       },
       state === "done" ? 1500 : 6000,
     );
   }
 
-  function copyImage(root: Element, button: Element) {
+  function copyImage(root: Element, button: HTMLElement) {
     const open = part<HTMLAnchorElement>(root, ".cmm-open");
     if (open) open.hidden = true;
     // Safari only lets a click write what it hands over before awaiting, so the image goes up as a promise of one.
@@ -156,7 +213,7 @@ export function start(): () => void {
     );
   }
 
-  function copySource(root: Element, button: Element) {
+  function copySource(root: Element, button: HTMLElement) {
     const source = (root.getAttribute("data-source") ?? "").replace(/\n$/, "");
     // A fence longer than any run of backticks in the source, so none of them closes it.
     const longest = Math.max(2, ...(source.match(/`+/g) ?? []).map((run) => run.length));

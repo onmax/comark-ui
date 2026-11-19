@@ -34,6 +34,9 @@ const disclosure: NodeHandler = async (node, state) => {
   );
 };
 
+// A real element rather than a pseudo-element, so the motion layer can turn it.
+const CHEVRON = '<span class="cdt-chevron" aria-hidden="true" data-motion-chevron></span>';
+
 const summary: NodeHandler = async (node, state) => {
   const [, attrs] = node;
   // SAFETY: the parse plugin writes `icon` as comark-icon's `IconData`.
@@ -41,7 +44,7 @@ const summary: NodeHandler = async (node, state) => {
   const toggle = attrs.show
     ? `<span class="cdt-toggle" data-show="${attr(attrs.show)} " data-hide="${attr(attrs.hide)} "></span>`
     : "";
-  return `<summary class="cdt-summary">${icon}<span>${toggle}${await state.flow(node, state)}</span></summary>`;
+  return `<summary class="cdt-summary">${icon}<span>${toggle}${await state.flow(node, state)}</span>${CHEVRON}</summary>`;
 };
 
 /** The HTML renderer for `::details`, `::accordion`, and `::collapsible`. Pass it as `components`. */

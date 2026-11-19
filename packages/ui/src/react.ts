@@ -34,6 +34,7 @@ import * as gitGraph from "comark-git-graph/react";
 import * as bundle from "comark-bundle/react";
 import * as time from "comark-time/react";
 import * as zoom from "comark-zoom/react";
+import * as motion from "comark-motion/react";
 import { addMermaidStyles, mermaidBar, startMermaid } from "./client.ts";
 import { type Preset, type PresetOptions, preset } from "./index.ts";
 import { typesetCss } from "./typeset-css.ts";
@@ -110,6 +111,7 @@ export default (options?: PresetOptions): Preset<AnyComponent> =>
       typeset,
       typesetCaretFallback: true,
       zoom,
+      motion,
     },
     options,
   );

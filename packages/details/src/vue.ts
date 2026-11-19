@@ -67,6 +67,7 @@ export const DisclosureSummary = defineComponent({
             : null,
           slots.default?.(),
         ]),
+        h("span", { class: "cdt-chevron", "aria-hidden": "true", "data-motion-chevron": "" }),
       ]);
   },
 });

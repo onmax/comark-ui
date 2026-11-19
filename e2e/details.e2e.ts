@@ -2,66 +2,64 @@ import { createHtmlRenderer } from "@comark/html";
 import { expect, test } from "@playwright/test";
 import details, { components } from "../packages/details/src/html.ts";
 
-test("a details box closes faster than it opens, and its chevron moves with the content", async ({
-  page,
-}) => {
-  await page.emulateMedia({ reducedMotion: "no-preference" });
-  const render = createHtmlRenderer({ plugins: [details()], components });
-  await page.setContent(await render('::details{summary="Why?"}\nBecause.\n::'));
-  const timings = await page.locator(".cdt").evaluate(async (element) => {
-    if (!(element instanceof HTMLDetailsElement)) throw new Error("Expected a details element");
-    const chevron = element.querySelector(".cdt-summary");
-    if (!chevron) throw new Error("Expected a summary");
-    // Chromium leaves `::details-content` transitions out of `getAnimations()`, so read the durations it runs.
-    const read = () => ({
-      content: getComputedStyle(element, "::details-content").transitionDuration,
-      chevron: getComputedStyle(chevron, "::after").transitionDuration,
-      box: getComputedStyle(element).transitionDuration,
-    });
-    const closed = read();
-    element.open = true;
-    let midway = { height: 0, opacity: 0 };
-    // Under load Chromium can defer the transition's start beyond two frames. Sample its first visible frame.
-    for (let frame = 0; frame < 10; frame++) {
+for (const reducedMotion of ["no-preference", "reduce"] as const) {
+  test(`a details box opens at once and its chevron has no transition (${reducedMotion})`, async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion });
+    const render = createHtmlRenderer({ plugins: [details()], components });
+    await page.setContent(await render('::details{summary="Why?"}\nBecause.\n\nAnd that.\n::'));
+    const seen = await page.locator(".cdt").evaluate(async (element) => {
+      if (!(element instanceof HTMLDetailsElement)) throw new Error("Expected a details element");
+      const chevron = element.querySelector(".cdt-summary>.cdt-chevron");
+      const content = element.querySelector(".cdt>p");
+      if (!chevron || !content) throw new Error("Expected a chevron and content");
+      const read = () => ({
+        transitions: [
+          getComputedStyle(element).transitionDuration,
+          getComputedStyle(element, "::details-content").transitionDuration,
+          getComputedStyle(chevron).transitionDuration,
+        ],
+        rotate: getComputedStyle(chevron).rotate,
+        opacity: Number(getComputedStyle(content).opacity),
+        height: content.getBoundingClientRect().height,
+      });
+      const closed = read();
+      element.open = true;
+      const open = read();
       await new Promise(requestAnimationFrame);
-      const style = getComputedStyle(element, "::details-content");
-      midway = { height: Number.parseFloat(style.blockSize), opacity: Number(style.opacity) };
-      if (midway.height > 0 && midway.opacity > 0) break;
-    }
-    return { closed, open: read(), midway };
+      return { closed, open, frame: read() };
+    });
+    expect(seen.closed.transitions).toEqual(["0s", "0s", "0s"]);
+    expect(seen.closed.rotate).toBe("45deg");
+    expect(seen.open.rotate).toBe("225deg");
+    expect(seen.open.transitions).toEqual(["0s", "0s", "0s"]);
+    expect(seen.frame.opacity).toBe(1);
+    expect(seen.frame.height).toBeGreaterThan(0);
+    expect(seen.frame.height).toBe(seen.open.height);
   });
-  // The content's durations are block-size, opacity, and content-visibility; the chevron's are rotate and translate.
-  expect(timings.open).toEqual({
-    content: "0.25s, 0.25s, 0.25s",
-    chevron: "0.25s, 0.25s",
-    box: "0.25s",
-  });
-  expect(timings.closed).toEqual({
-    content: "0.18s, 0.12s, 0.18s",
-    chevron: "0.18s, 0.18s",
-    box: "0.18s",
-  });
-  expect(timings.midway.height).toBeGreaterThan(0);
-  expect(timings.midway.opacity).toBeGreaterThan(0);
-  expect(timings.midway.opacity).toBeLessThan(1);
-});
+}
 
-test("a details chevron has no transition when opening or closing with reduced motion", async ({
-  page,
-}) => {
-  await page.emulateMedia({ reducedMotion: "reduce" });
+test("a details chevron stays in place as it points down and up", async ({ page }) => {
   const render = createHtmlRenderer({ plugins: [details()], components });
   await page.setContent(await render('::details{summary="Why?"}\nBecause.\n::'));
-  const timings = await page.locator(".cdt").evaluate((element) => {
+  const centers = await page.locator(".cdt").evaluate((element) => {
     if (!(element instanceof HTMLDetailsElement)) throw new Error("Expected a details element");
-    const chevron = element.querySelector(".cdt-summary");
-    if (!chevron) throw new Error("Expected a summary");
-    const read = () => getComputedStyle(chevron, "::after").transitionDuration;
-    const closed = read();
+    const chevron = element.querySelector(".cdt-chevron")!;
+    const summary = element.querySelector(".cdt-summary")!.getBoundingClientRect();
+    const center = () => {
+      const box = chevron.getBoundingClientRect();
+      return {
+        x: box.x + box.width / 2,
+        y: box.y + box.height / 2 - (summary.y + summary.height / 2),
+      };
+    };
+    const closed = center();
     element.open = true;
-    const open = read();
-    element.open = false;
-    return { closed, open, closedAgain: read() };
+    return { closed, open: center() };
   });
-  expect(timings).toEqual({ closed: "0s", open: "0s", closedAgain: "0s" });
+  // Pointing down it sits 2px above the middle of the summary, and pointing up 2px below, as an arrowhead looks centered.
+  expect(centers.closed.y).toBeCloseTo(-2, 0);
+  expect(centers.open.y).toBeCloseTo(2, 0);
+  expect(centers.open.x).toBeCloseTo(centers.closed.x, 0);
 });

@@ -17,18 +17,18 @@ export const css = `@layer comark{${[
   ".ct-list{isolation:isolate}",
   ".ct-list,.ct[data-tabs-code]>.ct-panel>.ct-caption{background:var(--ct-surface,color-mix(in srgb,var(--_comark-accent) 50%,transparent));box-shadow:inset 0 0 0 1px var(--_comark-border)}",
   ".ct-tab{display:inline-flex;flex:none;align-items:center;gap:.375rem;padding:.25rem .625rem;border:0;border-radius:calc(var(--_comark-radius) - 2px);background:none;color:var(--_comark-muted);font:500 var(--ct-font-size,.8125rem)/1.25rem var(--_comark-font);white-space:nowrap;cursor:pointer;touch-action:manipulation;position:relative;transition:color .15s}",
-  '.ct-tab::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;transform-origin:0 0;pointer-events:none}',
+  ".ct-indicator{position:absolute;inset:0;z-index:-1;border-radius:inherit;pointer-events:none}",
   ".ct-tab:hover{color:var(--_comark-foreground)}",
   // The open tab carries its own surface rather than one shared indicator, so the server's markup already shows it and
-  // nothing moves when the script starts; the script slides it over from the last tab. Forced colors drop the surface,
-  // and the transparent outline shows instead.
+  // nothing moves when the script starts. The motion layer slides it over from the last tab: it is the tab's
+  // `data-motion-indicator`. Forced colors drop the surface, and the transparent outline shows instead.
   ".ct-tab[aria-selected='true']{color:var(--ct-active-text,var(--_comark-foreground));outline:1px solid transparent;outline-offset:-1px}",
-  ".ct-tab[aria-selected='true']::before{background:var(--ct-active,var(--_comark-background));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--_comark-border),var(--_comark-foreground) 8%)}",
+  ".ct-tab[aria-selected='true']>.ct-indicator{background:var(--ct-active,var(--_comark-background));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--_comark-border),var(--_comark-foreground) 8%)}",
   // On a dark background the strip is lighter than the page, so the page's color would sink the open tab into it. As in
   // shadcn/ui's dark tabs, it rises with a lighter surface. The background's own lightness decides, rather than the
   // system setting, so a `.dark` class, or a light site on a dark system, gets the right one. `min(1, …)` never clips,
   // since only a lightness under .5 rises; it stands in for `calc()`, whose channel keywords postcss-calc can't parse.
-  "@supports (color:oklch(from red l c h)){.ct-tab[aria-selected='true']::before{background:var(--ct-active,oklch(from var(--_comark-background) min(1, l + .14 * clamp(0, (.5 - l) * 100, 1)) c h))}}",
+  "@supports (color:oklch(from red l c h)){.ct-tab[aria-selected='true']>.ct-indicator{background:var(--ct-active,oklch(from var(--_comark-background) min(1, l + .14 * clamp(0, (.5 - l) * 100, 1)) c h))}}",
   // A panel has no padding, so its ring stands clear of the text that reaches its edge.
   ".ct-tab:focus-visible,.ct-panel:focus-visible{outline:2px solid var(--_comark-ring);outline-offset:4px}",
   // The strip scrolls, so it clips whatever reaches past its padding: a tab's ring stays inside the tab.

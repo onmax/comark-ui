@@ -26,7 +26,6 @@ export function anchoredPopovers() {
   const card = async (page: Page, n: number) => {
     await cite(page, n).hover();
     const shown = page.locator(".cso-card");
-    // It grows in, so it's measured once it has.
     await expect(shown).toHaveCSS("opacity", "1");
     const [link, box] = await Promise.all([cite(page, n).boundingBox(), shown.boundingBox()]);
     if (!link || !box) throw new Error("Expected the citation and its card on screen");
@@ -49,30 +48,18 @@ export function anchoredPopovers() {
       expect(await page.locator(".cso-card").evaluate((e) => e.style.top)).not.toBe("");
     });
 
-    test("keeps its position throughout the exit transition", async ({ page }) => {
+    test("keeps its anchor until the next citation takes it", async ({ page }) => {
       await at(page, "top:300px;left:200px");
-      const { box } = await card(page, 1);
-      // Slow the exit so a visible frame can be sampled reliably.
-      await page.locator(".cso-card").evaluate((e) => {
-        e.style.transitionDuration = "1s";
-      });
+      await card(page, 1);
       await page.mouse.move(750, 550);
       await expect(cite(page, 1)).not.toHaveAttribute("data-cso-open", "");
       await expect(cite(page, 1)).toHaveAttribute("data-cso-anchor", "");
-      // Firefox hides popovers immediately because it doesn't support overlay transitions.
-      if (await page.evaluate(() => CSS.supports("overlay: auto"))) {
-        const closing = await page.locator(".cso-card").evaluate((e) => {
-          const rect = e.getBoundingClientRect();
-          return { x: rect.x, y: rect.y, opacity: Number(getComputedStyle(e).opacity) };
-        });
-        expect(closing.opacity).toBeGreaterThan(0);
-        expect(Math.abs(closing.x - box.x)).toBeLessThan(12);
-        expect(Math.abs(closing.y - box.y)).toBeLessThan(12);
-      }
       await cite(page, 2).hover();
       await expect(cite(page, 2)).toHaveAttribute("data-cso-open", "");
       await expect(cite(page, 2)).toHaveAttribute("data-cso-anchor", "");
       await expect(cite(page, 1)).not.toHaveAttribute("data-cso-anchor", "");
+      // What closing pinned for the motion layer's exit copy is gone once the browser places it again.
+      expect(await page.locator(".cso-card").evaluate((e) => e.style.top)).toBe("");
     });
 
     test("sits above its citation, centered, placed by the browser", async ({ page }) => {
@@ -110,14 +97,17 @@ export function anchoredPopovers() {
       near(box.x + box.width, 800 - 8);
     });
 
-    test("grows from its citation", async ({ page }) => {
+    // The motion layer reads it to raise the card from that side.
+    test("names the side of its citation it landed on", async ({ page }) => {
+      await at(page, "top:300px;left:200px");
+      await card(page, 1);
+      await expect(page.locator(".cso-card")).toHaveAttribute("data-side", "top");
+    });
+
+    test("names the side below a citation at the top edge", async ({ page }) => {
       await at(page, "top:4px;left:200px");
-      const { link, box } = await card(page, 1);
-      const [x, y] = (await page.locator(".cso-card").evaluate((e) => e.style.transformOrigin))
-        .split(" ")
-        .map(parseFloat);
-      near(box.x + x!, link.x + link.width / 2);
-      expect(y).toBe(0);
+      await card(page, 1);
+      await expect(page.locator(".cso-card")).toHaveAttribute("data-side", "bottom");
     });
 
     test("follows its citation as the page scrolls", async ({ page }) => {

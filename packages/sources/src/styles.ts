@@ -22,15 +22,15 @@ export const css = `@layer comark{${[
   // A citation that was just followed shows which source it points at.
   ".cso li:target{border-radius:calc(var(--_comark-radius) - 6px);background:var(--_comark-accent)}",
   ".cso a:focus-visible,.cso-cite a:focus-visible{border-radius:calc(var(--_comark-radius) - 6px);outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--_comark-ring) 50%,transparent)}",
-  // The card is a popover in the top layer. It grows from the citation and fades out faster than
-  // it came in; one that opens while another is showing, or from the keyboard, appears at once.
-  ".cso-card{position:fixed;inset:auto;box-sizing:border-box;width:max-content;max-width:min(20rem,calc(100vw - 1rem));margin:0;padding:0;overflow:visible;border:1px solid var(--_comark-border);border-radius:calc(var(--_comark-radius) - 2px);background:var(--_comark-background);color:var(--_comark-foreground);box-shadow:var(--_comark-shadow);font:400 .875rem/1.43 var(--_comark-font);text-align:start;transition:opacity .15s cubic-bezier(.23,1,.32,1),transform .15s cubic-bezier(.23,1,.32,1),overlay .15s allow-discrete,display .15s allow-discrete}",
-  ".cso-card:not(:popover-open){opacity:0;transform:scale(.97);transition-duration:.1s}",
-  "@starting-style{.cso-card:popover-open{opacity:0;transform:scale(.97)}}",
-  ".cso-card[data-instant]{transition:none}",
+  // The card is a popover in the top layer. It has no motion of its own: where the page runs the motion layer, the layer
+  // raises it from its citation, slides it to the next one, and sinks it back.
+  ".cso-card{position:fixed;inset:auto;box-sizing:border-box;width:max-content;max-width:min(20rem,calc(100vw - 1rem));margin:0;padding:0;overflow:visible;border:1px solid var(--_comark-border);border-radius:calc(var(--_comark-radius) - 2px);background:var(--_comark-background);color:var(--_comark-foreground);box-shadow:var(--_comark-shadow);font:400 .875rem/1.43 var(--_comark-font);text-align:start}",
   // Where the browser has anchor positioning, the open citation is the card's anchor: above it and centered, below it
   // when there's no room, and kept 8px inside the viewport. Elsewhere the script places it.
   "@supports (anchor-name: --a) and (position-area: top) and (position-try-fallbacks: flip-block) and (justify-self: anchor-center){.cso-cite a[data-cso-anchor]{anchor-name:--cso-cite}.cso-card{position-anchor:--cso-cite;position-area:top;position-try-fallbacks:flip-block;justify-self:anchor-center;margin:8px 8px 4px}}",
+  // The motion layer plays the card's exit on a copy, which isn't an open popover, so it would not show. The script pins
+  // the card where it was before it closes, so the copy stays there when the next citation takes the anchor.
+  ".cso-card[data-motion=none]{display:block;position-area:none;justify-self:auto;margin:0;z-index:2147483647}",
   // The pointer crosses the gap between the citation and the card without leaving either.
   '.cso-card::before{content:"";position:absolute;z-index:-1;inset:-6px 0}',
   ".cso-card-link{display:grid;gap:.375rem;padding:.625rem .75rem;color:inherit;text-decoration:none}",
@@ -43,5 +43,4 @@ export const css = `@layer comark{${[
   ".cso-card-arrow{flex:none;width:.875rem;height:.875rem;margin-inline-start:auto;transition:color .15s ease}",
   ".cso-card-title{display:-webkit-box;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:3;font-weight:500;overflow-wrap:anywhere;text-wrap:pretty;text-decoration:underline transparent;text-decoration-thickness:from-font;text-underline-offset:.2em;transition:text-decoration-color .15s ease}",
   "@media (hover:hover){.cso-card-link:hover .cso-card-title{text-decoration-color:currentColor}.cso-card-link:hover .cso-card-arrow{color:var(--_comark-foreground)}}",
-  "@media (prefers-reduced-motion:reduce){.cso-card,.cso-card:not(:popover-open){transform:none}@starting-style{.cso-card:popover-open{transform:none}}}",
 ].join("")}}`;

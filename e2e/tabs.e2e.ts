@@ -39,28 +39,6 @@ test("a tab opens its panel, and the arrow keys, Home, and End move between tabs
   await expect(page.getByRole("tabpanel")).toBeFocused();
 });
 
-test("the open tab's surface slides over from the last one, and only fades with reduced motion", async ({
-  page,
-}) => {
-  await open(page, block("A"));
-  const surface = (name: string) =>
-    page.getByRole("tab", { name }).evaluate((tab) =>
-      tab
-        .getAnimations({ subtree: true })
-        .filter((animation) => !(animation instanceof CSSTransition))
-        // SAFETY: every animation the script starts is a KeyframeEffect on the tab's `::before`.
-        .flatMap((animation) =>
-          Object.keys((animation.effect as KeyframeEffect).getKeyframes()[0] ?? {}),
-        )
-        .filter((key) => key === "transform" || key === "opacity"),
-    );
-  await page.getByRole("tab", { name: "C" }).click();
-  expect(await surface("C")).toEqual(["transform"]);
-  await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.getByRole("tab", { name: "A" }).click();
-  expect(await surface("A")).toEqual(["opacity"]);
-});
-
 test("synced blocks switch together, keep the clicked tab still, and remember the choice", async ({
   page,
 }) => {
@@ -100,9 +78,9 @@ for (const colorScheme of ["light", "dark"] as const)
         return r! + g! + b!;
       };
       const background = getComputedStyle(root).getPropertyValue("--_comark-background");
-      const tab = root.querySelector(".ct-tab[aria-selected='true']")!;
+      const surface = root.querySelector(".ct-tab[aria-selected='true']>.ct-indicator")!;
       return [
-        paint(background, getComputedStyle(tab, "::before").backgroundColor),
+        paint(background, getComputedStyle(surface).backgroundColor),
         paint(background, getComputedStyle(root.querySelector(".ct-list")!).backgroundColor),
       ];
     });

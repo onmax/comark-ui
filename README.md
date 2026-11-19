@@ -102,6 +102,7 @@ Browse the [docs and live examples](https://comark-ui.onmax.me) for component sy
 | [`comark-time`](./packages/time) | Dates as relative time that turn into a date past a threshold, with the full date in a tooltip. |
 | [`comark-xref`](./packages/xref) | Numbered figures and tables, and `:ref{#fig-x}` references that read "Figure 1". |
 | [`comark-zoom`](./packages/zoom) | Zoom images and any block like medium-zoom, with Escape, Back, and click-outside to close. |
+| [`comark-motion`](./packages/motion) | ViteHub UI's motion in every document: buttons squash, tabs slide, chevrons turn, tooltips rise from their trigger. |
 
 </details>
 

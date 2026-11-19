@@ -49,6 +49,7 @@ credits: 'Modeled on <a href="https://github.com/francoischalifour/medium-zoom">
 - An image never grows past its natural size, so it stays sharp.
 - An item taller than the screen fills the view's width and scrolls, instead of shrinking to fit.
 - Escape, Back, or a click around the item closes the view.
+- The zoomed copy travels from its place in the page and back on [comark-motion](/motion)'s springs. Under reduced motion, or without comark-motion, it opens and closes at once.
 
 ## Usage
 

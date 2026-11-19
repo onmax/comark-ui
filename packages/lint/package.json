@@ -82,6 +82,7 @@
     "comark-mathml": "workspace:*",
     "comark-media": "workspace:*",
     "comark-metrics": "workspace:*",
+    "comark-motion": "workspace:*",
     "comark-outline": "workspace:*",
     "comark-pele": "catalog:",
     "comark-properties": "workspace:*",
@@ -136,6 +137,7 @@
     "comark-mathml": "workspace:^",
     "comark-media": "workspace:^",
     "comark-metrics": "workspace:^",
+    "comark-motion": "workspace:^",
     "comark-outline": "workspace:^",
     "comark-pele": "^1.1.0",
     "comark-properties": "workspace:^",
@@ -255,6 +257,9 @@
       "optional": true
     },
     "comark-metrics": {
+      "optional": true
+    },
+    "comark-motion": {
       "optional": true
     },
     "comark-outline": {

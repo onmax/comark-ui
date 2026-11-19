@@ -401,6 +401,7 @@ Size icons in tabs with comark-icon's `--comark-icon-size`, as [its theming](/ic
 | `.ct` | The block, with `data-tabs-code` and comark-code's [`data-code-header`](/code#your-own-header) when it's a code group, and `data-tabs-sync` when it has a `sync` key |
 | `.ct-list` | The strip |
 | `.ct-tab` | Each tab, with `aria-selected="true"` on the open one |
+| `.ct-indicator` | The open tab's surface, a span in every tab that shows only on the open one and that the motion layer slides from the last tab |
 | `.ct-panel` | Each panel, with `data-inactive` while it's closed |
 | `.ct-caption` | The label over each panel, shown only without the script |
 | `[data-tabs-ready]` | On `<html>` once the script runs |

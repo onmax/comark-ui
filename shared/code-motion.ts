@@ -1,4 +1,5 @@
-// Self-contained because HTML renderers inline it alongside their runtime.
+// Self-contained because HTML renderers inline it alongside their runtime. It draws its own motion: see the own-motion
+// figures of test/motion.test.ts.
 export function createCodeMotion(prefix: string, duration = 500) {
   const easing = "cubic-bezier(.22,1,.36,1)";
   // A word, or one mark of punctuation: the pieces that move on their own. Shiki's spans hold several, with the spaces
@@ -11,6 +12,8 @@ export function createCodeMotion(prefix: string, duration = 500) {
     if (known) return known;
     const tokens: HTMLElement[] = [];
     const code = step.querySelector("pre");
+    // The moving code is an own-motion figure (test/motion.test.ts), so the motion layer leaves what is inside it.
+    code?.setAttribute("data-motion", "none");
     const walker = code && document.createTreeWalker(code, NodeFilter.SHOW_TEXT);
     const texts: Text[] = [];
     while (walker?.nextNode())
@@ -71,7 +74,10 @@ export function createCodeMotion(prefix: string, duration = 500) {
     const owned: Animation[] = [];
     playing.set(stage, owned);
     for (const ghost of stage.querySelectorAll(`:scope>.${prefix}-ghost`)) ghost.remove();
-    const moving = animate && !matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const moving =
+      animate &&
+      !stage.closest('[data-motion="none"]') &&
+      !matchMedia("(prefers-reduced-motion: reduce)").matches;
     const before = moving ? tokensOf(from) : [];
     const after = moving ? tokensOf(target) : [];
     const box = stage.getBoundingClientRect();

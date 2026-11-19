@@ -52,14 +52,13 @@ export const css = `@layer comark{${[
   ".ca-swipe img{-webkit-user-drag:none}",
   // A thin line with a round grip, as in React Bits' comparison slider. The ring and shadow keep it visible on a white page.
   "[data-annotate-ready] .ca-handle{grid-area:2/1/3/3;position:relative;left:var(--ca-split);display:block;width:0;outline:none;cursor:ew-resize;touch-action:none}",
-  ".ca-handle::before{content:'';position:absolute;inset:0 auto 0 -1px;width:2px;background:var(--_comark-background);box-shadow:0 0 0 1px var(--_comark-border),var(--_comark-shadow)}",
-  ".ca-grip{position:absolute;top:50%;left:0;display:grid;place-items:center;width:2rem;height:2rem;border-radius:9999px;background:var(--_comark-background);color:var(--_comark-foreground);box-shadow:0 0 0 1px var(--_comark-border),var(--_comark-shadow);transform:translate(-50%,-50%);transition:transform .15s ease,box-shadow .15s ease}",
+  // The line is an element of its own, so the motion layer hides only it, not the grip, while it draws the line bent.
+  ".ca-line{position:absolute;inset:0 auto 0 -1px;width:2px;background:var(--_comark-background);box-shadow:0 0 0 1px var(--_comark-border),var(--_comark-shadow)}",
+  ".ca-grip{position:absolute;top:50%;left:0;display:grid;place-items:center;width:2rem;height:2rem;border-radius:9999px;background:var(--_comark-background);color:var(--_comark-foreground);box-shadow:0 0 0 1px var(--_comark-border),var(--_comark-shadow);transform:translate(-50%,-50%);transition:box-shadow .15s ease}",
   ".ca-grip svg{width:1rem;height:1rem}",
   ".ca-swipe[data-dragging]{cursor:ew-resize}",
-  ".ca-swipe[data-dragging] .ca-grip{transform:translate(-50%,-50%) scale(1.1)}",
   ".ca-handle:focus-visible .ca-grip{box-shadow:0 0 0 1px var(--_comark-border),0 0 0 4px color-mix(in srgb,var(--_comark-ring) 50%,transparent)}",
   "@media (pointer:coarse){.ca-grip{width:2.5rem;height:2.5rem}}",
-  "@media (prefers-reduced-motion:reduce){.ca-grip{transition:none}}",
   // Each screenshot's notes sit under its own side, and stack on a narrow page.
   ".ca-swipe-notes{display:grid;grid-template-columns:1fr 1fr;gap:.75rem 1.5rem;margin-top:.75rem}",
   ".ca-notes-after{grid-column:2}",
@@ -137,7 +136,7 @@ export const css = `@layer comark{${[
   ".ca-stamp{display:inline-grid;place-items:center;flex:none;min-width:15px;height:15px;padding:0 4px;box-sizing:border-box;border-radius:9999px;background:var(--ca-solid,var(--ca-color));color:var(--ca-ink);font-family:var(--_comark-font);font-size:9.5px;font-weight:600;line-height:1;letter-spacing:-.01em;font-variant-numeric:tabular-nums}",
   ".ca-letter{display:none}",
   // place.ts sets which corner of the mark the number sits on.
-  ".ca-mark .ca-stamp{position:absolute;box-shadow:0 0 0 2px var(--ca-ring,var(--_comark-background)),0 1px 3px rgb(0 0 0/.18);transform:scale(calc(1 + .1 * var(--ca-on,0)));transition:transform .15s ease}",
+  ".ca-mark .ca-stamp{position:absolute;box-shadow:0 0 0 2px var(--ca-ring,var(--_comark-background)),0 1px 3px rgb(0 0 0/.18)}",
   // A numbered mark that draws nothing is only its number, so the number stays on the corner.
   ".ca-mark.ca-none .ca-stamp{left:-7.5px;top:-7.5px}",
   ".ca-arrow{position:absolute;height:16px;color:var(--ca-color);transform:translateY(-50%);pointer-events:none}",

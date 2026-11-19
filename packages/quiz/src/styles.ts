@@ -1,5 +1,4 @@
 import { theme } from "comark-zoom/theme";
-import { disclosureMotion } from "../../../shared/disclosure.ts";
 
 // The parts that hold an author's Markdown. A page's own paragraph and list margins are almost always unlayered, so
 // only `!important` keeps their first and last blocks flush with the part's edges.
@@ -24,7 +23,6 @@ const ring = "0 0 0 3px color-mix(in oklab,var(--_comark-ring) 50%,transparent)"
  * `--cqz-surface`. The rules sit in the `comark` layer, so any unlayered rule of the host's wins.
  */
 export const css = `@layer comark{${[
-  disclosureMotion(".cqz-disclosure"),
   theme(".cqz", "status", "primary"),
   // Resolved into private variables, so a `--cqz-*` set on `:root` or any ancestor reaches every block.
   ":where(.cqz){--_cqz-primary:var(--cqz-primary,var(--_comark-primary));--_cqz-on-primary:var(--cqz-primary-foreground,var(--_comark-primary-foreground));--_cqz-correct:var(--cqz-correct,var(--_comark-success));--_cqz-incorrect:var(--cqz-incorrect,var(--_comark-danger));--_cqz-correct-foreground:var(--cqz-correct-foreground,color-mix(in oklab,var(--_cqz-correct) 55%,var(--_comark-foreground)));--_cqz-incorrect-foreground:var(--cqz-incorrect-foreground,color-mix(in oklab,var(--_cqz-incorrect) 55%,var(--_comark-foreground)));--_cqz-bar:var(--cqz-bar,color-mix(in oklab,var(--_comark-foreground) 6%,transparent));--_cqz-bar-strong:var(--cqz-bar-strong,color-mix(in oklab,var(--_cqz-primary) 14%,transparent));--_cqz-surface:var(--cqz-surface,color-mix(in oklab,var(--_comark-foreground) 2%,var(--_comark-background)));--_cqz-ease:cubic-bezier(.23,1,.32,1)}",
@@ -84,8 +82,9 @@ export const css = `@layer comark{${[
     ring +
     "}",
 
-  // Results: each row fills to its share like a poll, the leading row and the reader's own choice a shade deeper.
-  ".cqz-bar{position:absolute;inset:0;z-index:-1;background:var(--_cqz-bar);transform:scaleX(0);transform-origin:left center;transition:transform .25s var(--_cqz-ease)}",
+  // Results: each row fills to its share like a poll, the leading row and the reader's own choice a shade deeper. The
+  // script grows a bar to its share with comark-motion's travel, so the bar has no transition of its own.
+  ".cqz-bar{position:absolute;inset:0;z-index:-1;background:var(--_cqz-bar);transform:scaleX(0);transform-origin:left center}",
   ".cqz-bar:dir(rtl){transform-origin:right center}",
   ".cqz[data-results] .cqz-bar{transform:scaleX(var(--_cqz-share,0))}",
   ".cqz[data-results][data-quiz-kind='poll'] .cqz-option:is([data-leading],[data-state='voted']) .cqz-bar{background:var(--_cqz-bar-strong)}",
@@ -99,9 +98,8 @@ export const css = `@layer comark{${[
   ".cqz-actions{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;margin-top:1rem}",
   // Left with only the screen reader's message, the row folds away but stays in the accessibility tree.
   ".cqz-actions[data-empty]{height:0;margin-top:0;overflow:hidden}",
-  ".cqz-button{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:.375rem;height:2rem;margin:0;padding:0 .75rem;border:1px solid transparent;border-radius:calc(var(--_comark-radius) - 2px);background:none;color:var(--_comark-foreground);font:500 .875rem/1.25rem var(--_comark-font);white-space:nowrap;cursor:pointer;user-select:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:transform .16s var(--_cqz-ease),background-color .15s var(--_cqz-ease),border-color .15s var(--_cqz-ease),color .15s var(--_cqz-ease),box-shadow .15s var(--_cqz-ease)}",
+  ".cqz-button{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:.375rem;height:2rem;margin:0;padding:0 .75rem;border:1px solid transparent;border-radius:calc(var(--_comark-radius) - 2px);background:none;color:var(--_comark-foreground);font:500 .875rem/1.25rem var(--_comark-font);white-space:nowrap;cursor:pointer;user-select:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:background-color .15s var(--_cqz-ease),border-color .15s var(--_cqz-ease),color .15s var(--_cqz-ease),box-shadow .15s var(--_cqz-ease)}",
   ".cqz-button::before{content:'';position:absolute;inset:-.25rem}",
-  ".cqz-button:active{transform:scale(.96)}",
   ".cqz-button[data-variant='default']{background:var(--_cqz-primary);color:var(--_cqz-on-primary)}",
   ".cqz-button[data-variant='default']:hover{background:color-mix(in oklab,var(--_cqz-primary) 90%,var(--_comark-background))}",
   ".cqz-button[data-variant='outline']{border-color:var(--_comark-border);background:var(--_comark-background)}",
@@ -168,9 +166,8 @@ export const css = `@layer comark{${[
   ".cqz-key-label{font-weight:500}",
   ".cqz-key+.cqz-explain{margin-top:1rem}",
 
-  // Restored answers and results arrive at once, with no motion; so does everything for a reader who asks for less.
+  // Restored answers and results arrive at once, with no fades.
   ".cqz[data-instant],.cqz[data-instant] *{transition:none}",
-  "@media (prefers-reduced-motion:reduce){.cqz-bar{transition:none}.cqz-button{transition-property:background-color,border-color,color,box-shadow}.cqz-button:active{transform:none}}",
   "@container (max-width:30rem){.cqz-choice{grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:'indicator label percent' 'indicator verdict percent'}.cqz-verdict{justify-self:start}}",
   "@media (max-width:40rem){.cqz{padding:1rem}}",
   "@media print{.cqz{break-inside:avoid}}",

@@ -64,12 +64,27 @@ export function script(css: string): () => void {
   const SELECTOR = "[data-zoom]";
   const INTERACTIVE = "a,button,input,textarea,select,summary,label,video,audio";
   const motion = matchMedia("(prefers-reduced-motion: reduce)");
+  const optedOut = (item: HTMLElement) => Boolean(item.closest('[data-motion="none"]'));
   const easing = "cubic-bezier(.22,1,.36,1)";
 
   type Mapping = {
     copies: WeakMap<Element, Element>;
     originals: WeakMap<Element, Element>;
   };
+
+  type Box = { left: number; top: number; width: number; height: number };
+  type Travel = { done: Promise<boolean>; stop: () => void };
+  // comark-motion's runtime, looked up at each change since its script may come later in the page. Without it the view
+  // opens and closes at once.
+  // SAFETY: comark-motion's runtime sets it, and this package doesn't depend on comark-motion.
+  const layer = () =>
+    (
+      window as {
+        __comarkMotion?: {
+          travel: (element: HTMLElement, options: { from?: Box; to?: Box }) => Travel;
+        };
+      }
+    ).__comarkMotion;
 
   type View = {
     dialog: HTMLDialogElement;
@@ -90,6 +105,7 @@ export function script(css: string): () => void {
     pushed: boolean;
     closing: boolean;
     pressed: EventTarget | null;
+    moving: Travel | null;
   };
   let view: View | null = null;
   let restoration: ScrollRestoration | null = null;
@@ -395,25 +411,31 @@ export function script(css: string): () => void {
     preload.src = large;
   }
 
-  // The move that puts the copy, at scale 1, over the item. It aims at the copy's center rather than the frame's,
-  // since margins inside the copy can sit in the frame but outside the item on the page. The frame scales from its
-  // center, or from its top when it scrolls, and that point stays put at any scale.
-  function travel(current: View, item: HTMLElement) {
-    const center = (node: Element) => {
-      const rect = node.getBoundingClientRect();
-      return [rect.left + rect.width / 2, rect.top + rect.height / 2] as const;
-    };
+  // The box the frame takes, at scale 1, when its copy lies over the item. It aims at the copy's center rather than the
+  // frame's, since margins inside the copy can sit in the frame but outside the item on the page. Where the copy sits
+  // in the frame is read as a fraction of the frame, which a travel under way scales and moves alike, so the box is the
+  // same whenever it is read.
+  function over(current: View, item: HTMLElement): Box {
     const frame = current.frame.getBoundingClientRect();
-    const [ox, oy] = getComputedStyle(current.frame).transformOrigin.split(" ").map(parseFloat);
-    const fx = frame.left + ox! * current.scale;
-    const fy = frame.top + oy! * current.scale;
-    const [cx, cy] = center(current.frame.firstElementChild!);
-    const [tx, ty] = center(item);
-    return `translate(${tx - fx - (cx - fx) / current.scale}px, ${ty - fy - (cy - fy) / current.scale}px)`;
+    const copy = current.frame.firstElementChild!.getBoundingClientRect();
+    const target = item.getBoundingClientRect();
+    const style = getComputedStyle(current.frame);
+    const width = parseFloat(style.width) || 1;
+    const height = parseFloat(style.height) || 1;
+    const x = (copy.left + copy.width / 2 - frame.left) / (frame.width || 1);
+    const y = (copy.top + copy.height / 2 - frame.top) / (frame.height || 1);
+    return {
+      left: target.left + target.width / 2 - x * width,
+      top: target.top + target.height / 2 - y * height,
+      width,
+      height,
+    };
   }
 
   function render(current: View) {
     const item = current.items[current.index]!;
+    if (optedOut(item)) current.dialog.setAttribute("data-motion", "none");
+    else current.dialog.removeAttribute("data-motion");
     current.frame.replaceChildren();
     current.stage.scrollTop = 0;
     current.mapping = { copies: new WeakMap(), originals: new WeakMap() };
@@ -492,7 +514,7 @@ export function script(css: string): () => void {
     if (stage.hasAttribute("data-scroll") && room > 1) {
       stage.scrollBy({
         top: step * stage.clientHeight * 0.25,
-        behavior: motion.matches ? "instant" : "smooth",
+        behavior: motion.matches || optedOut(current.items[current.index]!) ? "instant" : "smooth",
       });
       return;
     }
@@ -511,14 +533,16 @@ export function script(css: string): () => void {
     arrows(current);
     thumbs(current);
     render(current);
-    if (!motion.matches)
-      current.frame.animate(
-        [
-          { translate: `0 ${step * 24}px`, opacity: 0 },
-          { translate: "0 0", opacity: 1 },
-        ],
-        { duration: 180, easing },
-      );
+    const motions = optedOut(item) ? undefined : layer();
+    current.moving?.stop();
+    if (motions) {
+      const { left, top, width, height } = current.frame.getBoundingClientRect();
+      current.moving = motions.travel(current.frame, {
+        from: { left, top: top + step * 24, width, height },
+      });
+      if (!motion.matches)
+        current.frame.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 180, easing });
+    }
     item.dispatchEvent(
       new CustomEvent("comark-zoom:change", { bubbles: true, detail: detail(current) }),
     );
@@ -618,6 +642,7 @@ export function script(css: string): () => void {
       pushed: false,
       closing: false,
       pressed: null,
+      moving: null,
     };
     arrows(current);
     view = current;
@@ -662,27 +687,20 @@ export function script(css: string): () => void {
     }
 
     const shown = items[current.index]!;
-    if (!motion.matches) {
+    const motions = optedOut(shown) ? undefined : layer();
+    if (motions) {
       fly(current);
-      const opening = frame.animate(
-        [
-          {
-            transform: `${travel(current, shown)} scale(1)`,
-          },
-          { transform: `scale(${current.scale})` },
-        ],
-        { duration: 260, easing },
-      );
-      opening.finished.then(
-        () => {
-          if (current.closing) return;
-          stage.removeAttribute("data-flying");
-          frame.style.translate = "";
-        },
-        () => {},
-      );
-      for (const part of [backdrop, header, aside, footer])
-        part.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200 });
+      const opening = motions.travel(frame, { from: over(current, shown) });
+      current.moving = opening;
+      void opening.done.then(() => {
+        if (current.closing) return;
+        stage.removeAttribute("data-flying");
+        frame.style.left = "";
+        frame.style.top = "";
+      });
+      if (!motion.matches)
+        for (const part of [backdrop, header, aside, footer])
+          part.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200 });
     }
     shown.style.visibility = "hidden";
     shown.dispatchEvent(
@@ -699,7 +717,9 @@ export function script(css: string): () => void {
     const before = current.frame.getBoundingClientRect();
     current.stage.setAttribute("data-flying", "");
     const after = current.frame.getBoundingClientRect();
-    current.frame.style.translate = `${before.left - after.left}px ${before.top - after.top}px`;
+    // An offset, since the travel writes `translate`.
+    current.frame.style.left = `${before.left - after.left}px`;
+    current.frame.style.top = `${before.top - after.top}px`;
   }
 
   // Closing from the page goes back in history, so the zoom's entry goes away. stop() doesn't: with its listeners gone,
@@ -711,30 +731,35 @@ export function script(css: string): () => void {
     if (from === "page" && current.pushed && history.state?.comarkZoom) history.back();
     else if (from !== "history") restore();
     const item = current.items[current.index]!;
-    if (!motion.matches) {
-      // A close can come while the opening animation still runs. Measure the frame where it settles, so the path back
-      // ends on the item, and start from where it is now.
-      const now = getComputedStyle(current.frame).transform;
-      for (const animation of current.frame.getAnimations()) animation.cancel();
+    const motions = optedOut(item) ? undefined : layer();
+    if (motions) {
+      // A close can come while the opening still travels. The travel back starts from where the frame is, with its
+      // speed, and ends on the item.
       fly(current);
       const to = item.getBoundingClientRect();
-      const visible = to.bottom > 0 && to.top < innerHeight;
-      const animations = [
-        ...current.dialog.querySelectorAll<HTMLElement>(
-          ".cz-backdrop,.cz-header,.cz-aside,.cz-footer,.cz-nav",
-        ),
-      ].map((part) =>
-        part.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 180, fill: "forwards" }),
-      );
-      animations.push(
-        current.frame.animate(
-          visible
-            ? [{ transform: now }, { transform: `${travel(current, item)} scale(1)` }]
-            : [{ opacity: 1 }, { opacity: 0 }],
-          { duration: 200, easing, fill: "forwards" },
-        ),
-      );
-      await Promise.all(animations.map((animation) => animation.finished.catch(() => {})));
+      const fades = motion.matches
+        ? []
+        : [
+            ...current.dialog.querySelectorAll<HTMLElement>(
+              ".cz-backdrop,.cz-header,.cz-aside,.cz-footer,.cz-nav",
+            ),
+          ].map((part) =>
+            part.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 180, fill: "forwards" }),
+          );
+      if (to.bottom > 0 && to.top < innerHeight)
+        await motions.travel(current.frame, { to: over(current, item) }).done;
+      else {
+        current.moving?.stop();
+        if (!motion.matches)
+          fades.push(
+            current.frame.animate([{ opacity: 1 }, { opacity: 0 }], {
+              duration: 200,
+              easing,
+              fill: "forwards",
+            }),
+          );
+        await Promise.all(fades.map((animation) => animation.finished.catch(() => {})));
+      }
     }
     for (const node of current.items) node.style.visibility = "";
     // Removed rather than closed: close() would focus the element focused before it opened, scrolling to it, while
@@ -778,11 +803,13 @@ export function script(css: string): () => void {
         }
         return;
       }
-      // A control in the copy, such as a comparison's slider, keeps its own arrow keys.
+      // A control in the copy, such as the divider of a comparison, keeps its own arrow keys.
       const own =
         event.defaultPrevented ||
         (event.target instanceof Element &&
-          event.target.closest("[role=slider],input,textarea,select,[contenteditable]"));
+          event.target.closest(
+            "[role=slider],[role=separator],input,textarea,select,[contenteditable]",
+          ));
       if (own && event.key.startsWith("Arrow")) return;
       if (event.key === "ArrowLeft" && view.items.length > 1) go(view.index - 1);
       else if (event.key === "ArrowRight" && view.items.length > 1) go(view.index + 1);

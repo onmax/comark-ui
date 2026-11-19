@@ -42,7 +42,7 @@ Two thresholds for one date: :time[2026-09-30] and :time[2026-09-30]{threshold="
 
 - `:time` turns a date into the words a reader would say: "today", "yesterday", "2 days ago", "in 2 weeks".
 - From a threshold on, 3 weeks by default, it shows the date instead: "Sep 30", or "Sep 30, 2025" in another year.
-- Hover or focus opens a tooltip with the full date and time, or with how far away the date is once it shows as a date. It opens above the text, or below where the page has no room, and grows from the edge that touches the text.
+- Hover or focus opens a tooltip with the full date and time, or with how far away the date is once it shows as a date. It opens above the text, or below where the page has no room, and rises from behind the text.
 - The plugin works out the words, the date, and the tooltip while parsing, and the tooltip is CSS. One small script lets <kbd>Escape</kbd> close it.
 - Everything is measured from one `now` per document, so rendering twice gives the same words.
 - `describeTime()` gives the same words in your own code, and `relativize()` keeps them current in a page that was rendered earlier.
@@ -88,7 +88,7 @@ Write `none` to keep a date relative at any distance, such as "3 years ago".
 
 ### Tooltip
 
-A time reads as plain text. Hover it for 300 milliseconds, or focus it with the keyboard or a tap, and a pill with the full date opens above it. Where the page has no room above, near the top of the window, it opens below. The pill scales from the edge that touches the text, starting a few pixels toward it, in 140 milliseconds, and leaves in 100.
+A time reads as plain text. Hover it for 300 milliseconds, or focus it with the keyboard or a tap, and a pill with the full date opens above it. Where the page has no room above, near the top of the window, it opens below. With comark-ui's motion on, the pill rises from behind the text, widens to fit, and sinks back when it closes. Without it, the pill fades in over 140 milliseconds and out over 100.
 
 ::example
 ```md
@@ -156,7 +156,7 @@ time({ threshold: "2w" });
 
 A time is a `<time datetime>` with `tabindex="0"`, so a keyboard reaches it and a tap focuses it. The tooltip has `role="tooltip"`, and the time points to it with `aria-describedby`, so a screen reader reads "2 days ago" and then the full date. The pill opens when the time has focus and closes when it loses it. <kbd>Escape</kbd> closes it while the time keeps focus or the pointer, and it opens again once both have left the time. On a touch screen, a tap opens it and a tap elsewhere closes it. The pill is not a target: it passes the pointer through to the text.
 
-Reduced motion shows the pill without a transition.
+Reduced motion fades the pill in and out where it sits.
 
 ### Keyboard interactions
 
@@ -249,4 +249,4 @@ Times read these [shared tokens](/guide/theming):
 
 ### Durations
 
-Set `--ctm-enter` (140ms) and `--ctm-exit` (100ms) on a time or any ancestor to change how long the tooltip takes to open and close.
+Set `--ctm-enter` (140ms) and `--ctm-exit` (100ms) on a time or any ancestor to change how long the tooltip takes to fade in and out on a page without comark-ui's motion.

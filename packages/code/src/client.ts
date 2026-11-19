@@ -157,6 +157,12 @@ export function start(css: string): () => void {
       header.style.setProperty("--ck-controls", `${width}px`);
       headers.add(header);
     }
+    // With the layer, Copy holds only the icon it shows from the start, so it presses like Wrap.
+    if (motion())
+      for (const { root } of blocks) {
+        const copy = root.querySelector<HTMLElement>(":scope>.ck-bar>.ck-copy");
+        if (copy) claim(copy);
+      }
   };
   const schedule = () => {
     if (!frame) frame = requestAnimationFrame(refresh);
@@ -192,17 +198,74 @@ export function start(css: string): () => void {
   );
   schedule();
 
+  // SAFETY: comark-motion's runtime sets it, and this package doesn't depend on comark-motion.
+  const motion = () =>
+    (
+      window as {
+        __comarkMotion?: {
+          ring: (element: HTMLElement) => void;
+          swapIcon: (container: HTMLElement, icon: Element) => void;
+        };
+      }
+    ).__comarkMotion;
+  // Without the motion layer the styles swap the icons at once by `data-state`. With it, the button holds only the
+  // icon it shows, and the layer blurs the old one out as the new one comes in.
+  const claimed = new WeakSet<HTMLElement>();
+  const claim = (button: HTMLElement) => {
+    const saved = button.nextElementSibling;
+    if (saved instanceof HTMLTemplateElement && saved.hasAttribute("data-copy-icons")) {
+      if (!claimed.has(button)) {
+        const idle = saved.content.firstElementChild;
+        if (!idle) return;
+        button.replaceChildren(idle.cloneNode(true));
+        claimed.add(button);
+      }
+      return saved.content;
+    }
+    const idle = button.querySelector(":scope>.ck-copy-idle");
+    const check = button.querySelector(":scope>.ck-copy-done");
+    if (!idle || !check) return undefined;
+    const template = document.createElement("template");
+    template.setAttribute("data-copy-icons", "");
+    template.content.append(idle.cloneNode(true), check);
+    button.after(template);
+    claimed.add(button);
+    button.setAttribute("data-icon-swap", "");
+    return template.content;
+  };
+  const swap = (button: HTMLElement, done: boolean) => {
+    const layer = motion();
+    const icon = layer && claim(button)?.children[done ? 1 : 0]?.cloneNode(true);
+    if (layer && icon instanceof Element) layer.swapIcon(button, icon);
+  };
+  // The layer squashes the icon of an icon-only control, so the button gives up its hidden icon before the layer's
+  // listener on the document sees the press: a listener on the window hears it first.
+  const pressed = (event: Event) => {
+    const button =
+      event.target instanceof Element
+        ? event.target.closest<HTMLElement>(".ck>.ck-bar>.ck-copy")
+        : null;
+    if (button && motion()) claim(button);
+  };
+  window.addEventListener("pointerdown", pressed, { capture: true, signal });
+  window.addEventListener("keydown", pressed, { capture: true, signal });
+
   const say = (root: Element, message: string, state: "done" | "failed") => {
-    const button = root.querySelector(":scope>.ck-bar>.ck-copy");
+    const button = root.querySelector<HTMLElement>(":scope>.ck-bar>.ck-copy");
     const status = root.querySelector(":scope>.ck-bar>.ck-status,:scope>.ck-status");
     if (!button || !status) return;
     button.setAttribute("data-state", state);
     status.textContent = message;
+    if (state === "done") {
+      swap(button, true);
+      motion()?.ring(button);
+    }
     setTimeout(
       () => {
         if (status.textContent !== message) return;
         button.removeAttribute("data-state");
         status.textContent = "";
+        swap(button, false);
       },
       state === "done" ? 1500 : 6000,
     );

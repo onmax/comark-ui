@@ -74,6 +74,7 @@ export function start(css: string): () => void {
       card.className = "cso-card";
       card.id = "cso-card";
       card.setAttribute("popover", "manual");
+      card.setAttribute("data-state", "closed");
       card.innerHTML =
         '<a class="cso-card-link" tabindex="-1"><span class="cso-card-site"><img class="cso-card-image" alt="">' +
         svg(
@@ -85,6 +86,7 @@ export function start(css: string): () => void {
     }
     // Popovers still inherit modal inertness. Keep the shared card with its citation,
     // and move it back to the page when a later citation is outside a dialog.
+    card.toggleAttribute("data-motion-appear", !link.closest('[data-motion="none"]'));
     const parent = link.closest("dialog:modal") ?? document.body;
     if (card.parentElement !== parent) parent.append(card);
     const anchor = card.querySelector<HTMLAnchorElement>(".cso-card-link");
@@ -127,9 +129,13 @@ export function start(css: string): () => void {
     if (!card || !current) return;
     const at = current.getBoundingClientRect();
     const { clientWidth: right, clientHeight: bottom } = document.documentElement;
-    if (at.bottom < 0 || at.top > bottom) return hide(true);
+    if (at.bottom < 0 || at.top > bottom) return hide();
     const center = at.left + at.width / 2;
-    if (!anchored) {
+    if (anchored) {
+      // What `hide()` pinned for the motion layer's copy.
+      card.style.left = "";
+      card.style.top = "";
+    } else {
       // Measured at the corner, so the width the last place left it doesn't narrow the card.
       card.style.left = "0";
       card.style.top = "0";
@@ -139,16 +145,16 @@ export function start(css: string): () => void {
       card.style.left = `${Math.max(8, Math.min(center - width / 2, right - width - 8))}px`;
       card.style.top = `${above ? at.top - gap - height : at.bottom + gap}px`;
     }
-    // It grows from the citation, on whichever side it landed.
-    card.style.transformOrigin = `${center - card.offsetLeft}px ${card.offsetTop < at.top ? "100%" : "0"}`;
+    // It rises from the citation, on whichever side it landed.
+    card.setAttribute("data-side", card.offsetTop < at.top ? "top" : "bottom");
   }
 
-  function show(link: HTMLAnchorElement, instant: boolean) {
+  function show(link: HTMLAnchorElement) {
     clearTimeout(opening);
     clearTimeout(closing);
     if (!link.isConnected) return;
     const filled = fill(link);
-    if (!filled) return hide(true);
+    if (!filled) return hide();
     if (current && current !== link) {
       current.removeAttribute("aria-describedby");
       current.removeAttribute("data-cso-open");
@@ -159,20 +165,24 @@ export function start(css: string): () => void {
     current = link;
     link.setAttribute("aria-describedby", filled.id);
     link.setAttribute("data-cso-open", "");
-    filled.toggleAttribute("data-instant", instant);
+    filled.setAttribute("data-state", "open");
     if (!filled.matches(":popover-open")) filled.showPopover();
     place();
   }
 
-  function hide(instant = false) {
+  function hide() {
     clearTimeout(opening);
     clearTimeout(closing);
     if (!card || !current) return;
     current.removeAttribute("aria-describedby");
     current.removeAttribute("data-cso-open");
     current = undefined;
-    card.toggleAttribute("data-instant", instant);
-    if (card.matches(":popover-open")) card.hidePopover();
+    if (card.matches(":popover-open")) {
+      card.style.left = `${card.offsetLeft}px`;
+      card.style.top = `${card.offsetTop}px`;
+      card.hidePopover();
+    }
+    card.setAttribute("data-state", "closed");
     closed = performance.now();
   }
 
@@ -193,8 +203,8 @@ export function start(css: string): () => void {
         if (link === current || link === dismissed) return;
         clearTimeout(opening);
         // Once a card is open, or has just closed, the next opens at once, so reading along a line stays quick.
-        if (current || performance.now() - closed < 400) show(link, true);
-        else opening = window.setTimeout(() => show(link, false), 300);
+        if (current || performance.now() - closed < 400) show(link);
+        else opening = window.setTimeout(() => show(link), 300);
       },
       { signal },
     );
@@ -221,7 +231,7 @@ export function start(css: string): () => void {
         const link = citation(event.target);
         if (!link?.matches(":focus-visible")) return;
         quiet(link);
-        if (link !== dismissed) show(link, true);
+        if (link !== dismissed) show(link);
       },
       { signal },
     );
@@ -231,7 +241,7 @@ export function start(css: string): () => void {
         const link = citation(event.target);
         if (!link) return;
         if (link === dismissed) dismissed = undefined;
-        if (link === current && !inCard(event.relatedTarget)) hide(true);
+        if (link === current && !inCard(event.relatedTarget)) hide();
       },
       { signal },
     );
@@ -240,7 +250,7 @@ export function start(css: string): () => void {
       (event) => {
         if (event.key !== "Escape" || !current) return;
         dismissed = current;
-        hide(true);
+        hide();
       },
       { signal },
     );
@@ -248,7 +258,7 @@ export function start(css: string): () => void {
     document.addEventListener(
       "click",
       (event) => {
-        if (citation(event.target) || inCard(event.target)) hide(true);
+        if (citation(event.target) || inCard(event.target)) hide();
       },
       { signal },
     );

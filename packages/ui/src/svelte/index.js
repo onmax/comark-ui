@@ -35,6 +35,7 @@ import * as gitGraph from "comark-git-graph/svelte";
 import * as bundle from "comark-bundle/svelte";
 import * as time from "comark-time/svelte";
 import * as zoom from "comark-zoom/svelte";
+import * as motion from "comark-motion/svelte";
 import Mermaid from "./Mermaid.svelte";
 import typeset from "./Typeset.svelte";
 
@@ -81,6 +82,7 @@ export default (options) =>
       time,
       typeset,
       zoom,
+      motion,
     },
     options,
   );

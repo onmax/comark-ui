@@ -5,4 +5,4 @@
   let { icon = undefined, show = undefined, hide = undefined, children } = $props();
 </script>
 
-<summary class="cdt-summary">{#if icon?.src}<Icon {...icon} />{/if}<span>{#if show}<span class="cdt-toggle" data-show="{show} " data-hide="{hide} "></span>{/if}{@render children?.()}</span></summary>
+<summary class="cdt-summary">{#if icon?.src}<Icon {...icon} />{/if}<span>{#if show}<span class="cdt-toggle" data-show="{show} " data-hide="{hide} "></span>{/if}{@render children?.()}</span><span class="cdt-chevron" aria-hidden="true" data-motion-chevron=""></span></summary>

@@ -36,22 +36,17 @@ test("hover opens the full date right above the text, centered on it", async ({ 
   expect(card.y + card.height).toBeLessThanOrEqual(anchor.y);
   expect(anchor.y - (card.y + card.height)).toBeLessThan(16);
   expect(card.x + card.width / 2).toBeCloseTo(anchor.x + anchor.width / 2, 0);
-  // It grows from the edge that touches the text.
-  const origin = await pill(page).evaluate((el) => getComputedStyle(el).transformOrigin);
-  expect(Number.parseFloat(origin.split(" ")[1]!)).toBeGreaterThan(card.height / 2);
   await page.mouse.move(0, 0);
   await hidden(page);
 });
 
-test("near the top of the window it opens below and grows from its top edge", async ({ page }) => {
+test("near the top of the window it opens below", async ({ page }) => {
   await open(page, "Opened :time[2026-11-02] by the loft.", "margin:0.25rem 2rem");
   const text = page.locator(".ctm");
   await text.hover();
   await shown(page);
   const [anchor, card] = [await box(text), await box(pill(page))];
   expect(card.y).toBeGreaterThanOrEqual(anchor.y + anchor.height);
-  const origin = await pill(page).evaluate((el) => getComputedStyle(el).transformOrigin);
-  expect(Number.parseFloat(origin.split(" ")[1]!)).toBeLessThan(card.height / 2);
 });
 
 test("hover waits before it opens, and focus doesn't", async ({ page }) => {
