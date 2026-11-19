@@ -73,6 +73,7 @@ export function start(css: string): () => void {
     tip.className = "ctm-tip ctm-live";
     // The time's own tooltip still describes it, so screen readers skip the copy.
     tip.setAttribute("aria-hidden", "true");
+    tip.inert = true;
     tip.setAttribute("data-motion-appear", ".ctm");
     tip.textContent = text;
     time.append(tip);

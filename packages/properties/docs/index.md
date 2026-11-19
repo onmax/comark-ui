@@ -118,7 +118,7 @@ The palette page now shows every token.
 
 ### Dates
 
-A date row works out its words in the reader's browser, against the reader's clock and time zone, so a page you render once and cache never reads "2 days ago" a week later. The server writes the date with its year, "Oct 23, 2026", which reads right before the script runs and without it. The script right after the box, or the component once it mounts, turns it into "2 days ago", or "Oct 23" from 3 weeks on, and the tooltip into the full date and time. It updates each minute while the page is open and when a reader comes back to the tab.
+A date row works out its words in the reader's browser, against the reader's clock and time zone, so a page you render once and cache never reads "2 days ago" a week later. The server writes the date with its year, "Oct 23, 2026", which reads right before the script runs and without it. The HTML renderer's shared script, or the component once it mounts, turns it into "2 days ago", or "Oct 23" from 3 weeks on, and the tooltip into the full date and time. It updates each minute while the page is open and when a reader comes back to the tab.
 
 ::example
 ```md

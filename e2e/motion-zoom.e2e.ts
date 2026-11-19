@@ -4,12 +4,12 @@ import comarkUi from "../packages/ui/src/html.ts";
 
 const offline = { chips: { download: false }, badge: { download: false }, icon: { fetch: false } };
 
-async function open(page: Page, markdown: string, after = "", style = "") {
+async function open(page: Page, markdown: string, after = "", style = "", optedOut = false) {
   const { plugins, components } = comarkUi(offline);
   const html = await createHtmlRenderer({ plugins, components })(markdown);
   await page.goto("/no-such-page");
   await page.setContent(
-    `<!doctype html><html><head><style>body{width:36rem;margin:2rem}${style}</style></head><body>${html}${after}</body></html>`,
+    `<!doctype html><html><head><style>body{width:36rem;margin:2rem}${style}</style></head><body><article${optedOut ? ' data-motion="none"' : ""}>${html}${after}</article></body></html>`,
   );
   await page.waitForFunction(() => window.__comarkMotion);
   await page
@@ -133,6 +133,7 @@ test("under reduced motion the zoom opens and closes at once", async ({ page }) 
   await page.locator("img[data-zoom]").first().click();
   await expect(page.locator(".cz-dialog")).toBeVisible();
   const zoomed = await box(page, ".cz-item > img");
+  await expect.poll(async () => (await frames(page)).some((sample) => sample.box)).toBe(true);
   const [first] = (await frames(page)).filter((sample) => sample.box);
   expect(first!.translate).toBe("");
   expect(first!.scale).toBe("");
@@ -141,6 +142,22 @@ test("under reduced motion the zoom opens and closes at once", async ({ page }) 
 
   await page.keyboard.press("Escape");
   await expect(page.locator(".cz-dialog")).toHaveCount(0, { timeout: 200 });
+});
+
+test("a body-mounted zoom honors the source article's motion opt-out", async ({ page }) => {
+  await open(page, "![Dashboard](/dashboard.png)\n\n![Before](/before.png)", "", "", true);
+  await page.locator("img[data-zoom]").first().click();
+  const dialog = page.locator("body > .cz-dialog");
+  await expect(dialog).toBeVisible();
+  await expect(dialog).toHaveAttribute("data-motion", "none");
+  await expect(dialog.locator(".cz-stage[data-flying]")).toHaveCount(0);
+  await page.keyboard.press("ArrowDown");
+  await expect(dialog.locator(".cz-title")).toHaveText("Before");
+  expect(
+    await dialog.locator(".cz-item").evaluate((frame: HTMLElement) => frame.style.translate),
+  ).toBe("");
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
 });
 
 const table = `::zoom\n| Attempt | Wait |\n| --- | --- |\n${Array.from({ length: 80 }, (_, index) => `| ${index + 1} | ${index * 2} s |`).join("\n")}\n::`;

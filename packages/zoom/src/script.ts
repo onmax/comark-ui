@@ -64,6 +64,7 @@ export function script(css: string): () => void {
   const SELECTOR = "[data-zoom]";
   const INTERACTIVE = "a,button,input,textarea,select,summary,label,video,audio";
   const motion = matchMedia("(prefers-reduced-motion: reduce)");
+  const optedOut = (item: HTMLElement) => Boolean(item.closest('[data-motion="none"]'));
   const easing = "cubic-bezier(.22,1,.36,1)";
 
   type Mapping = {
@@ -433,6 +434,8 @@ export function script(css: string): () => void {
 
   function render(current: View) {
     const item = current.items[current.index]!;
+    if (optedOut(item)) current.dialog.setAttribute("data-motion", "none");
+    else current.dialog.removeAttribute("data-motion");
     current.frame.replaceChildren();
     current.stage.scrollTop = 0;
     current.mapping = { copies: new WeakMap(), originals: new WeakMap() };
@@ -511,7 +514,7 @@ export function script(css: string): () => void {
     if (stage.hasAttribute("data-scroll") && room > 1) {
       stage.scrollBy({
         top: step * stage.clientHeight * 0.25,
-        behavior: motion.matches ? "instant" : "smooth",
+        behavior: motion.matches || optedOut(current.items[current.index]!) ? "instant" : "smooth",
       });
       return;
     }
@@ -530,9 +533,9 @@ export function script(css: string): () => void {
     arrows(current);
     thumbs(current);
     render(current);
-    const motions = layer();
+    const motions = optedOut(item) ? undefined : layer();
+    current.moving?.stop();
     if (motions) {
-      current.moving?.stop();
       const { left, top, width, height } = current.frame.getBoundingClientRect();
       current.moving = motions.travel(current.frame, {
         from: { left, top: top + step * 24, width, height },
@@ -684,7 +687,7 @@ export function script(css: string): () => void {
     }
 
     const shown = items[current.index]!;
-    const motions = layer();
+    const motions = optedOut(shown) ? undefined : layer();
     if (motions) {
       fly(current);
       const opening = motions.travel(frame, { from: over(current, shown) });
@@ -728,7 +731,7 @@ export function script(css: string): () => void {
     if (from === "page" && current.pushed && history.state?.comarkZoom) history.back();
     else if (from !== "history") restore();
     const item = current.items[current.index]!;
-    const motions = layer();
+    const motions = optedOut(item) ? undefined : layer();
     if (motions) {
       // A close can come while the opening still travels. The travel back starts from where the frame is, with its
       // speed, and ends on the item.

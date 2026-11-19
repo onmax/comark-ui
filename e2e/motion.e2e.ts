@@ -46,3 +46,26 @@ test("motion: false leaves the runtime out", async ({ page }) => {
   await open(page, "Some text.", { motion: false });
   expect(await page.evaluate(() => window.__comarkMotion)).toBeUndefined();
 });
+
+test("a zoomed copy button still swaps icons after the original has copied", async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await open(page, "::zoom\n```ts\nconst answer = 42\n```\n::");
+  const original = page.getByRole("button", { name: "Copy code" });
+  await original.click();
+  await expect(original.locator(".ck-copy-done")).toBeAttached();
+  await expect(original.locator(".ck-copy-done")).toHaveCount(0);
+  expect(
+    await original.locator(".ck-copy-idle").evaluate((icon: SVGElement) => icon.style.position),
+  ).toBe("");
+  await page.locator(".cz").press("Enter");
+  const copy = page.locator(".cz-dialog").getByRole("button", { name: "Copy code" });
+  await copy.click();
+  await expect(copy.locator(".ck-copy-done")).toBeAttached();
+  await expect(copy.locator(".ck-copy-done")).toHaveCount(0);
+  expect(
+    await copy.locator(".ck-copy-idle").evaluate((icon: SVGElement) => icon.style.position),
+  ).toBe("");
+});

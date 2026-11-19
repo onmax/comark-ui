@@ -74,8 +74,6 @@ export function start(css: string): () => void {
       card.className = "cso-card";
       card.id = "cso-card";
       card.setAttribute("popover", "manual");
-      // The motion layer raises the card from 8px past its edge, on the side the citation is, as it opens.
-      card.setAttribute("data-motion-appear", "");
       card.setAttribute("data-state", "closed");
       card.innerHTML =
         '<a class="cso-card-link" tabindex="-1"><span class="cso-card-site"><img class="cso-card-image" alt="">' +
@@ -88,6 +86,7 @@ export function start(css: string): () => void {
     }
     // Popovers still inherit modal inertness. Keep the shared card with its citation,
     // and move it back to the page when a later citation is outside a dialog.
+    card.toggleAttribute("data-motion-appear", !link.closest('[data-motion="none"]'));
     const parent = link.closest("dialog:modal") ?? document.body;
     if (card.parentElement !== parent) parent.append(card);
     const anchor = card.querySelector<HTMLAnchorElement>(".cso-card-link");

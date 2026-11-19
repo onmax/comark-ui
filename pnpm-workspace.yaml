@@ -69,10 +69,8 @@ catalog:
   nuxt-agent-discovery: ^0.8.0
   valibot: ^1.4.2
   better-auth: 1.7.15
-  # ViteHub's motion stack from pkg.pr.new: main with the motion layer, vite-hub/vitehub#4850 to #4949, and the branch
-  # feat/ui-motion-comark on top, which comark-motion bundles. Move to a main build once they merge. @vite-hub/docs
-  # isn't on npm yet. Every @vite-hub/* package names the
-  # others by this full commit URL, so the app uses the same one and the tree holds a single commit.
+  # ViteHub's motion stack from pkg.pr.new. @vite-hub/docs isn't on npm yet. Every @vite-hub/* package names the others by
+  # this full commit URL, so the app uses the same one and the tree holds a single commit.
   vite-hub: https://pkg.pr.new/vite-hub/vitehub/vite-hub@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
   "@vite-hub/blob": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/blob@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
   "@vite-hub/connections": https://pkg.pr.new/vite-hub/vitehub/@vite-hub/connections@4811d4ba8f4ef13c3a6abffd0c7f38a9d97c1890
@@ -178,8 +176,6 @@ minimumReleaseAgeExclude:
   - "@nuxt/vite-server-nightly@5.0.0-2611111405-4462a07"
   - nuxt-nightly@5.0.0-2611111405-4462a07
   - vue-router@5.5.0
-  # The ViteHub build pins nostics 1.4.0, published on 2026-11-16. Remove this line after 2026-11-17T08:31Z.
-  - nostics@1.4.0
 
 allowBuilds:
   # ViteHub's optional dependencies (zstd, swc, cbor-extract, cpu-features, liblzma, ssh2) are not used by the docs.

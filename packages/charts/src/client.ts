@@ -160,23 +160,33 @@ export function start(css: string): () => void {
     ).__comarkMotion;
   // Without the motion layer the styles swap the icons at once by `data-state`. With it, the button holds only the
   // icon it shows, and the layer blurs the old one out as the new one comes in.
-  const icons = new WeakMap<HTMLElement, [Element, Element]>();
+  const claimed = new WeakSet<HTMLElement>();
   const claim = (button: HTMLElement) => {
-    let pair = icons.get(button);
-    if (pair) return pair;
+    const saved = button.nextElementSibling;
+    if (saved instanceof HTMLTemplateElement && saved.hasAttribute("data-copy-icons")) {
+      if (!claimed.has(button)) {
+        const idle = saved.content.firstElementChild;
+        if (!idle) return;
+        button.replaceChildren(idle.cloneNode(true));
+        claimed.add(button);
+      }
+      return saved.content;
+    }
     const idle = button.querySelector(":scope>svg:first-child");
     const check = button.querySelector(":scope>svg+svg");
     if (!idle || !check) return undefined;
-    pair = [idle, check];
-    icons.set(button, pair);
-    check.remove();
+    const template = document.createElement("template");
+    template.setAttribute("data-copy-icons", "");
+    template.content.append(idle.cloneNode(true), check);
+    button.after(template);
+    claimed.add(button);
     button.setAttribute("data-icon-swap", "");
-    return pair;
+    return template.content;
   };
   const swap = (button: HTMLElement, done: boolean) => {
     const layer = motion();
-    const pair = layer && claim(button);
-    if (layer && pair) layer.swapIcon(button, pair[done ? 1 : 0]);
+    const icon = layer && claim(button)?.children[done ? 1 : 0];
+    if (layer && icon) layer.swapIcon(button, icon.cloneNode(true) as Element);
   };
   // The layer squashes the icon of an icon-only control, so the button gives up its hidden icon before the layer's
   // listener on the document sees the press: a listener on the window hears it first.

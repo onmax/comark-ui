@@ -74,7 +74,10 @@ export function createCodeMotion(prefix: string, duration = 500) {
     const owned: Animation[] = [];
     playing.set(stage, owned);
     for (const ghost of stage.querySelectorAll(`:scope>.${prefix}-ghost`)) ghost.remove();
-    const moving = animate && !matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const moving =
+      animate &&
+      !stage.closest('[data-motion="none"]') &&
+      !matchMedia("(prefers-reduced-motion: reduce)").matches;
     const before = moving ? tokensOf(from) : [];
     const after = moving ? tokensOf(target) : [];
     const box = stage.getBoundingClientRect();

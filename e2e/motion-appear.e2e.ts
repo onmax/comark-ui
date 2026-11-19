@@ -7,12 +7,12 @@ import comarkUi from "../packages/ui/src/html.ts";
 
 const offline = { chips: { download: false }, badge: { download: false }, icon: { fetch: false } };
 
-async function open(page: Page, markdown: string) {
+async function open(page: Page, markdown: string, optedOut = false) {
   const { plugins, components } = comarkUi(offline);
   const html = await createHtmlRenderer({ plugins, components })(markdown);
   // No `page.goto()` first: after a navigation, Chromium stops sending `pointerout`, which closes both.
   await page.setContent(
-    `<!doctype html><html><head><style>body{width:36rem;margin:10rem 2rem}</style></head><body>${html}</body></html>`,
+    `<!doctype html><html><head><style>body{width:36rem;margin:10rem 2rem}</style></head><body><article${optedOut ? ' data-motion="none"' : ""}>${html}</article></body></html>`,
   );
   await page.waitForFunction(() => window.__comarkMotion);
 }
@@ -182,6 +182,35 @@ test("a citation's card rises from its citation, slides to the next, and sinks b
   expect(leaving.some((frame) => visibleWidth(frame) < second.width / 2 && ty(frame) > 0)).toBe(
     true,
   );
+});
+
+test("a body-mounted citation card honors the source article's motion opt-out", async ({
+  page,
+}) => {
+  await open(page, "See :cite[1].\n\n::sources\n1. [Example](https://example.com)\n::", true);
+  await page.locator(".cso-cite a").hover();
+  const popover = page.locator("body > .cso-card");
+  await expect(popover).toBeVisible();
+  await expect(popover).not.toHaveAttribute("data-motion-appear");
+  await page.mouse.move(0, 0);
+  await expect(popover).toBeHidden();
+  await expect(page.locator(".cso-card[data-motion=none]")).toHaveCount(0);
+});
+
+test("selecting a paragraph excludes the animated tooltip copy", async ({ page }) => {
+  await open(page, "Opened :time[2026-11-02] by the loft.");
+  const time = page.locator(".ctm");
+  await time.focus();
+  await expect(time.locator(live)).toBeVisible();
+  const { animated, original } = await time.locator("xpath=..").evaluate((paragraph) => {
+    const selection = getSelection()!;
+    selection.selectAllChildren(paragraph);
+    const animated = selection.toString();
+    paragraph.querySelector(".ctm-live")?.remove();
+    selection.selectAllChildren(paragraph);
+    return { animated, original: selection.toString() };
+  });
+  expect(animated).toBe(original);
 });
 
 test("under reduced motion the tooltip and the card crossfade in place", async ({ page }) => {
