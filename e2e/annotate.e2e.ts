@@ -109,7 +109,7 @@ test("the zoom maps its copies to the page and back", async ({ page }) => {
     outside: null,
   };
   expect(await mapped()).toEqual({ ...expected, index: 0 });
-  await page.locator(".cz-next").click();
+  await page.keyboard.press("ArrowRight");
   await expect(page.locator(".cz-count")).toHaveText("2 / 2");
   expect(await mapped()).toEqual({ ...expected, index: 1 });
 });
