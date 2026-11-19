@@ -13,6 +13,11 @@ const [script] = output;
 
 export default definePackage({
   entry: ["src/index.ts", "src/client.ts", "src/html.ts", "src/vue.ts", "src/react.ts"],
-  define: { __COMARK_MOTION_SCRIPT__: JSON.stringify(script.code.trim()) },
+  // A tree-shaking annotation means nothing in a page, and comark-ui's output carries no comments.
+  define: {
+    __COMARK_MOTION_SCRIPT__: JSON.stringify(
+      script.code.replace(/\/\*\s*[#@]__(?:PURE|NO_SIDE_EFFECTS)__\s*\*\/\s?/g, "").trim(),
+    ),
+  },
   copy: [{ from: "src/svelte", to: "dist" }],
 });

@@ -799,7 +799,9 @@ export function script(css: string): () => void {
       const own =
         event.defaultPrevented ||
         (event.target instanceof Element &&
-          event.target.closest("[role=slider],[role=separator],input,textarea,select,[contenteditable]"));
+          event.target.closest(
+            "[role=slider],[role=separator],input,textarea,select,[contenteditable]",
+          ));
       if (own && event.key.startsWith("Arrow")) return;
       if (event.key === "ArrowLeft" && view.items.length > 1) go(view.index - 1);
       else if (event.key === "ArrowRight" && view.items.length > 1) go(view.index + 1);
