@@ -52,7 +52,7 @@ export default defineNuxtConfig({
     host: "cloudflare",
     // Comments, the editor's sessions in the Content cms preset (server/content.ts), and nothing else use the database.
     database: {
-      driver: "d1",
+      driver: "cloudflare",
       databaseId: "66cd474e-9408-4af3-bab9-75e06b76f099",
       databaseName: "comark-ui-docs",
     },
@@ -63,7 +63,7 @@ export default defineNuxtConfig({
     kv: true,
     auth: true,
     // A Durable Object holds each page's room: who else is on it and where their cursor is, for comments and the editor.
-    realtime: { authority: "cloudflare" },
+    realtime: { driver: "cloudflare" },
     // The editor is the Content section of the ViteHub Console (console.vitehub.dev). The site serves only
     // /_vitehub/rpc, which takes calls the Console signs with the key in a VITEHUB_CONSOLE_KEY_<NAME> binding, and
     // console-authorize.ts checks the person who calls.
