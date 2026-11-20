@@ -47,12 +47,27 @@ export function start(css: string): () => void {
     return rtl(track) ? outer.right - inner.right : inner.left - outer.left;
   };
 
-  // The slide at the start edge. At the end of a track with several columns, the last slides never get there.
-  function current(root: Element) {
-    const { track, slides } = parts(root);
-    if (!track || !slides.length) return 0;
+  function visible(track: HTMLElement, slides: HTMLElement[]) {
+    if (slides.length < 2) return 1;
+    const first = slides[0]!.getBoundingClientRect();
+    const second = slides[1]!.getBoundingClientRect();
+    const pitch = Math.abs(second.left - first.left);
+    return pitch > 0
+      ? Math.min(
+          slides.length,
+          1 + Math.max(0, Math.floor((track.clientWidth - first.width + 1) / pitch)),
+        )
+      : 1;
+  }
+
+  const limit = (track: HTMLElement) => track.scrollWidth - track.clientWidth;
+  const atEnd = (track: HTMLElement) => limit(track) - Math.abs(track.scrollLeft) <= 1;
+
+  // At the clamped endpoint a peeking slide can still start closer to the edge than the last slide.
+  function current(track: HTMLElement, slides: HTMLElement[], lastStart: number) {
+    if (atEnd(track)) return lastStart;
     const offsets = slides.map((slide) => Math.abs(offset(track, slide)));
-    return offsets.indexOf(Math.min(...offsets));
+    return Math.min(lastStart, offsets.indexOf(Math.min(...offsets)));
   }
 
   // Where each carousel is heading while it scrolls smoothly, so quick clicks add up instead of reading a position
@@ -72,36 +87,51 @@ export function start(css: string): () => void {
     );
   };
 
-  function show(root: Element, index: number, behavior?: ScrollBehavior) {
+  function show(
+    root: Element,
+    index: number | ((current: number) => number),
+    behavior?: ScrollBehavior,
+  ) {
     const { track, slides } = parts(root);
-    const target = Math.max(0, Math.min(index, slides.length - 1));
-    const slide = slides[target];
-    if (!track || !slide) return;
+    if (!track?.clientWidth || !slides.length) return;
+    const lastStart = slides.length - visible(track, slides);
+    const requested =
+      typeof index === "number"
+        ? index
+        : index(targets.get(root) ?? current(track, slides, lastStart));
+    const target = Math.max(0, Math.min(requested, lastStart));
+    const direction = rtl(track) ? -1 : 1;
+    const scrolled = direction * track.scrollLeft;
+    const end = limit(track);
+    const to =
+      target > 0 && target === lastStart
+        ? end
+        : Math.max(0, Math.min(scrolled + offset(track, slides[target]!), end));
+    if (Math.abs(to - scrolled) <= 1) {
+      if (targets.delete(root)) track.scrollTo({ left: direction * to, behavior: "instant" });
+      return;
+    }
     const how =
       behavior ?? (matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth");
     if (how === "smooth") targets.set(root, target);
     else targets.delete(root);
-    // A track already in place doesn't scroll, so the pause starts now.
     settle(root);
-    const by = offset(track, slide);
-    track.scrollTo({ left: track.scrollLeft + (rtl(track) ? -by : by), behavior: how });
+    track.scrollTo({ left: direction * to, behavior: how });
   }
 
-  const page = (root: Element, by: number) => show(root, (targets.get(root) ?? current(root)) + by);
+  const page = (root: Element, by: number) => show(root, (index) => index + by);
 
   function sync(root: Element) {
     const { track, slides, count, prev, next } = parts(root);
     // A carousel in a hidden tab or a closed details measures 0 wide, which would read as the end.
-    if (!track?.clientWidth) return;
+    if (!track?.clientWidth || !slides.length) return;
     const scrolled = Math.abs(track.scrollLeft);
-    const end = scrolled + track.clientWidth >= track.scrollWidth - 2;
+    const end = atEnd(track);
     // The counter names every slide in view, such as 2–3 / 5. It counts from the track's width rather than from what
     // is on screen, so it doesn't flicker mid-scroll, and a slide that only peeks in on a narrow page doesn't count.
-    const gap = parseFloat(getComputedStyle(track).columnGap) || 0;
-    const width = slides[0]?.getBoundingClientRect().width ?? 0;
-    const shown = width ? Math.max(1, Math.round((track.clientWidth + gap) / (width + gap))) : 1;
-    const first = Math.max(0, end ? slides.length - shown : current(root));
-    const last = Math.min(slides.length, first + shown);
+    const shown = visible(track, slides);
+    const first = current(track, slides, slides.length - shown);
+    const last = first + shown;
     const text = `${first + 1}${last - first > 1 ? `–${last}` : ""} / ${slides.length}`;
     // Only on a change: the counter is a live region, so each write is read out.
     if (count && count.textContent !== text) count.textContent = text;
@@ -196,7 +226,7 @@ export function start(css: string): () => void {
       const target = event.target instanceof Element ? event.target : null;
       const root = target?.closest(".cc");
       const track = root ? parts(root).track : null;
-      if (!target || !root || !track || target.closest(keyed)) return;
+      if (!target || !root || !track || limit(track) <= 0 || target.closest(keyed)) return;
       // A wide code block or table scrolls with these keys.
       for (
         let at: Element | null = target;

@@ -183,7 +183,7 @@ When the reader prefers reduced motion, paging jumps instead of scrolling smooth
 | `Tab`, `Shift+Tab` | Moves focus through the slides, when they zoom, and then the arrows. |
 | `Escape` | Closes the zoomed view. |
 
-The carousel ignores the arrow keys, `Home`, and `End` when pressed with Alt, Ctrl, Meta, or Shift. It also leaves them to whatever has focus and uses them:
+The carousel leaves the arrow keys, `Home`, and `End` to the browser when all slides fit or when pressed with Alt, Ctrl, Meta, or Shift. It also leaves them to whatever has focus and uses them:
 
 - A form field, a video or audio player, a `<summary>`, or editable text.
 - A tab list, slider, radio group, list box, combo box, spin button, menu, menu bar, or tree.

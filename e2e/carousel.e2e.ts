@@ -12,15 +12,16 @@ const render = createHtmlRenderer({
 const open = async (
   page: Page,
   markdown: string,
-  options: { dir?: string; script?: boolean; width?: string } = {},
+  options: { dir?: string; script?: boolean; width?: string; style?: string } = {},
 ) => {
   let html = await render(markdown);
   if (options.script === false) html = html.replace(/<script>[\s\S]*?<\/script>/g, "");
   await page.setContent(
-    `<!doctype html><html dir="${options.dir ?? "ltr"}"><style>body{width:${options.width ?? "48rem"};margin:2rem}pre{overflow-x:auto}</style><body>${html}</body></html>`,
+    `<!doctype html><html dir="${options.dir ?? "ltr"}"><style>body{width:${options.width ?? "48rem"};margin:2rem}pre{overflow-x:auto}${options.style ?? ""}</style><body>${html}</body></html>`,
   );
 };
 const three = '::carousel{title="Tour"}\nOne\n\nTwo\n\nThree\n::';
+const five = '::carousel{title="Tour" columns=3}\nOne\n\nTwo\n\nThree\n\nFour\n\nFive\n::';
 const parts = (page: Page, title = "Tour") => {
   const root = page.locator(`.cc[aria-label="${title}"]`);
   const controls = root.locator(":scope>.cc-controls");
@@ -170,6 +171,63 @@ test("Home and End go to the first and last slide", async ({ page }) => {
   await page.keyboard.press("Home");
   await expect(count).toHaveText("1 / 3");
   await expect(prev).toHaveAttribute("aria-disabled", "true");
+});
+
+test("the range excludes a clipped slide with a percentage gap", async ({ page }) => {
+  await open(page, five, { style: ".cc{--cc-gap:10%}" });
+  const { count, next } = parts(page);
+  await expect(count).toHaveText("1–3 / 5");
+  await next.click();
+  await expect(count).toHaveText("2–4 / 5");
+});
+
+test("a tiny carousel does not count the next slide peeking in", async ({ page }) => {
+  await open(page, three, { width: "120px" });
+  const { count, next } = parts(page);
+  await expect(next).toHaveAttribute("aria-disabled", "false");
+  await expect(count).toHaveText("1 / 3");
+});
+
+test("one backward step works after pressing End again at the last snap", async ({ page }) => {
+  await open(page, five);
+  const { count, track, next, root } = parts(page);
+  await root.locator(".cc-slide").first().focus();
+  await track.evaluate((element) => {
+    element.addEventListener("scrollend", () => element.setAttribute("data-settled", ""), {
+      once: true,
+    });
+  });
+  await page.keyboard.press("End");
+  await expect(track).toHaveAttribute("data-settled", "");
+  await expect(next).toHaveAttribute("aria-disabled", "true");
+  await page.keyboard.press("End");
+  await page.keyboard.press("ArrowLeft");
+  await expect(count).toHaveText("2–4 / 5");
+});
+
+test("Previous reaches the preceding snap with a large peek", async ({ page }) => {
+  await open(page, three, { width: "320px", style: ".cc{--cc-peek:10rem}" });
+  const { count, next, prev, root } = parts(page);
+  await root.locator(".cc-slide").first().focus();
+  await page.keyboard.press("End");
+  await expect(next).toHaveAttribute("aria-disabled", "true");
+  await expect(count).toHaveText("3 / 3");
+  await prev.click();
+  await expect(count).toHaveText("2 / 3");
+  await expect(next).toHaveAttribute("aria-disabled", "false");
+});
+
+test("Home and End scroll the page when all slides fit", async ({ page }) => {
+  await open(page, '::carousel{title="Tour" columns=2}\nOne\n\nTwo\n::', {
+    style: "body{min-height:300vh}",
+  });
+  const { root, next } = parts(page);
+  await expect(next).toBeHidden();
+  await root.locator(".cc-slide").first().focus();
+  await page.keyboard.press("End");
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
+  await page.keyboard.press("Home");
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
 });
 
 test("a right-to-left carousel pages in its reading direction", async ({ page }) => {
