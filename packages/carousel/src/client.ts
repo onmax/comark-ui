@@ -95,8 +95,14 @@ export function start(css: string): () => void {
     if (!track?.clientWidth) return;
     const scrolled = Math.abs(track.scrollLeft);
     const end = scrolled + track.clientWidth >= track.scrollWidth - 2;
-    const index = end ? slides.length - 1 : current(root);
-    const text = `${index + 1} / ${slides.length}`;
+    // The counter names every slide in view, such as 2–3 / 5. It counts from the track's width rather than from what
+    // is on screen, so it doesn't flicker mid-scroll, and a slide that only peeks in on a narrow page doesn't count.
+    const gap = parseFloat(getComputedStyle(track).columnGap) || 0;
+    const width = slides[0]?.getBoundingClientRect().width ?? 0;
+    const shown = width ? Math.max(1, Math.round((track.clientWidth + gap) / (width + gap))) : 1;
+    const first = Math.max(0, end ? slides.length - shown : current(root));
+    const last = Math.min(slides.length, first + shown);
+    const text = `${first + 1}${last - first > 1 ? `–${last}` : ""} / ${slides.length}`;
     // Only on a change: the counter is a live region, so each write is read out.
     if (count && count.textContent !== text) count.textContent = text;
     prev?.setAttribute("aria-disabled", String(scrolled < 2));
@@ -175,7 +181,7 @@ export function start(css: string): () => void {
   document.addEventListener(
     "keydown",
     (event) => {
-      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+      if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
       // Alt+Left is the browser's Back, and the other modifiers select text or switch tabs.
       if (
         event.defaultPrevented ||
@@ -191,7 +197,7 @@ export function start(css: string): () => void {
       const root = target?.closest(".cc");
       const track = root ? parts(root).track : null;
       if (!target || !root || !track || target.closest(keyed)) return;
-      // A wide code block or table scrolls with the arrows.
+      // A wide code block or table scrolls with these keys.
       for (
         let at: Element | null = target;
         at && at !== track && at !== root;
@@ -199,7 +205,9 @@ export function start(css: string): () => void {
       )
         if (scrolls(at)) return;
       event.preventDefault();
-      page(root, event.key === (rtl(track) ? "ArrowLeft" : "ArrowRight") ? 1 : -1);
+      if (event.key === "Home") show(root, 0);
+      else if (event.key === "End") show(root, parts(root).slides.length - 1);
+      else page(root, event.key === (rtl(track) ? "ArrowLeft" : "ArrowRight") ? 1 : -1);
     },
     { signal },
   );

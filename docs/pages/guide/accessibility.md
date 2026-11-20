@@ -29,7 +29,7 @@ When no element fits, a block follows the matching [WAI-ARIA pattern](https://ww
 | Block | Pattern | Keys |
 | --- | --- | --- |
 | [Tabs](/tabs) | [Tabs](https://www.w3.org/WAI/ARIA/apg/patterns/tabs/) | `ArrowLeft`, `ArrowRight`, `Home`, `End` |
-| [Carousel](/carousel) | [Carousel](https://www.w3.org/WAI/ARIA/apg/patterns/carousel/) | `ArrowLeft`, `ArrowRight` |
+| [Carousel](/carousel) | [Carousel](https://www.w3.org/WAI/ARIA/apg/patterns/carousel/) | `ArrowLeft`, `ArrowRight`, `Home`, `End` |
 | [Zoom](/zoom) | [Modal dialog](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/) | `Enter`, `Space`, `Escape`, `ArrowLeft`, `ArrowRight` |
 | [Annotate](/annotate)'s compare slider | [Slider](https://www.w3.org/WAI/ARIA/apg/patterns/slider/) | Arrow keys, `Home`, `End`, `PageUp` (+25%), `PageDown` (−25%) |
 
