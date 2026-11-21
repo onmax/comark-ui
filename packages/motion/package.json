@@ -1,6 +1,6 @@
 {
   "name": "comark-motion",
-  "version": "0.14.0",
+  "version": "0.14.1",
   "description": "ViteHub UI's motion layer in Comark documents: buttons squash, tabs slide, chevrons turn, tooltips rise from their trigger. A Comark plugin.",
   "keywords": [
     "animation",
