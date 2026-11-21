@@ -20,6 +20,8 @@ export const STACK_ROWS = 3;
 
 // Comments add a document wrapper; nested component/list tables remain outside this scope.
 const documentRoot = ":is(:scope, :scope > .cr)";
+const imageParent = `:is(${documentRoot}, p, li, blockquote, dt, dd, figure, td, th)`;
+const inline = ":is(a, b, del, em, i, mark, s, span, strong, sub, sup)";
 const table = `${documentRoot} > div:is([data-width], [data-fit])`;
 // A grid of the table's rows, each a subgrid, so its columns line up from row to row.
 const grid = (selector: string) => `
@@ -243,11 +245,17 @@ const rules = `
   &:where(img, video) { border-radius: var(--_ty-radius); max-width: 100%; height: auto; margin-block: var(--_ty-flow) 0; }
   /* An image in a line of text sits on the text; a block's top margin would push it below. */
   &:where(:is(p, li, td, th, a) img) { margin-block-start: 0; }
-  /* A Markdown image fits on the screen beside some text, so a tall one never fills it while you scroll; a click zooms
-     it whole. An image with its width set keeps that room and fits the picture inside it, rather than squashing it.
-     Blocks' own images, such as a screenshot's under its marks, keep their size. */
-  &:where(:is(:scope, p, li, blockquote, dd, figure) > img, :is(p, li, figure) > a > img) {
-    max-height: min(70svh, 40rem); object-fit: contain;
+  /* Cap prose images, not the images inside a block's frame. */
+  &:where(${imageParent} > img, ${imageParent} > ${inline} img) {
+    --_ty-image-height: min(70svh, 40rem);
+    max-height: var(--_ty-image-height); object-fit: contain;
+    &:where([width][height]) {
+      @supports (width: attr(width px)) {
+        --_ty-image-width: calc(var(--_ty-image-height) * attr(width type(<number>)) / max(1, attr(height type(<number>))));
+        max-width: min(100%, var(--_ty-image-width, 100%));
+      }
+      @supports not (width: attr(width px)) { width: auto; }
+    }
   }
   /* A captioned image is centered over its caption once it's narrower than the column. */
   &:where(figure > img, figure > a > img) { display: block; margin-inline: auto; }

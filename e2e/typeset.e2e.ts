@@ -9,8 +9,12 @@ const render = createHtmlRenderer(
     badge: { download: false },
     icon: { fetch: false },
     diagrams: { draw: false },
+    figure: { unwrap: true },
   }),
 );
+
+const portrait =
+  '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="1000"><rect width="400" height="1000"/></svg>';
 
 test("the first block adds no space above, with the typeset styles before it", async ({ page }) => {
   const html = await render("## Plan\n\nThe first step.");
@@ -24,21 +28,33 @@ test("a tall image fits on the screen, centered over its caption, while a screen
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
-  const tall = (name: string) =>
-    page.route(`**/${name}.svg`, (route) =>
-      route.fulfill({
-        contentType: "image/svg+xml",
-        body: '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="1000"><rect width="400" height="1000"/></svg>',
-      }),
-    );
-  await tall("painting");
-  await tall("shot");
-  const html = await render(
-    '![A tall painting](/painting.svg "A tall painting")\n\n::screenshot{src="/shot.svg" alt="A tall screenshot"}\n::',
+  const paintingReady = Promise.withResolvers<void>();
+  await page.route("**/painting.svg", async (route) => {
+    await paintingReady.promise;
+    await route.fulfill({ contentType: "image/svg+xml", body: portrait });
+  });
+  await page.route("**/shot.svg", (route) =>
+    route.fulfill({ contentType: "image/svg+xml", body: portrait }),
   );
-  await fixture(page, html, "main{width:40rem;margin:auto}");
+  const html = await render(
+    '![A tall painting](/painting.svg "A tall painting"){width="400" height="1000"}\n\n::screenshot{src="/shot.svg" alt="A tall screenshot"}\n::',
+  );
   const painting = page.locator('figure > img[alt="A tall painting"]');
-  await expect(painting).toHaveJSProperty("complete", true);
+  await Promise.all([
+    fixture(page, html, "main{width:40rem;margin:auto}"),
+    (async () => {
+      try {
+        await expect(painting).toHaveAttribute("width", "400");
+        await expect(painting).toHaveAttribute("height", "1000");
+        await expect(painting).toHaveJSProperty("naturalWidth", 0);
+        await expect(painting).toHaveCSS("width", "224px");
+        await expect(painting).toHaveCSS("height", "560px");
+      } finally {
+        paintingReady.resolve();
+      }
+    })(),
+  ]);
+  await expect(painting).toHaveJSProperty("naturalWidth", 400);
   const box = (await painting.boundingBox())!;
   const column = (await page.locator("main").boundingBox())!;
   // 70% of the 800px window, at the picture's own 2:5.
@@ -49,4 +65,40 @@ test("a tall image fits on the screen, centered over its caption, while a screen
   const shot = page.locator('img[alt="A tall screenshot"]');
   await expect(shot).toHaveJSProperty("complete", true);
   expect((await shot.boundingBox())!.height).toBeCloseTo(column.width * 2.5, 0);
+});
+
+test("ordinary Markdown images fit inside links, inline markup, tables, and the comments wrapper", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.route("**/portrait.svg", (route) =>
+    route.fulfill({ contentType: "image/svg+xml", body: portrait }),
+  );
+  const html = await render(`> [![Quote](/portrait.svg)](/full)
+
+Portrait
+: [![Definition](/portrait.svg)](/full)
+
+**![Emphasis](/portrait.svg)**
+
+| Portrait |
+| --- |
+| ![Cell](/portrait.svg) |
+
+![Unwrapped](/portrait.svg)
+
+:comment[Margin comment]{note="A note"}`);
+  await fixture(page, html, "main{width:40rem;margin:auto}");
+  for (const selector of [
+    'blockquote > a > img[alt="Quote"]',
+    'dd > a > img[alt="Definition"]',
+    'strong > img[alt="Emphasis"]',
+    'td > img[alt="Cell"]',
+    '.cr > img[alt="Unwrapped"]',
+  ]) {
+    const image = page.locator(selector);
+    await expect(image).toHaveJSProperty("naturalWidth", 400);
+    await expect(image).toHaveCSS("max-height", "560px");
+    expect((await image.boundingBox())!.height).toBeLessThanOrEqual(560);
+  }
 });
