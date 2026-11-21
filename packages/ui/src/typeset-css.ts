@@ -243,6 +243,14 @@ const rules = `
   &:where(img, video) { border-radius: var(--_ty-radius); max-width: 100%; height: auto; margin-block: var(--_ty-flow) 0; }
   /* An image in a line of text sits on the text; a block's top margin would push it below. */
   &:where(:is(p, li, td, th, a) img) { margin-block-start: 0; }
+  /* A Markdown image fits on the screen beside some text, so a tall one never fills it while you scroll; a click zooms
+     it whole. An image with its width set keeps that room and fits the picture inside it, rather than squashing it.
+     Blocks' own images, such as a screenshot's under its marks, keep their size. */
+  &:where(:is(:scope, p, li, blockquote, dd, figure) > img, :is(p, li, figure) > a > img) {
+    max-height: min(70svh, 40rem); object-fit: contain;
+  }
+  /* A captioned image is centered over its caption once it's narrower than the column. */
+  &:where(figure > img, figure > a > img) { display: block; margin-inline: auto; }
   &:where(figure) { margin-block: var(--_ty-flow) 0; margin-inline: 0; }
   &:where(figcaption, caption) {
     color: var(--_ty-muted); font-size: 0.875em; text-align: center; margin-block-start: calc(0.75em / 0.875);
