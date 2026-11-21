@@ -165,8 +165,8 @@ export const css = `@layer comark{${[
   ".ca-callout.ca-callout-west{text-align:right;transform:translateX(-100%)}",
   ".ca-callout>div>:first-child{margin-top:0}",
   ".ca-callout>div>:last-child{margin-bottom:0}",
-  // Too narrow for side notes: stack them under the image, drop the arrows, and letter each note and its target instead. Notes on both sides need more room than notes on one.
-  "@container (max-width:28rem){.ca-stage{padding:0!important}.ca-arrow{display:none}.ca-callout{position:static;display:flex;gap:.6rem;align-items:baseline;width:auto;max-width:none;margin-top:.5rem;padding-left:0;text-align:left;transform:none}.ca-letter{display:inline-grid}.ca-none{outline:1.5px dashed var(--ca-color);outline-offset:3px;border-radius:calc(var(--_comark-radius) - 7px)}}",
+  // Too narrow for side notes: stack them under the image, drop the arrows, and letter each note and its target instead. Notes on both sides need more room than notes on one. The stacked note outranks .ca-callout-west, whose shift would push it off the image.
+  "@container (max-width:28rem){.ca-stage{padding:0!important}.ca-arrow{display:none}.ca-stage .ca-callout{position:static;display:flex;gap:.6rem;align-items:baseline;width:auto;max-width:none;margin-top:.5rem;padding-left:0;text-align:left;transform:none}.ca-letter{display:inline-grid}.ca-none{outline:1.5px dashed var(--ca-color);outline-offset:3px;border-radius:calc(var(--_comark-radius) - 7px)}}",
   "@container (max-width:40rem){.ca-left.ca-right .ca-stage{padding:0!important}.ca-left.ca-right .ca-arrow{display:none}.ca-left.ca-right .ca-callout{position:static;display:flex;gap:.6rem;align-items:baseline;width:auto;max-width:none;margin-top:.5rem;padding-left:0;text-align:left;transform:none}.ca-left.ca-right .ca-letter{display:inline-grid}.ca-left.ca-right .ca-none{outline:1.5px dashed var(--ca-color);outline-offset:3px;border-radius:calc(var(--_comark-radius) - 7px)}}",
   // Host pages often center a figcaption, which suits a one-line caption but not a list of notes.
   ".ca figcaption{margin-top:.75rem;text-align:start}",

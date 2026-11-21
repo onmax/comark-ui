@@ -1,4 +1,6 @@
-import { defineComarkPlugin } from "comark";
+import { defineComarkPlugin, type Node } from "comark";
+import { childrenOf, isElement } from "../../../shared/nodes.ts";
+import { rawText } from "../../../shared/text.ts";
 
 export { typesetCss, typesetStylesheet } from "./typeset-css.ts";
 
@@ -6,6 +8,38 @@ export { typesetCss, typesetStylesheet } from "./typeset-css.ts";
 export const TYPESET_TAG = "typeset-styles";
 
 const isTypeset = (node: unknown) => Array.isArray(node) && node[0] === TYPESET_TAG;
+
+function pixels(value: unknown) {
+  const digits = rawText(value);
+  const size = /^\d+$/.test(digits) ? Number(digits) : 0;
+  return Number.isSafeInteger(size) ? size : 0;
+}
+
+function sizeImages(nodes: Node[]): Node[] {
+  return nodes.map((node) => {
+    if (!isElement(node)) return node;
+    const [tag, attrs] = node;
+    if (tag !== "img") {
+      const children = sizeImages(childrenOf(node));
+      return children.some((child, index) => child !== node[index + 2])
+        ? [tag, attrs, ...children]
+        : node;
+    }
+    const width = pixels(attrs.width);
+    const height = pixels(attrs.height);
+    const style = rawText(attrs.style);
+    if (!width || !height || (attrs.style !== undefined && attrs.style !== style)) return node;
+    if (style.includes("--_ty-image-w:")) return node;
+    return [
+      tag,
+      {
+        ...attrs,
+        style: `${style ? `${style};` : ""}--_ty-image-w:${width};--_ty-image-h:${height}`,
+      },
+      ...childrenOf(node),
+    ];
+  });
+}
 
 /**
  * Adds the node that writes the typeset styles at the start of the document. The preset turns it on by default.
@@ -24,7 +58,7 @@ export const typeset = defineComarkPlugin(
       const nodes = state.tree.nodes.filter(
         (node) => !isTypeset(node) && (!caretFallback || node !== ""),
       );
-      state.tree.nodes = [[TYPESET_TAG, {}], ...nodes, ...(caretFallback ? [""] : [])];
+      state.tree.nodes = [[TYPESET_TAG, {}], ...sizeImages(nodes), ...(caretFallback ? [""] : [])];
     },
   }),
 );

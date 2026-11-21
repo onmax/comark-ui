@@ -2,12 +2,18 @@ import { createHtmlRenderer } from "@comark/html";
 import { expect, type Page, test } from "@playwright/test";
 import annotate, { components as annotateComponents } from "../packages/annotate/src/html.ts";
 import carousel, { components as carouselComponents } from "../packages/carousel/src/html.ts";
+import details, { components as detailsComponents } from "../packages/details/src/html.ts";
 import zoom, { components as zoomComponents } from "../packages/zoom/src/html.ts";
 import { fixture } from "./helpers.ts";
 
 const render = createHtmlRenderer({
-  plugins: [annotate(), carousel(), zoom()],
-  components: { ...annotateComponents, ...carouselComponents, ...zoomComponents },
+  plugins: [annotate(), carousel(), details(), zoom()],
+  components: {
+    ...annotateComponents,
+    ...carouselComponents,
+    ...detailsComponents,
+    ...zoomComponents,
+  },
 });
 
 const image = "![Office correlations dashboard](/dashboard.png)";
@@ -420,6 +426,114 @@ test("an item taller than the stage fills its width and scrolls instead of shrin
 
   await page.keyboard.press("Escape");
   await expect(page.locator(".cz-dialog")).toHaveCount(0);
+});
+
+test("an item a little taller than the stage shrinks a little and shows whole", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setViewportSize({ width: 1000, height: 800 });
+  await page.route("**/portrait.svg", (route) =>
+    route.fulfill({
+      contentType: "image/svg+xml",
+      body: '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1440"><rect width="1200" height="1440"/></svg>',
+    }),
+  );
+  await fixture(page, await render("![Portrait](/portrait.svg)"));
+  await page.locator("main img").click();
+  const stage = page.locator(".cz-stage");
+  await expect(stage).not.toHaveAttribute("data-scroll");
+  const copy = await rect(page, ".cz-item");
+  const box = await rect(page, ".cz-stage");
+  expect(copy.top).toBeGreaterThanOrEqual(box.top);
+  expect(copy.bottom).toBeLessThanOrEqual(box.bottom);
+  expect(copy.width).toBeGreaterThan(600 * 0.85);
+});
+
+test("notes that sit outside a screenshot's box zoom onto the stage with it, centered", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setViewportSize({ width: 900, height: 700 });
+  await fixture(
+    page,
+    await render(`::screenshot{src="/dashboard.png" alt="Dashboard" viewport="1440x860"}
+:::annotation{x=24 y=15 w=50 h=70 mark="none" side="top" at=0 to="24,30"}
+The whole chart fits in the window, and this note runs far past its left edge.
+:::
+::`),
+  );
+  const stage = page.locator(".ca-stage");
+  const note = page.locator("main .ca-callout");
+  expect((await note.boundingBox())!.x).toBeLessThan((await stage.boundingBox())!.x);
+  await stage.click({ position: { x: 200, y: 200 } });
+  const box = await rect(page, ".cz-stage");
+  const shown = await rect(page, ".cz-item .ca-callout");
+  const copy = await rect(page, ".cz-item .ca-stage");
+  expect(shown.left).toBeGreaterThanOrEqual(box.left);
+  // The note and the screenshot together sit in the middle of the stage.
+  expect((shown.left + copy.right) / 2).toBeCloseTo((box.left + box.right) / 2, -1);
+});
+
+test("closed details do not add blank scrolling to a zoomed block", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setViewportSize({ width: 1000, height: 800 });
+  const paragraphs = Array.from({ length: 55 }, (_, i) => `Hidden paragraph ${i + 1}.`);
+  await fixture(
+    page,
+    await render(`::zoom{title="Release notes"}
+Visible introduction.
+
+:::details{summary="More details"}
+${paragraphs.join("\n\n")}
+:::
+::`),
+  );
+  await page.getByText("Visible introduction.").click();
+  const stage = page.locator(".cz-stage");
+  await expect(stage.locator("summary")).toHaveText("More details");
+  await expect(stage).not.toHaveAttribute("data-scroll");
+});
+
+test("resizing while scrolled into a note above a screenshot keeps the reading position", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setViewportSize({ width: 1000, height: 800 });
+  const paragraphs = Array(8).fill(
+    "The note above the screenshot is long enough to keep reading while the viewport changes.",
+  );
+  await fixture(
+    page,
+    await render(`::screenshot{src="/dashboard.png" alt="Dashboard" viewport="1440x860"}
+:::annotation{x=24 y=15 w=50 h=70 mark="none" side="top" at=50 to="24,30"}
+${paragraphs.join("\n\n")}
+:::
+::`),
+  );
+  await page.evaluate(() => document.fonts.ready);
+  await page.locator("main .ca-stage").click({ position: { x: 200, y: 200 } });
+  const stage = page.locator(".cz-stage");
+  const item = stage.locator(".cz-item");
+  const margin = () => item.evaluate((node: HTMLElement) => node.style.marginBlockStart);
+  await expect(stage).toHaveAttribute("data-scroll");
+  await stage.evaluate((node) => (node.scrollTop = 150));
+  const noteTop = async () =>
+    (await rect(page, ".cz-item .ca-callout")).top - (await rect(page, ".cz-stage")).top;
+  const before = await noteTop();
+  expect(before).toBeLessThan(-100);
+  expect((await rect(page, ".cz-item")).top).toBeGreaterThan((await rect(page, ".cz-stage")).top);
+
+  const oldMargin = await margin();
+  await page.setViewportSize({ width: 1000, height: 820 });
+  await expect.poll(margin).not.toBe(oldMargin);
+  await expect.poll(async () => Math.abs((await noteTop()) - before)).toBeLessThan(2);
+
+  await stage.evaluate((node) => (node.scrollTop = 0));
+  const resizedMargin = await margin();
+  await page.setViewportSize({ width: 1000, height: 840 });
+  await expect.poll(margin).not.toBe(resizedMargin);
+  expect(await stage.evaluate((node) => node.scrollTop)).toBe(0);
 });
 
 test("resizing a scrolled tall item preserves its content position and clears scrolling when it fits", async ({

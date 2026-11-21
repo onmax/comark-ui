@@ -323,7 +323,9 @@ describe("comark-ui", () => {
     const out = await renderHtml(markdown);
     expect(out.match(/<style data-comark-typeset>/g)).toHaveLength(1);
     // The styles come first, so a stream that adds blocks never replaces them.
-    expect(out.trimStart()).toMatch(/^<style data-comark-typeset>[^<]*<\/style><h1/);
+    const [, afterStyles] = out.trimStart().split("</style>", 2);
+    expect(out.trimStart()).toMatch(/^<style data-comark-typeset>/);
+    expect(afterStyles).toMatch(/^<h1/);
     const css = out.slice(out.indexOf("<style data-comark-typeset>"));
     // Under every block's rules, which sit in `comark` itself, and on the tokens shared with them.
     expect(css).toContain("@layer comark{@layer typeset{@scope{");

@@ -14,6 +14,7 @@ comark-ui styles a document's plain Markdown: headings, paragraphs, links, lists
 - **On by default.** Every `comark-ui` renderer writes them.
 - **Scoped to the document.** A `<style>` inside the document uses `@scope`, so it styles only the element the document renders into.
 - **In the server's HTML.** Vue, React, and Svelte render the `<style>` with the document, so a server-rendered page arrives styled and doesn't shift.
+- **Images that fit the screen.** A Markdown image is at most 70% of the window's height (40rem at most), so a tall one never fills the screen as you scroll, and a click zooms it whole. A captioned one is centered over its caption. Blocks' own images, such as a screenshot's, keep their size.
 - **With a grain.** A faint noise covers the background. `--comark-grain: none` turns it off.
 - **Under the blocks.** The rules sit in a `typeset` layer inside the `comark` layer, so block rules win over them, and your plain rules win over both.
 

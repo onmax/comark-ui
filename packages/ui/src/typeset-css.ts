@@ -20,6 +20,8 @@ export const STACK_ROWS = 3;
 
 // Comments add a document wrapper; nested component/list tables remain outside this scope.
 const documentRoot = ":is(:scope, :scope > .cr)";
+const imageParent = `:is(${documentRoot}, p, li, blockquote, dt, dd, figure, td, th)`;
+const inline = ":is(a, b, del, em, i, mark, s, span, strong, sub, sup)";
 const table = `${documentRoot} > div:is([data-width], [data-fit])`;
 // A grid of the table's rows, each a subgrid, so its columns line up from row to row.
 const grid = (selector: string) => `
@@ -243,6 +245,21 @@ const rules = `
   &:where(img, video) { border-radius: var(--_ty-radius); max-width: 100%; height: auto; margin-block: var(--_ty-flow) 0; }
   /* An image in a line of text sits on the text; a block's top margin would push it below. */
   &:where(:is(p, li, td, th, a) img) { margin-block-start: 0; }
+  /* Cap prose images, not the images inside a block's frame. */
+  &:where(${imageParent} > img, ${imageParent} > ${inline} img) {
+    --_ty-image-height: min(70svh, 40rem);
+    max-height: var(--_ty-image-height); object-fit: contain;
+    &:where([width][height]) {
+      --_ty-image-width: min(calc(var(--_ty-image-w) * 1px), calc(var(--_ty-image-height) * var(--_ty-image-w) / var(--_ty-image-h)));
+      width: var(--_ty-image-width, revert-layer);
+      @supports (opacity: attr(width type(<number>))) {
+        --_ty-image-w: attr(width type(<number>));
+        --_ty-image-h: attr(height type(<number>));
+      }
+    }
+  }
+  /* A captioned image is centered over its caption once it's narrower than the column. */
+  &:where(figure > img, figure > a > img) { display: block; margin-inline: auto; }
   &:where(figure) { margin-block: var(--_ty-flow) 0; margin-inline: 0; }
   &:where(figcaption, caption) {
     color: var(--_ty-muted); font-size: 0.875em; text-align: center; margin-block-start: calc(0.75em / 0.875);
