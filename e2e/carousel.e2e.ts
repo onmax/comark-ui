@@ -34,6 +34,44 @@ const parts = (page: Page, title = "Tour") => {
   };
 };
 
+for (const scaling of ["transform:scale(.7)", "zoom:.7"]) {
+  test(`paging reaches each range under ${scaling}`, async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await open(page, five, { style: `body{${scaling};transform-origin:top left}` });
+    const { count, next, prev } = parts(page);
+    await expect(count).toHaveText("1–3 / 5");
+    await next.click();
+    await expect(count).toHaveText("2–4 / 5");
+    await next.click();
+    await expect(count).toHaveText("3–5 / 5");
+    await expect(next).toHaveAttribute("aria-disabled", "true");
+    await prev.click();
+    await expect(count).toHaveText("2–4 / 5");
+  });
+}
+
+test("overflowing slide content does not extend the last page", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await open(
+    page,
+    five.replace(
+      "Five",
+      "`/usr/local/share/acme/workspaces/onboarding/documents/2026/november/reports/architecture/component-implementation/revisions/summary.md`",
+    ),
+  );
+  const { count, next, track } = parts(page);
+  await next.click();
+  await expect(count).toHaveText("2–4 / 5");
+  await next.click();
+  await expect(count).toHaveText("3–5 / 5");
+  await expect(next).toHaveAttribute("aria-disabled", "true");
+  const panelOffset = await track.evaluate((element) => {
+    const third = element.querySelectorAll(":scope>.cc-slide")[2]!;
+    return third.getBoundingClientRect().left - element.getBoundingClientRect().left;
+  });
+  expect(Math.abs(panelOffset)).toBeLessThan(1);
+});
+
 test("a carousel pages with its arrows, and its zoomed view keeps the carousel in step", async ({
   page,
 }) => {

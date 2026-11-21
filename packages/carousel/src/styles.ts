@@ -33,7 +33,7 @@ export const css = `@layer comark{${[
   ".cc-track [data-zoom]:focus-visible{outline-offset:-2px}",
   // Several columns need room; a narrow page shows one slide at a time, with less padding to spare its width. The next
   // slide peeks in at the edge, so a swipe looks possible before the reader finds the counter.
-  "@container (max-width:36rem){.cc-track{grid-auto-columns:100%}.cc-track:has(>.cc-slide+.cc-slide){grid-auto-columns:calc(100% - var(--cc-peek,3rem))}.cc-track>.cc-slide{padding:calc(var(--cc-padding,1rem) / 2)}}",
+  "@container (max-width:36rem){.cc-track{grid-auto-columns:100%}.cc-track:has(>.cc-slide+.cc-slide){grid-auto-columns:calc(100% - var(--cc-peek,3rem))}.cc-track>.cc-slide{padding:calc(var(--cc-padding,1rem) / 2)}.cc-track>.cc-slide:last-child{scroll-snap-align:end}}",
   // One quiet row under the slides, as in Embla's examples: where you are on the left, shadcn's outline icon buttons
   // on the right. It needs no gutter beside the slides, so it stays the same on a phone.
   ".cc-controls{display:none;align-items:center;justify-content:space-between;gap:.5rem;margin-top:.75rem}",
