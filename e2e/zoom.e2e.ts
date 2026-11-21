@@ -422,6 +422,53 @@ test("an item taller than the stage fills its width and scrolls instead of shrin
   await expect(page.locator(".cz-dialog")).toHaveCount(0);
 });
 
+test("an item a little taller than the stage shrinks a little and shows whole", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setViewportSize({ width: 1000, height: 800 });
+  await page.route("**/portrait.svg", (route) =>
+    route.fulfill({
+      contentType: "image/svg+xml",
+      body: '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1440"><rect width="1200" height="1440"/></svg>',
+    }),
+  );
+  await fixture(page, await render("![Portrait](/portrait.svg)"));
+  await page.locator("main img").click();
+  const stage = page.locator(".cz-stage");
+  await expect(stage).not.toHaveAttribute("data-scroll");
+  const copy = await rect(page, ".cz-item");
+  const box = await rect(page, ".cz-stage");
+  expect(copy.top).toBeGreaterThanOrEqual(box.top);
+  expect(copy.bottom).toBeLessThanOrEqual(box.bottom);
+  expect(copy.width).toBeGreaterThan(600 * 0.85);
+});
+
+test("notes that sit outside a screenshot's box zoom onto the stage with it, centered", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setViewportSize({ width: 900, height: 700 });
+  await fixture(
+    page,
+    await render(`::screenshot{src="/dashboard.png" alt="Dashboard" viewport="1440x860"}
+:::annotation{x=24 y=15 w=50 h=70 mark="none" side="top" at=0 to="24,30"}
+The whole chart fits in the window, and this note runs far past its left edge.
+:::
+::`),
+  );
+  const stage = page.locator(".ca-stage");
+  const note = page.locator("main .ca-callout");
+  expect((await note.boundingBox())!.x).toBeLessThan((await stage.boundingBox())!.x);
+  await stage.click({ position: { x: 200, y: 200 } });
+  const box = await rect(page, ".cz-stage");
+  const shown = await rect(page, ".cz-item .ca-callout");
+  const copy = await rect(page, ".cz-item .ca-stage");
+  expect(shown.left).toBeGreaterThanOrEqual(box.left);
+  // The note and the screenshot together sit in the middle of the stage.
+  expect((shown.left + copy.right) / 2).toBeCloseTo((box.left + box.right) / 2, -1);
+});
+
 test("resizing a scrolled tall item preserves its content position and clears scrolling when it fits", async ({
   page,
 }) => {

@@ -84,7 +84,9 @@ test("a zoomed picture travels from its place in the page to the dialog, and bac
   await expect(page.locator(".cz-stage[data-flying]")).toHaveCount(0);
   const zoomed = await box(page, ".cz-item > img");
   // The frame keeps its own scale; the travel only adds to it.
-  expect(await frame.evaluate((node: HTMLElement) => node.style.transform)).toMatch(/^scale\(/);
+  expect(await frame.evaluate((node: HTMLElement) => node.style.transform)).toMatch(
+    /^translate\([^)]*\) scale\(/,
+  );
   expect(zoomed.width).toBeGreaterThan(picture.width * 1.3);
 
   const opening = (await frames(page)).filter((sample) => sample.box);

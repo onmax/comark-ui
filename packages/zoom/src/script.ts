@@ -346,10 +346,42 @@ export function script(css: string): () => void {
     };
   }
 
+  // Parts of a copy can sit outside its box, such as a screenshot's notes in the margin beside it, so the view fits
+  // and centers all of them. A part counts only as far as an ancestor that clips it lets it show. The box is in the
+  // copy's own pixels, measured against the frame at whatever scale it is drawn.
+  function drawn(frame: HTMLElement) {
+    const box = frame.getBoundingClientRect();
+    const ratio = box.width / (frame.offsetWidth || 1) || 1;
+    let [left, top, right, bottom] = [0, 0, frame.offsetWidth, frame.offsetHeight];
+    const visit = (node: Element) => {
+      for (const part of node.children) {
+        if (part.classList.contains("cz-layer")) continue;
+        const style = getComputedStyle(part);
+        if (style.display === "none" || style.visibility === "hidden") continue;
+        const rect = part.getBoundingClientRect();
+        if (rect.width && rect.height) {
+          left = Math.min(left, (rect.left - box.left) / ratio);
+          top = Math.min(top, (rect.top - box.top) / ratio);
+          right = Math.max(right, (rect.right - box.left) / ratio);
+          bottom = Math.max(bottom, (rect.bottom - box.top) / ratio);
+        }
+        const clips =
+          part instanceof SVGElement ||
+          style.overflowX !== "visible" ||
+          style.overflowY !== "visible" ||
+          style.clipPath !== "none";
+        if (!clips) visit(part);
+      }
+    };
+    visit(frame);
+    return { left, top, right, bottom };
+  }
+
   // The zoomed copy keeps the item's width on the page and scales to fill the stage, so text stays sharp. Its height is
   // its own, which grows when an image in it loads after the page's. An image stops at its natural size, past which it
-  // would blur. A copy that would have to shrink below its size on the page to fit the stage's height fills the
-  // stage's width instead and scrolls, since a zoom that makes it smaller reads as zooming out.
+  // would blur. A copy that would have to shrink well below its size on the page to fit the stage's height fills the
+  // stage's width instead and scrolls, since a zoom that makes it much smaller reads as zooming out. One only a little
+  // taller than the stage shrinks a little and shows whole: doubling it to the stage's width would crop most of it.
   function place(current: View) {
     // Save the reading position relative to the displayed width, so a responsive page width can change too.
     const scroll = current.stage.scrollTop;
@@ -376,18 +408,24 @@ export function script(css: string): () => void {
       (!large || image.getAttribute("src") === large)
         ? Math.max(1, image.naturalWidth / width)
         : 4;
-    const across = Math.min(box.width * 0.92, box.width - arrows) / width;
-    const down = (box.height * 0.92) / height;
-    const tall = down < Math.min(1, across);
-    current.scale = Math.max(0.1, Math.min(across, tall ? Infinity : down, natural, 4));
+    const ink = drawn(current.frame);
+    const across = Math.min(box.width * 0.92, box.width - arrows) / (ink.right - ink.left);
+    const down = (box.height * 0.92) / (ink.bottom - ink.top);
+    const tall = down < Math.min(1, across) * 0.85;
+    const scale = Math.max(0.1, Math.min(across, tall ? Infinity : down, natural, 4));
+    current.scale = scale;
     current.stage.toggleAttribute("data-scroll", tall);
+    // The stage centers the item's box; the shift centers what is drawn.
+    const x = (width / 2 - (ink.left + ink.right) / 2) * scale;
+    const y = (height / 2 - (ink.top + ink.bottom) / 2) * scale;
     // The copy grows down from its top, and its margins give the stage's scroll the height it takes once scaled.
     const gap = box.height * 0.04;
+    const above = gap - ink.top * scale;
     if (tall) {
-      current.frame.style.marginBlock = `${gap}px ${height * (current.scale - 1) + gap}px`;
+      current.frame.style.marginBlock = `${above}px ${ink.bottom * scale - height + gap}px`;
     }
-    current.frame.style.transform = `scale(${current.scale})`;
-    current.stage.scrollTop = tall && scroll > 0 ? position * width * current.scale + gap : 0;
+    current.frame.style.transform = `translate(${x}px,${tall ? 0 : y}px) scale(${scale})`;
+    current.stage.scrollTop = tall && scroll > 0 ? position * width * scale + above : 0;
   }
 
   // Whether an image of a copy is still shown, so a load that finishes after a close or a move changes nothing.

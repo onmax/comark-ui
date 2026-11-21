@@ -47,7 +47,8 @@ credits: 'Modeled on <a href="https://github.com/francoischalifour/medium-zoom">
 - `::zoom` zooms any block, such as a table, a code block, or a diagram.
 - Items in one group page through one view, with a strip of thumbnails.
 - An image never grows past its natural size, so it stays sharp.
-- An item taller than the screen fills the view's width and scrolls, instead of shrinking to fit.
+- An item much taller than the screen fills the view's width and scrolls, instead of shrinking to fit. One only a little taller shrinks a little and shows whole.
+- Parts drawn outside an item's box, such as a screenshot's notes in the margin, stay in view and centered with it.
 - Escape, Back, or a click around the item closes the view.
 - The zoomed copy travels from its place in the page and back on [comark-motion](/motion)'s springs. Under reduced motion, or without comark-motion, it opens and closes at once.
 
