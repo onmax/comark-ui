@@ -354,7 +354,12 @@ export function script(css: string): () => void {
     const ratio = box.width / (frame.offsetWidth || 1) || 1;
     let [left, top, right, bottom] = [0, 0, frame.offsetWidth, frame.offsetHeight];
     const visit = (node: Element) => {
-      for (const part of node.children) {
+      const summary =
+        node instanceof HTMLDetailsElement && !node.open
+          ? node.querySelector(":scope > summary")
+          : undefined;
+      const children = summary === undefined ? node.children : summary ? [summary] : [];
+      for (const part of children) {
         if (part.classList.contains("cz-layer")) continue;
         const style = getComputedStyle(part);
         if (style.display === "none" || style.visibility === "hidden") continue;
@@ -386,7 +391,7 @@ export function script(css: string): () => void {
     // Save the reading position relative to the displayed width, so a responsive page width can change too.
     const scroll = current.stage.scrollTop;
     const position =
-      Math.max(0, scroll - (parseFloat(current.frame.style.marginBlockStart) || 0)) /
+      (scroll - (parseFloat(current.frame.style.marginBlockStart) || 0)) /
       (parseFloat(current.frame.style.width) * current.scale || 1);
     const item = current.items[current.index]!;
     const { width } = measure(item);

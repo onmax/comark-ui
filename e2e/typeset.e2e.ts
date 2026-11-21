@@ -146,7 +146,11 @@ test("a native Markdown table sizes its columns from the fitted image widths", a
     "main{width:40rem;margin:auto}",
   );
   const [fitted, control] = await page.locator("table").all();
-  await expect(fitted!.getByRole("img", { name: "Before" })).toHaveCSS("width", "140px");
+  for (const name of ["Before", "After"]) {
+    const image = (await fitted!.getByRole("img", { name }).boundingBox())!;
+    const controlImage = (await control!.getByRole("img", { name }).boundingBox())!;
+    expect(image.width).toBeCloseTo(controlImage.width, 0);
+  }
   const notes = (await fitted!.locator("tbody td").last().boundingBox())!;
   const controlNotes = (await control!.locator("tbody td").last().boundingBox())!;
   expect(notes.width).toBeCloseTo(controlNotes.width, 0);
