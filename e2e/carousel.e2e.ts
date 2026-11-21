@@ -12,15 +12,16 @@ const render = createHtmlRenderer({
 const open = async (
   page: Page,
   markdown: string,
-  options: { dir?: string; script?: boolean } = {},
+  options: { dir?: string; script?: boolean; width?: string; style?: string } = {},
 ) => {
   let html = await render(markdown);
   if (options.script === false) html = html.replace(/<script>[\s\S]*?<\/script>/g, "");
   await page.setContent(
-    `<!doctype html><html dir="${options.dir ?? "ltr"}"><style>body{width:48rem;margin:2rem}pre{overflow-x:auto}</style><body>${html}</body></html>`,
+    `<!doctype html><html dir="${options.dir ?? "ltr"}"><style>body{width:${options.width ?? "48rem"};margin:2rem}pre{overflow-x:auto}${options.style ?? ""}</style><body>${html}</body></html>`,
   );
 };
 const three = '::carousel{title="Tour"}\nOne\n\nTwo\n\nThree\n::';
+const five = '::carousel{title="Tour" columns=3}\nOne\n\nTwo\n\nThree\n\nFour\n\nFive\n::';
 const parts = (page: Page, title = "Tour") => {
   const root = page.locator(`.cc[aria-label="${title}"]`);
   const controls = root.locator(":scope>.cc-controls");
@@ -32,6 +33,81 @@ const parts = (page: Page, title = "Tour") => {
     next: controls.getByRole("button", { name: "Next slide" }),
   };
 };
+
+for (const scaling of ["transform:scale(.7)", "zoom:.7"]) {
+  test(`paging reaches each range under ${scaling}`, async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await open(page, five, { style: `body{${scaling};transform-origin:top left}` });
+    const { count, next, prev } = parts(page);
+    await expect(count).toHaveText("1–3 / 5");
+    await next.click();
+    await expect(count).toHaveText("2–4 / 5");
+    await next.click();
+    await expect(count).toHaveText("3–5 / 5");
+    await expect(next).toHaveAttribute("aria-disabled", "true");
+    await prev.click();
+    await expect(count).toHaveText("2–4 / 5");
+  });
+}
+
+for (const dir of ["ltr", "rtl"]) {
+  test(`a padded narrow track pages through all slides in ${dir}`, async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await open(page, three, { dir, width: "320px", style: ".cc-track{padding-inline:48px}" });
+    const { count, next, prev } = parts(page);
+    await expect(count).toHaveText("1 / 3");
+    await expect(prev).toHaveAttribute("aria-disabled", "true");
+    await next.click();
+    await expect(count).toHaveText("2 / 3");
+    await next.click();
+    await expect(count).toHaveText("3 / 3");
+    await expect(next).toHaveAttribute("aria-disabled", "true");
+    await prev.click();
+    await expect(count).toHaveText("2 / 3");
+    await prev.click();
+    await expect(count).toHaveText("1 / 3");
+    await expect(prev).toHaveAttribute("aria-disabled", "true");
+  });
+}
+
+test("a wide track with leading padding reaches the last full range", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await open(page, five, { style: ".cc-track{padding-inline-start:144px}" });
+  const { count, next, track } = parts(page);
+  await expect(count).toHaveText("1–3 / 5");
+  await next.click();
+  await expect(count).toHaveText("2–4 / 5");
+  await next.click();
+  await expect(count).toHaveText("3–5 / 5");
+  await expect(next).toHaveAttribute("aria-disabled", "true");
+  const panelEnd = await track.evaluate((element) => {
+    const last = element.querySelector(".cc-slide:last-child")!;
+    return last.getBoundingClientRect().right - element.getBoundingClientRect().right;
+  });
+  expect(Math.abs(panelEnd)).toBeLessThan(1);
+});
+
+test("overflowing slide content does not extend the last page", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await open(
+    page,
+    five.replace(
+      "Five",
+      "`/usr/local/share/acme/workspaces/onboarding/documents/2026/november/reports/architecture/component-implementation/revisions/summary.md`",
+    ),
+  );
+  const { count, next, track } = parts(page);
+  await next.click();
+  await expect(count).toHaveText("2–4 / 5");
+  await next.click();
+  await expect(count).toHaveText("3–5 / 5");
+  await expect(next).toHaveAttribute("aria-disabled", "true");
+  const panelOffset = await track.evaluate((element) => {
+    const third = element.querySelectorAll(":scope>.cc-slide")[2]!;
+    return third.getBoundingClientRect().left - element.getBoundingClientRect().left;
+  });
+  expect(Math.abs(panelOffset)).toBeLessThan(1);
+});
 
 test("a carousel pages with its arrows, and its zoomed view keeps the carousel in step", async ({
   page,
@@ -125,14 +201,108 @@ test("paging jumps when the reader prefers reduced motion", async ({ page }) => 
   expect(scrolled).toBeGreaterThan(0);
 });
 
-test("the end of a track with several columns counts as the last slide", async ({ page }) => {
-  await open(page, '::carousel{title="Tour" columns=2}\nOne\n\nTwo\n\nThree\n::');
+test("with several columns, the counter names every slide in view", async ({ page }) => {
+  await open(page, '::carousel{title="Tour" columns=3}\nOne\n\nTwo\n\nThree\n\nFour\n\nFive\n::');
   const { count, next, prev } = parts(page);
+  await expect(count).toHaveText("1–3 / 5");
+  await next.click();
+  await expect(count).toHaveText("2–4 / 5");
+  await next.click();
+  await expect(count).toHaveText("3–5 / 5");
+  await expect(next).toHaveAttribute("aria-disabled", "true");
+  await prev.click();
+  await expect(count).toHaveText("2–4 / 5");
+});
+
+test("on a narrow page the next slide peeks in, and the counter names one slide", async ({
+  page,
+}) => {
+  await open(
+    page,
+    '::carousel{title="Tour" columns=2}\nOne\n\nTwo\n\nThree\n::\n\n::carousel{title="Alone"}\nOnly\n::',
+    { width: "20rem" },
+  );
+  const { track, count, next } = parts(page);
+  const peek = (element: HTMLElement) =>
+    element.clientWidth - element.querySelector(".cc-slide")!.getBoundingClientRect().width;
+  // 3rem narrower than the track, 1rem of it the gap.
+  expect(await track.evaluate(peek)).toBe(48);
+  expect(await parts(page, "Alone").track.evaluate(peek)).toBe(0);
+  await expect(count).toHaveText("1 / 3");
+  await next.click();
+  await expect(count).toHaveText("2 / 3");
   await next.click();
   await expect(count).toHaveText("3 / 3");
   await expect(next).toHaveAttribute("aria-disabled", "true");
-  await prev.click();
+});
+
+test("Home and End go to the first and last slide", async ({ page }) => {
+  await open(page, three);
+  const { count, next, prev, root } = parts(page);
+  await root.locator(".cc-slide").first().focus();
+  await page.keyboard.press("End");
+  await expect(count).toHaveText("3 / 3");
+  await expect(next).toHaveAttribute("aria-disabled", "true");
+  await page.keyboard.press("Home");
   await expect(count).toHaveText("1 / 3");
+  await expect(prev).toHaveAttribute("aria-disabled", "true");
+});
+
+test("the range excludes a clipped slide with a percentage gap", async ({ page }) => {
+  await open(page, five, { style: ".cc{--cc-gap:10%}" });
+  const { count, next } = parts(page);
+  await expect(count).toHaveText("1–3 / 5");
+  await next.click();
+  await expect(count).toHaveText("2–4 / 5");
+});
+
+test("a tiny carousel does not count the next slide peeking in", async ({ page }) => {
+  await open(page, three, { width: "120px" });
+  const { count, next } = parts(page);
+  await expect(next).toHaveAttribute("aria-disabled", "false");
+  await expect(count).toHaveText("1 / 3");
+});
+
+test("one backward step works after pressing End again at the last snap", async ({ page }) => {
+  await open(page, five);
+  const { count, track, next, root } = parts(page);
+  await root.locator(".cc-slide").first().focus();
+  await track.evaluate((element) => {
+    element.addEventListener("scrollend", () => element.setAttribute("data-settled", ""), {
+      once: true,
+    });
+  });
+  await page.keyboard.press("End");
+  await expect(track).toHaveAttribute("data-settled", "");
+  await expect(next).toHaveAttribute("aria-disabled", "true");
+  await page.keyboard.press("End");
+  await page.keyboard.press("ArrowLeft");
+  await expect(count).toHaveText("2–4 / 5");
+});
+
+test("Previous reaches the preceding snap with a large peek", async ({ page }) => {
+  await open(page, three, { width: "320px", style: ".cc{--cc-peek:10rem}" });
+  const { count, next, prev, root } = parts(page);
+  await root.locator(".cc-slide").first().focus();
+  await page.keyboard.press("End");
+  await expect(next).toHaveAttribute("aria-disabled", "true");
+  await expect(count).toHaveText("3 / 3");
+  await prev.click();
+  await expect(count).toHaveText("2 / 3");
+  await expect(next).toHaveAttribute("aria-disabled", "false");
+});
+
+test("Home and End scroll the page when all slides fit", async ({ page }) => {
+  await open(page, '::carousel{title="Tour" columns=2}\nOne\n\nTwo\n::', {
+    style: "body{min-height:300vh}",
+  });
+  const { root, next } = parts(page);
+  await expect(next).toBeHidden();
+  await root.locator(".cc-slide").first().focus();
+  await page.keyboard.press("End");
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
+  await page.keyboard.press("Home");
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
 });
 
 test("a right-to-left carousel pages in its reading direction", async ({ page }) => {

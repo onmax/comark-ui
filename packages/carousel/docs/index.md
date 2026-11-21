@@ -93,7 +93,7 @@ Use the `title` prop to name the carousel for screen readers. It's also the head
 
 ### Columns
 
-Use the `columns` prop to show 2 or 3 slides at once on a wide page. A narrow page shows one at a time.
+Use the `columns` prop to show 2 or 3 slides at once on a wide page. The counter then names every slide in view, such as `2–3 / 5`. A narrow page shows one slide at a time, with the edge of the next one peeking in.
 
 ::example
 ```md
@@ -167,7 +167,7 @@ The dashboard ![icon](/dashboard.png) sits in this sentence.
 
 The carousel follows the [WAI-ARIA carousel pattern](https://www.w3.org/WAI/ARIA/apg/patterns/carousel/). It's a region that screen readers announce as a carousel, named by its `title`, or "Carousel" without one. Each slide is a group announced as a slide and named by its position, such as "2 of 3".
 
-The counter is a polite live region, so screen readers read the new position after each page. The arrows are buttons named "Previous slide" and "Next slide". At either end an arrow is marked disabled but keeps its focus, so the keys keep working.
+The counter is a polite live region, so screen readers read the new position after each page. With several columns it names every slide in view, such as `2–3 / 5`. The arrows are buttons named "Previous slide" and "Next slide". At either end an arrow is marked disabled but keeps its focus, so the keys keep working.
 
 When the slides zoom, each slide is a tab stop. Enter or Space opens it in the zoomed view, and focus returns to the slide when the view closes.
 
@@ -178,11 +178,12 @@ When the reader prefers reduced motion, paging jumps instead of scrolling smooth
 | Key | Description |
 | --- | --- |
 | `ArrowLeft`, `ArrowRight` | With focus anywhere in the carousel, including a link or a button in a slide, pages to the previous or next slide. On a right-to-left page they follow the reading direction. |
+| `Home`, `End` | With focus anywhere in the carousel, goes to the first or last slide. |
 | `Enter`, `Space` | On a slide, opens it in the zoomed view. On an arrow, pages. |
 | `Tab`, `Shift+Tab` | Moves focus through the slides, when they zoom, and then the arrows. |
 | `Escape` | Closes the zoomed view. |
 
-The carousel ignores the arrow keys when pressed with Alt, Ctrl, Meta, or Shift. It also leaves them to whatever has focus and uses them:
+The carousel leaves the arrow keys, `Home`, and `End` to the browser when all slides fit or when pressed with Alt, Ctrl, Meta, or Shift. It also leaves them to whatever has focus and uses them:
 
 - A form field, a video or audio player, a `<summary>`, or editable text.
 - A tab list, slider, radio group, list box, combo box, spin button, menu, menu bar, or tree.
@@ -201,7 +202,7 @@ Props can be inline or bound, such as `:columns="2"`.
 | Prop | Default | Description |
 | --- | --- | --- |
 | `title` | `"Carousel"` | The name screen readers read, and the heading of a zoomed slide that has no title or image of its own. Bind it to the document or its frontmatter, not to render-time data. |
-| `columns` | `1` | How many slides show at once on a wide page: `1`, `2`, or `3`. A narrow page shows one. |
+| `columns` | `1` | How many slides show at once on a wide page: `1`, `2`, or `3`. A narrow page shows one, with the edge of the next. |
 | `zoom` | `true` | `false` turns zoom off. Bind it to the document or its frontmatter, not to render-time data. |
 
 #### Slide
@@ -277,6 +278,7 @@ Set these on `.cc` or any ancestor, such as `:root`:
 | `--cc-gap` | `1rem` | The space between slides |
 | `--cc-surface` | `--comark-foreground` at 4% | The panel behind each slide |
 | `--cc-padding` | `1rem` | The space inside each panel, halved on a narrow page |
+| `--cc-peek` | `3rem` | How much narrower than the column each slide is on a narrow page, so the next one shows at the edge. The gap takes part of it; `0px` turns the peek off |
 | `--cc-button-size` | `2rem` | The arrows' width and height, at least `2.5rem` on touch screens |
 
 Each slide sits on a soft panel as tall as the tallest one, so slides of different heights line up. A slide that is one image sits in the middle of its panel. To drop the panel, set `--cc-surface: transparent` and `--cc-padding: 0`.

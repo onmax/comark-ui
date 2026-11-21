@@ -44,7 +44,7 @@ Step two.
 ::
 ```
 
-`columns=2` or `columns=3` shows several slides at once on wide pages and one at a time on narrow ones. Slides zoom with [`comark-zoom`](../zoom), which comes with it, and paging in the zoomed view moves the carousel too; `zoom=false` turns that off. A zoomed slide with no title or image of its own takes the carousel's `title` as its heading. Props can be inline or bound, such as `:columns="2"`; bind `zoom` and `title` only to the document or its front matter.
+`columns=2` or `columns=3` shows several slides at once on wide pages, and the counter names every slide in view. Narrow pages show one at a time, with the edge of the next peeking in. Slides zoom with [`comark-zoom`](../zoom), which comes with it, and paging in the zoomed view moves the carousel too; `zoom=false` turns that off. A zoomed slide with no title or image of its own takes the carousel's `title` as its heading. Props can be inline or bound, such as `:columns="2"`; bind `zoom` and `title` only to the document or its front matter.
 
 The plugin adds every problem to `meta.issues`, so a host can reject a document before publishing it: content outside every `:::slide` (it's dropped), a carousel with no slides, `columns` that isn't 1, 2, or 3, a `:::slide` outside a carousel (it renders as plain content), and a `:zoom` or `:title` that reads render-time data. Each issue names its block and says how to fix it.
 

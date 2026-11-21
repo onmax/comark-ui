@@ -39,20 +39,47 @@ export function start(css: string): () => void {
     return { track, slides, count, prev: step(-1), next: step(1) };
   };
 
-  // Distances from the track's start edge, so a right-to-left page, where scrollLeft runs negative, reads the same.
   const rtl = (track: Element) => getComputedStyle(track).direction === "rtl";
-  const offset = (track: HTMLElement, slide: HTMLElement) => {
-    const outer = track.getBoundingClientRect();
-    const inner = slide.getBoundingClientRect();
-    return rtl(track) ? outer.right - inner.right : inner.left - outer.left;
-  };
-
-  // The slide at the start edge. At the end of a track with several columns, the last slides never get there.
-  function current(root: Element) {
-    const { track, slides } = parts(root);
-    if (!track || !slides.length) return 0;
-    const offsets = slides.map((slide) => Math.abs(offset(track, slide)));
-    return offsets.indexOf(Math.min(...offsets));
+  // Convert the rendered panel distances to scroll coordinates, even on a scaled page or in RTL.
+  function geometry(track: HTMLElement, slides: HTMLElement[]) {
+    const width = track.clientWidth;
+    const bounds = track.getBoundingClientRect();
+    const scale = bounds.width / track.offsetWidth || 1;
+    const direction = rtl(track) ? -1 : 1;
+    const scrolled = direction * track.scrollLeft;
+    const inset =
+      direction === -1 ? track.offsetWidth - width - track.clientLeft : track.clientLeft;
+    const origin = direction === -1 ? bounds.right : bounds.left;
+    const panels = slides.map((slide) => slide.getBoundingClientRect());
+    const first = panels[0]!;
+    const starts = panels.map((panel) => {
+      const edge = direction === -1 ? panel.right : panel.left;
+      return (direction * (edge - origin)) / scale - inset + scrolled;
+    });
+    const pitch = starts.length > 1 ? starts[1]! - starts[0]! : 0;
+    const shown =
+      pitch > 0
+        ? Math.min(
+            slides.length,
+            1 + Math.max(0, Math.floor((width - first.width / scale + 1) / pitch)),
+          )
+        : 1;
+    const lastStart = slides.length - shown;
+    const panelEnd = starts.at(-1)! + panels.at(-1)!.width / scale;
+    const end = Math.max(
+      0,
+      Math.min(starts[lastStart]!, panelEnd - width, track.scrollWidth - width),
+    );
+    const atEnd = end - scrolled <= 1;
+    const stops = starts.slice(0, lastStart + 1).map((start) => Math.max(0, Math.min(start, end)));
+    const current = atEnd
+      ? lastStart
+      : stops.reduce(
+          (nearest, stop, index) =>
+            Math.abs(scrolled - stop) < Math.abs(scrolled - stops[nearest]!) ? index : nearest,
+          0,
+        );
+    return { shown, lastStart, direction, scrolled, end, atEnd, stops, current };
   }
 
   // Where each carousel is heading while it scrolls smoothly, so quick clicks add up instead of reading a position
@@ -72,35 +99,46 @@ export function start(css: string): () => void {
     );
   };
 
-  function show(root: Element, index: number, behavior?: ScrollBehavior) {
+  function show(
+    root: Element,
+    index: (current: number, lastStart: number) => number,
+    behavior?: ScrollBehavior,
+  ) {
     const { track, slides } = parts(root);
-    const target = Math.max(0, Math.min(index, slides.length - 1));
-    const slide = slides[target];
-    if (!track || !slide) return;
+    if (!track?.clientWidth || !slides.length) return false;
+    const { lastStart, direction, scrolled, end, stops, current } = geometry(track, slides);
+    if (end <= 1) return false;
+    const requested = index(targets.get(root) ?? current, lastStart);
+    const target = Math.max(0, Math.min(requested, lastStart));
+    const to = stops[target]!;
+    if (Math.abs(to - scrolled) <= 1) {
+      if (targets.delete(root)) track.scrollTo({ left: direction * to, behavior: "instant" });
+      return true;
+    }
     const how =
       behavior ?? (matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth");
     if (how === "smooth") targets.set(root, target);
     else targets.delete(root);
-    // A track already in place doesn't scroll, so the pause starts now.
     settle(root);
-    const by = offset(track, slide);
-    track.scrollTo({ left: track.scrollLeft + (rtl(track) ? -by : by), behavior: how });
+    track.scrollTo({ left: direction * to, behavior: how });
+    return true;
   }
 
-  const page = (root: Element, by: number) => show(root, (targets.get(root) ?? current(root)) + by);
+  const page = (root: Element, by: number) => show(root, (index) => index + by);
 
   function sync(root: Element) {
     const { track, slides, count, prev, next } = parts(root);
     // A carousel in a hidden tab or a closed details measures 0 wide, which would read as the end.
-    if (!track?.clientWidth) return;
-    const scrolled = Math.abs(track.scrollLeft);
-    const end = scrolled + track.clientWidth >= track.scrollWidth - 2;
-    const index = end ? slides.length - 1 : current(root);
-    const text = `${index + 1} / ${slides.length}`;
+    if (!track?.clientWidth || !slides.length) return;
+    // The counter names every slide in view, such as 2–3 / 5. It counts from the track's width rather than from what
+    // is on screen, so it doesn't flicker mid-scroll, and a slide that only peeks in on a narrow page doesn't count.
+    const { shown, current: first, scrolled, stops, atEnd } = geometry(track, slides);
+    const last = first + shown;
+    const text = `${first + 1}${last - first > 1 ? `–${last}` : ""} / ${slides.length}`;
     // Only on a change: the counter is a live region, so each write is read out.
     if (count && count.textContent !== text) count.textContent = text;
-    prev?.setAttribute("aria-disabled", String(scrolled < 2));
-    next?.setAttribute("aria-disabled", String(end));
+    prev?.setAttribute("aria-disabled", String(scrolled - stops[0]! < 2));
+    next?.setAttribute("aria-disabled", String(atEnd));
   }
 
   // Each track syncs when it's first observed and whenever its size changes, including when it's shown.
@@ -175,7 +213,7 @@ export function start(css: string): () => void {
   document.addEventListener(
     "keydown",
     (event) => {
-      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+      if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
       // Alt+Left is the browser's Back, and the other modifiers select text or switch tabs.
       if (
         event.defaultPrevented ||
@@ -191,15 +229,20 @@ export function start(css: string): () => void {
       const root = target?.closest(".cc");
       const track = root ? parts(root).track : null;
       if (!target || !root || !track || target.closest(keyed)) return;
-      // A wide code block or table scrolls with the arrows.
+      // A wide code block or table scrolls with these keys.
       for (
         let at: Element | null = target;
         at && at !== track && at !== root;
         at = at.parentElement
       )
         if (scrolls(at)) return;
-      event.preventDefault();
-      page(root, event.key === (rtl(track) ? "ArrowLeft" : "ArrowRight") ? 1 : -1);
+      const handled =
+        event.key === "Home"
+          ? show(root, () => 0)
+          : event.key === "End"
+            ? show(root, (_, lastStart) => lastStart)
+            : page(root, event.key === (rtl(track) ? "ArrowLeft" : "ArrowRight") ? 1 : -1);
+      if (handled) event.preventDefault();
     },
     { signal },
   );
@@ -210,7 +253,7 @@ export function start(css: string): () => void {
       event.target instanceof Element ? event.target.closest<HTMLElement>(".cc-slide") : null;
     const root = slide?.closest(".cc");
     if (!slide || !root) return;
-    show(root, parts(root).slides.indexOf(slide), "instant");
+    show(root, () => parts(root).slides.indexOf(slide), "instant");
     sync(root);
   };
   document.addEventListener("comark-zoom:change", follow, { signal });
