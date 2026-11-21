@@ -37,8 +37,16 @@ for (const typedAttr of [true, false]) {
     await page.route("**/shot.svg", (route) =>
       route.fulfill({ contentType: "image/svg+xml", body: portrait }),
     );
+    await page.route("**/landscape.svg", (route) =>
+      route.fulfill({
+        contentType: "image/svg+xml",
+        body: '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="250"></svg>',
+      }),
+    );
     let html = await render(
-      '![A tall painting](/painting.svg "A tall painting"){width="400" height="1000"}\n\n::screenshot{src="/shot.svg" alt="A tall screenshot"}\n::',
+      '![A tall painting](/painting.svg "A tall painting"){width="400" height="1000"}\n\n' +
+        '![A half-width painting](/landscape.svg){width="50%" height="250"}\n\n' +
+        '::screenshot{src="/shot.svg" alt="A tall screenshot"}\n::',
     );
     if (typedAttr) {
       const dimensions = ' style="--_ty-image-w:400;--_ty-image-h:1000"';
@@ -71,6 +79,10 @@ for (const typedAttr of [true, false]) {
     expect(box.height).toBeCloseTo(560, 0);
     expect(box.width).toBeCloseTo(224, 0);
     expect(box.x - column.x).toBeCloseTo((column.width - box.width) / 2, 0);
+    const halfWidth = page.getByRole("img", { name: "A half-width painting" });
+    await expect(halfWidth).toHaveAttribute("width", "50%");
+    await expect(halfWidth).toHaveJSProperty("naturalWidth", 400);
+    await expect(halfWidth).toHaveCSS("width", "320px");
     // The screenshot's marks sit on its image, so the image keeps the column's width and its full height.
     const shot = page.locator('img[alt="A tall screenshot"]');
     await expect(shot).toHaveJSProperty("complete", true);

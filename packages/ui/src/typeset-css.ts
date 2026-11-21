@@ -250,8 +250,8 @@ const rules = `
     --_ty-image-height: min(70svh, 40rem);
     max-height: var(--_ty-image-height); object-fit: contain;
     &:where([width][height]) {
-      --_ty-image-width: min(calc(1px * var(--_ty-image-w)), calc(var(--_ty-image-height) * var(--_ty-image-w) / var(--_ty-image-h)));
-      width: var(--_ty-image-width, auto);
+      --_ty-image-width: calc(var(--_ty-image-height) * var(--_ty-image-w) / var(--_ty-image-h));
+      max-width: min(100%, var(--_ty-image-width, 100%));
       @supports (opacity: attr(width type(<number>))) {
         --_ty-image-w: attr(width type(<number>));
         --_ty-image-h: attr(height type(<number>));

@@ -1,5 +1,6 @@
 import { defineComarkPlugin, type Node } from "comark";
 import { childrenOf, isElement } from "../../../shared/nodes.ts";
+import { rawText } from "../../../shared/text.ts";
 
 export { typesetCss, typesetStylesheet } from "./typeset-css.ts";
 
@@ -9,9 +10,9 @@ export const TYPESET_TAG = "typeset-styles";
 const isTypeset = (node: unknown) => Array.isArray(node) && node[0] === TYPESET_TAG;
 
 function pixels(value: unknown) {
-  if (typeof value !== "number" && (typeof value !== "string" || !/^\d+$/.test(value))) return 0;
-  const size = Number(value);
-  return Number.isSafeInteger(size) && size > 0 ? size : 0;
+  const digits = rawText(value);
+  const size = /^\d+$/.test(digits) ? Number(digits) : 0;
+  return Number.isSafeInteger(size) ? size : 0;
 }
 
 function sizeImages(nodes: Node[]): Node[] {
@@ -26,9 +27,9 @@ function sizeImages(nodes: Node[]): Node[] {
     }
     const width = pixels(attrs.width);
     const height = pixels(attrs.height);
-    const style = attrs.style;
-    if (!width || !height || (style !== undefined && typeof style !== "string")) return node;
-    if (style?.includes("--_ty-image-w:")) return node;
+    const style = rawText(attrs.style);
+    if (!width || !height || (attrs.style !== undefined && attrs.style !== style)) return node;
+    if (style.includes("--_ty-image-w:")) return node;
     return [
       tag,
       {
