@@ -21,7 +21,6 @@ jobs:
   publish:
     # Do not give fork pull requests a write-capable token while executing their package scripts.
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
-    needs: check
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -36,11 +35,12 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-        with:
-          name: packages
-          path: packages
+      # Build and check here instead of waiting for the whole CI run, so the
+      # preview does not wait for the tests. A broken build still publishes nothing.
+      - run: pnpm build
+      - run: pnpm --filter comark-ui-docs run prepare
+      - run: pnpm check
       - run: pnpm exec pkg-pr-new publish './packages/*' --pnpm --packageManager=pnpm
         env:
-          # CI already built and checked these packages, including publint.
+          # The steps above already built and checked the packages, including publint.
           pnpm_config_ignore_scripts: "true"
