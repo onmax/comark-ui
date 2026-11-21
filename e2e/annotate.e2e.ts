@@ -164,6 +164,36 @@ Extra filters collapse into **+2 filters**.
   await expect(page.locator(`.cz-item ${plain}`).first()).toHaveCSS("color", "rgb(1, 2, 3)");
 });
 
+test("on a narrow screen, notes above a screenshot off to one side of their points stack under it", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 400, height: 700 });
+  await open(
+    page,
+    `::screenshot{src="/dashboard.png" alt="Dashboard" viewport="1440x860"}
+:::annotation{x=24 y=15 w=50 h=70 mark="none" side="top" at=0 to="24,30"}
+Reads away from its point.
+:::
+
+:::annotation{x=60 y=15 w=20 h=20 mark="none" side="top" at=95 to="60,30"}
+Reads the other way.
+:::
+::`,
+  );
+  await page.addStyleTag({ content: "main{width:auto;margin:1rem}" });
+  const stage = (await page.locator("main .ca-stage").boundingBox())!;
+  const notes = page.locator("main .ca-callout");
+  await expect(notes).toHaveCount(2);
+  expect(
+    await page.locator("main .ca-callout-west, main .ca-callout-east").count(),
+  ).toBeGreaterThan(0);
+  for (const note of await notes.all()) {
+    const box = (await note.boundingBox())!;
+    expect(box.x).toBeGreaterThanOrEqual(stage.x - 1);
+    expect(box.x + box.width).toBeLessThanOrEqual(stage.x + stage.width + 1);
+  }
+});
+
 test("a box frames its area 6px out on a host that sets every element's box-sizing", async ({
   page,
 }) => {
