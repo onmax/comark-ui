@@ -24,48 +24,59 @@ test("the first block adds no space above, with the typeset styles before it", a
   await expect(page.getByText("The first step.")).not.toHaveCSS("margin-top", "0px");
 });
 
-test("a tall image fits on the screen, centered over its caption, while a screenshot keeps its size", async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 1280, height: 800 });
-  const paintingReady = Promise.withResolvers<void>();
-  await page.route("**/painting.svg", async (route) => {
-    await paintingReady.promise;
-    await route.fulfill({ contentType: "image/svg+xml", body: portrait });
+for (const typedAttr of [true, false]) {
+  test(`a tall image fits over its caption without capping a screenshot (${typedAttr ? "native CSS" : "without typed attr"})`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    const paintingReady = Promise.withResolvers<void>();
+    await page.route("**/painting.svg", async (route) => {
+      await paintingReady.promise;
+      await route.fulfill({ contentType: "image/svg+xml", body: portrait });
+    });
+    await page.route("**/shot.svg", (route) =>
+      route.fulfill({ contentType: "image/svg+xml", body: portrait }),
+    );
+    let html = await render(
+      '![A tall painting](/painting.svg "A tall painting"){width="400" height="1000"}\n\n::screenshot{src="/shot.svg" alt="A tall screenshot"}\n::',
+    );
+    if (typedAttr) {
+      const dimensions = ' style="--_ty-image-w:400;--_ty-image-h:1000"';
+      expect(html).toContain(dimensions);
+      html = html.replace(dimensions, "");
+    } else {
+      const query = "@supports(opacity:attr(width type(<number>)))";
+      expect(html).toContain(query);
+      html = html.replace(query, "@supports (width: unsupported)");
+    }
+    const painting = page.locator('figure > img[alt="A tall painting"]');
+    await Promise.all([
+      fixture(page, html, "main{width:40rem;margin:auto}"),
+      (async () => {
+        try {
+          await expect(painting).toHaveAttribute("width", "400");
+          await expect(painting).toHaveAttribute("height", "1000");
+          await expect(painting).toHaveJSProperty("naturalWidth", 0);
+          await expect(painting).toHaveCSS("width", "224px");
+          await expect(painting).toHaveCSS("height", "560px");
+        } finally {
+          paintingReady.resolve();
+        }
+      })(),
+    ]);
+    await expect(painting).toHaveJSProperty("naturalWidth", 400);
+    const box = (await painting.boundingBox())!;
+    const column = (await page.locator("main").boundingBox())!;
+    // 70% of the 800px window, at the picture's own 2:5.
+    expect(box.height).toBeCloseTo(560, 0);
+    expect(box.width).toBeCloseTo(224, 0);
+    expect(box.x - column.x).toBeCloseTo((column.width - box.width) / 2, 0);
+    // The screenshot's marks sit on its image, so the image keeps the column's width and its full height.
+    const shot = page.locator('img[alt="A tall screenshot"]');
+    await expect(shot).toHaveJSProperty("complete", true);
+    expect((await shot.boundingBox())!.height).toBeCloseTo(column.width * 2.5, 0);
   });
-  await page.route("**/shot.svg", (route) =>
-    route.fulfill({ contentType: "image/svg+xml", body: portrait }),
-  );
-  const html = await render(
-    '![A tall painting](/painting.svg "A tall painting"){width="400" height="1000"}\n\n::screenshot{src="/shot.svg" alt="A tall screenshot"}\n::',
-  );
-  const painting = page.locator('figure > img[alt="A tall painting"]');
-  await Promise.all([
-    fixture(page, html, "main{width:40rem;margin:auto}"),
-    (async () => {
-      try {
-        await expect(painting).toHaveAttribute("width", "400");
-        await expect(painting).toHaveAttribute("height", "1000");
-        await expect(painting).toHaveJSProperty("naturalWidth", 0);
-        await expect(painting).toHaveCSS("width", "224px");
-        await expect(painting).toHaveCSS("height", "560px");
-      } finally {
-        paintingReady.resolve();
-      }
-    })(),
-  ]);
-  await expect(painting).toHaveJSProperty("naturalWidth", 400);
-  const box = (await painting.boundingBox())!;
-  const column = (await page.locator("main").boundingBox())!;
-  // 70% of the 800px window, at the picture's own 2:5.
-  expect(box.height).toBeCloseTo(560, 0);
-  expect(box.width).toBeCloseTo(224, 0);
-  expect(box.x - column.x).toBeCloseTo((column.width - box.width) / 2, 0);
-  // The screenshot's marks sit on its image, so the image keeps the column's width and its full height.
-  const shot = page.locator('img[alt="A tall screenshot"]');
-  await expect(shot).toHaveJSProperty("complete", true);
-  expect((await shot.boundingBox())!.height).toBeCloseTo(column.width * 2.5, 0);
-});
+}
 
 test("ordinary Markdown images fit inside links, inline markup, tables, and the comments wrapper", async ({
   page,

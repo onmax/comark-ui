@@ -250,11 +250,12 @@ const rules = `
     --_ty-image-height: min(70svh, 40rem);
     max-height: var(--_ty-image-height); object-fit: contain;
     &:where([width][height]) {
-      @supports (width: attr(width px)) {
-        --_ty-image-width: calc(var(--_ty-image-height) * attr(width type(<number>)) / max(1, attr(height type(<number>))));
-        max-width: min(100%, var(--_ty-image-width, 100%));
+      --_ty-image-width: min(calc(1px * var(--_ty-image-w)), calc(var(--_ty-image-height) * var(--_ty-image-w) / var(--_ty-image-h)));
+      width: var(--_ty-image-width, auto);
+      @supports (opacity: attr(width type(<number>))) {
+        --_ty-image-w: attr(width type(<number>));
+        --_ty-image-h: attr(height type(<number>));
       }
-      @supports not (width: attr(width px)) { width: auto; }
     }
   }
   /* A captioned image is centered over its caption once it's narrower than the column. */
