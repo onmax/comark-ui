@@ -125,3 +125,29 @@ Portrait
     expect((await image.boundingBox())!.height).toBeLessThanOrEqual(560);
   }
 });
+
+test("a native Markdown table sizes its columns from the fitted image widths", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.route("**/tall.svg", (route) =>
+    route.fulfill({
+      contentType: "image/svg+xml",
+      body: '<svg xmlns="http://www.w3.org/2000/svg" width="960" height="3840"></svg>',
+    }),
+  );
+  const table = (width: number, height: number) => {
+    const dimensions = `{width="${width}" height="${height}"}`;
+    return `| Before | After | Notes |
+| --- | --- | --- |
+| ![Before](/tall.svg)${dimensions} | ![After](/tall.svg)${dimensions} | The painting keeps its proportions while the notes next to it stay readable in a narrow column. |`;
+  };
+  await fixture(
+    page,
+    await render(`${table(960, 3840)}\n\n${table(140, 560)}`),
+    "main{width:40rem;margin:auto}",
+  );
+  const [fitted, control] = await page.locator("table").all();
+  await expect(fitted!.getByRole("img", { name: "Before" })).toHaveCSS("width", "140px");
+  const notes = (await fitted!.locator("tbody td").last().boundingBox())!;
+  const controlNotes = (await control!.locator("tbody td").last().boundingBox())!;
+  expect(notes.width).toBeCloseTo(controlNotes.width, 0);
+});
