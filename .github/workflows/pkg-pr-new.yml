@@ -38,6 +38,7 @@ jobs:
       # Build and check here instead of waiting for the whole CI run, so the
       # preview does not wait for the tests. A broken build still publishes nothing.
       - run: pnpm build
+      - run: pnpm --filter comark-ui-docs run prepare
       - run: pnpm check
       - run: pnpm exec pkg-pr-new publish './packages/*' --pnpm --packageManager=pnpm
         env:
