@@ -43,14 +43,20 @@ export function start(css: string): () => void {
   // Convert the rendered panel distances to scroll coordinates, even on a scaled page or in RTL.
   function geometry(track: HTMLElement, slides: HTMLElement[]) {
     const width = track.clientWidth;
-    const scale = track.getBoundingClientRect().width / track.offsetWidth || 1;
+    const bounds = track.getBoundingClientRect();
+    const scale = bounds.width / track.offsetWidth || 1;
     const direction = rtl(track) ? -1 : 1;
+    const scrolled = direction * track.scrollLeft;
+    const inset =
+      direction === -1 ? track.offsetWidth - width - track.clientLeft : track.clientLeft;
+    const origin = direction === -1 ? bounds.right : bounds.left;
     const panels = slides.map((slide) => slide.getBoundingClientRect());
     const first = panels[0]!;
-    const starts = panels.map(
-      (panel) => (direction === -1 ? first.right - panel.right : panel.left - first.left) / scale,
-    );
-    const pitch = starts[1] ?? 0;
+    const starts = panels.map((panel) => {
+      const edge = direction === -1 ? panel.right : panel.left;
+      return (direction * (edge - origin)) / scale - inset + scrolled;
+    });
+    const pitch = starts.length > 1 ? starts[1]! - starts[0]! : 0;
     const shown =
       pitch > 0
         ? Math.min(
@@ -64,9 +70,8 @@ export function start(css: string): () => void {
       0,
       Math.min(starts[lastStart]!, panelEnd - width, track.scrollWidth - width),
     );
-    const scrolled = direction * track.scrollLeft;
     const atEnd = end - scrolled <= 1;
-    const stops = starts.slice(0, lastStart + 1).map((start) => Math.min(start, end));
+    const stops = starts.slice(0, lastStart + 1).map((start) => Math.max(0, Math.min(start, end)));
     const current = atEnd
       ? lastStart
       : stops.reduce(
@@ -127,12 +132,12 @@ export function start(css: string): () => void {
     if (!track?.clientWidth || !slides.length) return;
     // The counter names every slide in view, such as 2–3 / 5. It counts from the track's width rather than from what
     // is on screen, so it doesn't flicker mid-scroll, and a slide that only peeks in on a narrow page doesn't count.
-    const { shown, current: first, scrolled, atEnd } = geometry(track, slides);
+    const { shown, current: first, scrolled, stops, atEnd } = geometry(track, slides);
     const last = first + shown;
     const text = `${first + 1}${last - first > 1 ? `–${last}` : ""} / ${slides.length}`;
     // Only on a change: the counter is a live region, so each write is read out.
     if (count && count.textContent !== text) count.textContent = text;
-    prev?.setAttribute("aria-disabled", String(scrolled < 2));
+    prev?.setAttribute("aria-disabled", String(scrolled - stops[0]! < 2));
     next?.setAttribute("aria-disabled", String(atEnd));
   }
 

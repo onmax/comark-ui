@@ -50,6 +50,43 @@ for (const scaling of ["transform:scale(.7)", "zoom:.7"]) {
   });
 }
 
+for (const dir of ["ltr", "rtl"]) {
+  test(`a padded narrow track pages through all slides in ${dir}`, async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await open(page, three, { dir, width: "320px", style: ".cc-track{padding-inline:48px}" });
+    const { count, next, prev } = parts(page);
+    await expect(count).toHaveText("1 / 3");
+    await expect(prev).toHaveAttribute("aria-disabled", "true");
+    await next.click();
+    await expect(count).toHaveText("2 / 3");
+    await next.click();
+    await expect(count).toHaveText("3 / 3");
+    await expect(next).toHaveAttribute("aria-disabled", "true");
+    await prev.click();
+    await expect(count).toHaveText("2 / 3");
+    await prev.click();
+    await expect(count).toHaveText("1 / 3");
+    await expect(prev).toHaveAttribute("aria-disabled", "true");
+  });
+}
+
+test("a wide track with leading padding reaches the last full range", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await open(page, five, { style: ".cc-track{padding-inline-start:144px}" });
+  const { count, next, track } = parts(page);
+  await expect(count).toHaveText("1–3 / 5");
+  await next.click();
+  await expect(count).toHaveText("2–4 / 5");
+  await next.click();
+  await expect(count).toHaveText("3–5 / 5");
+  await expect(next).toHaveAttribute("aria-disabled", "true");
+  const panelEnd = await track.evaluate((element) => {
+    const last = element.querySelector(".cc-slide:last-child")!;
+    return last.getBoundingClientRect().right - element.getBoundingClientRect().right;
+  });
+  expect(Math.abs(panelEnd)).toBeLessThan(1);
+});
+
 test("overflowing slide content does not extend the last page", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await open(
