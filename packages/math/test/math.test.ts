@@ -78,6 +78,29 @@ describe("comark-mathml", () => {
     expect(html).toContain("$ x $ is not math.");
   });
 
+  it("keeps brackets a Markdown writer escaped as text", async () => {
+    const markdown = [
+      "> \\[!NOTE\\]\n> Read this first.",
+      "See \\[draft\\] and \\[see below\\], with a note\\[^1\\].",
+      "\\[x\\] done",
+      "- \\[X\\] shipped",
+    ].join("\n\n");
+    expect(await formulas(markdown)).toEqual([]);
+    const html = await render(markdown);
+    for (const text of [
+      "[!NOTE]",
+      "See [draft] and [see below], with a note[^1].",
+      "[x] done",
+      "[X] shipped",
+    ])
+      expect(html).toContain(text);
+    expect(await formulas("Let \\[x\\] be the input, and \\[\\alpha\\].\n\n\\[x\\]")).toEqual([
+      "$$x$$",
+      "$$\\alpha$$",
+      "$$x$$",
+    ]);
+  });
+
   it("closes `$` before a non-digit after a non-space, as Pandoc does", async () => {
     expect(await formulas("From $a$ to $b$, and $x + y = 2$.")).toEqual(["a", "b", "x + y = 2"]);
   });

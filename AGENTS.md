@@ -134,7 +134,7 @@ How most packages work, so the bullets below don't repeat it:
   - Marks are renamed to `mdc_inline_span`, since Comark drops `mark_open`. A `^` right after `[` never opens a superscript, so `[^1]` stays a footnote reference.
   - The AST stays plain `mark` and `sup`. Each renderer's components add the `cmk-` classes and styles, so the plugin still works without them.
 - `packages/math` is `comark-mathml`. Its plugin is named `math` so it replaces `comark/plugins/math`.
-  - Its inline and block rules read `$…$`, `\(…\)`, `$$…$$`, and `\[…\]` (a `$` before a digit, and `\[1\]`, stay text). `markdownItPost` turns `math` fences into the same token, so Comark builds its own `math` nodes.
+  - Its inline and block rules read `$…$`, `\(…\)`, `$$…$$`, and `\[…\]` (a `$` before a digit stays text, and so do `\[…\]` brackets an editor escaped: citations like `\[1\]`, `\[!NOTE\]`, `\[^1\]`, words, and a leading `\[x\] ` task box). `markdownItPost` turns `math` fences into the same token, so Comark builds its own `math` nodes.
   - `post` typesets every one with Temml into MathML, or with KaTeX's HTML when `output` asks and `katex` is installed, cached per process in `src/typeset.ts`. It replaces each node with a `formula` holding `tex`, `display`, and `html`, so no renderer loads a typesetter.
   - A formula that fails keeps no `html` and renders its escaped TeX. A `$$` that Comark closed at the end of a stream fails without an issue.
 - `packages/media` is `comark-media`.
