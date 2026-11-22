@@ -40,6 +40,8 @@ const ownMotionFigures: Array<{ path: string; reason: string }> = [
 
 const ignoreDirs = new Set(["dist", "node_modules", ".nuxt", ".output", "content"]);
 const sourceFile = /\.(vue|ts|css|svelte)$/;
+const motionMarker =
+  /@keyframes|animation|transition|<Transition|scale-|:(?:active|hover)|\.animate\(|requestAnimationFrame/;
 
 interface Finding {
   file: string;
@@ -194,8 +196,7 @@ function selfScheduling(source: string, name: string): boolean {
   );
 }
 
-function scan(file: string, text: string, keyframes: Map<string, boolean>): Finding[] {
-  const source = withoutComments(file, text);
+function scan(file: string, source: string, keyframes: Map<string, boolean>): Finding[] {
   const findings: Finding[] = [];
   const add = (index: number, found: string) =>
     findings.push({
@@ -257,18 +258,21 @@ function scanSurfaces(): Finding[] {
     .map((file) => relative(root, file))
     .filter((path) => !ownMotionFigures.some((figure) => path.startsWith(figure.path)))
     .toSorted();
-  const texts = files.map((path) => [path, readFileSync(join(root, path), "utf8")] as const);
+  const sources = files.flatMap((path) => {
+    const text = readFileSync(join(root, path), "utf8");
+    return motionMarker.test(text) ? [[path, withoutComments(path, text)] as const] : [];
+  });
   const keyframes = new Map([
     ["spin", false],
     ["pulse", false],
   ]);
-  for (const [file, text] of texts)
-    for (const match of withoutComments(file, text).matchAll(/@keyframes\s+([\w-]+)\s*\{/g))
+  for (const [, source] of sources)
+    for (const match of source.matchAll(/@keyframes\s+([\w-]+)\s*\{/g))
       keyframes.set(
         match[1]!,
         keyframesMove(balanced(match.input, match.index + match[0].length - 1)),
       );
-  return texts.flatMap(([path, text]) => scan(path, text, keyframes));
+  return sources.flatMap(([path, source]) => scan(path, source, keyframes));
 }
 
 describe("motion", () => {

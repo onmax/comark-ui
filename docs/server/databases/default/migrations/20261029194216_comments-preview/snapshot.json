@@ -885,16 +885,9 @@
     {
       "table": "session",
       "name": "session_token_unique",
-      "columns": [
-        {
-          "value": "token",
-          "isExpression": false
-        }
-      ],
-      "isUnique": true,
-      "where": null,
-      "origin": "manual",
-      "entityType": "indexes"
+      "columns": ["token"],
+      "nameExplicit": false,
+      "entityType": "uniques"
     },
     {
       "table": "session",
@@ -913,16 +906,9 @@
     {
       "table": "user",
       "name": "user_email_unique",
-      "columns": [
-        {
-          "value": "email",
-          "isExpression": false
-        }
-      ],
-      "isUnique": true,
-      "where": null,
-      "origin": "manual",
-      "entityType": "indexes"
+      "columns": ["email"],
+      "nameExplicit": false,
+      "entityType": "uniques"
     },
     {
       "table": "verification",

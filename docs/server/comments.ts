@@ -1,7 +1,12 @@
-import { defineComments } from "vite-hub/comments";
-import { inTeam } from "./utils/team.ts";
+import { commentsRoleAllows, defineComments } from "vite-hub/comments";
+import { hasConsoleGrant, inTeam } from "./utils/team.ts";
 
-// Figma-style comments on the docs pages, for the team only (utils/team.ts). The team signs in at /sign-in, which turns
-// comment mode on, and every other visitor gets the prerendered files unchanged. The Console's Comments section lists
-// the same threads, for the same people.
-export const comments = defineComments({ authorize: ({ user }) => inTeam(user) });
+// Draft previews and published pages share comment threads. Only the team may use Comments, even with a Site Access grant.
+export const comments = defineComments({
+  authorize: ({ user, action }) =>
+    inTeam(user) ||
+    (user?.emailVerified === true &&
+      hasConsoleGrant(user.role) &&
+      inTeam({ email: user.email }) &&
+      commentsRoleAllows(user, action)),
+});

@@ -23,3 +23,7 @@ export function inTeam(user: Person): boolean {
     typeof email === "string" && TEAM.some((member) => member.emails.includes(email.toLowerCase()))
   );
 }
+
+export function hasConsoleGrant(role: unknown): boolean {
+  return typeof role === "string" && role.split(",").some((name) => name.trim() === "console");
+}

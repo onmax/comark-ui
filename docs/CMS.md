@@ -19,6 +19,8 @@ The site signs the team in with the [Personal Project CMS GitHub App](https://gi
 
 For comark-ui, the callback is `https://comark-ui.onmax.me/api/auth/callback/github`. Open `/sign-in` to sign in. It returns to the landing page in comment mode. Anyone can sign in, but only the GitHub logins in `server/utils/team.ts` can comment.
 
+Team members can also comment when they open the site from the Console with a verified team email and a Comments grant for the action. Don't use guest invites to share Comments: draft previews and published pages share threads, so guest comment grants are not honored.
+
 The App has email read access for sign-in. Its repository permissions are contents write, pull requests write, and the required metadata read access. Install it only on repositories that use the CMS. The first installation, `176174996`, selects only `onmax/comark-ui`. Webhooks and Device Flow are disabled.
 
 To add another project, add its exact `/api/auth/callback/github` URL in the App settings. Configure that project's bindings and its own session secret. Add the repository to the App installation when it needs repository access. Keep the project's team policy in its own application; signing in does not grant editing access.
