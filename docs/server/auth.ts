@@ -4,8 +4,8 @@ import { admin } from "better-auth/plugins";
 import { defineAuth } from "vite-hub/auth";
 import { db, schema } from "vite-hub/database";
 
-// Use GitHub at /sign-in (server/routes/sign-in.get.ts). Only the GitHub team or users with Site Access comment grants
-// can comment. Editing happens in the ViteHub Console, which signs its own people in.
+// Use GitHub at /sign-in (server/routes/sign-in.get.ts). Only the team can comment, including team members who open
+// the site via the ViteHub Console. Editing happens in the Console, which signs its own people in.
 export default defineAuth(({ env, requestOrigin }) => ({
   appName: "comark ui",
   baseURL: requestOrigin,

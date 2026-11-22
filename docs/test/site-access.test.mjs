@@ -60,7 +60,7 @@ describe("Site Access page authorization", () => {
     await withHostSession(
       {
         name: "Console member",
-        email: "member@example.test",
+        email: "hello@onmax.me",
         roles: [
           "console",
           "comments-read",
@@ -78,15 +78,33 @@ describe("Site Access page authorization", () => {
     );
   });
 
-  it("lets a redeemed write invite read and write but not resolve, delete, or see Console", async () => {
+  it("denies a redeemed guest access to shared page threads and Console", async () => {
     await withHostSession({ name: "Guest", roles: ["guest", "comments-write"] }, async (user) => {
       expect(await authorizeConsole({ request, via: "page", user })).toBe(false);
+      const subject = { kind: "page", id: "/guide/theming" };
+      const thread = { subject };
       for (const action of ["read", "write", "resolve", "delete"]) {
-        expect(await comments.options.authorize?.({ user, action })).toBe(
-          action === "read" || action === "write",
-        );
+        expect(await comments.options.authorize?.({ user, action, subject, thread })).toBe(false);
+        expect(await comments.options.authorize?.({ user, action, subject })).toBe(false);
+        expect(await comments.options.authorize?.({ user, action })).toBe(false);
       }
     });
+  });
+
+  it("requires team membership and checks each action for Site Access members", async () => {
+    await withHostSession(
+      { name: "Console member", email: "hello@onmax.me", roles: ["console", "comments-read"] },
+      async (user) => {
+        expect(await comments.options.authorize?.({ user, action: "read" })).toBe(true);
+        expect(await comments.options.authorize?.({ user, action: "write" })).toBe(false);
+        expect(
+          await comments.options.authorize?.({
+            user: { ...user, email: "member@example.test" },
+            action: "read",
+          }),
+        ).toBe(false);
+      },
+    );
   });
 
   it("preserves GitHub team and signed RPC authorization", async () => {

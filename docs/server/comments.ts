@@ -1,7 +1,12 @@
 import { commentsRoleAllows, defineComments } from "vite-hub/comments";
-import { inTeam } from "./utils/team.ts";
+import { hasConsoleGrant, inTeam } from "./utils/team.ts";
 
-// The GitHub team can comment after /sign-in. Site Access sessions can act on the same threads according to their grants.
+// Draft previews and published pages share comment threads. Only the team may use Comments, even with a Site Access grant.
 export const comments = defineComments({
-  authorize: ({ user, action }) => inTeam(user) || commentsRoleAllows(user, action),
+  authorize: ({ user, action }) =>
+    inTeam(user) ||
+    (user?.emailVerified === true &&
+      hasConsoleGrant(user.role) &&
+      inTeam({ email: user.email }) &&
+      commentsRoleAllows(user, action)),
 });
