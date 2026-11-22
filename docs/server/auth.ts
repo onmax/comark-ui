@@ -1,5 +1,6 @@
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthMiddleware } from "better-auth/api";
+import { admin } from "better-auth/plugins";
 import { defineAuth } from "vite-hub/auth";
 import { db, schema } from "vite-hub/database";
 
@@ -19,6 +20,8 @@ export default defineAuth(({ env, requestOrigin }) => ({
       overrideUserInfoOnSignIn: true,
     },
   },
+  // The ViteHub Console's Auth section keeps site access as admin() roles, and refuses to open without it.
+  plugins: [admin()],
   // Where /sign-in sends someone who isn't signed in yet. Back on the site, the session turns comment mode on.
   access: { signIn: { provider: "github", callbackURL: "/" } },
   // Not `input: false`: Better Auth drops such a field from the GitHub profile too, so the login would never be stored.

@@ -2087,16 +2087,9 @@
     {
       "table": "oauth_access_token",
       "name": "oauth_access_token_token_unique",
-      "columns": [
-        {
-          "value": "token",
-          "isExpression": false
-        }
-      ],
-      "isUnique": true,
-      "where": null,
-      "origin": "manual",
-      "entityType": "indexes"
+      "columns": ["token"],
+      "nameExplicit": false,
+      "entityType": "uniques"
     },
     {
       "table": "oauth_access_token",
@@ -2171,16 +2164,9 @@
     {
       "table": "oauth_client",
       "name": "oauth_client_client_id_unique",
-      "columns": [
-        {
-          "value": "client_id",
-          "isExpression": false
-        }
-      ],
-      "isUnique": true,
-      "where": null,
-      "origin": "manual",
-      "entityType": "indexes"
+      "columns": ["client_id"],
+      "nameExplicit": false,
+      "entityType": "uniques"
     },
     {
       "table": "oauth_client",
@@ -2273,16 +2259,9 @@
     {
       "table": "oauth_refresh_token",
       "name": "oauth_refresh_token_token_unique",
-      "columns": [
-        {
-          "value": "token",
-          "isExpression": false
-        }
-      ],
-      "isUnique": true,
-      "where": null,
-      "origin": "manual",
-      "entityType": "indexes"
+      "columns": ["token"],
+      "nameExplicit": false,
+      "entityType": "uniques"
     },
     {
       "table": "oauth_refresh_token",
@@ -2343,30 +2322,16 @@
     {
       "table": "oauth_resource",
       "name": "oauth_resource_identifier_unique",
-      "columns": [
-        {
-          "value": "identifier",
-          "isExpression": false
-        }
-      ],
-      "isUnique": true,
-      "where": null,
-      "origin": "manual",
-      "entityType": "indexes"
+      "columns": ["identifier"],
+      "nameExplicit": false,
+      "entityType": "uniques"
     },
     {
       "table": "session",
       "name": "session_token_unique",
-      "columns": [
-        {
-          "value": "token",
-          "isExpression": false
-        }
-      ],
-      "isUnique": true,
-      "where": null,
-      "origin": "manual",
-      "entityType": "indexes"
+      "columns": ["token"],
+      "nameExplicit": false,
+      "entityType": "uniques"
     },
     {
       "table": "session",
@@ -2385,16 +2350,9 @@
     {
       "table": "user",
       "name": "user_email_unique",
-      "columns": [
-        {
-          "value": "email",
-          "isExpression": false
-        }
-      ],
-      "isUnique": true,
-      "where": null,
-      "origin": "manual",
-      "entityType": "indexes"
+      "columns": ["email"],
+      "nameExplicit": false,
+      "entityType": "uniques"
     },
     {
       "table": "verification",

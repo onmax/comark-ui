@@ -14,6 +14,11 @@ export const user = sqliteTable("user", {
   image: text("image"),
   // The GitHub login, which server/auth.ts sets at every sign-in and no request can change.
   login: text("login"),
+  // The admin() plugin's fields (server/auth.ts).
+  role: text("role"),
+  banned: integer("banned", { mode: "boolean" }).default(false),
+  banReason: text("ban_reason"),
+  banExpires: integer("ban_expires", { mode: "timestamp_ms" }),
   createdAt: integer("created_at", { mode: "timestamp_ms" }).default(now).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp_ms" })
     .default(now)
@@ -33,6 +38,7 @@ export const session = sqliteTable(
       .notNull(),
     ipAddress: text("ip_address"),
     userAgent: text("user_agent"),
+    impersonatedBy: text("impersonated_by"),
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
