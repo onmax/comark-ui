@@ -44,7 +44,7 @@ Bread costs $2 a pigeon and seed $5 in all, so $n$ pigeons cost $c = 2n + 5$.
 
 - `$…$` and `\(…\)` write inline math, and `$$…$$`, `\[…\]`, and a `math` fence write display math.
 - Formulas become MathML while parsing, drawn in the browser's math font, so the page loads no script, font, or stylesheet.
-- Prices such as `$5 and $10`, citations such as `\[1\]`, and anything in code stay text.
+- Prices such as `$5 and $10`, citations such as `\[1\]`, brackets an editor escaped such as `> \[!NOTE\]`, and anything in code stay text.
 - A formula that doesn't typeset shows its TeX and adds an issue.
 - The MathML keeps the TeX for screen readers and copying.
 
@@ -88,6 +88,7 @@ comarkUi({ math: { macros: { "\\R": "\\mathbb{R}" } } });
 
 - A `$` followed by a digit or a space doesn't open a formula, as in `$5 and $10`, `US$20`, and `$ x $`.
 - Brackets around numbers, such as `\[1\]` and `\[2, 3\]`, are citations.
+- Editors such as Tiptap escape every bracket in text, so `\[` holding a GitHub alert marker (`\[!NOTE\]`), a footnote reference (`\[^1\]`), or words (`\[draft\]`) stays text, and so does `\[x\]` followed by a space at the start of a paragraph, a task box. `\[x\]` anywhere else is a formula.
 - An invalid formula shows its TeX and adds an issue. While streaming, an unfinished formula may add one until the rest arrives.
 
 ### From Comark's math plugin

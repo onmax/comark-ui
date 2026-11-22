@@ -26,7 +26,7 @@ $$
 $$
 ```
 
-The parse plugin typesets each formula with [Temml](https://temml.org) while parsing. `\href` and `\url` don't render. Prices such as `$5 and $10`, citations such as `\[1\]`, and anything in code stay text. `output: "html"` or `"htmlAndMathml"` uses KaTeX's HTML instead, which needs `katex` installed and `katex/dist/katex.css` on the page.
+The parse plugin typesets each formula with [Temml](https://temml.org) while parsing. `\href` and `\url` don't render. Prices such as `$5 and $10`, citations such as `\[1\]`, brackets an editor escaped such as `> \[!NOTE\]` and `\[draft\]`, and anything in code stay text. `output: "html"` or `"htmlAndMathml"` uses KaTeX's HTML instead, which needs `katex` installed and `katex/dist/katex.css` on the page.
 
 The plugin adds every formula that doesn't typeset to `meta.issues`, with the reason, and renders its TeX in its place.
 

@@ -47,8 +47,17 @@ const BACKTICK = 0x60;
 const NEWLINE = 0x0a;
 const isSpace = (code: number) => code === 0x20 || code === 0x09 || code === NEWLINE;
 const isDigit = (code: number) => code >= 0x30 && code <= 0x39;
-// `\[1\]` and `\[2, 3\]` are citations written so the brackets don't start a link.
-const isCitation = (tex: string) => /^[\d\s,–-]+$/.test(tex);
+// Text whose brackets a Markdown writer escaped so they don't start a link, such as @tiptap/markdown's output:
+// citations (`\[1\]`, `\[2, 3\]`), a GitHub alert marker (`\[!NOTE\]`), a footnote reference (`\[^1\]`), and words
+// (`\[draft\]`). None of them is a formula anyone writes.
+const isEscapedText = (tex: string) =>
+  /^[\d\s,–-]+$/.test(tex) ||
+  /^![a-z]+$/i.test(tex) ||
+  /^\^[\w-]+$/.test(tex) ||
+  /^\p{L}{2,}(?:\s+\p{L}+)*$/u.test(tex);
+// `\[x\] done` opening a paragraph is a task box written as text, while `\[x\]` elsewhere stays a formula.
+const isTaskBox = (src: string, start: number, end: number, tex: string) =>
+  start === 0 && /^[xX]$/.test(tex) && src.charCodeAt(end + 2) === 0x20;
 
 type Delimiter = { open: string; close: string; display: boolean; multiline: boolean };
 const DELIMITERS: Delimiter[] = [
@@ -85,7 +94,9 @@ function inline(state: StateInline, silent: boolean) {
   const end = closing(src, from, max, delimiter);
   if (end < 0) return false;
   const tex = src.slice(from, end).trim();
-  if (!tex || (delimiter.open === "\\[" && isCitation(tex))) return false;
+  if (!tex) return false;
+  if (delimiter.open === "\\[" && (isEscapedText(tex) || isTaskBox(src, start, end, tex)))
+    return false;
   if (!silent) {
     const token = state.push(delimiter.display ? "math_block" : "math_inline", "math", 0);
     token.content = tex;
@@ -122,7 +133,7 @@ function block(state: StateBlock, startLine: number, endLine: number, silent: bo
     if (!text.trim() || indent(line) < state.blkIndent) return false;
   }
   const tex = lines.join("\n").trim();
-  if (!tex || (open === "\\[" && isCitation(tex))) return false;
+  if (!tex || (open === "\\[" && isEscapedText(tex))) return false;
   if (silent) return true;
   const token = state.push("math_block", "math", 0);
   token.content = tex;
