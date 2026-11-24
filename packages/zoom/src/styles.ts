@@ -11,10 +11,11 @@ export const css = `@layer comark{${[
   "img[data-zoom],.cz-item>img{border-radius:var(--_comark-radius)}",
   // A thumbnail, an image in a table cell, fits a box of --comark-thumb-height by --comark-thumb-width at its own ratio,
   // which the plugin writes as --cz-ratio; a fixed height with an automatic width then takes the ratio of its `width`
-  // and `height` attributes before the file loads. One with no size known holds a 3:2 box until it loads, and crops
-  // to the box's width if it turns out wider.
-  "img[data-zoom-thumb]{display:inline-block;width:auto;max-width:var(--comark-thumb-width,8rem);height:min(var(--comark-thumb-height,4rem),calc(var(--comark-thumb-width,8rem) / var(--cz-ratio,1)));max-height:none;margin:.125rem 0;vertical-align:middle;object-fit:cover;object-position:left top;border-radius:calc(var(--_comark-radius) - 4px);outline:1px solid color-mix(in srgb,var(--_comark-foreground) 12%,transparent);outline-offset:-1px;touch-action:manipulation}",
-  "img[data-zoom-thumb]:not([width][height]){aspect-ratio:auto 3/2}",
+  // and `height` attributes before the file loads. --cz-height keeps a small
+  // image, such as an icon, from growing past its file. One with no size known keeps a 3:2 box and shows whole inside
+  // it, since its ratio arrives too late to size the row, and a page's own `img{max-width}` may outrank this layer.
+  "img[data-zoom-thumb]{display:inline-block;width:auto;max-width:var(--comark-thumb-width,8rem);height:min(var(--comark-thumb-height,4rem),calc(var(--comark-thumb-width,8rem) / var(--cz-ratio,1)),var(--cz-height,100vh));max-height:none;margin:.125rem 0;vertical-align:middle;object-fit:cover;object-position:left top;border-radius:calc(var(--_comark-radius) - 4px);outline:1px solid color-mix(in srgb,var(--_comark-foreground) 12%,transparent);outline-offset:-1px;touch-action:manipulation}",
+  "img[data-zoom-thumb]:not([width][height]){aspect-ratio:3/2;object-fit:contain;object-position:center;outline:0}",
   "@media (hover:hover) and (pointer:fine){img[data-zoom-thumb]{transition:outline-color .15s ease-out}img[data-zoom-thumb]:hover{outline-color:color-mix(in srgb,var(--_comark-foreground) 32%,transparent)}}",
   // A `::zoom` block holds no margin of its own for its content's to collapse into, so blocks in a row would touch.
   ".cz{margin:1.5rem 0}",

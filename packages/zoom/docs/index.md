@@ -94,7 +94,7 @@ Put an image in a table cell to show it as a thumbnail. It keeps its ratio insid
 ::
 
 > [!TIP]
-> Give each image its `width` and `height`, the size of its file, so the row has its height before the image loads.
+> Give each image its `width` and `height`, the size of its file, so the row has its height before the image loads. Without them it shows whole inside a 3:2 box.
 
 ### Link to the page shown
 

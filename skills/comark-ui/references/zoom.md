@@ -29,7 +29,7 @@ comark-zoom lets the reader click an image or a `::zoom` block to see it large, 
 ```
 
 - An image in a table cell is a thumbnail at most 4rem high and 8rem wide, at its own ratio, so one reference table can hold a screenshot per row. A click, Enter, or Space zooms it to the size of its file, and it loads only near the screen. Several images in one cell sit side by side and wrap.
-- Give `width` and `height`, the file's size in pixels, so the row has its height before the image loads. Without them the thumbnail holds a 3:2 box until then.
+- Give `width` and `height`, the file's size in pixels, so the row has its height before the image loads. Without them the thumbnail shows whole inside a 3:2 box.
 - `link` names the page the image shows. The zoomed view links to it beside the title, so the click on the image still zooms. Don't wrap the image in a Markdown link: a linked image doesn't zoom and isn't a thumbnail. `link` works on any zoomable image, not only in a table.
 - The alt text is the image's accessible name and the zoomed view's heading, so say what the screenshot shows.
 - A `::screenshot` doesn't fit a cell. For marks and notes, zoom is not enough: put the annotated `::screenshot` under the table and link to it.

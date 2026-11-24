@@ -62,7 +62,7 @@ describe("comark-zoom", () => {
       "| Term | Where |\n| --- | --- |\n| Forecast | ![Forecast page](a.png){width=1280 height=800} |",
     );
     expect(html).toContain(
-      '<img src="a.png" alt="Forecast page" width="1280" height="800" data-zoom="" tabindex="0" data-zoom-thumb="" loading="lazy" decoding="async" style="--cz-ratio:1.6">',
+      '<img src="a.png" alt="Forecast page" width="1280" height="800" data-zoom="" tabindex="0" data-zoom-thumb="" loading="lazy" decoding="async" style="--cz-ratio:1.6;--cz-height:800px">',
     );
     expect(html.match(/<script>/g)).toHaveLength(1);
   });

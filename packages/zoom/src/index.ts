@@ -124,7 +124,7 @@ function proportion([, attrs]: ElementNode) {
   const width = pixels(attrs.width);
   const height = pixels(attrs.height);
   if (!("data-zoom-thumb" in attrs) || !width || !height) return;
-  const ratio = `--cz-ratio:${Math.round((width / height) * 1000) / 1000}`;
+  const ratio = `--cz-ratio:${Math.round((width / height) * 1000) / 1000};--cz-height:${height}px`;
   const style = text(attrs.style);
   attrs.style = style ? `${style};${ratio}` : ratio;
 }

@@ -25,8 +25,15 @@ const text = (node: Node): string =>
   isElement(node) ? childrenOf(node).map(text).join("") : Array.isArray(node) ? "" : node;
 const chipsOf = (node: Node): ElementNode[] =>
   isElement(node) ? (node[0] === "chip" ? [node] : childrenOf(node).flatMap(chipsOf)) : [];
+// comark-zoom runs first and marks the images it draws as thumbnails. Any other image, such as an icon, is its own size.
 const imagesOf = (node: Node): ElementNode[] =>
-  isElement(node) ? (node[0] === "img" ? [node] : childrenOf(node).flatMap(imagesOf)) : [];
+  isElement(node)
+    ? node[0] === "img"
+      ? "data-zoom-thumb" in node[1]
+        ? [node]
+        : []
+      : childrenOf(node).flatMap(imagesOf)
+    : [];
 /** What comark-zoom's thumbnail of an image in a cell is worth, in characters: about 6.5em of its 8rem at most. */
 const THUMBNAIL = 12;
 // A chip draws an icon and padding beside its label, worth about three characters. A cell's images sit side by side

@@ -420,7 +420,7 @@ export function script(css: string): () => void {
     const arrows = next ? 2 * (box.right - next.getBoundingClientRect().left + 8) : 0;
     // An image grows no larger than its file. While a data-zoom-src file loads, the page's image may stretch, since
     // the larger file will take its place.
-    const image = current.frame.firstElementChild;
+    const image = current.content;
     const large = image?.getAttribute("data-zoom-src");
     // The copy of a loaded image has no size until the browser decodes it again, so the page's image answers for it.
     const picture = item instanceof HTMLImageElement && image instanceof HTMLImageElement;
@@ -428,19 +428,24 @@ export function script(css: string): () => void {
       picture && (!large || image.getAttribute("src") === large)
         ? image.naturalWidth || (large ? 0 : item.naturalWidth)
         : 0;
-    const natural = file ? Math.max(1, file / width) : 4;
+    const thumbnail = picture && item.hasAttribute("data-zoom-thumb");
+    // An image the page stretched past its file keeps that size. A thumbnail is the size of its box, not of its file,
+    // so it never grows past the file.
+    const natural = file ? (thumbnail ? file / width : Math.max(1, file / width)) : 4;
     const ink = drawn(current.frame);
     const across = Math.min(box.width * 0.92, box.width - arrows) / (ink.right - ink.left);
     const down = (box.height * 0.92) / (ink.bottom - ink.top);
-    const tall = down < Math.min(1, across) * 0.85;
+    // A thumbnail fits and scrolls as its file would at full size, so a long screenshot opens as wide as it would
+    // from the page's column, rather than whole and too small to read.
+    const unit = thumbnail && file ? natural : 1;
+    const tall = down / unit < Math.min(1, across / unit) * 0.85;
     // Anything but an image stops at four times its size on the page. An image stops only at its file's size, so a
     // thumbnail opens as large as a full-width image would.
     const most = file ? natural : Math.min(natural, 4);
     const scale = Math.max(0.1, Math.min(across, tall ? Infinity : down, most));
     current.scale = scale;
     // A thumbnail grows many times over, and its corners would grow with it.
-    if (picture && item.hasAttribute("data-zoom-thumb"))
-      image.style.borderRadius = `calc(var(--_comark-radius) / ${scale})`;
+    if (thumbnail) image.style.borderRadius = `calc(var(--_comark-radius) / ${scale})`;
     current.stage.toggleAttribute("data-scroll", tall);
     // The stage centers the item's box; the shift centers what is drawn.
     const x = (width / 2 - (ink.left + ink.right) / 2) * scale;
