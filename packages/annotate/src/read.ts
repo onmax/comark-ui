@@ -693,6 +693,8 @@ export function thumbnails(nodes: Node[]): Issue[] {
       if (tag === "screenshot") {
         const id = text(attrs.id);
         if (attrs.of !== undefined) names.push({ node, parent, cell });
+        // One written in the cell itself, with its `src`, is a thumbnail there, and never the block another cell names.
+        else if (cell) attrs[THUMBNAIL] = "";
         else if (id && !blocks.has(id)) blocks.set(id, { node, parent });
       } else if (tag !== "compare" && tag !== "annotation")
         walk(childrenOf(node), node, cell || tag === "td" || tag === "th");

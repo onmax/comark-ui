@@ -981,6 +981,17 @@ The caption.
     expect(html.split('id="shot"')).toHaveLength(2);
   });
 
+  it("draws a screenshot written in the cell as a thumbnail, and never as the block another cell names", async () => {
+    const { issues, html: page } = await run(
+      '| A | B |\n| --- | --- |\n| :screenshot{#shot src="a.png" alt="A" viewport="900x600"} | :screenshot{of="shot"} |',
+    );
+    expect(issues).toHaveLength(1);
+    expect(issues[0]).toContain('`:screenshot{of="shot"}` names no standalone screenshot');
+    const html = page.replace(/<style>.*?<\/style>\s*/gs, "");
+    expect(html.split('class="ca ca-thumb"')).toHaveLength(2);
+    expect(html).not.toContain("data-comark-frame");
+  });
+
   it("reports a name with no block, and one outside a table, and draws neither", async () => {
     const {
       issues,
