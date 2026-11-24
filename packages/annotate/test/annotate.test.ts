@@ -948,14 +948,16 @@ The caption.
     expect(issues).toEqual([]);
     const [, row, second, after] = html.split(/<tr>\s*<td>/);
     expect(row).toMatch(
-      /^Sign in<\/td>\s*<td>\s*<div class="ca ca-thumb" style="--ca-ratio:1\.5"><figure id="sign-in" class="ca-screenshot ca-right"><div class="ca-stage" data-zoom data-zoom-width="720" tabindex="0"/,
+      /^Sign in<\/td>\s*<td>\s*<div class="ca ca-thumb" style="--ca-ratio:1\.5"><figure id="sign-in" class="ca-screenshot ca-right">/,
     );
-    // The marks and notes stay in the markup for the zoomed view, and no heading takes room in the cell.
+    expect(row).toContain('<div class="ca-stage" data-zoom data-zoom-width="720" tabindex="0"');
     expect(row).toContain('<span class="ca-stamp"');
     expect(row).toContain("<strong>cut off</strong>");
     expect(row).toContain("The caption.");
-    expect(row).not.toContain("ca-heading");
-    expect(second).toMatch(/^Cart<\/td>\s*<td>\s*<div class="ca ca-thumb"><figure id="cart"/);
+    expect(row).toContain("ca-heading");
+    expect(second).toMatch(
+      /^Cart<\/td>\s*<td>\s*<div class="ca ca-thumb" data-ca-unsized><figure id="cart"/,
+    );
     expect(after).toBeUndefined();
     // Nothing is left where the blocks were written.
     expect(html.split("</table>")[1]).not.toContain("ca-screenshot");
@@ -965,10 +967,9 @@ The caption.
   it("draws a dot for each mark, and the full figure again in the zoomed view", async () => {
     const css = styles((await run(table)).html);
     expect(css).toContain(
-      ".ca-thumb:not(.cz-dialog *) :is(figcaption,.ca-callout,.ca-arrow,.ca-copy,.ca-copy-status,.ca-hide,.ca-mark>*){display:none}",
+      "[data-comark-zoom-ready] .ca-thumb:not(.cz-dialog *) :is(.ca-heading,figcaption,.ca-callout,.ca-arrow,.ca-copy,.ca-copy-status,.ca-hide,.ca-mark>*){display:none}",
     );
     expect(css).toContain(".ca-thumb:not(.cz-dialog *) .ca-mark::after{");
-    expect(css).not.toMatch(/\.ca-thumb(?!:not\(\.cz-dialog \*\))/);
   });
 
   it("draws a block two cells name in both, with its id once", async () => {
@@ -989,7 +990,7 @@ The caption.
       '| A |\n| --- |\n| :screenshot{of="missing"} |\n\nSee :screenshot{of="shot"} here.\n\n::screenshot{#shot src="a.png" alt="A"}\n::',
     );
     expect(issues).toEqual([
-      '`:screenshot{of="missing"}` names a screenshot that isn\'t in the document. Give the `::screenshot` block that id, as `::screenshot{#missing …}`, or fix `of`.',
+      '`:screenshot{of="missing"}` names no standalone screenshot in this document. Give a `::screenshot` block outside a `::compare` that id, as `::screenshot{#missing …}`, or fix `of`.',
       '`:screenshot{of="shot"}` is outside a table, and it only draws a screenshot as a thumbnail in a table cell. Move it into a cell, or write the `::screenshot` block here.',
     ]);
     expect(Object.values(document.meta.issueRules)).toEqual([
@@ -997,8 +998,25 @@ The caption.
       "comark/annotate/thumbnail-outside-table",
     ]);
     const html = page.replace(/<style>.*?<\/style>\s*/gs, "");
-    expect(html).not.toContain("ca-thumb");
+    expect(html).not.toContain('class="ca ca-thumb"');
     expect(html.split('class="ca-screenshot')).toHaveLength(2);
+  });
+
+  it("does not take a named screenshot out of a comparison", async () => {
+    const { issues, html } = await run(`| Evidence |
+| --- |
+| :screenshot{of="before"} |
+
+::compare
+:::screenshot{#before src="before.png" alt="Before"}
+:::
+:::screenshot{#after src="after.png" alt="After"}
+:::
+::`);
+    expect(issues).toHaveLength(1);
+    expect(issues[0]).toContain("names no standalone screenshot");
+    expect(html).toContain('<figure id="before"');
+    expect(html).toContain('<figure id="after"');
   });
 });
 

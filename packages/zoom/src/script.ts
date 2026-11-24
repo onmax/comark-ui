@@ -933,11 +933,13 @@ export function script(css: string): () => void {
       if (--state.users > 0) return;
       added.disconnect();
       listeners.abort();
+      document.documentElement.removeAttribute("data-comark-zoom-ready");
       style?.remove();
       void shut("stop");
       window.__comarkZoom = undefined;
     },
   };
   window.__comarkZoom = state;
+  document.documentElement.setAttribute("data-comark-zoom-ready", "");
   return state.stop;
 }

@@ -102,7 +102,7 @@ export default {
   },
   "comark/annotate/unknown-screenshot": {
     code: "COMARK0127",
-    title: "Name a `::screenshot` in the document with `of`",
+    title: "Name a standalone `::screenshot` with `of`",
   },
   "comark/annotate/thumbnail-outside-table": {
     code: "COMARK0128",

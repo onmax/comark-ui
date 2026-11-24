@@ -299,6 +299,23 @@ describe("comark/invalid-frontmatter", () => {
 });
 
 describe("plugin issues", () => {
+  it("locates screenshot references rather than earlier mentions of their IDs", async () => {
+    const markdown = `# missing
+
+::screenshot{#pond src="pond.png" alt="Pond"}
+::
+
+| Pond | Unknown |
+| --- | --- |
+| :screenshot{of="pond"} | :screenshot{of=missing} |
+
+See :screenshot{of='#pond'} here.`;
+    expect(await lint(markdown, options)).toMatchObject([
+      { rule: "comark/annotate/unknown-screenshot", line: 8, column: 28 },
+      { rule: "comark/annotate/thumbnail-outside-table", line: 10, column: 5 },
+    ]);
+  });
+
   it("passes a document the plugins accept", async () => {
     expect(await check(`::screenshot{src="a.png" alt="A"}\n::`)).toEqual([]);
   });

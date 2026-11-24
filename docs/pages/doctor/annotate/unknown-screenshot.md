@@ -1,4 +1,4 @@
-A table cell shows a screenshot as a thumbnail by naming its block: `:screenshot{of="pond"}` draws the `::screenshot` whose id is `pond`. When no screenshot in the document has that id, the cell has nothing to draw and stays empty.
+A table cell shows a screenshot as a thumbnail by naming its block: `:screenshot{of="pond"}` draws the standalone `::screenshot` whose id is `pond`. Screenshots inside a `::compare` stay with the comparison. If no standalone screenshot has that id, the cell has nothing to draw and stays empty.
 
 ::incorrect
 ```md

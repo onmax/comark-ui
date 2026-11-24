@@ -159,11 +159,12 @@ describe("table layout", () => {
 
   it("counts a screenshot a cell names as one thumbnail, without its notes", async () => {
     const shot = (id: string) =>
-      `::screenshot{#${id} src="${id}.png" alt="${id}"}\n:::annotation{x=10 y=10 w=20 h=10}\nA note long enough to make its column read as prose, were it counted as the cell's text.\n:::\n::`;
+      `::screenshot{#${id} src="${id}.png" alt="${id}"}\n:::annotation{x=10 y=10 w=20 h=10}\nA long note ${Array.from({ length: 16 }, (_, n) => `[link](https://example.com/${n})`).join(" ")}\n:::\n::`;
     const table = `| Id | Kind | Area | Where |\n|---|---|---|---|\n| a1 | page | home | :screenshot{of="one"} :screenshot{of="two"} |\n| b2 | card | cart | :screenshot{of="three"} |\n\n${["one", "two", "three"].map(shot).join("\n\n")}`;
     const [first, ...rest] = await nodes(table);
     expect(first![0]).toBe("table");
     expect(JSON.stringify(first)).toContain('"data-short":"chips"');
+    expect(JSON.stringify(first)).toMatch(/"td",\{"data-short":""\},\["screenshot",\{"id":"three"/);
     expect(JSON.stringify(rest)).not.toContain('"screenshot"');
   });
 

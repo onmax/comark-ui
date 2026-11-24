@@ -243,7 +243,32 @@ export function start(): () => void {
     return image;
   }
 
-  async function compose(figure: HTMLElement) {
+  async function compose(figure: HTMLElement): Promise<Blob> {
+    const thumb = figure.closest("[data-comark-zoom-ready] .ca-thumb:not(.cz-dialog *)");
+    if (thumb) {
+      const staging = document.createElement("div");
+      staging.className = "ca ca-export";
+      staging.inert = true;
+      staging.style.cssText = "position:fixed;left:-10000px;top:0";
+      const width = figure.querySelector(".ca-stage")?.getAttribute("data-zoom-width");
+      staging.style.width = `${Number(width)}px`;
+      // SAFETY: cloning an HTMLElement returns an HTMLElement of the same kind.
+      const full = figure.cloneNode(true) as HTMLElement;
+      full.removeAttribute("id");
+      for (const part of full.querySelectorAll(SKIP)) part.remove();
+      for (const part of full.querySelectorAll("[id]")) part.removeAttribute("id");
+      for (const part of full.querySelectorAll<HTMLElement>("[data-zoom]")) {
+        part.removeAttribute("data-zoom");
+        part.style.removeProperty("visibility");
+      }
+      staging.append(full);
+      thumb.after(staging);
+      try {
+        return await compose(full);
+      } finally {
+        staging.remove();
+      }
+    }
     const body = figure.querySelector<SVGSVGElement>(".ca-frame>svg");
     const shown = body ?? figure.querySelector<HTMLImageElement>(".ca-frame>img:not(.ca-overlay)");
     if (!shown) throw new Error("The screenshot has no image.");

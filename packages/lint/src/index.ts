@@ -266,7 +266,13 @@ function checkDocument({ source, found, parsed }: Document, options: LintOptions
     check("comark/missing-alt", () => missingAlts(document.nodes, source));
     check("comark/empty-link", () => emptyLinks(document.nodes, source));
     check("comark/plugin-issue", () =>
-      pluginIssues(document.meta, source, [...blocks(), ...codeBlocks(tokens, offset, source)]),
+      pluginIssues(
+        document.meta,
+        source,
+        [...blocks(), ...codeBlocks(tokens, offset, source)],
+        tokens,
+        offset,
+      ),
     );
   }
 }
@@ -916,27 +922,64 @@ function emptyLinks(nodes: Node[], source: Source): Finding[] {
   return found;
 }
 
-function pluginIssues(meta: Record<string, unknown>, source: Source, blocks: Block[]): Finding[] {
+function thumbnailLocations(source: Source, tokens: Token[], offset: number) {
+  const rows = new Set(
+    tokens.flatMap((token) =>
+      token.type === "tr_open" && token.map ? [token.map[0] + offset] : [],
+    ),
+  );
+  const refs = new Map<string, Location[]>();
+  source.prose.forEach((line, index) => {
+    for (const ref of line.matchAll(/(?<![:\\]):screenshot(?:\[[^\]]*\])?\{([^}]*)\}/gi)) {
+      const value = /(?:^|\s)of\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"']+))/.exec(ref[1]!);
+      if (!value) continue;
+      const id = (value[1] ?? value[2] ?? value[3] ?? "").replace(/^#/, "");
+      const key = `${rows.has(index)}:${id}`;
+      let matches = refs.get(key);
+      if (!matches) refs.set(key, (matches = []));
+      matches.push({ line: index + 1, column: ref.index + 1 });
+    }
+  });
+  return refs;
+}
+
+function pluginIssues(
+  meta: Record<string, unknown>,
+  source: Source,
+  blocks: Block[],
+  tokens: Token[],
+  offset: number,
+): Finding[] {
   const issues = Array.isArray(meta.issues)
     ? meta.issues.flatMap((issue) => rawText(issue) || [])
     : [];
   const named: Record<string, unknown> =
     meta.issueRules instanceof Object ? { ...meta.issueRules } : {};
   const locators = new Map<string, ReturnType<typeof locator>>();
+  let thumbnails: ReturnType<typeof thumbnailLocations> | undefined;
   return issues.map((issue) => {
     const rule = rawText(named[issue]);
     const known = Object.hasOwn(catalog, rule);
     // Different rules can report the same image or quoted value without advancing past it.
     let locate = locators.get(rule);
     if (!locate) locators.set(rule, (locate = locator(source)));
-    const { line, column } = place(issue, blocks, locate);
+    const thumbnail =
+      rule === "comark/annotate/unknown-screenshot" ||
+      rule === "comark/annotate/thumbnail-outside-table";
+    const id = thumbnail ? /^`:screenshot\{of="((?:[^"\\]|\\.)*)"\}`/.exec(issue)?.[1] : undefined;
+    if (id !== undefined) thumbnails ??= thumbnailLocations(source, tokens, offset);
+    const at =
+      id === undefined
+        ? place(issue, blocks, locate)
+        : (thumbnails
+            ?.get(`${rule === "comark/annotate/unknown-screenshot"}:${unescape(id)}`)
+            ?.shift() ?? { line: source.body + 1, column: undefined });
     const sentences = issue.split(/(?<=[.!?])\s+(?=[A-Z`])/);
     return {
       // A rule this version doesn't know, from a newer plugin, still reports.
       // SAFETY: `known` says the catalog, whose keys are exactly the rules, has it.
       rule: known ? (rule as Rule) : "comark/plugin-issue",
-      line,
-      column,
+      ...at,
       message: sentences.length > 1 ? sentences.slice(0, -1).join(" ") : issue,
       fix: sentences.length > 1 ? sentences.at(-1)! : "Change the block as the message says.",
     };

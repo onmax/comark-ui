@@ -342,9 +342,11 @@ async function figure(
   );
   const classes = [...new Set([...sides, ...margins.map((side) => ` ca-${side}`)])].join("");
   // A thumbnail opens as wide as a screenshot sits in a page's column, where its marks and notes are drawn in full.
-  const small = thumbnail ? ` data-zoom-width="${THUMBNAIL_OPENS}"` : "";
+  const small = thumbnail
+    ? ` data-zoom-width="${THUMBNAIL_OPENS}"${shot.href ? ` data-zoom-href="${attr(shot.href)}"` : ""}`
+    : "";
   const html =
-    `<figure${anchor(shot.id)} class="ca-screenshot${classes}">${thumbnail ? "" : heading}<div class="ca-stage" data-zoom${small} tabindex="0" data-zoom-context=".ca,.ca-screenshot${zoomContext ? `,${zoomContext}` : ""}" data-zoom-aside="figcaption" data-zoom-title="${attr(shot.title || shot.alt)}">${frame}${callouts}</div>` +
+    `<figure${anchor(shot.id)} class="ca-screenshot${classes}">${heading}<div class="ca-stage" data-zoom${small} tabindex="0" data-zoom-context=".ca,.ca-screenshot${zoomContext ? `,${zoomContext}` : ""}" data-zoom-aside="figcaption" data-zoom-title="${attr(shot.title || shot.alt)}">${frame}${callouts}</div>` +
     (notes ? `<figcaption>${notes}</figcaption>` : "") +
     "</figure>";
   return { html, ratio };
@@ -410,7 +412,9 @@ const screenshot: NodeHandler = async (node, state) => {
       BOX_PADDING,
       true,
     );
-    const style = ratio ? ` style="--ca-ratio:${Math.round(ratio * 1000) / 1000}"` : "";
+    const style = ratio
+      ? ` style="--ca-ratio:${Math.round(ratio * 1000) / 1000}"`
+      : " data-ca-unsized";
     return `${styles(state)}<div class="ca ca-thumb"${style}>${html}</div>${zoomRuntime(state)}${runtime(state)}`;
   }
   return `${styles(state)}<div class="ca" data-comark-frame>${(await figure(shot, state, id)).html}</div>${zoomRuntime(state)}${runtime(state)}`;

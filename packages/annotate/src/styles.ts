@@ -5,6 +5,7 @@ import { caveat } from "./font.ts";
 // The zoomed view holds the screenshot and its notes in separate copies, so the dialog links those two, and only those:
 // its thumbnails are copies too.
 const zoomed = ":is(.cz-item,.cz-aside)";
+const thumb = "[data-comark-zoom-ready] .ca-thumb:not(.cz-dialog *)";
 const linked = Array.from({ length: 40 }, (_, index) => {
   const n = `[data-n="${index + 1}"]`;
   return (
@@ -182,12 +183,16 @@ export const css = `@layer comark{${[
   // A screenshot in a table cell is a thumbnail the size of comark-zoom's: the image alone, with a dot where each mark
   // is, since a mark drawn at this size would cover what it points at. Its heading, notes, and buttons wait for the
   // zoomed view, whose copy sits in the dialog, where none of this applies.
-  ".ca-thumb:not(.cz-dialog *){display:inline-block;width:min(var(--comark-thumb-width,8rem),calc(var(--comark-thumb-height,4rem) * var(--ca-ratio,1.5)));margin:.125rem 0;vertical-align:middle}",
-  ".ca-thumb:not(.cz-dialog *) :is(figcaption,.ca-callout,.ca-arrow,.ca-copy,.ca-copy-status,.ca-hide,.ca-mark>*){display:none}",
-  ".ca-thumb:not(.cz-dialog *) .ca-stage{--ca-pl:0px;--ca-pr:0px;--ca-pt:0px;--ca-pb:0px;padding:0;border-radius:calc(var(--_comark-radius) - 4px)}",
-  ".ca-thumb:not(.cz-dialog *) .ca-frame img{border-radius:calc(var(--_comark-radius) - 4px)}",
-  ".ca-thumb:not(.cz-dialog *) .ca-mark{outline:0}",
-  ".ca-thumb:not(.cz-dialog *) .ca-mark::after{content:'';position:absolute;left:50%;top:50%;width:7px;height:7px;border-radius:50%;background:var(--ca-solid,var(--ca-color));box-shadow:0 0 0 1.5px var(--_comark-background);translate:-50% -50%}",
-  "@media (hover:hover) and (pointer:fine){.ca-thumb:not(.cz-dialog *) .ca-frame img{transition:outline-color .15s ease-out}.ca-thumb:not(.cz-dialog *) .ca-stage:hover img{outline-color:color-mix(in srgb,var(--_comark-foreground) 32%,transparent)}}",
+  ".ca-thumb,.ca-export{white-space:normal}",
+  ".ca-thumb:not(.cz-dialog *){width:min(28rem,70vw);max-width:100%}",
+  `${thumb}{display:inline-block;width:min(var(--comark-thumb-width,8rem),calc(var(--comark-thumb-height,4rem) * var(--ca-ratio,1.5)));margin:.125rem 0;vertical-align:middle}`,
+  `${thumb} :is(.ca-heading,figcaption,.ca-callout,.ca-arrow,.ca-copy,.ca-copy-status,.ca-hide,.ca-mark>*){display:none}`,
+  `${thumb} .ca-stage{--ca-pl:0px;--ca-pr:0px;--ca-pt:0px;--ca-pb:0px;padding:0;border-radius:calc(var(--_comark-radius) - 4px)}`,
+  `${thumb} .ca-frame img{border-radius:calc(var(--_comark-radius) - 4px)}`,
+  `${thumb}[data-ca-unsized] .ca-stage{aspect-ratio:3/2;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);place-items:center}`,
+  `${thumb}[data-ca-unsized] .ca-frame img{width:auto;max-width:100%;max-height:min(var(--comark-thumb-height,4rem),calc(var(--comark-thumb-width,8rem) / 1.5))}`,
+  `${thumb} .ca-mark{outline:0}`,
+  `${thumb} .ca-mark::after{content:'';position:absolute;left:50%;top:50%;width:7px;height:7px;border-radius:50%;background:var(--ca-solid,var(--ca-color));box-shadow:0 0 0 1.5px var(--_comark-background);translate:-50% -50%}`,
+  `@media (hover:hover) and (pointer:fine){${thumb} .ca-frame img{transition:outline-color .15s ease-out}${thumb} .ca-stage:hover img{outline-color:color-mix(in srgb,var(--_comark-foreground) 32%,transparent)}}`,
   ...linked,
 ].join("")}}`;

@@ -32,7 +32,11 @@ const text = (node: Node): string =>
       ? ""
       : node;
 const chipsOf = (node: Node): ElementNode[] =>
-  isElement(node) ? (node[0] === "chip" ? [node] : childrenOf(node).flatMap(chipsOf)) : [];
+  isElement(node) && !screenshot(node)
+    ? node[0] === "chip"
+      ? [node]
+      : childrenOf(node).flatMap(chipsOf)
+    : [];
 // comark-zoom runs first and marks the images it draws as thumbnails. Any other image, such as an icon, is its own size.
 const imagesOf = (node: Node): ElementNode[] =>
   isElement(node)

@@ -703,7 +703,7 @@ export function thumbnails(nodes: Node[]): Issue[] {
   for (const { node, parent, cell } of names) {
     const id = text(node[1].of).replace(/^#/, "");
     const block = blocks.get(id);
-    const written = `\`:screenshot{of="${id}"}\``;
+    const written = `\`:screenshot{of=${JSON.stringify(id)}}\``;
     let thumbnail: ElementNode | undefined;
     if (!cell)
       issues.push({
@@ -713,7 +713,7 @@ export function thumbnails(nodes: Node[]): Issue[] {
     else if (!block)
       issues.push({
         rule: "comark/annotate/unknown-screenshot",
-        message: `${written} names a screenshot that isn't in the document. Give the \`::screenshot\` block that id, as \`::screenshot{#${id || "id"} …}\`, or fix \`of\`.`,
+        message: `${written} names no standalone screenshot in this document. Give a \`::screenshot\` block outside a \`::compare\` that id, as \`::screenshot{#${id || "id"} …}\`, or fix \`of\`.`,
       });
     else {
       // A second cell that names the block draws its own copy, and an id stays unique.
