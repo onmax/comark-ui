@@ -913,6 +913,17 @@ test("a thumbnail opens at the size and scroll of its file, whatever the size of
   await expect.poll(() => wide.evaluate((node: HTMLImageElement) => node.naturalWidth)).toBe(1280);
   expect(await wide.evaluate((node) => getComputedStyle(node).objectFit)).toBe("contain");
   expect((await wide.boundingBox())!.width).toBeCloseTo(96, 0);
+  // It shows the focus ring from the keyboard, and a narrower limit shrinks the whole box.
+  await page.keyboard.press("Tab");
+  await expect(wide).toBeFocused();
+  expect(await wide.evaluate((node) => getComputedStyle(node).outlineWidth)).toBe("2px");
+  await page
+    .locator("table")
+    .evaluate((node) => node.style.setProperty("--comark-thumb-width", "2rem"));
+  const narrow = (await wide.boundingBox())!;
+  expect(narrow.width).toBeCloseTo(32, 0);
+  expect(narrow.width / narrow.height).toBeCloseTo(1.5, 1);
+  await page.locator("table").evaluate((node) => node.style.removeProperty("--comark-thumb-width"));
 
   // A context's shell around the copy doesn't hide the image from its sizing.
   await thumbs.nth(3).click();
