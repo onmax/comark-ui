@@ -2,7 +2,7 @@ import type { ElementNode, Node } from "comark";
 import { defineComarkPlugin } from "comark";
 import { measure } from "./size.ts";
 import { isElement } from "../../../shared/nodes.ts";
-import { text } from "../../../shared/text.ts";
+import { rawText } from "../../../shared/text.ts";
 
 export interface ZoomOptions {
   /** Make every content image zoomable. Images inside links keep their link. Default `true`. */
@@ -59,13 +59,13 @@ function mark(
       delete attrs.zoom;
     }
     const thumbnail = tag === "img" && thumbnails && cell && !skip && !off(hand);
-    const link = tag === "img" ? text(attrs.link) : "";
+    const link = tag === "img" ? rawText(attrs.link) : "";
     if (tag === "img") delete attrs.link;
     if (off(hand)) delete attrs["data-zoom"];
     else if (hand !== undefined || thumbnail || (tag === "img" && images && !skip)) {
       attrs["data-zoom"] = "";
       attrs.tabindex ??= "0";
-      if (link) attrs["data-zoom-href"] = link;
+      if (link.trim()) attrs["data-zoom-href"] = link;
       if (thumbnail) {
         attrs["data-zoom-thumb"] = "";
         attrs.loading ??= "lazy";
@@ -125,8 +125,9 @@ function proportion([, attrs]: ElementNode) {
   const height = pixels(attrs.height);
   if (!("data-zoom-thumb" in attrs) || !width || !height) return;
   const ratio = `--cz-ratio:${Math.round((width / height) * 1000) / 1000};--cz-height:${height}px`;
-  const style = text(attrs.style);
-  attrs.style = style ? `${style};${ratio}` : ratio;
+  // First, so nothing an author wrote, such as an escape at the end, can swallow it.
+  const style = rawText(attrs.style);
+  attrs.style = style ? `${ratio};${style}` : ratio;
 }
 
 /**

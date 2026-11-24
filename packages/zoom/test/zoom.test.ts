@@ -67,6 +67,13 @@ describe("comark-zoom", () => {
     expect(html.match(/<script>/g)).toHaveLength(1);
   });
 
+  it("writes a thumbnail's ratio before the style its author wrote, kept as written", async () => {
+    const html = await render(
+      '| A |\n| --- |\n| ![One](a.png){width=200 height=100 style="--label:Release\\ "} |',
+    );
+    expect(html).toContain('style="--cz-ratio:2;--cz-height:100px;--label:Release\\ "');
+  });
+
   it("keeps table thumbnails when images are left alone, and leaves the other images", async () => {
     const html = await render(
       "![Out](out.png)\n\n| A | B |\n| --- | --- |\n| x | ![In](in.png) |",
