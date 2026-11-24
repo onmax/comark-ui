@@ -90,6 +90,7 @@ export function script(css: string): () => void {
     dialog: HTMLDialogElement;
     header: HTMLElement;
     title: HTMLElement;
+    link: HTMLAnchorElement;
     count: HTMLElement;
     place: HTMLElement;
     stage: HTMLElement;
@@ -182,6 +183,18 @@ export function script(css: string): () => void {
     );
   }
 
+  // `data-zoom-href` is the page an item shows, which the zoomed view links to. Only a web address becomes a link.
+  function linkOf(item: HTMLElement) {
+    const href = item.getAttribute("data-zoom-href");
+    if (!href) return null;
+    try {
+      const url = new URL(href, document.baseURI);
+      return url.protocol === "http:" || url.protocol === "https:" ? url : null;
+    } catch {
+      return null;
+    }
+  }
+
   // A copy that can't open another zoom, steal focus, or repeat an id from the page. An SVG finds its clip paths and
   // gradients by id, so its ids are renamed rather than dropped: the original's sit in an item hidden while zoomed,
   // and a hidden clip path clips everything away.
@@ -225,6 +238,8 @@ export function script(css: string): () => void {
         "data-zoom",
         "data-zoom-group",
         "data-zoom-context",
+        "data-zoom-thumb",
+        "data-zoom-href",
         "tabindex",
         "aria-haspopup",
       ])
@@ -232,6 +247,7 @@ export function script(css: string): () => void {
     }
     node.style.visibility = "";
     node.style.margin = "0";
+    node.style.removeProperty("--cz-ratio");
     return node;
   }
 
@@ -406,19 +422,25 @@ export function script(css: string): () => void {
     // the larger file will take its place.
     const image = current.frame.firstElementChild;
     const large = image?.getAttribute("data-zoom-src");
-    const natural =
-      item instanceof HTMLImageElement &&
-      image instanceof HTMLImageElement &&
-      image.naturalWidth &&
-      (!large || image.getAttribute("src") === large)
-        ? Math.max(1, image.naturalWidth / width)
-        : 4;
+    // The copy of a loaded image has no size until the browser decodes it again, so the page's image answers for it.
+    const picture = item instanceof HTMLImageElement && image instanceof HTMLImageElement;
+    const file =
+      picture && (!large || image.getAttribute("src") === large)
+        ? image.naturalWidth || (large ? 0 : item.naturalWidth)
+        : 0;
+    const natural = file ? Math.max(1, file / width) : 4;
     const ink = drawn(current.frame);
     const across = Math.min(box.width * 0.92, box.width - arrows) / (ink.right - ink.left);
     const down = (box.height * 0.92) / (ink.bottom - ink.top);
     const tall = down < Math.min(1, across) * 0.85;
-    const scale = Math.max(0.1, Math.min(across, tall ? Infinity : down, natural, 4));
+    // Anything but an image stops at four times its size on the page. An image stops only at its file's size, so a
+    // thumbnail opens as large as a full-width image would.
+    const most = file ? natural : Math.min(natural, 4);
+    const scale = Math.max(0.1, Math.min(across, tall ? Infinity : down, most));
     current.scale = scale;
+    // A thumbnail grows many times over, and its corners would grow with it.
+    if (picture && item.hasAttribute("data-zoom-thumb"))
+      image.style.borderRadius = `calc(var(--_comark-radius) / ${scale})`;
     current.stage.toggleAttribute("data-scroll", tall);
     // The stage centers the item's box; the shift centers what is drawn.
     const x = (width / 2 - (ink.left + ink.right) / 2) * scale;
@@ -495,6 +517,13 @@ export function script(css: string): () => void {
       enlarge(current, image);
     }
     current.title.textContent = titleOf(item);
+    const href = linkOf(item);
+    current.link.hidden = !href;
+    if (href) {
+      current.link.href = href.href;
+      current.link.firstElementChild!.textContent =
+        href.origin === location.origin ? href.pathname : href.host;
+    } else current.link.removeAttribute("href");
     current.count.textContent =
       current.items.length > 1 ? `${current.index + 1} / ${current.items.length}` : "";
     const all = figures();
@@ -654,11 +683,14 @@ export function script(css: string): () => void {
     const dialog = el("dialog", "cz-dialog", { tabindex: "-1" });
     const header = el("div", "cz-header");
     const title = el("span", "cz-title");
+    const link = el("a", "cz-link", { target: "_blank", rel: "noopener noreferrer" });
+    // Lucide's external-link.
+    link.innerHTML = `<span></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>`;
     const count = el("span", "cz-count");
     const place = el("span", "cz-place");
     const close = el("button", "cz-close", { type: "button", "aria-label": "Close" });
     close.textContent = "✕";
-    header.append(title, count, place, close);
+    header.append(title, count, link, place, close);
     const stage = el("div", "cz-stage");
     const frame = el("div", "cz-item");
     stage.append(frame);
@@ -670,6 +702,7 @@ export function script(css: string): () => void {
       dialog,
       header,
       title,
+      link,
       count,
       place,
       stage,

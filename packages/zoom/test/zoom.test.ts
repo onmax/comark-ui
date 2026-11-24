@@ -57,6 +57,51 @@ describe("comark-zoom", () => {
     expect(html).not.toContain("<script>");
   });
 
+  it("draws an image in a table cell as a lazy thumbnail that zooms, with its ratio", async () => {
+    const html = await render(
+      "| Term | Where |\n| --- | --- |\n| Forecast | ![Forecast page](a.png){width=1280 height=800} |",
+    );
+    expect(html).toContain(
+      '<img src="a.png" alt="Forecast page" width="1280" height="800" data-zoom="" tabindex="0" data-zoom-thumb="" loading="lazy" decoding="async" style="--cz-ratio:1.6">',
+    );
+    expect(html.match(/<script>/g)).toHaveLength(1);
+  });
+
+  it("keeps table thumbnails when images are left alone, and leaves the other images", async () => {
+    const html = await render(
+      "![Out](out.png)\n\n| A | B |\n| --- | --- |\n| x | ![In](in.png) |",
+      {
+        images: false,
+      },
+    );
+    expect(html).toContain('<img src="out.png" alt="Out">');
+    expect(html).toContain(
+      '<img src="in.png" alt="In" data-zoom="" tabindex="0" data-zoom-thumb=""',
+    );
+  });
+
+  it("leaves a table's linked and opted-out images alone, and every one with thumbnails off", async () => {
+    const table =
+      "| A | B |\n| --- | --- |\n| [![Logo](logo.png)](https://example.com) | ![Icon](icon.png){zoom=false} |";
+    const html = await render(table);
+    expect(html).toContain('<img src="logo.png" alt="Logo">');
+    expect(html).toContain('<img src="icon.png" alt="Icon">');
+    expect(html).not.toContain("<script>");
+    const plain = await render("| A | B |\n| --- | --- |\n| x | ![In](in.png) |", {
+      images: false,
+      thumbnails: false,
+    });
+    expect(plain).toContain('<img src="in.png" alt="In">');
+  });
+
+  it("carries an image's link to the zoomed view instead of wrapping the image", async () => {
+    const html = await render('![Forecast page](a.png){link="https://example.com/forecast"}');
+    expect(html).toContain(
+      '<img src="a.png" alt="Forecast page" data-zoom="" tabindex="0" data-zoom-href="https://example.com/forecast">',
+    );
+    expect(html).not.toContain("<a ");
+  });
+
   it("wraps any block in ::zoom, with a group and a title", async () => {
     const html = await render('::zoom{group="tour" title="Step one"}\n> Any **content**\n::');
     expect(html).toMatch(
