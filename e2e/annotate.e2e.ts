@@ -772,7 +772,7 @@ test("a screenshot a table cell names is a thumbnail with a dot per mark, and op
 test("a thumbnail's full figure is readable when scripts are blocked", async ({ page }) => {
   await page.route("**/fixture/", async (route) =>
     route.fulfill({
-      contentType: "text/html",
+      contentType: "text/html; charset=utf-8",
       headers: { "Content-Security-Policy": "script-src 'none'" },
       body: `<!doctype html>${await render(inTable)}`,
     }),
@@ -805,6 +805,7 @@ test("Copy from a thumbnail exports the same PNG pixels as the full figure", asy
   await page.locator(".cz-header .ca-copy").click();
   await expect(page.locator(".cz-header .ca-copy-status")).toHaveText("Copied");
   const same = await page.locator("#standalone").evaluate(async (figure) => {
+    if (!(figure instanceof HTMLElement)) throw new Error("Expected an HTML figure");
     const [item] = await navigator.clipboard.read();
     const copied = await createImageBitmap(await item!.getType("image/png"));
     const reference = await createImageBitmap(await window.__comarkAnnotate!.capture(figure));
@@ -833,7 +834,7 @@ test("an unsized thumbnail reserves its row height while the image downloads", a
   });
   await page.route("**/fixture/", async (route) =>
     route.fulfill({
-      contentType: "text/html",
+      contentType: "text/html; charset=utf-8",
       body: `<!doctype html>${await render(inTable.replace(' viewport="640x250"', ""))}`,
     }),
   );
