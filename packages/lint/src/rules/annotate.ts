@@ -100,4 +100,12 @@ export default {
     code: "COMARK0126",
     title: "Give an annotation with `at` or `to` a `side`",
   },
+  "comark/annotate/unknown-screenshot": {
+    code: "COMARK0127",
+    title: "Name a standalone `::screenshot` with `of`",
+  },
+  "comark/annotate/thumbnail-outside-table": {
+    code: "COMARK0128",
+    title: "Put `:screenshot{of}` in a table cell",
+  },
 } satisfies Record<`comark/annotate/${string}`, RuleInfo>;

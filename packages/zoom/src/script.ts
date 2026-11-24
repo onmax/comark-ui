@@ -239,6 +239,7 @@ export function script(css: string): () => void {
         "data-zoom-group",
         "data-zoom-context",
         "data-zoom-thumb",
+        "data-zoom-width",
         "data-zoom-href",
         "tabindex",
         "aria-haspopup",
@@ -410,11 +411,14 @@ export function script(css: string): () => void {
       (scroll - (parseFloat(current.frame.style.marginBlockStart) || 0)) /
       (parseFloat(current.frame.style.width) * current.scale || 1);
     const item = current.items[current.index]!;
-    const { width } = measure(item);
+    const box = current.stage.getBoundingClientRect();
+    // `data-zoom-width` is the width an item drawn small on the page opens at, such as a thumbnail of a figure whose
+    // marks and text would grow many times over with it. It never opens wider than the stage.
+    const wide = Number(item.getAttribute("data-zoom-width"));
+    const width = wide > 0 ? Math.min(wide, box.width * 0.92) : measure(item).width;
     current.frame.style.width = `${width}px`;
     current.frame.style.marginBlock = "";
     const height = current.frame.offsetHeight || 1;
-    const box = current.stage.getBoundingClientRect();
     // A group's arrows sit over the sides of the stage, so the item fits between them.
     const next = current.dialog.querySelector(".cz-next");
     const arrows = next ? 2 * (box.right - next.getBoundingClientRect().left + 8) : 0;
@@ -494,11 +498,13 @@ export function script(css: string): () => void {
     const height = parseFloat(style.height) || 1;
     const x = (copy.left + copy.width / 2 - frame.left) / (frame.width || 1);
     const y = (copy.top + copy.height / 2 - frame.top) / (frame.height || 1);
+    // An item with `data-zoom-width` is smaller on the page than its copy, which shrinks to lie over it.
+    const fit = item.hasAttribute("data-zoom-width") ? target.width / width : 1;
     return {
-      left: target.left + target.width / 2 - x * width,
-      top: target.top + target.height / 2 - y * height,
-      width,
-      height,
+      left: target.left + target.width / 2 - x * width * fit,
+      top: target.top + target.height / 2 - y * height * fit,
+      width: width * fit,
+      height: height * fit,
     };
   }
 
@@ -927,11 +933,13 @@ export function script(css: string): () => void {
       if (--state.users > 0) return;
       added.disconnect();
       listeners.abort();
+      document.documentElement.removeAttribute("data-comark-zoom-ready");
       style?.remove();
       void shut("stop");
       window.__comarkZoom = undefined;
     },
   };
   window.__comarkZoom = state;
+  document.documentElement.setAttribute("data-comark-zoom-ready", "");
   return state.stop;
 }

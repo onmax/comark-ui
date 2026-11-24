@@ -16,6 +16,7 @@ import {
   readScreenshot,
   type Screenshot,
   target,
+  THUMBNAIL,
 } from "./read.ts";
 import { css } from "./styles.ts";
 import { attr, inlineScript } from "../../../shared/html.ts";
@@ -307,6 +308,7 @@ async function parts(
         : undefined));
   const sized = size ? ` width="${size.width}" height="${size.height}"` : "";
   return {
+    ratio: size ? size.width / size.height : shot.aspect ? 1 / shot.aspect : undefined,
     sides: sided.map((annotation) => ` ca-${annotation.side}`),
     heading: heading && `<div class="ca-heading">${heading}</div>`,
     frame: `<div class="ca-frame">${body ?? `<img src="${attr(shot.src)}" alt="${attr(shot.alt)}"${sized} loading="lazy" decoding="async">`}${pins.join("")}${arrows.join("")}${copy ? `${pins.length ? HIDE : ""}${COPY}` : ""}</div>`,
@@ -314,6 +316,9 @@ async function parts(
     notes: caption || notes ? `${caption}${notes ? `<ol class="ca-notes">${notes}</ol>` : ""}` : "",
   };
 }
+
+/** The width in CSS pixels a thumbnail's screenshot opens at, before the zoomed view scales it to fill the window. */
+const THUMBNAIL_OPENS = 720;
 
 // `margins` reserves room for notes above and below the image, so every image in a comparison sits at the same height.
 async function figure(
@@ -324,9 +329,10 @@ async function figure(
   body?: string,
   zoomContext?: string,
   boxPadding = BOX_PADDING,
+  thumbnail = false,
 ) {
   // Copying draws the image and its marks to a canvas, which only works for an image.
-  const { sides, heading, frame, callouts, notes } = await parts(
+  const { ratio, sides, heading, frame, callouts, notes } = await parts(
     shot,
     state,
     id,
@@ -335,11 +341,15 @@ async function figure(
     boxPadding,
   );
   const classes = [...new Set([...sides, ...margins.map((side) => ` ca-${side}`)])].join("");
-  return (
-    `<figure${anchor(shot.id)} class="ca-screenshot${classes}">${heading}<div class="ca-stage" data-zoom tabindex="0" data-zoom-context=".ca,.ca-screenshot${zoomContext ? `,${zoomContext}` : ""}" data-zoom-aside="figcaption" data-zoom-title="${attr(shot.title || shot.alt)}">${frame}${callouts}</div>` +
+  // A thumbnail opens as wide as a screenshot sits in a page's column, where its marks and notes are drawn in full.
+  const small = thumbnail
+    ? ` data-zoom-width="${THUMBNAIL_OPENS}"${shot.href ? ` data-zoom-href="${attr(shot.href)}"` : ""}`
+    : "";
+  const html =
+    `<figure${anchor(shot.id)} class="ca-screenshot${classes}">${heading}<div class="ca-stage" data-zoom${small} tabindex="0" data-zoom-context=".ca,.ca-screenshot${zoomContext ? `,${zoomContext}` : ""}" data-zoom-aside="figcaption" data-zoom-title="${attr(shot.title || shot.alt)}">${frame}${callouts}</div>` +
     (notes ? `<figcaption>${notes}</figcaption>` : "") +
-    "</figure>"
-  );
+    "</figure>";
+  return { html, ratio };
 }
 
 const GRIP = `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${[5, 12, 19].map((y) => `<circle cx="9" cy="${y}" r="1.5"/><circle cx="15" cy="${y}" r="1.5"/>`).join("")}</svg>`;
@@ -383,12 +393,31 @@ export async function annotateHtml(
   boxPadding = BOX_PADDING,
 ): Promise<string> {
   const shot: Screenshot = { src: label, alt: label, annotations, caption: [], aspect };
-  return `${styles(state)}<div class="ca">${await figure(shot, state, idFor([shot], state), [], body, zoomContext, boxPadding)}</div>${zoomRuntime(state)}${runtime(state)}`;
+  return `${styles(state)}<div class="ca">${(await figure(shot, state, idFor([shot], state), [], body, zoomContext, boxPadding)).html}</div>${zoomRuntime(state)}${runtime(state)}`;
 }
 
 const screenshot: NodeHandler = async (node, state) => {
   const shot = readScreenshot(node, [], state.renderData);
-  return `${styles(state)}<div class="ca" data-comark-frame>${await figure(shot, state, idFor([shot], state))}</div>${zoomRuntime(state)}${runtime(state)}`;
+  const id = idFor([shot], state);
+  if (THUMBNAIL in node[1]) {
+    // In a table cell: the image at a thumbnail's size with a dot where each mark is. The marks, notes, and caption
+    // stay in the markup, since the zoomed view draws its copy of them.
+    const { html, ratio } = await figure(
+      shot,
+      state,
+      id,
+      [],
+      undefined,
+      undefined,
+      BOX_PADDING,
+      true,
+    );
+    const style = ratio
+      ? ` style="--ca-ratio:${Math.round(ratio * 1000) / 1000}"`
+      : " data-ca-unsized";
+    return `${styles(state)}<div class="ca ca-thumb"${style}>${html}</div>${zoomRuntime(state)}${runtime(state)}`;
+  }
+  return `${styles(state)}<div class="ca" data-comark-frame>${(await figure(shot, state, id)).html}</div>${zoomRuntime(state)}${runtime(state)}`;
 };
 
 const compare: NodeHandler = async (node, state) => {
@@ -400,7 +429,7 @@ const compare: NodeHandler = async (node, state) => {
     shots.some((shot) => shot.annotations.some((annotation) => annotation.side === side)),
   );
   const figures: string[] = [];
-  for (const shot of shots) figures.push(await figure(shot, state, id, margins));
+  for (const shot of shots) figures.push((await figure(shot, state, id, margins)).html);
   // Side by side on a wide page, one at a time on a narrow one; both screenshots zoom as one gallery.
   return `${styles(state)}<div${anchor(read.id)} class="ca ca-compare" data-comark-frame data-wide>${carouselHtml(figures, { columns: 2, title: title ?? "Comparison" }, state)}</div>${runtime(state)}`;
 };

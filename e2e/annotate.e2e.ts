@@ -707,3 +707,146 @@ Apply.
   await page.mouse.move(0, 0);
   for (const n of [1, 2, 3]) await expect(mark(n)).toHaveCSS("opacity", "1");
 });
+
+const inTable = `| Screen | Where |
+| --- | --- |
+| Filters | :screenshot{of="filters"} |
+
+::screenshot{#filters src="/before.png" alt="Filter toolbar wrapping onto a second row" title="Filters" viewport="640x250" href="https://example.com/preview"}
+:::annotation{x=40 y=28.7 w=20 h=44.4 color="red"}
+Moon phase and vibes don't fit.
+:::
+
+:::annotation{x=55 y=45 w=12 h=16 side="right"}
+Toolbar wraps here.
+:::
+
+Before the layout fix.
+::
+`;
+
+test("a screenshot a table cell names is a thumbnail with a dot per mark, and opens as the whole figure", async ({
+  page,
+}) => {
+  await open(page, inTable);
+  const thumbnail = page.locator("td .ca-thumb");
+  // 8rem wide at most, at the capture's ratio.
+  const box = (await thumbnail.boundingBox())!;
+  expect(box.width).toBe(128);
+  expect(box.height).toBe(50);
+  await expect(thumbnail.locator(".ca-notes")).toBeHidden();
+  await expect(thumbnail.locator(".ca-mark .ca-stamp").first()).toBeHidden();
+  await expect(page.locator("main > .ca")).toHaveCount(0);
+  const dot = await thumbnail
+    .locator(".ca-mark")
+    .first()
+    .evaluate((mark) => {
+      const style = getComputedStyle(mark, "::after");
+      const { left, width } = mark.getBoundingClientRect();
+      return { size: style.width, middle: left + width / 2 };
+    });
+  expect(dot.size).toBe("7px");
+  expect(Math.round(dot.middle - box.x)).toBe(64);
+
+  await thumbnail.locator(".ca-stage").click();
+  const stage = page.locator(".cz-dialog .cz-item .ca-stage");
+  await expect(stage.locator(".ca-mark .ca-stamp").first()).toBeVisible();
+  await expect(page.locator(".cz-dialog .cz-aside")).toContainText(
+    "Moon phase and vibes don't fit.",
+  );
+  await expect(page.locator(".cz-dialog .cz-title")).toHaveText("Filters");
+  await expect(page.locator(".cz-dialog .cz-link")).toHaveAttribute(
+    "href",
+    "https://example.com/preview",
+  );
+  // Laid out as wide as a page's column, not as the thumbnail scaled up: the number keeps its size.
+  await expect.poll(async () => (await stage.boundingBox())!.width).toBeGreaterThan(500);
+  const stamp = (await stage.locator(".ca-mark .ca-stamp").first().boundingBox())!;
+  expect(stamp.width).toBeLessThan(30);
+
+  await page.keyboard.press("Escape");
+  await expect(page.locator(".cz-dialog")).toHaveCount(0);
+  await expect(thumbnail.locator(".ca-stage")).toBeFocused();
+});
+
+test("a thumbnail's full figure is readable when scripts are blocked", async ({ page }) => {
+  await page.route("**/fixture/", async (route) =>
+    route.fulfill({
+      contentType: "text/html; charset=utf-8",
+      headers: { "Content-Security-Policy": "script-src 'none'" },
+      body: `<!doctype html>${await render(inTable)}`,
+    }),
+  );
+  await page.goto("/fixture/");
+  const figure = page.locator("td .ca-thumb");
+  await expect(figure.locator(".ca-mark .ca-stamp").first()).toBeVisible();
+  await expect(figure.getByText("Moon phase and vibes don't fit.")).toBeVisible();
+  await expect(figure.getByText("Toolbar wraps here.")).toBeVisible();
+  await expect(figure.getByText("Before the layout fix.")).toBeVisible();
+  await expect(figure.getByRole("link", { name: "example.com" })).toBeVisible();
+});
+
+test("Copy from a thumbnail exports the same PNG pixels as the full figure", async ({
+  page,
+  context,
+  browserName,
+}) => {
+  test.skip(browserName !== "chromium", "Clipboard PNG reads require Chromium");
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  const standalone = inTable
+    .slice(inTable.indexOf("::screenshot{"))
+    .replace("#filters ", "#standalone ");
+  await fixture(
+    page,
+    await render(`${inTable}\n${standalone}`),
+    "main{width:720px;margin:2rem auto}#standalone{position:fixed;left:-10000px;top:0;width:720px}",
+  );
+  await page.locator("td .ca-stage").click();
+  await page.locator(".cz-header .ca-copy").click();
+  await expect(page.locator(".cz-header .ca-copy-status")).toHaveText("Copied");
+  const same = await page.locator("#standalone").evaluate(async (figure) => {
+    if (!(figure instanceof HTMLElement)) throw new Error("Expected an HTML figure");
+    const [item] = await navigator.clipboard.read();
+    const copied = await createImageBitmap(await item!.getType("image/png"));
+    const reference = await createImageBitmap(await window.__comarkAnnotate!.capture(figure));
+    if (copied.width !== reference.width || copied.height !== reference.height) return false;
+    const context = new OffscreenCanvas(copied.width, copied.height).getContext("2d")!;
+    const pixels = (image: ImageBitmap) => {
+      context.clearRect(0, 0, image.width, image.height);
+      context.drawImage(image, 0, 0);
+      return context.getImageData(0, 0, image.width, image.height).data;
+    };
+    const actual = pixels(copied);
+    const expected = pixels(reference);
+    return actual.every((value, index) => Math.abs(value - expected[index]!) <= 2);
+  });
+  expect(same).toBe(true);
+});
+
+test("an unsized thumbnail reserves its row height while the image downloads", async ({ page }) => {
+  let release!: () => void;
+  const pending = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route("**/before.png", async (route) => {
+    await pending;
+    await route.continue();
+  });
+  await page.route("**/fixture/", async (route) =>
+    route.fulfill({
+      contentType: "text/html; charset=utf-8",
+      body: `<!doctype html>${await render(inTable.replace(' viewport="640x250"', ""))}`,
+    }),
+  );
+  await page.goto("/fixture/", { waitUntil: "domcontentloaded" });
+  const thumbnail = page.locator("td .ca-stage");
+  try {
+    await expect(thumbnail).toHaveCSS("height", "64px");
+  } finally {
+    release();
+  }
+  await expect
+    .poll(() => thumbnail.locator("img").evaluate((img: HTMLImageElement) => img.naturalWidth))
+    .toBeGreaterThan(0);
+  await expect(thumbnail).toHaveCSS("height", "64px");
+});

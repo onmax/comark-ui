@@ -157,6 +157,17 @@ describe("table layout", () => {
     expect(plain).not.toContain("data-wide");
   });
 
+  it("counts a screenshot a cell names as one thumbnail, without its notes", async () => {
+    const shot = (id: string) =>
+      `::screenshot{#${id} src="${id}.png" alt="${id}"}\n:::annotation{x=10 y=10 w=20 h=10}\nA long note ${Array.from({ length: 16 }, (_, n) => `[link](https://example.com/${n})`).join(" ")}\n:::\n::`;
+    const table = `| Id | Kind | Area | Where |\n|---|---|---|---|\n| a1 | page | home | :screenshot{of="one"} :screenshot{of="two"} |\n| b2 | card | cart | :screenshot{of="three"} |\n\n${["one", "two", "three"].map(shot).join("\n\n")}`;
+    const [first, ...rest] = await nodes(table);
+    expect(first![0]).toBe("table");
+    expect(JSON.stringify(first)).toContain('"data-short":"chips"');
+    expect(JSON.stringify(first)).toMatch(/"td",\{"data-short":""\},\["screenshot",\{"id":"three"/);
+    expect(JSON.stringify(rest)).not.toContain('"screenshot"');
+  });
+
   it("keeps a short column's header on one line only when it's no longer than its cells", async () => {
     const output = await createHtmlRenderer(html(offline))(
       "| Server | Peak memory (megabytes) |\n|---|---|\n| node | 182 |\n| bun | 141 |",

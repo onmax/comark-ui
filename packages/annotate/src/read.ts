@@ -671,6 +671,68 @@ function name(nodes: Node[], data: Data): Names {
   return names;
 }
 
+/** Marks a `::screenshot` drawn as a thumbnail in a table cell. It's a `data-` attribute, so it's never an unknown prop. */
+export const THUMBNAIL = "data-thumbnail";
+
+/**
+ * A table cell holds one line of Markdown, so it can't hold a `::screenshot` and its annotations. The block is written
+ * anywhere in the document with an id, and the cell names it: `:screenshot{of="id"}`. This moves the block into each
+ * cell that names it, marked as a thumbnail, so it's drawn once, where the table shows it. A name that finds no block,
+ * or sits outside a table, is dropped and reported.
+ */
+export function thumbnails(nodes: Node[]): Issue[] {
+  const issues: Issue[] = [];
+  // A parent is the document's list of nodes or an element, whose children follow its tag and attributes.
+  type Parent = unknown[];
+  const blocks = new Map<string, { node: ElementNode; parent: Parent }>();
+  const names: { node: ElementNode; parent: Parent; cell: boolean }[] = [];
+  const walk = (list: Node[], parent: Parent, cell: boolean) => {
+    for (const node of list) {
+      if (!isElement(node)) continue;
+      const [tag, attrs] = node;
+      if (tag === "screenshot") {
+        const id = text(attrs.id);
+        if (attrs.of !== undefined) names.push({ node, parent, cell });
+        else if (id && !blocks.has(id)) blocks.set(id, { node, parent });
+      } else if (tag !== "compare" && tag !== "annotation")
+        walk(childrenOf(node), node, cell || tag === "td" || tag === "th");
+    }
+  };
+  walk(nodes, nodes, false);
+  const moved = new Set<string>();
+  for (const { node, parent, cell } of names) {
+    const id = text(node[1].of).replace(/^#/, "");
+    const block = blocks.get(id);
+    const written = `\`:screenshot{of=${JSON.stringify(id)}}\``;
+    let thumbnail: ElementNode | undefined;
+    if (!cell)
+      issues.push({
+        rule: "comark/annotate/thumbnail-outside-table",
+        message: `${written} is outside a table, and it only draws a screenshot as a thumbnail in a table cell. Move it into a cell, or write the \`::screenshot\` block here.`,
+      });
+    else if (!block)
+      issues.push({
+        rule: "comark/annotate/unknown-screenshot",
+        message: `${written} names no standalone screenshot in this document. Give a \`::screenshot\` block outside a \`::compare\` that id, as \`::screenshot{#${id || "id"} …}\`, or fix \`of\`.`,
+      });
+    else {
+      // A second cell that names the block draws its own copy, and an id stays unique.
+      const [tag, attrs, ...children] = moved.has(id) ? structuredClone(block.node) : block.node;
+      if (moved.has(id)) delete attrs.id;
+      thumbnail = [tag, { ...attrs, [THUMBNAIL]: "" }, ...children];
+      moved.add(id);
+    }
+    const at = parent.indexOf(node);
+    if (thumbnail) parent[at] = thumbnail;
+    else parent.splice(at, 1);
+  }
+  for (const id of moved) {
+    const { node, parent } = blocks.get(id)!;
+    parent.splice(parent.indexOf(node), 1);
+  }
+  return issues;
+}
+
 /** Every problem in a document's screenshots, compares, and annotations. */
 export function check(nodes: Node[], data: Data): Issue[] {
   const issues: Issue[] = [];

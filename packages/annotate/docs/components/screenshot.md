@@ -108,6 +108,45 @@ Captured on the staging dashboard, after the filter fix.
 ```
 ::
 
+### In a table
+
+A table cell holds one line, so it can't hold a screenshot block and its annotations. Give a standalone `::screenshot` an id and name it in the cell with `:screenshot{of="id"}`. The screenshot moves into that cell as a thumbnail, with a dot where each mark sits, and opens with its marks and notes at full size. Without JavaScript, the cell shows the full figure instead. Nothing is drawn where the block was written. Screenshots inside `::compare` are not eligible: they stay in their comparisons.
+
+::example
+```md
+| Screen | Finding | Where |
+| --- | --- | --- |
+| Filters | The toolbar wraps onto a second row | :screenshot{of="filters-before"} |
+| Filters, fixed | Extra filters collapse into one chip | :screenshot{of="filters-after"} |
+| Dashboard | Export sits apart from the filters it exports | :screenshot{of="dashboard"} |
+
+::screenshot{#filters-before src="/before.png" alt="Filter toolbar wrapping onto a second row" title="Filters" viewport="1280x500"}
+:::annotation{x=3.6 y=20.6 w=92.9 h=31.4 color="red"}
+Two filters don't fit, so the toolbar wraps and pushes the table down.
+:::
+::
+
+::screenshot{#filters-after src="/after.png" alt="Filter toolbar on one row" title="Filters, fixed" viewport="1280x500"}
+:::annotation{x=67.9 y=34.8 w=13 h=14.2 color="green"}
+Extra filters collapse into **+2 filters**.
+:::
+::
+
+::screenshot{#dashboard src="/dashboard.png" alt="Office correlations dashboard" title="Dashboard" viewport="1440x860"}
+:::annotation{x=82.4 y=5.3 w=14.2 h=8.8}
+**Export CSV** sits in the header.
+:::
+
+:::annotation{x=5.3 y=46 w=21.7 h=9.3 color="amber"}
+The search and filters it exports.
+:::
+::
+```
+::
+
+> [!TIP]
+> Give each screenshot its `viewport`, so the row has its height before the image loads. Without one, and with no size to read from the file, the thumbnail takes a 3:2 box.
+
 ## Examples
 
 ### Copy a screenshot
@@ -146,6 +185,7 @@ The image is one tab stop that opens the [zoomed view](/zoom). The Copy button i
 | `viewport` | — | Capture size in pixels, like `1440x900`. A `compare` checks that both sides match. |
 | `ink` | — | The color of every mark and note that doesn't set its own `color`. Takes the same values as `color`: `red`, `amber`, `green`, `blue`, `violet`, `gray`, or a 3- or 6-digit hex color. Without it, marks take the compare's `ink`, or else violet. |
 | `id` | — | An id for the screenshot, such as `#fig-login`, that links and [comark-xref](/xref) references point at. |
+| `of` | — | On an inline `:screenshot` in a table cell, the id of the standalone `::screenshot` block to draw there as a thumbnail. |
 
 ### Issues
 
@@ -156,6 +196,7 @@ The plugin adds these problems to `meta.issues`:
 - `viewport` isn't a size in pixels, like `1440x900`.
 - `ink` isn't a named color or a 3- or 6-digit hex color.
 - An unknown prop. Likely slips such as `label`, `url`, `color`, `caption`, `width`, and `height` get a hint.
+- `:screenshot{of}` names no screenshot in the document, or sits outside a table.
 - A `:bound` prop resolves to nothing, or to an unsafe URL.
 - A `screenshot`, `compare`, or `annotation` sits inside the caption.
 - Side notes on one side sit so close that they would overlap.

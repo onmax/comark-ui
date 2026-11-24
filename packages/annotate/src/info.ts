@@ -29,6 +29,11 @@ export const componentInfo = {
       viewport: { type: "string", description: "The capture size in pixels, such as 1440x900." },
       ink,
       id,
+      of: {
+        type: "string",
+        description:
+          "On an inline :screenshot in a table cell, the id of the ::screenshot block to draw there as a thumbnail.",
+      },
     },
   },
   compare: {

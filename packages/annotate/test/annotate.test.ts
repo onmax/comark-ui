@@ -919,6 +919,107 @@ Duck
   });
 });
 
+describe("a screenshot in a table cell", () => {
+  const table = `
+| Page | Where |
+| --- | --- |
+| Sign in | :screenshot{of="sign-in"} |
+| Cart | :screenshot{of="cart"} |
+
+::screenshot{#sign-in src="sign-in.png" alt="The sign-in form" title="Sign in" viewport="1200x800"}
+:::annotation{x=40 y=50 w=20 h=10 color="red"}
+The button is **cut off**.
+:::
+
+:::annotation{x=10 y=10 w=20 h=10 side="right"}
+A side note.
+:::
+
+The caption.
+::
+
+::screenshot{#cart src="cart.png" alt="The cart"}
+::
+`;
+
+  it("moves the block a cell names into it, as a thumbnail that opens at a page's width", async () => {
+    const { issues, html: page } = await run(table);
+    const html = page.replace(/<style>.*?<\/style>\s*/gs, "");
+    expect(issues).toEqual([]);
+    const [, row, second, after] = html.split(/<tr>\s*<td>/);
+    expect(row).toMatch(
+      /^Sign in<\/td>\s*<td>\s*<div class="ca ca-thumb" style="--ca-ratio:1\.5"><figure id="sign-in" class="ca-screenshot ca-right">/,
+    );
+    expect(row).toContain('<div class="ca-stage" data-zoom data-zoom-width="720" tabindex="0"');
+    expect(row).toContain('<span class="ca-stamp"');
+    expect(row).toContain("<strong>cut off</strong>");
+    expect(row).toContain("The caption.");
+    expect(row).toContain("ca-heading");
+    expect(second).toMatch(
+      /^Cart<\/td>\s*<td>\s*<div class="ca ca-thumb" data-ca-unsized><figure id="cart"/,
+    );
+    expect(after).toBeUndefined();
+    // Nothing is left where the blocks were written.
+    expect(html.split("</table>")[1]).not.toContain("ca-screenshot");
+    expect(html).not.toContain("data-comark-frame");
+  });
+
+  it("draws a dot for each mark, and the full figure again in the zoomed view", async () => {
+    const css = styles((await run(table)).html);
+    expect(css).toContain(
+      "[data-comark-zoom-ready] .ca-thumb:not(.cz-dialog *) :is(.ca-heading,figcaption,.ca-callout,.ca-arrow,.ca-copy,.ca-copy-status,.ca-hide,.ca-mark>*){display:none}",
+    );
+    expect(css).toContain(".ca-thumb:not(.cz-dialog *) .ca-mark::after{");
+  });
+
+  it("draws a block two cells name in both, with its id once", async () => {
+    const { issues, html } = await run(
+      '| A | B |\n| --- | --- |\n| :screenshot{of="#shot"} | :screenshot{of="shot"} |\n\n::screenshot{#shot src="a.png" alt="A"}\n::',
+    );
+    expect(issues).toEqual([]);
+    expect(html.split('class="ca ca-thumb"')).toHaveLength(3);
+    expect(html.split('id="shot"')).toHaveLength(2);
+  });
+
+  it("reports a name with no block, and one outside a table, and draws neither", async () => {
+    const {
+      issues,
+      html: page,
+      document,
+    } = await run(
+      '| A |\n| --- |\n| :screenshot{of="missing"} |\n\nSee :screenshot{of="shot"} here.\n\n::screenshot{#shot src="a.png" alt="A"}\n::',
+    );
+    expect(issues).toEqual([
+      '`:screenshot{of="missing"}` names no standalone screenshot in this document. Give a `::screenshot` block outside a `::compare` that id, as `::screenshot{#missing …}`, or fix `of`.',
+      '`:screenshot{of="shot"}` is outside a table, and it only draws a screenshot as a thumbnail in a table cell. Move it into a cell, or write the `::screenshot` block here.',
+    ]);
+    expect(Object.values(document.meta.issueRules)).toEqual([
+      "comark/annotate/unknown-screenshot",
+      "comark/annotate/thumbnail-outside-table",
+    ]);
+    const html = page.replace(/<style>.*?<\/style>\s*/gs, "");
+    expect(html).not.toContain('class="ca ca-thumb"');
+    expect(html.split('class="ca-screenshot')).toHaveLength(2);
+  });
+
+  it("does not take a named screenshot out of a comparison", async () => {
+    const { issues, html } = await run(`| Evidence |
+| --- |
+| :screenshot{of="before"} |
+
+::compare
+:::screenshot{#before src="before.png" alt="Before"}
+:::
+:::screenshot{#after src="after.png" alt="After"}
+:::
+::`);
+    expect(issues).toHaveLength(1);
+    expect(issues[0]).toContain("names no standalone screenshot");
+    expect(html).toContain('<figure id="before"');
+    expect(html).toContain('<figure id="after"');
+  });
+});
+
 describe("screenshot sizes", () => {
   afterEach(() => {
     vi.unstubAllGlobals();

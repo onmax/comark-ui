@@ -1,5 +1,5 @@
 import { defineComarkPlugin } from "comark";
-import { check } from "./read.ts";
+import { check, thumbnails } from "./read.ts";
 
 export type { Mark } from "./marks.ts";
 export { readMark } from "./read.ts";
@@ -23,7 +23,8 @@ export type AnnotateMeta = {
 };
 
 /**
- * Checks `::screenshot`, `::compare`, and `::annotation` blocks while parsing and adds every problem to
+ * Moves each `::screenshot` a table cell names into that cell, then checks `::screenshot`, `::compare`, and
+ * `::annotation` blocks while parsing and adds every problem to
  * `meta.issues`, so a host can reject a document before publishing it. Also passes the host's sizing option to HTML.
  */
 export default defineComarkPlugin<AnnotateOptions, AnnotateMeta>((options) => ({
@@ -31,12 +32,15 @@ export default defineComarkPlugin<AnnotateOptions, AnnotateMeta>((options) => ({
   post(state) {
     const { tree } = state;
     tree.meta.annotateSize = options?.size;
-    const found = check(tree.nodes, {
-      frontmatter: tree.frontmatter,
-      meta: tree.meta,
-      data: {},
-      props: {},
-    });
+    const found = [
+      ...thumbnails(tree.nodes),
+      ...check(tree.nodes, {
+        frontmatter: tree.frontmatter,
+        meta: tree.meta,
+        data: {},
+        props: {},
+      }),
+    ];
     // Several plugins report into the same list, so each one appends.
     tree.meta.issues = [...(tree.meta.issues ?? []), ...found.map((issue) => issue.message)];
     tree.meta.issueRules = {

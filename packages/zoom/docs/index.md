@@ -239,6 +239,7 @@ Each item, a thumbnail included, is a tab stop that opens a native modal `<dialo
 | `data-zoom` | — | Makes an image zoom when the `images` option is `false`. |
 | `data-zoom-src` | — | A larger file to load when the view opens. |
 | `data-zoom-aside` | — | A selector for an element to show beside the zoomed item. |
+| `data-zoom-width` | — | The width in pixels the zoomed copy is laid out at, for an item that is smaller on the page than it should open, such as a thumbnail of a block. Without it the copy keeps the item's width on the page. |
 | `data-zoom-context` | — | A selector for ancestors whose styles the zoomed copy keeps. |
 
 ### Options
