@@ -110,7 +110,7 @@ Captured on the staging dashboard, after the filter fix.
 
 ### In a table
 
-A table cell holds one line, so it can't hold a screenshot block and its annotations. Give a standalone `::screenshot` an id and name it in the cell with `:screenshot{of="id"}`. The screenshot moves into that cell as a thumbnail, with a dot where each mark sits, and opens with its marks and notes at full size. Without JavaScript, the cell shows the full figure instead. Nothing is drawn where the block was written. Screenshots inside `::compare` are not eligible: they stay in their comparisons.
+A table cell holds one line, so it can't hold a screenshot block and its annotations. Give a standalone `::screenshot` an id and name it in the cell with `:screenshot{of="id"}`. The screenshot moves into that cell as a thumbnail, with a dot where each mark sits, and opens with its marks and notes at full size. Without JavaScript, the cell shows the full figure instead. Nothing is drawn where the block was written. A screenshot with nothing to annotate can go in the cell itself, as `:screenshot{src="/cart.png" alt="The cart"}`. Screenshots inside `::compare` are not eligible: they stay in their comparisons.
 
 ::example
 ```md
