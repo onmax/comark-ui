@@ -146,6 +146,17 @@ describe("table layout", () => {
     expect(json).toMatch(/"data-short":""[^\]]*\["chip"/);
   });
 
+  it("lets a cell of two thumbnails break between them, and counts no image that isn't one", async () => {
+    const table =
+      "| Id | Kind | Area | Where |\n|---|---|---|---|\n| a1 | page | home | ![One](a.png) ![Two](b.png) |\n| b2 | card | cart | ![Three](c.png) |";
+    expect(JSON.stringify(await nodes(table))).toContain('"data-short":"chips"');
+    const plain = JSON.stringify(
+      await nodes(table, { zoom: { thumbnails: false, images: false } }),
+    );
+    expect(plain).not.toContain('"data-short":"chips"');
+    expect(plain).not.toContain("data-wide");
+  });
+
   it("keeps a short column's header on one line only when it's no longer than its cells", async () => {
     const output = await createHtmlRenderer(html(offline))(
       "| Server | Peak memory (megabytes) |\n|---|---|\n| node | 182 |\n| bun | 141 |",

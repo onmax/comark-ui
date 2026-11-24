@@ -92,6 +92,7 @@ Read the reference for each block you use before you write it. Mix the blocks fr
 | To show | Write | Reference |
 | --- | --- | --- |
 | A stable link to a section, or a link that opens a new tab | `{#id}`, `{target="_blank"}` | [links](references/links.md) |
+| A screenshot per row of a table, as a thumbnail that zooms | `![alt](shot.png)` in a cell | [zoom](references/zoom.md) |
 | A table, code block, or diagram too small to read in place | `::zoom` | [zoom](references/zoom.md) |
 | A sequence to page through in one place, such as the screens of a flow | `::carousel` | [carousel](references/carousel.md) |
 | Versions of one thing where each reader needs only one, such as an OS or a package manager | `::tabs`, `::code-group`, `pm` | [tabs](references/tabs.md) |

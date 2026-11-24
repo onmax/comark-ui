@@ -25,8 +25,23 @@ const text = (node: Node): string =>
   isElement(node) ? childrenOf(node).map(text).join("") : Array.isArray(node) ? "" : node;
 const chipsOf = (node: Node): ElementNode[] =>
   isElement(node) ? (node[0] === "chip" ? [node] : childrenOf(node).flatMap(chipsOf)) : [];
-// A chip draws an icon and padding beside its label, worth about three characters.
-const lengthOf = (cell: ElementNode) => text(cell).trim().length + 3 * chipsOf(cell).length;
+// comark-zoom runs first and marks the images it draws as thumbnails. Any other image, such as an icon, is its own size.
+const imagesOf = (node: Node): ElementNode[] =>
+  isElement(node)
+    ? node[0] === "img"
+      ? "data-zoom-thumb" in node[1]
+        ? [node]
+        : []
+      : childrenOf(node).flatMap(imagesOf)
+    : [];
+/** What comark-zoom's thumbnail of an image in a cell is worth, in characters: about 6.5em of its 8rem at most. */
+const THUMBNAIL = 12;
+// A chip draws an icon and padding beside its label, worth about three characters. A cell's images sit side by side
+// and may break apart, so the cell is as long as its text and one of them.
+const lengthOf = (cell: ElementNode) =>
+  text(cell).trim().length + 3 * chipsOf(cell).length + (imagesOf(cell).length ? THUMBNAIL : 0);
+// A cell that never wraps would hold its chips, or its images, in one row however many they are.
+const breaks = (cell: ElementNode) => chipsOf(cell).length > 1 || imagesOf(cell).length > 1;
 
 const rowsOf = (table: ElementNode): ElementNode[] =>
   childrenOf(table)
@@ -45,8 +60,8 @@ const sum = (values: number[]) => values.reduce((total, value) => total + value,
  * author writes nothing.
  *
  * - `data-short` on each body cell of a short column, and on its header when the header is no longer. The cell never
- *   wraps, so `portal #1596` can't break into `#159` and `6`. One with two chips or more is `data-short="chips"`: it
- *   may break between them, never inside one.
+ *   wraps, so `portal #1596` can't break into `#159` and `6`. One with two chips or more, or two images, is
+ *   `data-short="chips"`: it may break between them, never inside one.
  * - A table wider than a readable column goes in a `div` with `data-wide` and `data-width`, its own width in em rounded
  *   up to a step, so it grows into the room beside the text like a wide diagram.
  * - When two or more of its columns hold more than short values, the table is a grid (`data-cols`): the short columns
@@ -100,7 +115,7 @@ function layoutTable(table: ElementNode): ElementNode {
     cellsOf(row).forEach((cell, index) => {
       const column = columns[index];
       if (!column?.short) return;
-      if (row !== head) cell[1]["data-short"] = chipsOf(cell).length > 1 ? "chips" : "";
+      if (row !== head) cell[1]["data-short"] = breaks(cell) ? "chips" : "";
       else if (column.headerShort) cell[1]["data-short"] = "";
     });
 

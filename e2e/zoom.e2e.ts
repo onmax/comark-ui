@@ -800,3 +800,132 @@ test("on a phone, both ends of a wide thumbnail strip are reachable", async ({ p
   await thumbs.last().click();
   await expect(page.locator(".cz-title")).toHaveText("Item 7");
 });
+
+const glossary = `| Term | Where it shows |
+| --- | --- |
+${Array.from(
+  { length: 60 },
+  (_, row) =>
+    `| Term ${row + 1} | ![Dashboard ${row + 1}](/dashboard.png?row=${row}){width=1440 height=860 link="https://example.com/page/${row + 1}"} |`,
+).join("\n")}
+| Both | ![Before](/before.png) ![After](/after.png) |`;
+
+test("an image in a table cell is a thumbnail that keeps its room, loads lazily, and zooms large", async ({
+  page,
+}) => {
+  const requested: string[] = [];
+  page.on("request", (request) => {
+    const row = new URL(request.url()).searchParams.get("row");
+    if (row) requested.push(row);
+  });
+  await page.setViewportSize({ width: 1000, height: 400 });
+  // The room is checked before any file arrives.
+  await page.route("**/dashboard.png?row=*", async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    await route.continue();
+  });
+  await fixture(page, await render(glossary));
+  const thumbs = page.locator("main td img[data-zoom-thumb]");
+  await expect(thumbs).toHaveCount(62);
+  const first = thumbs.first();
+  const before = await first.evaluate((node) => node.getBoundingClientRect().toJSON() as DOMRect);
+  expect(before.height).toBeCloseTo(64, 0);
+  expect(before.width).toBeCloseTo(107.2, 0);
+  await expect(first).toHaveJSProperty("complete", true);
+  await expect.poll(() => first.evaluate((node: HTMLImageElement) => node.naturalWidth)).toBe(1440);
+  expect(await first.evaluate((node) => node.getBoundingClientRect().toJSON() as DOMRect)).toEqual(
+    before,
+  );
+  // The rows far below the screen haven't asked for their files.
+  expect(requested).not.toContain("59");
+
+  await first.focus();
+  await page.keyboard.press("Enter");
+  const dialog = page.locator(".cz-dialog");
+  await expect(dialog).toBeVisible();
+  await expect(dialog).toHaveAccessibleName("Dashboard 1");
+  const link = dialog.locator(".cz-link");
+  await expect(link).toHaveAttribute("href", "https://example.com/page/1");
+  await expect(link).toHaveText("example.com");
+  // Far larger than four times the thumbnail, up to what the stage holds.
+  await expect
+    .poll(async () => (await rect(page, ".cz-item img")).width)
+    .toBeGreaterThan(before.width * 4.5);
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  await expect(first).toBeFocused();
+
+  // A cell's two images sit side by side, and the second has no link to show.
+  const [left, right] = await Promise.all(
+    [60, 61].map((at) =>
+      thumbs.nth(at).evaluate((node) => {
+        node.scrollIntoView();
+        return node.getBoundingClientRect().toJSON() as DOMRect;
+      }),
+    ),
+  );
+  expect(right!.left).toBeGreaterThan(left!.right);
+  expect(right!.top).toBeCloseTo(left!.top, 0);
+  await thumbs.nth(61).click();
+  await expect(dialog).toBeVisible();
+  await expect(dialog.locator(".cz-link")).toBeHidden();
+});
+
+const svg = (width: number, height: number) =>
+  `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><rect width="${width}" height="${height}" fill="teal"/></svg>`;
+
+test("a thumbnail opens at the size and scroll of its file, whatever the size of its box", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1000, height: 700 });
+  await page.route("**/drawn-*.svg", (route) => {
+    const [, width, height] = /drawn-(\d+)x(\d+)/.exec(route.request().url())!;
+    return route.fulfill({
+      contentType: "image/svg+xml",
+      body: svg(Number(width), Number(height)),
+    });
+  });
+  const table = await render(
+    '| What | Where |\n| --- | --- |\n| Long | ![Long](/drawn-600x2400.svg){width=600 height=2400} |\n| Icon | ![Icon](/drawn-16x16.svg){width=16 height=16} |\n| Wide | ![Wide](/before.png) |\n| Sized | ![Sized](/before.png){width=1280 height=500 data-zoom-context=".post"} |',
+  );
+  await fixture(page, `<div class="post">${table}</div>`);
+  const thumbs = page.locator("main td img[data-zoom-thumb]");
+  await expect(thumbs).toHaveCount(4);
+  const dialog = page.locator(".cz-dialog");
+  const copy = () => rect(page, ".cz-item img");
+
+  // A long screenshot opens as wide as its file and scrolls, as it does outside a table.
+  await thumbs.nth(0).click();
+  await expect.poll(async () => (await copy()).width).toBeCloseTo(600, 0);
+  await expect(dialog.locator(".cz-stage")).toHaveAttribute("data-scroll", "");
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+
+  // An icon is no larger than its file, on the page or zoomed.
+  expect((await thumbs.nth(1).boundingBox())!.height).toBeCloseTo(16, 0);
+  await thumbs.nth(1).click();
+  await expect.poll(async () => (await copy()).width).toBeCloseTo(16, 0);
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+
+  // An image with no size written keeps a 3:2 box and shows whole in it once it loads.
+  const wide = thumbs.nth(2);
+  await expect.poll(() => wide.evaluate((node: HTMLImageElement) => node.naturalWidth)).toBe(1280);
+  expect(await wide.evaluate((node) => getComputedStyle(node).objectFit)).toBe("contain");
+  expect((await wide.boundingBox())!.width).toBeCloseTo(96, 0);
+  // It shows the focus ring from the keyboard, and a narrower limit shrinks the whole box.
+  await page.keyboard.press("Tab");
+  await expect(wide).toBeFocused();
+  expect(await wide.evaluate((node) => getComputedStyle(node).outlineWidth)).toBe("2px");
+  await page
+    .locator("table")
+    .evaluate((node) => node.style.setProperty("--comark-thumb-width", "2rem"));
+  const narrow = (await wide.boundingBox())!;
+  expect(narrow.width).toBeCloseTo(32, 0);
+  expect(narrow.width / narrow.height).toBeCloseTo(1.5, 1);
+  await page.locator("table").evaluate((node) => node.style.removeProperty("--comark-thumb-width"));
+
+  // A context's shell around the copy doesn't hide the image from its sizing.
+  await thumbs.nth(3).click();
+  await expect.poll(async () => (await copy()).width).toBeGreaterThan(128 * 4.5);
+});

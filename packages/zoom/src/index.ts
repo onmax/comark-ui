@@ -2,6 +2,7 @@ import type { ElementNode, Node } from "comark";
 import { defineComarkPlugin } from "comark";
 import { measure } from "./size.ts";
 import { isElement } from "../../../shared/nodes.ts";
+import { rawText } from "../../../shared/text.ts";
 
 export interface ZoomOptions {
   /** Make every content image zoomable. Images inside links keep their link. Default `true`. */
@@ -12,6 +13,11 @@ export interface ZoomOptions {
    * An image with one side keeps it and gets the other at its ratio.
    */
   size?: boolean;
+  /**
+   * Draw an image in a table cell as a small thumbnail that zooms, even when `images` is `false`, so a table can hold a
+   * screenshot per row. Default `true`.
+   */
+  thumbnails?: boolean;
 }
 
 /** The node that starts the zoom script. The plugin adds one at the end of a document that has anything to zoom. */
@@ -29,7 +35,17 @@ const off = (value: unknown) => value === false || value === "false";
 
 // Marks images with the same attributes a `::zoom` block gets, so every renderer outputs zoomable images unchanged.
 // An element marked by hand gets the same; `{zoom=false}` on an image, or `data-zoom=false` anywhere, opts out.
-function mark(nodes: Node[], images: boolean, whole: Set<string>, skip = false): boolean {
+// An image in a table cell is a thumbnail: marked for the styles that keep its row short, and loaded only once near
+// the screen, since a table may hold one per row. `{link="…"}` on a zoomable image names the page it shows, which the
+// zoomed view links to; on the image itself a link would take the click that zooms it.
+function mark(
+  nodes: Node[],
+  images: boolean,
+  thumbnails: boolean,
+  whole: Set<string>,
+  skip = false,
+  cell = false,
+): boolean {
   let found = false;
   for (const node of nodes) {
     if (!isElement(node)) continue;
@@ -42,14 +58,32 @@ function mark(nodes: Node[], images: boolean, whole: Set<string>, skip = false):
       hand = false;
       delete attrs.zoom;
     }
+    const thumbnail = tag === "img" && thumbnails && cell && !skip && !off(hand);
+    const link = tag === "img" ? rawText(attrs.link) : "";
+    if (tag === "img") delete attrs.link;
     if (off(hand)) delete attrs["data-zoom"];
-    else if (hand !== undefined || (tag === "img" && images && !skip)) {
+    else if (hand !== undefined || thumbnail || (tag === "img" && images && !skip)) {
       attrs["data-zoom"] = "";
       attrs.tabindex ??= "0";
+      if (link.trim()) attrs["data-zoom-href"] = link;
+      if (thumbnail) {
+        attrs["data-zoom-thumb"] = "";
+        attrs.loading ??= "lazy";
+        attrs.decoding ??= "async";
+      }
       found = true;
     }
-    // SAFETY: an element node is [tag, attributes, ...children], so everything after index 1 is a child node.
-    if (mark(node.slice(2) as Node[], images, whole, skip || tag === "a" || whole.has(tag)))
+    if (
+      mark(
+        // SAFETY: an element node is [tag, attributes, ...children], so everything after index 1 is a child node.
+        node.slice(2) as Node[],
+        images,
+        thumbnails,
+        whole,
+        skip || tag === "a" || whole.has(tag),
+        cell || tag === "td" || tag === "th",
+      )
+    )
       found = true;
   }
   return found;
@@ -84,6 +118,18 @@ async function size([, attrs]: ElementNode, remote: boolean) {
   attrs.height = String(height ?? (width ? Math.round(width * ratio) : measured.height));
 }
 
+// A thumbnail fits a box of a set height and width, which CSS can't work out from the `width` and `height` attributes
+// in every browser, so it gets its ratio. With it the thumbnail has its final size before its file loads.
+function proportion([, attrs]: ElementNode) {
+  const width = pixels(attrs.width);
+  const height = pixels(attrs.height);
+  if (!("data-zoom-thumb" in attrs) || !width || !height) return;
+  const ratio = `--cz-ratio:${Math.round((width / height) * 1000) / 1000};--cz-height:${height}px`;
+  // First, so nothing an author wrote, such as an escape at the end, can swallow it.
+  const style = rawText(attrs.style);
+  attrs.style = style ? `${ratio};${style}` : ratio;
+}
+
 /**
  * Zooms images and `::zoom` blocks like medium-zoom: out of their place on the page, closed with Escape, Back, or a
  * click around them. Items with the same `group` page through one zoomed view with a strip of them at the bottom.
@@ -95,8 +141,11 @@ export default /* @__PURE__ */ defineComarkPlugin<ZoomOptions>((options) => ({
     const plugins = new Set(state.options.plugins?.map((plugin) => plugin.name));
     const drawn = Object.entries(WHOLE).filter(([, plugin]) => plugins.has(plugin));
     const whole = new Set(["zoom", ...drawn.map(([tag]) => tag)]);
-    if (mark(nodes, options?.images ?? true, whole)) nodes.push([RUNTIME_TAG, {}]);
+    if (mark(nodes, options?.images ?? true, options?.thumbnails ?? true, whole))
+      nodes.push([RUNTIME_TAG, {}]);
+    const found = images(nodes);
     if (options?.size !== false)
-      await Promise.all(images(nodes).map((node) => size(node, options?.size === true)));
+      await Promise.all(found.map((node) => size(node, options?.size === true)));
+    found.forEach(proportion);
   },
 }));

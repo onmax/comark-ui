@@ -9,6 +9,15 @@ export const css = `@layer comark{${[
   theme(".cz-dialog,[data-zoom],.cz-item>img"),
   "[data-zoom]{cursor:zoom-in}",
   "img[data-zoom],.cz-item>img{border-radius:var(--_comark-radius)}",
+  // A thumbnail, an image in a table cell, fits a box of --comark-thumb-height by --comark-thumb-width at its own ratio,
+  // which the plugin writes as --cz-ratio; a fixed height with an automatic width then takes the ratio of its `width`
+  // and `height` attributes before the file loads. --cz-height keeps a small
+  // image, such as an icon, from growing past its file. One with no size known keeps a 3:2 box and shows whole inside
+  // it, since its ratio arrives too late to size the row, and a page's own `img{max-width}` may outrank this layer.
+  "img[data-zoom-thumb]{display:inline-block;width:auto;max-width:var(--comark-thumb-width,8rem);height:min(var(--comark-thumb-height,4rem),calc(var(--comark-thumb-width,8rem) / var(--cz-ratio,1)),var(--cz-height,100vh));max-height:none;margin:.125rem 0;vertical-align:middle;object-fit:cover;object-position:left top;border-radius:calc(var(--_comark-radius) - 4px);outline:1px solid color-mix(in srgb,var(--_comark-foreground) 12%,transparent);outline-offset:-1px;touch-action:manipulation}",
+  "img[data-zoom-thumb]:not([width][height]){--cz-ratio:1.5;aspect-ratio:3/2;object-fit:contain;object-position:center}",
+  "img[data-zoom-thumb]:not([width][height]):not(:focus-visible){outline:0}",
+  "@media (hover:hover) and (pointer:fine){img[data-zoom-thumb]{transition:outline-color .15s ease-out}img[data-zoom-thumb]:hover{outline-color:color-mix(in srgb,var(--_comark-foreground) 32%,transparent)}}",
   // A `::zoom` block holds no margin of its own for its content's to collapse into, so blocks in a row would touch.
   ".cz{margin:1.5rem 0}",
   "[data-zoom]:focus-visible{outline:2px solid var(--_comark-ring);outline-offset:3px}",
@@ -20,6 +29,13 @@ export const css = `@layer comark{${[
   ".cz-backdrop{position:absolute;inset:0;background:var(--cz-backdrop,color-mix(in srgb,var(--_comark-background) var(--cz-backdrop-opacity,96%),transparent))}",
   ".cz-header{position:relative;display:flex;gap:.75rem;align-items:center;min-height:2.75rem;padding:0 .5rem 0 1rem}",
   ".cz-title{overflow:hidden;font-weight:500;white-space:nowrap;text-overflow:ellipsis}",
+  // The page an image shows, from `data-zoom-href`. It keeps to one line beside the title, which gives way first.
+  ".cz-link{display:inline-flex;flex-shrink:0;gap:.25rem;align-items:center;min-height:2.75rem;max-width:50%;color:var(--_comark-muted);text-decoration:none;white-space:nowrap}",
+  ".cz-link>span{overflow:hidden;text-overflow:ellipsis}",
+  ".cz-link svg{flex-shrink:0;width:.875rem;height:.875rem}",
+  ".cz-link:focus-visible{outline:2px solid var(--_comark-ring);outline-offset:1px;border-radius:calc(var(--_comark-radius) - 2px)}",
+  "@media (hover:hover) and (pointer:fine){.cz-link{transition:color .15s ease-out}.cz-link:hover{color:var(--_comark-foreground);text-decoration:underline;text-underline-offset:.2em}}",
+  ".cz-link[hidden]{display:none}",
   ".cz-count{color:var(--_comark-muted);font-variant-numeric:tabular-nums}",
   ".cz-place{margin-left:auto;color:var(--_comark-muted);font-variant-numeric:tabular-nums;white-space:nowrap}",
   ".cz-place:not(:empty)+.cz-close{margin-left:0}",

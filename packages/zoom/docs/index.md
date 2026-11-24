@@ -16,6 +16,15 @@ credits: 'Modeled on <a href="https://github.com/francoischalifour/medium-zoom">
 ```
 :::
 
+:::example{label="In a table"}
+```md
+| Term | Means | Where it shows |
+| --- | --- | --- |
+| Correlation | How two offices move together | ![Office correlations dashboard](/dashboard.png) |
+| Filter | Narrows the dashboard to one team | ![Filter toolbar on one row](/after.png) |
+```
+:::
+
 :::example{label="Any block"}
 ```md
 ::zoom{title="Deploy retry policy"}
@@ -44,6 +53,7 @@ credits: 'Modeled on <a href="https://github.com/francoischalifour/medium-zoom">
 ## Features
 
 - Content images zoom with no markup.
+- An image in a table cell is a small thumbnail that zooms, so a table holds a screenshot per row.
 - `::zoom` zooms any block, such as a table, a code block, or a diagram.
 - Items in one group page through one view, with a strip of thumbnails.
 - An image never grows past its natural size, so it stays sharp.
@@ -59,6 +69,42 @@ Content images zoom on their own, titled by their `alt` text.
 ```md
 ![Office correlations dashboard](/dashboard.png)
 ```
+
+### In a table
+
+Put an image in a table cell to show it as a thumbnail. It keeps its ratio inside a box 4rem high and 8rem wide, loads only near the screen, and opens at the size of its file. A cell can hold several, and a table can hold a screenshot in every row.
+
+::example
+```md
+| App term | Engine term | Means | Where it shows |
+| --- | --- | --- | --- |
+| Dashboard | `overview` | The first page, with one card per office | ![Office correlations dashboard](/dashboard.png){width=1440 height=860} |
+| Filter bar | `query.filters` | Narrows every card to one team or week | ![Filter toolbar wrapping](/before.png){width=1280 height=500} ![Filter toolbar on one row](/after.png){width=1280 height=500} |
+| Correlation | `pearson_r` | How closely two offices move together | ![Correlation card](/dashboard.png){width=1440 height=860} |
+| Office | `site` | A place with its own headcount | ![Office list](/dashboard.png){width=1440 height=860} |
+| Week | `iso_week` | Monday to Sunday, by ISO 8601 | ![Week picker](/after.png){width=1280 height=500} |
+| Headcount | `fte` | Full-time equivalents, not people | ![Headcount card](/dashboard.png){width=1440 height=860} |
+| Trend | `slope_4w` | The change over the last four weeks | ![Trend arrow](/dashboard.png){width=1440 height=860} |
+| Outlier | `z_gt_3` | A week far from its mean | ![Outlier marker](/dashboard.png){width=1440 height=860} |
+| Team | `group` | People who share a manager | ![Team filter](/before.png){width=1280 height=500} |
+| Region | `geo` | Offices grouped by country | ![Region filter](/after.png){width=1280 height=500} |
+| Export | `dump_csv` | Downloads the cards on screen | ![Export button](/dashboard.png){width=1440 height=860} |
+| Share link | `permalink` | A URL that restores the filters | ![Share dialog](/dashboard.png){width=1440 height=860} |
+```
+::
+
+> [!TIP]
+> Give each image its `width` and `height`, the size of its file, so the row has its height before the image loads. Without them it shows whole inside a 3:2 box.
+
+### Link to the page shown
+
+Use the `link` attribute to name the page an image shows. The zoomed view links to it beside the title, and a click on the image still zooms.
+
+::example
+```md
+![Office correlations dashboard](/dashboard.png){link="https://comark-ui.onmax.me/zoom"}
+```
+::
 
 ### Any block
 
@@ -161,7 +207,7 @@ In an open or change listener, `event.detail.copyOf(element)` finds a page eleme
 
 ## Accessibility
 
-Each item is a tab stop that opens a native modal `<dialog>`, labelled by its title. The dialog sits in the top layer and the page behind it is inert, so focus stays in the dialog while it's open. Focus returns to the item on close. An item inside another one, such as a screenshot in a slide, zooms with it, so only the outer one is a tab stop.
+Each item, a thumbnail included, is a tab stop that opens a native modal `<dialog>`, labelled by its title. The dialog sits in the top layer and the page behind it is inert, so focus stays in the dialog while it's open. Focus returns to the item on close. An item inside another one, such as a screenshot in a slide, zooms with it, so only the outer one is a tab stop.
 
 ### Keyboard interactions
 
@@ -188,6 +234,8 @@ Each item is a tab stop that opens a native modal `<dialog>`, labelled by its ti
 | Attribute | Default | Description |
 | --- | --- | --- |
 | `zoom` | `true` | `false` keeps the image from zooming. |
+| `link` | — | The page the image shows, linked from the zoomed view. Web addresses only. |
+| `width`, `height` | — | The size of the file in pixels, so the image keeps its room before it loads. |
 | `data-zoom` | — | Makes an image zoom when the `images` option is `false`. |
 | `data-zoom-src` | — | A larger file to load when the view opens. |
 | `data-zoom-aside` | — | A selector for an element to show beside the zoomed item. |
@@ -200,6 +248,7 @@ The options go under `zoom` in `comarkUi()`, or to `zoom()` when you use it alon
 | Option | Default | Description |
 | --- | --- | --- |
 | `images` | `true` | `false` leaves images alone, so only `::zoom` blocks and images with `data-zoom` zoom. |
+| `thumbnails` | `true` | `false` draws an image in a table cell at its own size, like any other image. Otherwise it's a thumbnail that zooms even when `images` is `false`. |
 | `size` | Data URIs only | Gives images their `width` and `height` while parsing. `true` also fetches remote URLs with range requests, which follow redirects and can reach private networks, so use it only for trusted documents. An image with one side gets the other from its ratio. One with both sides, or a side like `50%`, stays as it is. `false` turns measuring off. |
 
 ### Events
@@ -283,11 +332,18 @@ The zoomed view sits at the end of `body`, so set these on `:root`, `body`, or `
 | `--cz-backdrop` | `--comark-background` at `--cz-backdrop-opacity` | The backdrop's color |
 | `--cz-backdrop-opacity` | `96%` | How much of `--comark-background` the backdrop mixes in |
 
+| `--comark-thumb-height` | `4rem` | The height of a thumbnail in a table cell |
+| `--comark-thumb-width` | `8rem` | The most a thumbnail is wide; a wider image gets shorter |
+
+Set the two thumbnail variables on the table or any ancestor, not on the dialog.
+
 ### Classes and attributes
 
 | Selector | Is |
 | --- | --- |
 | `[data-zoom]` | An item on the page that zooms |
+| `img[data-zoom-thumb]` | A thumbnail in a table cell |
+| `.cz-link` | The link to the page an image shows, from its `link` |
 | `.cz-dialog` | The zoomed view, with `data-aside` when it shows a caption beside the item |
 | `.cz-backdrop` | The layer behind everything else |
 | `.cz-header`, `.cz-title`, `.cz-count`, `.cz-place`, `.cz-close` | The top row: title, position in a group, position among the page's figures (hidden on touch screens), and the close button |
