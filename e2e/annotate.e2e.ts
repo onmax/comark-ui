@@ -707,3 +707,51 @@ Apply.
   await page.mouse.move(0, 0);
   for (const n of [1, 2, 3]) await expect(mark(n)).toHaveCSS("opacity", "1");
 });
+
+const inTable = `| Screen | Where |
+| --- | --- |
+| Filters | :screenshot{of="filters"} |
+
+::screenshot{#filters src="/before.png" alt="Filter toolbar wrapping onto a second row" title="Filters" viewport="640x250"}
+:::annotation{x=40 y=28.7 w=20 h=44.4 color="red"}
+Moon phase and vibes don't fit.
+:::
+::
+`;
+
+test("a screenshot a table cell names is a thumbnail with a dot per mark, and opens as the whole figure", async ({
+  page,
+}) => {
+  await open(page, inTable);
+  const thumbnail = page.locator("td .ca-thumb");
+  // 8rem wide at most, at the capture's ratio.
+  const box = (await thumbnail.boundingBox())!;
+  expect(box.width).toBe(128);
+  expect(box.height).toBe(50);
+  await expect(thumbnail.locator(".ca-notes")).toBeHidden();
+  await expect(thumbnail.locator(".ca-mark .ca-stamp")).toBeHidden();
+  await expect(page.locator("main > .ca")).toHaveCount(0);
+  const dot = await thumbnail.locator(".ca-mark").evaluate((mark) => {
+    const style = getComputedStyle(mark, "::after");
+    const { left, width } = mark.getBoundingClientRect();
+    return { size: style.width, middle: left + width / 2 };
+  });
+  expect(dot.size).toBe("7px");
+  expect(Math.round(dot.middle - box.x)).toBe(64);
+
+  await thumbnail.locator(".ca-stage").click();
+  const stage = page.locator(".cz-dialog .cz-item .ca-stage");
+  await expect(stage.locator(".ca-mark .ca-stamp")).toBeVisible();
+  await expect(page.locator(".cz-dialog .cz-aside")).toContainText(
+    "Moon phase and vibes don't fit.",
+  );
+  await expect(page.locator(".cz-dialog .cz-title")).toHaveText("Filters");
+  // Laid out as wide as a page's column, not as the thumbnail scaled up: the number keeps its size.
+  await expect.poll(async () => (await stage.boundingBox())!.width).toBeGreaterThan(500);
+  const stamp = (await stage.locator(".ca-mark .ca-stamp").boundingBox())!;
+  expect(stamp.width).toBeLessThan(30);
+
+  await page.keyboard.press("Escape");
+  await expect(page.locator(".cz-dialog")).toHaveCount(0);
+  await expect(thumbnail.locator(".ca-stage")).toBeFocused();
+});

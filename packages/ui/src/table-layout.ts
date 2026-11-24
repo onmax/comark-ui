@@ -21,8 +21,16 @@ const COLUMN = 46;
 const READABLE = 9.5;
 
 // Text is a string, an element an array, and a comment an array with a null tag, which has no text.
+// comark-annotate runs first too, and moves the screenshot a cell names into it. Its notes wait for the zoomed view.
+const screenshot = (node: ElementNode) => node[0] === "screenshot" && "data-thumbnail" in node[1];
 const text = (node: Node): string =>
-  isElement(node) ? childrenOf(node).map(text).join("") : Array.isArray(node) ? "" : node;
+  isElement(node)
+    ? screenshot(node)
+      ? ""
+      : childrenOf(node).map(text).join("")
+    : Array.isArray(node)
+      ? ""
+      : node;
 const chipsOf = (node: Node): ElementNode[] =>
   isElement(node) ? (node[0] === "chip" ? [node] : childrenOf(node).flatMap(chipsOf)) : [];
 // comark-zoom runs first and marks the images it draws as thumbnails. Any other image, such as an icon, is its own size.
@@ -32,7 +40,9 @@ const imagesOf = (node: Node): ElementNode[] =>
       ? "data-zoom-thumb" in node[1]
         ? [node]
         : []
-      : childrenOf(node).flatMap(imagesOf)
+      : screenshot(node)
+        ? [node]
+        : childrenOf(node).flatMap(imagesOf)
     : [];
 /** What comark-zoom's thumbnail of an image in a cell is worth, in characters: about 6.5em of its 8rem at most. */
 const THUMBNAIL = 12;

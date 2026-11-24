@@ -179,5 +179,15 @@ export const css = `@layer comark{${[
   ".ca-notes>li{display:flex;gap:.625rem;align-items:baseline;margin:0;padding:.3rem .5rem;border-radius:calc(var(--_comark-radius) - 4px);scroll-margin:1rem;background:color-mix(in srgb,var(--ca-color) calc(8% * var(--ca-on,0)),transparent);transition:background .15s ease}",
   ".ca-notes>li>div>:first-child{margin-top:0}",
   ".ca-notes>li>div>:last-child{margin-bottom:0}",
+  // A screenshot in a table cell is a thumbnail the size of comark-zoom's: the image alone, with a dot where each mark
+  // is, since a mark drawn at this size would cover what it points at. Its heading, notes, and buttons wait for the
+  // zoomed view, whose copy sits in the dialog, where none of this applies.
+  ".ca-thumb:not(.cz-dialog *){display:inline-block;width:min(var(--comark-thumb-width,8rem),calc(var(--comark-thumb-height,4rem) * var(--ca-ratio,1.5)));margin:.125rem 0;vertical-align:middle}",
+  ".ca-thumb:not(.cz-dialog *) :is(figcaption,.ca-callout,.ca-arrow,.ca-copy,.ca-copy-status,.ca-hide,.ca-mark>*){display:none}",
+  ".ca-thumb:not(.cz-dialog *) .ca-stage{--ca-pl:0px;--ca-pr:0px;--ca-pt:0px;--ca-pb:0px;padding:0;border-radius:calc(var(--_comark-radius) - 4px)}",
+  ".ca-thumb:not(.cz-dialog *) .ca-frame img{border-radius:calc(var(--_comark-radius) - 4px)}",
+  ".ca-thumb:not(.cz-dialog *) .ca-mark{outline:0}",
+  ".ca-thumb:not(.cz-dialog *) .ca-mark::after{content:'';position:absolute;left:50%;top:50%;width:7px;height:7px;border-radius:50%;background:var(--ca-solid,var(--ca-color));box-shadow:0 0 0 1.5px var(--_comark-background);translate:-50% -50%}",
+  "@media (hover:hover) and (pointer:fine){.ca-thumb:not(.cz-dialog *) .ca-frame img{transition:outline-color .15s ease-out}.ca-thumb:not(.cz-dialog *) .ca-stage:hover img{outline-color:color-mix(in srgb,var(--_comark-foreground) 32%,transparent)}}",
   ...linked,
 ].join("")}}`;
