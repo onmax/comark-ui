@@ -319,11 +319,10 @@ How most packages work, so the bullets below don't repeat it:
 
 ## Releasing
 
-uppt opens a draft `release/vX.Y.Z` PR from conventional commits on `main`, in lockstep for every package matched by `packages/*`. Merging it tags the version and stages each package on npm through OIDC trusted publishing. Each goes live when the maintainer approves it with 2FA on npmjs.com.
+uppt opens a draft `release/vX.Y.Z` PR from conventional commits on `main`, in lockstep for every package matched by `packages/*`. Merging it tags the version, and the publish job waits for a maintainer to approve the `npm` environment in GitHub Actions. Then it publishes each package to npm through OIDC trusted publishing.
 
-- Every package is staged, never published directly. pnpm ranks a staged publish above a direct one, and its `trustPolicy: no-downgrade` refuses any version with weaker evidence than an earlier one. comark-annotate, comark-carousel, and comark-zoom began staged, so their direct releases from 0.4.1 to 0.12.2 can't be installed under that policy. `test/npm-trust.test.ts` fails if the workflow publishes directly again.
-- A new package needs a trusted publisher on npmjs.com before its first release, with workflow `release.yaml`, environment `npm`, and `npm stage publish` allowed. Leave `npm publish` off. Publishers set up while releases went out directly (0.4.1 to 0.12.2) may not allow staging, so check them with `npm trust list <pkg>` before the first staged release; the publish job names the package npm refuses.
-- The publish job stages in waves of dependency order and lists them in its summary. Approve in that order, so `latest` never names a sibling version npm lacks: comark-ui after its plugins, comark-linter after comark-ui.
-- The verify job waits up to six hours for the approvals, then fails for any version that is missing or went out without a staged publish. Approve the rest and rerun it.
-- If staging fails after the tag exists, approve or reject what it staged, then run `gh workflow run release.yaml --repo onmax/comark-ui --ref vX.Y.Z`. It skips versions already on npm.
+- A new package needs a trusted publisher on npmjs.com before its first release, with workflow `release.yaml`, environment `npm`, and `npm publish` allowed.
+- Publishing goes in waves of dependency order, so comark-ui follows its plugins and comark-linter follows comark-ui. A package that fails stops every later wave, so `latest` never names a sibling version npm lacks.
+- pnpm ranks a staged publish above a direct one, and its `trustPolicy: no-downgrade` refuses any version with weaker evidence than an earlier one. Packages with a staged version (comark-annotate, comark-carousel, and comark-zoom from 0.1.0 to 0.2.0, and the 0.14.2 packages approved on npmjs.com) need exact-version exceptions under that policy. The docs' pnpm trust errors section lists them.
+- If publishing fails after the tag exists, run `gh workflow run release.yaml --repo onmax/comark-ui --ref vX.Y.Z` and approve it again. It skips versions already on npm.
 - The docs deploy through Cloudflare Workers Builds on every push to `main`.
