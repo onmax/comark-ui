@@ -249,11 +249,11 @@ Every block is its own package, and comark-ui only registers them. To install fe
 
 ## pnpm trust errors
 
-With `trustPolicy: no-downgrade`, pnpm refuses comark-annotate, comark-carousel, and comark-zoom from `0.4.1` through `0.12.2` with `ERR_PNPM_TRUST_DOWNGRADE`: "Earlier versions had staged publish, but this version has trusted publisher." comark-ui and comark-linter depend on them, so installing those fails too.
+With `trustPolicy: no-downgrade`, pnpm can refuse these packages with `ERR_PNPM_TRUST_DOWNGRADE`: "Earlier versions had staged publish, but this version has trusted publisher." comark-ui and comark-linter depend on the other packages, so installing them can fail too.
 
-Their first releases were staged on npm and approved with 2FA, which pnpm ranks highest. From `0.4.1` through `0.12.2`, every package went out directly through OIDC trusted publishing with provenance. pnpm compares each version with every version published before it, so those releases stay blocked. Releases after `0.12.2` are staged again, so upgrade to one.
+GitHub Actions publishes every release directly through OIDC trusted publishing with provenance. A few versions were staged on npm and approved with 2FA instead, which pnpm ranks higher: comark-annotate, comark-carousel, and comark-zoom from `0.1.0` to `0.2.0`, and comark-reading-time, comark-sources, comark-steps, comark-table, comark-tests, comark-time, comark-xref, comark-zoom, and remark-to-comark at `0.14.2`. pnpm compares each version with every version published before it, so later releases of those packages trip the policy. A new release does not reset that history.
 
-To stay on a blocked version, check its publisher and provenance before adding an exception:
+Check the exact version's publisher and provenance before adding an exception:
 
 ```sh
 npm view comark-annotate@0.9.1 _npmUser _npmUser.trustedPublisher.id dist.attestations --json
