@@ -106,7 +106,8 @@ Portrait
 
 | Portrait |
 | --- |
-| ![Cell](/portrait.svg) |
+| ![Cell](/portrait.svg){zoom=false} |
+| ![Thumbnail](/portrait.svg) |
 
 ![Unwrapped](/portrait.svg)
 
@@ -124,6 +125,11 @@ Portrait
     await expect(image).toHaveCSS("max-height", "560px");
     expect((await image.boundingBox())!.height).toBeLessThanOrEqual(560);
   }
+  // A cell's image is comark-zoom's thumbnail unless it opts out, and the typeset's cap leaves it alone.
+  expect((await page.locator('td > img[alt="Thumbnail"]').boundingBox())!.height).toBeCloseTo(
+    64,
+    0,
+  );
 });
 
 test("a native Markdown table sizes its columns from the fitted image widths", async ({ page }) => {
