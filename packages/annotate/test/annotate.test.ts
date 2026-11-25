@@ -395,7 +395,7 @@ describe("comark-annotate", () => {
       /class="ca-callout ca-callout-bottom ca-callout-west"[^>]*;--ca-room:calc\(var\(--ca-pl,0px\) \+ \(100% - var\(--ca-pl,0px\) - var\(--ca-pr,0px\)\) \* 0.3\)"/,
     );
     expect(styles(html)).toContain(
-      ":where([data-ca-fit-notes]) .ca-callout:is(.ca-callout-east,.ca-callout-west){max-width:min(14rem,var(--ca-room))",
+      ":where([data-ca-fit-notes]:not(:where(.cz-dialog *))) .ca-callout:is(.ca-callout-east,.ca-callout-west){max-width:min(14rem,var(--ca-room))",
     );
     // A standalone screenshot fits them like a compare does: stacked until the runtime sees they fit.
     expect(html).toContain('<div class="ca" data-ca-fit-notes data-comark-frame>');

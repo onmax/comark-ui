@@ -520,7 +520,7 @@ test("an item a little taller than the stage shrinks a little and shows whole", 
   expect(copy.width).toBeGreaterThan(600 * 0.85);
 });
 
-test("notes that sit outside a screenshot's box zoom onto the stage with it, centered", async ({
+test("a stacked screenshot note returns to its offset position in zoom and centers with the image", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
@@ -535,11 +535,13 @@ The whole chart fits in the window, and this note runs far past its left edge.
   );
   const stage = page.locator(".ca-stage");
   const note = page.locator("main .ca-callout");
-  expect((await note.boundingBox())!.x).toBeLessThan((await stage.boundingBox())!.x);
+  await expect(note).toHaveCSS("position", "static");
   await stage.click({ position: { x: 200, y: 200 } });
+  await expect(page.locator(".cz-item .ca-callout")).toHaveCSS("position", "absolute");
   const box = await rect(page, ".cz-stage");
   const shown = await rect(page, ".cz-item .ca-callout");
   const copy = await rect(page, ".cz-item .ca-stage");
+  expect(shown.right).toBeLessThanOrEqual(copy.left + 1);
   expect(shown.left).toBeGreaterThanOrEqual(box.left);
   // The note and the screenshot together sit in the middle of the stage.
   expect((shown.left + copy.right) / 2).toBeCloseTo((box.left + box.right) / 2, -1);
