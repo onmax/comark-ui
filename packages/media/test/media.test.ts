@@ -47,6 +47,39 @@ describe("comark-media", () => {
     expect(await render("![Diagram](a.png)")).toContain('<img src="a.png" alt="Diagram"');
   });
 
+  it("links a PDF written as an image, alone or in a sentence, with no player", async () => {
+    expect(await render("![CV](cv.pdf)")).toMatch(
+      /<p>\s*<a class="cm-pdf" href="cv.pdf">CV<\/a>\s*<\/p>/,
+    );
+    expect(await render("Read ![my CV](./cv.PDF?download=1#page=2) before the call.")).toContain(
+      'Read <a class="cm-pdf" href="./cv.PDF?download=1#page=2">my CV</a> before the call.',
+    );
+    const html = await render("![CV](cv.pdf)\n\n![The signed contract](contract.pdf)");
+    expect(html).not.toContain("<img");
+    expect(html).not.toContain("<style");
+    expect(html).not.toContain("<script");
+    expect(await render("![CV](cv.pdf)\n\n![Clip](clip.mp4)")).toMatch(
+      /<a class="cm-pdf" href="cv.pdf">CV<\/a>[\s\S]*<style data-comark-media>[\s\S]*<script>/,
+    );
+    const value = await parseMarkdown("![CV](cv.pdf)", { plugins: [media()] });
+    expect(value.nodes).toEqual([
+      ["p", {}, ["media", { kind: "pdf", src: "cv.pdf", label: "CV" }]],
+    ]);
+    expect(value.meta.issues).toEqual([]);
+  });
+
+  it("reports a PDF without a label, and drops a player's options from it", async () => {
+    expect(await issues("![](cv.pdf)")).toEqual([
+      "`![](cv.pdf)` has no label. Describe the PDF in the brackets, like `![The signed contract](cv.pdf)`.",
+    ]);
+    expect(await issues('![CV](cv.pdf){autoplay poster="cv.png" width=600 height=800}')).toEqual([
+      "`![CV](cv.pdf)`: `autoplay`, `poster`, `width`, `height` aren't PDF options, so they were dropped. A PDF takes only its label, in the brackets.",
+    ]);
+    expect(await render('![CV](cv.pdf){autoplay poster="cv.png" width=600 height=800}')).toContain(
+      '<a class="cm-pdf" href="cv.pdf">CV</a>',
+    );
+  });
+
   it("gives videos and audio controls that keep the browser's as a fallback, with the script once per document", async () => {
     const html = await render("![Alert](alert.mp3)\n\n![Chime](chime.ogg)\n\n![Clip](clip.mp4)");
     expect(html).toContain(

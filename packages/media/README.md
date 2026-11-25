@@ -5,7 +5,7 @@
 [![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-media)
 [![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/media)
 
-Videos and audio written as images, as GitLab does. Both get controls on the shadcn/ui tokens, with the browser's own as their fallback. A GitHub attachment link alone in a paragraph plays too, as on GitHub. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
+Videos and audio written as images, as GitLab does. Both get controls on the shadcn/ui tokens, with the browser's own as their fallback. A GitHub attachment link alone in a paragraph plays too, as on GitHub, and a PDF written as an image becomes a link to it. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
 
 ```sh
 pnpm add comark comark-media
@@ -25,10 +25,12 @@ const render = createHtmlRenderer({ plugins: [media()], components });
 
 ![The new alert sound](./alert.mp3)
 
+![The signed contract](./contract.pdf)
+
 https://github.com/user-attachments/assets/2f3c0e3e-1c4b-4c3a-9a6b-0b1e2f3a4b5c
 ```
 
-An image ending in `.mp4`, `.webm`, `.mov`, or `.m4v` becomes `<video controls playsinline preload="metadata">`, and one ending in `.mp3`, `.wav`, `.ogg`, or `.m4a` becomes `<audio controls preload="metadata">`. The alt text labels the player. `autoplay`, `loop`, `muted`, `poster`, `width`, and `height` pass through. Give a video paired pixel dimensions like `{width=1280 height=720}` to reserve its room. `media({ size: true })` measures remote videos without dimensions while parsing. Enable it only for trusted documents: requests follow redirects and can reach private networks. By default measurement reads only data URIs; `media({ size: false })` disables it.
+An image ending in `.mp4`, `.webm`, `.mov`, or `.m4v` becomes `<video controls playsinline preload="metadata">`, and one ending in `.mp3`, `.wav`, `.ogg`, or `.m4a` becomes `<audio controls preload="metadata">`. The alt text labels the player. One ending in `.pdf` becomes `<a class="cm-pdf">` with the alt text as its text, and takes no props, so a host can draw `kind: "pdf"` with its own component. `autoplay`, `loop`, `muted`, `poster`, `width`, and `height` pass through. Give a video paired pixel dimensions like `{width=1280 height=720}` to reserve its room. `media({ size: true })` measures remote videos without dimensions while parsing. Enable it only for trusted documents: requests follow redirects and can reach private networks. By default measurement reads only data URIs; `media({ size: false })` disables it.
 
 Players come with a play button, the time, a seek bar, and a mute button with a volume slider over it, and a settings panel for the speed and looping, with Copy link (at the current second, as `#t=`) and a video's Copy frame, drawn with the shared `--comark-*` tokens; a video's float over its bottom edge and add a full screen button, and on a touch screen spread over the video with the sound and settings in its top corner. A small script runs them. Until it does, and when a file can't play, the browser's own controls show instead, so the file plays without any script. Pass `media({ controls: "native" })` to keep the browser's controls and leave the script out.
 

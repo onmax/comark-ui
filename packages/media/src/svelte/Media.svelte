@@ -1,4 +1,4 @@
-<!-- Videos and audio for `@comark/svelte`. -->
+<!-- Videos, audio, and PDF links for `@comark/svelte`. -->
 <script>
   import { controls, css, start } from "comark-media/client";
 
@@ -22,7 +22,9 @@
   });
 </script>
 
-{#if kind === "video" && src && native}
+{#if kind === "pdf" && src}
+  <a class="cm-pdf" href={src}>{label || src}</a>
+{:else if kind === "video" && src && native}
   <video class="cm" data-comark-frame="" {src} controls playsinline preload="metadata" {poster} {width} {height} {autoplay} {loop} {muted} aria-label={label || undefined}><a href={src}>{label || src}</a></video>
 {:else if kind === "audio" && src && native}
   <audio class="cm" {src} controls preload="metadata" {autoplay} {loop} {muted} aria-label={label || undefined}><a href={src}>{label || src}</a></audio>

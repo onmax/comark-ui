@@ -6,7 +6,7 @@ import { text } from "../../../shared/text.ts";
 import { childrenOf, isElement } from "../../../shared/nodes.ts";
 
 export type MediaMeta = {
-  /** One readable sentence per problem with a video or audio file. Empty when the document has none. Other plugins add theirs too. */
+  /** One readable sentence per problem with a video, audio, or PDF file. Empty when the document has none. Other plugins add theirs too. */
   issues: string[];
   /** The comark-linter rule of each issue, by its sentence, so the linter reports it under its own code. */
   issueRules: Record<string, string>;
@@ -27,12 +27,12 @@ export type MediaOptions = {
 };
 
 /**
- * What a media file becomes, and all its renderers read. `kind` is `video` or `audio`; `label` is the image's alt.
- * `width` and `height` are a video's size in pixels, as written or read from the file. `native` marks a file that keeps
- * the browser's controls. The flags are only present when set.
+ * What a media file becomes, and all its renderers read. `kind` is `video`, `audio`, or `pdf`; `label` is the image's
+ * alt. A PDF has only `src` and `label`. `width` and `height` are a video's size in pixels, as written or read from the
+ * file. `native` marks a file that keeps the browser's controls. The flags are only present when set.
  */
 export type MediaAttributes = {
-  kind?: "video" | "audio";
+  kind?: "video" | "audio" | "pdf";
   src?: string;
   label?: string;
   poster?: string;
@@ -49,6 +49,7 @@ type Issue = { message: string; rule: `comark/media/${string}` };
 
 const VIDEO = /\.(?:mp4|webm|mov|m4v)$/i;
 const AUDIO = /\.(?:mp3|wav|ogg|m4a)$/i;
+const PDF = /\.pdf$/i;
 // GitHub plays an uploaded video when its link sits alone in a paragraph; the address has no extension.
 const ATTACHMENT = /^https:\/\/github\.com\/user-attachments\/assets\/[\w-]+\/?(?:[?#].*)?$/;
 const FLAGS = ["autoplay", "loop", "muted"] as const;
@@ -56,16 +57,23 @@ const SIDES = ["width", "height"] as const;
 // How the issues name each video written as an image. A GitHub attachment link takes no props, so it has no name here.
 const names = new WeakMap<MediaAttributes, string>();
 const KNOWN = new Set<string>(["src", "alt", "kind", "poster", ...FLAGS]);
+const PDF_KNOWN = new Set<string>(["src", "alt", "kind"]);
 
 const kindOf = (src: string) => {
   const path = src.replace(/[?#].*$/, "");
-  return VIDEO.test(path) ? "video" : AUDIO.test(path) ? "audio" : undefined;
+  return VIDEO.test(path)
+    ? "video"
+    : AUDIO.test(path)
+      ? "audio"
+      : PDF.test(path)
+        ? "pdf"
+        : undefined;
 };
 const on = (value: unknown) => value !== undefined && value !== false && text(value) !== "false";
 
 /**
  * Turns media images and GitHub attachment links into `media` tokens. It runs on the tokens, before any plugin's `post`,
- * so comark-zoom never makes a video zoom and comark-chips never makes a GitHub attachment a chip, whatever the order.
+ * so comark-zoom never makes a video or a PDF zoom and comark-chips never makes a GitHub attachment a chip, whatever the order.
  */
 function convert(tokens: ComarkParseTokensState["tokens"]) {
   for (const token of tokens) {
@@ -113,10 +121,10 @@ function read(
   const kind = text(attrs.kind) || kindOf(src);
   const name =
     attrs.alt === undefined ? `The ${kind || "media"} link ${src}` : `\`![${alt}](${src})\``;
-  if (kind !== "video" && kind !== "audio") {
+  if (kind !== "video" && kind !== "audio" && kind !== "pdf") {
     issues.push({
       rule: "comark/media/unplayable-src",
-      message: `${name}: \`src\` must end in .mp4, .webm, .mov, .m4v, .mp3, .wav, .ogg, or .m4a to play.`,
+      message: `${name}: \`src\` must end in .mp4, .webm, .mov, .m4v, .mp3, .wav, .ogg, .m4a, or .pdf.`,
     });
     return {};
   }
@@ -125,8 +133,20 @@ function read(
   else if (attrs.alt !== undefined)
     issues.push({
       rule: "comark/media/missing-label",
-      message: `${name} has no label. Describe the ${kind} in the brackets, like \`![Signing in with a passkey](${src})\`.`,
+      message:
+        kind === "pdf"
+          ? `${name} has no label. Describe the PDF in the brackets, like \`![The signed contract](${src})\`.`
+          : `${name} has no label. Describe the ${kind} in the brackets, like \`![Signing in with a passkey](${src})\`.`,
     });
+  if (kind === "pdf") {
+    const unknown = Object.keys(attrs).filter((key) => !PDF_KNOWN.has(key));
+    if (unknown.length)
+      issues.push({
+        rule: "comark/media/unknown-prop",
+        message: `${name}: ${unknown.map((key) => `\`${key}\``).join(", ")} ${unknown.length === 1 ? "isn't a PDF option, so it was" : "aren't PDF options, so they were"} dropped. A PDF takes only its label, in the brackets.`,
+      });
+    return result;
+  }
   for (const flag of FLAGS) if (on(attrs[flag])) result[flag] = true;
   const poster = text(attrs.poster);
   if (poster && kind === "audio")
@@ -168,7 +188,8 @@ function read(
 
 /**
  * Plays an image whose `src` ends in .mp4, .webm, .mov, or .m4v as a video, and .mp3, .wav, .ogg, or .m4a as audio,
- * with the alt as its label, as GitLab does. A GitHub `user-attachments` link alone in a paragraph plays too, as on
+ * with the alt as its label, as GitLab does. One that ends in .pdf becomes a `pdf` that renders as a link, so a host
+ * can draw it its own way. A GitHub `user-attachments` link alone in a paragraph plays too, as on
  * GitHub. Problems are added to `meta.issues`.
  */
 export default defineComarkPlugin<MediaOptions | undefined, MediaMeta>((options = {}) => ({

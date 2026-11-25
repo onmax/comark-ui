@@ -1,4 +1,4 @@
-A video or audio file takes its label from the image's alt text. Without one, a screen reader announces only "video", and a reader can't tell what it shows before pressing play.
+A video, audio, or PDF file takes its label from the image's alt text. Without one, a screen reader announces only "video", and a reader can't tell what it shows before pressing play.
 
 ::incorrect
 ```md

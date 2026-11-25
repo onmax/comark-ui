@@ -18,6 +18,7 @@ const markdown = [
   '![Login & logout](./login.mp4){autoplay loop muted poster="login.png" width=1280 height=720}',
   "![Standup](standup.m4a)",
   "https://github.com/user-attachments/assets/2f3c0e3e-1c4b-4c3a-9a6b-0b1e2f3a4b5c",
+  "![The CV & cover letter](./cv.pdf)",
 ].join("\n\n");
 // Drops what differs only in serialization: comments, whitespace between tags, the HTML renderer's inline styles and
 // script, and
@@ -57,11 +58,25 @@ describe("comark-media renderers", async () => {
   const value = await parseMarkdown(markdown, { plugins: [media({ size: false })] });
   const expected = normalize(await renderHtmlFromDocument(value, { components: htmlComponents }));
 
-  it("renders a video, audio, and an attachment in HTML", () => {
+  it("renders a video, audio, an attachment, and a PDF in HTML", () => {
     expect(expected.match(/<span class="cm cm-video" data-comark-frame/g)).toHaveLength(2);
     expect(expected.match(/<span class="cm cm-audio"/g)).toHaveLength(1);
     expect(expected).toContain("Login &amp; logout");
     expect(expected).toContain('width="1280" height="720"');
+    expect(expected).toContain(
+      '<p><a class="cm-pdf" href="./cv.pdf">The CV &amp; cover letter</a></p>',
+    );
+  });
+
+  it("writes no styles or script for a document whose only media is a PDF", async () => {
+    const value = await parseMarkdown("![CV](cv.pdf)", { plugins: [media()] });
+    const html = await renderHtmlFromDocument(value, { components: htmlComponents });
+    expect(html).toContain('<a class="cm-pdf" href="cv.pdf">CV</a>');
+    expect(html).not.toMatch(/<style|<script/);
+    for (const [name, render] of Object.entries(renderers))
+      expect(normalize(await render(value)), name).toContain(
+        '<p><a class="cm-pdf" href="cv.pdf">CV</a></p>',
+      );
   });
 
   for (const [name, render] of Object.entries(renderers))

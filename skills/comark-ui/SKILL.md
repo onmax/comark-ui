@@ -73,7 +73,7 @@ Read the reference for each block you use before you write it. Mix the blocks fr
 | A suggested change to one file, before and after | `::diff` | [diff](references/diff.md) |
 | Suggested edits and comment threads on prose, such as a copy review, each note in a card in the margin | `:suggestion`, `:comment` | [comments](references/comments.md) |
 | A video, a design file, or a live reproduction from its link | `::embed` | [embed](references/embed.md) |
-| A screen recording or a sound that a screenshot can't show | `![alt](clip.mp4)` | [media](references/media.md) |
+| A screen recording or a sound that a screenshot can't show, or a PDF to link | `![alt](clip.mp4)`, `![alt](file.pdf)` | [media](references/media.md) |
 | A number before and after, a table of befores and afters, or progress | `:delta`, `::stats`, `:progress` | [metrics](references/metrics.md) |
 | Data from a CSV, TSV, or JSON fence or file, as a table that copies and sorts | `::table`, a `csv` fence | [table](references/table.md) |
 | A test run's passed, failed, and skipped counts and its failures, from a JUnit report | `::tests` | [tests](references/tests.md) |

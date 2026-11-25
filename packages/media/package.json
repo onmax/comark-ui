@@ -1,13 +1,14 @@
 {
   "name": "comark-media",
   "version": "0.14.2",
-  "description": "Videos and audio from image syntax, and GitHub attachment links that play. Both get controls on the shadcn/ui tokens. A Comark plugin.",
+  "description": "Videos and audio from image syntax, and GitHub attachment links that play. Both get controls on the shadcn/ui tokens. A PDF written as an image becomes a link. A Comark plugin.",
   "keywords": [
     "audio",
     "comark",
     "markdown",
     "mdc",
     "media",
+    "pdf",
     "plugin",
     "video"
   ],
