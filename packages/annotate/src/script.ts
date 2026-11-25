@@ -28,7 +28,7 @@ export function start(): () => void {
   const root = document.documentElement;
   root.setAttribute("data-annotate-ready", "");
   const comparisons = "[data-ca-fit-notes]:not(.cz-dialog *)";
-  const widths = new WeakMap<Element, number>();
+  const fitTargets = "[data-ca-fit-notes],.ca-stage,.ca-callout,.ca-callout>div";
   const fitNotes = (compare: Element) => {
     compare.setAttribute("data-ca-notes-fit", "");
     const fits = [...compare.querySelectorAll<HTMLElement>(".ca-callout")].every((note) => {
@@ -45,29 +45,46 @@ export function start(): () => void {
     });
     compare.toggleAttribute("data-ca-notes-fit", fits);
   };
-  const sizes = new ResizeObserver((entries) => {
-    for (const { target, contentRect } of entries) {
-      if (!target.isConnected) {
-        sizes.unobserve(target);
-      } else if (widths.get(target) !== contentRect.width) {
-        widths.set(target, contentRect.width);
-        fitNotes(target);
+  const pendingFits = new Set<Element>();
+  let fitFrame = 0;
+  const scheduleFit = (compare: Element) => {
+    pendingFits.add(compare);
+    if (fitFrame) return;
+    fitFrame = requestAnimationFrame(() => {
+      fitFrame = 0;
+      for (const pending of pendingFits) {
+        if (pending.isConnected && pending.matches(comparisons)) fitNotes(pending);
       }
+      pendingFits.clear();
+    });
+  };
+  const sizes = new ResizeObserver((entries) => {
+    for (const { target } of entries) {
+      const compare = target.closest(comparisons);
+      if (compare) scheduleFit(compare);
     }
   });
-  const watch = (element: Element) => {
-    if (element.matches(comparisons)) sizes.observe(element);
-    for (const compare of element.querySelectorAll(comparisons)) sizes.observe(compare);
+  const visitFitTargets = (node: Node, visit: (target: Element) => void) => {
+    if (!(node instanceof Element)) return;
+    if (node.matches(fitTargets)) visit(node);
+    node.querySelectorAll(fitTargets).forEach(visit);
   };
-  watch(root);
+  const watchFitTarget = (target: Element) => {
+    if (target.closest(comparisons)) sizes.observe(target, { box: "border-box" });
+  };
+  visitFitTargets(root, watchFitTarget);
   const changes = new MutationObserver((records) => {
-    for (const { addedNodes } of records)
-      for (const node of addedNodes) if (node instanceof Element) watch(node);
+    for (const { addedNodes, removedNodes, target } of records) {
+      for (const node of removedNodes) visitFitTargets(node, (element) => sizes.unobserve(element));
+      for (const node of addedNodes) visitFitTargets(node, watchFitTarget);
+      const compare = target instanceof Element && target.closest(comparisons);
+      if (compare) scheduleFit(compare);
+    }
   });
   changes.observe(root, { childList: true, subtree: true });
   document.fonts.addEventListener(
     "loadingdone",
-    () => document.querySelectorAll(comparisons).forEach(fitNotes),
+    () => document.querySelectorAll(comparisons).forEach(scheduleFit),
     { signal },
   );
   // A press that moves less than this is a click, which zooms.
@@ -785,6 +802,8 @@ export function start(): () => void {
       listeners.abort();
       sizes.disconnect();
       changes.disconnect();
+      cancelAnimationFrame(fitFrame);
+      pendingFits.clear();
       for (const compare of document.querySelectorAll(comparisons))
         compare.removeAttribute("data-ca-notes-fit");
       zoomCopy?.remove();

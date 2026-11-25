@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { createHtmlRenderer } from "@comark/html";
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 import annotate, { components } from "../packages/annotate/src/html.ts";
 import { fixture } from "./helpers.ts";
 
@@ -194,6 +194,41 @@ Reads the other way.
   }
 });
 
+const compareWithOffsetNote = (at: number, text: string) => `::compare
+:::screenshot{src="/before.png" alt="Before" viewport="640x250"}
+:::
+:::screenshot{src="/after.png" alt="After" viewport="640x250"}
+::::annotation{x=45 y=33 w=12 h=10 mark="none" side="top" at=${at} to="45,33"}
+${text}
+::::
+:::
+::`;
+const compareStyle =
+  "main{width:970px;margin:2rem auto}main .ca{--ca-note-font:monospace;--ca-note-size:16px}";
+
+async function noteBounds(note: Locator) {
+  return note.evaluate((element) => {
+    const track = element.closest(".cc-track")!;
+    const range = document.createRange();
+    range.selectNodeContents(element.querySelector(":scope > div")!);
+    const text = range.getBoundingClientRect();
+    const clip = track.getBoundingClientRect();
+    const images = [...track.querySelectorAll(".ca-frame img")];
+    const image = element.closest(".ca-stage")!.querySelector("img")!.getBoundingClientRect();
+    return {
+      overflow: track.scrollWidth - track.clientWidth,
+      inside:
+        text.height > 0 &&
+        text.left >= image.left &&
+        text.right <= image.right &&
+        text.top >= clip.top &&
+        text.bottom <= clip.top + track.clientHeight,
+      aligned: images[0]!.getBoundingClientRect().top === image.top,
+      lines: range.getClientRects().length,
+    };
+  });
+}
+
 for (const { direction, at, stacked } of [
   { direction: "east", at: 70, stacked: false },
   { direction: "east", at: 90, stacked: true },
@@ -204,46 +239,41 @@ for (const { direction, at, stacked } of [
   }) => {
     const text = stacked
       ? "The filter menu keeps the most recent values at the top."
-      : "Latest filters first.";
-    await fixture(
-      page,
-      await render(`::compare
-:::screenshot{src="/before.png" alt="Before" viewport="640x250"}
-:::
-:::screenshot{src="/after.png" alt="After" viewport="640x250"}
-::::annotation{x=45 y=33 w=12 h=10 mark="none" side="top" at=${at} to="45,33"}
-${text}
-::::
-:::
-::`),
-      "main{width:970px;margin:2rem auto}main .ca{--ca-note-font:monospace;--ca-note-size:16px}",
-    );
+      : "New filters first.";
+    await fixture(page, await render(compareWithOffsetNote(at, text)), compareStyle);
     const track = page.locator("main .cc-track");
     const note = track.locator(`.ca-callout-${direction}`);
     await expect(note).toHaveCSS("position", stacked ? "static" : "absolute");
-    const bounds = await note.evaluate((element) => {
-      const track = element.closest(".cc-track")!;
-      const range = document.createRange();
-      range.selectNodeContents(element.querySelector("p")!);
-      const text = range.getBoundingClientRect();
-      const clip = track.getBoundingClientRect();
-      const images = [...track.querySelectorAll(".ca-frame img")];
-      const image = element.closest(".ca-stage")!.querySelector("img")!.getBoundingClientRect();
-      return {
-        overflow: track.scrollWidth - track.clientWidth,
-        inside:
-          text.left >= image.left &&
-          text.right <= image.right &&
-          text.top >= clip.top &&
-          text.bottom <= clip.top + track.clientHeight,
-        aligned: images[0]!.getBoundingClientRect().top === image.top,
-        lines: range.getClientRects().length,
-      };
-    });
+    const bounds = await noteBounds(note);
     expect(bounds).toMatchObject({ overflow: 0, inside: true, aligned: true });
     if (!stacked) expect(bounds.lines).toBeGreaterThan(1);
   });
 }
+
+test("a compare note refits when its font changes at a fixed comparison width", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await fixture(
+    page,
+    await render(compareWithOffsetNote(66, "Latest filters first.")),
+    `${compareStyle}@media (min-width:1300px){main .ca{--ca-note-size:23px}}`,
+  );
+  const track = page.locator("main .cc-track");
+  const note = track.locator(".ca-callout-east");
+  await expect(note).toHaveCSS("position", "absolute");
+  const width = await track.evaluate((element) => element.clientWidth);
+  expect(await noteBounds(note)).toMatchObject({ overflow: 0, inside: true, aligned: true });
+
+  await page.setViewportSize({ width: 1400, height: 720 });
+  await expect(note).toHaveCSS("position", "static");
+  await expect(track).toHaveJSProperty("clientWidth", width);
+  expect(await noteBounds(note)).toMatchObject({ overflow: 0, inside: true, aligned: true });
+
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await expect(note).toHaveCSS("position", "absolute");
+  expect(await noteBounds(note)).toMatchObject({ overflow: 0, inside: true, aligned: true });
+});
 
 test("a box frames its area 6px out on a host that sets every element's box-sizing", async ({
   page,
