@@ -388,7 +388,7 @@ describe("comark-annotate", () => {
       /class="ca-callout ca-callout-bottom ca-callout-west"[^>]*;--ca-room:calc\(var\(--ca-pl,0px\) \+ \(100% - var\(--ca-pl,0px\) - var\(--ca-pr,0px\)\) \* 0.3\)"/,
     );
     expect(styles(html)).toContain(
-      ".ca-callout.ca-callout-east{max-width:min(14rem,var(--ca-room))",
+      ":where([data-ca-fit-notes]) .ca-callout:is(.ca-callout-east,.ca-callout-west){max-width:min(14rem,var(--ca-room))",
     );
     // A right note above its point drops into it and lands level.
     expect(html).toMatch(

@@ -27,6 +27,49 @@ export function start(): () => void {
   const signal = listeners.signal;
   const root = document.documentElement;
   root.setAttribute("data-annotate-ready", "");
+  const comparisons = "[data-ca-fit-notes]:not(.cz-dialog *)";
+  const widths = new WeakMap<Element, number>();
+  const fitNotes = (compare: Element) => {
+    compare.setAttribute("data-ca-notes-fit", "");
+    const fits = [...compare.querySelectorAll<HTMLElement>(".ca-callout")].every((note) => {
+      if (getComputedStyle(note).position !== "absolute") return true;
+      const stage = note.closest(".ca-stage")!.getBoundingClientRect();
+      const box = note.getBoundingClientRect();
+      return (
+        box.left >= stage.left - 1 &&
+        box.right <= stage.right + 1 &&
+        box.top >= stage.top - 1 &&
+        box.bottom <= stage.bottom + 1 &&
+        note.scrollWidth <= note.clientWidth
+      );
+    });
+    compare.toggleAttribute("data-ca-notes-fit", fits);
+  };
+  const sizes = new ResizeObserver((entries) => {
+    for (const { target, contentRect } of entries) {
+      if (!target.isConnected) {
+        sizes.unobserve(target);
+      } else if (widths.get(target) !== contentRect.width) {
+        widths.set(target, contentRect.width);
+        fitNotes(target);
+      }
+    }
+  });
+  const watch = (element: Element) => {
+    if (element.matches(comparisons)) sizes.observe(element);
+    for (const compare of element.querySelectorAll(comparisons)) sizes.observe(compare);
+  };
+  watch(root);
+  const changes = new MutationObserver((records) => {
+    for (const { addedNodes } of records)
+      for (const node of addedNodes) if (node instanceof Element) watch(node);
+  });
+  changes.observe(root, { childList: true, subtree: true });
+  document.fonts.addEventListener(
+    "loadingdone",
+    () => document.querySelectorAll(comparisons).forEach(fitNotes),
+    { signal },
+  );
   // A press that moves less than this is a click, which zooms.
   const SLOP = 4;
 
@@ -740,6 +783,10 @@ export function start(): () => void {
     stop: () => {
       if (--state.users > 0) return;
       listeners.abort();
+      sizes.disconnect();
+      changes.disconnect();
+      for (const compare of document.querySelectorAll(comparisons))
+        compare.removeAttribute("data-ca-notes-fit");
       zoomCopy?.remove();
       disarm();
       for (const url of urls) URL.revokeObjectURL(url);

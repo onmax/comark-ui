@@ -316,6 +316,10 @@ async function parts(
   return {
     ratio: size ? size.width / size.height : shot.aspect ? 1 / shot.aspect : undefined,
     sides: sided.map((annotation) => ` ca-${annotation.side}`),
+    offsetNotes: sided.some(
+      (annotation) =>
+        (annotation.side === "top" || annotation.side === "bottom") && offset(annotation),
+    ),
     heading: heading && `<div class="ca-heading">${heading}</div>`,
     frame: `<div class="ca-frame">${body ?? `<img src="${attr(shot.src)}" alt="${attr(shot.alt)}"${sized} loading="lazy" decoding="async">`}${pins.join("")}${arrows.join("")}${copy ? `${pins.length ? HIDE : ""}${COPY}` : ""}</div>`,
     callouts,
@@ -338,7 +342,7 @@ async function figure(
   thumbnail = false,
 ) {
   // Copying draws the image and its marks to a canvas, which only works for an image.
-  const { ratio, sides, heading, frame, callouts, notes } = await parts(
+  const { ratio, sides, offsetNotes, heading, frame, callouts, notes } = await parts(
     shot,
     state,
     id,
@@ -355,7 +359,7 @@ async function figure(
     `<figure${anchor(shot.id)} class="ca-screenshot${classes}">${heading}<div class="ca-stage" data-zoom${small} tabindex="0" data-zoom-context=".ca,.ca-screenshot${zoomContext ? `,${zoomContext}` : ""}" data-zoom-aside="figcaption" data-zoom-title="${attr(shot.title || shot.alt)}">${frame}${callouts}</div>` +
     (notes ? `<figcaption>${notes}</figcaption>` : "") +
     "</figure>";
-  return { html, ratio };
+  return { html, ratio, offsetNotes };
 }
 
 const GRIP = `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${[5, 12, 19].map((y) => `<circle cx="9" cy="${y}" r="1.5"/><circle cx="15" cy="${y}" r="1.5"/>`).join("")}</svg>`;
@@ -435,9 +439,14 @@ const compare: NodeHandler = async (node, state) => {
     shots.some((shot) => shot.annotations.some((annotation) => annotation.side === side)),
   );
   const figures: string[] = [];
-  for (const shot of shots) figures.push((await figure(shot, state, id, margins)).html);
+  let fit = false;
+  for (const shot of shots) {
+    const { html, offsetNotes } = await figure(shot, state, id, margins);
+    figures.push(html);
+    fit ||= offsetNotes;
+  }
   // Side by side on a wide page, one at a time on a narrow one; both screenshots zoom as one gallery.
-  return `${styles(state)}<div${anchor(read.id)} class="ca ca-compare" data-comark-frame data-wide>${carouselHtml(figures, { columns: 2, title: title ?? "Comparison" }, state)}</div>${runtime(state)}`;
+  return `${styles(state)}<div${anchor(read.id)} class="ca ca-compare"${fit ? " data-ca-fit-notes" : ""} data-comark-frame data-wide>${carouselHtml(figures, { columns: 2, title: title ?? "Comparison" }, state)}</div>${runtime(state)}`;
 };
 
 /** HTML renderers for `::screenshot`, `::compare`, and `::annotation`. Pass them as `components`; the styles are inlined once per document. */
