@@ -27,6 +27,78 @@ export function start(): () => void {
   const signal = listeners.signal;
   const root = document.documentElement;
   root.setAttribute("data-annotate-ready", "");
+  const comparisons = "[data-ca-fit-notes]:not(.cz-dialog *)";
+  const fitTargets = "[data-ca-fit-notes],.ca-stage,.ca-callout,.ca-callout>div";
+  const fitNotes = (compare: HTMLElement) => {
+    const { style } = compare;
+    const stacked = !compare.hasAttribute("data-ca-notes-fit");
+    const minHeight = style.getPropertyValue("min-height");
+    const priority = style.getPropertyPriority("min-height");
+    const hadStyle = compare.hasAttribute("style");
+    if (stacked) style.setProperty("min-height", getComputedStyle(compare).height, "important");
+
+    compare.setAttribute("data-ca-notes-fit", "");
+    const fits = [...compare.querySelectorAll<HTMLElement>(".ca-callout")].every((note) => {
+      if (getComputedStyle(note).position !== "absolute") return true;
+      const stage = note.closest(".ca-stage")!.getBoundingClientRect();
+      const box = note.getBoundingClientRect();
+      return (
+        box.left >= stage.left - 1 &&
+        box.right <= stage.right + 1 &&
+        box.top >= stage.top - 1 &&
+        box.bottom <= stage.bottom + 1 &&
+        note.scrollWidth <= note.clientWidth
+      );
+    });
+    compare.toggleAttribute("data-ca-notes-fit", fits);
+    if (stacked) {
+      style.setProperty("min-height", minHeight, priority);
+      if (!hadStyle && !style.length) compare.removeAttribute("style");
+    }
+  };
+  const pendingFits = new Set<Element>();
+  let fitFrame = 0;
+  const scheduleFit = (compare: Element) => {
+    pendingFits.add(compare);
+    if (fitFrame) return;
+    fitFrame = requestAnimationFrame(() => {
+      fitFrame = 0;
+      for (const pending of pendingFits) {
+        if (pending instanceof HTMLElement && pending.isConnected && pending.matches(comparisons))
+          fitNotes(pending);
+      }
+      pendingFits.clear();
+    });
+  };
+  const sizes = new ResizeObserver((entries) => {
+    for (const { target } of entries) {
+      const compare = target.closest(comparisons);
+      if (compare) scheduleFit(compare);
+    }
+  });
+  const visitFitTargets = (node: Node, visit: (target: Element) => void) => {
+    if (!(node instanceof Element)) return;
+    if (node.matches(fitTargets)) visit(node);
+    node.querySelectorAll(fitTargets).forEach(visit);
+  };
+  const watchFitTarget = (target: Element) => {
+    if (target.closest(comparisons)) sizes.observe(target, { box: "border-box" });
+  };
+  visitFitTargets(root, watchFitTarget);
+  const changes = new MutationObserver((records) => {
+    for (const { addedNodes, removedNodes, target } of records) {
+      for (const node of removedNodes) visitFitTargets(node, (element) => sizes.unobserve(element));
+      for (const node of addedNodes) visitFitTargets(node, watchFitTarget);
+      const compare = target instanceof Element && target.closest(comparisons);
+      if (compare) scheduleFit(compare);
+    }
+  });
+  changes.observe(root, { childList: true, subtree: true });
+  document.fonts.addEventListener(
+    "loadingdone",
+    () => document.querySelectorAll(comparisons).forEach(scheduleFit),
+    { signal },
+  );
   // A press that moves less than this is a click, which zooms.
   const SLOP = 4;
 
@@ -740,6 +812,12 @@ export function start(): () => void {
     stop: () => {
       if (--state.users > 0) return;
       listeners.abort();
+      sizes.disconnect();
+      changes.disconnect();
+      cancelAnimationFrame(fitFrame);
+      pendingFits.clear();
+      for (const compare of document.querySelectorAll(comparisons))
+        compare.removeAttribute("data-ca-notes-fit");
       zoomCopy?.remove();
       disarm();
       for (const url of urls) URL.revokeObjectURL(url);

@@ -6,6 +6,8 @@ import { caveat } from "./font.ts";
 // its thumbnails are copies too.
 const zoomed = ":is(.cz-item,.cz-aside)";
 const thumb = "[data-comark-zoom-ready] .ca-thumb:not(.cz-dialog *)";
+const stacked = (scope: string) =>
+  `${scope} .ca-stage{padding:0!important}${scope} .ca-arrow{display:none}${scope} .ca-stage .ca-callout{position:static;display:flex;gap:.6rem;align-items:baseline;width:auto;max-width:none;margin-top:.5rem;padding-left:0;text-align:left;transform:none;overflow-wrap:anywhere}${scope} .ca-callout>div{min-width:0}${scope} .ca-letter{display:inline-grid}${scope} .ca-none{outline:1.5px dashed var(--ca-color);outline-offset:3px;border-radius:calc(var(--_comark-radius) - 7px)}`;
 const linked = Array.from({ length: 40 }, (_, index) => {
   const n = `[data-n="${index + 1}"]`;
   return (
@@ -164,11 +166,13 @@ export const css = `@layer comark{${[
   // A note off to one side of its point starts where its leader leaves it and reads away from the point.
   ".ca-callout.ca-callout-east{text-align:left;transform:none}",
   ".ca-callout.ca-callout-west{text-align:right;transform:translateX(-100%)}",
+  ":where([data-ca-fit-notes]) .ca-callout:is(.ca-callout-east,.ca-callout-west){max-width:min(14rem,var(--ca-room));overflow-wrap:anywhere}",
   ".ca-callout>div>:first-child{margin-top:0}",
   ".ca-callout>div>:last-child{margin-bottom:0}",
   // Too narrow for side notes: stack them under the image, drop the arrows, and letter each note and its target instead. Notes on both sides need more room than notes on one. The stacked note outranks .ca-callout-west, whose shift would push it off the image.
-  "@container (max-width:28rem){.ca-stage{padding:0!important}.ca-arrow{display:none}.ca-stage .ca-callout{position:static;display:flex;gap:.6rem;align-items:baseline;width:auto;max-width:none;margin-top:.5rem;padding-left:0;text-align:left;transform:none}.ca-letter{display:inline-grid}.ca-none{outline:1.5px dashed var(--ca-color);outline-offset:3px;border-radius:calc(var(--_comark-radius) - 7px)}}",
-  "@container (max-width:40rem){.ca-left.ca-right .ca-stage{padding:0!important}.ca-left.ca-right .ca-arrow{display:none}.ca-left.ca-right .ca-callout{position:static;display:flex;gap:.6rem;align-items:baseline;width:auto;max-width:none;margin-top:.5rem;padding-left:0;text-align:left;transform:none}.ca-left.ca-right .ca-letter{display:inline-grid}.ca-left.ca-right .ca-none{outline:1.5px dashed var(--ca-color);outline-offset:3px;border-radius:calc(var(--_comark-radius) - 7px)}}",
+  stacked("[data-ca-fit-notes]:not([data-ca-notes-fit]) > :is(.cc,.ca-screenshot)"),
+  `@container (max-width:28rem){${stacked(":where(.ca)")}}`,
+  `@container (max-width:40rem){${stacked(".ca-left.ca-right")}}`,
   // Host pages often center a figcaption, which suits a one-line caption but not a list of notes.
   ".ca figcaption{margin-top:.75rem;text-align:start}",
   // One line, so the two images of a compare stay level.
