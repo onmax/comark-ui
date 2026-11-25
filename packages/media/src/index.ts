@@ -59,17 +59,19 @@ const names = new WeakMap<MediaAttributes, string>();
 const KNOWN = new Set<string>(["src", "alt", "kind", "poster", ...FLAGS]);
 
 type Token = ComarkParseTokensState["tokens"][number];
-type PdfImage = { occurrence: number; name: string; label: string; inLink: boolean };
+type PdfImage = { occurrence: string; name: string; label: string; inLink: boolean };
 type MediaMetadata = NonNullable<ElementNode[1]["$"]> & {
   mediaPdfImage?: { occurrence?: unknown; name?: unknown; label?: unknown; inLink?: unknown };
 };
 
 function readPdfImage(metadata: MediaMetadata | undefined): PdfImage | undefined {
   const image = metadata?.mediaPdfImage;
-  const name = rawText(image?.name);
-  if (!name || typeof image?.occurrence !== "number") return;
+  if (!image) return;
+  const occurrence = rawText(image.occurrence);
+  const name = rawText(image.name);
+  if (!name || !/^\d+$/.test(occurrence)) return;
   return {
-    occurrence: image.occurrence,
+    occurrence,
     name,
     label: rawText(image.label),
     inLink: image.inLink === true,
@@ -141,7 +143,7 @@ function convert(tokens: ComarkParseTokensState["tokens"]) {
         child.attrs = child.attrs?.filter(([key]) => key !== "alt") ?? null;
         const props = inline[index + 1];
         const image: PdfImage = {
-          occurrence: pdfOccurrence++,
+          occurrence: String(pdfOccurrence++),
           name: `\`![${child.content}](${src})\``,
           label: plainAlt(child.children).trim(),
           inLink,
@@ -281,7 +283,7 @@ export default defineComarkPlugin<MediaOptions | undefined, MediaMeta>((options 
     const data: Data = { frontmatter: tree.frontmatter, meta: tree.meta, data: {}, props: {} };
     const issues: Issue[] = [];
     const videos: MediaAttributes[] = [];
-    const seenPdfImages = new Set<number>();
+    const seenPdfImages = new Set<string>();
     const walk = (node: Node, inLink: boolean): Node => {
       if (!isElement(node)) return node;
       const [tag] = node;
