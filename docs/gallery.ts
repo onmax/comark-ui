@@ -437,8 +437,10 @@ export function startGallery(root: HTMLElement, data: GalleryData): () => void {
   let selected: string | undefined;
 
   // A shared link carries the changes in the URL, deflated, as the playground's does.
-  function reportSharing(error: unknown, message = "Could not create a sharing link.") {
-    sharingIssue.textContent = `${message} ${errorText(error)}`;
+  function reportSharing(error: unknown, message?: string) {
+    // Debounced link updates must not replace the error from the reader's last action.
+    if (!message && !sharingIssue.hidden) return;
+    sharingIssue.textContent = `${message ?? "Could not create a sharing link."} ${errorText(error)}`;
     sharingIssue.hidden = false;
   }
 
