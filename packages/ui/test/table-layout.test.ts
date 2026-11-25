@@ -33,6 +33,27 @@ const report = `| PR | Summary | Status / your next step | Preview | Working now
 `;
 
 describe("table layout", () => {
+  it("preserves PDF labels and classification in both copies of a screenshot", async () => {
+    const preset = html(offline);
+    const markdown = `| First | Second |
+| --- | --- |
+| :screenshot{of="toolbar"} | :screenshot{of="toolbar"} |
+
+::screenshot{#toolbar src="toolbar.png" alt="Toolbar" viewport="640x250"}
+![Download the **report** &amp; notes](report.pdf){kind=audio src="/download/report"}
+::`;
+    const doc = await parseMarkdown(markdown, preset);
+    const output = await renderHtmlFromDocument(doc, preset);
+    const link = '<a class="cm-pdf" href="/download/report">Download the report &amp; notes</a>';
+    expect(output.match(/<td\b[^>]*>[\s\S]*?<\/td>/g)).toEqual([
+      expect.stringContaining(link),
+      expect.stringContaining(link),
+    ]);
+    expect(doc.meta.issues).toContain(
+      "`![Download the **report** &amp; notes](report.pdf)`: `kind` isn't a PDF option, so it was dropped. A PDF takes only its label, in the brackets.",
+    );
+  });
+
   it.each(['note="Check"', ':note="data.note"'])(
     "lays out tables through comments with %s",
     async (binding) => {

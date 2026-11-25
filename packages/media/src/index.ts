@@ -2,7 +2,7 @@ import type { ComarkParseTokensState, ElementNode, Node } from "comark";
 import { defineComarkPlugin } from "comark";
 import { resolveAttributes } from "comark/render";
 import { measure } from "comark-zoom/size";
-import { text } from "../../../shared/text.ts";
+import { rawText, text } from "../../../shared/text.ts";
 import { childrenOf, isElement } from "../../../shared/nodes.ts";
 
 export type MediaMeta = {
@@ -60,14 +60,15 @@ const KNOWN = new Set<string>(["src", "alt", "kind", "poster", ...FLAGS]);
 
 type Token = ComarkParseTokensState["tokens"][number];
 type PdfImage = { name: string; label: string; inLink: boolean };
-const pdfImages = new WeakMap<object, PdfImage>();
+type MediaMetadata = NonNullable<ElementNode[1]["$"]> & {
+  mediaPdfImage?: { name?: unknown; label?: unknown; inLink?: unknown };
+};
 
-/** Carry provenance in Comark's `$` metadata slot, which the sanitizer preserves. The tree builder copies
- * non-string token attributes as-is, although markdown-exit declares string values. */
-function markPdfImage(token: Token, image: PdfImage) {
-  const metadata = {};
-  pdfImages.set(metadata, image);
-  token.attrSet("$", metadata as unknown as string);
+function readPdfImage(metadata: MediaMetadata | undefined): PdfImage | undefined {
+  const image = metadata?.mediaPdfImage;
+  const name = rawText(image?.name);
+  if (!name) return;
+  return { name, label: rawText(image?.label), inLink: image?.inLink === true };
 }
 
 function plainAlt(tokens: Token[] | null): string {
@@ -133,11 +134,13 @@ function convert(tokens: ComarkParseTokensState["tokens"]) {
       if (kind === "pdf") {
         child.attrs = child.attrs?.filter(([key]) => key !== "alt") ?? null;
         const props = inline[index + 1];
-        markPdfImage(props?.type === "mdc_inline_props" ? props : child, {
+        const image: PdfImage = {
           name: `\`![${child.content}](${src})\``,
           label: plainAlt(child.children).trim(),
           inLink,
-        });
+        };
+        const carrier = props?.type === "mdc_inline_props" ? props : child;
+        carrier.attrSet("$", JSON.stringify({ mediaPdfImage: image }));
       } else {
         child.attrSet("kind", kind);
         child.attrSet("alt", child.content);
@@ -280,9 +283,7 @@ export default defineComarkPlugin<MediaOptions | undefined, MediaMeta>((options 
         }
         return node;
       }
-      const metadata = node[1].$;
-      const pdfImage =
-        metadata && typeof metadata === "object" ? pdfImages.get(metadata) : undefined;
+      const pdfImage = readPdfImage(node[1].$);
       const linked = inLink || pdfImage?.inLink === true;
       const attributes = read(node, data, issues, options, pdfImage, linked);
       if (linked && (pdfImage || attributes.kind === "pdf"))
