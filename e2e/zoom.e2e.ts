@@ -139,6 +139,76 @@ test("a zoomed block keeps its text styles, so it closes onto the original witho
   expect(await copy.evaluate((node) => (node as HTMLElement).offsetHeight)).toBe(height);
 });
 
+test("a zoomed screenshot keeps the dialog's text color inside its context", async ({ page }) => {
+  await fixture(page, await render('::screenshot{src="/dashboard.png" alt="Dashboard"}\n::'));
+  await page.addStyleTag({ content: ".ca{color:rgb(255,0,0)}" });
+  await page.locator("main .ca-stage").click();
+  const color = (selector: string) =>
+    page.locator(selector).evaluate((node) => getComputedStyle(node).color);
+  expect(await color(".cz-item > .ca")).toBe(await color(".cz-dialog"));
+});
+
+test("Enter on an item inside a slide opens that slide, the only zoom tab stop", async ({
+  page,
+}) => {
+  const shot = (src: string, alt: string) => `:::screenshot{src="${src}" alt="${alt}"}\n:::`;
+  const slides = [
+    shot("/before.png", "One"),
+    shot("/after.png", "Two"),
+    shot("/dashboard.png", "Three"),
+  ];
+  await fixture(page, await render(`::carousel\n${slides.join("\n\n")}\n::`));
+  await expect(page.locator(".ca-stage")).toHaveCount(3);
+  await expect(page.locator(".ca-stage[tabindex]")).toHaveCount(0);
+
+  // Each screenshot's Copy button is a stop of its own, after its slide.
+  const slide = (index: number) => page.locator(".cc-slide").nth(index);
+  const copy = (index: number) => page.locator(".ca-copy").nth(index);
+  for (const stop of [slide(0), copy(0), slide(1), copy(1), slide(2)]) {
+    await page.keyboard.press("Tab");
+    await expect(stop).toBeFocused();
+  }
+  await page.keyboard.press("Enter");
+  await expect(page.locator(".cz-count")).toHaveText("3 / 3");
+  await page.keyboard.press("Escape");
+  await expect(page.locator(".cz-dialog")).toHaveCount(0);
+
+  // A host can still make the inner item focusable; it opens its slide too.
+  const inner = page.locator(".ca-stage").nth(1);
+  await inner.evaluate((node) => node.setAttribute("tabindex", "-1"));
+  await inner.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.locator(".cz-count")).toHaveText("2 / 3");
+});
+
+test("an item nested in one added later stops being a tab stop, unless its author set the tabindex", async ({
+  page,
+}) => {
+  await fixture(page, await render("![One](/before.png)"));
+  await page.evaluate(() =>
+    document
+      .querySelector("main")!
+      .insertAdjacentHTML(
+        "beforeend",
+        '<div data-zoom tabindex="0"><img id="added" src="/after.png" alt="" data-zoom tabindex="0"><img id="kept" src="/after.png" alt="" data-zoom tabindex="-1"></div>',
+      ),
+  );
+  await expect(page.locator("#added")).not.toHaveAttribute("tabindex");
+  await expect(page.locator("#kept")).toHaveAttribute("tabindex", "-1");
+});
+
+test("stopping the zoom while it's open gives the page its scroll restoration back", async ({
+  page,
+}) => {
+  await fixture(page, await render(image));
+  await page.locator("main img[data-zoom]").first().click();
+  await expect(page.locator(".cz-dialog")).toBeVisible();
+  expect(await page.evaluate(() => history.scrollRestoration)).toBe("manual");
+  await page.evaluate(() => window.__comarkZoom!.stop());
+  await expect(page.locator(".cz-dialog")).toHaveCount(0);
+  await expect.poll(() => page.evaluate(() => history.scrollRestoration)).toBe("auto");
+});
+
 test("a zoom opened as another closes keeps scroll restoration off until it closes too", async ({
   page,
 }) => {
