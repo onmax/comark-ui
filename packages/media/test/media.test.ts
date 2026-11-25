@@ -1,5 +1,6 @@
 import { createHtmlRenderer } from "@comark/html";
 import { parseMarkdown } from "comark";
+import security from "comark/plugins/security";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 import chips from "../../chips/src/index.ts";
 import zoom from "../../zoom/src/index.ts";
@@ -102,6 +103,28 @@ describe("comark-media", () => {
     const html = await render("[Read ![my **CV**](cv.pdf)](landing.html)");
     expect(html).toContain('<a href="landing.html">Read my CV</a>');
     expect(html.match(/<a /g)).toHaveLength(1);
+  });
+
+  it("keeps PDF images under the same tag allowlist as video", async () => {
+    const renderAllowed = createHtmlRenderer({
+      plugins: [
+        security({ allowedTags: ["p", "a", ...Object.keys(components)] }),
+        media({ size: false }),
+      ],
+      components,
+    });
+    const html = await renderAllowed(
+      "![CV](cv.pdf){kind=audio}\n\n[![Cover](cover.pdf)](landing.html)\n\n![Clip](clip.mp4)",
+    );
+    expect(html).toContain('<a class="cm-pdf" href="cv.pdf">CV</a>');
+    expect(html).toContain('<a href="landing.html">Cover</a>');
+    expect(html).toContain('<video src="clip.mp4"');
+  });
+
+  it("retains the outer link's label when it rejects the unused PDF destination", async () => {
+    const html = await render("[![**CV**](ftp://files.example.com/cv.pdf)](landing.html)");
+    expect(html).toContain('<a href="landing.html">CV</a>');
+    expect(html).not.toContain("ftp:");
   });
 
   it("ignores an authored kind on a PDF image", async () => {
