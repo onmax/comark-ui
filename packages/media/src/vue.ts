@@ -4,7 +4,7 @@ import { controls, css, start } from "./client.ts";
 export { default } from "./index.ts";
 export type { MediaAttributes, MediaMeta, MediaOptions } from "./index.ts";
 
-/** Videos and audio for `@comark/vue`. */
+/** Videos, audio, and PDF links for `@comark/vue`. */
 export const Media = defineComponent({
   name: "Media",
   inheritAttrs: false,
@@ -33,6 +33,7 @@ export const Media = defineComponent({
     onBeforeUnmount(() => stop());
     return () => {
       const { kind, src, label } = props;
+      if (kind === "pdf" && src) return h("a", { class: "cm-pdf", href: src }, label || src);
       if ((kind !== "video" && kind !== "audio") || !src) return null;
       const video = kind === "video";
       // A video draws its own frame; audio doesn't.

@@ -1,5 +1,6 @@
 import { createHtmlRenderer } from "@comark/html";
 import { parseMarkdown } from "comark";
+import security from "comark/plugins/security";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 import chips from "../../chips/src/index.ts";
 import zoom from "../../zoom/src/index.ts";
@@ -45,6 +46,110 @@ describe("comark-media", () => {
         `<span class="cm cm-audio" role="group" aria-label="Clip"><audio src="${file}" controls preload="metadata" aria-label="Clip">`,
       );
     expect(await render("![Diagram](a.png)")).toContain('<img src="a.png" alt="Diagram"');
+  });
+
+  it("links a PDF written as an image, alone or in a sentence, with no player", async () => {
+    expect(await render("![CV](cv.pdf)")).toMatch(
+      /<p>\s*<a class="cm-pdf" href="cv.pdf">CV<\/a>\s*<\/p>/,
+    );
+    expect(await render("Read ![my CV](./cv.PDF?download=1#page=2) before the call.")).toContain(
+      'Read <a class="cm-pdf" href="./cv.PDF?download=1#page=2">my CV</a> before the call.',
+    );
+    const html = await render("![CV](cv.pdf)\n\n![The signed contract](contract.pdf)");
+    expect(html).not.toContain("<img");
+    expect(html).not.toContain("<style");
+    expect(html).not.toContain("<script");
+    expect(await render("![CV](cv.pdf)\n\n![Clip](clip.mp4)")).toMatch(
+      /<a class="cm-pdf" href="cv.pdf">CV<\/a>[\s\S]*<style data-comark-media>[\s\S]*<script>/,
+    );
+    const value = await parseMarkdown("![CV](cv.pdf)", { plugins: [media()] });
+    expect(value.nodes).toEqual([
+      ["p", {}, ["media", { kind: "pdf", src: "cv.pdf", label: "CV" }]],
+    ]);
+    expect(value.meta.issues).toEqual([]);
+  });
+
+  it("reports a PDF without a label, and drops a player's options from it", async () => {
+    expect(await issues("![](cv.pdf)")).toEqual([
+      "`![](cv.pdf)` has no label. Describe the PDF in the brackets, like `![The signed contract](cv.pdf)`.",
+    ]);
+    expect(await issues('![CV](cv.pdf){autoplay poster="cv.png" width=600 height=800}')).toEqual([
+      "`![CV](cv.pdf)`: `autoplay`, `poster`, `width`, `height` aren't PDF options, so they were dropped. A PDF takes only its label, in the brackets.",
+    ]);
+    expect(await render('![CV](cv.pdf){autoplay poster="cv.png" width=600 height=800}')).toContain(
+      '<a class="cm-pdf" href="cv.pdf">CV</a>',
+    );
+  });
+
+  it.each([
+    '![CV](cv.pdf){src="javascript:void(0)"}',
+    ':media{kind=pdf src="javascript:void(0)" alt=CV}',
+    ':media{src="data:text/plain,cv.pdf" alt=CV}',
+  ])("drops unsafe PDF destinations from the tree and HTML: %s", async (markdown) => {
+    const value = await parseMarkdown(markdown, { plugins: [media()] });
+    expect(JSON.stringify(value.nodes)).not.toContain("javascript:");
+    expect(await render(markdown)).not.toContain("<a ");
+    expect(Object.values(value.meta.issueRules)).toContain("comark/media/unplayable-src");
+  });
+
+  it("keeps the resolved PDF URL literal in HTML", async () => {
+    const markdown = ':media{src="cv.pdf?download=&copy;" alt=CV}';
+    expect(await render(markdown)).toContain(
+      '<a class="cm-pdf" href="cv.pdf?download=&amp;copy;">CV</a>',
+    );
+  });
+
+  it("leaves a PDF inside a Markdown link as the outer link's text", async () => {
+    const html = await render("[Read ![my **CV**](cv.pdf)](landing.html)");
+    expect(html).toContain('<a href="landing.html">Read my CV</a>');
+    expect(html.match(/<a /g)).toHaveLength(1);
+  });
+
+  it("keeps PDF images under the same tag allowlist as video", async () => {
+    const renderAllowed = createHtmlRenderer({
+      plugins: [
+        security({ allowedTags: ["p", "a", ...Object.keys(components)] }),
+        media({ size: false }),
+      ],
+      components,
+    });
+    const html = await renderAllowed(
+      "![CV](cv.pdf){kind=audio}\n\n[![Cover](cover.pdf)](landing.html)\n\n![Clip](clip.mp4)",
+    );
+    expect(html).toContain('<a class="cm-pdf" href="cv.pdf">CV</a>');
+    expect(html).toContain('<a href="landing.html">Cover</a>');
+    expect(html).toContain('<video src="clip.mp4"');
+  });
+
+  it("retains the outer link's label when it rejects the unused PDF destination", async () => {
+    const html = await render("[![**CV**](ftp://files.example.com/cv.pdf)](landing.html)");
+    expect(html).toContain('<a href="landing.html">CV</a>');
+    expect(html).not.toContain("ftp:");
+  });
+
+  it("ignores an authored kind on a PDF image", async () => {
+    const markdown = "![CV](https://cdn.test/cv.pdf){kind=audio}";
+    const html = await render(markdown);
+    expect(html).toContain('<a class="cm-pdf" href="https://cdn.test/cv.pdf">CV</a>');
+    expect(html).not.toMatch(/<audio|<style|<script/);
+    expect(await issues(markdown)).toEqual([
+      "`![CV](https://cdn.test/cv.pdf)`: `kind` isn't a PDF option, so it was dropped. A PDF takes only its label, in the brackets.",
+    ]);
+  });
+
+  it("takes a PDF image's label only from its brackets", async () => {
+    const markdown = '![CV](cv.pdf){alt="Replacement"}';
+    expect(await render(markdown)).toContain('<a class="cm-pdf" href="cv.pdf">CV</a>');
+    expect(await issues(markdown)).toEqual([
+      "`![CV](cv.pdf)`: `alt` isn't a PDF option, so it was dropped. A PDF takes only its label, in the brackets.",
+    ]);
+    const { meta } = await parseMarkdown('![](cv.pdf){alt="Replacement"}', {
+      plugins: [media()],
+    });
+    expect(Object.values(meta.issueRules)).toEqual([
+      "comark/media/missing-label",
+      "comark/media/unknown-prop",
+    ]);
   });
 
   it("gives videos and audio controls that keep the browser's as a fallback, with the script once per document", async () => {

@@ -5,7 +5,7 @@ import type { MediaAttributes } from "./index.ts";
 export { default } from "./index.ts";
 export type { MediaAttributes, MediaMeta, MediaOptions } from "./index.ts";
 
-/** Videos and audio for `@comark/react`. */
+/** Videos, audio, and PDF links for `@comark/react`. */
 export function Media({
   kind,
   src,
@@ -20,6 +20,8 @@ export function Media({
 }: MediaAttributes) {
   const valid = (kind === "video" || kind === "audio") && Boolean(src);
   useEffect(() => (valid && !native ? start(css) : undefined), [valid, native]);
+  if (kind === "pdf" && src)
+    return createElement("a", { className: "cm-pdf", href: src }, label || src);
   if (!valid) return null;
   const video = kind === "video";
   const element = createElement(

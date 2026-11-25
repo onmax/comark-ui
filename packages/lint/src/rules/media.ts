@@ -4,11 +4,11 @@ import type { RuleInfo } from "./types.ts";
 export default {
   "comark/media/unplayable-src": {
     code: "COMARK3901",
-    title: "Link a video or audio file a browser plays",
+    title: "Link a video, audio, or PDF file",
   },
   "comark/media/missing-label": {
     code: "COMARK3902",
-    title: "Describe every video and audio file",
+    title: "Describe every video, audio, and PDF file",
   },
   "comark/media/poster-on-audio": { code: "COMARK3903", title: "Keep `poster` off audio" },
   "comark/media/autoplay-without-muted": {

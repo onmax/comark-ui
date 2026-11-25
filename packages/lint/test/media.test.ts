@@ -2,6 +2,19 @@ import { describe, expect, it } from "vite-plus/test";
 import media from "../../media/src/index.ts";
 import { lint } from "../src/index.ts";
 
+describe("PDF image diagnostics", () => {
+  it.each([
+    ["![**CV**](cv.pdf){width=640}", "comark/media/unknown-prop"],
+    ["![CV &amp; notes](cv.pdf){width=640}", "comark/media/unknown-prop"],
+    ['![CV](cv.pdf){src="ftp://files.example.com/cv.pdf"}', "comark/media/unplayable-src"],
+  ])("locates the authored image %s", async (image, rule) => {
+    const found = await lint(`# Demo\n\nSome text.\n\nRead ${image}`, {
+      plugins: [media({ size: false })],
+    });
+    expect(found).toContainEqual(expect.objectContaining({ rule, line: 5, column: 6 }));
+  });
+});
+
 describe("comark/media/missing-size", () => {
   const options = { plugins: [media({ size: false })] };
 

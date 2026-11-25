@@ -82,7 +82,7 @@ Browse the [docs and live examples](https://comark-ui.onmax.me) for component sy
 | [`comark-keys`](./packages/keys) | Keyboard shortcuts: `++ctrl+shift+k++` renders each key as a `<kbd>`, with pymdownx.keys' names and aliases. |
 | [`comark-links`](./packages/links) | A `#` link beside each heading, and external links with the `target` and `rel` you choose and a warning before a new tab. |
 | [`comark-magic-move`](./packages/magic-move) | Code that animates between steps: the tokens two steps share move into place, as in Shiki Magic Move, and the steps read in turn without a script. |
-| [`comark-media`](./packages/media) | Videos and audio written as images, and GitHub attachment links that play, with no script. |
+| [`comark-media`](./packages/media) | Videos and audio written as images, and GitHub attachment links that play, with no script. A PDF written as an image becomes a link. |
 | [`comark-metrics`](./packages/metrics) | Before → after numbers with the percent change, progress bars, and tables of metrics with a change column. |
 | [`comark-include`](./packages/include) | Markdown partials and code snippets from files, by lines or by region. |
 | [`comark-mark`](./packages/mark) | `==highlighted text==` as `<mark>` and `^superscript^` as `<sup>`. |

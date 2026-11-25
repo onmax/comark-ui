@@ -1,4 +1,4 @@
-A `:media` block plays only files a browser can play on its own: `.mp4`, `.webm`, `.mov`, and `.m4v` video, and `.mp3`, `.wav`, `.ogg`, and `.m4a` audio. Any other file renders nothing. An image written as `![]()` is media only when its file is one of these, so a GIF stays an image.
+A `:media` block plays only files a browser can play on its own: `.mp4`, `.webm`, `.mov`, and `.m4v` video, and `.mp3`, `.wav`, `.ogg`, and `.m4a` audio. A `.pdf` becomes a link. Any other file renders nothing. An image written as `![]()` is media only when its file is one of these, so a GIF stays an image.
 
 ::incorrect
 ```md

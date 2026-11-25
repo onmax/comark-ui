@@ -2,6 +2,7 @@ import type { NodeHandler } from "comark";
 import { controls, start } from "./client.ts";
 import { css } from "./styles.ts";
 import { attr, inlineScript } from "../../../shared/html.ts";
+import { rawText } from "../../../shared/text.ts";
 
 export { default } from "./index.ts";
 export type { MediaAttributes, MediaMeta, MediaOptions } from "./index.ts";
@@ -17,9 +18,12 @@ export const scripts: string[] = [inline];
 // Each render gets a fresh `state.context`, so a document carries the styles and the script once.
 const styled = new WeakSet<object>();
 const started = new WeakSet<object>();
+const literal = (value: unknown) => attr(rawText(value).replaceAll("&", "&amp;"));
 
 const media: NodeHandler = ([, attrs], state) => {
   const { kind, src, label, poster, width, height, autoplay, loop, muted, native } = attrs;
+  if (kind === "pdf" && src)
+    return `<a class="cm-pdf" href="${literal(src)}">${literal(label || src)}</a>`;
   if ((kind !== "video" && kind !== "audio") || !src) return "";
   const styles = styled.has(state.context) ? "" : `<style data-comark-media>${css}</style>`;
   styled.add(state.context);
@@ -42,5 +46,5 @@ const media: NodeHandler = ([, attrs], state) => {
   return `${styles}<span class="cm cm-${kind}"${video ? " data-comark-frame" : ""}${label ? ` role="group" aria-label="${attr(label)}"` : ""}>${element}<span class="cm-bar">${controls(kind)}</span></span>${script}`;
 };
 
-/** The HTML renderer for videos and audio. Pass it as `components`; it inlines the styles and the players' script once per document. */
+/** The HTML renderer for videos, audio, and PDF links. Pass it as `components`; it inlines the styles and the players' script once per document that has a player. */
 export const components: Record<"media", NodeHandler> = { media };

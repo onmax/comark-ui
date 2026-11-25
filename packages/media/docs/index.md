@@ -1,7 +1,7 @@
 ---
 title: Media
-description: Videos and audio in Markdown, written as images.
-keywords: video, audio, mp4, webm, mp3, ogg, player, HTML5 video, GitHub attachments
+description: Videos, audio, and PDF links in Markdown, written as images.
+keywords: video, audio, mp4, webm, mp3, ogg, pdf, player, HTML5 video, GitHub attachments
 tagline: A player for a video or an audio file, written as an image.
 group: Review blocks
 icon: film
@@ -31,6 +31,7 @@ The alert sound the reviewer asked for:
 
 - An image that points at a video or audio file plays where it sits, labeled by its alt text.
 - A GitHub attachment link alone in its paragraph plays too.
+- An image that points at a PDF becomes a link to it, labeled by its alt text, instead of a broken image.
 - Only the first frame and the length load until the reader presses play.
 - The controls match the page. The browser's own show before the script runs and when the file can't play.
 - A settings panel sets the speed, from 0.5× to 2×, and turns looping on or off.
@@ -98,6 +99,21 @@ https://github.com/user-attachments/assets/2f3c0e3e-1c4b-4c3a-9a6b-0b1e2f3a4b5c
 
 A link with text of its own, or one inside a sentence, stays a link.
 
+### PDFs
+
+A browser can't show a PDF as an image, so an image whose address ends in `.pdf` becomes a link to the file, with the alt text as its text. It has no player, styles, or script.
+
+::example
+```md
+Read ![the signed contract](https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf) before the call.
+```
+::
+
+> [!NOTE]
+> A PDF takes no props. The plugin drops `autoplay`, `poster`, `width`, and the rest.
+
+The node keeps `kind: "pdf"`, so a host can pass its own `media` component and draw the pages instead.
+PDF destinations must be relative or use HTTP or HTTPS. If the PDF image is already inside a Markdown link, its alt text labels that link instead of adding a second one.
 
 ## Copying
 
@@ -199,6 +215,7 @@ Write `{loop=false}` to turn a prop off. The plugin drops other props, such as a
 | --- | --- |
 | `.mp4`, `.webm`, `.mov`, `.m4v` | `<video controls playsinline preload="metadata">` |
 | `.mp3`, `.wav`, `.ogg`, `.m4a` | `<audio controls preload="metadata">` |
+| `.pdf` | `<a class="cm-pdf" href="…">` |
 
 ### Options
 
@@ -213,11 +230,11 @@ Pass options under `media` in `comarkUi()`, or to `media()` when you use the plu
 
 The plugin adds these problems to `meta.issues`, as [Validation](/guide/validation) describes:
 
-- A video or audio file with nothing in its brackets.
+- A video, audio, or PDF file with nothing in its brackets.
 - `autoplay` without `muted`.
 - A `poster` on audio.
 - A `width` or `height` without the other, or one that isn't a whole number of pixels.
-- A prop it doesn't know.
+- A prop it doesn't know, and any prop on a PDF.
 
 Each has its own rule in [Doctor](/doctor):
 
@@ -287,5 +304,6 @@ Players read these [shared tokens](/guide/theming):
 | `[data-playing]`, `[data-muted]`, `[data-fullscreen]` | A player while it plays, while it's muted, and while a video fills the screen |
 | `[data-error]` | A player whose file can't play, which shows the browser's controls instead |
 | `video.cm`, `audio.cm` | A player with `controls: "native"` |
+| `.cm-pdf` | The link a PDF becomes. The package doesn't style it, so it looks like the page's links. |
 
 The fallback link inside a player shows only in a browser that can't play the file.

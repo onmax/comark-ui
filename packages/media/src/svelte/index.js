@@ -1,4 +1,4 @@
-// Videos and audio for `@comark/svelte`. Pass `components` to it; the parse plugin comes from `comark-media`.
+// Videos, audio, and PDF links for `@comark/svelte`. Pass `components` to it; the parse plugin comes from `comark-media`.
 import Media from "./Media.svelte";
 
 export { default } from "comark-media";
