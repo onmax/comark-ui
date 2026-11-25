@@ -162,8 +162,8 @@ export const css = `@layer comark{${[
   ".ca-callout-top{bottom:calc(100% - var(--ca-top-gutter) + var(--ca-gap));width:max-content;max-width:14rem;text-align:center;transform:translateX(-50%)}",
   ".ca-callout-bottom{top:calc(100% - var(--ca-bottom-gutter) + var(--ca-gap));width:max-content;max-width:14rem;text-align:center;transform:translateX(-50%)}",
   // A note off to one side of its point starts where its leader leaves it and reads away from the point.
-  ".ca-callout.ca-callout-east{text-align:left;transform:none}",
-  ".ca-callout.ca-callout-west{text-align:right;transform:translateX(-100%)}",
+  ".ca-callout.ca-callout-east{max-width:min(14rem,var(--ca-room));text-align:left;transform:none}",
+  ".ca-callout.ca-callout-west{max-width:min(14rem,var(--ca-room));text-align:right;transform:translateX(-100%)}",
   ".ca-callout>div>:first-child{margin-top:0}",
   ".ca-callout>div>:last-child{margin-bottom:0}",
   // Too narrow for side notes: stack them under the image, drop the arrows, and letter each note and its target instead. Notes on both sides need more room than notes on one. The stacked note outranks .ca-callout-west, whose shift would push it off the image.

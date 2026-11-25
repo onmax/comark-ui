@@ -282,10 +282,16 @@ async function parts(
       ? `left:calc(var(--ca-pl,0px) + (100% - var(--ca-pl,0px) - var(--ca-pr,0px)) * ${along / 100})`
       : `top:calc(var(--ca-pt,0px) + (100% - var(--ca-pt,0px) - var(--ca-pb,0px)) * ${along / 100})`;
     // A note off to one side of its point starts where its leader does and reads away from it: rightward when the
-    // point lies to its left.
+    // point lies to its left. It wraps within the room left before the screenshot's edge, so it never runs past it,
+    // where a compare's track would scroll sideways to show it.
     const reads = across && way ? ` ca-callout-${way === "back" ? "east" : "west"}` : "";
+    const room = !reads
+      ? ""
+      : way === "back"
+        ? `;--ca-room:calc((100% - var(--ca-pl,0px) - var(--ca-pr,0px)) * ${+((100 - along) / 100).toFixed(4)} + var(--ca-pr,0px))`
+        : `;--ca-room:calc(var(--ca-pl,0px) + (100% - var(--ca-pl,0px) - var(--ca-pr,0px)) * ${along / 100})`;
     return (
-      `<div class="ca-callout ca-callout-${annotation.side}${reads}" id="${id}-${annotation.n}" data-n="${annotation.n}" style="${color(annotation)}${place}">` +
+      `<div class="ca-callout ca-callout-${annotation.side}${reads}" id="${id}-${annotation.n}" data-n="${annotation.n}" style="${color(annotation)}${place}${room}">` +
       `${letter(annotation)}<div>${await children(annotation.note, state)}</div></div>`
     );
   });

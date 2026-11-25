@@ -377,13 +377,19 @@ describe("comark-annotate", () => {
       /class="ca-arrow ca-arrow-top ca-curve ca-reach" data-n="1" style="left:12%;right:60%;top:calc\(-1 \* var\(--ca-lead\)\);bottom:79%"[^>]*><svg class="ca-arrow-line" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M100 0C55 0 0 20 0 100"/,
     );
     expect(html).toMatch(
-      /class="ca-callout ca-callout-top ca-callout-east" id="ca-[a-z0-9]+-1" data-n="1" style="left:calc\(var\(--ca-pl,0px\) \+ \(100% - var\(--ca-pl,0px\) - var\(--ca-pr,0px\)\) \* 0.4\)"/,
+      /class="ca-callout ca-callout-top ca-callout-east" id="ca-[a-z0-9]+-1" data-n="1" style="left:calc\(var\(--ca-pl,0px\) \+ \(100% - var\(--ca-pl,0px\) - var\(--ca-pr,0px\)\) \* 0.4\);--ca-room:calc\(\(100% - var\(--ca-pl,0px\) - var\(--ca-pr,0px\)\) \* 0.6 \+ var\(--ca-pr,0px\)\)"/,
     );
     // Without `to`, the arrow meets the edge of the mark that faces the note; this one lies right of its note.
     expect(html).toMatch(
       /class="ca-arrow ca-arrow-bottom ca-curve" data-n="2" style="left:30%;right:35%;top:75%;bottom:calc\(-1 \* var\(--ca-lead\)\)"[^>]*>.*?<path d="M0 100C45 100 100 80 100 0"/,
     );
-    expect(html).toMatch(/class="ca-callout ca-callout-bottom ca-callout-west"/);
+    // Each wraps within the room between where it starts and the screenshot's edge it reads toward.
+    expect(html).toMatch(
+      /class="ca-callout ca-callout-bottom ca-callout-west"[^>]*;--ca-room:calc\(var\(--ca-pl,0px\) \+ \(100% - var\(--ca-pl,0px\) - var\(--ca-pr,0px\)\) \* 0.3\)"/,
+    );
+    expect(styles(html)).toContain(
+      ".ca-callout.ca-callout-east{max-width:min(14rem,var(--ca-room))",
+    );
     // A right note above its point drops into it and lands level.
     expect(html).toMatch(
       /class="ca-arrow ca-arrow-right ca-curve" data-n="3" style="top:20%;bottom:55%;left:20%;right:calc\(-1 \* var\(--ca-gap\)\)"[^>]*>.*?<path d="M100 0C40 0 60 100 0 100"/,
