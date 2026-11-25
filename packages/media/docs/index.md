@@ -113,6 +113,7 @@ Read ![the signed contract](https://www.w3.org/WAI/ER/tests/xhtml/testfiles/reso
 > A PDF takes no props. The plugin drops `autoplay`, `poster`, `width`, and the rest.
 
 The node keeps `kind: "pdf"`, so a host can pass its own `media` component and draw the pages instead.
+PDF destinations must be relative or use HTTP or HTTPS. If the PDF image is already inside a Markdown link, its alt text labels that link instead of adding a second one.
 
 ## Copying
 

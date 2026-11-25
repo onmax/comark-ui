@@ -18,7 +18,7 @@ const markdown = [
   '![Login & logout](./login.mp4){autoplay loop muted poster="login.png" width=1280 height=720}',
   "![Standup](standup.m4a)",
   "https://github.com/user-attachments/assets/2f3c0e3e-1c4b-4c3a-9a6b-0b1e2f3a4b5c",
-  "![The CV & cover letter](./cv.pdf)",
+  "![The **CV** &amp; cover letter with literal &amp;amp;](./cv.pdf)",
 ].join("\n\n");
 // Drops what differs only in serialization: comments, whitespace between tags, the HTML renderer's inline styles and
 // script, and
@@ -64,7 +64,7 @@ describe("comark-media renderers", async () => {
     expect(expected).toContain("Login &amp; logout");
     expect(expected).toContain('width="1280" height="720"');
     expect(expected).toContain(
-      '<p><a class="cm-pdf" href="./cv.pdf">The CV &amp; cover letter</a></p>',
+      '<p><a class="cm-pdf" href="./cv.pdf">The CV &amp; cover letter with literal &amp;amp;</a></p>',
     );
   });
 

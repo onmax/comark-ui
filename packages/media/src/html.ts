@@ -2,6 +2,7 @@ import type { NodeHandler } from "comark";
 import { controls, start } from "./client.ts";
 import { css } from "./styles.ts";
 import { attr, inlineScript } from "../../../shared/html.ts";
+import { rawText } from "../../../shared/text.ts";
 
 export { default } from "./index.ts";
 export type { MediaAttributes, MediaMeta, MediaOptions } from "./index.ts";
@@ -17,11 +18,12 @@ export const scripts: string[] = [inline];
 // Each render gets a fresh `state.context`, so a document carries the styles and the script once.
 const styled = new WeakSet<object>();
 const started = new WeakSet<object>();
+const literal = (value: unknown) => attr(rawText(value).replaceAll("&", "&amp;"));
 
 const media: NodeHandler = ([, attrs], state) => {
   const { kind, src, label, poster, width, height, autoplay, loop, muted, native } = attrs;
   if (kind === "pdf" && src)
-    return `<a class="cm-pdf" href="${attr(src)}">${attr(label || src)}</a>`;
+    return `<a class="cm-pdf" href="${literal(src)}">${literal(label || src)}</a>`;
   if ((kind !== "video" && kind !== "audio") || !src) return "";
   const styles = styled.has(state.context) ? "" : `<style data-comark-media>${css}</style>`;
   styled.add(state.context);

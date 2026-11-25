@@ -57,7 +57,40 @@ const SIDES = ["width", "height"] as const;
 // How the issues name each video written as an image. A GitHub attachment link takes no props, so it has no name here.
 const names = new WeakMap<MediaAttributes, string>();
 const KNOWN = new Set<string>(["src", "alt", "kind", "poster", ...FLAGS]);
-const PDF_KNOWN = new Set<string>(["src", "alt", "kind"]);
+const PDF_IMAGE = "!media-pdf";
+const LINKED_PDF_IMAGE = "!media-pdf-in-link";
+
+type Token = ComarkParseTokensState["tokens"][number];
+
+function plainAlt(tokens: Token[] | null): string {
+  return (tokens ?? [])
+    .map((token) => {
+      switch (token.type) {
+        case "text":
+        case "text_special":
+        case "code_inline":
+          return token.content;
+        case "softbreak":
+        case "hardbreak":
+          return " ";
+        case "image":
+          return plainAlt(token.children);
+        default:
+          return "";
+      }
+    })
+    .join("");
+}
+
+function isPdfLink(src: string): boolean {
+  if (!src) return false;
+  try {
+    const { protocol } = new URL(src, "https://example.invalid/");
+    return protocol === "https:" || protocol === "http:";
+  } catch {
+    return false;
+  }
+}
 
 const kindOf = (src: string) => {
   const path = src.replace(/[?#].*$/, "");
@@ -79,13 +112,21 @@ function convert(tokens: ComarkParseTokensState["tokens"]) {
   for (const token of tokens) {
     const inline = token.children;
     if (token.type !== "inline" || !inline) continue;
+    let inLink = false;
     for (const child of inline) {
+      if (child.type === "link_open") inLink = true;
+      if (child.type === "link_close") inLink = false;
       const kind = child.type === "image" ? kindOf(child.attrGet("src") ?? "") : undefined;
       if (!kind) continue;
       child.type = "mdc_inline_component";
-      child.tag = "media";
-      child.attrSet("kind", kind);
-      child.attrSet("alt", child.content);
+      if (kind === "pdf") {
+        child.tag = inLink ? LINKED_PDF_IMAGE : PDF_IMAGE;
+        child.attrSet("alt", plainAlt(child.children));
+      } else {
+        child.tag = "media";
+        child.attrSet("kind", kind);
+        child.attrSet("alt", child.content);
+      }
     }
     const parts = inline.filter((child) => child.type !== "text" || child.content.trim());
     const [open, label, close] = parts;
@@ -118,13 +159,22 @@ function read(
   const attrs = resolveAttributes(node[1], data, { parseJson: true });
   const src = text(attrs.src);
   const alt = text(attrs.alt);
-  const kind = text(attrs.kind) || kindOf(src);
+  const sourceKind = kindOf(src);
+  const pdfImage = node[0] === PDF_IMAGE || node[0] === LINKED_PDF_IMAGE;
+  const kind = pdfImage || sourceKind === "pdf" ? "pdf" : text(attrs.kind) || sourceKind;
   const name =
     attrs.alt === undefined ? `The ${kind || "media"} link ${src}` : `\`![${alt}](${src})\``;
   if (kind !== "video" && kind !== "audio" && kind !== "pdf") {
     issues.push({
       rule: "comark/media/unplayable-src",
       message: `${name}: \`src\` must end in .mp4, .webm, .mov, .m4v, .mp3, .wav, .ogg, .m4a, or .pdf.`,
+    });
+    return {};
+  }
+  if (kind === "pdf" && !isPdfLink(src)) {
+    issues.push({
+      rule: "comark/media/unplayable-src",
+      message: `${name}: use a relative, HTTP, or HTTPS URL for the PDF.`,
     });
     return {};
   }
@@ -139,7 +189,9 @@ function read(
           : `${name} has no label. Describe the ${kind} in the brackets, like \`![Signing in with a passkey](${src})\`.`,
     });
   if (kind === "pdf") {
-    const unknown = Object.keys(attrs).filter((key) => !PDF_KNOWN.has(key));
+    const unknown = Object.keys(attrs).filter(
+      (key) => key !== "src" && key !== "alt" && (key !== "kind" || pdfImage),
+    );
     if (unknown.length)
       issues.push({
         rule: "comark/media/unknown-prop",
@@ -202,19 +254,24 @@ export default defineComarkPlugin<MediaOptions | undefined, MediaMeta>((options 
     const data: Data = { frontmatter: tree.frontmatter, meta: tree.meta, data: {}, props: {} };
     const issues: Issue[] = [];
     const videos: MediaAttributes[] = [];
-    const walk = (nodes: Node[]) => {
-      for (const node of nodes) {
-        if (!isElement(node)) continue;
-        if (node[0] !== "media") {
-          walk(childrenOf(node));
-          continue;
+    const walk = (node: Node, inLink: boolean): Node => {
+      if (!isElement(node)) return node;
+      const [tag] = node;
+      if (tag !== "media" && tag !== PDF_IMAGE && tag !== LINKED_PDF_IMAGE) {
+        for (const [index, child] of childrenOf(node).entries()) {
+          node[index + 2] = walk(child, inLink || tag === "a");
         }
-        const attributes = read(node, data, issues, options);
-        node.splice(1, node.length - 1, attributes);
-        if (attributes.kind === "video" && !attributes.width) videos.push(attributes);
+        return node;
       }
+      const attributes = read(node, data, issues, options);
+      if (tag === LINKED_PDF_IMAGE || (inLink && attributes.kind === "pdf"))
+        return attributes.label || attributes.src || "";
+      node[0] = "media";
+      node.splice(1, node.length - 1, attributes);
+      if (attributes.kind === "video" && !attributes.width) videos.push(attributes);
+      return node;
     };
-    walk(tree.nodes);
+    tree.nodes = tree.nodes.map((node) => walk(node, false));
     if (options.size !== false)
       await Promise.all(
         videos.map(async (video) => {

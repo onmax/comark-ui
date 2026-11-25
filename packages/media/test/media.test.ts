@@ -80,6 +80,40 @@ describe("comark-media", () => {
     );
   });
 
+  it.each([
+    '![CV](cv.pdf){src="javascript:void(0)"}',
+    ':media{kind=pdf src="javascript:void(0)" alt=CV}',
+    ':media{src="data:text/plain,cv.pdf" alt=CV}',
+  ])("drops unsafe PDF destinations from the tree and HTML: %s", async (markdown) => {
+    const value = await parseMarkdown(markdown, { plugins: [media()] });
+    expect(JSON.stringify(value.nodes)).not.toContain("javascript:");
+    expect(await render(markdown)).not.toContain("<a ");
+    expect(Object.values(value.meta.issueRules)).toContain("comark/media/unplayable-src");
+  });
+
+  it("keeps the resolved PDF URL literal in HTML", async () => {
+    const markdown = ':media{src="cv.pdf?download=&copy;" alt=CV}';
+    expect(await render(markdown)).toContain(
+      '<a class="cm-pdf" href="cv.pdf?download=&amp;copy;">CV</a>',
+    );
+  });
+
+  it("leaves a PDF inside a Markdown link as the outer link's text", async () => {
+    const html = await render("[Read ![my **CV**](cv.pdf)](landing.html)");
+    expect(html).toContain('<a href="landing.html">Read my CV</a>');
+    expect(html.match(/<a /g)).toHaveLength(1);
+  });
+
+  it("ignores an authored kind on a PDF image", async () => {
+    const markdown = "![CV](https://cdn.test/cv.pdf){kind=audio}";
+    const html = await render(markdown);
+    expect(html).toContain('<a class="cm-pdf" href="https://cdn.test/cv.pdf">CV</a>');
+    expect(html).not.toMatch(/<audio|<style|<script/);
+    expect(await issues(markdown)).toEqual([
+      "`![CV](https://cdn.test/cv.pdf)`: `kind` isn't a PDF option, so it was dropped. A PDF takes only its label, in the brackets.",
+    ]);
+  });
+
   it("gives videos and audio controls that keep the browser's as a fallback, with the script once per document", async () => {
     const html = await render("![Alert](alert.mp3)\n\n![Chime](chime.ogg)\n\n![Clip](clip.mp4)");
     expect(html).toContain(
