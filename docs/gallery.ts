@@ -436,12 +436,20 @@ export function startGallery(root: HTMLElement, data: GalleryData): () => void {
   const article = (id: string) => document.getElementById(id);
   let selected: string | undefined;
 
-  // A shared link carries the changes in the URL, deflated, as the playground's does.
-  function reportSharing(error: unknown, message = "Could not create a sharing link.") {
+  let sharingUpdate = 0;
+  let suppressedThrough = 0;
+  function reportSharing(error: unknown, message: string, update?: number) {
+    if (signal.aborted || (update !== undefined && update <= suppressedThrough)) return;
+    if (update === undefined) suppressedThrough = sharingUpdate;
     sharingIssue.textContent = `${message} ${errorText(error)}`;
     sharingIssue.hidden = false;
   }
+  function backgroundSharingFailure() {
+    const update = ++sharingUpdate;
+    return (error: unknown) => reportSharing(error, "Could not create a sharing link.", update);
+  }
 
+  // A shared link carries the changes in the URL, deflated, as the playground's does.
   let saving: ReturnType<typeof setTimeout> | undefined;
   let saveVersion = 0;
   // As files, each cell's Markdown is `<id>.md`, and `added.json` places the copies. The examples' own Markdown is the
@@ -452,9 +460,7 @@ export function startGallery(root: HTMLElement, data: GalleryData): () => void {
   );
   const edited = () =>
     added.length > 0 || [...sources].some(([id, source]) => data.cells[id]?.source !== source);
-  async function saveNow(): Promise<string> {
-    clearTimeout(saving);
-    const version = saveVersion;
+  async function writeSharedUrl(version: number): Promise<string | undefined> {
     const files: PlaygroundFiles = Object.fromEntries(
       [...sources].map(([id, source]) => [fileOf(id), source]),
     );
@@ -464,18 +470,29 @@ export function startGallery(root: HTMLElement, data: GalleryData): () => void {
       );
     const code = edited() ? await encodePlaygroundLink({ files }, examplesFiles) : undefined;
     // Compression can finish after another edit or reset. Only the current snapshot may reach the URL.
-    if (version !== saveVersion) return saveNow();
+    if (version !== saveVersion) return;
     const url = new URL(location.href);
     if (code) url.searchParams.set(playgroundHashKey, code);
     else url.searchParams.delete(playgroundHashKey);
     if (!signal.aborted) history.replaceState(history.state, "", url);
     return url.href;
   }
+  async function saveNow(): Promise<string> {
+    clearTimeout(saving);
+    let href = await writeSharedUrl(saveVersion);
+    while (href === undefined) href = await writeSharedUrl(saveVersion);
+    return href;
+  }
   function save() {
-    saveVersion++;
+    const version = ++saveVersion;
+    const report = backgroundSharingFailure();
     clear.hidden = share.hidden = !edited();
     clearTimeout(saving);
-    saving = setTimeout(() => void saveNow().catch((error) => reportSharing(error)), 250);
+    saving = setTimeout(() => {
+      void writeSharedUrl(version).catch((error) => {
+        if (version === saveVersion) report(error);
+      });
+    }, 250);
   }
 
   // A cell's Playground link, and the inspector's while it's open, take the cell's Markdown as it is now.
@@ -528,11 +545,12 @@ export function startGallery(root: HTMLElement, data: GalleryData): () => void {
     pending.add(id);
     gallery.dataset.busy = "";
     clearTimeout(timers.get(id));
+    const report = backgroundSharingFailure();
     timers.set(
       id,
       setTimeout(() => {
         void render(id);
-        void link(id).catch((error) => reportSharing(error));
+        void link(id).catch(report);
       }, 120),
     );
     save();
@@ -610,7 +628,7 @@ export function startGallery(root: HTMLElement, data: GalleryData): () => void {
       frame.removeAttribute("srcdoc");
     }
     save();
-    void link(id).catch((error) => reportSharing(error));
+    void link(id).catch(backgroundSharingFailure());
     if (selected === id) open(id);
   }
 
@@ -1004,7 +1022,7 @@ export function startGallery(root: HTMLElement, data: GalleryData): () => void {
       highlight = module.highlight;
       repaint();
     });
-    void link(id).catch((error) => reportSharing(error));
+    void link(id).catch(backgroundSharingFailure());
   }
   function close() {
     for (const other of gallery.querySelectorAll("[data-selected]"))
