@@ -250,6 +250,42 @@ for (const { direction, at, stacked } of [
   });
 }
 
+for (const { at, text, stacked } of [
+  { at: 60, text: "New filters first.", stacked: false },
+  {
+    at: 92,
+    text: "The filter menu keeps the most recent values at the top, so the last filter is one click away.",
+    stacked: true,
+  },
+]) {
+  test(`a standalone screenshot's note at ${at}, reading toward its edge, keeps the page from scrolling sideways`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 900, height: 700 });
+    await fixture(
+      page,
+      await render(`::screenshot{src="/dashboard.png" alt="Dashboard" viewport="1440x860"}
+:::annotation{x=10 y=15 w=6 h=6 mark="none" side="top" at=${at} to="12,18"}
+${text}
+:::
+::`),
+      "main{width:auto;margin:1rem}",
+    );
+    const note = page.locator("main .ca-callout-east");
+    await expect(note).toHaveCSS("position", stacked ? "static" : "absolute");
+    const bounds = await note.evaluate((element) => {
+      const stage = element.closest(".ca-stage")!.getBoundingClientRect();
+      const box = element.getBoundingClientRect();
+      const root = document.documentElement;
+      return {
+        overflow: root.scrollWidth - root.clientWidth,
+        inside: box.left >= stage.left - 1 && box.right <= stage.right + 1,
+      };
+    });
+    expect(bounds).toEqual({ overflow: 0, inside: true });
+  });
+}
+
 test("a compare note refits when its font changes at a fixed comparison width", async ({
   page,
 }) => {

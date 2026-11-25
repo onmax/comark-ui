@@ -427,7 +427,9 @@ const screenshot: NodeHandler = async (node, state) => {
       : " data-ca-unsized";
     return `${styles(state)}<div class="ca ca-thumb"${style}>${html}</div>${zoomRuntime(state)}${runtime(state)}`;
   }
-  return `${styles(state)}<div class="ca" data-comark-frame>${(await figure(shot, state, id)).html}</div>${zoomRuntime(state)}${runtime(state)}`;
+  // Notes off to one side of their points start stacked, like a compare's, until the runtime sees they fit.
+  const { html, offsetNotes } = await figure(shot, state, id);
+  return `${styles(state)}<div class="ca"${offsetNotes ? " data-ca-fit-notes" : ""} data-comark-frame>${html}</div>${zoomRuntime(state)}${runtime(state)}`;
 };
 
 const compare: NodeHandler = async (node, state) => {

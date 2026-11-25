@@ -367,6 +367,13 @@ describe("comark-annotate", () => {
     expect(styles(html)).toContain(".ca-bottom .ca-stage{--ca-pb:var(--ca-bottom-gutter)");
   });
 
+  it("leaves a screenshot whose notes sit over their points out of the fit check", async () => {
+    const { html } = await run(
+      `::screenshot{src="a.png" alt="A"}\n:::annotation{x=10 y=20 w=10 h=5 side="top"}\nCentered over its point.\n:::\n::`,
+    );
+    expect(html).toContain('<div class="ca" data-comark-frame>');
+  });
+
   it("sets a note off to one side with `at` and sweeps its arrow into the `to` point", async () => {
     const { issues, html } = await run(
       `::screenshot{src="a.png" alt="A"}\n:::annotation{x=10 y=20 w=10 h=5 mark="none" side="top" at=40 to="12,21"}\nThe type gets the headline.\n:::\n:::annotation{x=60 y=70 w=10 h=5 side="bottom" at=30}\nOpen it here.\n:::\n:::annotation{x=10 y=40 w=10 h=10 mark="bracket" side="right" at=20}\nThree rows.\n:::\n::`,
@@ -390,6 +397,8 @@ describe("comark-annotate", () => {
     expect(styles(html)).toContain(
       ":where([data-ca-fit-notes]) .ca-callout:is(.ca-callout-east,.ca-callout-west){max-width:min(14rem,var(--ca-room))",
     );
+    // A standalone screenshot fits them like a compare does: stacked until the runtime sees they fit.
+    expect(html).toContain('<div class="ca" data-ca-fit-notes data-comark-frame>');
     // A right note above its point drops into it and lands level.
     expect(html).toMatch(
       /class="ca-arrow ca-arrow-right ca-curve" data-n="3" style="top:20%;bottom:55%;left:20%;right:calc\(-1 \* var\(--ca-gap\)\)"[^>]*>.*?<path d="M100 0C40 0 60 100 0 100"/,
