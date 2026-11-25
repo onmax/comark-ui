@@ -1,5 +1,5 @@
 import { createHtmlRenderer } from "@comark/html";
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 import comarkUi from "../packages/ui/src/html.ts";
 
 const offline = { chips: { download: false }, badge: { download: false }, icon: { fetch: false } };
@@ -161,6 +161,52 @@ test("a body-mounted zoom honors the source article's motion opt-out", async ({ 
   ).toBe("");
   await page.keyboard.press("Escape");
   await expect(dialog).toHaveCount(0);
+});
+
+// The copy's box and the original's on the last frame of the closing animation, just before the original takes the
+// copy's place.
+async function lastFrame(page: Page, item: Locator) {
+  await item.click();
+  await expect(page.locator(".cz-dialog")).toBeVisible();
+  await item.evaluate((original) => {
+    const frames: { copy: DOMRect; original: DOMRect }[] = [];
+    Object.assign(window, { closing: frames });
+    const record = () => {
+      const copy = document.querySelector(".cz-item")?.firstElementChild;
+      if (!copy) return;
+      frames.push({
+        copy: copy.getBoundingClientRect(),
+        original: original.getBoundingClientRect(),
+      });
+      requestAnimationFrame(record);
+    };
+    record();
+  });
+  await page.keyboard.press("Escape");
+  await expect(page.locator(".cz-dialog")).toHaveCount(0);
+  return page.evaluate(() => {
+    const last = (
+      window as Window & { closing?: { copy: DOMRect; original: DOMRect }[] }
+    ).closing!.at(-1)!;
+    return { copy: last.copy.toJSON(), original: last.original.toJSON() };
+  });
+}
+
+test("a zoomed block closes onto the original without a jump", async ({ page }) => {
+  // A length line height stays the same for larger text, unlike a ratio. The host's rule for spans mustn't fool the
+  // zoom into reading it as one.
+  await open(
+    page,
+    "::zoom\n| Attempt | Wait |\n| --- | --- |\n| 1 | 1 s |\n| 2 | 4 s |\n| 3 | Until the pigeons leave |\n::",
+    '<div style="font:16px/24px sans-serif"><div id="fixed" data-zoom tabindex="0"><p>One</p><p style="font-size:2em">Two</p></div></div>',
+    "body span{line-height:1.2;position:static!important}",
+  );
+  for (const item of [page.locator(".cz[data-zoom]"), page.locator("#fixed")]) {
+    await item.scrollIntoViewIfNeeded();
+    const { copy, original } = await lastFrame(page, item);
+    for (const side of ["x", "y", "width", "height"] as const)
+      expect(Math.abs(copy[side] - original[side])).toBeLessThan(1);
+  }
 });
 
 const table = `::zoom\n| Attempt | Wait |\n| --- | --- |\n${Array.from({ length: 80 }, (_, index) => `| ${index + 1} | ${index * 2} s |`).join("\n")}\n::`;
