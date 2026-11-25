@@ -59,16 +59,21 @@ const names = new WeakMap<MediaAttributes, string>();
 const KNOWN = new Set<string>(["src", "alt", "kind", "poster", ...FLAGS]);
 
 type Token = ComarkParseTokensState["tokens"][number];
-type PdfImage = { name: string; label: string; inLink: boolean };
+type PdfImage = { occurrence: number; name: string; label: string; inLink: boolean };
 type MediaMetadata = NonNullable<ElementNode[1]["$"]> & {
-  mediaPdfImage?: { name?: unknown; label?: unknown; inLink?: unknown };
+  mediaPdfImage?: { occurrence?: unknown; name?: unknown; label?: unknown; inLink?: unknown };
 };
 
 function readPdfImage(metadata: MediaMetadata | undefined): PdfImage | undefined {
   const image = metadata?.mediaPdfImage;
   const name = rawText(image?.name);
-  if (!name) return;
-  return { name, label: rawText(image?.label), inLink: image?.inLink === true };
+  if (!name || typeof image?.occurrence !== "number") return;
+  return {
+    occurrence: image.occurrence,
+    name,
+    label: rawText(image.label),
+    inLink: image.inLink === true,
+  };
 }
 
 function plainAlt(tokens: Token[] | null): string {
@@ -118,6 +123,7 @@ const on = (value: unknown) => value !== undefined && value !== false && text(va
  * so comark-zoom never makes a video or a PDF zoom and comark-chips never makes a GitHub attachment a chip, whatever the order.
  */
 function convert(tokens: ComarkParseTokensState["tokens"]) {
+  let pdfOccurrence = 0;
   for (const token of tokens) {
     const inline = token.children;
     if (token.type !== "inline" || !inline) continue;
@@ -135,6 +141,7 @@ function convert(tokens: ComarkParseTokensState["tokens"]) {
         child.attrs = child.attrs?.filter(([key]) => key !== "alt") ?? null;
         const props = inline[index + 1];
         const image: PdfImage = {
+          occurrence: pdfOccurrence++,
           name: `\`![${child.content}](${src})\``,
           label: plainAlt(child.children).trim(),
           inLink,
@@ -178,7 +185,7 @@ function read(
 ): MediaAttributes {
   const attrs = resolveAttributes(node[1], data, { parseJson: true });
   const src = text(attrs.src);
-  const alt = attrs.alt === undefined ? (pdfImage?.label ?? "") : text(attrs.alt);
+  const alt = pdfImage?.label ?? text(attrs.alt);
   const sourceKind = kindOf(src);
   const kind = pdfImage || sourceKind === "pdf" ? "pdf" : text(attrs.kind) || sourceKind;
   const name =
@@ -210,7 +217,7 @@ function read(
     });
   if (kind === "pdf") {
     const unknown = Object.keys(attrs).filter(
-      (key) => key !== "src" && key !== "alt" && key !== "$" && (key !== "kind" || pdfImage),
+      (key) => key !== "src" && key !== "$" && (pdfImage || (key !== "alt" && key !== "kind")),
     );
     if (unknown.length)
       issues.push({
@@ -274,6 +281,7 @@ export default defineComarkPlugin<MediaOptions | undefined, MediaMeta>((options 
     const data: Data = { frontmatter: tree.frontmatter, meta: tree.meta, data: {}, props: {} };
     const issues: Issue[] = [];
     const videos: MediaAttributes[] = [];
+    const seenPdfImages = new Set<number>();
     const walk = (node: Node, inLink: boolean): Node => {
       if (!isElement(node)) return node;
       const [tag] = node;
@@ -285,7 +293,9 @@ export default defineComarkPlugin<MediaOptions | undefined, MediaMeta>((options 
       }
       const pdfImage = readPdfImage(node[1].$);
       const linked = inLink || pdfImage?.inLink === true;
-      const attributes = read(node, data, issues, options, pdfImage, linked);
+      const copy = pdfImage && seenPdfImages.has(pdfImage.occurrence);
+      if (pdfImage) seenPdfImages.add(pdfImage.occurrence);
+      const attributes = read(node, data, copy ? [] : issues, options, pdfImage, linked);
       if (linked && (pdfImage || attributes.kind === "pdf"))
         return attributes.label || attributes.src || "";
       node.splice(1, node.length - 1, attributes);

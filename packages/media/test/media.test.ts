@@ -137,6 +137,21 @@ describe("comark-media", () => {
     ]);
   });
 
+  it("takes a PDF image's label only from its brackets", async () => {
+    const markdown = '![CV](cv.pdf){alt="Replacement"}';
+    expect(await render(markdown)).toContain('<a class="cm-pdf" href="cv.pdf">CV</a>');
+    expect(await issues(markdown)).toEqual([
+      "`![CV](cv.pdf)`: `alt` isn't a PDF option, so it was dropped. A PDF takes only its label, in the brackets.",
+    ]);
+    const { meta } = await parseMarkdown('![](cv.pdf){alt="Replacement"}', {
+      plugins: [media()],
+    });
+    expect(Object.values(meta.issueRules)).toEqual([
+      "comark/media/missing-label",
+      "comark/media/unknown-prop",
+    ]);
+  });
+
   it("gives videos and audio controls that keep the browser's as a fallback, with the script once per document", async () => {
     const html = await render("![Alert](alert.mp3)\n\n![Chime](chime.ogg)\n\n![Clip](clip.mp4)");
     expect(html).toContain(
