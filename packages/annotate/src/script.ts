@@ -29,7 +29,14 @@ export function start(): () => void {
   root.setAttribute("data-annotate-ready", "");
   const comparisons = "[data-ca-fit-notes]:not(.cz-dialog *)";
   const fitTargets = "[data-ca-fit-notes],.ca-stage,.ca-callout,.ca-callout>div";
-  const fitNotes = (compare: Element) => {
+  const fitNotes = (compare: HTMLElement) => {
+    const { style } = compare;
+    const stacked = !compare.hasAttribute("data-ca-notes-fit");
+    const minHeight = style.getPropertyValue("min-height");
+    const priority = style.getPropertyPriority("min-height");
+    const hadStyle = compare.hasAttribute("style");
+    if (stacked) style.setProperty("min-height", getComputedStyle(compare).height, "important");
+
     compare.setAttribute("data-ca-notes-fit", "");
     const fits = [...compare.querySelectorAll<HTMLElement>(".ca-callout")].every((note) => {
       if (getComputedStyle(note).position !== "absolute") return true;
@@ -44,6 +51,10 @@ export function start(): () => void {
       );
     });
     compare.toggleAttribute("data-ca-notes-fit", fits);
+    if (stacked) {
+      style.setProperty("min-height", minHeight, priority);
+      if (!hadStyle && !style.length) compare.removeAttribute("style");
+    }
   };
   const pendingFits = new Set<Element>();
   let fitFrame = 0;
@@ -53,7 +64,8 @@ export function start(): () => void {
     fitFrame = requestAnimationFrame(() => {
       fitFrame = 0;
       for (const pending of pendingFits) {
-        if (pending.isConnected && pending.matches(comparisons)) fitNotes(pending);
+        if (pending instanceof HTMLElement && pending.isConnected && pending.matches(comparisons))
+          fitNotes(pending);
       }
       pendingFits.clear();
     });

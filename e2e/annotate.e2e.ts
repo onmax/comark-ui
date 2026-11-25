@@ -275,6 +275,41 @@ test("a compare note refits when its font changes at a fixed comparison width", 
   expect(await noteBounds(note)).toMatchObject({ overflow: 0, inside: true, aligned: true });
 });
 
+test("refitting a stacked compare note does not move the reader", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 320 });
+  await fixture(
+    page,
+    await render(
+      compareWithOffsetNote(
+        90,
+        "The filter menu keeps the most recent values at the top. ".repeat(5).trim(),
+      ),
+    ),
+    compareStyle,
+  );
+  const note = page.locator("main .ca-callout-east");
+  await expect(note).toHaveCSS("position", "static");
+  expect(await noteBounds(note)).toMatchObject({ overflow: 0, inside: true, aligned: true });
+
+  const { before, after } = await note.locator(":scope > div").evaluate(async (text) => {
+    const frame = () => new Promise(requestAnimationFrame);
+    const scrollState = () => ({ height: document.documentElement.scrollHeight, y: scrollY });
+    await document.fonts.ready;
+    await frame();
+    await frame();
+    window.scrollTo(0, document.documentElement.scrollHeight);
+    await frame();
+    const before = scrollState();
+    text.append(document.createTextNode(" "));
+    await frame();
+    await frame();
+    return { before, after: scrollState() };
+  });
+  expect(before.y).toBeGreaterThan(0);
+  expect(after).toEqual(before);
+  await expect(note).toHaveCSS("position", "static");
+});
+
 test("a box frames its area 6px out on a host that sets every element's box-sizing", async ({
   page,
 }) => {
