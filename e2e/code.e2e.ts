@@ -181,8 +181,8 @@ test("without a title, the buttons float in the corner over the code, on hover a
   await open(page, sh);
   const block = page.locator(".ck");
   const bar = block.locator(".ck-bar");
-  const [pre, line, copy] = await Promise.all(
-    [".ck pre", ".ck pre code", ".ck-copy"].map((selector) =>
+  const [pre, line, copy, surface] = await Promise.all(
+    [".ck pre", ".ck pre code", ".ck-copy", ".ck-bar"].map((selector) =>
       page.locator(selector).evaluate((element) => element.getBoundingClientRect()),
     ),
   );
@@ -193,8 +193,12 @@ test("without a title, the buttons float in the corner over the code, on hover a
   expect(Math.abs(copy.top - pre.top - 6)).toBeLessThan(1);
   await expect(block.locator(".ck-title")).toHaveCount(0);
   await expect(bar).toHaveCSS("border-bottom-width", "0px");
-  // The buttons sit on the code block's surface, so the code under them doesn't show through.
-  await expect(bar).toHaveCSS("background-color", "rgb(245, 245, 245)");
+  // The buttons sit on the code block's surface, laid on the page's background and run to the block's edges, so no
+  // code shows through them or between them and the edge.
+  await expect(bar).toHaveCSS("background-image", /^linear-gradient\(rgb\(245, 245, 245\)/);
+  await expect(bar).toHaveCSS("background-color", "rgb(255, 255, 255)");
+  expect(Math.abs(surface.top - pre.top)).toBeLessThan(1);
+  expect(Math.abs(surface.right - pre.right)).toBeLessThan(1);
   await page.mouse.move(0, 0);
   await expect(bar).toHaveCSS("opacity", "0");
   await block.hover();

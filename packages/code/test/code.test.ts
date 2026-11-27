@@ -68,9 +68,11 @@ describe("comark-code", () => {
       /div\.ck:not\(\[data-code-header\] \.ck\)(:not\([^)]*\)\))?>pre\{padding-top/,
     );
     expect(style).toContain(
-      ".ck:not([data-code-header] .ck):not(:has(>.ck-bar>.ck-title))>.ck-bar{inset:var(--_ck-inset) var(--_ck-inset) auto auto;height:auto;padding:0;",
+      ".ck:not([data-code-header] .ck):not(:has(>.ck-bar>.ck-title))>.ck-bar{inset:0 0 auto auto;height:auto;padding:var(--_ck-inset);",
     );
-    expect(style).toContain("background:var(--ck-surface,var(--_comark-accent));opacity:0;");
+    expect(style).toContain(
+      "background:linear-gradient(var(--ck-surface,var(--_comark-accent)) 0 0) var(--_comark-background);opacity:0;",
+    );
     expect(style).toContain("height:var(--_ck-bar)");
     expect(style).toContain(
       ".ck-title{min-width:0;margin-right:auto;overflow:hidden;color:color-mix(in srgb,var(--_comark-foreground) 72%,transparent);font:.6875rem/1.5 var(--ck-title-font,ui-monospace,SFMono-Regular,Menlo,monospace);",

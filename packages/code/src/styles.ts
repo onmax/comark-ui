@@ -41,13 +41,14 @@ export const css = `${icons}@layer comark{${[
   // In a flex or grid item the block's margins stay inside the wrapper, so the header pins itself to the block itself.
   "@supports (anchor-scope:all){.ck{anchor-scope:--ck-pre}.ck>pre{anchor-name:--ck-pre}.ck-bar{position-anchor:--ck-pre;top:anchor(top);left:anchor(left);right:anchor(right)}}",
   // Floating buttons hide the code under them with the block's background, which comark-ui's typeset paints in the
-  // accent token. The fade is opacity only, so the buttons stay focusable and the keyboard brings them back.
-  `${floating}>.ck-bar{inset:var(--_ck-inset) var(--_ck-inset) auto auto;height:auto;padding:0;border-radius:calc(var(--_comark-radius) - 2px);background:var(--ck-surface,var(--_comark-accent));opacity:0;transition:opacity .15s ease}`,
-  `@supports (anchor-scope:all){${floating}>.ck-bar{top:calc(anchor(top) + var(--_ck-inset));right:calc(anchor(right) + var(--_ck-inset));left:auto}}`,
+  // accent token. The surface sits on the page's background, so a translucent accent still hides the code, and it runs
+  // to the block's edges, so no line shows between the buttons and the edge. The fade is opacity only, so the buttons
+  // stay focusable and the keyboard brings them back.
+  `${floating}>.ck-bar{inset:0 0 auto auto;height:auto;padding:var(--_ck-inset);border-radius:0 var(--_comark-radius) 0 var(--_comark-radius);background:linear-gradient(var(--ck-surface,var(--_comark-accent)) 0 0) var(--_comark-background);opacity:0;transition:opacity .15s ease}`,
+  `@supports (anchor-scope:all){${floating}>.ck-bar{top:anchor(top);right:anchor(right);left:auto}}`,
   // While Copy says whether it worked, the buttons stay, so the status doesn't vanish with the pointer.
   `[data-code-ready] ${floating}:is(:hover,:focus-within,:has(.ck-status:not(:empty)))>.ck-bar{opacity:1}`,
   `@media (hover:none){[data-code-ready] ${floating}>.ck-bar{opacity:1}}`,
-  `${floating}>.ck-bar>.ck-status{right:0}`,
   // The container's header already names the block.
   "[data-code-header] .ck-title{display:none}",
   // Very wide action sets scroll independently, leaving some of the header available to its tabs.

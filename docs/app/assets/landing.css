@@ -60,3 +60,22 @@
   letter-spacing: -0.035em;
   text-wrap: balance;
 }
+
+/* @vite-hub/docs paints a code block's surface on its frame and leaves the `pre` clear, so floating code buttons take the
+   frame's color, and its ring moves above the block so the buttons' surface doesn't cover it. */
+.docs-content .ck {
+  --ck-surface: var(--ui-bg-muted);
+}
+
+.docs-content .ck:not(.ct .ck) {
+  box-shadow: none;
+}
+
+.docs-content .ck:not(.ct .ck)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px var(--ui-border);
+  pointer-events: none;
+}

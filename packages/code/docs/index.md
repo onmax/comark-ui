@@ -373,7 +373,7 @@ When you render on a server, import `comark-code/style.css` with your own styles
 
 ## Theme
 
-A title's header sits on the code block's own background, so it takes your `pre` styles and Shiki's theme. Floating buttons sit on `--ck-surface`, which defaults to `--comark-accent`, the background comark-ui's typeset gives code blocks; set it to your `pre` background if yours differs. The title and buttons follow the shared tokens in [Theming](/guide/theming).
+A title's header sits on the code block's own background, so it takes your `pre` styles and Shiki's theme. Floating buttons sit on `--ck-surface`, which defaults to `--comark-accent`, the background comark-ui's typeset gives code blocks; set it to your `pre` background if yours differs. That surface runs to the block's top and right edges, so a frame drawn as an inset `box-shadow` on the block goes under it; draw the frame on a `::after` over the block instead. The title and buttons follow the shared tokens in [Theming](/guide/theming).
 
 Code highlighted with a light and a dark Shiki theme switches to the dark one with the page: under a `.dark` class, or in the system's dark mode unless a `.light` class is above it. Shiki writes the light colors inline, so this rule is `!important`.
 
@@ -406,7 +406,7 @@ Set these on `.ck` or any ancestor, such as `:root`:
 | --- | --- | --- |
 | `--ck-inset` | `0.375rem` | How far the buttons sit from the block's top right corner |
 | `--ck-button-size` | `1.5rem` | The buttons' height and least width. On touch screens the tap area is at least `2.75rem` tall without growing the button, and no wider than it, so it doesn't overlap the next control. |
-| `--ck-surface` | `--comark-accent` | The background under floating buttons, which hides the code beneath them. Set it to your code block's background. |
+| `--ck-surface` | `--comark-accent` | The background under floating buttons, which hides the code beneath them. It sits on `--comark-background`, so a translucent color still hides the code. Set it to your code block's background. |
 | `--ck-title-font` | `ui-monospace, SFMono-Regular, Menlo, monospace` | The title. Set it to your code's font to match the block. |
 | `--ck-green` | `--comark-success` | Lines marked `ins`, and their `+` |
 | `--ck-red` | `--comark-danger` | Lines marked `del`, and their `−`, and Shiki's errors |
