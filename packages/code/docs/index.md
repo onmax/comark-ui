@@ -2,7 +2,7 @@
 title: Code
 description: Copy and wrap buttons on code blocks.
 keywords: copy button, copy to clipboard, clipboard, line wrap, word wrap, code block, run button, actions, Shiki
-tagline: A header on every code block with Copy, Wrap, and buttons of your own, and line markers written after the fence.
+tagline: Copy, Wrap, and buttons of your own on every code block, and line markers written after the fence.
 group: Page behavior
 icon: square-code
 blurb: Copy and wrap buttons on code
@@ -59,12 +59,12 @@ pnpm add comark @comark/html comark-code
 
 ## Features
 
-- Each code block gets a header with the file's name or language on the left and the buttons on the right, so they never cover the code.
+- The buttons float in each code block's top right corner while the pointer is over it or focus is in it, and always on touch screens. A block with a title gets a header instead, with the title on the left and the buttons on the right, above the code.
 - Copy puts the block's code on the clipboard, and Wrap breaks long lines in that block only.
 - Words after the fence's language mark lines as added, deleted, or worth a look, fold runs of lines, number the lines, and draw shell sessions as a terminal.
 - A `diff` fence with a `lang` turns pasted `git diff` output into highlighted code with its lines marked.
 - Buttons of your own, such as Run, hand the block's code to your app.
-- Without a script, the header keeps its title and hides the buttons.
+- Without a script, a header keeps its title and the buttons stay hidden.
 
 ## Usage
 
@@ -152,7 +152,7 @@ The numbers and signs come from CSS, so selecting and copying the code gets only
 
 ### Title
 
-Use the `title` attribute to name the block in its header, like Comark's `[src/x.ts]`. Without a title, the header shows the language.
+Use the `title` attribute to name the block in a header above its first line, like Comark's `[src/x.ts]`. A block without a title has no header: its buttons float over the code in its top right corner, on the block's background.
 
 ::example
 ````md
@@ -164,7 +164,7 @@ export function close() {}
 
 ### Frame
 
-Use the `frame` attribute to choose how the block is drawn. `frame="terminal"` draws a terminal, with a line under its header. `frame="code"` or `frame="none"` draws a plain block.
+Use the `frame` attribute to choose how the block is drawn. `frame="terminal"` draws a terminal, with a line under its header when it has a title. `frame="code"` or `frame="none"` draws a plain block.
 
 ::example
 ````md
@@ -174,7 +174,7 @@ pnpm add comark @comark/html comark-code
 ````
 ::
 
-`sh`, `bash`, `zsh`, `shell`, `shellscript`, `shellsession`, `console`, and `ansi` blocks are terminals unless their title is a file's name, like `install.sh`. A terminal's header shows its title but not its language. In a [code group](/tabs#code-group) the tab names the block, so a terminal there draws no line under its header.
+`sh`, `bash`, `zsh`, `shell`, `shellscript`, `shellsession`, `console`, and `ansi` blocks are terminals unless their title is a file's name, like `install.sh`. In a [code group](/tabs#code-group) the tab names the block, so a terminal there draws no line under its header.
 
 ### Wrap
 
@@ -273,7 +273,7 @@ A check mark confirms the copy. When the page can't write to the clipboard, such
 
 ## Accessibility
 
-The header's buttons stay hidden until the script runs, so screen readers reach them only then. The title is plain text.
+The buttons stay hidden until the script runs, so screen readers reach them only then. Floating buttons fade out while the pointer is off the block, but they stay in the tab order, and focusing one shows them. The title is plain text.
 
 - Copy is a button named "Copy code". After a click, a status line says "Copied", or, when the page can't write to the clipboard, "Couldn't copy, so the code is selected. Press Ctrl+C or ⌘C." Screen readers read it out.
 - Wrap is a toggle button named "Wrap lines", pressed while it's on.
@@ -284,7 +284,7 @@ The header's buttons stay hidden until the script runs, so screen readers reach 
 
 | Key | Description |
 | --- | --- |
-| `Tab`, `Shift+Tab` | Moves focus to each collapsed range in the code, then to the header's buttons: your actions, Wrap, and Copy. |
+| `Tab`, `Shift+Tab` | Moves focus to each collapsed range in the code, then to the block's buttons: your actions, Wrap, and Copy. |
 | `Enter`, `Space` | Presses the focused button. On a collapsed range, opens its lines. |
 
 ## API
@@ -373,13 +373,13 @@ When you render on a server, import `comark-code/style.css` with your own styles
 
 ## Theme
 
-The header sits on the code block's own background, so it takes your `pre` styles and Shiki's theme. The title and buttons follow the shared tokens in [Theming](/guide/theming).
+A title's header sits on the code block's own background, so it takes your `pre` styles and Shiki's theme. Floating buttons sit on `--ck-surface`, which defaults to `--comark-accent`, the background comark-ui's typeset gives code blocks; set it to your `pre` background if yours differs. The title and buttons follow the shared tokens in [Theming](/guide/theming).
 
 Code highlighted with a light and a dark Shiki theme switches to the dark one with the page: under a `.dark` class, or in the system's dark mode unless a `.light` class is above it. Shiki writes the light colors inline, so this rule is `!important`.
 
 The rules sit in a `comark` CSS layer, so any plain rule of your own wins. These sit outside the layer, so they beat a page's own `pre` styles:
 
-- The `padding-top` that makes room for the header above the first line.
+- The `padding-top` that makes room for a titled block's header above the first line.
 - The `overflow-x` that clips a marked line's tint.
 - Wrap's `white-space`.
 
@@ -393,7 +393,7 @@ A collapsed range's margins, padding, and border are `!important`, so a page's o
 | `--comark-foreground` | The title, at 72%, hovered buttons' icons and labels, the status line's background, and the tint of `mark` lines, highlighted words, and collapsed ranges |
 | `--comark-background` | The status line's text |
 | `--comark-border` | The line under a terminal's header |
-| `--comark-accent` | Hovered buttons, and Wrap while it's on |
+| `--comark-accent` | Floating buttons' background, hovered buttons, and Wrap while it's on |
 | `--comark-ring` | The focus ring on the buttons and on a collapsed range |
 | `--comark-radius` | Code block, button, status line, and highlighted word corners |
 | `--comark-font` | Action labels and the status line |
@@ -406,6 +406,7 @@ Set these on `.ck` or any ancestor, such as `:root`:
 | --- | --- | --- |
 | `--ck-inset` | `0.375rem` | How far the buttons sit from the block's top right corner |
 | `--ck-button-size` | `1.5rem` | The buttons' height and least width. On touch screens the tap area is at least `2.75rem` tall without growing the button, and no wider than it, so it doesn't overlap the next control. |
+| `--ck-surface` | `--comark-accent` | The background under floating buttons, which hides the code beneath them. Set it to your code block's background. |
 | `--ck-title-font` | `ui-monospace, SFMono-Regular, Menlo, monospace` | The title. Set it to your code's font to match the block. |
 | `--ck-green` | `--comark-success` | Lines marked `ins`, and their `+` |
 | `--ck-red` | `--comark-danger` | Lines marked `del`, and their `−`, and Shiki's errors |
@@ -423,20 +424,20 @@ A block that draws a header above its code blocks, like a [code group](/tabs#cod
 }
 ```
 
-The block's `padding-top` is the button size, plus the inset above the buttons, plus `0.75rem`, so the code starts that far below the header. A marked line's tint runs edge to edge, past the block's padding, so the block clips its overflow. The line's sign sits in the left padding, which needs to be at least `1.5ch` wide. On a numbered block, it sits between the number and the code.
+A titled block's `padding-top` is the button size, plus the inset above the buttons, plus `0.75rem`, so the code starts that far below the header. A block without a title keeps your padding. A marked line's tint runs edge to edge, past the block's padding, so the block clips its overflow. The line's sign sits in the left padding, which needs to be at least `1.5ch` wide. On a numbered block, it sits between the number and the code.
 
 ### Classes and attributes
 
 | Selector | Is |
 | --- | --- |
 | `.ck` | The wrapper around each block, with `data-code-wrap` while Wrap is on |
-| `.ck-bar` | The header above the code: the title, then the buttons |
-| `.ck-title` | The file's name, or else the language; hidden under [your own header](#your-own-header), which names the block |
+| `.ck-bar` | The buttons, floating in the block's top right corner, or, on a block with a title, the header above the code: the title, then the buttons |
+| `.ck-title` | The block's title, which gives it a header; hidden under [your own header](#your-own-header), which names the block |
 | `.ck-action` | Each of your [actions](#run-code-from-a-button), with its id in `data-code-action`, and `aria-label` when it shows only an icon |
 | `.ck-wrap` | Wrap, with `aria-pressed="true"` while it's on |
 | `.ck-copy` | Copy, with `data-state="done"` or `data-state="failed"` for a moment after a click |
-| `.ck-status` | The line under the header that says what Copy did |
-| `[data-code-frame="terminal"]` | On `.ck` when the block is a terminal, with a line under its header |
+| `.ck-status` | The line under the buttons that says what Copy did |
+| `[data-code-frame="terminal"]` | On `.ck` when the block is a terminal, with a line under its header when it has a title |
 | `[data-code-lines]` | On `.ck` when the lines are blocks of their own, because the block marks, numbers, or folds lines, or Shiki's transformers mark them |
 | `[data-code-numbers]` | On `.ck` when the lines are numbered, with the widest number's digits as its value; each line's number is in `data-line` |
 | `.ck-ins`, `.ck-del`, `.ck-mark` | Lines the fence marks with `ins`, `del`, and `mark`. A line Comark's `{2}` highlights has `.highlight`, and Shiki's transformers' `.diff.add`, `.diff.remove`, `.highlighted`, `.focused`, `.error`, and `.warning` look the same as the matching marker |

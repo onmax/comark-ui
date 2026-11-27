@@ -9,13 +9,21 @@ const chevrons = `url("data:image/svg+xml,${encodeURIComponent(
 const lines = ".ck[data-code-lines]";
 // A container with `data-code-header` draws the block's header itself, as comark-tabs' code groups and magic move do.
 const own = ".ck:not([data-code-header] .ck)";
-const terminal = `${own}[data-code-frame=terminal]`;
+// Only a block with a title has a header. Without one its buttons float in its top right corner, over the code.
+const titled = `${own}:has(>.ck-bar>.ck-title)`;
+const floating = `${own}:not(:has(>.ck-bar>.ck-title))`;
+const terminal = `${titled}[data-code-frame=terminal]`;
 
 /**
- * The header's styles, on the shared `--comark-*` tokens, with `--ck-inset` and `--ck-button-size` for how far the
- * buttons sit from the block's top right corner and how big they are, and `--ck-title-font` for the title. The script adds them to the page once. The rules sit in the
- * `comark` layer, so any unlayered rule of the host's wins, except the two after it that make room for the header and
- * wrap the lines.
+ * The buttons' styles, on the shared `--comark-*` tokens, with `--ck-inset` and `--ck-button-size` for how far the
+ * buttons sit from the block's top right corner and how big they are, `--ck-surface` for the background they float on,
+ * and `--ck-title-font` for the title. The script adds them to the page once. The rules sit in the `comark` layer, so
+ * any unlayered rule of the host's wins, except the ones after it that make room for a titled block's header and wrap
+ * the lines.
+ *
+ * A block with a title gets a header above its first line. A block without one makes no room: its buttons float in its
+ * top right corner on the code block's background, shown while the pointer is over the block or focus is in it, and
+ * always on a screen with no hover.
  *
  * A container that draws a header above its code blocks puts `data-code-header` on its root and sets `--ck-header` to
  * how far the header's top sits above the block's. Its blocks then make no room of their own, and their buttons sit at
@@ -27,11 +35,19 @@ export const css = `${icons}@layer comark{${[
   // No padding, border, or new formatting context, so the block's own margins collapse through the wrapper and the
   // header's top edge is the block's.
   ".ck{position:relative;--_ck-size:var(--ck-button-size,1.5rem);--_ck-inset:var(--ck-inset,.375rem);--_ck-bar:calc(var(--_ck-size) + 2 * var(--_ck-inset))}",
-  // The header sits on the block's own background, in room the block makes above its first line, so it never covers
-  // the code.
+  // A titled block's header sits on the block's own background, in room the block makes above its first line, so it
+  // never covers the code.
   ".ck-bar{position:absolute;inset:0 0 auto;display:flex;align-items:center;justify-content:flex-end;gap:.125rem;height:var(--_ck-bar);padding:var(--_ck-inset) var(--_ck-inset) 0 .75rem;box-sizing:border-box;user-select:none}",
   // In a flex or grid item the block's margins stay inside the wrapper, so the header pins itself to the block itself.
   "@supports (anchor-scope:all){.ck{anchor-scope:--ck-pre}.ck>pre{anchor-name:--ck-pre}.ck-bar{position-anchor:--ck-pre;top:anchor(top);left:anchor(left);right:anchor(right)}}",
+  // Floating buttons hide the code under them with the block's background, which comark-ui's typeset paints in the
+  // accent token. The fade is opacity only, so the buttons stay focusable and the keyboard brings them back.
+  `${floating}>.ck-bar{inset:var(--_ck-inset) var(--_ck-inset) auto auto;height:auto;padding:0;border-radius:calc(var(--_comark-radius) - 2px);background:var(--ck-surface,var(--_comark-accent));opacity:0;transition:opacity .15s ease}`,
+  `@supports (anchor-scope:all){${floating}>.ck-bar{top:calc(anchor(top) + var(--_ck-inset));right:calc(anchor(right) + var(--_ck-inset));left:auto}}`,
+  // While Copy says whether it worked, the buttons stay, so the status doesn't vanish with the pointer.
+  `[data-code-ready] ${floating}:is(:hover,:focus-within,:has(.ck-status:not(:empty)))>.ck-bar{opacity:1}`,
+  `@media (hover:none){[data-code-ready] ${floating}>.ck-bar{opacity:1}}`,
+  `${floating}>.ck-bar>.ck-status{right:0}`,
   // The container's header already names the block.
   "[data-code-header] .ck-title{display:none}",
   // Very wide action sets scroll independently, leaving some of the header available to its tabs.
@@ -59,7 +75,7 @@ export const css = `${icons}@layer comark{${[
   "[data-code-header] .ck>.ck-status{top:.25rem}",
   // Expand touch targets vertically only, so adjacent buttons cannot steal each other's taps.
   "@media (pointer:coarse){.ck-bar>button::after{content:'';position:absolute;top:50%;left:50%;width:100%;height:max(100%,2.75rem);translate:-50% -50%}}",
-  // A terminal block keeps a line under its header.
+  // A titled terminal keeps a line under its header.
   `${terminal}>.ck-bar{border-bottom:1px solid var(--_comark-border)}`,
   ":where(.ck){--ck-red:var(--_comark-danger);--ck-green:var(--_comark-success);--ck-yellow:var(--_comark-warning);--_ck-digits:2}",
   ...[3, 4, 5, 6].map((digits) => `.ck[data-code-numbers="${digits}"]{--_ck-digits:${digits}}`),
@@ -102,7 +118,7 @@ export const css = `${icons}@layer comark{${[
   // Pages set a code block's padding, overflow, and `white-space` with plain rules, which beat any layered one. A tinted
   // line reaches past the block, which must clip it.
   // Like T3 Code's, the header has no inset under its buttons, and the code starts a block padding below it.
-  `div${own}>pre{padding-top:calc(var(--_ck-size) + var(--_ck-inset) + .75rem)}` +
+  `div${titled}>pre{padding-top:calc(var(--_ck-size) + var(--_ck-inset) + .75rem)}` +
   `div${terminal}>pre{padding-top:calc(var(--_ck-bar) + .625rem)}` +
   "div.ck[data-code-lines]>pre{overflow-x:auto}" +
   ".ck[data-code-wrap]>pre,.ck[data-code-wrap]>pre>code{white-space:pre-wrap;overflow-wrap:anywhere}"

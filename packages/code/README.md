@@ -18,7 +18,7 @@ import code, { components } from "comark-code/html";
 const render = createHtmlRenderer({ plugins: [code()], components });
 ```
 
-Shiki's highlighting and your `pre` styles still apply. Each block gets a header above its first line, with the file's name or the language and the buttons, so they never cover the code. They work in a `comark-tabs` code group whichever plugin comes first.
+Shiki's highlighting and your `pre` styles still apply. The buttons float in each block's top right corner while the pointer is over it or focus is in it, and always on touch screens. A block with a title gets a header above its first line instead, with the title and the buttons. They work in a `comark-tabs` code group whichever plugin comes first.
 
 Copy writes the code to the clipboard and shows a check. When the page can't write to it, such as over plain http, it selects the code and says to press Ctrl+C or ⌘C. Wrap breaks long lines in that block until it's pressed again.
 
@@ -77,4 +77,4 @@ const stop = onCodeAction("run", ({ code, language }) => terminal.run(code));
 
 Each entry exports the parse plugin as `default` and the renderer's `components`.
 
-The buttons read shadcn's CSS variables, such as `--background` and `--border`, when the page has them, and use its neutral theme otherwise. Set the `--comark-*` tokens to theme every comark plugin at once. The rules sit in a `comark` CSS layer, so any plain rule of your own wins, except the two that make room for the header and wrap lines. `--ck-inset` sets how far the buttons sit from the corner and `--ck-button-size` sizes them, and the header grows to fit. `--ck-title-font` sets the title's font; see the code's [Theming page](https://comark-ui.onmax.me/code#theme).
+The buttons read shadcn's CSS variables, such as `--background` and `--border`, when the page has them, and use its neutral theme otherwise. Set the `--comark-*` tokens to theme every comark plugin at once. The rules sit in a `comark` CSS layer, so any plain rule of your own wins, except the ones that make room for a titled block's header and wrap lines. `--ck-inset` sets how far the buttons sit from the corner and `--ck-button-size` sizes them, and the header grows to fit. `--ck-surface` sets the background under floating buttons. `--ck-title-font` sets the title's font; see the code's [Theming page](https://comark-ui.onmax.me/code#theme).

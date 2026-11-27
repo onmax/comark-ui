@@ -397,15 +397,13 @@ function action({ id, label, title, icon: image }: ActionButton) {
 }
 
 /**
- * The inside of a block's header, the same in every renderer: the file's name or the language, your actions, Wrap and
- * Copy, then the status line that says whether the copy worked. The buttons stay hidden until the script starts, since
- * nothing works without it.
+ * The inside of a block's buttons, the same in every renderer: the block's title, your actions, Wrap and Copy, then the
+ * status line that says whether the copy worked. The title gives the block a header; without one the buttons float
+ * over the code. The buttons stay hidden until the script starts, since nothing works without it.
  */
 export function buttons(actions: unknown, attributes: Record<string, unknown> = {}): string {
-  // A terminal needs no language to say it's a shell.
-  const language = attributes.frame === "terminal" ? "" : attributes.language;
-  // SAFETY: Comark writes a fence's filename and language as strings.
-  const title = `${(attributes.filename || language || "") as string}`;
+  // SAFETY: Comark writes a fence's filename as a string.
+  const title = `${(attributes.filename || "") as string}`;
   const wrap = attributes.wrap === true;
   // SAFETY: the parse plugin is the only writer of `actions`, always as `ActionButton`s.
   const own = (Array.isArray(actions) ? (actions as ActionButton[]) : []).map(action);

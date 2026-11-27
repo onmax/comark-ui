@@ -175,7 +175,63 @@ test("an action sends the block's code and language to the page", async ({ page 
   expect(await detail).toEqual({ action: "run", code: long, language: "sh" });
 });
 
-test("the header sits above the first line, so its buttons never cover the code", async ({
+test("without a title, the buttons float in the corner over the code, on hover and focus", async ({
+  page,
+}) => {
+  await open(page, sh);
+  const block = page.locator(".ck");
+  const bar = block.locator(".ck-bar");
+  const [pre, line, copy] = await Promise.all(
+    [".ck pre", ".ck pre code", ".ck-copy"].map((selector) =>
+      page.locator(selector).evaluate((element) => element.getBoundingClientRect()),
+    ),
+  );
+  // No header: the code starts at the host's own padding, and the buttons sit over it in the block's corner.
+  expect(Math.abs(line.top - pre.top - 16)).toBeLessThan(1);
+  expect(copy.top).toBeLessThan(line.bottom);
+  expect(Math.abs(pre.right - copy.right - 6)).toBeLessThan(1);
+  expect(Math.abs(copy.top - pre.top - 6)).toBeLessThan(1);
+  await expect(block.locator(".ck-title")).toHaveCount(0);
+  await expect(bar).toHaveCSS("border-bottom-width", "0px");
+  // The buttons sit on the code block's surface, so the code under them doesn't show through.
+  await expect(bar).toHaveCSS("background-color", "rgb(245, 245, 245)");
+  await page.mouse.move(0, 0);
+  await expect(bar).toHaveCSS("opacity", "0");
+  await block.hover();
+  await expect(bar).toHaveCSS("opacity", "1");
+  await page.mouse.move(0, 0);
+  await expect(bar).toHaveCSS("opacity", "0");
+  // Chromium focuses a block that scrolls before the buttons that follow it.
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("button", { name: "Run" })).toBeFocused();
+  await expect(bar).toHaveCSS("opacity", "1");
+  // Without the script there are no buttons to show, so hovering shows nothing.
+  await open(page, sh, { script: false });
+  await page.locator(".ck").hover();
+  await expect(page.locator(".ck-bar")).toHaveCSS("opacity", "0");
+});
+
+test("Copy's status keeps floating buttons shown after the pointer leaves", async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await open(page, sh);
+  await page.getByRole("button", { name: "Copy code" }).click();
+  await page.mouse.move(0, 0);
+  await expect(page.getByRole("status")).toHaveText("Copied");
+  await expect(page.locator(".ck-bar")).toHaveCSS("opacity", "1");
+  const [copy, status] = await Promise.all(
+    [".ck-copy", ".ck-status"].map((selector) =>
+      page.locator(selector).evaluate((element) => element.getBoundingClientRect()),
+    ),
+  );
+  expect(status.top).toBeGreaterThan(copy.bottom);
+  expect(Math.abs(status.right - copy.right)).toBeLessThan(1);
+});
+
+test("a titled block's header sits above the first line, so its buttons never cover the code", async ({
   page,
 }) => {
   // A terminal's header shows its title, not its language.
