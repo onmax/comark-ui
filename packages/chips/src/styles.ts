@@ -35,5 +35,6 @@ export const css = `@layer comark{${[
   '.cp[data-kind="avatar"]:hover{background:none;text-decoration-color:currentColor}',
   '.cp[data-kind="avatar"]:focus-visible{outline:none;text-decoration:underline 2px var(--_comark-ring)}',
   '.cp[data-kind="avatar"] .cp-img{border-radius:50%}',
+  '.cp[data-kind="avatar"]:focus-visible > .cp-img{outline:2px solid var(--_comark-ring);outline-offset:-2px}',
   '@media (prefers-reduced-motion:reduce){.cp,.cp[data-kind="avatar"]{transition:none}}',
 ].join("")}}`;

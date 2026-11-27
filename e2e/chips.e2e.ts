@@ -9,6 +9,29 @@ const label = "A detailed review of the build configuration and deployment setti
 const token = "abcdefghij".repeat(9);
 const render = createHtmlRenderer({ plugins: [chips({ download: false })], components });
 
+test("an image-only avatar chip shows an inset keyboard focus ring", async ({ page }) => {
+  const html = await render(
+    ':chip{href="https://github.com/onmax" title="GitHub profile"} and ask',
+  );
+  await page.route("https://**/*", (route) =>
+    route.fulfill({
+      contentType: "image/svg+xml",
+      body: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"><rect width="16" height="16" fill="white"/></svg>',
+    }),
+  );
+  await page.setContent(`<!doctype html>${html}`);
+
+  const chip = page.getByRole("link", { name: "GitHub profile" });
+  const avatar = chip.locator("img");
+  await expect(chip).toHaveText("");
+  await expect(avatar).toHaveCSS("outline-style", "none");
+  await page.keyboard.press("Tab");
+  await expect(chip).toBeFocused();
+  await expect(avatar).toHaveCSS("outline-style", "solid");
+  await expect(avatar).toHaveCSS("outline-width", "2px");
+  await expect(avatar).toHaveCSS("outline-offset", "-2px");
+});
+
 for (const width of [320, 390, 900, 1280]) {
   test(`long chips fit a ${width}px document`, async ({ page }) => {
     const html = await render(
