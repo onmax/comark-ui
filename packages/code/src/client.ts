@@ -103,14 +103,11 @@ export function start(css: string): () => void {
   const headers = new Set<HTMLElement>();
   const fitFloatingBar = (bar: HTMLElement) => {
     const root = bar.parentElement;
-    const pre = root?.querySelector<HTMLElement>(":scope>pre");
-    if (!root || !pre || bar.offsetParent !== root) return;
-    const bottom = bar.offsetTop + bar.offsetHeight;
-    if (bottom > pre.offsetTop + pre.offsetHeight) {
-      root.style.setProperty("--_ck-bar-height", `${root.clientTop + bottom}px`);
-    } else {
-      root.style.removeProperty("--_ck-bar-height");
-    }
+    if (!root || bar.offsetParent !== root) return;
+    root.style.setProperty(
+      "--_ck-bar-height",
+      `${root.clientTop + bar.offsetTop + bar.offsetHeight}px`,
+    );
   };
   let frame = 0;
   const refresh = () => {

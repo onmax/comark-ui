@@ -279,6 +279,37 @@ test("wrapped floating actions fit and work in a short clipped frame", async ({
   await expect.poll(async () => (await frame.boundingBox())!.height).toBe(wideHeight);
 });
 
+test("a clipped grid frame stays at one height when its floating actions wrap", async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.setViewportSize({ width: 800, height: 600 });
+  await openFramedActions(page);
+  await page.addStyleTag({ content: ".ck{display:grid}" });
+  const frame = page.locator(".ck");
+  const bar = frame.locator(".ck-bar");
+  const wideHeight = (await frame.boundingBox())!.height;
+  await page.setViewportSize({ width: 390, height: 600 });
+  await frame.hover();
+  await expect(bar).toHaveCSS("opacity", "1");
+  const heights = await frame.evaluate(async (element) => {
+    const samples: number[] = [];
+    for (let index = 0; index < 8; index++) {
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      samples.push(element.getBoundingClientRect().height);
+    }
+    return samples;
+  });
+  expect(Math.min(...heights)).toBeGreaterThan(wideHeight);
+  expect(new Set(heights).size).toBe(1);
+  await frame.getByRole("button", { name: "Copy code" }).click();
+  await expect(frame.getByRole("status")).toHaveText("Copied");
+  await page.setViewportSize({ width: 800, height: 600 });
+  await expect(frame.locator(".ck-status")).toBeEmpty({ timeout: 3000 });
+  await expect.poll(async () => (await frame.boundingBox())!.height).toBe(wideHeight);
+});
+
 test.describe("on a touch screen without hover", () => {
   test.use({ viewport: { width: 390, height: 600 }, hasTouch: true, isMobile: true });
 
