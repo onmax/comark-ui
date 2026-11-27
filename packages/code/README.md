@@ -18,7 +18,7 @@ import code, { components } from "comark-code/html";
 const render = createHtmlRenderer({ plugins: [code()], components });
 ```
 
-Shiki's highlighting and your `pre` styles still apply. The buttons float in each block's top right corner while the pointer is over it or focus is in it, and always on touch screens. A block with a title gets a header above its first line instead, with the title and the buttons. They work in a `comark-tabs` code group whichever plugin comes first.
+Shiki's highlighting and your `pre` styles still apply. The buttons float in each untitled block's top right corner while the pointer is over it or focus is in it. On screens without hover they sit below the code, where they stay visible without covering it. A block with a title gets a header above its first line, with the title and the buttons. They work in a `comark-tabs` code group whichever plugin comes first.
 
 Copy writes the code to the clipboard and shows a check. When the page can't write to it, such as over plain http, it selects the code and says to press Ctrl+C or ⌘C. Wrap breaks long lines in that block until it's pressed again.
 

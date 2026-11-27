@@ -59,7 +59,7 @@ pnpm add comark @comark/html comark-code
 
 ## Features
 
-- The buttons float in each code block's top right corner while the pointer is over it or focus is in it, and always on touch screens. A block with a title gets a header instead, with the title on the left and the buttons on the right, above the code.
+- An untitled block's buttons float in its top right corner while the pointer is over it or focus is in it. On screens without hover they stay visible below the code so they don't cover it. A block with a title gets a header instead, with the title on the left and the buttons on the right, above the code.
 - Copy puts the block's code on the clipboard, and Wrap breaks long lines in that block only.
 - Words after the fence's language mark lines as added, deleted, or worth a look, fold runs of lines, number the lines, and draw shell sessions as a terminal.
 - A `diff` fence with a `lang` turns pasted `git diff` output into highlighted code with its lines marked.
@@ -152,7 +152,7 @@ The numbers and signs come from CSS, so selecting and copying the code gets only
 
 ### Title
 
-Use the `title` attribute to name the block in a header above its first line, like Comark's `[src/x.ts]`. A block without a title has no header: its buttons float over the code in its top right corner, on the block's background.
+Use the `title` attribute to name the block in a header above its first line, like Comark's `[src/x.ts]`. A block without a title has no header: its buttons float over the code in its top right corner, or sit below it on screens without hover.
 
 ::example
 ````md
@@ -431,7 +431,7 @@ A titled block's `padding-top` is the button size, plus the inset above the butt
 | Selector | Is |
 | --- | --- |
 | `.ck` | The wrapper around each block, with `data-code-wrap` while Wrap is on |
-| `.ck-bar` | The buttons, floating in the block's top right corner, or, on a block with a title, the header above the code: the title, then the buttons |
+| `.ck-bar` | The buttons: floating in the top right corner, below the code on screens without hover, or in the header of a titled block |
 | `.ck-title` | The block's title, which gives it a header; hidden under [your own header](#your-own-header), which names the block |
 | `.ck-action` | Each of your [actions](#run-code-from-a-button), with its id in `data-code-action`, and `aria-label` when it shows only an icon |
 | `.ck-wrap` | Wrap, with `aria-pressed="true"` while it's on |

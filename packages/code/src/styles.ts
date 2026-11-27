@@ -12,6 +12,7 @@ const own = ".ck:not([data-code-header] .ck)";
 // Only a block with a title has a header. Without one its buttons float in its top right corner, over the code.
 const titled = `${own}:has(>.ck-bar>.ck-title)`;
 const floating = `${own}:not(:has(>.ck-bar>.ck-title))`;
+const feedback = `${floating}:has(>.ck-bar>.ck-status:not(:empty))`;
 const terminal = `${titled}[data-code-frame=terminal]`;
 
 /**
@@ -21,9 +22,8 @@ const terminal = `${titled}[data-code-frame=terminal]`;
  * any unlayered rule of the host's wins, except the ones after it that make room for a titled block's header and wrap
  * the lines.
  *
- * A block with a title gets a header above its first line. A block without one makes no room: its buttons float in its
- * top right corner on the code block's background, shown while the pointer is over the block or focus is in it, and
- * always on a screen with no hover.
+ * A block with a title gets a header above its first line. Without a title, the buttons float in the top right corner
+ * on hover or focus. On a screen with no hover, they sit below the code so they never cover it.
  *
  * A container that draws a header above its code blocks puts `data-code-header` on its root and sets `--ck-header` to
  * how far the header's top sits above the block's. Its blocks then make no room of their own, and their buttons sit at
@@ -44,11 +44,13 @@ export const css = `${icons}@layer comark{${[
   // accent token. The surface sits on the page's background, so a translucent accent still hides the code, and it runs
   // to the block's edges, so no line shows between the buttons and the edge. The fade is opacity only, so the buttons
   // stay focusable and the keyboard brings them back.
-  `${floating}>.ck-bar{inset:0 0 auto auto;height:auto;padding:var(--_ck-inset);border-radius:0 var(--_comark-radius) 0 var(--_comark-radius);background:linear-gradient(var(--ck-surface,var(--_comark-accent)) 0 0) var(--_comark-background);opacity:0;transition:opacity .15s ease}`,
+  `${floating}>.ck-bar{inset:0 0 auto auto;height:auto;padding:var(--_ck-inset);border-radius:0 var(--_comark-radius) 0 var(--_comark-radius);background:linear-gradient(var(--ck-surface,var(--_comark-accent)) 0 0) var(--_comark-background);opacity:0;pointer-events:none;transition:opacity .15s ease}`,
   `@supports (anchor-scope:all){${floating}>.ck-bar{top:anchor(top);right:anchor(right);left:auto}}`,
+  `[data-code-ready] ${floating}>.ck-bar{pointer-events:auto}`,
   // While Copy says whether it worked, the buttons stay, so the status doesn't vanish with the pointer.
   `[data-code-ready] ${floating}:is(:hover,:focus-within,:has(.ck-status:not(:empty)))>.ck-bar{opacity:1}`,
-  `@media (hover:none){[data-code-ready] ${floating}>.ck-bar{opacity:1}}`,
+  `@media (hover:none){[data-code-ready] ${floating}>.ck-bar{position:static;flex-wrap:wrap;border-radius:0;opacity:1}}`,
+  `@media (hover:none) and (pointer:coarse){[data-code-ready] ${floating}>.ck-bar{padding-block:max(var(--_ck-inset),calc((2.75rem - var(--_ck-size))/2))}}`,
   // The container's header already names the block.
   "[data-code-header] .ck-title{display:none}",
   // Very wide action sets scroll independently, leaving some of the header available to its tabs.
@@ -73,6 +75,8 @@ export const css = `${icons}@layer comark{${[
   ".ck-copy[data-state=done] .ck-copy-done{display:block}",
   ".ck-status{position:absolute;top:calc(100% + .25rem);right:var(--_ck-inset);z-index:1;width:max-content;max-width:18rem;padding:.25rem .5rem;border-radius:calc(var(--_comark-radius) - 4px);background:var(--_comark-foreground);color:var(--_comark-background);font:.75rem/1.25rem var(--_comark-font);pointer-events:none}",
   ".ck-status:empty{display:none}",
+  `@media (hover:hover){${feedback}{display:grid;grid-template-columns:minmax(0,1fr)}${feedback}>:is(pre,.ck-bar){grid-area:1/1}${feedback}>.ck-bar{position:static;align-self:start;justify-self:end;z-index:1;max-width:100%;margin-top:0}}`,
+  `${feedback}>.ck-bar{flex-wrap:wrap}${feedback}>.ck-bar::after{content:'';flex-basis:100%;order:1}${feedback}>.ck-bar>.ck-status{position:static;order:2;box-sizing:border-box;max-width:min(18rem,100%);margin-top:.125rem;overflow-wrap:anywhere}`,
   "[data-code-header] .ck>.ck-status{top:.25rem}",
   // Expand touch targets vertically only, so adjacent buttons cannot steal each other's taps.
   "@media (pointer:coarse){.ck-bar>button::after{content:'';position:absolute;top:50%;left:50%;width:100%;height:max(100%,2.75rem);translate:-50% -50%}}",

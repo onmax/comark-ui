@@ -22,7 +22,7 @@ function close() {
 | `collapse={2-7}` | Folds lines behind a row that counts them. A click opens them. |
 | `showLineNumbers` | Numbers the lines. |
 | `startLineNumber=120` | Numbers the lines from 120, and turns numbers on. |
-| `title="src/zoom.ts"` | Titles the block in a header above the code, like Comark's `[src/zoom.ts]`. A block without one has no header, and its buttons float in its top right corner. |
+| `title="src/zoom.ts"` | Titles the block in a header above the code, like Comark's `[src/zoom.ts]`. An untitled block's buttons float in its top right corner, or sit below the code on screens without hover. |
 | `frame="terminal"` | Draws a terminal, with a line under its header when it has a title. `frame="code"` or `frame="none"` draws a plain block. |
 | `wrap` | Starts the block with Wrap on. |
 

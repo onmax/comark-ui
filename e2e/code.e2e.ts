@@ -20,6 +20,18 @@ const open = async (page: Page, markdown: string, options: { script?: boolean } 
 };
 const long = `echo ${"word ".repeat(40)}`;
 const sh = `\`\`\`sh\n${long}\n\`\`\``;
+const short = "echo 'Run the build before deploying now'";
+const openFramed = async (page: Page, script = true) => {
+  let html = await render(`\`\`\`sh\n${short}\n\`\`\``);
+  if (!script) html = html.replace(/<script>[\s\S]*?<\/script>/g, "");
+  await page.goto("/no-such-page");
+  await page.setContent(`<!doctype html><meta name="viewport" content="width=device-width">
+    <style>
+      body{margin:0}
+      .ck{margin-block:1.25rem;overflow:hidden;border-radius:10px;background:#f4f4f5}
+      .ck>pre{margin:0;padding:.8rem .9rem;overflow-x:auto;font:13px/1.6 monospace}
+    </style>${html}`);
+};
 
 test("Copy writes the block's code to the clipboard and says so", async ({ page, context }) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
@@ -216,24 +228,71 @@ test("without a title, the buttons float in the corner over the code, on hover a
   await expect(page.locator(".ck-bar")).toHaveCSS("opacity", "0");
 });
 
-test("Copy's status keeps floating buttons shown after the pointer leaves", async ({
-  page,
-  context,
-}) => {
-  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
-  await open(page, sh);
-  await page.getByRole("button", { name: "Copy code" }).click();
-  await page.mouse.move(0, 0);
-  await expect(page.getByRole("status")).toHaveText("Copied");
-  await expect(page.locator(".ck-bar")).toHaveCSS("opacity", "1");
-  const [copy, status] = await Promise.all(
-    [".ck-copy", ".ck-status"].map((selector) =>
-      page.locator(selector).evaluate((element) => element.getBoundingClientRect()),
-    ),
-  );
-  expect(status.top).toBeGreaterThan(copy.bottom);
-  expect(Math.abs(status.right - copy.right)).toBeLessThan(1);
+test.describe("on a touch screen without hover", () => {
+  test.use({ viewport: { width: 390, height: 600 }, hasTouch: true, isMobile: true });
+
+  test("the action bar leaves the entire first line readable", async ({ page }) => {
+    await openFramed(page);
+    expect(await page.evaluate(() => matchMedia("(hover: none)").matches)).toBe(true);
+    const bar = page.locator(".ck-bar");
+    await expect(bar).toHaveCSS("opacity", "1");
+    const pre = page.locator(".ck pre");
+    expect(await pre.evaluate((el) => el.scrollWidth)).toBe(
+      await pre.evaluate((el) => el.clientWidth),
+    );
+    const [code, controls] = await Promise.all([pre.boundingBox(), bar.boundingBox()]);
+    expect(controls!.y).toBeGreaterThanOrEqual(code!.y + code!.height);
+    await expect(bar.getByRole("button", { name: "Run" })).toBeVisible();
+    await expect(bar.getByRole("button", { name: "Copy code" })).toBeVisible();
+  });
 });
+
+test("without the script, dragging from beneath the invisible toolbar selects code", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 600 });
+  await openFramed(page, false);
+  const [code, bar] = await Promise.all(
+    [".ck pre code", ".ck-bar"].map((selector) => page.locator(selector).boundingBox()),
+  );
+  const from = code!.x + code!.width - 1;
+  expect(from).toBeGreaterThan(bar!.x);
+  const middle = code!.y + code!.height / 2;
+  await page.mouse.move(from, middle);
+  await page.mouse.down();
+  await page.mouse.move(code!.x, middle, { steps: 8 });
+  await page.mouse.up();
+  expect(await page.evaluate(() => getSelection()?.toString())).toBe(short);
+});
+
+for (const success of [true, false]) {
+  test(`Copy ${success ? "confirmation" : "instructions"} fit inside a short clipped frame`, async ({
+    page,
+    context,
+  }) => {
+    if (success) await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await page.setViewportSize({ width: 390, height: 600 });
+    await openFramed(page);
+    if (!success) {
+      await page.evaluate(() =>
+        Object.defineProperty(navigator, "clipboard", { value: undefined }),
+      );
+    }
+    await page.getByRole("button", { name: "Copy code" }).click();
+    await page.mouse.move(0, 0);
+    await expect(page.getByRole("status")).toContainText(success ? "Copied" : "Press Ctrl+C or ⌘C");
+    await expect(page.locator(".ck-bar")).toHaveCSS("opacity", "1");
+    const [copy, status, frame] = await Promise.all(
+      [".ck-copy", ".ck-status", ".ck"].map((selector) =>
+        page.locator(selector).evaluate((element) => element.getBoundingClientRect()),
+      ),
+    );
+    expect(status.top).toBeGreaterThan(copy.bottom);
+    expect(Math.abs(status.right - copy.right)).toBeLessThan(1);
+    expect(status.left).toBeGreaterThanOrEqual(frame.left);
+    expect(status.bottom).toBeLessThanOrEqual(frame.bottom);
+  });
+}
 
 test("a titled block's header sits above the first line, so its buttons never cover the code", async ({
   page,
