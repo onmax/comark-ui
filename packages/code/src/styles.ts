@@ -76,7 +76,7 @@ export const css = `${icons}@layer comark{${[
   ".ck-copy[data-state=done] .ck-copy-done{display:block}",
   ".ck-status{position:absolute;top:calc(100% + .25rem);right:var(--_ck-inset);z-index:1;width:max-content;max-width:18rem;padding:.25rem .5rem;border-radius:calc(var(--_comark-radius) - 4px);background:var(--_comark-foreground);color:var(--_comark-background);font:.75rem/1.25rem var(--_comark-font);pointer-events:none}",
   ".ck-status:empty{display:none}",
-  `@media (hover:hover){${feedback}{min-height:var(--_ck-feedback-height,0px)}${feedback}>.ck-bar{z-index:1}}`,
+  `@media (hover:hover){[data-code-ready] ${floating}{min-height:var(--_ck-bar-height,0px)}${feedback}>.ck-bar{z-index:1}}`,
   `${feedback}>.ck-bar::after{content:'';flex-basis:100%;order:1}${feedback}>.ck-bar>.ck-status{position:static;order:2;box-sizing:border-box;max-width:min(18rem,100%);margin-top:.125rem;overflow-wrap:anywhere}`,
   "[data-code-header] .ck>.ck-status{top:.25rem}",
   // Expand touch targets vertically only, so adjacent buttons cannot steal each other's taps.

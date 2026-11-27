@@ -59,7 +59,7 @@ pnpm add comark @comark/html comark-code
 
 ## Features
 
-- An untitled block's buttons float in its top right corner while the pointer is over it or focus is in it. On screens without hover they stay visible below the code so they don't cover it. A block with a title gets a header instead, with the title on the left and the buttons on the right, above the code.
+- An untitled block's buttons float in its top right corner while the pointer is over it or focus is in it. A short block grows if needed to fit wrapped buttons or Copy feedback. On screens without hover the buttons stay visible below the code so they don't cover it. A block with a title gets a header instead, with the title on the left and the buttons on the right, above the code.
 - Copy puts the block's code on the clipboard, and Wrap breaks long lines in that block only.
 - Words after the fence's language mark lines as added, deleted, or worth a look, fold runs of lines, number the lines, and draw shell sessions as a terminal.
 - A `diff` fence with a `lang` turns pasted `git diff` output into highlighted code with its lines marked.

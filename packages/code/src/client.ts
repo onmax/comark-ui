@@ -101,6 +101,17 @@ export function start(css: string): () => void {
   const observed = new Set<Element>();
   const defaults = new WeakMap<Element, boolean>();
   const headers = new Set<HTMLElement>();
+  const fitFloatingBar = (bar: HTMLElement) => {
+    const root = bar.parentElement;
+    const pre = root?.querySelector<HTMLElement>(":scope>pre");
+    if (!root || !pre || bar.offsetParent !== root) return;
+    const bottom = bar.offsetTop + bar.offsetHeight;
+    if (bottom > pre.offsetTop + pre.offsetHeight) {
+      root.style.setProperty("--_ck-bar-height", `${root.clientTop + bottom}px`);
+    } else {
+      root.style.removeProperty("--_ck-bar-height");
+    }
+  };
   let frame = 0;
   const refresh = () => {
     frame = 0;
@@ -136,14 +147,18 @@ export function start(css: string): () => void {
     for (const { root } of blocks) {
       const header = root.closest<HTMLElement>("[data-code-header]");
       const bar = root.querySelector<HTMLElement>(":scope>.ck-bar");
-      if (!header || !bar) continue;
-      // Keep feedback outside a controls scroller so it can still appear below the header.
-      const status = bar.querySelector(":scope>.ck-status");
-      if (status) root.append(status);
+      if (!bar || (!header && bar.querySelector(":scope>.ck-title"))) continue;
       if (!observed.has(bar)) {
         resize.observe(bar);
         observed.add(bar);
       }
+      if (!header) {
+        fitFloatingBar(bar);
+        continue;
+      }
+      // Keep feedback outside a controls scroller so it can still appear below the header.
+      const status = bar.querySelector(":scope>.ck-status");
+      if (status) root.append(status);
       // Hidden steps measure zero; the active step determines the space its controls need.
       const width = Math.ceil(bar.getBoundingClientRect().width);
       widths.set(header, Math.max(widths.get(header) ?? 0, width));
@@ -250,17 +265,6 @@ export function start(css: string): () => void {
   window.addEventListener("pointerdown", pressed, { capture: true, signal });
   window.addEventListener("keydown", pressed, { capture: true, signal });
 
-  const fitFeedback = (bar: HTMLElement) => {
-    const root = bar.parentElement;
-    if (!root || bar.offsetParent !== root) return;
-    root.style.setProperty(
-      "--_ck-feedback-height",
-      `${root.clientTop + bar.offsetTop + bar.offsetHeight}px`,
-    );
-  };
-  const feedbackSize = new ResizeObserver((entries) => {
-    for (const { target } of entries) if (target instanceof HTMLElement) fitFeedback(target);
-  });
   const say = (root: Element, message: string, state: "done" | "failed") => {
     const button = root.querySelector<HTMLElement>(":scope>.ck-bar>.ck-copy");
     const status = root.querySelector(":scope>.ck-bar>.ck-status,:scope>.ck-status");
@@ -269,10 +273,7 @@ export function start(css: string): () => void {
     status.textContent = message;
     const bar = button.parentElement;
     const floating = bar && !root.closest("[data-code-header]") && !bar.querySelector(".ck-title");
-    if (floating) {
-      fitFeedback(bar);
-      feedbackSize.observe(bar);
-    }
+    if (floating) fitFloatingBar(bar);
     if (state === "done") {
       swap(button, true);
       motion()?.ring(button);
@@ -282,10 +283,7 @@ export function start(css: string): () => void {
         if (status.textContent !== message) return;
         button.removeAttribute("data-state");
         status.textContent = "";
-        if (floating) {
-          feedbackSize.unobserve(bar);
-          bar.parentElement?.style.removeProperty("--_ck-feedback-height");
-        }
+        if (floating) fitFloatingBar(bar);
         swap(button, false);
       },
       state === "done" ? 1500 : 6000,
@@ -365,8 +363,10 @@ export function start(css: string): () => void {
       listeners.abort();
       cancelAnimationFrame(frame);
       resize.disconnect();
-      feedbackSize.disconnect();
       mutations.disconnect();
+      for (const element of observed)
+        if (element.matches(".ck-bar"))
+          element.parentElement?.style.removeProperty("--_ck-bar-height");
       for (const header of headers) header.style.removeProperty("--ck-controls");
       style?.remove();
       document.documentElement.removeAttribute("data-code-ready");

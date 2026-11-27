@@ -32,6 +32,24 @@ const openFramed = async (page: Page, script = true, renderer = render) => {
       .ck>pre{margin:0;padding:.8rem .9rem;overflow-x:auto;font:13px/1.6 monospace}
     </style>${html}`);
 };
+const framedActions = [
+  { id: "editor", label: "Open full example in editor" },
+  { id: "download", label: "Download the complete example" },
+  { id: "playground", label: "Open in playground" },
+  { id: "terminal", label: "Run locally in your terminal" },
+];
+const openFramedActions = async (page: Page) => {
+  await openFramed(
+    page,
+    true,
+    createHtmlRenderer({ plugins: [code({ actions: framedActions })], components }),
+  );
+  await page.evaluate(() => {
+    document.addEventListener("comark-code-action", (event) => {
+      document.body.dataset.action = event.detail.action;
+    });
+  });
+};
 
 test("Copy writes the block's code to the clipboard and says so", async ({ page, context }) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
@@ -228,6 +246,39 @@ test("without a title, the buttons float in the corner over the code, on hover a
   await expect(page.locator(".ck-bar")).toHaveCSS("opacity", "0");
 });
 
+test("wrapped floating actions fit and work in a short clipped frame", async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.setViewportSize({ width: 800, height: 600 });
+  await openFramedActions(page);
+  expect(await page.evaluate(() => matchMedia("(hover: hover)").matches)).toBe(true);
+  const frame = page.locator(".ck");
+  const bar = frame.locator(".ck-bar");
+  const copy = frame.getByRole("button", { name: "Copy code" });
+  await expect(copy).toBeVisible();
+  const wideHeight = (await frame.boundingBox())!.height;
+  await page.setViewportSize({ width: 390, height: 600 });
+  await frame.hover();
+  await expect(bar).toHaveCSS("opacity", "1");
+  await expect.poll(async () => (await frame.boundingBox())!.height).toBeGreaterThan(wideHeight);
+  const bounds = (await frame.boundingBox())!;
+  const button = (await copy.boundingBox())!;
+  expect(button.y).toBeGreaterThan(bounds.y + wideHeight);
+  expect(button.y + button.height).toBeLessThanOrEqual(bounds.y + bounds.height);
+  for (const { id, label } of framedActions) {
+    await frame.getByRole("button", { name: label }).click();
+    await expect(page.locator("body")).toHaveAttribute("data-action", id);
+  }
+  await copy.click();
+  await expect(frame.getByRole("status")).toHaveText("Copied");
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(short);
+  await page.setViewportSize({ width: 800, height: 600 });
+  await expect(frame.locator(".ck-status")).toBeEmpty({ timeout: 3000 });
+  await expect.poll(async () => (await frame.boundingBox())!.height).toBe(wideHeight);
+});
+
 test.describe("on a touch screen without hover", () => {
   test.use({ viewport: { width: 390, height: 600 }, hasTouch: true, isMobile: true });
 
@@ -247,23 +298,12 @@ test.describe("on a touch screen without hover", () => {
   });
 
   test("each wrapped action owns its visible face", async ({ page }) => {
-    const actions = [
-      { id: "editor", label: "Open full example in editor" },
-      { id: "download", label: "Download the complete example" },
-      { id: "playground", label: "Open in playground" },
-      { id: "terminal", label: "Run locally in your terminal" },
-    ];
-    await openFramed(page, true, createHtmlRenderer({ plugins: [code({ actions })], components }));
-    await page.evaluate(() => {
-      document.addEventListener("comark-code-action", (event) => {
-        document.body.dataset.action = event.detail.action;
-      });
-    });
+    await openFramedActions(page);
     const boxes = await Promise.all(
-      actions.map(({ label }) => page.getByRole("button", { name: label }).boundingBox()),
+      framedActions.map(({ label }) => page.getByRole("button", { name: label }).boundingBox()),
     );
     expect(new Set(boxes.map((box) => box!.y)).size).toBeGreaterThan(1);
-    for (const [index, { id }] of actions.entries()) {
+    for (const [index, { id }] of framedActions.entries()) {
       const box = boxes[index]!;
       await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height - 2);
       await expect(page.locator("body")).toHaveAttribute("data-action", id);
