@@ -20,6 +20,36 @@ const open = async (page: Page, markdown: string, options: { script?: boolean } 
 };
 const long = `echo ${"word ".repeat(40)}`;
 const sh = `\`\`\`sh\n${long}\n\`\`\``;
+const short = "echo 'Run the build before deploying now'";
+const openFramed = async (page: Page, script = true, renderer = render) => {
+  let html = await renderer(`\`\`\`sh\n${short}\n\`\`\``);
+  if (!script) html = html.replace(/<script>[\s\S]*?<\/script>/g, "");
+  await page.goto("/no-such-page");
+  await page.setContent(`<!doctype html><meta name="viewport" content="width=device-width">
+    <style>
+      body{margin:0}
+      .ck{margin-block:1.25rem;overflow:hidden;border-radius:10px;background:#f4f4f5}
+      .ck>pre{margin:0;padding:.8rem .9rem;overflow-x:auto;font:13px/1.6 monospace}
+    </style>${html}`);
+};
+const framedActions = [
+  { id: "editor", label: "Open full example in editor" },
+  { id: "download", label: "Download the complete example" },
+  { id: "playground", label: "Open in playground" },
+  { id: "terminal", label: "Run locally in your terminal" },
+];
+const openFramedActions = async (page: Page) => {
+  await openFramed(
+    page,
+    true,
+    createHtmlRenderer({ plugins: [code({ actions: framedActions })], components }),
+  );
+  await page.evaluate(() => {
+    document.addEventListener("comark-code-action", (event) => {
+      document.body.dataset.action = event.detail.action;
+    });
+  });
+};
 
 test("Copy writes the block's code to the clipboard and says so", async ({ page, context }) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
@@ -175,7 +205,202 @@ test("an action sends the block's code and language to the page", async ({ page 
   expect(await detail).toEqual({ action: "run", code: long, language: "sh" });
 });
 
-test("the header sits above the first line, so its buttons never cover the code", async ({
+test("without a title, the buttons float in the corner over the code, on hover and focus", async ({
+  page,
+}) => {
+  await open(page, sh);
+  const block = page.locator(".ck");
+  const bar = block.locator(".ck-bar");
+  const [pre, line, copy, surface] = await Promise.all(
+    [".ck pre", ".ck pre code", ".ck-copy", ".ck-bar"].map((selector) =>
+      page.locator(selector).evaluate((element) => element.getBoundingClientRect()),
+    ),
+  );
+  // No header: the code starts at the host's own padding, and the buttons sit over it in the block's corner.
+  expect(Math.abs(line.top - pre.top - 16)).toBeLessThan(1);
+  expect(copy.top).toBeLessThan(line.bottom);
+  expect(Math.abs(pre.right - copy.right - 6)).toBeLessThan(1);
+  expect(Math.abs(copy.top - pre.top - 6)).toBeLessThan(1);
+  await expect(block.locator(".ck-title")).toHaveCount(0);
+  await expect(bar).toHaveCSS("border-bottom-width", "0px");
+  // The buttons sit on the code block's surface, laid on the page's background and run to the block's edges, so no
+  // code shows through them or between them and the edge.
+  await expect(bar).toHaveCSS("background-image", /^linear-gradient\(rgb\(245, 245, 245\)/);
+  await expect(bar).toHaveCSS("background-color", "rgb(255, 255, 255)");
+  expect(Math.abs(surface.top - pre.top)).toBeLessThan(1);
+  expect(Math.abs(surface.right - pre.right)).toBeLessThan(1);
+  await page.mouse.move(0, 0);
+  await expect(bar).toHaveCSS("opacity", "0");
+  await block.hover();
+  await expect(bar).toHaveCSS("opacity", "1");
+  await page.mouse.move(0, 0);
+  await expect(bar).toHaveCSS("opacity", "0");
+  // Chromium focuses a block that scrolls before the buttons that follow it.
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("button", { name: "Run" })).toBeFocused();
+  await expect(bar).toHaveCSS("opacity", "1");
+  // Without the script there are no buttons to show, so hovering shows nothing.
+  await open(page, sh, { script: false });
+  await page.locator(".ck").hover();
+  await expect(page.locator(".ck-bar")).toHaveCSS("opacity", "0");
+});
+
+test("wrapped floating actions fit and work in a short clipped frame", async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.setViewportSize({ width: 800, height: 600 });
+  await openFramedActions(page);
+  expect(await page.evaluate(() => matchMedia("(hover: hover)").matches)).toBe(true);
+  const frame = page.locator(".ck");
+  const bar = frame.locator(".ck-bar");
+  const copy = frame.getByRole("button", { name: "Copy code" });
+  await expect(copy).toBeVisible();
+  const wideHeight = (await frame.boundingBox())!.height;
+  await page.setViewportSize({ width: 390, height: 600 });
+  await frame.hover();
+  await expect(bar).toHaveCSS("opacity", "1");
+  await expect.poll(async () => (await frame.boundingBox())!.height).toBeGreaterThan(wideHeight);
+  const bounds = (await frame.boundingBox())!;
+  const button = (await copy.boundingBox())!;
+  expect(button.y).toBeGreaterThan(bounds.y + wideHeight);
+  expect(button.y + button.height).toBeLessThanOrEqual(bounds.y + bounds.height);
+  for (const { id, label } of framedActions) {
+    await frame.getByRole("button", { name: label }).click();
+    await expect(page.locator("body")).toHaveAttribute("data-action", id);
+  }
+  await copy.click();
+  await expect(frame.getByRole("status")).toHaveText("Copied");
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(short);
+  await page.setViewportSize({ width: 800, height: 600 });
+  await expect(frame.locator(".ck-status")).toBeEmpty({ timeout: 3000 });
+  await expect.poll(async () => (await frame.boundingBox())!.height).toBe(wideHeight);
+});
+
+test("a clipped grid frame stays at one height when its floating actions wrap", async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.setViewportSize({ width: 800, height: 600 });
+  await openFramedActions(page);
+  await page.addStyleTag({ content: ".ck{display:grid}" });
+  const frame = page.locator(".ck");
+  const bar = frame.locator(".ck-bar");
+  const wideHeight = (await frame.boundingBox())!.height;
+  await page.setViewportSize({ width: 390, height: 600 });
+  await frame.hover();
+  await expect(bar).toHaveCSS("opacity", "1");
+  const heights = await frame.evaluate(async (element) => {
+    const samples: number[] = [];
+    for (let index = 0; index < 8; index++) {
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      samples.push(element.getBoundingClientRect().height);
+    }
+    return samples;
+  });
+  expect(Math.min(...heights)).toBeGreaterThan(wideHeight);
+  expect(new Set(heights).size).toBe(1);
+  await frame.getByRole("button", { name: "Copy code" }).click();
+  await expect(frame.getByRole("status")).toHaveText("Copied");
+  await page.setViewportSize({ width: 800, height: 600 });
+  await expect(frame.locator(".ck-status")).toBeEmpty({ timeout: 3000 });
+  await expect.poll(async () => (await frame.boundingBox())!.height).toBe(wideHeight);
+});
+
+test.describe("on a touch screen without hover", () => {
+  test.use({ viewport: { width: 390, height: 600 }, hasTouch: true, isMobile: true });
+
+  test("the action bar leaves the entire first line readable", async ({ page }) => {
+    await openFramed(page);
+    expect(await page.evaluate(() => matchMedia("(hover: none)").matches)).toBe(true);
+    const bar = page.locator(".ck-bar");
+    await expect(bar).toHaveCSS("opacity", "1");
+    const pre = page.locator(".ck pre");
+    expect(await pre.evaluate((el) => el.scrollWidth)).toBe(
+      await pre.evaluate((el) => el.clientWidth),
+    );
+    const [code, controls] = await Promise.all([pre.boundingBox(), bar.boundingBox()]);
+    expect(controls!.y).toBeGreaterThanOrEqual(code!.y + code!.height);
+    await expect(bar.getByRole("button", { name: "Run" })).toBeVisible();
+    await expect(bar.getByRole("button", { name: "Copy code" })).toBeVisible();
+  });
+
+  test("each wrapped action owns its visible face", async ({ page }) => {
+    await openFramedActions(page);
+    const boxes = await Promise.all(
+      framedActions.map(({ label }) => page.getByRole("button", { name: label }).boundingBox()),
+    );
+    expect(new Set(boxes.map((box) => box!.y)).size).toBeGreaterThan(1);
+    for (const [index, { id }] of framedActions.entries()) {
+      const box = boxes[index]!;
+      await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height - 2);
+      await expect(page.locator("body")).toHaveAttribute("data-action", id);
+    }
+  });
+});
+
+test("without the script, dragging from beneath the invisible toolbar selects code", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 600 });
+  await openFramed(page, false);
+  const [code, bar] = await Promise.all(
+    [".ck pre code", ".ck-bar"].map((selector) => page.locator(selector).boundingBox()),
+  );
+  const from = code!.x + code!.width - 1;
+  expect(from).toBeGreaterThan(bar!.x);
+  const middle = code!.y + code!.height / 2;
+  await page.mouse.move(from, middle);
+  await page.mouse.down();
+  await page.mouse.move(code!.x, middle, { steps: 8 });
+  await page.mouse.up();
+  expect(await page.evaluate(() => getSelection()?.toString())).toBe(short);
+});
+
+for (const success of [true, false]) {
+  test(`Copy ${success ? "confirmation" : "instructions"} fit inside a short clipped frame`, async ({
+    page,
+    context,
+  }) => {
+    if (success) await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await page.setViewportSize({ width: 390, height: 600 });
+    await openFramed(page);
+    await page.addStyleTag({ content: ".ck>pre{margin-block-start:1.25rem}" });
+    if (!success) {
+      await page.evaluate(() =>
+        Object.defineProperty(navigator, "clipboard", { value: undefined }),
+      );
+    }
+    const trigger = page.getByRole("button", { name: "Copy code" });
+    const before = await trigger.boundingBox();
+    await trigger.click();
+    await page.mouse.move(0, 0);
+    await expect(page.getByRole("status")).toContainText(success ? "Copied" : "Press Ctrl+C or ⌘C");
+    await expect(page.locator(".ck-bar")).toHaveCSS("opacity", "1");
+    const [copy, status, frame] = await Promise.all(
+      [".ck-copy", ".ck-status", ".ck"].map((selector) =>
+        page.locator(selector).evaluate((element) => element.getBoundingClientRect()),
+      ),
+    );
+    expect(copy.top).toBeCloseTo(before!.y);
+    expect(copy.left).toBeCloseTo(before!.x);
+    expect(status.top).toBeGreaterThan(copy.bottom);
+    expect(Math.abs(status.right - copy.right)).toBeLessThan(1);
+    expect(status.left).toBeGreaterThanOrEqual(frame.left);
+    expect(status.bottom).toBeLessThanOrEqual(frame.bottom);
+    if (success) {
+      await expect(page.locator(".ck-status")).toBeEmpty();
+      const after = await trigger.boundingBox();
+      expect(after!.y).toBeCloseTo(before!.y);
+      expect(after!.x).toBeCloseTo(before!.x);
+    }
+  });
+}
+
+test("a titled block's header sits above the first line, so its buttons never cover the code", async ({
   page,
 }) => {
   // A terminal's header shows its title, not its language.
@@ -399,7 +624,8 @@ test.describe("touch targets", () => {
     await page.touchscreen.tap(box!.x + box!.width - 2, box!.y + box!.height / 2);
     await expect(wrap).toHaveAttribute("aria-pressed", "true");
     await expect(page.locator(".ck-status")).toBeEmpty();
-    await page.touchscreen.tap(box!.x + box!.width / 2, box!.y - 8);
+    const wrappedBox = (await wrap.boundingBox())!;
+    await page.touchscreen.tap(wrappedBox.x + wrappedBox.width / 2, wrappedBox.y - 8);
     await expect(wrap).toHaveAttribute("aria-pressed", "false");
   });
 });

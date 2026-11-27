@@ -32,7 +32,7 @@ describe("comark-code", () => {
   it("wraps a code block with Wrap and Copy buttons, and leaves the block as it was", async () => {
     const html = await markup("```ts\nconst a = 1\n```");
     expect(html).toMatch(
-      /^<div class="ck" data-comark-frame><pre data-language="ts"><code class="language-ts">const a = 1<\/code><\/pre><div class="ck-bar"><span class="ck-title">ts<\/span><button/,
+      /^<div class="ck" data-comark-frame><pre data-language="ts"><code class="language-ts">const a = 1<\/code><\/pre><div class="ck-bar"><button/,
     );
     expect(html).toContain(
       '<button type="button" class="ck-wrap" aria-label="Wrap lines" aria-pressed="false" title="Wrap lines">',
@@ -43,11 +43,12 @@ describe("comark-code", () => {
     expect(html).toContain('<span class="ck-status" role="status"></span></div></div>');
   });
 
-  it("titles the header with the file's name, else the language, else nothing", async () => {
+  it("titles the header with the file's name, and gives a block without one no title", async () => {
     expect(await bar("```ts [config.ts]\nconst a = 1\n```")).toMatch(
       /^<span class="ck-title">config.ts<\/span><button/,
     );
-    expect(await bar("```\nplain\n```")).toMatch(/^<button/);
+    for (const markdown of ["```ts\nconst a = 1\n```", "```\nplain\n```"])
+      expect(await bar(markdown)).toMatch(/^<button/);
   });
 
   it("inlines the styles and script once per document", async () => {
@@ -60,7 +61,17 @@ describe("comark-code", () => {
   it("inlines styles a site can theme with --ck-* variables, with today's look as the fallback", async () => {
     const style = /<style data-comark-code>(.*?)<\/style>/s.exec(await render(sh))?.[1];
     expect(style).toContain(
-      "div.ck:not([data-code-header] .ck)>pre{padding-top:calc(var(--_ck-size) + var(--_ck-inset) + .75rem)}",
+      "div.ck:not([data-code-header] .ck):has(>.ck-bar>.ck-title)>pre{padding-top:calc(var(--_ck-size) + var(--_ck-inset) + .75rem)}",
+    );
+    // Without a title the block makes no room, and its buttons float on --ck-surface.
+    expect(style).not.toMatch(
+      /div\.ck:not\(\[data-code-header\] \.ck\)(:not\([^)]*\)\))?>pre\{padding-top/,
+    );
+    expect(style).toContain(
+      ".ck:not([data-code-header] .ck):not(:has(>.ck-bar>.ck-title))>.ck-bar{inset:0 0 auto auto;height:auto;padding:var(--_ck-inset);",
+    );
+    expect(style).toContain(
+      "background:linear-gradient(var(--ck-surface,var(--_comark-accent)) 0 0) var(--_comark-background);opacity:0;",
     );
     expect(style).toContain("height:var(--_ck-bar)");
     expect(style).toContain(
@@ -267,7 +278,7 @@ describe("comark-code lines", () => {
   it("draws a terminal's header as a line, with no window dots", async () => {
     const style = /<style data-comark-code>(.*?)<\/style>/s.exec(await render(sh))?.[1];
     expect(style).toContain(
-      ".ck:not([data-code-header] .ck)[data-code-frame=terminal]>.ck-bar{border-bottom:1px solid var(--_comark-border)}",
+      ".ck:not([data-code-header] .ck):has(>.ck-bar>.ck-title)[data-code-frame=terminal]>.ck-bar{border-bottom:1px solid var(--_comark-border)}",
     );
     expect(style).not.toContain(".ck-bar::before");
     expect(style).not.toMatch(/data-code-frame=terminal[^{]*\.ck-title\{/);

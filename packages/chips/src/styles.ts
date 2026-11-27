@@ -11,8 +11,10 @@ const globe = `url("data:image/svg+xml,${encodeURIComponent(
  * a pill around a face is noise. Both stay inside the line's height, with the image at the text's size and as much
  * room on its left as above and below it. A chip that a flex row lays out as a block, such as one in comark-properties'
  * box, takes its height from its own line height, which matches the text's box, so that room stays even there too.
- * Favicons are drawn for a light tab bar, so in the dark theme each sits on a white plate. Every value a
- * site would change is a `--cp-*` variable. The image sets every margin, since prose styles give images a top margin
+ * Favicons are drawn for a light tab bar, so in the dark theme each sits on a white plate. In the light theme a favicon
+ * blends with `darken`, since favicon services return many on an opaque white or near-white square, which would show
+ * as a box on the tint: each pixel lighter than the chip takes the chip's color, and the icon's darker colors stay as
+ * they are. Every value a site would change is a `--cp-*` variable. The image sets every margin, since prose styles give images a top margin
  * meant for block images, and on an inline image that margin pushes it below the text. The rules sit in the `comark`
  * layer, so any unlayered rule of the host's wins.
  */
@@ -26,7 +28,11 @@ export const css = `@layer comark{${[
   // A site with no favicon gets a globe in its place, so its chip still reads as a link and not as inline code.
   `.cp[data-kind="favicon"]:not(:has(.cp-img))::before{content:'';display:inline-block;width:1em;height:1em;margin:0 .3125em 0 0;background:color-mix(in oklab,currentColor 55%,transparent);-webkit-mask:${globe} center/contain no-repeat;mask:${globe} center/contain no-repeat;vertical-align:-.125em}`,
   ".cp:hover{background:var(--_cp-hover)}",
-  dark('.cp[data-kind="favicon"] .cp-img', "background:#fff;box-shadow:0 0 0 .0625em #fff"),
+  '.cp[data-kind="favicon"] .cp-img{mix-blend-mode:darken}',
+  dark(
+    '.cp[data-kind="favicon"] .cp-img',
+    "background:#fff;box-shadow:0 0 0 .0625em #fff;mix-blend-mode:normal",
+  ),
   // A chip sits in running text, a space from the next word, so its focus ring covers its own hairline instead of
   // standing off it, and an avatar chip, which has no padding to hold a ring, underlines its name like on hover.
   ".cp:focus-visible{outline:2px solid var(--_comark-ring);outline-offset:-1px}",

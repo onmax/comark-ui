@@ -101,6 +101,14 @@ export function start(css: string): () => void {
   const observed = new Set<Element>();
   const defaults = new WeakMap<Element, boolean>();
   const headers = new Set<HTMLElement>();
+  const fitFloatingBar = (bar: HTMLElement) => {
+    const root = bar.parentElement;
+    if (!root || bar.offsetParent !== root) return;
+    root.style.setProperty(
+      "--_ck-bar-height",
+      `${root.clientTop + bar.offsetTop + bar.offsetHeight}px`,
+    );
+  };
   let frame = 0;
   const refresh = () => {
     frame = 0;
@@ -136,14 +144,18 @@ export function start(css: string): () => void {
     for (const { root } of blocks) {
       const header = root.closest<HTMLElement>("[data-code-header]");
       const bar = root.querySelector<HTMLElement>(":scope>.ck-bar");
-      if (!header || !bar) continue;
-      // Keep feedback outside a controls scroller so it can still appear below the header.
-      const status = bar.querySelector(":scope>.ck-status");
-      if (status) root.append(status);
+      if (!bar || (!header && bar.querySelector(":scope>.ck-title"))) continue;
       if (!observed.has(bar)) {
         resize.observe(bar);
         observed.add(bar);
       }
+      if (!header) {
+        fitFloatingBar(bar);
+        continue;
+      }
+      // Keep feedback outside a controls scroller so it can still appear below the header.
+      const status = bar.querySelector(":scope>.ck-status");
+      if (status) root.append(status);
       // Hidden steps measure zero; the active step determines the space its controls need.
       const width = Math.ceil(bar.getBoundingClientRect().width);
       widths.set(header, Math.max(widths.get(header) ?? 0, width));
@@ -256,6 +268,9 @@ export function start(css: string): () => void {
     if (!button || !status) return;
     button.setAttribute("data-state", state);
     status.textContent = message;
+    const bar = button.parentElement;
+    const floating = bar && !root.closest("[data-code-header]") && !bar.querySelector(".ck-title");
+    if (floating) fitFloatingBar(bar);
     if (state === "done") {
       swap(button, true);
       motion()?.ring(button);
@@ -265,6 +280,7 @@ export function start(css: string): () => void {
         if (status.textContent !== message) return;
         button.removeAttribute("data-state");
         status.textContent = "";
+        if (floating) fitFloatingBar(bar);
         swap(button, false);
       },
       state === "done" ? 1500 : 6000,
@@ -345,6 +361,9 @@ export function start(css: string): () => void {
       cancelAnimationFrame(frame);
       resize.disconnect();
       mutations.disconnect();
+      for (const element of observed)
+        if (element.matches(".ck-bar"))
+          element.parentElement?.style.removeProperty("--_ck-bar-height");
       for (const header of headers) header.style.removeProperty("--ck-controls");
       style?.remove();
       document.documentElement.removeAttribute("data-code-ready");
@@ -397,15 +416,13 @@ function action({ id, label, title, icon: image }: ActionButton) {
 }
 
 /**
- * The inside of a block's header, the same in every renderer: the file's name or the language, your actions, Wrap and
- * Copy, then the status line that says whether the copy worked. The buttons stay hidden until the script starts, since
- * nothing works without it.
+ * The inside of a block's buttons, the same in every renderer: the block's title, your actions, Wrap and Copy, then the
+ * status line that says whether the copy worked. The title gives the block a header; without one the buttons float
+ * over the code. The buttons stay hidden until the script starts, since nothing works without it.
  */
 export function buttons(actions: unknown, attributes: Record<string, unknown> = {}): string {
-  // A terminal needs no language to say it's a shell.
-  const language = attributes.frame === "terminal" ? "" : attributes.language;
-  // SAFETY: Comark writes a fence's filename and language as strings.
-  const title = `${(attributes.filename || language || "") as string}`;
+  // SAFETY: Comark writes a fence's filename as a string.
+  const title = `${(attributes.filename || "") as string}`;
   const wrap = attributes.wrap === true;
   // SAFETY: the parse plugin is the only writer of `actions`, always as `ActionButton`s.
   const own = (Array.isArray(actions) ? (actions as ActionButton[]) : []).map(action);

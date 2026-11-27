@@ -77,6 +77,15 @@ describe("comark-chips", () => {
     expect(html).toContain('.cp[data-kind="favicon"] .cp-img){background:#fff');
   });
 
+  // Google's favicon service returns many icons, vitehub.dev's and github.com's among them, on an opaque white square.
+  it("darkens favicons into the chip in the light theme, so a white square takes the chip's tint", async () => {
+    const html = await render("[Vite](https://vite.dev)");
+    expect(html).toContain('.cp[data-kind="favicon"] .cp-img{mix-blend-mode:darken}');
+    expect(html).toMatch(
+      /\.cp\[data-kind="favicon"\] \.cp-img\)\{background:#fff;[^}]*mix-blend-mode:normal\}/,
+    );
+  });
+
   // Prose styles give every image a top margin, and outside a paragraph, as in a list item, nothing takes it back.
   it("sets every margin of the image, so a prose style's image margin can't push it below the text", async () => {
     const html = await render("- Listed on [Vite](https://vite.dev).");

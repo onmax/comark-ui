@@ -201,7 +201,7 @@ The plugin adds every problem to `meta.issues`, as [Validation](/guide/validatio
 - An `avatar` that is a bare login, such as `avatar="antfu"`. Write `avatar="@antfu"`.
 - A `:chip` whose `href` isn't a web address.
 
-A site without a favicon gets a globe in its place, and no issue. In the dark theme a favicon sits on a white plate, since sites draw them for a light tab bar. Each problem has its own rule in [Doctor](/doctor).
+A site without a favicon gets a globe in its place, and no issue. In the dark theme a favicon sits on a white plate, since sites draw them for a light tab bar. In the light theme its parts lighter than the chip take the chip's fill, so an icon that Google's favicon service returns on an opaque white square, such as github.com's, shows no square. Each problem has its own rule in [Doctor](/doctor).
 
 ### Package
 
