@@ -27,10 +27,13 @@ export const css = `@layer comark{${[
   `.cp[data-kind="favicon"]:not(:has(.cp-img))::before{content:'';display:inline-block;width:1em;height:1em;margin:0 .3125em 0 0;background:color-mix(in oklab,currentColor 55%,transparent);-webkit-mask:${globe} center/contain no-repeat;mask:${globe} center/contain no-repeat;vertical-align:-.125em}`,
   ".cp:hover{background:var(--_cp-hover)}",
   dark('.cp[data-kind="favicon"] .cp-img', "background:#fff;box-shadow:0 0 0 .0625em #fff"),
-  ".cp:focus-visible{outline:2px solid var(--_comark-ring);outline-offset:2px}",
+  // A chip sits in running text, a space from the next word, so its focus ring covers its own hairline instead of
+  // standing off it, and an avatar chip, which has no padding to hold a ring, underlines its name like on hover.
+  ".cp:focus-visible{outline:2px solid var(--_comark-ring);outline-offset:-1px}",
   ".cp-img{display:inline-block;width:min(var(--cp-image-size,1em),1em);height:min(var(--cp-image-size,1em),1em);margin:0 .3125em 0 0;border-radius:calc(var(--_comark-radius) - 7px);vertical-align:-.125em;object-fit:cover}",
   '.cp[data-kind="avatar"]{padding:0;background:none;box-shadow:none;text-decoration:underline;text-decoration-color:transparent;text-underline-offset:.2em;transition:text-decoration-color .15s ease-out}',
   '.cp[data-kind="avatar"]:hover{background:none;text-decoration-color:currentColor}',
+  '.cp[data-kind="avatar"]:focus-visible{outline:none;text-decoration:underline 2px var(--_comark-ring)}',
   '.cp[data-kind="avatar"] .cp-img{border-radius:50%}',
   '@media (prefers-reduced-motion:reduce){.cp,.cp[data-kind="avatar"]{transition:none}}',
 ].join("")}}`;
