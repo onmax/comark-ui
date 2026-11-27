@@ -21,8 +21,8 @@ const open = async (page: Page, markdown: string, options: { script?: boolean } 
 const long = `echo ${"word ".repeat(40)}`;
 const sh = `\`\`\`sh\n${long}\n\`\`\``;
 const short = "echo 'Run the build before deploying now'";
-const openFramed = async (page: Page, script = true) => {
-  let html = await render(`\`\`\`sh\n${short}\n\`\`\``);
+const openFramed = async (page: Page, script = true, renderer = render) => {
+  let html = await renderer(`\`\`\`sh\n${short}\n\`\`\``);
   if (!script) html = html.replace(/<script>[\s\S]*?<\/script>/g, "");
   await page.goto("/no-such-page");
   await page.setContent(`<!doctype html><meta name="viewport" content="width=device-width">
@@ -245,6 +245,30 @@ test.describe("on a touch screen without hover", () => {
     await expect(bar.getByRole("button", { name: "Run" })).toBeVisible();
     await expect(bar.getByRole("button", { name: "Copy code" })).toBeVisible();
   });
+
+  test("each wrapped action owns its visible face", async ({ page }) => {
+    const actions = [
+      { id: "editor", label: "Open full example in editor" },
+      { id: "download", label: "Download the complete example" },
+      { id: "playground", label: "Open in playground" },
+      { id: "terminal", label: "Run locally in your terminal" },
+    ];
+    await openFramed(page, true, createHtmlRenderer({ plugins: [code({ actions })], components }));
+    await page.evaluate(() => {
+      document.addEventListener("comark-code-action", (event) => {
+        document.body.dataset.action = event.detail.action;
+      });
+    });
+    const boxes = await Promise.all(
+      actions.map(({ label }) => page.getByRole("button", { name: label }).boundingBox()),
+    );
+    expect(new Set(boxes.map((box) => box!.y)).size).toBeGreaterThan(1);
+    for (const [index, { id }] of actions.entries()) {
+      const box = boxes[index]!;
+      await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height - 2);
+      await expect(page.locator("body")).toHaveAttribute("data-action", id);
+    }
+  });
 });
 
 test("without the script, dragging from beneath the invisible toolbar selects code", async ({
@@ -273,12 +297,15 @@ for (const success of [true, false]) {
     if (success) await context.grantPermissions(["clipboard-read", "clipboard-write"]);
     await page.setViewportSize({ width: 390, height: 600 });
     await openFramed(page);
+    await page.addStyleTag({ content: ".ck>pre{margin-block-start:1.25rem}" });
     if (!success) {
       await page.evaluate(() =>
         Object.defineProperty(navigator, "clipboard", { value: undefined }),
       );
     }
-    await page.getByRole("button", { name: "Copy code" }).click();
+    const trigger = page.getByRole("button", { name: "Copy code" });
+    const before = await trigger.boundingBox();
+    await trigger.click();
     await page.mouse.move(0, 0);
     await expect(page.getByRole("status")).toContainText(success ? "Copied" : "Press Ctrl+C or ⌘C");
     await expect(page.locator(".ck-bar")).toHaveCSS("opacity", "1");
@@ -287,10 +314,18 @@ for (const success of [true, false]) {
         page.locator(selector).evaluate((element) => element.getBoundingClientRect()),
       ),
     );
+    expect(copy.top).toBeCloseTo(before!.y);
+    expect(copy.left).toBeCloseTo(before!.x);
     expect(status.top).toBeGreaterThan(copy.bottom);
     expect(Math.abs(status.right - copy.right)).toBeLessThan(1);
     expect(status.left).toBeGreaterThanOrEqual(frame.left);
     expect(status.bottom).toBeLessThanOrEqual(frame.bottom);
+    if (success) {
+      await expect(page.locator(".ck-status")).toBeEmpty();
+      const after = await trigger.boundingBox();
+      expect(after!.y).toBeCloseTo(before!.y);
+      expect(after!.x).toBeCloseTo(before!.x);
+    }
   });
 }
 
@@ -518,7 +553,8 @@ test.describe("touch targets", () => {
     await page.touchscreen.tap(box!.x + box!.width - 2, box!.y + box!.height / 2);
     await expect(wrap).toHaveAttribute("aria-pressed", "true");
     await expect(page.locator(".ck-status")).toBeEmpty();
-    await page.touchscreen.tap(box!.x + box!.width / 2, box!.y - 8);
+    const wrappedBox = (await wrap.boundingBox())!;
+    await page.touchscreen.tap(wrappedBox.x + wrappedBox.width / 2, wrappedBox.y - 8);
     await expect(wrap).toHaveAttribute("aria-pressed", "false");
   });
 });

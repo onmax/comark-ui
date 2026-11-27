@@ -250,12 +250,29 @@ export function start(css: string): () => void {
   window.addEventListener("pointerdown", pressed, { capture: true, signal });
   window.addEventListener("keydown", pressed, { capture: true, signal });
 
+  const fitFeedback = (bar: HTMLElement) => {
+    const root = bar.parentElement;
+    if (!root || bar.offsetParent !== root) return;
+    root.style.setProperty(
+      "--_ck-feedback-height",
+      `${root.clientTop + bar.offsetTop + bar.offsetHeight}px`,
+    );
+  };
+  const feedbackSize = new ResizeObserver((entries) => {
+    for (const { target } of entries) if (target instanceof HTMLElement) fitFeedback(target);
+  });
   const say = (root: Element, message: string, state: "done" | "failed") => {
     const button = root.querySelector<HTMLElement>(":scope>.ck-bar>.ck-copy");
     const status = root.querySelector(":scope>.ck-bar>.ck-status,:scope>.ck-status");
     if (!button || !status) return;
     button.setAttribute("data-state", state);
     status.textContent = message;
+    const bar = button.parentElement;
+    const floating = bar && !root.closest("[data-code-header]") && !bar.querySelector(".ck-title");
+    if (floating) {
+      fitFeedback(bar);
+      feedbackSize.observe(bar);
+    }
     if (state === "done") {
       swap(button, true);
       motion()?.ring(button);
@@ -265,6 +282,10 @@ export function start(css: string): () => void {
         if (status.textContent !== message) return;
         button.removeAttribute("data-state");
         status.textContent = "";
+        if (floating) {
+          feedbackSize.unobserve(bar);
+          bar.parentElement?.style.removeProperty("--_ck-feedback-height");
+        }
         swap(button, false);
       },
       state === "done" ? 1500 : 6000,
@@ -344,6 +365,7 @@ export function start(css: string): () => void {
       listeners.abort();
       cancelAnimationFrame(frame);
       resize.disconnect();
+      feedbackSize.disconnect();
       mutations.disconnect();
       for (const header of headers) header.style.removeProperty("--ck-controls");
       style?.remove();
