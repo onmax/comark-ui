@@ -85,10 +85,10 @@ const carousel: NodeHandler = async ([, attrs, ...children], state) => {
 };
 
 const slide: NodeHandler = async ([, attrs, ...children], state) => {
-  const { index, count, title, zoom } = props(attrs, state);
+  const { index, count, title, zoom, photo } = props(attrs, state);
   const name = scalar(title);
   const zoomable = !off(zoom);
-  return `<div class="cc-slide" role="group" aria-roledescription="slide" aria-label="${attr(`${scalar(index) ?? ""} of ${scalar(count) ?? ""}`)}"${zoomable ? ` data-zoom tabindex="0"${name === undefined ? "" : ` data-zoom-title="${attr(name)}"`}` : ""}>${await state.flow(["div", {}, ...children], state)}</div>`;
+  return `<div class="cc-slide" role="group" aria-roledescription="slide" aria-label="${attr(`${scalar(index) ?? ""} of ${scalar(count) ?? ""}`)}"${photo === true ? " data-cc-photo" : ""}${zoomable ? ` data-zoom tabindex="0"${name === undefined ? "" : ` data-zoom-title="${attr(name)}"`}` : ""}>${await state.flow(["div", {}, ...children], state)}</div>`;
 };
 
 /** HTML renderers for `::carousel` and `:::slide`. Pass them as `components`. */

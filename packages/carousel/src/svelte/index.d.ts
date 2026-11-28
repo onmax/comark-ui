@@ -13,6 +13,7 @@ export declare const Slide: Component<{
   index?: string | number;
   count?: string | number;
   title?: string;
+  photo?: boolean;
   zoom?: boolean | string;
   children?: Snippet;
 }>;

@@ -441,7 +441,7 @@ test("a slide that is one image, linked or not, is the photo filling it at 4:3, 
 :::
 
 :::slide
-[![Linked](${image(50)})](https://example.com)
+[![Linked](${image(50)})](https://example.com){target="_blank"}
 :::
 
 :::slide
@@ -459,9 +459,21 @@ Text
 
 ![With text](${image(50)})
 :::
+
+:::slide
+[![With caption](${image(50)}) Caption](#next)
+:::
+
+:::slide
+![With list](${image(50)})
+
+${Array.from({ length: 40 }, (_, index) => `- Item ${index + 1}`).join("\n")}
+:::
 ::`,
   );
   const slides = parts(page).track.locator(".cc-slide");
+  await expect(slides.nth(1).locator("a")).toHaveAttribute("target", "_blank");
+  await expect(slides.nth(1).getByText("(opens in a new tab)")).toBeAttached();
   await slides
     .locator("img")
     .evaluateAll((images) =>
@@ -473,6 +485,8 @@ Text
       const image = slide.querySelector("img")!.getBoundingClientRect();
       return {
         above: image.top - panel.top,
+        below: panel.bottom - image.bottom,
+        height: panel.height,
         side: image.left - panel.left,
         width: image.width / panel.width,
         ratio: image.width / image.height,
@@ -482,9 +496,10 @@ Text
       };
     }),
   );
-  expect(positions).toHaveLength(5);
+  expect(positions).toHaveLength(7);
   for (const position of positions.slice(0, 3)) {
     expect(position.padding).toBe(0);
+    expect(position.below).toBeCloseTo(0, 1);
     expect(position.above).toBeCloseTo(0, 1);
     expect(position.side).toBeCloseTo(0, 1);
     expect(position.width).toBeCloseTo(1, 2);
@@ -493,8 +508,11 @@ Text
   }
   for (const position of positions.slice(3)) {
     expect(position.padding).toBeGreaterThan(0);
+  }
+  for (const position of positions.slice(3, 5)) {
     expect(position.contentTop).toBe(position.padding);
   }
+  expect(positions[6]!.height).toBeGreaterThan(positions[0]!.height);
 });
 
 test("a short slide starts at the top, where a taller one does", async ({ page }) => {

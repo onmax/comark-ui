@@ -99,6 +99,7 @@ export const Slide = /* @__PURE__ */ defineComponent({
     index: [String, Number],
     count: [String, Number],
     title: String,
+    photo: Boolean,
     zoom: { type: [Boolean, String], default: undefined },
   },
   setup(props, { slots }) {
@@ -111,6 +112,7 @@ export const Slide = /* @__PURE__ */ defineComponent({
           role: "group",
           "aria-roledescription": "slide",
           "aria-label": `${props.index} of ${props.count}`,
+          "data-cc-photo": props.photo ? "" : undefined,
           "data-zoom": zoom ? "" : undefined,
           tabindex: zoom ? "0" : undefined,
           "data-zoom-title": zoom ? props.title : undefined,

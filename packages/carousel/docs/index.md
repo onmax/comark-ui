@@ -153,7 +153,7 @@ For annotated screenshots in a carousel, see the [recipe](/recipes/carousel).
 
 ### Images in slides
 
-An image alone in a slide or in its paragraph is centered, and so is a link around one. An image inside a sentence stays in the text.
+A slide containing just one image, linked or not, crops it to `--cc-ratio` so it fills the slide without a panel. A slide with text alongside the image, even inside the same link, keeps its panel. An image inside a sentence stays in the text, and zooming a photo shows the whole image.
 
 ```md
 ::carousel
@@ -283,7 +283,7 @@ Set these on `.cc` or any ancestor, such as `:root`:
 | `--cc-ratio` | `4 / 3` | The shape of a slide that is one image. The photo fills it, cropped to fit; zooming shows the whole photo |
 | `--cc-button-size` | `2rem` | The arrows' width and height, at least `2.5rem` on touch screens |
 
-Each slide sits on a soft panel as tall as the tallest one, so slides of different heights line up. A slide that is one image has no panel: the photo fills the slide at `--cc-ratio`, so photos of different shapes line up too. To drop the other panels, set `--cc-surface: transparent` and `--cc-padding: 0`.
+Slide panels stretch to the height of the tallest slide. Photo-only slides have no panel and keep their `--cc-ratio` even beside taller content. To drop the other panels, set `--cc-surface: transparent` and `--cc-padding: 0`.
 
 ### Classes and attributes
 
@@ -291,7 +291,7 @@ Each slide sits on a soft panel as tall as the tallest one, so slides of differe
 | --- | --- |
 | `.cc` | The carousel, with `data-carousel-columns` when it shows 2 or 3 at a time, and `data-carousel-fits` when every slide fits at once |
 | `.cc-track` | The row that scrolls |
-| `.cc-slide` | Each slide |
+| `.cc-slide` | Each slide, with `data-cc-photo` when it contains just one image |
 | `.cc-controls` | The row under the slides, shown once the script runs |
 | `.cc-count` | The position, such as `1 / 3` |
 | `.cc-step` | An arrow, with `aria-disabled="true"` at either end |

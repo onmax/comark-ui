@@ -3,8 +3,7 @@ import { scripted } from "../../../shared/scripted.ts";
 
 const inlineSizeUnit = "10000px";
 const inlineSizeRatio = `tan(atan2(100cqi,${inlineSizeUnit}))`;
-const photo =
-  ".cc-grid>.cc-slide:has(>:is(img,a):nth-child(1 of :not(style,script)):nth-last-child(1 of :not(style,script))):has(>img,>a>img:only-child)";
+const photo = ".cc-grid>.cc-slide[data-cc-photo]";
 
 /**
  * The carousel styles. The script adds them to the page once. Theme the controls with the shared `--comark-*` tokens,
@@ -32,12 +31,12 @@ export const css = `@layer comark{${[
   ".cc-grid>.cc-slide:has(>:is(pre,.ck):nth-child(1 of :not(style,script)):nth-last-child(1 of :not(style,script))){padding:0;background:none}",
   // A slide that is one image is the photo itself, with no panel around it: it fills the slide at one shape, cropped
   // to fit, so photos of different shapes line up. The zoomed copy, outside the grid, shows the whole photo.
-  `${photo}{padding:0;background:none}`,
-  `${photo}>a{display:block}`,
+  `${photo}{align-self:start;padding:0;background:none}`,
+  `${photo}>a{display:block;position:relative}`,
+  `${photo}>a>span[aria-hidden]{position:absolute;inset-block-start:.5rem;inset-inline-end:.5rem;padding:.25em;border-radius:var(--_comark-radius);background:var(--_comark-background);color:var(--_comark-foreground)}`,
   `${photo}>img,${photo}>a>img{width:100%;aspect-ratio:var(--cc-ratio,4/3);object-fit:cover;border-radius:var(--_comark-radius)}`,
   ".cc-slide img{max-width:100%;height:auto}",
-  // The parse plugin lifts an image, or a link around one, out of a paragraph of its own, so only an image that stands
-  // alone is centered.
+  // The parse plugin lifts standalone images out of their paragraphs but leaves inline images in the text.
   ".cc-slide>img,.cc-slide>a>img{display:block;margin-inline:auto}",
   // The track clips anything drawn outside a slide, so the focus ring of a zoomable item sits inside its edge.
   ".cc-track [data-zoom]:focus-visible{outline-offset:-2px}",

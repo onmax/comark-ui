@@ -61,12 +61,13 @@ describe("comark-carousel", () => {
   });
 
   it("shows a slide that is one image as the photo, filling the slide at one shape with no panel", async () => {
-    const html = await render("::carousel\n![Short](a.png)\n\n![Tall](b.png)\n::");
-    expect(html).toContain('data-zoom tabindex="0"><img src="a.png" alt="Short"></div>');
-    expect(html).toMatch(/:has\(>img,>a>img:only-child\)\{padding:0;background:none\}/);
-    expect(html).toMatch(
-      /:has\(>img,>a>img:only-child\)>img,[^{]*\{width:100%;aspect-ratio:var\(--cc-ratio,4\/3\);object-fit:cover;/,
+    const html = await render(
+      "::carousel\n![Short](a.png)\n\n[![Linked](b.png)](#next)\n\n[![Photo](c.png) Caption](#next)\n::",
     );
+    expect(html).toContain('data-zoom tabindex="0"><img src="a.png" alt="Short"></div>');
+    expect(
+      html.match(/<div class="cc-slide"[^>]*>/g)?.map((slide) => slide.includes("data-cc-photo")),
+    ).toEqual([true, true, false]);
   });
 
   it("keeps explicit slides and their titles", async () => {
@@ -87,7 +88,7 @@ describe("comark-carousel", () => {
     expect(html).toContain('aria-label="1 of 3" data-zoom tabindex="0" data-zoom-title="Install">');
     expect(html).toContain('aria-label="2 of 3" data-zoom tabindex="0" data-zoom-title="Setup">');
     // An image names its zoomed view with its alt text.
-    expect(html).toContain('aria-label="3 of 3" data-zoom tabindex="0">');
+    expect(html).toContain('aria-label="3 of 3" data-cc-photo data-zoom tabindex="0">');
     expect(await render("::carousel\nOne\n\nTwo\n::")).not.toContain('data-zoom-title="');
   });
 

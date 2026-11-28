@@ -1,11 +1,12 @@
 import { createHtmlRenderer } from "@comark/html";
 import type { Page } from "@playwright/test";
 import carousel, { components } from "../packages/carousel/src/html.ts";
+import { components as linksComponents, external } from "../packages/links/src/html.ts";
 import zoom, { components as zoomComponents } from "../packages/zoom/src/html.ts";
 
 export const render = createHtmlRenderer({
-  plugins: [carousel(), zoom()],
-  components: { ...components, ...zoomComponents },
+  plugins: [carousel(), zoom(), external()],
+  components: { ...components, ...zoomComponents, ...linksComponents },
 });
 
 export const open = async (

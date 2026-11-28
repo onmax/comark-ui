@@ -99,12 +99,13 @@ type SlideProps = {
   index?: string | number;
   count?: string | number;
   title?: string;
+  photo?: boolean;
   zoom?: boolean | string;
   children?: ReactNode;
 };
 
 /** `:::slide` for `@comark/react`. */
-export function Slide({ index, count, title, zoom, children }: SlideProps) {
+export function Slide({ index, count, title, photo, zoom, children }: SlideProps) {
   const zoomable = !off(zoom);
   return createElement(
     "div",
@@ -113,6 +114,7 @@ export function Slide({ index, count, title, zoom, children }: SlideProps) {
       role: "group",
       "aria-roledescription": "slide",
       "aria-label": `${index} of ${count}`,
+      "data-cc-photo": photo ? "" : undefined,
       "data-zoom": zoomable ? "" : undefined,
       tabIndex: zoomable ? 0 : undefined,
       "data-zoom-title": zoomable ? title : undefined,

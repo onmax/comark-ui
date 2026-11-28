@@ -53,9 +53,7 @@ const isPicture = (node: Node | undefined): node is ElementNode =>
   isElement(node) &&
   (node[0] === "img" || (node[0] === "a" && isElement(only(node)) && only(node)?.[0] === "img"));
 
-// The styles center a picture that is a direct child of a slide, so only one that stands alone may be one: a picture
-// alone in its paragraph leaves it, and a picture in a sentence gets back the paragraph Comark drops around a slide
-// that is a single paragraph.
+// Lift a picture alone in a paragraph, but restore the paragraph Comark drops around a slide with an inline image.
 function standalone(nodes: Node[]): Node[] {
   const lifted = nodes.map((node) => {
     if (!isElement(node) || node[0] !== "p") return node;
@@ -133,6 +131,7 @@ function carousel(node: ElementNode, walk: Walk) {
   const zoom = attrs.zoom !== false && attrs.zoom !== "false";
   for (const [index, slide] of slides.entries()) {
     slide.splice(2, slide.length - 2, ...standalone(childrenOf(slide)));
+    slide[1].photo = isPicture(only(slide));
     slide[1].index = String(index + 1);
     slide[1].count = String(slides.length);
     if (!zoom) slide[1].zoom = "false";
