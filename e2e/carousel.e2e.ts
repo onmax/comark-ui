@@ -422,7 +422,7 @@ test("without the script, the scrollbar reaches the other slides", async ({ page
   expect(await track.evaluate(bar)).toBe(0);
 });
 
-test("short images and linked images are centered, while titles and text stay at the top", async ({
+test("a slide that is one image, linked or not, is the photo filling it at 4:3, while titles and text keep the panel", async ({
   page,
 }) => {
   const image = (height: number) => `https://example.test/${height}.svg`;
@@ -473,18 +473,28 @@ Text
       const image = slide.querySelector("img")!.getBoundingClientRect();
       return {
         above: image.top - panel.top,
-        below: panel.bottom - image.bottom,
+        side: image.left - panel.left,
+        width: image.width / panel.width,
+        ratio: image.width / image.height,
+        background: getComputedStyle(slide).backgroundColor,
         contentTop: slide.firstElementChild!.getBoundingClientRect().top - panel.top,
         padding: parseFloat(getComputedStyle(slide).paddingTop),
       };
     }),
   );
   expect(positions).toHaveLength(5);
-  for (const position of positions.slice(0, 2)) {
-    expect(position.above).toBeGreaterThan(position.padding);
-    expect(Math.abs(position.above - position.below)).toBeLessThan(1);
+  for (const position of positions.slice(0, 3)) {
+    expect(position.padding).toBe(0);
+    expect(position.above).toBeCloseTo(0, 1);
+    expect(position.side).toBeCloseTo(0, 1);
+    expect(position.width).toBeCloseTo(1, 2);
+    expect(position.background).toBe("rgba(0, 0, 0, 0)");
+    expect(position.ratio).toBeCloseTo(4 / 3, 2);
   }
-  for (const position of positions.slice(3)) expect(position.contentTop).toBe(position.padding);
+  for (const position of positions.slice(3)) {
+    expect(position.padding).toBeGreaterThan(0);
+    expect(position.contentTop).toBe(position.padding);
+  }
 });
 
 test("a short slide starts at the top, where a taller one does", async ({ page }) => {
