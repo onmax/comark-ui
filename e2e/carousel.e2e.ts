@@ -340,6 +340,24 @@ for (const dir of ["ltr", "rtl"]) {
     await prev.click();
     await expect(count).toHaveText("2–4 / 5");
   });
+
+  for (const padding of ["25%", "calc(20% + 51.2px)"]) {
+    test(`start bleed paging works with ${padding} snap padding in ${dir}`, async ({ page }) => {
+      await page.emulateMedia({ reducedMotion: "reduce" });
+      await open(page, five, {
+        dir,
+        style: `.cc{--cc-bleed-start:256px}.cc-track{scroll-padding-inline-start:${padding}}`,
+      });
+      const { count, next, prev } = parts(page);
+      await expect(count).toHaveText("1–3 / 5");
+      await next.click();
+      await expect(count).toHaveText("2–4 / 5");
+      await next.click();
+      await expect(count).toHaveText("3–5 / 5");
+      await prev.click();
+      await expect(count).toHaveText("2–4 / 5");
+    });
+  }
 }
 
 test("invalid nested start bleed does not inherit the outer run's bleed", async ({ page }) => {

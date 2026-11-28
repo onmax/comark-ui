@@ -43,15 +43,13 @@ export function start(css: string): () => void {
 
   const rtl = (track: Element) => getComputedStyle(track).direction === "rtl";
   // Convert the rendered panel distances to scroll coordinates, even on a scaled page or in RTL.
-  function geometry(track: HTMLElement, slides: HTMLElement[]) {
+  function geometry(column: Element, track: HTMLElement, slides: HTMLElement[]) {
     // With --cc-bleed or --cc-bleed-start the track overhangs the carousel's column: a page is what fits in the
     // column, and it rests lined up with the column's start.
-    const column = track.closest(".cc") as HTMLElement;
     const columnStyle = getComputedStyle(column);
-    const columnWidth =
-      column.clientWidth -
-      parseFloat(columnStyle.paddingLeft) -
-      parseFloat(columnStyle.paddingRight);
+    const paddingLeft = parseFloat(columnStyle.paddingLeft);
+    const paddingRight = parseFloat(columnStyle.paddingRight);
+    const columnWidth = column.clientWidth - paddingLeft - paddingRight;
     const width = track.clientWidth - Math.max(0, track.offsetWidth - columnWidth);
     const bounds = track.getBoundingClientRect();
     const scale = bounds.width / track.offsetWidth || 1;
@@ -62,7 +60,13 @@ export function start(css: string): () => void {
         ? track.offsetWidth - track.clientWidth - track.clientLeft
         : track.clientLeft;
     const origin = direction === -1 ? bounds.right : bounds.left;
-    const lead = parseFloat(getComputedStyle(track).scrollPaddingInlineStart) || 0;
+    const columnBounds = column.getBoundingClientRect();
+    const columnEdge = direction === -1 ? columnBounds.right : columnBounds.left;
+    const columnInset =
+      direction === -1
+        ? parseFloat(columnStyle.borderRightWidth) + paddingRight
+        : parseFloat(columnStyle.borderLeftWidth) + paddingLeft;
+    const lead = Math.max(0, (direction * (columnEdge - origin)) / scale + columnInset - inset);
     const panels = slides.map((slide) => slide.getBoundingClientRect());
     const first = panels[0]!;
     const starts = panels.map((panel) => {
@@ -119,7 +123,7 @@ export function start(css: string): () => void {
   ) {
     const { track, slides } = parts(root);
     if (!track?.clientWidth || !slides.length) return false;
-    const { lastStart, direction, scrolled, end, stops, current } = geometry(track, slides);
+    const { lastStart, direction, scrolled, end, stops, current } = geometry(root, track, slides);
     if (end <= 1) return false;
     const requested = index(targets.get(root) ?? current, lastStart);
     const target = Math.max(0, Math.min(requested, lastStart));
@@ -145,7 +149,7 @@ export function start(css: string): () => void {
     if (!track?.clientWidth || !slides.length) return;
     // The counter names every slide in view, such as 2–3 / 5. It counts from the track's width rather than from what
     // is on screen, so it doesn't flicker mid-scroll, and a slide that only peeks in on a narrow page doesn't count.
-    const { shown, current: first, scrolled, stops, atEnd } = geometry(track, slides);
+    const { shown, current: first, scrolled, stops, atEnd } = geometry(root, track, slides);
     const last = first + shown;
     const text = `${first + 1}${last - first > 1 ? `–${last}` : ""} / ${slides.length}`;
     // Only on a change: the counter is a live region, so each write is read out.
