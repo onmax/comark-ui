@@ -183,6 +183,12 @@ export function script(config: ScriptConfig): void {
     el.textContent = value === null ? "" : percentText(value);
   }
 
+  function labelText(node: Node): string {
+    if (node.nodeType === Node.TEXT_NODE) return node.textContent ?? "";
+    if (node instanceof HTMLBRElement) return " ";
+    return Array.from(node.childNodes, labelText).join("");
+  }
+
   function paintQuestion(model: Model) {
     const { labels, result } = model;
     model.el.dataset.state = result ?? (model.selected.size ? "selected" : "idle");
@@ -222,11 +228,13 @@ export function script(config: ScriptConfig): void {
     const toggle = part(model, "[data-action='hint']");
     if (toggle) toggle.hidden = done && toggle.getAttribute("aria-expanded") !== "true";
     const total = paintResults(model, done, labels.answer, labels.answers);
-    const right = model.options.flatMap((option, at) =>
-      model.correct.has(model.keys[at] ?? "")
-        ? [$(option, ".cqz-label")?.innerText.replace(/\s+/g, " ").trim() ?? ""]
-        : [],
-    );
+    const right =
+      result === "revealed"
+        ? model.options.flatMap((option, at) => {
+            const label = model.correct.has(model.keys[at] ?? "") && $(option, ".cqz-label");
+            return label ? [labelText(label).replace(/\s+/g, " ").trim()] : [];
+          })
+        : [];
     const said =
       result === "correct"
         ? labels.correct

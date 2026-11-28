@@ -104,7 +104,7 @@ Which callback runs first once the current script ends?
 
 #### Lines
 
-Break an option's text onto a new line, and it shows on its own line, in questions and polls. The option's key reads the text as one line, so breaking an option keeps its saved answers.
+Break an option's text onto a new line, and it shows on its own line, in questions and polls. Replacing a space with a plain newline keeps the option's key and saved answers. A Markdown hard break (two trailing spaces or a backslash) uses a different key than a plain newline.
 
 ::example
 ```md
@@ -361,7 +361,7 @@ After every task, before it renders or takes the next task :cite[1].
 
 ### Order and keys
 
-Every reader, and the page without its script, sees the same shuffled order. Reordering options, or breaking one onto two lines, keeps saved answers, but editing an option's words resets the answers that picked it.
+Every reader, and the page without its script, sees the same shuffled order. Reordering options or replacing a space in an option with a plain newline keeps saved answers, but editing an option's words resets the answers that picked it.
 
 ### Hosting
 
