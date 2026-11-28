@@ -385,11 +385,12 @@ export function drawPost(post: Post, look: Look): ElementNode {
     : ["span", { class: "csl-logo", role: "img", "aria-label": info.name }];
   const meta: Node[] = [];
   if (handle) meta.push(["span", { class: "csl-handle" }, handle]);
-  // A row in a thread has no logo, so its date links to the post, as the platforms' own threads do.
-  if (post.time && !look.focal) {
-    const time = timeNode(post.time, look);
-    meta.push(look.thread && post.url ? ["a", { class: "csl-link", href: post.url }, time] : time);
-  }
+  // A row in a thread has no logo, so its date links to the post, as the platforms' own threads do, and a row with
+  // no date gets a link of its own.
+  const permalink = (words: Node): Node =>
+    look.thread && post.url ? ["a", { class: "csl-link", href: post.url }, words] : words;
+  if (!look.focal && post.time) meta.push(permalink(timeNode(post.time, look)));
+  else if (!look.focal && look.thread && post.url) meta.push(permalink("View post"));
   const head: ElementNode = [
     "div",
     { class: "csl-head" },
@@ -411,16 +412,21 @@ export function drawPost(post: Post, look: Look): ElementNode {
       ...post.media,
     ]);
   if (post.quote)
-    children.push(drawPost(post.quote, { ...look, quote: true, thread: false, focal: false }));
+    children.push(
+      drawPost(post.quote, { ...look, quote: true, thread: false, focal: false, rail: false }),
+    );
   if (look.focal) {
     const time = post.time ? timeOf(post.time, look) : undefined;
     const stamp: Node[] = [];
     if (post.time)
       stamp.push(
-        time
-          ? ["time", { class: "csl-time", datetime: time.datetime }, time.long]
-          : ["span", { class: "csl-time" }, post.time],
+        permalink(
+          time
+            ? ["time", { class: "csl-time", datetime: time.datetime }, time.long]
+            : ["span", { class: "csl-time" }, post.time],
+        ),
       );
+    else if (look.thread && post.url) stamp.push(permalink("View post"));
     const views = post.counts.views;
     if (views !== undefined)
       stamp.push([

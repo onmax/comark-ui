@@ -147,6 +147,14 @@ describe("comark-ui", () => {
     expect(out).not.toMatch(/>\s*Details\s*</);
   });
 
+  it("keeps a :::details in a social post a block beside the post's paragraphs", async () => {
+    const out = await renderHtml(
+      '::post{platform="x" author="Ada" handle="ada"}\nBefore\n\n:::details{summary="More"}\nInside\n:::\n\nAfter\n::',
+    );
+    expect(out).toContain("Inside");
+    expect(out).not.toMatch(/<p>\s*<details/);
+  });
+
   it("turns a plugin off, with its components", async () => {
     const { plugins, components } = html({ ...offline, zoom: false, github: { callouts: false } });
     expect(Object.keys(components)).not.toContain("zoom");

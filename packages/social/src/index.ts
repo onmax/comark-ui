@@ -102,7 +102,6 @@ export default defineComarkPlugin<SocialOptions | void, SocialMeta>((options) =>
               issues,
               draw: async () => drawThread(await completeThread(thread, settings, issues), look),
             });
-            continue;
           }
           if (node[0] === "post") {
             names.set(node, `\`::post\` ${names.size + 1}`);
@@ -118,8 +117,9 @@ export default defineComarkPlugin<SocialOptions | void, SocialMeta>((options) =>
                 },
               });
           }
+          // A thread's rows still count as posts, as the linter counts every `post` it finds, so the numbers match.
           // SAFETY: an element node is [tag, attributes, ...children], so its children start at index 2.
-          walk(node as Node[], 2, insidePost || node[0] === "post");
+          walk(node as Node[], 2, insidePost || node[0] === "post" || node[0] === "thread");
         }
       };
       walk(tree.nodes, 0, false);

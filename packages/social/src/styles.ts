@@ -108,7 +108,7 @@ export const css = `@layer comark{${[
   ".csl[data-thread]:not([data-focal])>.csl-text{margin-top:.125rem}",
   ".csl[data-rail]{padding-bottom:1rem}",
   ".csl[data-rail]::before{content:'';position:absolute;top:2.75rem;bottom:.25rem;left:calc(1.25rem - 1px);width:2px;border-radius:1px;background:var(--_comark-border)}",
-  ".csl[data-focal] .csl-text{font-size:1.0625rem;line-height:1.625rem}",
+  ".csl[data-focal]>.csl-text{font-size:1.0625rem;line-height:1.625rem}",
   ".csl-stamp{display:flex;flex-wrap:wrap;gap:.25rem;margin-top:.75rem;color:var(--_comark-muted);font-size:.8125rem;line-height:1.25rem}",
   ".csl-stamp>*+*::before{content:'·';margin-inline-end:.25rem}",
   ".csl-number{color:var(--_comark-foreground);font-weight:600;font-variant-numeric:tabular-nums}",

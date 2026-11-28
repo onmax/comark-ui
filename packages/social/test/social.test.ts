@@ -499,7 +499,7 @@ describe("::thread", () => {
       '<a class="csl-link" href="https://x.com/ada/status/1"><time class="csl-time" datetime="2026-11-20T09:31:00Z"',
     );
     expect(html).toContain(
-      '<div class="csl-stamp"><time class="csl-time" datetime="2026-11-20T09:33:00Z">November 20, 2026 at 9:33 AM</time><span class="csl-views"><span class="csl-number">9.1K</span> views</span></div>',
+      '<div class="csl-stamp"><a class="csl-link" href="https://x.com/ada/status/3"><time class="csl-time" datetime="2026-11-20T09:33:00Z">November 20, 2026 at 9:33 AM</time></a><span class="csl-views"><span class="csl-number">9.1K</span> views</span></div>',
     );
     expect(html).not.toContain('data-count="views"');
     expect(html.match(/class="csl-logo"/g)).toHaveLength(1);
@@ -523,6 +523,23 @@ describe("::thread", () => {
     expect(folded).toContain("Post 6");
     expect(folded).not.toContain("Post 7");
     expect(html.slice(html.indexOf("</details>"))).toContain("Post 7");
+  });
+
+  it("links a row with no date to its post, and draws a quote in a row as a quote", async () => {
+    const { html } = await render(
+      `::thread\n:::post{url="https://x.com/ada/status/1" author="Ada" handle="ada"}\nFirst\n\n::::post{author="Grace" handle="grace"}\nQuoted\n::::\n:::\n\n:::post{url="https://x.com/ada/status/2" author="Ada" handle="ada"}\nLast\n:::\n::`,
+    );
+    expect(html).toContain('<a class="csl-link" href="https://x.com/ada/status/1">View post</a>');
+    expect(html).toContain(
+      '<div class="csl-stamp"><a class="csl-link" href="https://x.com/ada/status/2">View post</a></div>',
+    );
+    expect(html).toMatch(/<article class="csl" data-platform="x" data-quote aria-label/);
+    expect(html.match(/data-rail/g)).toHaveLength(1);
+  });
+
+  it("numbers a post after a thread by every post before it, rows included", async () => {
+    const { meta } = await render(`${thread(1)}\n\n::post{platform="x"}\nNo one\n::`);
+    expect(meta.issues).toEqual([expect.stringMatching(/^`::post` 2 has no `author`/)]);
   });
 
   it("gives the posts that name no platform the thread's", async () => {
