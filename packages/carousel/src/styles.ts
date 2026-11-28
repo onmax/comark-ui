@@ -3,34 +3,53 @@ import { scripted } from "../../../shared/scripted.ts";
 
 const inlineSizeUnit = "10000px";
 const inlineSizeRatio = `tan(atan2(100cqi,${inlineSizeUnit}))`;
+// How far the run reaches past the carousel's own column on both sides: --cc-bleed-start and --cc-bleed resolved.
+const overhang = `calc((${inlineSizeRatio} - var(--_cc-column-ratio)) * ${inlineSizeUnit})`;
+// How far it reaches past the column's start, and past its end.
+const before = `calc(var(--_cc-start-ratio) * ${inlineSizeUnit})`;
+const after = `calc(${overhang} - ${before})`;
+const photo =
+  ".cc-grid>.cc-slide:has(>:is(img,a):nth-child(1 of :not(style,script)):nth-last-child(1 of :not(style,script))):has(>img,>a>img:only-child)";
 
 /**
  * The carousel styles. The script adds them to the page once. Theme the controls with the shared `--comark-*` tokens,
- * and set `--cc-gap`, `--cc-surface`, `--cc-padding`, `--cc-peek`, `--cc-bleed`, and `--cc-button-size` on `.cc` or any ancestor. The rules sit in
+ * and set `--cc-gap`, `--cc-surface`, `--cc-padding`, `--cc-peek`, `--cc-bleed`, `--cc-bleed-start`, `--cc-ratio`, and `--cc-button-size` on `.cc` or any ancestor. The rules sit in
  * the `comark` layer, so any unlayered rule of the host's wins.
  */
 export const css = `@layer comark{${[
   '@property --_cc-column-ratio{syntax:"<number>";inherits:true;initial-value:0}',
+  '@property --_cc-local-start-ratio{syntax:"<number>";inherits:false;initial-value:0}',
   theme(".cc"),
   ":where(.cc){--cc-columns:1}",
   ".cc{position:relative;margin:1.5rem 0;container:cc/inline-size}",
   ".cc[data-carousel-columns='2']{--cc-columns:2}",
   ".cc[data-carousel-columns='3']{--cc-columns:3}",
-  `.cc-run{--_cc-column-ratio:${inlineSizeRatio};container-type:inline-size;margin-inline-end:calc(-1 * max(0px,var(--cc-bleed,0px)))}`,
-  ".cc-track{position:relative;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory}",
-  `.cc-grid{margin-inline-end:calc((${inlineSizeRatio} - var(--_cc-column-ratio)) * ${inlineSizeUnit});display:grid;grid-auto-flow:column;grid-auto-columns:calc((100% - (var(--cc-columns) - 1) * var(--cc-gap,1rem)) / var(--cc-columns));gap:var(--cc-gap,1rem)}`,
+  // A carousel inside a slide stays inside it.
+  ".cc .cc{--cc-bleed:0px;--cc-bleed-start:0px}",
+  // --cc-bleed-start is a length, read once here as a number so the grid can sit at the column's start; a percentage
+  // would mean another width down there, so it reads as 0.
+  `.cc-run{--_cc-column-ratio:${inlineSizeRatio};--_cc-local-start-ratio:tan(atan2(max(0px,var(--cc-bleed-start,0px)),${inlineSizeUnit}));--_cc-start-ratio:var(--_cc-local-start-ratio);container-type:inline-size;margin-inline:calc(-1 * ${before}) calc(-1 * max(0px,var(--cc-bleed,0px)))}`,
+  // The slides scroll through the whole run, out to both of its edges, and come to rest lined up with the column.
+  `.cc-track{position:relative;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scroll-padding-inline:${before} ${after}}`,
+  `.cc-grid{margin-inline:${before} ${after};display:grid;grid-auto-flow:column;grid-auto-columns:calc((100% - (var(--cc-columns) - 1) * var(--cc-gap,1rem)) / var(--cc-columns));gap:var(--cc-gap,1rem)}`,
   // Every slide is a panel as tall as the tallest one, with its content at the top, so a slide's title stays put when
   // the next slide is taller. Only slides in a track: the zoomed copy stays bare.
   ".cc-grid>.cc-slide{min-width:0;scroll-snap-align:start;align-content:start;padding:var(--cc-padding,1rem);border-radius:var(--_comark-radius);background:var(--cc-surface,color-mix(in srgb,var(--_comark-foreground) 4%,transparent))}",
+  // With --cc-bleed, the track scrolls on past the last slide by the room past the column's end, so the last page lines
+  // up with the column, as the first does, instead of ending at the track's edge with a sliver of the slide before it.
+  ".cc-grid>.cc-slide:last-child{position:relative}",
+  `.cc-grid>.cc-slide:last-child::after{content:"";position:absolute;top:0;inset-inline-start:100%;width:${after};height:1px;pointer-events:none}`,
   // A page's unlayered block margins would open a band of the slide's surface around its content, and comark-code's
   // wrapper passes its block's margins through, so the trims are `!important` and skip a `style` or `script`.
   ".cc-slide>:nth-child(1 of :not(style,script)),.cc-slide>.ck:nth-child(1 of :not(style,script))>pre{margin-top:0!important}",
   ".cc-slide>:nth-last-child(1 of :not(style,script)),.cc-slide>.ck:nth-last-child(1 of :not(style,script))>pre{margin-bottom:0!important}",
   // A slide that is one code block shows the block's own frame, not a second one around it.
   ".cc-grid>.cc-slide:has(>:is(pre,.ck):nth-child(1 of :not(style,script)):nth-last-child(1 of :not(style,script))){padding:0;background:none}",
-  // A slide that is one image has no title to keep in place, so a shorter image sits in the middle of the panel
-  // instead of over a band of empty surface.
-  ".cc-grid>.cc-slide:has(>:is(img,a):nth-child(1 of :not(style,script)):nth-last-child(1 of :not(style,script))):has(>img,>a>img:only-child){align-content:center}",
+  // A slide that is one image is the photo itself, with no panel around it: it fills the slide at one shape, cropped
+  // to fit, so photos of different shapes line up. The zoomed copy, outside the grid, shows the whole photo.
+  `${photo}{padding:0;background:none}`,
+  `${photo}>a{display:block}`,
+  `${photo}>img,${photo}>a>img{width:100%;aspect-ratio:var(--cc-ratio,4/3);object-fit:cover;border-radius:var(--_comark-radius)}`,
   ".cc-slide img{max-width:100%;height:auto}",
   // The parse plugin lifts an image, or a link around one, out of a paragraph of its own, so only an image that stands
   // alone is centered.

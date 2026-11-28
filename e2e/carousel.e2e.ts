@@ -240,6 +240,71 @@ for (const dir of ["ltr", "rtl"]) {
   });
 }
 
+for (const dir of ["ltr", "rtl"])
+  for (const lead of [0, 80])
+    test(`with --cc-bleed${lead ? " and --cc-bleed-start" : ""}, the slides rest lined up with the carousel, to its last page, in ${dir}`, async ({
+      page,
+    }) => {
+      await page.emulateMedia({ reducedMotion: "reduce" });
+      await open(page, five, { dir });
+      const { root, track, count, next } = parts(page);
+      await root.evaluate((node, lead) => {
+        node.style.setProperty("--cc-bleed", "120px");
+        node.style.setProperty("--cc-bleed-start", `${lead}px`);
+      }, lead);
+      const edges = () =>
+        root.evaluate((node) => {
+          const box = node.getBoundingClientRect();
+          const rtl = getComputedStyle(node).direction === "rtl";
+          // Distances from the carousel's start and end, in reading order.
+          const start = (rect: DOMRect) => (rtl ? box.right - rect.right : rect.left - box.left);
+          const end = (rect: DOMRect) => (rtl ? rect.left - box.left : box.right - rect.right);
+          const slides = [...node.querySelectorAll(".cc-slide")].map((slide) =>
+            slide.getBoundingClientRect(),
+          );
+          const run = node.querySelector(".cc-track")!.getBoundingClientRect();
+          return {
+            run: [start(run), end(run)],
+            first: start(slides[0]!),
+            third: start(slides[2]!),
+            last: end(slides[4]!),
+            // How much of the slide before the last page shows in the room past the carousel's start.
+            shown: Math.max(0, start(slides[1]!) + slides[1]!.width - start(run)),
+          };
+        });
+      // Within a pixel: a right-to-left track scrolls in whole pixels.
+      const near = (value: number, expected: number) =>
+        expect(Math.abs(value - expected)).toBeLessThan(1);
+      const atStart = await edges();
+      near(atStart.run[0]!, -lead);
+      near(atStart.run[1]!, -120);
+      near(atStart.first, 0);
+      await next.click();
+      await next.click();
+      await expect(count).toHaveText("3–5 / 5");
+      await expect(next).toHaveAttribute("aria-disabled", "true");
+      const lined = ({ third, last }: { third: number; last: number }) => {
+        near(third, 0);
+        near(last, 0);
+      };
+      const byArrow = await edges();
+      lined(byArrow);
+      // Without room past the carousel's start, the slide before the page is wholly out of view, with no sliver of it;
+      // with room, it runs on into that room.
+      if (lead) expect(byArrow.shown).toBeGreaterThan(lead / 2);
+      else expect(byArrow.shown).toBeLessThan(1);
+      await track.evaluate((node) =>
+        node.scrollTo({
+          left:
+            (node.scrollWidth - node.clientWidth) *
+            (getComputedStyle(node).direction === "rtl" ? -1 : 1),
+          behavior: "instant",
+        }),
+      );
+      lined(await edges());
+      await expect(count).toHaveText("3–5 / 5");
+    });
+
 test("bleed preserves percentage gaps and slide widths in a padded track", async ({ page }) => {
   await open(page, five, { style: ".cc{--cc-gap:10%}.cc-track{padding-inline:24px}" });
   const { root, track } = parts(page);
@@ -257,6 +322,78 @@ test("bleed preserves percentage gaps and slide widths in a padded track", async
   expect(after.width).toBeCloseTo(before.width, 1);
   expect(after.gap).toBeCloseTo(before.gap, 1);
   expect((await track.boundingBox())!.width).toBeCloseTo((await root.boundingBox())!.width + 64, 0);
+});
+
+for (const dir of ["ltr", "rtl"]) {
+  test(`start bleed pages from the padded column's content edge in ${dir}`, async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await open(page, five, {
+      dir,
+      style: ".cc{padding-inline-start:144px;--cc-bleed-start:160px}",
+    });
+    const { count, next, prev } = parts(page);
+    await expect(count).toHaveText("1–3 / 5");
+    await next.click();
+    await expect(count).toHaveText("2–4 / 5");
+    await next.click();
+    await expect(count).toHaveText("3–5 / 5");
+    await prev.click();
+    await expect(count).toHaveText("2–4 / 5");
+  });
+
+  for (const padding of ["25%", "calc(20% + 51.2px)"]) {
+    test(`start bleed paging works with ${padding} snap padding in ${dir}`, async ({ page }) => {
+      await page.emulateMedia({ reducedMotion: "reduce" });
+      await open(page, five, {
+        dir,
+        style: `.cc{--cc-bleed-start:256px}.cc-track{scroll-padding-inline-start:${padding}}`,
+      });
+      const { count, next, prev } = parts(page);
+      await expect(count).toHaveText("1–3 / 5");
+      await next.click();
+      await expect(count).toHaveText("2–4 / 5");
+      await next.click();
+      await expect(count).toHaveText("3–5 / 5");
+      await prev.click();
+      await expect(count).toHaveText("2–4 / 5");
+    });
+  }
+}
+
+test("invalid nested start bleed does not inherit the outer run's bleed", async ({ page }) => {
+  await open(
+    page,
+    '::carousel{title="Outer"}\n:::slide\n::::carousel{title="Inner"}\nOne\n\nTwo\n::::\n:::\n\n:::slide\nThree\n:::\n::',
+    {
+      style:
+        '.cc[aria-label="Outer"]{--cc-bleed-start:80px}.cc[aria-label="Inner"]{--cc-bleed-start:20%}',
+    },
+  );
+  const overhang = async (title: string) => {
+    const { root, track } = parts(page, title);
+    return (await track.boundingBox())!.width - (await root.boundingBox())!.width;
+  };
+  expect(await overhang("Outer")).toBeCloseTo(80, 0);
+  expect(await overhang("Inner")).toBeCloseTo(0, 0);
+});
+
+test("a narrow track snaps to the last slide by native scrolling with end bleed", async ({
+  page,
+}) => {
+  await open(page, five, { width: "320px", style: ".cc{--cc-bleed:120px}" });
+  const { root, track, count } = parts(page);
+  await expect(count).toHaveText("1 / 5");
+  await track.evaluate((node) =>
+    node.scrollTo({ left: node.scrollWidth - node.clientWidth, behavior: "instant" }),
+  );
+  await expect(count).toHaveText("5 / 5");
+  await expect
+    .poll(async () => {
+      const column = (await root.boundingBox())!;
+      const last = (await track.locator(".cc-slide").last().boundingBox())!;
+      return Math.abs(last.x + last.width - column.x - column.width);
+    })
+    .toBeLessThan(1);
 });
 
 test("without bleed, two slides fit in a padded two-column track", async ({ page }) => {
@@ -422,7 +559,7 @@ test("without the script, the scrollbar reaches the other slides", async ({ page
   expect(await track.evaluate(bar)).toBe(0);
 });
 
-test("short images and linked images are centered, while titles and text stay at the top", async ({
+test("a slide that is one image, linked or not, is the photo filling it at 4:3, while titles and text keep the panel", async ({
   page,
 }) => {
   const image = (height: number) => `https://example.test/${height}.svg`;
@@ -473,18 +610,28 @@ Text
       const image = slide.querySelector("img")!.getBoundingClientRect();
       return {
         above: image.top - panel.top,
-        below: panel.bottom - image.bottom,
+        side: image.left - panel.left,
+        width: image.width / panel.width,
+        ratio: image.width / image.height,
+        background: getComputedStyle(slide).backgroundColor,
         contentTop: slide.firstElementChild!.getBoundingClientRect().top - panel.top,
         padding: parseFloat(getComputedStyle(slide).paddingTop),
       };
     }),
   );
   expect(positions).toHaveLength(5);
-  for (const position of positions.slice(0, 2)) {
-    expect(position.above).toBeGreaterThan(position.padding);
-    expect(Math.abs(position.above - position.below)).toBeLessThan(1);
+  for (const position of positions.slice(0, 3)) {
+    expect(position.padding).toBe(0);
+    expect(position.above).toBeCloseTo(0, 1);
+    expect(position.side).toBeCloseTo(0, 1);
+    expect(position.width).toBeCloseTo(1, 2);
+    expect(position.background).toBe("rgba(0, 0, 0, 0)");
+    expect(position.ratio).toBeCloseTo(4 / 3, 2);
   }
-  for (const position of positions.slice(3)) expect(position.contentTop).toBe(position.padding);
+  for (const position of positions.slice(3)) {
+    expect(position.padding).toBeGreaterThan(0);
+    expect(position.contentTop).toBe(position.padding);
+  }
 });
 
 test("a short slide starts at the top, where a taller one does", async ({ page }) => {

@@ -60,11 +60,12 @@ describe("comark-carousel", () => {
       expect(style).toContain(variable);
   });
 
-  it("centers a slide that is one image, so a shorter image leaves no empty band under it", async () => {
+  it("shows a slide that is one image as the photo, filling the slide at one shape with no panel", async () => {
     const html = await render("::carousel\n![Short](a.png)\n\n![Tall](b.png)\n::");
     expect(html).toContain('data-zoom tabindex="0"><img src="a.png" alt="Short"></div>');
+    expect(html).toMatch(/:has\(>img,>a>img:only-child\)\{padding:0;background:none\}/);
     expect(html).toMatch(
-      /\.cc-grid>\.cc-slide:has\(>:is\(img,a\)[^{]*\):has\(>img,>a>img:only-child\)\{align-content:center\}/,
+      /:has\(>img,>a>img:only-child\)>img,[^{]*\{width:100%;aspect-ratio:var\(--cc-ratio,4\/3\);object-fit:cover;/,
     );
   });
 
