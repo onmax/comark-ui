@@ -9,6 +9,7 @@ const render = createHtmlRenderer(
     badge: { download: false },
     icon: { fetch: false },
     diagrams: { draw: false },
+    code: false,
   }),
 );
 
@@ -38,11 +39,7 @@ const carousel = '::carousel{title="Tour" columns=3}\nOne\n\nTwo\n\nThree\n\nFou
 // A 46rem column, the way a review doc lays out its text. With `room`, the page gives wide blocks the room on each side
 // of it, and takes the outline's column off the room after it while the outline keeps one, as the outline page's docs
 // show. A carousel's slides run into the same room.
-async function open(
-  page: Page,
-  width: number,
-  { room = false, diagram = false, slides = false } = {},
-) {
+async function open(page: Page, width: number, { room = false, diagram = false, extra = "" } = {}) {
   await page.setViewportSize({ width, height: 800 });
   const css = room
     ? "main{--comark-wide-start:calc((100vw - 100%) / 2 - 1.5rem);--comark-wide-end:calc((100vw - 100%) / 2 - 1.5rem)}" +
@@ -50,8 +47,8 @@ async function open(
       "main>.cc{--cc-bleed:var(--comark-wide-end)}"
     : "";
   await page.setContent(
-    `<!doctype html><meta charset="utf-8"><style>body{margin:0}main{width:46rem;margin:auto}${css}</style><main>${await render(
-      sections(diagram ? flowchart : slides ? carousel : ""),
+    `<!doctype html><meta charset="utf-8"><style>body{margin:0}main{width:46rem;margin:auto}pre{overflow-x:auto}pre>code{display:block;width:max-content}${css}</style><main>${await render(
+      sections(diagram ? flowchart : extra),
     )}</main>`,
   );
 }
@@ -136,7 +133,7 @@ test("beside a long diagram, the outline keeps a column right of it, and the dia
 test("beside a carousel whose slides run into the room, the outline keeps a column right of the slides", async ({
   page,
 }) => {
-  await open(page, 1440, { room: true, slides: true });
+  await open(page, 1440, { room: true, extra: carousel });
   await expect(page.locator(".cto-rail")).toBeVisible();
   expect(await reserved(page)).toBe(true);
   const [main, track, nav, edge] = [
@@ -149,6 +146,31 @@ test("beside a carousel whose slides run into the room, the outline keeps a colu
   expect(nav.left - track.right).toBeGreaterThanOrEqual(40);
   expect(nav.left - track.right).toBeLessThanOrEqual(64);
   expect(nav.right).toBeLessThanOrEqual(edge - 24);
+});
+
+test("reserving the rail cannot clip a two-slide carousel when room goes negative", async ({
+  page,
+}) => {
+  await open(page, 1240, { room: true, extra: "::carousel{columns=2}\nOne\n\nTwo\n::" });
+  await expect(page.locator(".cto-rail")).toBeVisible();
+  expect(await reserved(page)).toBe(true);
+  const [main, track, last] = await Promise.all([
+    box(page, "main"),
+    box(page, ".cc-track"),
+    box(page, ".cc-slide:last-child"),
+  ]);
+  expect(track.right).toBeCloseTo(main.right, 0);
+  expect(last.right).toBeCloseTo(track.right, 0);
+  await expect(page.locator(".cc-controls")).toBeHidden();
+});
+
+test("the outline ignores a long code line clipped by its scrolling block", async ({ page }) => {
+  await open(page, 1440, { extra: `\`\`\`\n${"long code line ".repeat(80)}\n\`\`\`` });
+  const [pre, code] = await Promise.all([box(page, "pre"), box(page, "pre>code")]);
+  expect(code.right).toBeGreaterThan(pre.right);
+  await expect(page.locator(".cto-rail")).toBeVisible();
+  expect((await box(page, ".cto-rail")).left - pre.right).toBeCloseTo(64, 0);
+  expect(await reserved(page)).toBe(false);
 });
 
 test("where its column would narrow a diagram, the outline hides instead", async ({ page }) => {

@@ -27,7 +27,7 @@ const parts = (page: Page, title = "Tour") => {
   const controls = root.locator(":scope>.cc-controls");
   return {
     root,
-    track: root.locator(":scope>.cc-track"),
+    track: root.locator(":scope>.cc-run>.cc-track"),
     count: controls.locator(".cc-count"),
     prev: controls.getByRole("button", { name: "Previous slide" }),
     next: controls.getByRole("button", { name: "Next slide" }),
@@ -266,6 +266,33 @@ for (const dir of ["ltr", "rtl"]) {
     await expect(count).toHaveText("1–3 / 5");
   });
 }
+
+test("bleed preserves percentage gaps and slide widths in a padded track", async ({ page }) => {
+  await open(page, five, { style: ".cc{--cc-gap:10%}.cc-track{padding-inline:24px}" });
+  const { root, track } = parts(page);
+  const geometry = () =>
+    track.evaluate((node) => {
+      const [first, second] = node.querySelectorAll(".cc-slide");
+      const start = first!.getBoundingClientRect();
+      return { width: start.width, gap: second!.getBoundingClientRect().left - start.right };
+    });
+  const before = await geometry();
+  expect(before.width).toBeCloseTo(192);
+  expect(before.gap).toBeCloseTo(72);
+  await root.evaluate((node) => node.style.setProperty("--cc-bleed", "calc(100% - 704px)"));
+  expect(await geometry()).toEqual(before);
+  expect((await track.boundingBox())!.width).toBeCloseTo((await root.boundingBox())!.width + 64, 0);
+});
+
+test("without bleed, two slides fit in a padded two-column track", async ({ page }) => {
+  await open(page, '::carousel{title="Tour" columns=2}\nOne\n\nTwo\n::', {
+    style: ".cc-track{padding-inline-start:48px}",
+  });
+  const { track, next } = parts(page);
+  await expect(next).toBeHidden();
+  expect(await track.evaluate((node) => node.scrollWidth - node.clientWidth)).toBe(0);
+  expect(await track.evaluate((node) => node.scrollLeft)).toBe(0);
+});
 
 test("Home and End go to the first and last slide", async ({ page }) => {
   await open(page, three);

@@ -26,7 +26,7 @@
   aria-roledescription="carousel"
   aria-label={title ?? "Carousel"}
 >
-  <div class="cc-track">{@render children?.()}</div>
+  <div class="cc-run"><div class="cc-track"><div class="cc-grid">{@render children?.()}</div></div></div>
   {#if total > 1}
     <div class="cc-controls">
       <span class="cc-count" aria-live="polite">1 / {total}</span>

@@ -96,6 +96,7 @@ export function start(): () => void {
     const wide = [...parent.children].flatMap((child) => {
       if (child === nav) return [];
       if (child.hasAttribute("data-wide")) return width(child) > column + 1 ? [child] : [];
+      if (getComputedStyle(child).overflowX !== "visible") return [];
       return [...child.children].filter((part) => part.getBoundingClientRect().right > end + 1);
     });
     let spot = beside(wide, WIDTH);

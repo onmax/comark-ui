@@ -6,27 +6,27 @@ import { scripted } from "../../../shared/scripted.ts";
  * and set `--cc-gap`, `--cc-surface`, `--cc-padding`, `--cc-peek`, `--cc-bleed`, and `--cc-button-size` on `.cc` or any ancestor. The rules sit in
  * the `comark` layer, so any unlayered rule of the host's wins.
  */
-export const css = `@layer comark{${[
+export const css = `@property --_cc-column-width{syntax:"<length>";inherits:true;initial-value:0px}@layer comark{${[
   theme(".cc"),
   ":where(.cc){--cc-columns:1}",
-  ".cc{position:relative;margin:1.5rem 0;container-type:inline-size}",
+  ".cc{position:relative;margin:1.5rem 0;container:cc/inline-size}",
   ".cc[data-carousel-columns='2']{--cc-columns:2}",
   ".cc[data-carousel-columns='3']{--cc-columns:3}",
-  // Slides size from the carousel's width (cqi), not the track's: --cc-bleed runs the track past the carousel's end, into
-  // the room beside a column, and the slides that scroll there keep their size.
-  ".cc-track{position:relative;display:grid;grid-auto-flow:column;grid-auto-columns:calc((100cqi - (var(--cc-columns) - 1) * var(--cc-gap,1rem)) / var(--cc-columns));gap:var(--cc-gap,1rem);margin-inline-end:calc(-1 * var(--cc-bleed,0px));overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory}",
+  ".cc-run{--_cc-column-width:100cqi;container-type:inline-size;margin-inline-end:calc(-1 * max(0px,var(--cc-bleed,0px)))}",
+  ".cc-track{position:relative;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory}",
+  ".cc-grid{margin-inline-end:calc(100cqi - var(--_cc-column-width));display:grid;grid-auto-flow:column;grid-auto-columns:calc((100% - (var(--cc-columns) - 1) * var(--cc-gap,1rem)) / var(--cc-columns));gap:var(--cc-gap,1rem)}",
   // Every slide is a panel as tall as the tallest one, with its content at the top, so a slide's title stays put when
   // the next slide is taller. Only slides in a track: the zoomed copy stays bare.
-  ".cc-track>.cc-slide{min-width:0;scroll-snap-align:start;align-content:start;padding:var(--cc-padding,1rem);border-radius:var(--_comark-radius);background:var(--cc-surface,color-mix(in srgb,var(--_comark-foreground) 4%,transparent))}",
+  ".cc-grid>.cc-slide{min-width:0;scroll-snap-align:start;align-content:start;padding:var(--cc-padding,1rem);border-radius:var(--_comark-radius);background:var(--cc-surface,color-mix(in srgb,var(--_comark-foreground) 4%,transparent))}",
   // A page's unlayered block margins would open a band of the slide's surface around its content, and comark-code's
   // wrapper passes its block's margins through, so the trims are `!important` and skip a `style` or `script`.
   ".cc-slide>:nth-child(1 of :not(style,script)),.cc-slide>.ck:nth-child(1 of :not(style,script))>pre{margin-top:0!important}",
   ".cc-slide>:nth-last-child(1 of :not(style,script)),.cc-slide>.ck:nth-last-child(1 of :not(style,script))>pre{margin-bottom:0!important}",
   // A slide that is one code block shows the block's own frame, not a second one around it.
-  ".cc-track>.cc-slide:has(>:is(pre,.ck):nth-child(1 of :not(style,script)):nth-last-child(1 of :not(style,script))){padding:0;background:none}",
+  ".cc-grid>.cc-slide:has(>:is(pre,.ck):nth-child(1 of :not(style,script)):nth-last-child(1 of :not(style,script))){padding:0;background:none}",
   // A slide that is one image has no title to keep in place, so a shorter image sits in the middle of the panel
   // instead of over a band of empty surface.
-  ".cc-track>.cc-slide:has(>:is(img,a):nth-child(1 of :not(style,script)):nth-last-child(1 of :not(style,script))):has(>img,>a>img:only-child){align-content:center}",
+  ".cc-grid>.cc-slide:has(>:is(img,a):nth-child(1 of :not(style,script)):nth-last-child(1 of :not(style,script))):has(>img,>a>img:only-child){align-content:center}",
   ".cc-slide img{max-width:100%;height:auto}",
   // The parse plugin lifts an image, or a link around one, out of a paragraph of its own, so only an image that stands
   // alone is centered.
@@ -35,7 +35,7 @@ export const css = `@layer comark{${[
   ".cc-track [data-zoom]:focus-visible{outline-offset:-2px}",
   // Several columns need room; a narrow page shows one slide at a time, with less padding to spare its width. The next
   // slide peeks in at the edge, so a swipe looks possible before the reader finds the counter.
-  "@container (max-width:36rem){.cc-track{grid-auto-columns:100cqi}.cc-track:has(>.cc-slide+.cc-slide){grid-auto-columns:calc(100cqi - var(--cc-peek,3rem))}.cc-track>.cc-slide{padding:calc(var(--cc-padding,1rem) / 2)}.cc-track>.cc-slide:last-child{scroll-snap-align:end}}",
+  "@container cc (max-width:36rem){.cc-grid{grid-auto-columns:100%}.cc-grid:has(>.cc-slide+.cc-slide){grid-auto-columns:calc(100% - var(--cc-peek,3rem))}.cc-grid>.cc-slide{padding:calc(var(--cc-padding,1rem) / 2)}.cc-grid>.cc-slide:last-child{scroll-snap-align:end}}",
   // One quiet row under the slides, as in Embla's examples: where you are on the left, shadcn's outline icon buttons
   // on the right. It needs no gutter beside the slides, so it stays the same on a phone.
   ".cc-controls{display:none;align-items:center;justify-content:space-between;gap:.5rem;margin-top:.75rem}",
@@ -46,7 +46,7 @@ export const css = `@layer comark{${[
     "& .cc-controls{display:flex}",
   ]),
   // Slides that all fit side by side need no controls, until a narrow page shows them one at a time.
-  "@container (min-width:36.01rem){.cc[data-carousel-fits] .cc-controls{display:none!important}}",
+  "@container cc (min-width:36.01rem){.cc[data-carousel-fits] .cc-controls{display:none!important}}",
   ".cc-count{color:var(--_comark-muted);font-size:.875rem;line-height:1.25rem;font-variant-numeric:tabular-nums}",
   ".cc-steps{display:flex;gap:.5rem}",
   ".cc-step{display:inline-grid;place-items:center;width:var(--cc-button-size,2rem);height:var(--cc-button-size,2rem);padding:0;border:1px solid var(--_comark-border);border-radius:9999px;background:var(--_comark-background);color:var(--_comark-foreground);cursor:pointer;touch-action:manipulation;transition:background .15s,opacity .15s}",
