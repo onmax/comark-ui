@@ -113,9 +113,12 @@ export function readPost(
   issues: Issue[],
   /** The post that quotes this one, whose platform it shares unless it names its own. */
   quoting?: { platform: Platform; host: string },
+  /** The thread this post is in, whose platform it shares unless it names its own. */
+  thread?: { platform: Platform; host: string },
 ): Post {
   const name = nameOf(node);
   const quoted = Boolean(quoting);
+  const around = quoting ?? thread;
   const attrs = props(node, name, "::post", POST_PROPS, data, issues);
   const url = text(attrs.url);
   const address = url ? webUrl(url) : undefined;
@@ -142,7 +145,7 @@ export function readPost(
     ? written
     : address
       ? platformOf(address)
-      : (quoting?.platform ?? "generic");
+      : (around?.platform ?? "generic");
   const counts: Post["counts"] = {};
   for (const count of COUNTS) {
     const value = attrs[count];
@@ -161,7 +164,7 @@ export function readPost(
       rule: "comark/social/invalid-time",
       message: `${name}: \`time\` is "${time}", which isn't a date, so it shows as written. Write an ISO date such as 2026-11-28 or 2026-11-28T09:30:00Z.`,
     });
-  const host = address?.host ?? quoting?.host ?? "";
+  const host = address?.host ?? around?.host ?? "";
   const content = contentOf(node);
   const quotes = content.filter(
     (child): child is ElementNode => isElement(child) && child[0] === "post",
@@ -264,6 +267,12 @@ export type Look = TimeOptions & {
   references?: boolean;
   /** A quoted post: smaller, with no counts. */
   quote?: boolean;
+  /** A post in a `::thread`, drawn as a row beside the rail, with no frame or logo of its own. */
+  thread?: boolean;
+  /** The thread's focal post: larger text, with its full date and views under it. */
+  focal?: boolean;
+  /** Whether the rail runs on from this post to the next one in its thread. */
+  rail?: boolean;
 };
 
 const formatters = new Map<string, Intl.NumberFormat>();
@@ -280,8 +289,8 @@ const formatNumber = (value: number, locale: string | undefined, compact: boolea
   return format.format(value);
 };
 
-/** The time of a post: a short date on the card, and the full date and time in its tooltip. */
-export function timeNode(value: string, look: Look): ElementNode {
+/** A post's time as the card shows it: a short date, and the full date and time for its tooltip or a focal post. */
+function timeOf(value: string, look: Look) {
   let described: ReturnType<typeof describeTime>;
   try {
     described = describeTime(value, {
@@ -293,18 +302,21 @@ export function timeNode(value: string, look: Look): ElementNode {
   } catch {
     described = undefined;
   }
-  if (!described) return ["span", { class: "csl-time" }, value];
+  if (!described) return undefined;
   const dateOnly = described.datetime.length === 10;
   const at = dateOnly ? new Date(`${described.datetime}T00:00:00Z`) : new Date(described.datetime);
   const long = new Intl.DateTimeFormat(look.locale ?? "en-US", {
     dateStyle: "long",
     ...(dateOnly ? { timeZone: "UTC" } : { timeStyle: "short", timeZone: look.timeZone }),
   }).format(at);
-  return [
-    "time",
-    { class: "csl-time", datetime: described.datetime, title: long },
-    described.label,
-  ];
+  return { datetime: described.datetime, label: described.label, long };
+}
+
+/** The time of a post: a short date on the card, and the full date and time in its tooltip. */
+export function timeNode(value: string, look: Look): ElementNode {
+  const time = timeOf(value, look);
+  if (!time) return ["span", { class: "csl-time" }, value];
+  return ["time", { class: "csl-time", datetime: time.datetime, title: time.long }, time.label];
 }
 
 const graphemes = new Intl.Segmenter();
@@ -328,7 +340,8 @@ const handleOf = (post: Post) =>
 function counts(post: Post, look: Look): ElementNode | undefined {
   const { order } = PLATFORM[post.platform];
   const kinds = [...order, ...COUNTS.filter((count) => !order.includes(count))].filter(
-    (count) => post.counts[count] !== undefined,
+    // A focal post shows its views beside its date.
+    (count) => post.counts[count] !== undefined && !(look.focal && count === "views"),
   );
   if (!kinds.length) return undefined;
   return [
@@ -379,7 +392,12 @@ export function drawPost(post: Post, look: Look): ElementNode {
     : ["span", { class: "csl-logo", role: "img", "aria-label": info.name }];
   const meta: Node[] = [];
   if (handle) meta.push(["span", { class: "csl-handle" }, handle]);
-  if (post.time) meta.push(timeNode(post.time, look));
+  // A row in a thread has no logo, so its date links to the post, as the platforms' own threads do, and a row with
+  // no date gets a link of its own.
+  const permalink = (words: Node): Node =>
+    look.thread && post.url ? ["a", { class: "csl-link", href: post.url }, words] : words;
+  if (!look.focal && post.time) meta.push(permalink(timeNode(post.time, look)));
+  else if (!look.focal && look.thread && post.url) meta.push(permalink("View post"));
   const head: ElementNode = [
     "div",
     { class: "csl-head" },
@@ -390,7 +408,7 @@ export function drawPost(post: Post, look: Look): ElementNode {
       ...(who ? [["span", { class: "csl-name" }, who] satisfies ElementNode] : []),
       ...(meta.length ? [["span", { class: "csl-meta" }, ...meta] satisfies ElementNode] : []),
     ],
-    ...(look.quote ? [] : [logo]),
+    ...(look.quote || look.thread ? [] : [logo]),
   ];
   const children: Node[] = [head];
   if (post.text.length) children.push(["div", { class: "csl-text" }, ...post.text]);
@@ -400,7 +418,32 @@ export function drawPost(post: Post, look: Look): ElementNode {
       { class: "csl-media", "data-count": String(Math.min(post.media.length, 4)) },
       ...post.media,
     ]);
-  if (post.quote) children.push(drawPost(post.quote, { ...look, quote: true }));
+  if (post.quote)
+    children.push(
+      drawPost(post.quote, { ...look, quote: true, thread: false, focal: false, rail: false }),
+    );
+  if (look.focal) {
+    const time = post.time ? timeOf(post.time, look) : undefined;
+    const stamp: Node[] = [];
+    if (post.time)
+      stamp.push(
+        permalink(
+          time
+            ? ["time", { class: "csl-time", datetime: time.datetime }, time.long]
+            : ["span", { class: "csl-time" }, post.time],
+        ),
+      );
+    else if (look.thread && post.url) stamp.push(permalink("View post"));
+    const views = post.counts.views;
+    if (views !== undefined)
+      stamp.push([
+        "span",
+        { class: "csl-views" },
+        ["span", { class: "csl-number" }, formatNumber(views, look.locale, true)],
+        ` ${countWord(post.platform, "views", views)}`,
+      ]);
+    if (stamp.length) children.push(["div", { class: "csl-stamp" }, ...stamp]);
+  }
   const bar = look.quote ? undefined : counts(post, look);
   if (bar) children.push(bar);
   return [
@@ -409,9 +452,12 @@ export function drawPost(post: Post, look: Look): ElementNode {
       platform: post.platform,
       label,
       ...(look.quote ? { quote: "" } : {}),
+      ...(look.thread ? { thread: "" } : {}),
+      ...(look.focal ? { focal: "" } : {}),
+      ...(look.rail ? { rail: "" } : {}),
       // The card shows links and handles as its platform does, so comark-chips and comark-github leave it alone.
-      ...(look.chips && !look.quote ? { chip: "false" } : {}),
-      ...(look.references && !look.quote ? { references: "false" } : {}),
+      ...(look.chips && !look.quote && !look.thread ? { chip: "false" } : {}),
+      ...(look.references && !look.quote && !look.thread ? { references: "false" } : {}),
     },
     ...children,
   ];

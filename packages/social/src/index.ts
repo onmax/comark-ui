@@ -4,6 +4,7 @@ import { complete } from "./complete.ts";
 import { drawConversation, readConversation } from "./conversation.ts";
 import { drawPost, readPost, type Data, type Issue, type Look } from "./post.ts";
 import type { SocialRequest } from "./request.ts";
+import { completeThread, drawThread, readThread } from "./thread.ts";
 import { isElement } from "../../../shared/nodes.ts";
 
 export { fetchPost, FetchPostError } from "./fetch.ts";
@@ -39,10 +40,24 @@ export interface SocialOptions {
 
 /**
  * What a `::post` becomes. `platform` picks the logo and the icons, `label` names the card for screen readers, and
- * `quote` marks a quoted post inside another. Its children are plain elements: the header, the text, the pictures, the
+ * `quote` marks a quoted post inside another. In a `::thread`, `thread` marks each post, `focal` the last one, and
+ * `rail` each post the rail runs on from. Its children are plain elements: the header, the text, the pictures, the
  * quoted post, and the counts.
  */
-export type PostAttributes = { platform?: string; label?: string; quote?: string };
+export type PostAttributes = {
+  platform?: string;
+  label?: string;
+  quote?: string;
+  thread?: string;
+  focal?: string;
+  rail?: string;
+};
+
+/**
+ * What a `::thread` becomes: one card, named by `label`, with the platform's logo first and then its `post` nodes, the
+ * earlier ones in a `details` when there are many.
+ */
+export type ThreadAttributes = { platform?: string; label?: string };
 
 /**
  * What a `::conversation` becomes: one card, named by `label`, holding a header and an `ol` of messages. `request`
@@ -52,9 +67,9 @@ export type ConversationAttributes = { platform?: string; label?: string; reques
 
 /**
  * Turns each `::post` into a static card for X, Bluesky, Mastodon, Threads, LinkedIn, or any other site, with the
- * platform's logo and counts. A `:::post` inside is the quoted post. Each `::conversation` becomes one card of its
- * `:::message` blocks as chat bubbles. With `fetch`, a post with a `url` is filled from the platform's public API while
- * parsing. Problems are added to `meta.issues`.
+ * platform's logo and counts. A `:::post` inside is the quoted post. A `::thread` joins its `:::post` blocks by a rail;
+ * a `::conversation` draws its `:::message` blocks as chat bubbles. With `fetch`, a post with a `url` is filled from
+ * the platform's public API, and a `::thread{url}` with no posts walks up from that post. Problems go in `meta.issues`.
  */
 export default defineComarkPlugin<SocialOptions | void, SocialMeta>((options) => {
   const settings: SocialOptions = options ?? {};
@@ -80,6 +95,7 @@ export default defineComarkPlugin<SocialOptions | void, SocialMeta>((options) =>
         draw: () => Promise<ElementNode | undefined>;
       }[] = [];
       const names = new Map<ElementNode, string>();
+      let threads = 0;
       let conversations = 0;
       const walk = (nodes: Node[], start: number, insideSocial: boolean) => {
         for (let index = start; index < nodes.length; index++) {
@@ -92,6 +108,18 @@ export default defineComarkPlugin<SocialOptions | void, SocialMeta>((options) =>
             if (!insideSocial) {
               const chat = readConversation(node, name, data, look, issues);
               blocks.push({ nodes, index, issues, draw: async () => drawConversation(chat, look) });
+            }
+          }
+          if (tag === "thread") {
+            const name = `\`::thread\` ${++threads}`;
+            if (!insideSocial) {
+              const thread = readThread(node, name, data, issues);
+              blocks.push({
+                nodes,
+                index,
+                issues,
+                draw: async () => drawThread(await completeThread(thread, settings, issues), look),
+              });
             }
           }
           if (tag === "post") {
@@ -108,13 +136,18 @@ export default defineComarkPlugin<SocialOptions | void, SocialMeta>((options) =>
                 },
               });
           }
+          // A thread's rows still count as posts, as the linter counts every `post` it finds, so the numbers match.
           // SAFETY: an element node is [tag, attributes, ...children], so its children start at index 2.
-          walk(node as Node[], 2, insideSocial || tag === "post" || tag === "conversation");
+          walk(
+            node as Node[],
+            2,
+            insideSocial || tag === "post" || tag === "conversation" || tag === "thread",
+          );
         }
       };
       walk(tree.nodes, 0, false);
       const drawn = await Promise.all(blocks.map((block) => block.draw()));
-      // From the last block back, so dropping an empty conversation doesn't move the blocks after it in the same list.
+      // From the last block back, so dropping an empty card does not move the blocks after it in the same list.
       for (let at = blocks.length - 1; at >= 0; at--) {
         const { nodes, index } = blocks[at]!;
         const node = drawn[at];

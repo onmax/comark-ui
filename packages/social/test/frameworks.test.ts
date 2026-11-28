@@ -29,6 +29,16 @@ const markdown = [
   ":::",
   "::",
   "",
+  "::thread",
+  ':::post{url="https://x.com/ada/status/1" author="Ada" handle="ada" time="2026-11-20T09:30:00Z"}',
+  "First",
+  ":::",
+  "",
+  ':::post{url="https://x.com/ada/status/2" author="Ada" handle="ada" time="2026-11-20T09:31:00Z" views="12"}',
+  "Second",
+  ":::",
+  "::",
+  "",
   '::conversation{me="Ada" platform="x" request}',
   ':::message{from="Grace" time="2026-11-28T09:30:00Z"}',
   "Did it ship?",
@@ -110,7 +120,7 @@ describe("comark-social renderers", async () => {
   });
   const expected = normalize(await renderHtmlFromDocument(value, { components: htmlComponents }));
 
-  it("renders the card, its quoted post, and the counts in HTML", () => {
+  it("renders posts, threads, and conversations in HTML", () => {
     expect(expected).toContain(
       '<article class="csl" data-platform="bluesky" data-comark-frame data-not-typeset aria-label="Post by Ada & co on Bluesky">',
     );
@@ -118,6 +128,9 @@ describe("comark-social renderers", async () => {
       '<article class="csl" data-platform="bluesky" data-quote aria-label="Post by Grace on Bluesky">',
     );
     expect(expected).toContain('<span class="csl-sr">1,200 reposts</span>');
+    expect(expected).toContain(
+      '<div class="csl-thread" role="group" data-platform="x" data-comark-frame data-not-typeset aria-label="Thread of 2 posts on X">',
+    );
     expect(expected).toContain(
       '<div class="csl-chat" role="group" data-platform="x" data-request data-comark-frame data-not-typeset aria-label="Conversation with Grace on X">',
     );
@@ -128,7 +141,7 @@ describe("comark-social renderers", async () => {
       expect(normalize(await render(value))).toContain(expected);
     });
 
-  for (const name of ["Post", "Conversation"])
+  for (const name of ["Post", "Thread", "Conversation"])
     it(`ships ${name}.svelte, which compiles`, async () => {
       const file = await readFile(new URL(`../src/svelte/${name}.svelte`, import.meta.url), "utf8");
       expect(() => compile(file, { filename: `${name}.svelte`, generate: "server" })).not.toThrow();

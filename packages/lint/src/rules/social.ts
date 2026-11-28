@@ -4,7 +4,7 @@ import type { RuleInfo } from "./types.ts";
 export default {
   "comark/social/unknown-prop": {
     code: "COMARK4901",
-    title: "Use only the props a post, conversation, or message reads",
+    title: "Use only the props a post, thread, conversation, or message reads",
   },
   "comark/social/unknown-platform": {
     code: "COMARK4902",
@@ -26,6 +26,11 @@ export default {
     code: "COMARK4909",
     title: "Keep a fetched picture under `maxImageSize`",
   },
+  "comark/social/thread-content": {
+    code: "COMARK4910",
+    title: "Write a thread's words in its posts",
+  },
+  "comark/social/empty-thread": { code: "COMARK4911", title: "Give every thread its posts" },
   "comark/social/conversation-content": {
     code: "COMARK4912",
     title: "Write a conversation's words in its messages",

@@ -50,3 +50,27 @@ it("locates social issues after skipped nested blocks of either kind", async () 
     expect.objectContaining({ line: 11 }),
   ]);
 });
+
+it("locates thread and post issues after conversation content", async () => {
+  const markdown = [
+    "::conversation",
+    ":::thread",
+    "::::post",
+    "::::",
+    ":::",
+    "::",
+    "",
+    "::thread",
+    ":::post",
+    ":::",
+    "::",
+    "",
+    "::post",
+    "::",
+  ].join("\n");
+  const issues = await lint(markdown, { plugins: [social()] });
+  expect(issues.filter(({ rule }) => rule === "comark/social/missing-author")).toEqual([
+    expect.objectContaining({ line: 8 }),
+    expect.objectContaining({ line: 13 }),
+  ]);
+});

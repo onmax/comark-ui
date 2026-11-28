@@ -18,6 +18,11 @@
     },
     {
       "ruleId": "typescript/strict/no-runtime-typeof",
+      "file": "src/thread.ts",
+      "reason": "A Comark node is text when it's a string, so the thread tells stray words from its posts by their runtime type."
+    },
+    {
+      "ruleId": "typescript/strict/no-runtime-typeof",
       "file": "src/conversation.ts",
       "reason": "A Comark node is text when it's a string, so the conversation tells stray words from its messages by their runtime type."
     }

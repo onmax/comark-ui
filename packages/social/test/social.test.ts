@@ -583,3 +583,165 @@ describe("fetch", () => {
     );
   });
 });
+
+const reply = (n: number, extra = "") =>
+  `:::post{url="https://x.com/ada/status/${n}" author="Ada" handle="ada" time="2026-11-20T09:3${n}:00Z"${extra}}\nPost ${n}\n:::`;
+const thread = (count: number, props = "") =>
+  `::thread${props}\n${Array.from({ length: count }, (_, i) => reply(i + 1, i + 1 === count ? ' views="9.1K" likes="12"' : "")).join("\n\n")}\n::`;
+
+describe("::thread", () => {
+  it("draws its posts as rows of one card, joined by a rail, with the last one focal", async () => {
+    const { html, meta } = await render(thread(3));
+    expect(meta.issues ?? []).toEqual([]);
+    expect(html).toContain(
+      '<div class="csl-thread" role="group" data-platform="x" data-comark-frame data-not-typeset aria-label="Thread of 3 posts on X"><a class="csl-logo" href="https://x.com/ada/status/3" aria-label="View on X"></a>',
+    );
+    expect(
+      html.match(/<article class="csl" data-platform="x" data-thread data-rail aria-label/g),
+    ).toHaveLength(2);
+    expect(html).toContain(
+      '<article class="csl" data-platform="x" data-thread data-focal aria-label',
+    );
+    expect(html).not.toMatch(/data-thread[^>]*data-comark-frame/);
+    // A row's date links to its post; the focal post shows its full date and views instead.
+    expect(html).toContain(
+      '<a class="csl-link" href="https://x.com/ada/status/1"><time class="csl-time" datetime="2026-11-20T09:31:00Z"',
+    );
+    expect(html).toContain(
+      '<div class="csl-stamp"><a class="csl-link" href="https://x.com/ada/status/3"><time class="csl-time" datetime="2026-11-20T09:33:00Z">November 20, 2026 at 9:33 AM</time></a><span class="csl-views"><span class="csl-number">9.1K</span> views</span></div>',
+    );
+    expect(html).not.toContain('data-count="views"');
+    expect(html.match(/class="csl-logo"/g)).toHaveLength(1);
+  });
+
+  it("draws the last post like the others with focal set to false", async () => {
+    const { html } = await render(thread(2, '{:focal="false"}'));
+    expect(html).not.toContain("data-focal");
+    expect(html).not.toContain("csl-stamp");
+    expect(html).toContain('<span class="csl-sr">9,100 views</span>');
+  });
+
+  it("folds the posts above the one the last replies to once more than five come before it", async () => {
+    const short = await render(thread(6));
+    expect(short.html).not.toContain("<details");
+    const { html } = await render(thread(8));
+    expect(html).toContain(
+      '<details class="csl-earlier"><summary><span class="csl-closed">Show</span><span class="csl-opened">Hide</span> 6 earlier posts</summary>',
+    );
+    const folded = html.slice(html.indexOf("<details"), html.indexOf("</details>"));
+    expect(folded).toContain("Post 6");
+    expect(folded).not.toContain("Post 7");
+    expect(html.slice(html.indexOf("</details>"))).toContain("Post 7");
+  });
+
+  it("links a row with no date to its post, and draws a quote in a row as a quote", async () => {
+    const { html } = await render(
+      `::thread\n:::post{url="https://x.com/ada/status/1" author="Ada" handle="ada"}\nFirst\n\n::::post{author="Grace" handle="grace"}\nQuoted\n::::\n:::\n\n:::post{url="https://x.com/ada/status/2" author="Ada" handle="ada"}\nLast\n:::\n::`,
+    );
+    expect(html).toContain('<a class="csl-link" href="https://x.com/ada/status/1">View post</a>');
+    expect(html).toContain(
+      '<div class="csl-stamp"><a class="csl-link" href="https://x.com/ada/status/2">View post</a></div>',
+    );
+    expect(html).toMatch(/<article class="csl" data-platform="x" data-quote aria-label/);
+    expect(html.match(/data-rail/g)).toHaveLength(1);
+  });
+
+  it("numbers a post after a thread by every post before it, rows included", async () => {
+    const { meta } = await render(`${thread(1)}\n\n::post{platform="x"}\nNo one\n::`);
+    expect(meta.issues).toEqual([expect.stringMatching(/^`::post` 2 has no `author`/)]);
+  });
+
+  it("gives the posts that name no platform the thread's", async () => {
+    const written = await render(
+      '::thread\n:::post{url="https://bsky.app/profile/ada.dev/post/1" author="Ada" handle="ada.dev"}\nFirst\n:::\n\n:::post{author="Grace" handle="grace.dev"}\nSecond\n:::\n::',
+    );
+    expect(written.html.match(/<article class="csl" data-platform="bluesky"/g)).toHaveLength(2);
+    expect(written.html).toContain('<span class="csl-handle">@grace.dev</span>');
+    const fetched = await render(
+      '::thread{url="https://x.com/ada/status/2"}\n:::post{author="Ada"}\nOne\n:::\n::',
+    );
+    expect(fetched.html).toContain('<article class="csl" data-platform="x"');
+  });
+
+  it("reports what's outside its posts, and a thread with none", async () => {
+    const { html, meta } = await render(
+      `::thread\nA note\n\n${reply(1)}\n::\n\n::thread\n::\n\n::post{author="Ada"}\nAfter\n::`,
+    );
+    expect(html).not.toContain("A note");
+    expect(html.match(/csl-thread/g)).toHaveLength(1);
+    expect(html).toContain("After");
+    expect(meta.issues).toEqual([
+      "`::thread` 1 holds a `p` outside its posts, and a thread draws only its `:::post` blocks, so it's left out. Put the words in a `:::post`, or move them out of the thread.",
+      "`::thread` 2 holds no `:::post`, so nothing shows. Write a `:::post` for each post, or give it the last post's `url` and turn on the `fetch` option.",
+    ]);
+    expect(Object.values(meta.issueRules ?? {})).toEqual([
+      "comark/social/thread-content",
+      "comark/social/empty-thread",
+    ]);
+  });
+
+  it("names each post in its issues by the thread", async () => {
+    const { meta } = await render('::thread\n:::post{platform="x" likes="lots"}\nHi\n:::\n::');
+    expect(meta.issues).toEqual([
+      expect.stringMatching(/^`::thread` 1, post 1: `likes` is "lots"/),
+      expect.stringMatching(/^`::thread` 1, post 1 has no `author` or `handle`/),
+    ]);
+  });
+
+  it("fetches a thread from its last post up to the root, five posts at most", async () => {
+    const status = (id: number, parent?: number) =>
+      json({
+        id: String(id),
+        created_at: "2026-11-10T08:00:00.000Z",
+        in_reply_to_id: parent ? String(parent) : null,
+        url: `https://mastodon.example/@ada/${id}`,
+        content: `<p>Toot ${id}</p>`,
+        account: { acct: "ada", username: "ada", display_name: "Ada" },
+        media_attachments: [],
+      });
+    for (let id = 701; id <= 707; id++)
+      answers.set(
+        `https://mastodon.example/api/v1/statuses/${id}`,
+        status(id, id > 701 ? id - 1 : undefined),
+      );
+    const { html, meta } = await render('::thread{url="https://mastodon.example/@ada/707"}\n::', {
+      fetch: true,
+      request: (url: URL, init: RequestInit) => fetch(url, init),
+    });
+    expect(meta.issues ?? []).toEqual([]);
+    expect(requests).toHaveLength(5);
+    expect(html).not.toContain("Toot 702");
+    expect(html.indexOf("Toot 703")).toBeLessThan(html.indexOf("Toot 707"));
+    expect(html).toContain('aria-label="Thread of 5 posts on Mastodon"');
+  });
+
+  it("starts after a post it couldn't fetch, with an issue", async () => {
+    answers.set(
+      "https://mastodon.example/api/v1/statuses/802",
+      json({
+        id: "802",
+        in_reply_to_id: "801",
+        url: "https://mastodon.example/@ada/802",
+        content: "<p>Only me</p>",
+        account: { acct: "ada", display_name: "Ada" },
+      }),
+    );
+    const { html, meta } = await render('::thread{url="https://mastodon.example/@ada/802"}\n::', {
+      fetch: true,
+      request: (url: URL, init: RequestInit) => fetch(url, init),
+    });
+    expect(html).toContain("Only me");
+    expect(meta.issues).toEqual([
+      expect.stringMatching(
+        /^`::thread` 1: fetching the post at https:\/\/mastodon.example\/@ada\/801, which the thread replies to, failed .*so the thread starts after it\./,
+      ),
+    ]);
+  });
+
+  it("doesn't fetch the url when its posts are written", async () => {
+    await render(`::thread{url="https://mastodon.example/@ada/1"}\n${reply(1)}\n::`, {
+      fetch: true,
+    });
+    expect(requests.filter((url) => url.includes("mastodon"))).toEqual([]);
+  });
+});

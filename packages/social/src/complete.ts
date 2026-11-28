@@ -1,4 +1,4 @@
-import { fetchPost } from "./fetch.ts";
+import { fetchPost, type FetchedPost } from "./fetch.ts";
 import { inline } from "./images.ts";
 import { PLATFORM, platformOf, type Platform } from "./platforms.ts";
 import { merge, webUrl, type Issue, type Post } from "./post.ts";
@@ -57,17 +57,19 @@ async function inlinePictures(
   await Promise.all(tasks);
 }
 
-/** Fetches what a post leaves out when `fetch` is on, and inlines its pictures. */
+/** Fetches what a post leaves out when `fetch` is on, and inlines its pictures. With `fetched`, fills it from that copy instead. */
 export async function complete(
   post: Post,
   options: CompleteOptions,
   issues: Issue[],
+  fetched?: FetchedPost,
 ): Promise<Post> {
   const finish = async (
     written: Post,
     quoted: boolean,
     fromResponse: boolean,
     parentFetched = false,
+    response?: FetchedPost,
   ) => {
     let filled = written;
     let didFetch = false;
@@ -75,7 +77,11 @@ export async function complete(
     const url = written.url ? webUrl(written.url) : undefined;
     const platform = url ? platformOf(url) : undefined;
     const hasApi = platform !== undefined && FETCHED.has(platform);
-    if (options.fetch && !fromResponse && url && hasApi) {
+    if (response) {
+      filled = merge(written, response, !quoted);
+      didFetch = true;
+      fetchedMedia = !written.media.length;
+    } else if (options.fetch && !fromResponse && url && hasApi) {
       try {
         filled = merge(written, await fetchPost(url.href, { request: options.request }), !quoted);
         didFetch = true;
@@ -87,7 +93,7 @@ export async function complete(
         });
       }
     }
-    if (options.fetch && (fromResponse || hasApi || parentFetched))
+    if (options.fetch && (didFetch || fromResponse || hasApi || parentFetched))
       await inlinePictures(filled, fetchedMedia, options, issues);
     if (!filled.author && !filled.handle)
       issues.push({
@@ -96,7 +102,7 @@ export async function complete(
       });
     return { filled, didFetch };
   };
-  const { filled, didFetch } = await finish(post, false, false);
+  const { filled, didFetch } = await finish(post, false, false, false, fetched);
   if (filled.quote) {
     const quote = await finish(filled.quote, true, !post.quote, didFetch);
     filled.quote = quote.filled;

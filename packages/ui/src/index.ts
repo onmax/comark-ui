@@ -291,7 +291,7 @@ const TAGS: [keyof PresetOptions, string[]][] = [
   ["metrics", words("dd div dt")],
   ["outline", words("a div li ul")],
   ["properties", words("dd div dt time")],
-  ["social", words("a br div img li ol p span time")],
+  ["social", words("a br details div img li ol p span summary time")],
   [
     "quiz",
     words(
@@ -355,6 +355,8 @@ export function preset<C>(renderer: Renderer<C>, options: PresetOptions = {}): P
   parse(figure, options.figure);
   parse(critic, options.critic);
   add(renderer.charts, options.charts);
+  // Before social, tests, and bundle, which draw native `details` that aren't `::details` blocks.
+  add(renderer.details, options.details, { iconResolver: icons, ...optionsOf(options.details) });
   // Before chips, which leaves the links a post draws as links, since a post shows them as its platform does.
   add(renderer.social, options.social);
   // Before chips, so the links in the box become chips like the document's own.
@@ -390,7 +392,6 @@ export function preset<C>(renderer: Renderer<C>, options: PresetOptions = {}): P
   add(renderer.icon, options.icon, icons);
   add(renderer.mark, options.mark);
   add(renderer.math, options.math);
-  add(renderer.details, options.details, { iconResolver: icons, ...optionsOf(options.details) });
   if (on(options.links)) {
     const links = optionsOf(options.links) ?? {};
     if (on(links.external)) plugins.push(renderer.links.external(optionsOf(links.external)));

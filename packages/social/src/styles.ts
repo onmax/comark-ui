@@ -49,7 +49,7 @@ const mask = (variable: string) =>
  * unlayered rule of the host's wins.
  */
 export const css = `@layer comark{${[
-  theme(".csl,.csl-chat", "primary"),
+  theme(".csl,.csl-thread,.csl-chat", "primary"),
   ".csl{display:block;max-width:36rem;margin:1.5rem 0;padding:1rem;border:1px solid var(--_comark-border);border-radius:calc(var(--_comark-radius) + 2px);background:var(--_comark-background);color:var(--_comark-foreground);font:400 .875rem/1.375rem var(--_comark-font);overflow-wrap:anywhere}",
   ".csl-head{display:flex;align-items:center;gap:.625rem}",
   ".csl-avatar{display:grid;flex:none;place-items:center;width:2.5rem;height:2.5rem;margin:0;border-radius:50%;background:var(--_comark-accent);color:var(--_comark-muted);font-weight:600;object-fit:cover}",
@@ -57,12 +57,13 @@ export const css = `@layer comark{${[
   ".csl-name{overflow:hidden;font-weight:600;white-space:nowrap;text-overflow:ellipsis}",
   ".csl-meta{display:flex;gap:.25rem;min-width:0;color:var(--_comark-muted);font-size:.8125rem;line-height:1.25rem;white-space:nowrap}",
   ".csl-handle{overflow:hidden;text-overflow:ellipsis}",
-  ".csl-time{flex:none}",
-  ".csl-handle+.csl-time::before{content:'·';margin-inline-end:.25rem}",
+  ".csl-time,.csl-link{flex:none}",
+  // inline-block, so a link's underline skips the dot.
+  ".csl-handle+:is(.csl-time,.csl-link)::before{content:'·';display:inline-block;margin-inline-end:.25rem}",
   `.csl-logo{flex:none;align-self:flex-start;width:1.125rem;height:1.125rem;margin:.125rem;border-radius:2px;color:var(--_comark-foreground);${mask("--csl-logo")}}`,
   ...Object.entries(logos).map(
     ([platform, body]) =>
-      `:is(.csl,.csl-chat)[data-platform='${platform}']{--csl-logo:${svg(body)}}`,
+      `:is(.csl,.csl-thread,.csl-chat)[data-platform='${platform}']{--csl-logo:${svg(body)}}`,
   ),
   "a.csl-logo:focus-visible{outline:2px solid var(--_comark-ring);outline-offset:2px}",
   ".csl-text{margin-top:.75rem;font-size:.9375rem;line-height:1.5rem}",
@@ -97,6 +98,30 @@ export const css = `@layer comark{${[
   ),
   `.csl[data-platform='mastodon']>.csl-counts>[data-count='likes']{--csl-icon:${stroked(icons.star)}}`,
   `.csl[data-platform='linkedin']>.csl-counts>[data-count='likes']{--csl-icon:${stroked(icons.thumbs)}}`,
+  // A thread is one card: each post a row with its avatar in a column of its own, joined to the next by the rail.
+  ".csl-thread{position:relative;display:block;max-width:36rem;margin:1.5rem 0;padding:1rem;border:1px solid var(--_comark-border);border-radius:calc(var(--_comark-radius) + 2px);background:var(--_comark-background);color:var(--_comark-foreground);font:400 .875rem/1.375rem var(--_comark-font);overflow-wrap:anywhere}",
+  ".csl-thread>.csl-logo{position:absolute;top:1rem;right:1rem;margin:.125rem}",
+  ".csl-thread>.csl:nth-child(2) .csl-who{padding-inline-end:1.75rem}",
+  ".csl[data-thread]{position:relative;max-width:none;margin:0;padding:0;border:0;border-radius:0;background:none}",
+  ".csl[data-thread]:not([data-focal]){min-height:2.5rem;padding-inline-start:3.125rem}",
+  ".csl[data-thread]:not([data-focal])>.csl-head>.csl-avatar{position:absolute;top:0;left:0}",
+  ".csl[data-thread]:not([data-focal])>.csl-text{margin-top:.125rem}",
+  ".csl[data-rail]{padding-bottom:1rem}",
+  ".csl[data-rail]::before{content:'';position:absolute;top:2.75rem;bottom:.25rem;left:calc(1.25rem - 1px);width:2px;border-radius:1px;background:var(--_comark-border)}",
+  ".csl[data-focal]>.csl-text{font-size:1.0625rem;line-height:1.625rem}",
+  ".csl-stamp{display:flex;flex-wrap:wrap;gap:.25rem;margin-top:.75rem;color:var(--_comark-muted);font-size:.8125rem;line-height:1.25rem}",
+  ".csl-stamp>*+*::before{content:'·';margin-inline-end:.25rem}",
+  ".csl-number{color:var(--_comark-foreground);font-weight:600;font-variant-numeric:tabular-nums}",
+  ".csl[data-focal]>.csl-counts{padding-top:.75rem;border-top:1px solid var(--_comark-border)}",
+  ".csl-link{border-radius:2px;color:inherit;text-decoration:none}",
+  ".csl-link:hover{text-decoration:underline}",
+  ".csl-link:focus-visible{outline:2px solid var(--_comark-ring);outline-offset:1px}",
+  ".csl-earlier>summary{position:relative;display:block;min-height:2.5rem;padding:.5625rem 0 1rem 3.125rem;color:var(--_comark-primary);font-size:.8125rem;line-height:1.375rem;cursor:pointer;list-style:none}",
+  ".csl-earlier>summary::-webkit-details-marker{display:none}",
+  ".csl-earlier>summary::before{content:'';position:absolute;top:.25rem;bottom:.25rem;left:calc(1.25rem - 1px);border-inline-start:2px dotted var(--_comark-border)}",
+  ".csl-earlier>summary:hover{text-decoration:underline}",
+  ".csl-earlier>summary:focus-visible{border-radius:2px;outline:2px solid var(--_comark-ring);outline-offset:-2px}",
+  ".csl-earlier[open]>summary .csl-closed,.csl-earlier:not([open])>summary .csl-opened{display:none}",
   // A conversation is one card: a header, then bubbles, the reader's own on the right in the brand color.
   ".csl-chat{display:block;max-width:36rem;margin:1.5rem 0;overflow:hidden;border:1px solid var(--_comark-border);border-radius:calc(var(--_comark-radius) + 2px);background:var(--_comark-background);color:var(--_comark-foreground);font:400 .875rem/1.375rem var(--_comark-font);overflow-wrap:anywhere}",
   ".csl-chat-head{display:flex;align-items:center;gap:.5rem;min-height:3rem;padding:.625rem 1rem;border-bottom:1px solid var(--_comark-border)}",

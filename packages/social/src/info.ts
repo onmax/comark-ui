@@ -6,7 +6,7 @@ const count = (what: string) =>
     description: `How many ${what}, as a number such as 1234, 1,234, or 1.2K.`,
   }) as const;
 
-/** What an editor shows for `::post`, `::conversation`, and `:::message`. */
+/** What an editor shows for `::post`, `::thread`, `::conversation`, and `:::message`. */
 export const componentInfo = {
   post: {
     kind: "block",
@@ -37,6 +37,24 @@ export const componentInfo = {
       likes: count("likes, favourites, or reactions"),
       views: count("views"),
       bookmarks: count("bookmarks"),
+    },
+  },
+  thread: {
+    kind: "block",
+    label: "Social thread",
+    description:
+      "Posts that reply to each other as one card, joined by a rail, with the last one larger and its full date and views.",
+    props: {
+      url: {
+        type: "string",
+        description:
+          "The last post's address. With the fetch option and no posts inside, the thread is fetched up to its root, five posts at most.",
+      },
+      focal: {
+        type: "boolean",
+        default: true,
+        description: "Whether the last post shows larger, with its full date and views.",
+      },
     },
   },
   conversation: {

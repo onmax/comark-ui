@@ -2,9 +2,10 @@ import type { ElementNode, Node } from "comark";
 import { PLATFORM, type Platform } from "./platforms.ts";
 import { childrenOf, isElement } from "../../../shared/nodes.ts";
 
-// What a post's body holds as blocks; anything else is inline and goes in a paragraph.
+// What a post's body holds as blocks; anything else is inline and goes in a paragraph. A `disclosure` is a
+// `:::details` that comark-details read first.
 const BLOCKS = new Set(
-  "blockquote details div dl figure h1 h2 h3 h4 h5 h6 hr ol p pre table ul".split(" "),
+  "blockquote details disclosure div dl figure h1 h2 h3 h4 h5 h6 hr ol p pre table ul".split(" "),
 );
 // Text in these is a link or code already, so its words stay as written.
 const SKIP = new Set(["a", "code", "pre", "kbd", "script", "style"]);
