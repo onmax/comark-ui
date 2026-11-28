@@ -1,20 +1,24 @@
 import { theme } from "comark-zoom/theme";
 import { scripted } from "../../../shared/scripted.ts";
 
+const inlineSizeUnit = "10000px";
+const inlineSizeRatio = `tan(atan2(100cqi,${inlineSizeUnit}))`;
+
 /**
  * The carousel styles. The script adds them to the page once. Theme the controls with the shared `--comark-*` tokens,
  * and set `--cc-gap`, `--cc-surface`, `--cc-padding`, `--cc-peek`, `--cc-bleed`, and `--cc-button-size` on `.cc` or any ancestor. The rules sit in
  * the `comark` layer, so any unlayered rule of the host's wins.
  */
-export const css = `@property --_cc-column-width{syntax:"<length>";inherits:true;initial-value:0px}@layer comark{${[
+export const css = `@layer comark{${[
+  '@property --_cc-column-ratio{syntax:"<number>";inherits:true;initial-value:0}',
   theme(".cc"),
   ":where(.cc){--cc-columns:1}",
   ".cc{position:relative;margin:1.5rem 0;container:cc/inline-size}",
   ".cc[data-carousel-columns='2']{--cc-columns:2}",
   ".cc[data-carousel-columns='3']{--cc-columns:3}",
-  ".cc-run{--_cc-column-width:100cqi;container-type:inline-size;margin-inline-end:calc(-1 * max(0px,var(--cc-bleed,0px)))}",
+  `.cc-run{--_cc-column-ratio:${inlineSizeRatio};container-type:inline-size;margin-inline-end:calc(-1 * max(0px,var(--cc-bleed,0px)))}`,
   ".cc-track{position:relative;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory}",
-  ".cc-grid{margin-inline-end:calc(100cqi - var(--_cc-column-width));display:grid;grid-auto-flow:column;grid-auto-columns:calc((100% - (var(--cc-columns) - 1) * var(--cc-gap,1rem)) / var(--cc-columns));gap:var(--cc-gap,1rem)}",
+  `.cc-grid{margin-inline-end:calc((${inlineSizeRatio} - var(--_cc-column-ratio)) * ${inlineSizeUnit});display:grid;grid-auto-flow:column;grid-auto-columns:calc((100% - (var(--cc-columns) - 1) * var(--cc-gap,1rem)) / var(--cc-columns));gap:var(--cc-gap,1rem)}`,
   // Every slide is a panel as tall as the tallest one, with its content at the top, so a slide's title stays put when
   // the next slide is taller. Only slides in a track: the zoomed copy stays bare.
   ".cc-grid>.cc-slide{min-width:0;scroll-snap-align:start;align-content:start;padding:var(--cc-padding,1rem);border-radius:var(--_comark-radius);background:var(--cc-surface,color-mix(in srgb,var(--_comark-foreground) 4%,transparent))}",
