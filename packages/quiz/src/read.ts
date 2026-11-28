@@ -147,9 +147,13 @@ function breakLines(nodes: Node[]): Node[] {
   });
 }
 
-// Comark puts the attributes after an item's text, `{recommended}` or `{recommended="Pick"}`, on its `li`.
-function recommendedOf(item: ElementNode): string | undefined {
-  const value = item[1].recommended ?? item[1][":recommended"];
+// Comark puts attributes after an item's text on its `li` or the paragraph with the checkbox.
+function recommendedOf(item: ElementNode, paragraph?: ElementNode): string | undefined {
+  const value =
+    item[1].recommended ??
+    item[1][":recommended"] ??
+    paragraph?.[1].recommended ??
+    paragraph?.[1][":recommended"];
   if (value === undefined || isOff(value)) return undefined;
   return isOn(value) ? "" : text(value).trim();
 }
@@ -160,7 +164,9 @@ function readOption(item: ElementNode): Omit<Option, "key"> | undefined {
   let [first] = children;
   let rest = children.slice(1);
   let line: Node[] = [];
+  let paragraph: ElementNode | undefined;
   if (isElement(first) && first[0] === "p" && isCheckbox(childrenOf(first)[0])) {
+    paragraph = first;
     line = childrenOf(first).slice(1);
     first = childrenOf(first)[0];
   } else if (isCheckbox(first)) {
@@ -177,7 +183,7 @@ function readOption(item: ElementNode): Omit<Option, "key"> | undefined {
     text: words(label),
     own: textOf(label.filter(isInline)).trim(),
     correct: isCheckbox(first) && checked(first),
-    recommended: recommendedOf(item),
+    recommended: recommendedOf(item, paragraph),
     label: breakLines(label),
     rationale: quotes.flatMap((node) => (isElement(node) ? childrenOf(node) : [])),
   };
