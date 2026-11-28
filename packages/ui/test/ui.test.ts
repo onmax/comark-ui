@@ -155,6 +155,15 @@ describe("comark-ui", () => {
     expect(out).not.toMatch(/<p>\s*<details/);
   });
 
+  it("leaves the handles in a social conversation as written", async () => {
+    const out = await renderHtml(
+      '::conversation{me="Ada"}\n:::message{from="Grace"}\nAsk @lin about #7\n:::\n::',
+      { github: { references: { repo: "onmax/comark-ui" } } },
+    );
+    expect(out).toContain("Ask @lin about #7");
+    expect(out).not.toContain("github.com");
+  });
+
   it("turns a plugin off, with its components", async () => {
     const { plugins, components } = html({ ...offline, zoom: false, github: { callouts: false } });
     expect(Object.keys(components)).not.toContain("zoom");

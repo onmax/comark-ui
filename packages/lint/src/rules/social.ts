@@ -4,7 +4,7 @@ import type { RuleInfo } from "./types.ts";
 export default {
   "comark/social/unknown-prop": {
     code: "COMARK4901",
-    title: "Use only the props a post or thread reads",
+    title: "Use only the props a post, thread, conversation, or message reads",
   },
   "comark/social/unknown-platform": {
     code: "COMARK4902",
@@ -31,4 +31,13 @@ export default {
     title: "Write a thread's words in its posts",
   },
   "comark/social/empty-thread": { code: "COMARK4911", title: "Give every thread its posts" },
+  "comark/social/conversation-content": {
+    code: "COMARK4912",
+    title: "Write a conversation's words in its messages",
+  },
+  "comark/social/empty-conversation": {
+    code: "COMARK4913",
+    title: "Give every conversation its messages",
+  },
+  "comark/social/missing-sender": { code: "COMARK4914", title: "Say who sent every message" },
 } satisfies Record<`comark/social/${string}`, RuleInfo>;

@@ -25,3 +25,52 @@ it("locates social issues on the authored quote and the later post", async () =>
     expect.objectContaining({ rule: "comark/social/missing-author", line: 10 }),
   );
 });
+
+it("locates social issues after skipped nested blocks of either kind", async () => {
+  const markdown = [
+    "::conversation",
+    ':::post{author="Skipped"}',
+    ":::",
+    "::",
+    "",
+    '::post{author="Ada" likes="many"}',
+    ":::conversation",
+    ":::",
+    "::",
+    "",
+    "::conversation",
+    "::",
+  ].join("\n");
+  const issues = await lint(markdown, { plugins: [social()] });
+  expect(issues.filter(({ rule }) => rule === "comark/social/invalid-count")).toEqual([
+    expect.objectContaining({ line: 6 }),
+  ]);
+  expect(issues.filter(({ rule }) => rule === "comark/social/empty-conversation")).toEqual([
+    expect.objectContaining({ line: 1 }),
+    expect.objectContaining({ line: 11 }),
+  ]);
+});
+
+it("locates thread and post issues after conversation content", async () => {
+  const markdown = [
+    "::conversation",
+    ":::thread",
+    "::::post",
+    "::::",
+    ":::",
+    "::",
+    "",
+    "::thread",
+    ":::post",
+    ":::",
+    "::",
+    "",
+    "::post",
+    "::",
+  ].join("\n");
+  const issues = await lint(markdown, { plugins: [social()] });
+  expect(issues.filter(({ rule }) => rule === "comark/social/missing-author")).toEqual([
+    expect.objectContaining({ line: 8 }),
+    expect.objectContaining({ line: 13 }),
+  ]);
+});

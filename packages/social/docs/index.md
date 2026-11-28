@@ -1,7 +1,7 @@
 ---
 title: Social
-description: Posts and threads from X, Bluesky, Mastodon, Threads, and LinkedIn as static cards, written in Markdown.
-keywords: social, post, thread, tweet, X, Twitter, Bluesky, Mastodon, Threads, LinkedIn, quote post, static embed, social card, feedback
+description: Posts and threads from X, Bluesky, Mastodon, Threads, and LinkedIn as static cards, and direct messages as a chat, written in Markdown.
+keywords: social, post, thread, tweet, direct message, DM, chat, conversation, X, Twitter, Bluesky, Mastodon, Threads, LinkedIn, quote post, static embed, social card, feedback
 tagline: A post from X, Bluesky, Mastodon, Threads, LinkedIn, or any site, as a static card with its counts.
 group: Review blocks
 icon: message-circle
@@ -56,6 +56,24 @@ Next up: tables. They're the last thing we still render by hand.
 ::
 ```
 :::
+
+:::example{label="Conversation"}
+```md
+::conversation{me="Mira" platform="x" request}
+:::message{from="Theo Lin" avatar="/pond.svg" time="2026-11-27T16:02:00Z"}
+Hi! I maintain the docs theme you forked. Would you send the Safari fix upstream?
+:::
+
+:::message{from="Theo Lin"}
+Happy to review it this week.
+:::
+
+:::message{from="Mira" time="2026-11-27T16:20:00Z"}
+Sure, I'll open a PR tonight.
+:::
+::
+```
+:::
 ::
 
 ## Features
@@ -66,6 +84,7 @@ Next up: tables. They're the last thing we still render by hand.
 - `@handles` and `#tags` link to the platform, a nested `:::post` is the quoted post, and images in a paragraph of their own are a grid.
 - A `::thread` joins posts that reply to each other with a rail, in one card, with the last post larger.
 - With the `fetch` option, `::post{url="…"}` alone is filled from X, Bluesky, or Mastodon while parsing, with its pictures inlined.
+- `::conversation` draws direct messages as a chat: your messages on the right in the primary color, everyone else's on the left by their avatar.
 - A screen reader hears "Post by Mira Okafor on X", the full date, and each count in words.
 
 ## Usage
@@ -189,6 +208,50 @@ Three things I learned porting our plugin to Comark.
 
 Use `:focal="false"` to draw the last post like the others, for a thread that goes on past what you quote. With more than five posts above the last one, all but the post it replies to fold behind "Show N earlier posts".
 
+### Conversation
+
+Write direct messages as `:::message` blocks inside `::conversation`, each with who sent it in `from`. The messages whose `from` is the conversation's `me` sit on the right in the primary color; the others sit on the left by their sender's avatar, or initial. One sender's messages in a row are grouped, with the avatar by the last one. In a group chat or a conversation with a custom title, the incoming sender's name appears above the first message in each run.
+
+::example
+```md
+::conversation{me="Ada" platform="bluesky"}
+:::message{from="Grace" avatar="/pond.svg" time="2026-11-28T09:30:00Z"}
+Did the release go out?
+:::
+
+:::message{from="Ada" time="2026-11-28T09:41:00Z"}
+It did, this morning.
+:::
+
+:::message{from="Ada"}
+The changelog is on the docs site.
+:::
+::
+```
+::
+
+The header shows `title`, or the names of the others in the conversation, and the platform's logo. Use `request` to show the "Message request" pill a platform shows on a message from someone you don't follow. With three people or more, each run of messages on the left starts with its sender's name.
+
+::example
+```md
+::conversation{me="Ada" title="Release crew" platform="x"}
+:::message{from="Grace"}
+Tagging v0.15 now.
+:::
+
+:::message{from="Linus"}
+Docs are deployed.
+:::
+
+:::message{from="Ada"}
+Thanks both!
+:::
+::
+```
+::
+
+A message's text is Markdown, and images in a paragraph of their own show in the bubble. `avatar` and `time` read like a post's: one message's avatar shows by all of that sender's messages, and a time with the time of day shows it after the date.
+
 ## Examples
 
 ### Fill a post from its link
@@ -263,6 +326,23 @@ Links with a trailing slash 404 on 0.14.2.
 | `url` | — | The last post's address. With `fetch` and no posts inside, the thread is fetched from it up to the root. |
 | `focal` | `true` | Whether the last post shows larger, with its full date and views. |
 
+### Conversation props
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| `me` | — | The `from` of your own messages, which sit on the right. |
+| `platform` | `generic` | The logo in the header: `x`, `bluesky`, `mastodon`, `threads`, `linkedin`, or `generic`. |
+| `title` | the others' names | The header's title. |
+| `request` | `false` | Shows a "Message request" pill in the header. |
+
+### Message props
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| `from` | — | Who sent it. |
+| `avatar` | — | The sender's picture: an https address, a path, or a `data:image/` URI. |
+| `time` | — | When it was sent, as an ISO date or instant. |
+
 ### Options
 
 | Option | Default | Description |
@@ -291,6 +371,7 @@ The plugin adds these problems to `meta.issues`, as [Validation](/guide/validati
 - A `time` that isn't a date. It shows as written.
 - A post with no `author` or `handle`.
 - More than one `:::post` in a post, or a post inside a quoted post. Only the first quote shows.
+- A block in a `::conversation` other than a `:::message`, which is left out, a conversation with no messages, and a message with no `from`.
 - Text or a block in a `::thread` outside its posts. It's left out.
 - A `::thread` with no posts, and no `url` it could fetch them from. It renders nothing.
 - With `fetch`, a post, a post a thread replies to, or a picture that couldn't be fetched, and a picture larger than `maxImageSize`.
@@ -335,8 +416,8 @@ The card reads these [shared tokens](/guide/theming):
 | `--comark-foreground` | The text and the logo |
 | `--comark-muted` | The handle, the date, and the counts |
 | `--comark-border` | The card's edge, the quoted post, the gaps in the grid, and a thread's rail |
-| `--comark-accent` | The initial's circle, code, and a picture still loading |
-| `--comark-primary` | Links, `@handles`, `#tags`, and "Show N earlier posts" |
+| `--comark-accent` | The initial's circle, code, a picture still loading, and the others' messages |
+| `--comark-primary` | Links, `@handles`, `#tags`, "Show N earlier posts", and your own messages |
 | `--comark-ring` | The focus ring |
 | `--comark-radius` | The corners |
 | `--comark-font` | The text |
@@ -355,6 +436,10 @@ The card reads these [shared tokens](/guide/theming):
 | `.csl-text` | The text |
 | `.csl-media` | The pictures; `[data-count]` is how many show, up to 4 |
 | `.csl-counts`, `.csl-count` | The counts; `[data-count]` names each one |
+| `.csl-chat` | A conversation's card; `[data-platform]` names the platform and `[data-request]` marks a message request |
+| `.csl-chat-head`, `.csl-chat-title`, `.csl-request` | The header, its title, and the "Message request" pill |
+| `.csl-messages`, `.csl-message` | The list of messages and each one; `[data-me]` marks yours, `[data-start]` and `[data-end]` the first and last of a run |
+| `.csl-bubble`, `.csl-from` | A message's bubble and its visible sender name, when shown |
 
 ```css
 .csl {

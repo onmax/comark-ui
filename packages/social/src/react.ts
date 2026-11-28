@@ -1,9 +1,15 @@
 import { createElement, type ReactNode, useEffect } from "react";
 import { addStyles } from "./client.ts";
-import type { PostAttributes, ThreadAttributes } from "./index.ts";
+import type { ConversationAttributes, PostAttributes, ThreadAttributes } from "./index.ts";
 
 export { default } from "./index.ts";
-export type { PostAttributes, SocialMeta, SocialOptions, ThreadAttributes } from "./index.ts";
+export type {
+  ConversationAttributes,
+  PostAttributes,
+  SocialMeta,
+  SocialOptions,
+  ThreadAttributes,
+} from "./index.ts";
 
 const flag = (value: string | undefined) => (value === undefined ? undefined : "");
 
@@ -53,5 +59,28 @@ export function Thread({ platform, label, children }: ThreadAttributes & { child
   );
 }
 
+/** `::conversation` for `@comark/react`. */
+export function Conversation({
+  platform,
+  label,
+  request,
+  children,
+}: ConversationAttributes & { children?: ReactNode }) {
+  useEffect(addStyles, []);
+  return createElement(
+    "div",
+    {
+      className: "csl-chat",
+      role: "group",
+      "data-platform": platform || "generic",
+      "data-request": request === undefined ? undefined : "",
+      "data-comark-frame": "",
+      "data-not-typeset": "",
+      "aria-label": label || undefined,
+    },
+    children,
+  );
+}
+
 /** Pass these as `components` to `@comark/react`. */
-export const components = { Post, Thread };
+export const components = { Post, Thread, Conversation };

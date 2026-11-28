@@ -1,6 +1,7 @@
 import type { ElementNode, Node } from "comark";
 import { defineComarkPlugin } from "comark";
 import { complete } from "./complete.ts";
+import { drawConversation, readConversation } from "./conversation.ts";
 import { drawPost, readPost, type Data, type Issue, type Look } from "./post.ts";
 import type { SocialRequest } from "./request.ts";
 import { completeThread, drawThread, readThread } from "./thread.ts";
@@ -59,10 +60,16 @@ export type PostAttributes = {
 export type ThreadAttributes = { platform?: string; label?: string };
 
 /**
+ * What a `::conversation` becomes: one card, named by `label`, holding a header and an `ol` of messages. `request`
+ * marks a message request.
+ */
+export type ConversationAttributes = { platform?: string; label?: string; request?: string };
+
+/**
  * Turns each `::post` into a static card for X, Bluesky, Mastodon, Threads, LinkedIn, or any other site, with the
- * platform's logo and counts. A `:::post` inside is the quoted post. Each `::thread` becomes one card of its `:::post`
- * blocks joined by a rail. With `fetch`, a post with a `url` is filled from the platform's public API while parsing,
- * and a `::thread{url}` with no posts walks up from that post to the root. Problems are added to `meta.issues`.
+ * platform's logo and counts. A `:::post` inside is the quoted post. A `::thread` joins its `:::post` blocks by a rail;
+ * a `::conversation` draws its `:::message` blocks as chat bubbles. With `fetch`, a post with a `url` is filled from
+ * the platform's public API, and a `::thread{url}` with no posts walks up from that post. Problems go in `meta.issues`.
  */
 export default defineComarkPlugin<SocialOptions | void, SocialMeta>((options) => {
   const settings: SocialOptions = options ?? {};
@@ -89,24 +96,36 @@ export default defineComarkPlugin<SocialOptions | void, SocialMeta>((options) =>
       }[] = [];
       const names = new Map<ElementNode, string>();
       let threads = 0;
-      const walk = (nodes: Node[], start: number, insidePost: boolean) => {
+      let conversations = 0;
+      const walk = (nodes: Node[], start: number, insideSocial: boolean) => {
         for (let index = start; index < nodes.length; index++) {
           const node = nodes[index];
           if (!isElement(node)) continue;
           const issues: Issue[] = [];
-          if (node[0] === "thread" && !insidePost) {
-            const thread = readThread(node, `\`::thread\` ${++threads}`, data, issues);
-            blocks.push({
-              nodes,
-              index,
-              issues,
-              draw: async () => drawThread(await completeThread(thread, settings, issues), look),
-            });
+          const tag = node[0];
+          if (tag === "conversation") {
+            const name = `\`::conversation\` ${++conversations}`;
+            if (!insideSocial) {
+              const chat = readConversation(node, name, data, look, issues);
+              blocks.push({ nodes, index, issues, draw: async () => drawConversation(chat, look) });
+            }
           }
-          if (node[0] === "post") {
+          if (tag === "thread") {
+            const name = `\`::thread\` ${++threads}`;
+            if (!insideSocial) {
+              const thread = readThread(node, name, data, issues);
+              blocks.push({
+                nodes,
+                index,
+                issues,
+                draw: async () => drawThread(await completeThread(thread, settings, issues), look),
+              });
+            }
+          }
+          if (tag === "post") {
             names.set(node, `\`::post\` ${names.size + 1}`);
             // Read once the walk is done, since a quoted post inside takes its number from the walk too.
-            if (!insidePost)
+            if (!insideSocial)
               blocks.push({
                 nodes,
                 index,
@@ -119,12 +138,16 @@ export default defineComarkPlugin<SocialOptions | void, SocialMeta>((options) =>
           }
           // A thread's rows still count as posts, as the linter counts every `post` it finds, so the numbers match.
           // SAFETY: an element node is [tag, attributes, ...children], so its children start at index 2.
-          walk(node as Node[], 2, insidePost || node[0] === "post" || node[0] === "thread");
+          walk(
+            node as Node[],
+            2,
+            insideSocial || tag === "post" || tag === "conversation" || tag === "thread",
+          );
         }
       };
       walk(tree.nodes, 0, false);
       const drawn = await Promise.all(blocks.map((block) => block.draw()));
-      // From the last block back, so dropping an empty thread doesn't move the blocks after it in the same list.
+      // From the last block back, so dropping an empty card does not move the blocks after it in the same list.
       for (let at = blocks.length - 1; at >= 0; at--) {
         const { nodes, index } = blocks[at]!;
         const node = drawn[at];
