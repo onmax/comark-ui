@@ -210,6 +210,30 @@ describe("hosted badge handler", () => {
     ]);
   });
 
+  it.each([
+    { kibPerRun: 15, status: "ok", value: "passing" },
+    { kibPerRun: 64, status: "unavailable", value: "unavailable" },
+  ])(
+    "returns $status for a default-branch page with $kibPerRun KiB per run",
+    async ({ kibPerRun, status, value }) => {
+      const fetch = github({
+        main: Array.from({ length: 5 }, () => ({
+          ...upstream,
+          status: "completed",
+          conclusion: "success",
+          head_commit: {
+            message: "Update workflow tests\n\n" + "Details ".repeat(kibPerRun * 128),
+          },
+        })),
+      });
+      const response = await createBadgeHandler({ fetch })(
+        get("source=github-actions&repository=onmax/comark-ui&workflow=release.yaml"),
+      );
+      expect(response.headers.get("X-Badge-Status")).toBe(status);
+      expect(await response.text()).toContain(value);
+    },
+  );
+
   it("falls back to any branch for a workflow that never runs on the default branch", async () => {
     const fetch = github({
       main: [{ ...fork, status: "completed", conclusion: "action_required" }],

@@ -24,7 +24,9 @@ export const liveKey = (spec: BadgeSpec) =>
     spec.branch,
   ]);
 
-async function json(url: string, request: typeof fetch, token?: string) {
+const maxJsonBytes = 64 * 1024;
+
+async function json(url: string, request: typeof fetch, token?: string, maxBytes = maxJsonBytes) {
   const response = await request(url, {
     signal: AbortSignal.timeout(5000),
     redirect: "manual",
@@ -47,7 +49,7 @@ async function json(url: string, request: typeof fetch, token?: string) {
       const chunk = await reader.read();
       if (chunk.done) break;
       length += chunk.value.byteLength;
-      if (length > 65536) {
+      if (length > maxBytes) {
         await reader.cancel();
         throw new Error("Upstream response too large");
       }
@@ -76,7 +78,7 @@ async function latestOnDefaultBranch(
   let hasUpstreamRun = false;
   for (let page = 1; page <= 5; page++) {
     const query = new URLSearchParams({ branch, per_page: String(pageSize), page: String(page) });
-    const data = await json(`${runsUrl}?${query}`, request, token);
+    const data = await json(`${runsUrl}?${query}`, request, token, pageSize * maxJsonBytes);
     if (!Array.isArray(data.workflow_runs)) throw new Error("Missing workflow runs");
     for (const entry of data.workflow_runs) {
       const run = record(entry);
