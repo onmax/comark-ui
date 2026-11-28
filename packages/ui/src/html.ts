@@ -27,6 +27,7 @@ import pele, { Pele } from "comark-pele/html";
 import * as metrics from "comark-metrics/html";
 import * as outline from "comark-outline/html";
 import * as properties from "comark-properties/html";
+import * as social from "comark-social/html";
 import * as qr from "comark-qr/html";
 import * as quiz from "comark-quiz/html";
 import * as sources from "comark-sources/html";
@@ -136,6 +137,7 @@ export default (options?: PresetOptions): Preset<NodeHandler> =>
       metrics,
       outline,
       properties,
+      social,
       qr,
       quiz,
       sources,

@@ -91,7 +91,7 @@ Ask [Anthony](https://antfu.me){avatar="@antfu"} before you change the link rule
 
 ### Plain link
 
-Use the `chip` prop with `false` to keep a plain link.
+Use the `chip` prop with `false` to keep a plain link. On a block, such as `::div{chip=false}`, it keeps every link and `@user` inside it plain.
 
 ::example
 ```md

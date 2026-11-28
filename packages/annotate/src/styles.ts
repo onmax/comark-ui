@@ -40,7 +40,7 @@ export const css = `@layer comark{${[
   // overflows, so each slide keeps room at its sides for a stamp on an edge mark, and the gap shrinks to keep the
   // screenshots 1.5rem apart.
   ".ca-compare .cc{margin:0;--cc-gap:.5rem}",
-  ".ca-compare .cc-track>.cc-slide{align-content:start;padding:0 .5rem;background:none}",
+  ".ca-compare .cc-grid>.cc-slide{align-content:start;padding:0 .5rem;background:none}",
   // A slider without its script stacks the pair, each under its title.
   ".ca-slider{container-type:inline-size}",
   ".ca-swipe{display:grid;gap:1.5rem}",

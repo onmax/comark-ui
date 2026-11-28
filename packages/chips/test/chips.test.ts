@@ -140,6 +140,15 @@ describe("comark-chips", () => {
     );
   });
 
+  it("keeps everything plain inside a block marked chip=false", async () => {
+    const html = await render(
+      "::div{chip=false}\nThanks @onmax for [Vite](https://vite.dev)\n::\n\nand @posva",
+    );
+    expect(html).toContain('Thanks @onmax for <a href="https://vite.dev">Vite</a>');
+    expect(html).not.toContain(" chip");
+    expect(html).toContain('<a class="cp" href="https://github.com/posva"');
+  });
+
   it("preserves malformed web destinations instead of throwing", async () => {
     const html = await render("[broken](https://)");
     expect(html).toContain('<a href="https://">broken</a>');

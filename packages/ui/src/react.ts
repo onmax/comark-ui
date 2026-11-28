@@ -24,6 +24,7 @@ import pele, { createPeleComponent } from "comark-pele/react";
 import * as metrics from "comark-metrics/react";
 import * as outline from "comark-outline/react";
 import * as properties from "comark-properties/react";
+import * as social from "comark-social/react";
 import * as qr from "comark-qr/react";
 import * as sources from "comark-sources/react";
 import * as steps from "comark-steps/react";
@@ -99,6 +100,7 @@ export default (options?: PresetOptions): Preset<AnyComponent> =>
       metrics,
       outline,
       properties,
+      social,
       qr,
       sources,
       steps,

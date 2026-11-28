@@ -25,6 +25,7 @@ import pele from "comark-pele/svelte";
 import * as metrics from "comark-metrics/svelte";
 import * as outline from "comark-outline/svelte";
 import * as properties from "comark-properties/svelte";
+import * as social from "comark-social/svelte";
 import * as qr from "comark-qr/svelte";
 import * as sources from "comark-sources/svelte";
 import * as steps from "comark-steps/svelte";
@@ -71,6 +72,7 @@ export default (options) =>
       metrics,
       outline,
       properties,
+      social,
       qr,
       sources,
       steps,

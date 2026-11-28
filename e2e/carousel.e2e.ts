@@ -1,38 +1,8 @@
-import { createHtmlRenderer } from "@comark/html";
-import { expect, type Page, test } from "@playwright/test";
-import carousel, { components } from "../packages/carousel/src/html.ts";
-import zoom, { components as zoomComponents } from "../packages/zoom/src/html.ts";
+import { expect, test } from "@playwright/test";
+import { five, open, parts, render } from "./carousel-fixture.ts";
 import { fixture } from "./helpers.ts";
 
-const render = createHtmlRenderer({
-  plugins: [carousel(), zoom()],
-  components: { ...components, ...zoomComponents },
-});
-// A page of its own for each case, rendered the way the docs render, at a width where three columns fit.
-const open = async (
-  page: Page,
-  markdown: string,
-  options: { dir?: string; script?: boolean; width?: string; style?: string } = {},
-) => {
-  let html = await render(markdown);
-  if (options.script === false) html = html.replace(/<script>[\s\S]*?<\/script>/g, "");
-  await page.setContent(
-    `<!doctype html><html dir="${options.dir ?? "ltr"}"><style>body{width:${options.width ?? "48rem"};margin:2rem}pre{overflow-x:auto}${options.style ?? ""}</style><body>${html}</body></html>`,
-  );
-};
 const three = '::carousel{title="Tour"}\nOne\n\nTwo\n\nThree\n::';
-const five = '::carousel{title="Tour" columns=3}\nOne\n\nTwo\n\nThree\n\nFour\n\nFive\n::';
-const parts = (page: Page, title = "Tour") => {
-  const root = page.locator(`.cc[aria-label="${title}"]`);
-  const controls = root.locator(":scope>.cc-controls");
-  return {
-    root,
-    track: root.locator(":scope>.cc-track"),
-    count: controls.locator(".cc-count"),
-    prev: controls.getByRole("button", { name: "Previous slide" }),
-    next: controls.getByRole("button", { name: "Next slide" }),
-  };
-};
 
 for (const scaling of ["transform:scale(.7)", "zoom:.7"]) {
   test(`paging reaches each range under ${scaling}`, async ({ page }) => {
@@ -103,7 +73,7 @@ test("overflowing slide content does not extend the last page", async ({ page })
   await expect(count).toHaveText("3–5 / 5");
   await expect(next).toHaveAttribute("aria-disabled", "true");
   const panelOffset = await track.evaluate((element) => {
-    const third = element.querySelectorAll(":scope>.cc-slide")[2]!;
+    const third = element.querySelectorAll(":scope>.cc-grid>.cc-slide")[2]!;
     return third.getBoundingClientRect().left - element.getBoundingClientRect().left;
   });
   expect(Math.abs(panelOffset)).toBeLessThan(1);
@@ -195,7 +165,10 @@ test("paging jumps when the reader prefers reduced motion", async ({ page }) => 
   await page.emulateMedia({ reducedMotion: "reduce" });
   await open(page, three);
   const scrolled = await parts(page).track.evaluate((element) => {
-    element.parentElement?.querySelector<HTMLElement>("[data-carousel-step='1']")?.click();
+    element
+      .closest(".cc")!
+      .querySelector<HTMLElement>(":scope>.cc-controls [data-carousel-step='1']")!
+      .click();
     return element.scrollLeft;
   });
   expect(scrolled).toBeGreaterThan(0);
@@ -234,6 +207,66 @@ test("on a narrow page the next slide peeks in, and the counter names one slide"
   await next.click();
   await expect(count).toHaveText("3 / 3");
   await expect(next).toHaveAttribute("aria-disabled", "true");
+});
+
+for (const dir of ["ltr", "rtl"]) {
+  test(`with --cc-bleed, the slides run past the carousel's end at their size, and the controls stay under it in ${dir}`, async ({
+    page,
+  }) => {
+    await open(page, five, { dir });
+    const { root, track, count } = parts(page);
+    const slide = () =>
+      track
+        .locator(".cc-slide")
+        .first()
+        .evaluate((node) => node.getBoundingClientRect().width);
+    const size = await slide();
+    await root.evaluate((node) => node.style.setProperty("--cc-bleed", "120px"));
+    const [box, run, controls] = [
+      (await root.boundingBox())!,
+      (await track.boundingBox())!,
+      (await root.locator(":scope>.cc-controls").boundingBox())!,
+    ];
+    expect(await slide()).toBeCloseTo(size, 0);
+    expect(run.width).toBeCloseTo(box.width + 120, 0);
+    expect(dir === "ltr" ? run.x : run.x + run.width).toBeCloseTo(
+      dir === "ltr" ? box.x : box.x + box.width,
+      0,
+    );
+    expect(controls.x).toBeGreaterThanOrEqual(box.x - 0.5);
+    expect(controls.x + controls.width).toBeLessThanOrEqual(box.x + box.width + 0.5);
+    // The next slide only peeks in, so the counter still names three.
+    await expect(count).toHaveText("1–3 / 5");
+  });
+}
+
+test("bleed preserves percentage gaps and slide widths in a padded track", async ({ page }) => {
+  await open(page, five, { style: ".cc{--cc-gap:10%}.cc-track{padding-inline:24px}" });
+  const { root, track } = parts(page);
+  const geometry = () =>
+    track.evaluate((node) => {
+      const [first, second] = node.querySelectorAll(".cc-slide");
+      const start = first!.getBoundingClientRect();
+      return { width: start.width, gap: second!.getBoundingClientRect().left - start.right };
+    });
+  const before = await geometry();
+  expect(before.width).toBeCloseTo(192);
+  expect(before.gap).toBeCloseTo(72);
+  await root.evaluate((node) => node.style.setProperty("--cc-bleed", "calc(100% - 704px)"));
+  const after = await geometry();
+  expect(after.width).toBeCloseTo(before.width, 1);
+  expect(after.gap).toBeCloseTo(before.gap, 1);
+  expect((await track.boundingBox())!.width).toBeCloseTo((await root.boundingBox())!.width + 64, 0);
+});
+
+test("without bleed, two slides fit in a padded two-column track", async ({ page }) => {
+  await open(page, '::carousel{title="Tour" columns=2}\nOne\n\nTwo\n::', {
+    style: ".cc-track{padding-inline-start:48px}",
+  });
+  const { track, next } = parts(page);
+  await expect(next).toBeHidden();
+  expect(await track.evaluate((node) => node.scrollWidth - node.clientWidth)).toBe(0);
+  expect(await track.evaluate((node) => node.scrollLeft)).toBe(0);
 });
 
 test("Home and End go to the first and last slide", async ({ page }) => {

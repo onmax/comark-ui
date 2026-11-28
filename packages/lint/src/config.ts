@@ -168,6 +168,7 @@ const packages = [
   ["comark-tests/html", () => import("comark-tests/html"), []],
   ["comark-git-graph/html", () => import("comark-git-graph/html"), []],
   ["comark-bundle/html", () => import("comark-bundle/html"), []],
+  ["comark-social/html", () => import("comark-social/html"), []],
   ["comark-time/html", () => import("comark-time/html"), ["time"]],
   [
     "comark-xref",

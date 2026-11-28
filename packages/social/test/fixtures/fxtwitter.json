@@ -1,0 +1,48 @@
+{
+  "code": 200,
+  "message": "OK",
+  "tweet": {
+    "url": "https://x.com/ada/status/1856000000000000000",
+    "id": "1856000000000000000",
+    "text": "Shipped the new parser today 🎉\nIt reads 2x faster, thanks @grace\n\nhttps://example.com/blog/parser #compilers https://t.co/AbC123",
+    "author": {
+      "screen_name": "ada",
+      "name": "Ada Lovelace",
+      "avatar_url": "https://pbs.twimg.com/ada_200x200.jpg"
+    },
+    "replies": 12,
+    "retweets": 30,
+    "quotes": 4,
+    "likes": 1234,
+    "bookmarks": 7,
+    "views": 98765,
+    "created_timestamp": 1731407040,
+    "replying_to": null,
+    "replying_to_status": null,
+    "media": {
+      "photos": [
+        {
+          "url": "https://pbs.twimg.com/chart.png",
+          "width": 1200,
+          "height": 675,
+          "altText": "Parse time before and after"
+        }
+      ]
+    },
+    "quote": {
+      "url": "https://x.com/grace/status/1855000000000000000",
+      "id": "1855000000000000000",
+      "text": "Who wants to make the parser fast?",
+      "author": {
+        "screen_name": "grace",
+        "name": "Grace Hopper",
+        "avatar_url": "https://pbs.twimg.com/grace_200x200.jpg"
+      },
+      "replies": 1,
+      "retweets": 0,
+      "quotes": 1,
+      "likes": 50,
+      "created_timestamp": 1731000000
+    }
+  }
+}

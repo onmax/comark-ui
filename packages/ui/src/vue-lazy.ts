@@ -41,6 +41,7 @@ export const components = {
   ...lazy(() => import("comark-file-tree/vue"), ["FileTree", "FileTreeItem"]),
   ...lazy(() => import("comark-fields/vue"), ["Field", "FieldGroup"]),
   ...lazy(() => import("comark-properties/vue"), ["Properties"]),
+  ...lazy(() => import("comark-social/vue"), ["Post"]),
   ...lazy(() => import("comark-badge/vue"), ["Badge"]),
   ...lazy(() => import("comark-media/vue"), ["Media"]),
   ...lazy(() => import("comark-metrics/vue"), ["Delta", "ProgressBar", "StatTiles"]),
