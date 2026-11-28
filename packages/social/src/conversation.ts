@@ -1,5 +1,4 @@
 import type { ElementNode, Node } from "comark";
-import { describeTime } from "comark-time";
 import { PLATFORM, PLATFORMS, isPlatform, type Platform } from "./platforms.ts";
 import {
   contentOf,
@@ -20,7 +19,7 @@ import { text } from "../../../shared/text.ts";
 export interface Message {
   from: string;
   avatar?: string;
-  time?: string;
+  time?: ElementNode;
   text: Node[];
   media: ElementNode[];
 }
@@ -46,6 +45,7 @@ export function readConversation(
   node: ElementNode,
   name: string,
   data: Data,
+  look: Look,
   issues: Issue[],
 ): Conversation {
   const attrs = props(node, name, "::conversation", CONVERSATION_PROPS, data, issues);
@@ -61,7 +61,7 @@ export function readConversation(
   for (const child of contentOf(node)) {
     if (isElement(child) && child[0] === "message")
       messages.push(
-        readMessage(child, `${name}, message ${messages.length + 1}`, platform, data, issues),
+        readMessage(child, `${name}, message ${messages.length + 1}`, platform, data, look, issues),
       );
     else if (isElement(child)) stray.push(child[0]);
     else if (typeof child === "string" && child.trim()) stray.push("text");
@@ -100,6 +100,7 @@ function readMessage(
   name: string,
   platform: Platform,
   data: Data,
+  look: Look,
   issues: Issue[],
 ): Message {
   const attrs = props(node, name, ":::message", MESSAGE_PROPS, data, issues);
@@ -115,11 +116,12 @@ function readMessage(
       rule: "comark/social/invalid-url",
       message: `${name}: \`avatar\` is "${avatar}", which isn't a picture's address, so the message shows the sender's initial. Write an https address, a path, or a \`data:image/\` URI.`,
     });
-  const time = text(attrs.time);
-  if (time && !describeTime(time))
+  const writtenTime = text(attrs.time);
+  const time = writtenTime ? sentAt(writtenTime, look) : undefined;
+  if (time?.[0] === "span")
     issues.push({
       rule: "comark/social/invalid-time",
-      message: `${name}: \`time\` is "${time}", which isn't a date, so it shows as written. Write an ISO date such as 2026-11-28 or 2026-11-28T09:30:00Z.`,
+      message: `${name}: \`time\` is "${writtenTime}", which isn't a date, so it shows as written. Write an ISO date such as 2026-11-28 or 2026-11-28T09:30:00Z.`,
     });
   const body = readBody(contentOf(node), { platform, host: "" });
   return {
@@ -147,8 +149,8 @@ function sentAt(value: string, look: Look): ElementNode {
 /**
  * Draws a conversation as one card: a header with its title, the platform's logo, and a "Message request" pill, then
  * its messages as bubbles, `me`'s on the right in the primary color and everyone else's on the left by their avatar.
- * Consecutive messages from one sender are a run: the avatar shows by its last message and, in a group, the name over
- * its first.
+ * Consecutive messages from one sender are a run: the avatar shows by its last message, and the name goes above its
+ * first in a group or when the chat has a custom title.
  */
 export function drawConversation(chat: Conversation, look: Look): ElementNode | undefined {
   const { messages } = chat;
@@ -157,7 +159,7 @@ export function drawConversation(chat: Conversation, look: Look): ElementNode | 
   const others = [
     ...new Set(messages.map((message) => message.from).filter((from) => from !== chat.me)),
   ];
-  const group = others.length > 1;
+  const showSenders = others.length > 1 || Boolean(chat.title);
   const people =
     others.length && others.every(Boolean)
       ? new Intl.ListFormat("en", { type: "conjunction" }).format(others)
@@ -196,10 +198,10 @@ export function drawConversation(chat: Conversation, look: Look): ElementNode | 
         : []),
     ];
     const body: Node[] = [];
-    if (group && start && !mine && message.from)
+    if (showSenders && start && !mine && message.from)
       body.push(["span", { class: "csl-from", "aria-hidden": "true" }, message.from]);
     body.push(bubble);
-    if (message.time) body.push(sentAt(message.time, look));
+    if (message.time) body.push(message.time);
     const avatar: ElementNode | undefined =
       mine || !end
         ? undefined

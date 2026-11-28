@@ -167,7 +167,7 @@ The sidebar flickers on Safari 27.1 when it opens.
 
 ### Conversation
 
-Write direct messages as `:::message` blocks inside `::conversation`, each with who sent it in `from`. The messages whose `from` is the conversation's `me` sit on the right in the primary color; the others sit on the left by their sender's avatar, or initial. One sender's messages in a row are grouped, with the avatar by the last one.
+Write direct messages as `:::message` blocks inside `::conversation`, each with who sent it in `from`. The messages whose `from` is the conversation's `me` sit on the right in the primary color; the others sit on the left by their sender's avatar, or initial. One sender's messages in a row are grouped, with the avatar by the last one. In a group chat or a conversation with a custom title, the incoming sender's name appears above the first message in each run.
 
 ::example
 ```md
@@ -373,7 +373,7 @@ The card reads these [shared tokens](/guide/theming):
 | `.csl-chat` | A conversation's card; `[data-platform]` names the platform and `[data-request]` marks a message request |
 | `.csl-chat-head`, `.csl-chat-title`, `.csl-request` | The header, its title, and the "Message request" pill |
 | `.csl-messages`, `.csl-message` | The list of messages and each one; `[data-me]` marks yours, `[data-start]` and `[data-end]` the first and last of a run |
-| `.csl-bubble`, `.csl-from` | A message's bubble and, in a group, its sender's name |
+| `.csl-bubble`, `.csl-from` | A message's bubble and its visible sender name, when shown |
 
 ```css
 .csl {

@@ -81,25 +81,23 @@ export default defineComarkPlugin<SocialOptions | void, SocialMeta>((options) =>
       }[] = [];
       const names = new Map<ElementNode, string>();
       let conversations = 0;
-      const walk = (nodes: Node[], start: number, insidePost: boolean) => {
+      const walk = (nodes: Node[], start: number, insideSocial: boolean) => {
         for (let index = start; index < nodes.length; index++) {
           const node = nodes[index];
           if (!isElement(node)) continue;
           const issues: Issue[] = [];
-          if (node[0] === "conversation" && !insidePost) {
-            const chat = readConversation(
-              node,
-              `\`::conversation\` ${++conversations}`,
-              data,
-              issues,
-            );
-            blocks.push({ nodes, index, issues, draw: async () => drawConversation(chat, look) });
-            continue;
+          const tag = node[0];
+          if (tag === "conversation") {
+            const name = `\`::conversation\` ${++conversations}`;
+            if (!insideSocial) {
+              const chat = readConversation(node, name, data, look, issues);
+              blocks.push({ nodes, index, issues, draw: async () => drawConversation(chat, look) });
+            }
           }
-          if (node[0] === "post") {
+          if (tag === "post") {
             names.set(node, `\`::post\` ${names.size + 1}`);
             // Read once the walk is done, since a quoted post inside takes its number from the walk too.
-            if (!insidePost)
+            if (!insideSocial)
               blocks.push({
                 nodes,
                 index,
@@ -111,7 +109,7 @@ export default defineComarkPlugin<SocialOptions | void, SocialMeta>((options) =>
               });
           }
           // SAFETY: an element node is [tag, attributes, ...children], so its children start at index 2.
-          walk(node as Node[], 2, insidePost || node[0] === "post");
+          walk(node as Node[], 2, insideSocial || tag === "post" || tag === "conversation");
         }
       };
       walk(tree.nodes, 0, false);

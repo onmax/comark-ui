@@ -268,6 +268,23 @@ describe("::conversation", () => {
     expect(html).toContain('<span class="csl-avatar" aria-hidden="true">A</span>');
   });
 
+  it("names the incoming sender at the start of each run when there is a custom title", async () => {
+    const { html } = await render(chat.replace('platform="x"', 'title="Release chat"'));
+    expect(html).toContain('<span class="csl-chat-title">Release chat</span>');
+    expect(html.match(/<span class="csl-from" aria-hidden="true">Grace<\/span>/g)).toHaveLength(1);
+    expect(html).not.toContain('<span class="csl-from" aria-hidden="true">Ada</span>');
+  });
+
+  it("validates offsetless message times in the same zone as the rendered timestamp", async () => {
+    const markdown = '::conversation\n:::message{from="Ada" time="2026-03-08T02:30"}\nHi\n:::\n::';
+    const gap = await render(markdown, { timeZone: "America/New_York" });
+    expect(gap.html).toContain('<span class="csl-time">2026-03-08T02:30</span>');
+    expect(Object.values(gap.meta.issueRules ?? {})).toEqual(["comark/social/invalid-time"]);
+    const utc = await render(markdown, { timeZone: "UTC" });
+    expect(utc.html).toContain('<time class="csl-time" datetime="2026-03-08T02:30:00Z"');
+    expect(utc.meta.issues).toEqual([]);
+  });
+
   it("reports each problem, naming the block and the fix", async () => {
     const { html, meta } = await render(
       '::conversation{me="Ada" color="red" platform="myspace"}\n:::message{from="Grace" avatar="javascript:alert(1)" time="soon"}\nHi\n:::\n\nStray words\n\n:::message\nWho?\n:::\n::\n\n::conversation{me="Ada"}\n::\n\nAfter',
