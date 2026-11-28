@@ -1,3 +1,5 @@
+import { request, type SocialRequest } from "./request.ts";
+
 /** A picture inlined as a data URI, or why it wasn't: past the size cap, or a failed download. */
 export type Inlined = { src: string } | { large: true } | { error: string };
 
@@ -10,8 +12,8 @@ function base64(bytes: Uint8Array) {
   return btoa(binary);
 }
 
-async function download(url: string, limit: number): Promise<string> {
-  const response = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+async function download(url: URL, limit: number, transport?: SocialRequest): Promise<string> {
+  const response = await request(url, "image", { signal: AbortSignal.timeout(10_000) }, transport);
   let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
   try {
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -40,20 +42,19 @@ async function download(url: string, limit: number): Promise<string> {
 const cache = new Map<string, Promise<Inlined>>();
 
 /** Downloads a picture and inlines it, unless it's larger than `limit` bytes. Never throws. */
-export function inline(url: string, limit: number): Promise<Inlined> {
-  if (url.startsWith("data:")) return Promise.resolve({ src: url });
+export function inline(url: URL, limit: number, transport?: SocialRequest): Promise<Inlined> {
   const key = `${limit} ${url}`;
-  let found = cache.get(key);
+  let found = transport ? undefined : cache.get(key);
   if (!found) {
-    found = download(url, limit).then(
+    found = download(url, limit, transport).then(
       (src): Inlined => ({ src }),
       (error: unknown): Inlined => {
         if (error instanceof TooLarge) return { large: true };
-        cache.delete(key);
+        if (!transport) cache.delete(key);
         return { error: error instanceof Error ? error.message : String(error) };
       },
     );
-    cache.set(key, found);
+    if (!transport) cache.set(key, found);
   }
   return found;
 }

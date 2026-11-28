@@ -33,11 +33,11 @@ Has anyone measured the old parser?
 
 ## Fetch
 
-With `social({ fetch: true })`, a post on X, Bluesky, or Mastodon with a `url` is filled from the platform's public API while parsing, and its avatar and pictures are inlined, so `::post{url="…"}` alone is enough. What's written wins. Threads and LinkedIn have no public API, so write those posts by hand. A post that can't be fetched renders what's written, with an issue.
+With `social({ fetch: true })`, a post on X or Bluesky with a `url` is filled from the platform's public API while parsing. The built-in transport inlines pictures from known X and Bluesky image origins. Mastodon and other image hosts require a trusted `request` transport that checks every destination and leaves redirects to the plugin; never use unrestricted fetch with untrusted content. What's written wins. Threads and LinkedIn posts are written by hand. A post that can't be fetched renders what's written, with an issue.
 
 ## Register
 
 - In `comark-ui`: on, with the options below under `social`. Fetching is off unless you pass `social: { fetch: true }`.
 - Alone: `pnpm add comark @comark/html comark-social`, then `createHtmlRenderer({ plugins: [social()], components })` with both from `comark-social/html`. `comark-social/vue`, `/react`, and `/svelte` render it too.
 
-`fetch` (default `false`) fills posts from their platform. `maxImageSize` (default 500 KB) is the largest picture a fetch inlines. `locale`, `timeZone`, and `now` set how the dates read. `fetchPost(url)` returns a post's data for a script of your own.
+`fetch` (default `false`) fills posts from their platform. `request` supplies the host's egress-enforcing transport. `maxImageSize` (default 500 KB) is the largest picture a fetch inlines. `locale`, `timeZone`, and `now` set how the dates read. `fetchPost(url, { request })` returns a post's data for a script of your own.

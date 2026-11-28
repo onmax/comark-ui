@@ -47,6 +47,7 @@ export type TimeOptions = {
 };
 
 const POST_PROPS = ["platform", "url", "author", "handle", "avatar", "time", ...COUNTS];
+const MAX_MEDIA = 4;
 const list = (items: readonly string[]) =>
   new Intl.ListFormat("en", { type: "disjunction" }).format(items.map((item) => `\`${item}\``));
 
@@ -64,7 +65,7 @@ export function readCount(value: unknown): number | undefined {
   return Math.round(Number(match[1]) * (SUFFIX.get(match[2]?.toLowerCase() ?? "") ?? 1));
 }
 
-const webUrl = (value: string) => {
+export const webUrl = (value: string) => {
   try {
     const url = new URL(value);
     return url.protocol === "https:" || url.protocol === "http:" ? url : undefined;
@@ -101,12 +102,13 @@ export const contentOf = (node: ElementNode) =>
 /** Reads a written `::post` or `:::post`, and its quoted post, into what the card draws. */
 export function readPost(
   node: ElementNode,
-  name: string,
+  nameOf: (node: ElementNode) => string,
   data: Data,
   issues: Issue[],
   /** The post that quotes this one, whose platform it shares unless it names its own. */
   quoting?: { platform: Platform; host: string },
 ): Post {
+  const name = nameOf(node);
   const quoted = Boolean(quoting);
   const attrs = props(node, name, "::post", POST_PROPS, data, issues);
   const url = text(attrs.url);
@@ -120,7 +122,7 @@ export function readPost(
   // A path is a picture saved with the document; any scheme but the web's and an image data URI could run or leak.
   const scheme = /^([a-z][a-z\d+.-]*):/i.exec(writtenAvatar)?.[1]?.toLowerCase();
   const avatarOk =
-    !scheme || scheme === "http" || scheme === "https" || writtenAvatar.startsWith("data:image/");
+    !scheme || Boolean(webUrl(writtenAvatar)) || writtenAvatar.startsWith("data:image/");
   const avatar = avatarOk ? writtenAvatar : "";
   if (!avatarOk)
     issues.push({
@@ -174,7 +176,7 @@ export function readPost(
   );
   const quote =
     !quoted && quotes[0]
-      ? readPost(quotes[0], `${name}'s quoted post`, data, issues, { platform, host })
+      ? readPost(quotes[0], nameOf, data, issues, { platform, host })
       : undefined;
   return {
     name,
@@ -184,11 +186,11 @@ export function readPost(
     ...(address ? { url: address.href } : {}),
     ...(text(attrs.author) ? { author: text(attrs.author) } : {}),
     ...(text(attrs.handle) ? { handle: text(attrs.handle) } : {}),
-    ...(avatar ? { avatar } : {}),
+    ...(writtenAvatar ? { avatar } : {}),
     ...(time ? { time } : {}),
     counts,
     text: body.text,
-    media: body.media,
+    media: body.media.slice(0, MAX_MEDIA),
     ...(quote ? { quote } : {}),
   };
 }
@@ -208,16 +210,15 @@ const mediaNode = (item: FetchedMedia): ElementNode => {
 };
 
 /** Fills in what a post leaves out from its fetched copy. What's written wins. */
-export function merge(post: Post, fetched: FetchedPost): Post {
+export function merge(post: Post, fetched: FetchedPost, includeQuote: boolean): Post {
   const platform = post.platformWritten ? post.platform : fetched.platform;
-  let host = post.host;
-  try {
-    host = new URL(fetched.url).host;
-  } catch {}
+  const address = webUrl(fetched.url);
+  const host = address?.host ?? post.host;
+  const avatar = post.avatar ?? (fetched.avatar ? webUrl(fetched.avatar)?.href : undefined);
   const linking: Linking = { platform, host };
   const quote = post.quote
     ? post.quote
-    : fetched.quote
+    : includeQuote && fetched.quote
       ? merge(
           {
             name: `${post.name}'s quoted post`,
@@ -229,20 +230,26 @@ export function merge(post: Post, fetched: FetchedPost): Post {
             media: [],
           },
           fetched.quote,
+          false,
         )
       : undefined;
   return {
     ...post,
     platform,
     host,
-    url: post.url ?? fetched.url,
+    url: post.url ?? address?.href,
     author: post.author ?? fetched.author,
     handle: post.handle ?? fetched.handle,
-    ...((post.avatar ?? fetched.avatar) ? { avatar: post.avatar ?? fetched.avatar } : {}),
+    avatar,
     time: post.time ?? fetched.time,
     counts: { ...fetched.counts, ...post.counts },
     text: post.text.length ? post.text : readText(fetched.text, linking),
-    media: post.media.length ? post.media : fetched.media.map(mediaNode),
+    media: post.media.length
+      ? post.media
+      : fetched.media
+          .filter((item) => webUrl(item.src))
+          .slice(0, MAX_MEDIA)
+          .map(mediaNode),
     ...(quote ? { quote } : {}),
   };
 }

@@ -1,11 +1,13 @@
 import type { ElementNode, Node } from "comark";
 import { defineComarkPlugin } from "comark";
 import { complete } from "./complete.ts";
-import { drawPost, readPost, type Data, type Issue, type Look, type Post } from "./post.ts";
+import { drawPost, readPost, type Data, type Issue, type Look } from "./post.ts";
+import type { SocialRequest } from "./request.ts";
 import { isElement } from "../../../shared/nodes.ts";
 
 export { fetchPost, FetchPostError } from "./fetch.ts";
 export type { FetchedMedia, FetchedPost, FetchPostOptions } from "./fetch.ts";
+export type { SocialRequest } from "./request.ts";
 export { COUNTS, PLATFORMS, type Count, type Platform } from "./platforms.ts";
 
 export type SocialMeta = {
@@ -22,6 +24,8 @@ export interface SocialOptions {
    * written, and parsing makes no request.
    */
   fetch?: boolean;
+  /** Egress-enforcing transport for every API and image request, including redirects. Required for Mastodon. */
+  request?: SocialRequest;
   /** The largest picture, in bytes, a fetch inlines. A larger one keeps its address, with an issue. Default 500 KB. */
   maxImageSize?: number;
   /** A BCP 47 tag for dates and counts. Default `en-US`. */
@@ -61,30 +65,25 @@ export default defineComarkPlugin<SocialOptions | void, SocialMeta>((options) =>
         now: settings.now,
       };
       const issues: Issue[] = [];
-      const found: { nodes: Node[]; index: number; post: Post }[] = [];
-      let posts = 0;
-      const walk = (nodes: Node[], start: number) => {
+      const found: { nodes: Node[]; index: number; node: ElementNode }[] = [];
+      const names = new Map<ElementNode, string>();
+      const walk = (nodes: Node[], start: number, insidePost: boolean) => {
         for (let index = start; index < nodes.length; index++) {
           const node = nodes[index];
           if (!isElement(node)) continue;
           if (node[0] === "post") {
-            const post = readPost(node, `\`::post\` ${++posts}`, data, issues);
-            found.push({ nodes, index, post });
-            continue;
+            names.set(node, `\`::post\` ${names.size + 1}`);
+            if (!insidePost) found.push({ nodes, index, node });
           }
           // SAFETY: an element node is [tag, attributes, ...children], so its children start at index 2.
-          walk(node as Node[], 2);
+          walk(node as Node[], 2, insidePost || node[0] === "post");
         }
       };
-      walk(tree.nodes, 0);
+      walk(tree.nodes, 0, false);
       await Promise.all(
         found.map(async (item) => {
-          const post = await complete(item.post, settings, issues);
-          if (!post.author && !post.handle)
-            issues.push({
-              rule: "comark/social/missing-author",
-              message: `${post.name} has no \`author\` or \`handle\`, so the card names no one. Write \`author\`, or give it a \`url\` and turn on the \`fetch\` option.`,
-            });
+          const written = readPost(item.node, (node) => names.get(node)!, data, issues);
+          const post = await complete(written, settings, issues);
           item.nodes[item.index] = drawPost(post, look) satisfies ElementNode;
         }),
       );

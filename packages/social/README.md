@@ -28,7 +28,7 @@ just setting up my twttr
 
 The platform comes from `url`, or from `platform` (`x`, `bluesky`, `mastodon`, `threads`, `linkedin`, or `generic`). The card has no iframe and no script, and the page asks no one for anything but the pictures.
 
-With `social({ fetch: true })`, a post on X, Bluesky, or Mastodon with a `url` is filled from the platform's public API while parsing (api.fxtwitter.com, public.api.bsky.app, and the Mastodon server), and its avatar and pictures are inlined. What's written wins. `fetchPost(url)` returns the same data for a script of your own.
+With `social({ fetch: true })`, X and Bluesky posts are filled from their public APIs while parsing, and pictures from their known image origins are inlined. What's written wins. For Mastodon or other image origins, provide a trusted `request` transport that enforces egress policy on every API, image, and redirect request. Do not use an unrestricted transport for untrusted content. `fetchPost(url, { request })` returns the post data for a script of your own. Static rendering needs no transport.
 
 The plugin adds every problem to `meta.issues`, so a host can reject a document before publishing it. Each issue names the block and says how to fix it.
 

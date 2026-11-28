@@ -6,7 +6,7 @@
         "did": "did:plc:abc123",
         "handle": "ada.bsky.social",
         "displayName": "Ada",
-        "avatar": "https://cdn.bsky.example/ada.jpg"
+        "avatar": "https://cdn.bsky.app/ada.jpg"
       },
       "record": {
         "text": "Read the notes at example.com/notes… and say hi",
@@ -27,14 +27,14 @@
         "$type": "app.bsky.embed.images#view",
         "images": [
           {
-            "thumb": "https://cdn.bsky.example/t1.jpg",
-            "fullsize": "https://cdn.bsky.example/f1.jpg",
+            "thumb": "https://cdn.bsky.app/t1.jpg",
+            "fullsize": "https://cdn.bsky.app/f1.jpg",
             "alt": "A diagram",
             "aspectRatio": { "width": 4, "height": 3 }
           },
           {
-            "thumb": "https://cdn.bsky.example/t2.jpg",
-            "fullsize": "https://cdn.bsky.example/f2.jpg",
+            "thumb": "https://cdn.bsky.app/t2.jpg",
+            "fullsize": "https://cdn.bsky.app/f2.jpg",
             "alt": ""
           }
         ]

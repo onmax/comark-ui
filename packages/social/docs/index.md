@@ -150,7 +150,7 @@ The sidebar flickers on Safari 27.1 when it opens.
 
 ### Fill a post from its link
 
-Turn on `fetch` and write only the address. The parse fills the author, handle, avatar, time, text, pictures, counts, and quoted post from the platform's public API (api.fxtwitter.com for X, public.api.bsky.app, and the Mastodon server), and inlines the avatar and pictures, so the page asks no one for anything.
+Turn on `fetch` and write only the address. The parse fills the author, handle, avatar, time, text, pictures, counts, and quoted post from the platform's public API. It also tries to inline the avatar and fetched pictures.
 
 ```ts
 import social from "comark-social";
@@ -164,6 +164,10 @@ const plugins = [social({ fetch: true })];
 ```
 
 What you write wins over what's fetched, so you can correct a count or shorten the text. Threads and LinkedIn have no public API, so their posts are written by hand.
+
+By default, server-side fetching is limited to the HTTPS origins `api.fxtwitter.com` and `public.api.bsky.app` for posts, and `pbs.twimg.com` and `cdn.bsky.app` for images. The same restrictions apply on redirects. Disallowed requests report an issue; a picture that cannot be inlined may still load in the reader's browser. Leave `fetch` off if parsing must make no requests.
+
+To fetch federated Mastodon posts or images from other origins, supply a trusted `request(url, init)` transport to `social()` or `fetchPost()`. It replaces the default allowlist and handles every API and image request, including each redirect hop. Honor `init.redirect: "manual"` and the abort signal; enforce your egress rules at connection time, using a trusted proxy or a transport that validates and pins the actual destination IP. A URL or DNS precheck alone does not prevent DNS rebinding. Do not use an unrestricted transport with untrusted Markdown or provider responses. Requests through a custom transport are not shared in the default cache.
 
 ### Quote feedback in a pull request
 
@@ -203,6 +207,7 @@ Links with a trailing slash 404 on 0.14.2.
 | Option | Default | Description |
 | --- | --- | --- |
 | `fetch` | `false` | Fills each post with a `url` on X, Bluesky, or Mastodon from the platform while parsing, and inlines its avatar and pictures. |
+| `request` | built-in allowlist | A host-provided HTTPS transport that enforces egress policy and does not follow redirects itself. Required for federated Mastodon hosts. |
 | `maxImageSize` | `500000` | The largest picture, in bytes, a fetch inlines. A larger one keeps its address. |
 | `locale` | `en-US` | A BCP 47 tag for the dates and counts. |
 | `timeZone` | the runtime's | An IANA zone for the time of day. |
@@ -212,7 +217,7 @@ Links with a trailing slash 404 on 0.14.2.
 
 | Function | Description |
 | --- | --- |
-| `fetchPost(url, { signal })` | Returns a post's `platform`, `url`, `author`, `handle`, `avatar`, `time`, `text`, `counts`, `media`, and `quote` from X, Bluesky, or Mastodon, cached per process. It throws a `FetchPostError` for another platform or a failed request. |
+| `fetchPost(url, { signal, request })` | Returns a post's `platform`, `url`, `author`, `handle`, `avatar`, `time`, `text`, `counts`, `media`, and `quote` from X, Bluesky, or Mastodon. Default requests without a caller-supplied signal are cached per process. It throws a `FetchPostError` for another platform or a failed request. |
 
 ### Issues
 

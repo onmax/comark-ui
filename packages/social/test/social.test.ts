@@ -180,9 +180,9 @@ describe("::post", () => {
       expect.stringMatching(/^`::post` 1: `likes` is "lots", which isn't a count/),
       expect.stringMatching(/^`::post` 1: `time` is "yesterday", which isn't a date/),
       expect.stringMatching(/^`::post` 1 holds 2 `:::post` blocks/),
-      expect.stringMatching(/^`::post` 2 has no `author` or `handle`/),
+      expect.stringMatching(/^`::post` 4 has no `author` or `handle`/),
       expect.stringMatching(
-        /^`::post` 3: `avatar` is "javascript:alert\(1\)", which isn't a picture's address/,
+        /^`::post` 5: `avatar` is "javascript:alert\(1\)", which isn't a picture's address/,
       ),
     ]);
     expect(Object.values(meta.issueRules ?? {})).toEqual([
@@ -207,15 +207,90 @@ describe("::post", () => {
 });
 
 describe("fetch", () => {
+  it("keeps non-allowlisted status and image destinations off the default transport", async () => {
+    await expect(fetchPost("https://mastodon.example/@ada/123")).rejects.toThrow(
+      "require a host-provided request transport",
+    );
+    const { meta } = await render(
+      '::post{url="https://x.com/ada/status/405" author="Ada" avatar="https://images.example/ada.png"}\n::',
+      { fetch: true },
+    );
+    expect(requests).toEqual(["https://api.fxtwitter.com/i/status/405"]);
+    expect(meta.issues?.join(" ")).toContain("require a host-provided request transport");
+  });
+
+  it("checks each redirect against the same outbound policy", async () => {
+    const api = "https://api.fxtwitter.com/i/status/406";
+    const cdn = "https://pbs.twimg.com/redirect.png";
+    const other = "https://other.example/image.png";
+    const redirect = new Response(null, { status: 302, headers: { location: other } });
+    answers.set(api, redirect);
+    answers.set(cdn, redirect);
+    await render(`::post{url="https://x.com/ada/status/406" author="Ada" avatar="${cdn}"}\n::`, {
+      fetch: true,
+    });
+    expect(requests).toEqual([api, cdn]);
+    const transport = vi.fn(async (url: URL, init: RequestInit) => {
+      expect(init.redirect).toBe("manual");
+      if (url.href === other) throw new Error("blocked by host policy");
+      return redirect.clone();
+    });
+    await expect(fetchPost("https://x.com/ada/status/406", { request: transport })).rejects.toThrow(
+      "blocked by host policy",
+    );
+    expect(transport.mock.calls.map(([url]) => url.href)).toEqual([api, other]);
+  });
+
+  it("reports a malformed written avatar without rejecting the parse", async () => {
+    const { html, meta } = await render(
+      '::post{url="https://x.com/ada/status/407" author="Ada" avatar="https://"}\n::',
+      { fetch: true },
+    );
+    expect(html).toContain('<span class="csl-avatar" aria-hidden="true">A</span>');
+    expect(Object.values(meta.issueRules ?? {})).toContain("comark/social/invalid-url");
+    expect(requests).toEqual(["https://api.fxtwitter.com/i/status/407"]);
+  });
+
+  it("completes and validates authored quotes independently of the parent", async () => {
+    const api = "https://api.fxtwitter.com/i/status/408";
+    answers.set(api, json(await fixture("fxtwitter")));
+    const { html, meta } = await render(
+      '::post{author="Parent"}\n:::post{url="https://x.com/ada/status/408" author="Written quote"}\n:::\n::\n\n::post{author="Other parent"}\n:::post\nAnonymous\n:::\n::',
+      { fetch: true },
+    );
+    expect(html).toContain('data-quote aria-label="Post by Written quote on X"');
+    expect(html).toContain("Shipped the new parser");
+    expect(html).not.toContain("Grace Hopper");
+    expect(meta.issues).toContainEqual(expect.stringMatching(/^`::post` 4 has no `author`/));
+    expect(requests).toContain(api);
+  });
+
+  it("limits written and fetched media to four before rendering or downloading", async () => {
+    const written = Array.from({ length: 5 }, (_, index) => `![Image](${index}.png)`).join(" ");
+    const original = JSON.stringify(await fixture("fxtwitter"));
+    const fetched = JSON.parse(original) as { tweet: { media: { photos: { url: string }[] } } };
+    fetched.tweet.media.photos = Array.from({ length: 5 }, (_, index) => ({
+      url: `https://pbs.twimg.com/grid-${index}.png`,
+    }));
+    answers.set("https://api.fxtwitter.com/i/status/409", json(fetched));
+    const { html } = await render(
+      `::post{author="Ada"}\n${written}\n::\n\n::post{url="https://x.com/ada/status/409"}\n::`,
+      { fetch: true },
+    );
+    expect(html.match(/<img src=/g)).toHaveLength(8);
+    expect(requests.filter((url) => url.includes("/grid-"))).toHaveLength(4);
+    expect(requests).not.toContain("https://pbs.twimg.com/grid-4.png");
+  });
+
   it("fills an X post from fxtwitter and inlines its avatar and pictures, with what's written winning", async () => {
     answers.set(
       "https://api.fxtwitter.com/i/status/1856000000000000000",
       json(await fixture("fxtwitter")),
     );
     for (const url of [
-      "https://pbs.example/ada_200x200.jpg",
-      "https://pbs.example/chart.png",
-      "https://pbs.example/grace_200x200.jpg",
+      "https://pbs.twimg.com/ada_200x200.jpg",
+      "https://pbs.twimg.com/chart.png",
+      "https://pbs.twimg.com/grace_200x200.jpg",
     ])
       answers.set(url, image());
     const { html, meta } = await render(
@@ -249,9 +324,9 @@ describe("fetch", () => {
       json(await fixture("bluesky")),
     );
     for (const url of [
-      "https://cdn.bsky.example/ada.jpg",
-      "https://cdn.bsky.example/f1.jpg",
-      "https://cdn.bsky.example/f2.jpg",
+      "https://cdn.bsky.app/ada.jpg",
+      "https://cdn.bsky.app/f1.jpg",
+      "https://cdn.bsky.app/f2.jpg",
     ])
       answers.set(url, image());
     const post = await fetchPost("https://bsky.app/profile/ada.bsky.social/post/3lxyz");
@@ -283,7 +358,8 @@ describe("fetch", () => {
     );
     answers.set("https://mastodon.example/ada.png", image());
     answers.set("https://mastodon.example/v.jpg", image());
-    const post = await fetchPost("https://mastodon.example/@ada/113000000000000001");
+    const request = (url: URL, init: RequestInit) => fetch(url, init);
+    const post = await fetchPost("https://mastodon.example/@ada/113000000000000001", { request });
     expect(post.text).toBe(
       "Hello @grace@other.example & friends\n\nNew post: https://example.com/a/very/long/path/to/a/post #rust",
     );
@@ -292,6 +368,7 @@ describe("fetch", () => {
       '::post{url="https://mastodon.example/@ada/113000000000000001"}\n::',
       {
         fetch: true,
+        request,
       },
     );
     expect(html).toContain('<a href="https://other.example/@grace">@grace@other.example</a>');
@@ -309,17 +386,17 @@ describe("fetch", () => {
       "https://api.fxtwitter.com/i/status/1856000000000000000",
       json(await fixture("fxtwitter")),
     );
-    answers.set("https://pbs.example/ada_200x200.jpg", image());
-    answers.set("https://pbs.example/grace_200x200.jpg", image());
-    answers.set("https://pbs.example/chart.png", image(new Uint8Array(2000)));
+    answers.set("https://pbs.twimg.com/ada_200x200.jpg", image());
+    answers.set("https://pbs.twimg.com/grace_200x200.jpg", image());
+    answers.set("https://pbs.twimg.com/chart.png", image(new Uint8Array(2000)));
     const { html, meta } = await render(
       '::post{url="https://x.com/ada/status/1856000000000000000"}\n::',
       { fetch: true, maxImageSize: 1000 },
     );
-    expect(html).toContain('<img src="https://pbs.example/chart.png"');
+    expect(html).toContain('<img src="https://pbs.twimg.com/chart.png"');
     expect(meta.issues).toEqual([
       expect.stringMatching(
-        /^`::post` 1: the picture at https:\/\/pbs.example\/chart.png is larger than 1 KB/,
+        /^`::post` 1: the picture at https:\/\/pbs.twimg.com\/chart.png is larger than 1 KB/,
       ),
     ]);
     expect(meta.issueRules?.[meta.issues![0]!]).toBe("comark/social/large-media");

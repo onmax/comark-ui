@@ -1,4 +1,5 @@
 import { PLATFORM, platformOf, type Count, type Platform } from "./platforms.ts";
+import { request, type SocialRequest } from "./request.ts";
 
 /** A picture or a video's still in a post, at its address on the platform. */
 export interface FetchedMedia {
@@ -31,6 +32,7 @@ export interface FetchedPost {
 
 export interface FetchPostOptions {
   signal?: AbortSignal;
+  request?: SocialRequest;
 }
 
 /** Why a post couldn't be fetched, in a sentence that ends with what to do. */
@@ -43,19 +45,23 @@ const HEADERS = { accept: "application/json", "user-agent": "comark-social" };
 async function json(url: string, options: FetchPostOptions): Promise<unknown> {
   let response: Response;
   try {
-    response = await fetch(url, {
-      headers: HEADERS,
-      signal: options.signal ?? AbortSignal.timeout(10_000),
-    });
+    response = await request(
+      new URL(url),
+      "post",
+      { headers: HEADERS, signal: options.signal ?? AbortSignal.timeout(10_000) },
+      options.request,
+    );
   } catch (error) {
     throw new FetchPostError(
       `${new URL(url).host} didn't answer (${error instanceof Error ? error.message : String(error)})`,
     );
   }
-  if (response.status === 404 || response.status === 401 || response.status === 403)
-    throw new FetchPostError("the post doesn't exist or isn't public");
-  if (!response.ok)
+  if (!response.ok) {
+    await response.body?.cancel().catch(() => {});
+    if (response.status === 404 || response.status === 401 || response.status === 403)
+      throw new FetchPostError("the post doesn't exist or isn't public");
     throw new FetchPostError(`${new URL(url).host} answered HTTP ${response.status}`);
+  }
   try {
     return await response.json();
   } catch {
@@ -368,8 +374,8 @@ const cache = new Map<string, Promise<FetchedPost>>();
 
 /**
  * Fetches a public post from X (through api.fxtwitter.com), Bluesky (public.api.bsky.app), or a Mastodon server, by its
- * address. Threads and LinkedIn have no public API, so their posts are written by hand. Answers are cached per process,
- * and a failed one isn't kept. Throws a `FetchPostError` that says why.
+ * address. A Mastodon server outside the default allowlist requires a host-provided `request`. Default requests are
+ * cached per process, except for failures and requests with a caller-supplied signal.
  */
 export function fetchPost(address: string, options: FetchPostOptions = {}): Promise<FetchedPost> {
   let url: URL;
@@ -388,6 +394,7 @@ export function fetchPost(address: string, options: FetchPostOptions = {}): Prom
           : `${PLATFORM[platform].name} has no public API`,
       ),
     );
+  if (options.request || options.signal) return fetcher(url, options);
   const key = url.href;
   let found = cache.get(key);
   if (!found) {
