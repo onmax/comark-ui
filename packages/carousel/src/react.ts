@@ -82,7 +82,15 @@ export function Carousel({ count, columns, title, zoom, children }: CarouselProp
       "aria-roledescription": "carousel",
       "aria-label": title ?? "Carousel",
     },
-    createElement("div", { className: "cc-track" }, children),
+    createElement(
+      "div",
+      { className: "cc-run" },
+      createElement(
+        "div",
+        { className: "cc-track" },
+        createElement("div", { className: "cc-grid" }, children),
+      ),
+    ),
     controls,
   );
 }

@@ -80,7 +80,12 @@ export const Carousel = /* @__PURE__ */ defineComponent({
           "aria-roledescription": "carousel",
           "aria-label": props.title ?? "Carousel",
         },
-        [h("div", { class: "cc-track" }, slots.default?.()), controls],
+        [
+          h("div", { class: "cc-run" }, [
+            h("div", { class: "cc-track" }, [h("div", { class: "cc-grid" }, slots.default?.())]),
+          ]),
+          controls,
+        ],
       );
     };
   },
