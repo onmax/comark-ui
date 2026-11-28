@@ -11,13 +11,24 @@ const render = (...args: Parameters<typeof browserPlugins>) =>
   createHtmlRenderer({ plugins: browserPlugins(...args), components })(markdown);
 
 const fetchStub = () => {
-  const fetch = vi.fn(async (url: string) =>
-    url.includes("api.github.com")
-      ? Response.json({ workflow_runs: [{ status: "completed", conclusion: "success" }] })
-      : new Response(new Uint8Array([137, 80, 78, 71]), {
-          headers: { "content-type": "image/png" },
-        }),
-  );
+  const fetch = vi.fn(async (url: string) => {
+    if (url === "https://api.github.com/repos/onmax/comark-ui")
+      return Response.json({ default_branch: "main" });
+    if (url.startsWith("https://api.github.com/repos/onmax/comark-ui/actions/"))
+      return Response.json({
+        workflow_runs: [
+          {
+            status: "completed",
+            conclusion: "success",
+            head_branch: "main",
+            head_repository: { full_name: "onmax/comark-ui" },
+          },
+        ],
+      });
+    return new Response(new Uint8Array([137, 80, 78, 71]), {
+      headers: { "content-type": "image/png" },
+    });
+  });
   vi.stubGlobal("fetch", fetch);
   return fetch;
 };
@@ -40,6 +51,7 @@ describe("browser download policy", () => {
     const fetch = fetchStub();
     const html = await render();
     expect(html).toContain('src="data:image/png;base64,');
+    expect(html).toContain('src="data:image/svg+xml,');
     expect(html).not.toContain("https://comark-ui.onmax.me/badge.svg?");
     expect(fetch).toHaveBeenCalled();
   });

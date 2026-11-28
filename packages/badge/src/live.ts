@@ -64,6 +64,40 @@ async function json(url: string, request: typeof fetch, token?: string) {
   }
   return record(JSON.parse(new TextDecoder().decode(bytes)));
 }
+
+async function latestOnDefaultBranch(
+  runsUrl: string,
+  branch: string,
+  repository: string,
+  request: typeof fetch,
+  token?: string,
+) {
+  const pageSize = 5;
+  let hasUpstreamRun = false;
+  for (let page = 1; page <= 5; page++) {
+    const query = new URLSearchParams({ branch, per_page: String(pageSize), page: String(page) });
+    const data = await json(`${runsUrl}?${query}`, request, token);
+    if (!Array.isArray(data.workflow_runs)) throw new Error("Missing workflow runs");
+    for (const entry of data.workflow_runs) {
+      const run = record(entry);
+      const headRepository = record(run.head_repository).full_name;
+      if (
+        run.head_branch !== branch ||
+        typeof headRepository !== "string" ||
+        headRepository.toLowerCase() !== repository.toLowerCase()
+      )
+        continue;
+      hasUpstreamRun = true;
+      if (run.status === "completed") return run;
+    }
+    if (data.workflow_runs.length < pageSize) {
+      if (hasUpstreamRun) throw new Error("No completed run on the default branch");
+      return undefined;
+    }
+  }
+  throw new Error("Default branch workflow search limit reached");
+}
+
 export async function resolveLive(
   spec: BadgeSpec,
   request: typeof fetch = globalThis.fetch,
@@ -99,14 +133,12 @@ export async function resolveLive(
       value = `${new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 }).format(data.downloads)}/${spec.period === "month" ? "mo" : spec.period === "week" ? "wk" : "day"}`;
     } else {
       // The latest finished run, like GitHub's own badge, so a README doesn't read "pending" after every push.
+      const repositoryUrl = `https://api.github.com/repos/${spec.repository}`;
+      const runsUrl = `${repositoryUrl}/actions/workflows/${encodeURIComponent(spec.workflow)}/runs`;
       const latest = async (branch?: string) => {
         const query = new URLSearchParams({ per_page: "1", status: "completed" });
         if (branch) query.set("branch", branch);
-        const data = await json(
-          `https://api.github.com/repos/${spec.repository}/actions/workflows/${encodeURIComponent(spec.workflow)}/runs?${query}`,
-          request,
-          token,
-        );
+        const data = await json(`${runsUrl}?${query}`, request, token);
         return record(Array.isArray(data.workflow_runs) ? data.workflow_runs[0] : undefined);
       };
       let run: Record<string, unknown>;
@@ -114,17 +146,19 @@ export async function resolveLive(
       else {
         // Also like GitHub's badge: the default branch first, then any branch for a workflow that never runs there.
         // Across branches, a release workflow that also runs on closed pull requests reads "skipped" after every merge.
-        const repository = await json(
-          `https://api.github.com/repos/${spec.repository}`,
-          request,
-          token,
-        );
+        const repository = await json(repositoryUrl, request, token);
         if (token && repository.private !== false)
           throw new Error("Workflow repository is not public");
         if (typeof repository.default_branch !== "string" || !repository.default_branch)
           throw new Error("Missing default branch");
-        run = await latest(repository.default_branch);
-        if (!run.status) run = await latest();
+        run =
+          (await latestOnDefaultBranch(
+            runsUrl,
+            repository.default_branch,
+            spec.repository,
+            request,
+            token,
+          )) ?? (await latest());
       }
       // Check the run's repository in the same response: a broader token must never
       // turn this public endpoint into a private workflow status oracle.

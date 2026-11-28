@@ -176,18 +176,25 @@ describe("image badges", () => {
     expect(fetch).not.toHaveBeenCalled();
   });
   it("draws live badges from data fetched while parsing, once per process", async () => {
-    const fetch = vi
-      .fn<typeof globalThis.fetch>()
-      .mockImplementation(
-        async (url) =>
-          new Response(
-            JSON.stringify(
-              (url instanceof Request ? url.url : url.toString()).includes("/actions/")
-                ? { workflow_runs: [{ status: "completed", conclusion: "success" }] }
-                : { default_branch: "main" },
-            ),
+    const fetch = vi.fn<typeof globalThis.fetch>().mockImplementation(
+      async (url) =>
+        new Response(
+          JSON.stringify(
+            (url instanceof Request ? url.url : url.toString()).includes("/actions/")
+              ? {
+                  workflow_runs: [
+                    {
+                      status: "completed",
+                      conclusion: "success",
+                      head_branch: "main",
+                      head_repository: { full_name: "onmax/drawn" },
+                    },
+                  ],
+                }
+              : { default_branch: "main" },
           ),
-      );
+        ),
+    );
     vi.stubGlobal("fetch", fetch);
     const markdown =
       ':badge{source="github-actions" repository="onmax/drawn" workflow="ci.yml" label="build"}';

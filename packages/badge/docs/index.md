@@ -131,7 +131,7 @@ Use the `workflow` prop to choose the workflow's YAML filename.
 
 ### Branch
 
-Use the `branch` prop to filter workflow runs to one branch. Without it, the badge shows the latest finished run on the repository's default branch, like GitHub's own badge, or on any branch when the workflow never runs on the default one. A run in progress never shows. The badge keeps the last result until it finishes.
+Use the `branch` prop to filter workflow runs to one branch. Without it, the badge shows the latest finished run on the repository's own default branch. It falls back to the latest finished run across branches only when the workflow has no runs on the repository's default branch. A run in progress never shows: the badge keeps the last finished result, or shows unavailable if the first default-branch run has not finished.
 
 ```md
 :badge{source="github-actions" repository="onmax/comark-ui" workflow="ci.yaml" branch="main"}
