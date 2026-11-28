@@ -240,55 +240,70 @@ for (const dir of ["ltr", "rtl"]) {
   });
 }
 
-for (const dir of ["ltr", "rtl"]) {
-  test(`with --cc-bleed, the last page lines up with the carousel, by arrow or by scrolling, in ${dir}`, async ({
-    page,
-  }) => {
-    await page.emulateMedia({ reducedMotion: "reduce" });
-    await open(page, five, { dir });
-    const { root, track, count, next } = parts(page);
-    await root.evaluate((node) => node.style.setProperty("--cc-bleed", "120px"));
-    const edges = () =>
-      root.evaluate((node) => {
-        const box = node.getBoundingClientRect();
-        const slides = [...node.querySelectorAll(".cc-slide")].map((slide) =>
-          slide.getBoundingClientRect(),
-        );
-        const rtl = getComputedStyle(node).direction === "rtl";
-        // Distances from the carousel's start and end, in reading order.
-        const start = (rect: DOMRect) => (rtl ? box.right - rect.right : rect.left - box.left);
-        const end = (rect: DOMRect) => (rtl ? rect.left - box.left : box.right - rect.right);
-        return {
-          third: start(slides[2]!),
-          last: end(slides[4]!),
-          second: start(slides[1]!) + slides[1]!.width,
-        };
-      });
-    await next.click();
-    await next.click();
-    await expect(count).toHaveText("3–5 / 5");
-    await expect(next).toHaveAttribute("aria-disabled", "true");
-    // Within a pixel: a right-to-left track scrolls in whole pixels.
-    const lined = ({ third, last }: { third: number; last: number }) => {
-      expect(Math.abs(third)).toBeLessThan(1);
-      expect(Math.abs(last)).toBeLessThan(1);
-    };
-    const byArrow = await edges();
-    lined(byArrow);
-    // The slide before the page is wholly past the carousel's start, so no sliver of it shows.
-    expect(byArrow.second).toBeLessThan(1);
-    await track.evaluate((node) =>
-      node.scrollTo({
-        left:
-          (node.scrollWidth - node.clientWidth) *
-          (getComputedStyle(node).direction === "rtl" ? -1 : 1),
-        behavior: "instant",
-      }),
-    );
-    lined(await edges());
-    await expect(count).toHaveText("3–5 / 5");
-  });
-}
+for (const dir of ["ltr", "rtl"])
+  for (const lead of [0, 80])
+    test(`with --cc-bleed${lead ? " and --cc-bleed-start" : ""}, the slides rest lined up with the carousel, to its last page, in ${dir}`, async ({
+      page,
+    }) => {
+      await page.emulateMedia({ reducedMotion: "reduce" });
+      await open(page, five, { dir });
+      const { root, track, count, next } = parts(page);
+      await root.evaluate((node, lead) => {
+        node.style.setProperty("--cc-bleed", "120px");
+        node.style.setProperty("--cc-bleed-start", `${lead}px`);
+      }, lead);
+      const edges = () =>
+        root.evaluate((node) => {
+          const box = node.getBoundingClientRect();
+          const rtl = getComputedStyle(node).direction === "rtl";
+          // Distances from the carousel's start and end, in reading order.
+          const start = (rect: DOMRect) => (rtl ? box.right - rect.right : rect.left - box.left);
+          const end = (rect: DOMRect) => (rtl ? rect.left - box.left : box.right - rect.right);
+          const slides = [...node.querySelectorAll(".cc-slide")].map((slide) =>
+            slide.getBoundingClientRect(),
+          );
+          const run = node.querySelector(".cc-track")!.getBoundingClientRect();
+          return {
+            run: [start(run), end(run)],
+            first: start(slides[0]!),
+            third: start(slides[2]!),
+            last: end(slides[4]!),
+            // How much of the slide before the last page shows in the room past the carousel's start.
+            shown: Math.max(0, start(slides[1]!) + slides[1]!.width - start(run)),
+          };
+        });
+      // Within a pixel: a right-to-left track scrolls in whole pixels.
+      const near = (value: number, expected: number) =>
+        expect(Math.abs(value - expected)).toBeLessThan(1);
+      const atStart = await edges();
+      near(atStart.run[0]!, -lead);
+      near(atStart.run[1]!, -120);
+      near(atStart.first, 0);
+      await next.click();
+      await next.click();
+      await expect(count).toHaveText("3–5 / 5");
+      await expect(next).toHaveAttribute("aria-disabled", "true");
+      const lined = ({ third, last }: { third: number; last: number }) => {
+        near(third, 0);
+        near(last, 0);
+      };
+      const byArrow = await edges();
+      lined(byArrow);
+      // Without room past the carousel's start, the slide before the page is wholly out of view, with no sliver of it;
+      // with room, it runs on into that room.
+      if (lead) expect(byArrow.shown).toBeGreaterThan(lead / 2);
+      else expect(byArrow.shown).toBeLessThan(1);
+      await track.evaluate((node) =>
+        node.scrollTo({
+          left:
+            (node.scrollWidth - node.clientWidth) *
+            (getComputedStyle(node).direction === "rtl" ? -1 : 1),
+          behavior: "instant",
+        }),
+      );
+      lined(await edges());
+      await expect(count).toHaveText("3–5 / 5");
+    });
 
 test("bleed preserves percentage gaps and slide widths in a padded track", async ({ page }) => {
   await open(page, five, { style: ".cc{--cc-gap:10%}.cc-track{padding-inline:24px}" });

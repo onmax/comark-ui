@@ -44,24 +44,30 @@ export function start(css: string): () => void {
   const rtl = (track: Element) => getComputedStyle(track).direction === "rtl";
   // Convert the rendered panel distances to scroll coordinates, even on a scaled page or in RTL.
   function geometry(track: HTMLElement, slides: HTMLElement[]) {
-    // With --cc-bleed the track overhangs the carousel's column, and a page is what fits in the column.
-    const overhang = Math.max(
-      0,
-      track.offsetWidth - (track.closest(".cc") as HTMLElement).clientWidth,
-    );
-    const width = track.clientWidth - overhang;
+    // With --cc-bleed or --cc-bleed-start the track overhangs the carousel's column: a page is what fits in the
+    // column, and it rests lined up with the column's start.
+    const column = track.closest(".cc") as HTMLElement;
+    const width = track.clientWidth - Math.max(0, track.offsetWidth - column.clientWidth);
     const bounds = track.getBoundingClientRect();
     const scale = bounds.width / track.offsetWidth || 1;
     const direction = rtl(track) ? -1 : 1;
     const scrolled = direction * track.scrollLeft;
     const inset =
-      direction === -1 ? track.offsetWidth - width - track.clientLeft : track.clientLeft;
+      direction === -1
+        ? track.offsetWidth - track.clientWidth - track.clientLeft
+        : track.clientLeft;
     const origin = direction === -1 ? bounds.right : bounds.left;
+    const columnBounds = column.getBoundingClientRect();
+    const lead = Math.max(
+      0,
+      (direction * ((direction === -1 ? columnBounds.right : columnBounds.left) - origin)) / scale -
+        inset,
+    );
     const panels = slides.map((slide) => slide.getBoundingClientRect());
     const first = panels[0]!;
     const starts = panels.map((panel) => {
       const edge = direction === -1 ? panel.right : panel.left;
-      return (direction * (edge - origin)) / scale - inset + scrolled;
+      return (direction * (edge - origin)) / scale - inset + scrolled - lead;
     });
     const pitch = starts.length > 1 ? starts[1]! - starts[0]! : 0;
     const shown =
