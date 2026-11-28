@@ -112,6 +112,28 @@ describe("::question", () => {
     expect(new Set(Object.values(before)).size).toBe(3);
   });
 
+  it("keeps the keys it gave before options could break lines", async () => {
+    // Recorded from the release before multi-line options; hosts store answers by these.
+    const keys = rows((await run(question())).html).map((option) => option.key);
+    expect(keys.toSorted()).toEqual(["15pkdb9", "1o20d45", "ho7ax1"]);
+  });
+
+  it("renders a newline inside an option as a line break, keyed like the same option on one line", async () => {
+    const broken = await run(
+      "::question{#q}\nPick.\n\n- [x] Right\n  on two lines\n- [ ] Wrong\n  > No.\n::",
+    );
+    expect(broken.issues).toEqual([]);
+    expect(broken.html).toContain(
+      '<span class="cqz-label" data-slot="label">Right<br>on two lines</span>',
+    );
+    const one = await run(
+      "::question{#q}\nPick.\n\n- [x] Right on two lines\n- [ ] Wrong\n  > No.\n::",
+    );
+    expect(rows(broken.html).map((option) => option.key)).toEqual(
+      rows(one.html).map((option) => option.key),
+    );
+  });
+
   it("keeps the author's order with shuffle off", async () => {
     const { html, issues } = await run(question('{#event-loop shuffle="false"}'));
     expect(issues).toEqual([]);
@@ -190,6 +212,25 @@ describe("::poll", () => {
       '<span class="cqz-notice" data-slot="notice">Voting needs a host that collects votes.</span>',
     );
     expect(html).toContain('<span class="cqz-total" data-slot="total" role="status"></span>');
+  });
+
+  it("keeps its keys, and renders a newline inside an option as a line break", async () => {
+    expect(rows((await run(poll())).html).map((option) => option.key)).toEqual([
+      "45pmq4",
+      "10d9pvm",
+      "896mm6",
+    ]);
+    const { html, issues } = await run(
+      "::poll{#p}\nPick.\n\n- [ ] Web Workers\n  off the main thread, **in\n  bold**\n- [ ] Streams\n::",
+    );
+    expect(issues).toEqual([]);
+    expect(html).toContain(
+      '<span class="cqz-label" data-slot="label">Web Workers<br>off the main thread, <strong>in<br>bold</strong></span>',
+    );
+    const one = await run(
+      "::poll{#p}\nPick.\n\n- [ ] Web Workers off the main thread, **in bold**\n- [ ] Streams\n::",
+    );
+    expect(rows(html)[0]!.key).toBe(rows(one.html)[0]!.key);
   });
 
   it("renders as closed once its closing date has passed", async () => {
@@ -284,7 +325,7 @@ describe("issues", () => {
     ],
     [
       "line-break-option",
-      "::question{#q}\nPick.\n\n- [x] A\n- [ ] B\n  it's wrong\n  > No.\n::",
+      "::question{#q}\nPick.\n\n- [x] A\n- [ ] B\n  it's wrong\n::",
       '`::question` 1 (`#q`): the option "B" runs onto a second line',
     ],
     [

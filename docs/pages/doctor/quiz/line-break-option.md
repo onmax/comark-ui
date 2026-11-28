@@ -1,4 +1,4 @@
-A line under an option without `>` joins the option's own text, so the reader sees the reason before they answer. Start the line with `>` to make it the option's reason.
+A line under an option without `>` is a second line of the option's own text. On a wrong option with no reason, it's usually the reason missing its `>`, and the reader would see it before they answer. Start the line with `>` to make it the option's reason. An option with a reason, or a right one, can break its text onto two lines.
 
 ::incorrect
 ```md

@@ -2,7 +2,7 @@ import type { ElementNode, Node } from "comark";
 import { resolveAttributes } from "comark/render";
 import { textContent } from "comark/utils";
 import type { QuizLabels } from "./labels.ts";
-import { hash, text } from "../../../shared/text.ts";
+import { hash, scalar, text } from "../../../shared/text.ts";
 import { childrenOf, isElement } from "../../../shared/nodes.ts";
 
 export type Kind = "question" | "poll" | "recall";
@@ -83,7 +83,15 @@ function random(seed: number) {
   };
 }
 
-type Option = { key: string; text: string; correct: boolean; label: Node[]; rationale: Node[] };
+type Option = {
+  key: string;
+  text: string;
+  /** The option's own line as written, soft newlines included, which the checks read. */
+  own: string;
+  correct: boolean;
+  label: Node[];
+  rationale: Node[];
+};
 
 const INLINE = new Set([
   "a",
@@ -122,6 +130,21 @@ const isList = (node: Node): node is ElementNode =>
 const textOf = (nodes: Node[]) => nodes.map((node) => textContent(node)).join("");
 const words = (nodes: Node[]) => textOf(nodes).replace(/\s+/g, " ").trim();
 
+// Code keeps its newlines as they are.
+const VERBATIM = new Set(["code", "pre"]);
+// Markdown joins a soft newline into a space, but a line an author breaks in an option is part of how it reads.
+function breakLines(nodes: Node[]): Node[] {
+  return nodes.flatMap((node): Node[] => {
+    if (isElement(node))
+      return VERBATIM.has(node[0]) || node[1].$?.html
+        ? [node]
+        : [[node[0], node[1], ...breakLines(childrenOf(node))]];
+    const line = scalar(node);
+    if (line === undefined) return [node];
+    return line.split("\n").flatMap((part, at) => (at ? [["br", {}], part] : [part]));
+  });
+}
+
 // The checkbox drops out. A tight item holds it beside the text, and a loose one, or one with a rationale, inside a `p`.
 function readOption(item: ElementNode): Omit<Option, "key"> | undefined {
   const children = childrenOf(item);
@@ -141,9 +164,11 @@ function readOption(item: ElementNode): Omit<Option, "key"> | undefined {
   const quotes = rest.filter((node) => isElement(node) && node[0] === "blockquote");
   const label = [...line, ...rest.filter((node) => !quotes.includes(node))];
   return {
+    // From the label before its line breaks, so keys stay what they were when a newline was a space.
     text: words(label),
+    own: textOf(label.filter(isInline)).trim(),
     correct: isCheckbox(first) && checked(first),
-    label,
+    label: breakLines(label),
     rationale: quotes.flatMap((node) => (isElement(node) ? childrenOf(node) : [])),
   };
 }
@@ -209,8 +234,7 @@ function checkOptions(kind: Kind, name: string, options: Option[], walk: Walk) {
         `${name}: the option ${quote(option.text)} points at other options by place, and options are shuffled. Write out what it means.`,
       );
     // A reason that lost its `>` is reported as that, not as a missing reason.
-    const broken = textOf(option.label.filter(isInline)).trim().includes("\n");
-    if (!option.correct && !option.rationale.length && !broken)
+    if (!option.correct && !option.rationale.length && !option.own.includes("\n"))
       problem(
         "comark/quiz/missing-rationale",
         `${name}: the wrong option ${quote(option.text)} doesn't say why it's wrong. Add a \`>\` line under it.`,
@@ -218,17 +242,23 @@ function checkOptions(kind: Kind, name: string, options: Option[], walk: Walk) {
   }
 }
 
-function checkText(name: string, options: Option[], content: Node[], walk: Walk) {
+function checkText(kind: Kind, name: string, options: Option[], content: Node[], walk: Walk) {
   for (const option of options) {
-    const line = option.label.filter(isInline);
-    const own = textOf(line).trim();
+    const { own } = option;
     const slot = SWALLOWED.exec(own)?.[1] ?? SWALLOWED.exec(textOf(option.rationale))?.[1];
     if (slot)
       walk.issues.push({
         rule: "comark/quiz/swallowed-slot",
         message: `${name}: \`#${slot}\` is inside the option ${quote(option.text)}, because the blank line before it is missing. Leave a blank line before \`#${slot}\`.`,
       });
-    else if (own.includes("\n"))
+    // A line break is an option's own, except on a wrong one with no reason, where the second line is probably that
+    // reason without its `>`.
+    else if (
+      kind === "question" &&
+      !option.correct &&
+      !option.rationale.length &&
+      own.includes("\n")
+    )
       walk.issues.push({
         rule: "comark/quiz/line-break-option",
         message: `${name}: the option ${quote(own.split("\n")[0]!)} runs onto a second line, which is probably a rationale without its \`>\`. Start that line with \`> \`.`,
@@ -310,7 +340,7 @@ function quiz(node: ElementNode, kind: Kind, walk: Walk): string {
       message: `${name} has no options. Write each one as a task-list item, ${kind === "question" ? "`- [ ]` for a wrong one and `- [x]` for the right one" : "`- [ ] ...`"}, after the prompt.${content.some(isList) ? " A plain list isn't read as options." : ""}`,
     });
   if (kind !== "recall" && options.length) checkOptions(kind, name, options, walk);
-  checkText(name, options, [...prompt, ...after], walk);
+  checkText(kind, name, options, [...prompt, ...after], walk);
   if (kind === "recall" && !slots.get("answer")?.length)
     walk.issues.push({
       rule: "comark/quiz/missing-answer",
