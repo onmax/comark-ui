@@ -1,7 +1,7 @@
 ---
 title: Social
-description: Posts from X, Bluesky, Mastodon, Threads, and LinkedIn as static cards, written in Markdown.
-keywords: social, post, tweet, X, Twitter, Bluesky, Mastodon, Threads, LinkedIn, quote post, static embed, social card, feedback
+description: Posts from X, Bluesky, Mastodon, Threads, and LinkedIn as static cards, and direct messages as a chat, written in Markdown.
+keywords: social, post, tweet, direct message, DM, chat, conversation, X, Twitter, Bluesky, Mastodon, Threads, LinkedIn, quote post, static embed, social card, feedback
 tagline: A post from X, Bluesky, Mastodon, Threads, LinkedIn, or any site, as a static card with its counts.
 group: Review blocks
 icon: message-circle
@@ -38,6 +38,24 @@ Reminder: the meetup moved to Thursday. Bring your laptop if you want help with 
 ::
 ```
 :::
+
+:::example{label="Conversation"}
+```md
+::conversation{me="Mira" platform="x" request}
+:::message{from="Theo Lin" avatar="/pond.svg" time="2026-11-27T16:02:00Z"}
+Hi! I maintain the docs theme you forked. Would you send the Safari fix upstream?
+:::
+
+:::message{from="Theo Lin"}
+Happy to review it this week.
+:::
+
+:::message{from="Mira" time="2026-11-27T16:20:00Z"}
+Sure, I'll open a PR tonight.
+:::
+::
+```
+:::
 ::
 
 ## Features
@@ -47,6 +65,7 @@ Reminder: the meetup moved to Thursday. Bring your laptop if you want help with 
 - No iframe, no script, and no request when the page opens, so a quoted post stays as it was even after it's deleted.
 - `@handles` and `#tags` link to the platform, a nested `:::post` is the quoted post, and images in a paragraph of their own are a grid.
 - With the `fetch` option, `::post{url="…"}` alone is filled from X, Bluesky, or Mastodon while parsing, with its pictures inlined.
+- `::conversation` draws direct messages as a chat: your messages on the right in the primary color, everyone else's on the left by their avatar.
 - A screen reader hears "Post by Mira Okafor on X", the full date, and each count in words.
 
 ## Usage
@@ -146,6 +165,50 @@ The sidebar flickers on Safari 27.1 when it opens.
 ```
 ::
 
+### Conversation
+
+Write direct messages as `:::message` blocks inside `::conversation`, each with who sent it in `from`. The messages whose `from` is the conversation's `me` sit on the right in the primary color; the others sit on the left by their sender's avatar, or initial. One sender's messages in a row are grouped, with the avatar by the last one. In a group chat or a conversation with a custom title, the incoming sender's name appears above the first message in each run.
+
+::example
+```md
+::conversation{me="Ada" platform="bluesky"}
+:::message{from="Grace" avatar="/pond.svg" time="2026-11-28T09:30:00Z"}
+Did the release go out?
+:::
+
+:::message{from="Ada" time="2026-11-28T09:41:00Z"}
+It did, this morning.
+:::
+
+:::message{from="Ada"}
+The changelog is on the docs site.
+:::
+::
+```
+::
+
+The header shows `title`, or the names of the others in the conversation, and the platform's logo. Use `request` to show the "Message request" pill a platform shows on a message from someone you don't follow. With three people or more, each run of messages on the left starts with its sender's name.
+
+::example
+```md
+::conversation{me="Ada" title="Release crew" platform="x"}
+:::message{from="Grace"}
+Tagging v0.15 now.
+:::
+
+:::message{from="Linus"}
+Docs are deployed.
+:::
+
+:::message{from="Ada"}
+Thanks both!
+:::
+::
+```
+::
+
+A message's text is Markdown, and images in a paragraph of their own show in the bubble. `avatar` and `time` read like a post's: one message's avatar shows by all of that sender's messages, and a time with the time of day shows it after the date.
+
 ## Examples
 
 ### Fill a post from its link
@@ -202,6 +265,23 @@ Links with a trailing slash 404 on 0.14.2.
 | `views` | — | Views. |
 | `bookmarks` | — | Bookmarks. |
 
+### Conversation props
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| `me` | — | The `from` of your own messages, which sit on the right. |
+| `platform` | `generic` | The logo in the header: `x`, `bluesky`, `mastodon`, `threads`, `linkedin`, or `generic`. |
+| `title` | the others' names | The header's title. |
+| `request` | `false` | Shows a "Message request" pill in the header. |
+
+### Message props
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| `from` | — | Who sent it. |
+| `avatar` | — | The sender's picture: an https address, a path, or a `data:image/` URI. |
+| `time` | — | When it was sent, as an ISO date or instant. |
+
 ### Options
 
 | Option | Default | Description |
@@ -230,6 +310,7 @@ The plugin adds these problems to `meta.issues`, as [Validation](/guide/validati
 - A `time` that isn't a date. It shows as written.
 - A post with no `author` or `handle`.
 - More than one `:::post` in a post, or a post inside a quoted post. Only the first quote shows.
+- A block in a `::conversation` other than a `:::message`, which is left out, a conversation with no messages, and a message with no `from`.
 - With `fetch`, a post or a picture that couldn't be fetched, and a picture larger than `maxImageSize`.
 
 Each issue names the block and the fix, and has its own rule in [Doctor](/doctor):
@@ -272,8 +353,8 @@ The card reads these [shared tokens](/guide/theming):
 | `--comark-foreground` | The text and the logo |
 | `--comark-muted` | The handle, the date, and the counts |
 | `--comark-border` | The card's edge, the quoted post, and the gaps in the grid |
-| `--comark-accent` | The initial's circle, code, and a picture still loading |
-| `--comark-primary` | Links, `@handles`, and `#tags` |
+| `--comark-accent` | The initial's circle, code, a picture still loading, and the others' messages |
+| `--comark-primary` | Links, `@handles`, `#tags`, and your own messages |
 | `--comark-ring` | The focus ring |
 | `--comark-radius` | The corners |
 | `--comark-font` | The text |
@@ -289,6 +370,10 @@ The card reads these [shared tokens](/guide/theming):
 | `.csl-text` | The text |
 | `.csl-media` | The pictures; `[data-count]` is how many show, up to 4 |
 | `.csl-counts`, `.csl-count` | The counts; `[data-count]` names each one |
+| `.csl-chat` | A conversation's card; `[data-platform]` names the platform and `[data-request]` marks a message request |
+| `.csl-chat-head`, `.csl-chat-title`, `.csl-request` | The header, its title, and the "Message request" pill |
+| `.csl-messages`, `.csl-message` | The list of messages and each one; `[data-me]` marks yours, `[data-start]` and `[data-end]` the first and last of a run |
+| `.csl-bubble`, `.csl-from` | A message's bubble and its visible sender name, when shown |
 
 ```css
 .csl {

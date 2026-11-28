@@ -53,8 +53,8 @@ const plugins = () => [
   include({ root: files }),
 ];
 // comark-tabs turns `::code-group` into `::tabs`, comark-metrics `::stats` into a table, comark-time `:time` into `relative-time`, comark-include and comark-xref
-// replace `:include` and `:ref`, and comark-details turns its items and collapsibles into `disclosure` while parsing,
-// so no renderer has them.
+// replace `:include` and `:ref`, comark-details turns its items and collapsibles into `disclosure`, and comark-social
+// draws each `:::message` into its conversation while parsing, so no renderer has them.
 const known = [
   ...Object.keys(components),
   "code-group",
@@ -65,6 +65,7 @@ const known = [
   "time",
   "accordion-item",
   "collapsible",
+  "message",
 ];
 
 // Links to files are checked only in a document with a path, so broken-link's examples lint as a page in

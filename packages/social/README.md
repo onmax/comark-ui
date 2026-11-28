@@ -5,7 +5,7 @@
 [![license](https://comark-ui.onmax.me/badge.svg?label=license&value=MIT)](https://npmx.dev/package/comark-social)
 [![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=comark-ui.onmax.me)](https://comark-ui.onmax.me/social)
 
-Posts from X, Bluesky, Mastodon, Threads, LinkedIn, or any site as static cards: the author, the text, the pictures, a quoted post, and the counts in the platform's order, with its logo. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
+Posts from X, Bluesky, Mastodon, Threads, LinkedIn, or any site as static cards: the author, the text, the pictures, a quoted post, and the counts in the platform's order, with its logo. Direct messages as a chat. A [Comark](https://comark.dev) plugin for HTML, Vue, React, and Svelte.
 
 ```sh
 pnpm add comark comark-social
@@ -27,6 +27,20 @@ just setting up my twttr
 ```
 
 The platform comes from `url`, or from `platform` (`x`, `bluesky`, `mastodon`, `threads`, `linkedin`, or `generic`). The card has no iframe and no script, and the page asks no one for anything but the pictures.
+
+Direct messages go in `::conversation`, with your own messages on the right:
+
+```md
+::conversation{me="Ada" platform="x"}
+:::message{from="Grace"}
+Did the release go out?
+:::
+
+:::message{from="Ada"}
+It did, this morning.
+:::
+::
+```
 
 With `social({ fetch: true })`, X and Bluesky posts are filled from their public APIs while parsing, and pictures from their known image origins are inlined. What's written wins. For Mastodon or other image origins, provide a trusted `request` transport that enforces egress policy on every API, image, and redirect request. Do not use an unrestricted transport for untrusted content. `fetchPost(url, { request })` returns the post data for a script of your own. Static rendering needs no transport.
 
