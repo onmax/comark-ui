@@ -81,7 +81,7 @@ function line(value: string) {
   let out = "";
   let at = 0;
   for (const match of value.matchAll(URL_PATTERN)) {
-    out += escapeInline(value.slice(at, match.index));
+    out += escapeInline(value.slice(at, match.index)).replace(/!$/, "\\!");
     out += `[${escapeInline(display(match[0]))}](${destination(match[0])})`;
     at = match.index + match[0].length;
   }
@@ -109,26 +109,6 @@ export function textMarkdown(value: string): string {
         .join("\n"),
     )
     .join("\n\n");
-}
-
-// Comark keeps an image's alt as written between the brackets, escapes included, so it can't be escaped there. It
-// reads as written when its brackets pair up and no backslash comes before a bracket or the end.
-function labelSafe(alt: string) {
-  let depth = 0;
-  for (const char of alt) {
-    depth += char === "[" ? 1 : char === "]" ? -1 : 0;
-    if (depth < 0) return false;
-  }
-  return depth === 0 && !/\\(?=[[\]]|$)/.test(alt);
-}
-
-// Otherwise it goes in an `alt` attribute, which has no escapes and which Comark can't bind to JSON on an image. So a
-// backslash at its end is dropped, and in a value with both quotes the double ones become ”.
-function altProp(alt: string) {
-  const value = alt.replace(/\\+$/, "");
-  if (!value.includes('"')) return `alt="${value}"`;
-  if (!value.includes("'")) return `alt='${value}'`;
-  return `alt="${value.replace(/"/g, "”")}"`;
 }
 
 async function picture(
@@ -173,10 +153,10 @@ async function block(
   const media = await Promise.all(
     (post.media ?? []).slice(0, MAX_MEDIA).map(async (item, index) => {
       const src = await picture(item.src, { kind: "media", index, post }, options);
-      const alt = (item.alt ?? (item.video ? "Video" : "")).replace(/\s*\n\s*/g, " ");
-      const label = alt && labelSafe(alt) ? alt : "";
+      const alt = item.alt ?? (item.video ? "Video" : "");
+      const label = /^[\p{L}\p{M}\p{N} .,!?'-]+$/u.test(alt) ? alt : "";
       const attrs = [
-        ...(label ? [] : [altProp(alt)]),
+        ...(label ? [] : [prop("alt", alt)]),
         ...(item.video ? ["video"] : []),
         ...(item.width && item.height ? [`width="${item.width}"`, `height="${item.height}"`] : []),
       ];

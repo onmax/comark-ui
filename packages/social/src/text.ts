@@ -87,14 +87,24 @@ function inline(nodes: Node[], linking: Linking): Node[] {
   });
 }
 
-// `![…](still.jpg){video}` is a video's still, drawn with a play mark as a fetched video is.
-function video(node: ElementNode): ElementNode {
+function writtenMedia(node: ElementNode): ElementNode {
   const [tag, attrs, ...children] = node;
-  if (tag !== "img" || !(":video" in attrs || "video" in attrs)) return node;
-  const rest = Object.fromEntries(
-    Object.entries(attrs).filter(([key]) => key !== ":video" && key !== "video"),
-  );
-  return ["span", { class: "csl-video" }, [tag, rest, ...children]];
+  if (tag !== "img") return node;
+  const { ":video": boundVideo, video, ...rest } = attrs;
+  const boundAlt = rest[":alt"];
+  if (typeof boundAlt === "string" && boundAlt.startsWith('"')) {
+    try {
+      const alt: unknown = JSON.parse(boundAlt);
+      if (typeof alt === "string") {
+        delete rest[":alt"];
+        rest.alt = alt;
+      }
+    } catch {}
+  }
+  const image: ElementNode = [tag, rest, ...children];
+  return boundVideo !== undefined || video !== undefined
+    ? ["span", { class: "csl-video" }, image]
+    : image;
 }
 
 const blank = (node: Node) => typeof node === "string" && !node.trim();
@@ -112,7 +122,7 @@ export function readBody(nodes: Node[], linking: Linking): { text: Node[]; media
     const content = children.filter((child) => !blank(child));
     if (content.length && content.every(isMedia)) {
       // SAFETY: isMedia passed for every node, so each is an element.
-      media.push(...(content as ElementNode[]).map(video));
+      media.push(...(content as ElementNode[]).map(writtenMedia));
       return;
     }
     // Comark leaves the line breaks at a paragraph's ends, which would draw an empty line.

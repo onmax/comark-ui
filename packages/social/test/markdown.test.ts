@@ -136,6 +136,7 @@ describe("postMarkdown", () => {
   });
 
   const texts = [
+    "Docs!https://example.com/docs",
     `He said "hi", 'bye', and it's fine`,
     "{curly} {{ binding }} {++critic++} {--gone--} word{.class} [span]{#id}",
     "::post\n:::thread\n::\n:::\n::post{author=x}",
@@ -171,6 +172,25 @@ describe("postMarkdown", () => {
     expect(post.text).toBe(text);
     const { fetched, written, markdown } = await bothWays(X, post);
     expect(fetched.issues).toEqual([]);
+    expect(written.issues).toEqual([]);
+    expect(written.html, markdown).toBe(fetched.html);
+  });
+
+  it.each([
+    "The `[` key is paired with ]",
+    `Both "double" and 'single'\nEnds with a backslash\\`,
+    "Line one\n\n::\nLine two",
+  ])("writes a fetched photo without changing its alt text: %j", async (alt) => {
+    answers.set("https://api.fxtwitter.com/i/status/1856000000000000000", {
+      tweet: {
+        ...tweet("A photo").tweet,
+        media: { photos: [{ url: "https://pbs.twimg.com/chart.png", altText: alt }] },
+      },
+    });
+    const post = await fetchPost(X, { request });
+    expect(post.media?.[0]?.alt).toBe(alt);
+    const { fetched, written, markdown } = await bothWays(X, post);
+    expect(fetched.html).toContain('<img src="https://pbs.twimg.com/chart.png"');
     expect(written.issues).toEqual([]);
     expect(written.html, markdown).toBe(fetched.html);
   });
@@ -253,7 +273,7 @@ describe("postMarkdown", () => {
     expect(markdown).toContain('avatar="./Ada-avatar-0 (1).png"');
     expect(markdown).toContain(
       [
-        "![A [chart] of *speed*](<./Ada-media-0 (1).png>)",
+        '![](<./Ada-media-0 (1).png>){alt="A [chart] of *speed*"}',
         '![](https://pbs.twimg.com/b.png){alt=""}',
         "![Video](<./Ada-media-2 (1).png>){video}",
         "![](<./Ada-media-3 (1).png>){alt='Step 1] of \"2\"'}",
