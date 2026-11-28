@@ -41,6 +41,11 @@ export const componentInfo = {
       id,
       multiple: { type: "boolean", description: "Shows checkboxes." },
       closes: { type: "string", description: "An ISO date, after which the poll shows as closed." },
+      note: {
+        type: "string",
+        description:
+          "Adds a note field sent with the vote. A value replaces the field's placeholder.",
+      },
     },
   },
   recall: {

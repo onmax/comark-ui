@@ -25,6 +25,16 @@ export type QuizLabels = {
   closed: string;
   /** The pill on a poll option marked `{recommended}` with no text of its own. */
   recommended: string;
+  /** The button that opens a poll's note field, before and after the reader has a note. */
+  addNote: string;
+  editNote: string;
+  /** The note field's placeholder and name, unless the poll's `note` prop gives its own. */
+  notePlaceholder: string;
+  sendNote: string;
+  /** Read before the reader's note under their vote. */
+  yourNote: string;
+  /** Under a poll when its note is sent before a vote. */
+  pickFirst: string;
 };
 
 export const DEFAULT_LABELS: QuizLabels = {
@@ -47,4 +57,10 @@ export const DEFAULT_LABELS: QuizLabels = {
   noHost: "Voting needs a host that collects votes.",
   closed: "Voting closed",
   recommended: "Recommended",
+  addNote: "Add a note",
+  editNote: "Edit note",
+  notePlaceholder: "Add a note to your vote",
+  sendNote: "Send note",
+  yourNote: "Your note",
+  pickFirst: "Pick an option to send your note",
 };

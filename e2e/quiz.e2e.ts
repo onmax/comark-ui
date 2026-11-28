@@ -213,6 +213,154 @@ test("a poll waits for a host, then votes, shows its results, and changes the vo
   await expect(page.locator(".cqz")).toHaveAttribute("data-results", "");
 });
 
+const notePoll = poll.replace("::poll{#next-topic}", "::poll{#next-topic note}");
+const mine = (page: Page) => page.locator(".cqz-mine");
+
+test("a note goes with the vote, shows under the reader's pick, and an edit replaces it", async ({
+  page,
+}) => {
+  await open(page, notePoll);
+  const toggle = page.getByRole("button", { name: "Add a note" });
+  await expect(toggle).toBeHidden();
+  await send(page, { answers: {}, voting: { open: true } });
+  await expect(toggle).toBeVisible();
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+
+  await toggle.click();
+  const field = page.getByRole("textbox", { name: "Add a note to your vote" });
+  await expect(field).toBeFocused();
+  await field.fill("Streams would fix my uploads\nand my imports");
+  await option(page, "Streams").click();
+  const streams = await keyOf(page, "Streams");
+  expect(await answers(page)).toEqual([
+    {
+      id: "next-topic",
+      kind: "poll",
+      choice: [streams],
+      correct: null,
+      first: true,
+      note: "Streams would fix my uploads\nand my imports",
+    },
+  ]);
+  await expect(field).toBeHidden();
+  await expect(option(page, "Streams").locator(".cqz-mine")).toHaveText(
+    "Your note: Streams would fix my uploads\nand my imports",
+  );
+  await expect(mine(page)).toBeVisible();
+  const radio = page.getByRole("radio", { name: "Streams" });
+  await expect(radio).toHaveAccessibleDescription(/Your note: Streams would fix my uploads/);
+
+  // Editing after the vote sends the same vote with the new note, which replaces the old one.
+  await page.getByRole("button", { name: "Edit note" }).click();
+  await expect(field).toHaveValue("Streams would fix my uploads\nand my imports");
+  await field.fill("Only uploads");
+  await page.keyboard.press("ControlOrMeta+Enter");
+  expect((await answers(page)).at(-1)).toEqual({
+    id: "next-topic",
+    kind: "poll",
+    choice: [streams],
+    correct: null,
+    first: false,
+    note: "Only uploads",
+  });
+  await expect(mine(page)).toHaveText("Your note: Only uploads");
+  await expect(page.getByRole("button", { name: "Edit note" })).toBeFocused();
+
+  // Escape closes the field without sending.
+  await page.getByRole("button", { name: "Edit note" }).click();
+  await field.fill("Never sent");
+  await page.keyboard.press("Escape");
+  await expect(field).toBeHidden();
+  expect(await answers(page)).toHaveLength(2);
+  await expect(mine(page)).toHaveText("Your note: Only uploads");
+
+  // An empty note takes it back, and a changed vote keeps the note.
+  await page.getByRole("button", { name: "Edit note" }).click();
+  await expect(field).toHaveValue("Only uploads");
+  await field.fill("Faster builds");
+  await page.getByRole("button", { name: "Send note" }).click();
+  await page.getByRole("button", { name: "Change vote" }).click();
+  await expect(mine(page)).toBeHidden();
+  await option(page, "Caching").click();
+  const caching = await keyOf(page, "Caching");
+  expect((await answers(page)).at(-1)).toMatchObject({ choice: [caching], note: "Faster builds" });
+  await expect(option(page, "Caching").locator(".cqz-mine")).toHaveText("Your note: Faster builds");
+  await page.getByRole("button", { name: "Edit note" }).click();
+  await field.fill("  ");
+  await page.getByRole("button", { name: "Send note" }).click();
+  expect((await answers(page)).at(-1)).toMatchObject({ choice: [caching], note: "" });
+  await expect(mine(page)).toBeHidden();
+  await expect(page.getByRole("button", { name: "Add a note" })).toBeVisible();
+});
+
+test("a note sent before a vote asks for one, and goes with the vote that follows", async ({
+  page,
+}) => {
+  await open(page, notePoll);
+  await send(page, { answers: {}, voting: { open: true } });
+  await page.getByRole("button", { name: "Add a note" }).click();
+  await page.getByRole("textbox").fill("Workers, for the image resizing");
+  await page.getByRole("button", { name: "Send note" }).click();
+  expect(await answers(page)).toEqual([]);
+  await expect(page.getByText("Pick an option to send your note")).toBeVisible();
+  await expect(page.getByRole("radio").first()).toBeFocused();
+  await option(page, "Workers").click();
+  expect(await answers(page)).toMatchObject([{ note: "Workers, for the image resizing" }]);
+  await expect(page.getByText("Pick an option to send your note")).toBeHidden();
+
+  // A vote with no note sends an empty one.
+  await open(page, notePoll);
+  await send(page, { answers: {}, voting: { open: true } });
+  await option(page, "Streams").click();
+  expect(await answers(page)).toMatchObject([{ note: "" }]);
+  await expect(mine(page)).toBeHidden();
+});
+
+test("a host's state restores the reader's note, and one that leaves note out keeps it", async ({
+  page,
+}) => {
+  await open(page, notePoll);
+  const streams = await keyOf(page, "Streams");
+  const state: QuizState = {
+    answers: { "next-topic": { choice: [streams!], note: "From last week" } },
+    voting: { open: true },
+  };
+  await open(page, notePoll, {
+    before: `<script>window.__comarkQuizState=${JSON.stringify(state)}</script>`,
+  });
+  await expect(option(page, "Streams").locator(".cqz-mine")).toHaveText(
+    "Your note: From last week",
+  );
+  await page.getByRole("button", { name: "Edit note" }).click();
+  await expect(page.getByRole("textbox")).toHaveValue("From last week");
+  await page.keyboard.press("Escape");
+
+  await send(page, { answers: { "next-topic": { choice: [streams!] } } });
+  await expect(mine(page)).toHaveText("Your note: From last week");
+  await send(page, { answers: { "next-topic": { choice: [streams!], note: "Edited elsewhere" } } });
+  await expect(mine(page)).toHaveText("Your note: Edited elsewhere");
+  await send(page, { answers: { "next-topic": { choice: [streams!], note: "" } } });
+  await expect(mine(page)).toBeHidden();
+  expect(await answers(page)).toEqual([]);
+
+  // Once voting closes, the field goes, and the note stays under the pick.
+  await send(page, {
+    answers: { "next-topic": { choice: [streams!], note: "Still mine" } },
+    voting: { open: false },
+  });
+  await expect(page.locator(".cqz")).toHaveAttribute("data-state", "closed");
+  await expect(page.getByRole("button", { name: "Edit note" })).toBeHidden();
+  await expect(mine(page)).toHaveText("Your note: Still mine");
+});
+
+test("without the script, or without a host, a poll shows no note field", async ({ page }) => {
+  await open(page, notePoll, { script: false });
+  await expect(page.locator(".cqz-note")).toBeHidden();
+  await expect(page.getByRole("textbox")).toHaveCount(0);
+  await open(page, notePoll);
+  await expect(page.locator(".cqz-note")).toBeHidden();
+});
+
 test("a host closes voting, and an empty choice takes a vote back", async ({ page }) => {
   await open(page, poll);
   const streams = await keyOf(page, "Streams");
@@ -353,6 +501,51 @@ test("with data-quiz-relay, a framed lesson posts its events to the parent and t
       type: "comark-quiz:answer",
       detail: { id: "next-topic", kind: "poll", choice: [streams], correct: null, first: true },
     });
+});
+
+test("with data-quiz-relay, a framed poll posts its note to the parent and restores it from state", async ({
+  page,
+}) => {
+  const lesson = `<!doctype html><html lang="en" data-quiz-relay="*"><body>${await render(notePoll)}</body></html>`;
+  await page.goto("/no-such-page");
+  await page.setContent(
+    `<!doctype html><script>window.messages=[];addEventListener("message",(e)=>{messages.push(e.data);if(e.data.type==="comark-quiz:ready")e.source.postMessage({type:"comark-quiz:state",detail:{voting:{open:true}}},"*")})</script><iframe srcdoc="${lesson.replaceAll("&", "&amp;").replaceAll('"', "&quot;")}" style="width:40rem;height:30rem"></iframe>`,
+  );
+  const frame = page.frameLocator("iframe");
+  const messages = () =>
+    page.evaluate(() => (window as unknown as { messages: unknown[] }).messages);
+  await frame.getByRole("button", { name: "Add a note" }).click();
+  await frame.getByRole("textbox").fill("From the frame");
+  await frame.locator(".cqz-option", { hasText: "Streams" }).click();
+  const streams = await frame
+    .locator(".cqz-option", { hasText: "Streams" })
+    .first()
+    .getAttribute("data-key");
+  await expect
+    .poll(async () => (await messages()).at(-1))
+    .toEqual({
+      type: "comark-quiz:answer",
+      detail: {
+        id: "next-topic",
+        kind: "poll",
+        choice: [streams],
+        correct: null,
+        first: true,
+        note: "From the frame",
+      },
+    });
+  await page.evaluate(
+    (choice) =>
+      document.querySelector("iframe")!.contentWindow!.postMessage(
+        {
+          type: "comark-quiz:state",
+          detail: { answers: { "next-topic": { choice, note: "From the parent" } } },
+        },
+        "*",
+      ),
+    [streams!],
+  );
+  await expect(frame.locator(".cqz-mine")).toHaveText("Your note: From the parent");
 });
 
 for (const relay of ["data-quiz-relay", 'data-quiz-relay=""']) {

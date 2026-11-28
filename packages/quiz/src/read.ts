@@ -16,7 +16,7 @@ export type Data = Parameters<typeof resolveAttributes>[1];
 const KINDS: readonly string[] = ["question", "poll", "recall"];
 const PROPS: Record<Kind, readonly string[]> = {
   question: ["id", "multiple", "number", "shuffle"],
-  poll: ["id", "multiple", "closes"],
+  poll: ["id", "multiple", "closes", "note"],
   recall: ["id", "number"],
 };
 const SLOTS: Record<Kind, readonly string[]> = {
@@ -408,6 +408,9 @@ function quiz(node: ElementNode, kind: Kind, walk: Walk): string {
   if (kind !== "poll" && !isOff(attrs.number)) root.number = String(++walk.number);
   if (multiple) root.multiple = "true";
   if (kind === "poll" && closes && !Number.isNaN(Date.parse(closes))) root.closes = closes;
+  // `{note}` asks for the default label, and `note="Why?"` for its own.
+  if (kind === "poll" && attrs.note !== undefined && !isOff(attrs.note))
+    root.note = isOn(attrs.note) ? "" : text(attrs.note);
   const className = text(attrs.class);
   if (className) root.class = className;
   if (walk.labels) root.labels = walk.labels;
