@@ -3,7 +3,12 @@ export type SocialRequest = (url: URL, init: RequestInit) => Promise<Response>;
 
 const origins = {
   post: new Set(["https://api.fxtwitter.com", "https://public.api.bsky.app"]),
-  image: new Set(["https://pbs.twimg.com", "https://cdn.bsky.app"]),
+  image: new Set([
+    "https://pbs.twimg.com",
+    "https://cdn.bsky.app",
+    "https://video.bsky.app",
+    "https://video.cdn.bsky.app",
+  ]),
 };
 const redirects = new Set([301, 302, 303, 307, 308]);
 

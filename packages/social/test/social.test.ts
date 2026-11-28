@@ -265,6 +265,23 @@ describe("fetch", () => {
     expect(requests).toContain(api);
   });
 
+  it("inlines a URL-less written quote's avatar after fetching its parent, but not its body images", async () => {
+    const api = "https://api.fxtwitter.com/i/status/410";
+    const avatar = "https://pbs.twimg.com/written-quote.png";
+    const picture = "https://pbs.twimg.com/written-quote-picture.png";
+    answers.set(api, json({ tweet: { author: { name: "Ada" }, text: "Fetched parent" } }));
+    answers.set(avatar, image());
+    const { html, meta } = await render(
+      `::post{url="https://x.com/ada/status/410"}\n:::post{author="Grace" avatar="${avatar}"}\n![Written picture](${picture})\n:::\n::`,
+      { fetch: true },
+    );
+    expect(requests).toEqual([api, avatar]);
+    expect(meta.issues ?? []).toEqual([]);
+    expect(html).toContain('data-quote aria-label="Post by Grace on X"');
+    expect(html).toContain('<img class="csl-avatar" src="data:image/png;base64,iVBORw0KGgo="');
+    expect(html).toContain(`<img src="${picture}"`);
+  });
+
   it("limits written and fetched media to four before rendering or downloading", async () => {
     const written = Array.from({ length: 5 }, (_, index) => `![Image](${index}.png)`).join(" ");
     const original = JSON.stringify(await fixture("fxtwitter"));
@@ -349,6 +366,35 @@ describe("fetch", () => {
       '<a href="https://example.com/notes/2026/parser">example.com/notes/2026/parser</a>',
     );
     expect(html).toContain('<div class="csl-media" data-count="2">');
+  });
+
+  it("inlines an official Bluesky video thumbnail after its CDN redirect", async () => {
+    const uri = "at://did:plc:abc123/app.bsky.feed.post/video";
+    const api = `https://public.api.bsky.app/xrpc/app.bsky.feed.getPosts?uris=${encodeURIComponent(uri)}`;
+    const thumbnail = "https://video.bsky.app/watch/did:plc:abc123/video/thumbnail.jpg";
+    const cdn = "https://video.cdn.bsky.app/watch/did:plc:abc123/video/thumbnail.jpg";
+    answers.set(
+      api,
+      json({
+        posts: [
+          {
+            uri,
+            author: { handle: "ada.bsky.social", displayName: "Ada" },
+            record: { text: "A video" },
+            embed: { $type: "app.bsky.embed.video#view", thumbnail, alt: "A video still" },
+          },
+        ],
+      }),
+    );
+    answers.set(thumbnail, new Response(null, { status: 302, headers: { location: cdn } }));
+    answers.set(cdn, image(new Uint8Array([255, 216, 255, 217]), "image/jpeg"));
+    const { html, meta } = await render(
+      '::post{url="https://bsky.app/profile/did:plc:abc123/post/video"}\n::',
+      { fetch: true },
+    );
+    expect(requests).toEqual([api, thumbnail, cdn]);
+    expect(meta.issues ?? []).toEqual([]);
+    expect(html).toContain('<img src="data:image/jpeg;base64,/9j/2Q==" alt="A video still"');
   });
 
   it("fills a Mastodon post from its server, reading its HTML into text", async () => {

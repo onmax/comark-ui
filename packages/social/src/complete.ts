@@ -63,8 +63,14 @@ export async function complete(
   options: CompleteOptions,
   issues: Issue[],
 ): Promise<Post> {
-  const finish = async (written: Post, quoted: boolean, fromResponse: boolean) => {
+  const finish = async (
+    written: Post,
+    quoted: boolean,
+    fromResponse: boolean,
+    parentFetched = false,
+  ) => {
     let filled = written;
+    let didFetch = false;
     let fetchedMedia = fromResponse;
     const url = written.url ? webUrl(written.url) : undefined;
     const platform = url ? platformOf(url) : undefined;
@@ -72,6 +78,7 @@ export async function complete(
     if (options.fetch && !fromResponse && url && hasApi) {
       try {
         filled = merge(written, await fetchPost(url.href, { request: options.request }), !quoted);
+        didFetch = true;
         fetchedMedia = !written.media.length;
       } catch (error) {
         issues.push({
@@ -80,16 +87,19 @@ export async function complete(
         });
       }
     }
-    if (options.fetch && (fromResponse || hasApi))
+    if (options.fetch && (fromResponse || hasApi || parentFetched))
       await inlinePictures(filled, fetchedMedia, options, issues);
-    if (filled.author || filled.handle) return filled;
-    issues.push({
-      rule: "comark/social/missing-author",
-      message: `${filled.name} has no \`author\` or \`handle\`, so the card names no one. Write \`author\`, or give it a \`url\` and turn on the \`fetch\` option.`,
-    });
-    return filled;
+    if (!filled.author && !filled.handle)
+      issues.push({
+        rule: "comark/social/missing-author",
+        message: `${filled.name} has no \`author\` or \`handle\`, so the card names no one. Write \`author\`, or give it a \`url\` and turn on the \`fetch\` option.`,
+      });
+    return { filled, didFetch };
   };
-  const filled = await finish(post, false, false);
-  if (filled.quote) filled.quote = await finish(filled.quote, true, !post.quote);
+  const { filled, didFetch } = await finish(post, false, false);
+  if (filled.quote) {
+    const quote = await finish(filled.quote, true, !post.quote, didFetch);
+    filled.quote = quote.filled;
+  }
   return filled;
 }
