@@ -8,12 +8,19 @@ import { script } from "./script.ts";
 import { css } from "./styles.ts";
 import { attr, inlineScript } from "../../../shared/html.ts";
 
+// Long enough for a sentence or two of why, short enough for a host to store with each vote.
+const NOTE_LENGTH = 500;
+
 export { default, DEFAULT_LABELS } from "./index.ts";
 export type { QuizLabels, QuizMeta, QuizOptions } from "./index.ts";
 export type { QuizAnswer, QuizAnswerDetail, QuizReadyDetail, QuizState } from "./script.ts";
 
 // `<` is escaped, so no label can close the script early.
-const config = JSON.stringify({ labels: DEFAULT_LABELS, icons }).replaceAll("<", "\\u003c");
+const config = JSON.stringify({
+  labels: DEFAULT_LABELS,
+  icons,
+  noteLength: NOTE_LENGTH,
+}).replaceAll("<", "\\u003c");
 const inline = inlineScript(`(${script.toString()})(${config})`);
 
 /**
@@ -47,8 +54,6 @@ async function each<T>(items: T[], render: (item: T) => Promise<string>) {
 // The last child of every block. The parser may hand a long page to the browser in pieces, so the script waits for it
 // before it reads a block.
 const END = '<template class="cqz-end"></template>';
-// Long enough for a sentence or two of why, short enough for a host to store with each vote.
-const NOTE_LENGTH = 500;
 const button = (action: string, variant: string, label: string, extra = "") =>
   `<button type="button" class="cqz-button" data-variant="${variant}" data-action="${action}"${extra}>${label}</button>`;
 

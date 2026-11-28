@@ -40,7 +40,7 @@ declare global {
   }
 }
 
-type ScriptConfig = { labels: QuizLabels; icons: Icons };
+type ScriptConfig = { labels: QuizLabels; icons: Icons; noteLength: number };
 
 /**
  * Upgrades every `.cqz` block on the page, and any added later, from its no-script form into the interactive one,
@@ -104,6 +104,11 @@ export function script(config: ScriptConfig): void {
       : // SAFETY: undefined, null, objects, and arrays returned above, so only a string, number, or boolean is left.
         String(value as string | number | boolean);
   const amount = (value: unknown) => Math.max(0, Number(str(value)) || 0);
+  const normalizeNote = (value: string) => {
+    const trimmed = value.trim();
+    const last = trimmed.codePointAt(config.noteLength - 1) ?? 0;
+    return trimmed.slice(0, config.noteLength - (last > 0xffff ? 1 : 0)).trimEnd();
+  };
   function toAnswer(value: unknown): Answer {
     const fields = new Map(entries(value));
     const choice = fields.get("choice");
@@ -113,7 +118,7 @@ export function script(config: ScriptConfig): void {
       choice: Array.isArray(choice) ? choice.map(str).filter(Boolean) : [],
       correct: correct === true || correct === false ? correct : null,
     };
-    if (note !== undefined) answer.note = str(note).trim();
+    if (note !== undefined) answer.note = normalizeNote(str(note));
     return answer;
   }
 
@@ -284,9 +289,20 @@ export function script(config: ScriptConfig): void {
     }
   }
 
+  const pollClosed = (model: Model) => model.closes <= Date.now() || !voting.open;
+
+  function dismissNote(model: Model) {
+    model.noting = false;
+    model.prompted = false;
+  }
+
   function paintPoll(model: Model) {
     const { labels } = model;
-    const closed = model.closes <= Date.now() || !voting.open;
+    const closed = pollClosed(model);
+    if (closed) {
+      dismissNote(model);
+      model.changing = false;
+    }
     const voted = model.vote !== null && !model.changing;
     const open = hosted && !closed && (!voted || model.multiple);
     model.el.dataset.state = closed ? "closed" : voted ? "voted" : "idle";
@@ -461,7 +477,10 @@ export function script(config: ScriptConfig): void {
     model.live = true;
     model.local = false;
     const answer: Answer = { choice, correct };
-    if (model.noted) answer.note = model.note;
+    if (model.noted) {
+      answer.note = model.note;
+      if (hosted) answers.set(model.id, answer);
+    }
     model.sent = signature(answer);
     const detail: QuizAnswerDetail = {
       id: model.id,
@@ -651,15 +670,20 @@ export function script(config: ScriptConfig): void {
         total: amount(result.get("total")),
       });
     }
-    const sent = new Map(
-      entries(fields.get("answers")).map(([id, value]) => [id, toAnswer(value)]),
-    );
-    for (const [id, answer] of sent) answers.set(id, answer);
+    const sent = new Map<string, Answer>();
+    for (const [id, value] of entries(fields.get("answers"))) {
+      const answer = toAnswer(value);
+      // A host that doesn't keep notes leaves the one on the page alone, including on remount.
+      const previous = first
+        ? all.find((model) => model.id === id && model.local && model.el.isConnected)?.note
+        : answers.get(id)?.note;
+      if (answer.note === undefined && previous !== undefined) answer.note = previous;
+      sent.set(id, answer);
+      answers.set(id, answer);
+    }
     for (const model of all) {
       if (!model.el.isConnected) continue;
-      const given = sent.get(model.id);
-      // A host that doesn't keep notes leaves the one on the page alone.
-      const answer = given && given.note === undefined ? { ...given, note: model.note } : given;
+      const answer = sent.get(model.id);
       let instant = !model.live;
       if (answer && signature(answer) !== model.sent) {
         restore(model, answer);
@@ -734,9 +758,12 @@ export function script(config: ScriptConfig): void {
       paint(model, false);
       announce(model, [action], action === "knew");
     } else if (action === "note") {
-      model.noting = !model.noting;
       const area = field(model);
-      if (model.noting && area) area.value = model.note;
+      if (model.noting) dismissNote(model);
+      else if (area) {
+        model.noting = true;
+        area.value = model.note;
+      }
       paint(model, false);
       focus(model.noting ? area : button);
     } else if (action === "send") sendNote(model);
@@ -745,16 +772,20 @@ export function script(config: ScriptConfig): void {
   // Sending again replaces the note, with the vote it goes with.
   function sendNote(model: Model) {
     if (!hosted) return;
+    if (pollClosed(model)) {
+      paint(model, false);
+      return;
+    }
+    if (!model.noting) return;
     if (!model.vote) {
       model.prompted = true;
       paint(model, false);
       focus(model.inputs[0]);
       return;
     }
-    model.note = field(model)?.value.trim() ?? "";
-    model.noting = false;
+    model.note = normalizeNote(field(model)?.value ?? "");
+    dismissNote(model);
     model.changing = false;
-    model.prompted = false;
     paint(model, false);
     announce(model, model.vote, null);
     focus(part(model, "[data-action='note']"));
@@ -764,8 +795,8 @@ export function script(config: ScriptConfig): void {
     const choice = model.keys.filter((_, at) => model.inputs[at]?.checked);
     // A note being written goes with the vote.
     if (model.noting) {
-      model.note = field(model)?.value.trim() ?? "";
-      model.noting = false;
+      model.note = normalizeNote(field(model)?.value ?? "");
+      dismissNote(model);
     }
     model.vote = choice.length ? choice : null;
     model.changing = false;
@@ -779,7 +810,10 @@ export function script(config: ScriptConfig): void {
     const model = modelOf(event.target);
     if (!model) return;
     if (input) {
-      if (input.getAttribute("aria-disabled") === "true") event.preventDefault();
+      if (model.kind === "poll" && pollClosed(model)) {
+        event.preventDefault();
+        paint(model, false);
+      } else if (input.getAttribute("aria-disabled") === "true") event.preventDefault();
       else if (model.kind === "poll" && !input.disabled) vote(model);
       return;
     }
@@ -812,7 +846,7 @@ export function script(config: ScriptConfig): void {
         event.preventDefault();
         sendNote(noting);
       } else if (event.key === "Escape") {
-        noting.noting = false;
+        dismissNote(noting);
         paint(noting, false);
         focus(part(noting, "[data-action='note']"));
       }

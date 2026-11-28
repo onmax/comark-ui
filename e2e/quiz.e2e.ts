@@ -353,6 +353,86 @@ test("a host's state restores the reader's note, and one that leaves note out ke
   await expect(mine(page)).toHaveText("Your note: Still mine");
 });
 
+test("a choice-only host echo preserves a note across poll remounts", async ({ page }) => {
+  await open(page, notePoll);
+  const markup = (await render(notePoll)).replace(/<script>[\s\S]*?<\/script>/g, "");
+  const remount = () =>
+    page.evaluate((html) => (document.querySelector(".cqz")!.outerHTML = html), markup);
+  await send(page, { answers: {} });
+  await page.getByRole("button", { name: "Add a note" }).click();
+  await page.getByRole("textbox").fill("For uploads");
+  await option(page, "Streams").click();
+  const [vote] = await answers(page);
+  await send(page, { answers: { "next-topic": { choice: vote!.choice } } });
+  await remount();
+  await expect(mine(page)).toHaveText("Your note: For uploads");
+  await page.getByRole("button", { name: "Change vote" }).click();
+  await option(page, "Caching").click();
+  const updated = (await answers(page)).at(-1)!;
+  expect(updated).toMatchObject({ note: "For uploads" });
+
+  await send(page, { answers: { "next-topic": { choice: updated.choice, note: "" } } });
+  await send(page, { answers: { "next-topic": { choice: updated.choice } } });
+  await remount();
+  await expect(option(page, "Caching").getByRole("radio")).toBeChecked();
+  await expect(page.getByRole("button", { name: "Add a note" })).toBeVisible();
+  await expect(mine(page)).toBeHidden();
+});
+
+for (const submit of ["button", "shortcut", "vote"]) {
+  test(`a poll cannot send an open note after the deadline via ${submit}`, async ({ page }) => {
+    const start = new Date("2030-01-01T12:00:00Z");
+    const deadline = new Date("2030-01-01T12:01:00Z");
+    await page.clock.install({ time: start });
+    await open(page, notePoll.replace(" note}", ` note closes="${deadline.toISOString()}"}`));
+    await send(page, { answers: {} });
+    await page.getByRole("button", { name: "Add a note" }).click();
+    const field = page.getByRole("textbox");
+    await field.fill("First note");
+    await option(page, "Streams").click();
+    await page.getByRole("button", { name: "Edit note" }).click();
+    await field.fill("Too late");
+    if (submit === "vote") await page.getByRole("button", { name: "Change vote" }).click();
+    await page.clock.setSystemTime(deadline);
+    if (submit === "button") await page.getByRole("button", { name: "Send note" }).click();
+    else if (submit === "shortcut") await field.press("Control+Enter");
+    else await option(page, "Caching").click();
+    expect(await answers(page)).toMatchObject([{ note: "First note" }]);
+    await expect(page.locator(".cqz")).toHaveAttribute("data-state", "closed");
+    await expect(field).toBeHidden();
+    await expect(option(page, "Streams").locator(".cqz-mine")).toHaveText("Your note: First note");
+  });
+}
+
+test("sending a restored note enforces the length cap", async ({ page }) => {
+  await open(page, notePoll);
+  const streams = (await keyOf(page, "Streams"))!;
+  const note = "x".repeat(500);
+  await send(page, { answers: { "next-topic": { choice: [streams], note: ` ${note}y ` } } });
+  await page.getByRole("button", { name: "Edit note" }).click();
+  await page.getByRole("button", { name: "Send note" }).click();
+  expect(await answers(page)).toMatchObject([{ note }]);
+});
+
+test("dismissing a draft clears the pick-first prompt", async ({ page }) => {
+  await open(page, notePoll);
+  await send(page, { answers: {} });
+  const toggle = page.getByRole("button", { name: "Add a note" });
+  const field = page.getByRole("textbox");
+  const prompt = page.getByText("Pick an option to send your note");
+  for (const dismiss of [() => field.press("Escape"), () => toggle.click()]) {
+    await toggle.click();
+    await field.fill("Discard me");
+    await page.getByRole("button", { name: "Send note" }).click();
+    await expect(prompt).toBeVisible();
+    await dismiss();
+    await expect(field).toBeHidden();
+    await expect(prompt).toBeHidden();
+  }
+  await option(page, "Streams").click();
+  expect(await answers(page)).toMatchObject([{ note: "" }]);
+});
+
 test("without the script, or without a host, a poll shows no note field", async ({ page }) => {
   await open(page, notePoll, { script: false });
   await expect(page.locator(".cqz-note")).toBeHidden();
