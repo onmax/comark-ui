@@ -1,6 +1,6 @@
 {
   "name": "comark-social",
-  "version": "0.14.3",
+  "version": "0.14.4",
   "description": "Static cards for posts from X, Bluesky, Mastodon, Threads, LinkedIn, or any site, with the platform's logo and counts, and an optional fetch while parsing. A Comark plugin.",
   "keywords": [
     "bluesky",
