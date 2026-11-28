@@ -291,7 +291,7 @@ const TAGS: [keyof PresetOptions, string[]][] = [
   ["metrics", words("dd div dt")],
   ["outline", words("a div li ul")],
   ["properties", words("dd div dt time")],
-  ["social", words("a br div img p span time")],
+  ["social", words("a br div img li ol p span time")],
   [
     "quiz",
     words(
@@ -310,6 +310,7 @@ const TAGS: [keyof PresetOptions, string[]][] = [
 const BLOCKS: [keyof PresetOptions, string[]][] = [
   ["details", words("accordion-item collapsible details")],
   ["metrics", words("progress stats")],
+  ["social", words("message")],
   ["table", words("table")],
   ["tabs", words("code-group tabs-item")],
   ["time", words("time")],

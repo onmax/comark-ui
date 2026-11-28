@@ -48,7 +48,7 @@ export type TimeOptions = {
 
 const POST_PROPS = ["platform", "url", "author", "handle", "avatar", "time", ...COUNTS];
 const MAX_MEDIA = 4;
-const list = (items: readonly string[]) =>
+export const list = (items: readonly string[]) =>
   new Intl.ListFormat("en", { type: "disjunction" }).format(items.map((item) => `\`${item}\``));
 
 const SUFFIX = new Map([
@@ -99,6 +99,12 @@ const isTemplate = (node: Node): node is ElementNode => isElement(node) && node[
 export const contentOf = (node: ElementNode) =>
   childrenOf(node).flatMap((child) => (isTemplate(child) ? childrenOf(child) : [child]));
 
+/** Whether an avatar is a picture's address: a path is one saved with the document, and any scheme but the web's and an image data URI could run or leak. */
+export function isPicture(value: string) {
+  const scheme = /^([a-z][a-z\d+.-]*):/i.exec(value)?.[1]?.toLowerCase();
+  return !scheme || Boolean(webUrl(value)) || value.startsWith("data:image/");
+}
+
 /** Reads a written `::post` or `:::post`, and its quoted post, into what the card draws. */
 export function readPost(
   node: ElementNode,
@@ -119,10 +125,7 @@ export function readPost(
       message: `${name}: \`url\` is "${url}", which isn't an http or https address, so the card links nowhere. Write the post's full address, such as https://x.com/jack/status/20.`,
     });
   const writtenAvatar = text(attrs.avatar);
-  // A path is a picture saved with the document; any scheme but the web's and an image data URI could run or leak.
-  const scheme = /^([a-z][a-z\d+.-]*):/i.exec(writtenAvatar)?.[1]?.toLowerCase();
-  const avatarOk =
-    !scheme || Boolean(webUrl(writtenAvatar)) || writtenAvatar.startsWith("data:image/");
+  const avatarOk = isPicture(writtenAvatar);
   const avatar = avatarOk ? writtenAvatar : "";
   if (!avatarOk)
     issues.push({
@@ -305,10 +308,14 @@ export function timeNode(value: string, look: Look): ElementNode {
 }
 
 const graphemes = new Intl.Segmenter();
-const initial = (post: Post) => {
-  const name = (post.author ?? post.handle ?? "?").replace(/^@/, "");
-  return graphemes.segment(name)[Symbol.iterator]().next().value?.segment.toUpperCase() ?? "?";
-};
+/** A name's first letter, for an avatar with no picture. */
+export const initialOf = (name: string) =>
+  graphemes
+    .segment(name.replace(/^@/, ""))
+    [Symbol.iterator]()
+    .next()
+    .value?.segment.toUpperCase() ?? "?";
+const initial = (post: Post) => initialOf(post.author ?? post.handle ?? "?");
 
 /** The handle as the platform shows it: with its `@`, except on LinkedIn and other sites, where it's a headline. */
 const handleOf = (post: Post) =>

@@ -2,7 +2,10 @@ import type { RuleInfo } from "./types.ts";
 
 // comark-social's issues, COMARK4901 on.
 export default {
-  "comark/social/unknown-prop": { code: "COMARK4901", title: "Use only `::post`'s props" },
+  "comark/social/unknown-prop": {
+    code: "COMARK4901",
+    title: "Use only the props a post, conversation, or message reads",
+  },
   "comark/social/unknown-platform": {
     code: "COMARK4902",
     title: "Name a platform comark-social knows",
@@ -23,4 +26,13 @@ export default {
     code: "COMARK4909",
     title: "Keep a fetched picture under `maxImageSize`",
   },
+  "comark/social/conversation-content": {
+    code: "COMARK4912",
+    title: "Write a conversation's words in its messages",
+  },
+  "comark/social/empty-conversation": {
+    code: "COMARK4913",
+    title: "Give every conversation its messages",
+  },
+  "comark/social/missing-sender": { code: "COMARK4914", title: "Say who sent every message" },
 } satisfies Record<`comark/social/${string}`, RuleInfo>;

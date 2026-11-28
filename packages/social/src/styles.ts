@@ -49,7 +49,7 @@ const mask = (variable: string) =>
  * unlayered rule of the host's wins.
  */
 export const css = `@layer comark{${[
-  theme(".csl", "primary"),
+  theme(".csl,.csl-chat", "primary"),
   ".csl{display:block;max-width:36rem;margin:1.5rem 0;padding:1rem;border:1px solid var(--_comark-border);border-radius:calc(var(--_comark-radius) + 2px);background:var(--_comark-background);color:var(--_comark-foreground);font:400 .875rem/1.375rem var(--_comark-font);overflow-wrap:anywhere}",
   ".csl-head{display:flex;align-items:center;gap:.625rem}",
   ".csl-avatar{display:grid;flex:none;place-items:center;width:2.5rem;height:2.5rem;margin:0;border-radius:50%;background:var(--_comark-accent);color:var(--_comark-muted);font-weight:600;object-fit:cover}",
@@ -61,7 +61,8 @@ export const css = `@layer comark{${[
   ".csl-handle+.csl-time::before{content:'·';margin-inline-end:.25rem}",
   `.csl-logo{flex:none;align-self:flex-start;width:1.125rem;height:1.125rem;margin:.125rem;border-radius:2px;color:var(--_comark-foreground);${mask("--csl-logo")}}`,
   ...Object.entries(logos).map(
-    ([platform, body]) => `.csl[data-platform='${platform}']{--csl-logo:${svg(body)}}`,
+    ([platform, body]) =>
+      `:is(.csl,.csl-chat)[data-platform='${platform}']{--csl-logo:${svg(body)}}`,
   ),
   "a.csl-logo:focus-visible{outline:2px solid var(--_comark-ring);outline-offset:2px}",
   ".csl-text{margin-top:.75rem;font-size:.9375rem;line-height:1.5rem}",
@@ -96,5 +97,33 @@ export const css = `@layer comark{${[
   ),
   `.csl[data-platform='mastodon']>.csl-counts>[data-count='likes']{--csl-icon:${stroked(icons.star)}}`,
   `.csl[data-platform='linkedin']>.csl-counts>[data-count='likes']{--csl-icon:${stroked(icons.thumbs)}}`,
+  // A conversation is one card: a header, then bubbles, the reader's own on the right in the brand color.
+  ".csl-chat{display:block;max-width:36rem;margin:1.5rem 0;overflow:hidden;border:1px solid var(--_comark-border);border-radius:calc(var(--_comark-radius) + 2px);background:var(--_comark-background);color:var(--_comark-foreground);font:400 .875rem/1.375rem var(--_comark-font);overflow-wrap:anywhere}",
+  ".csl-chat-head{display:flex;align-items:center;gap:.5rem;min-height:3rem;padding:.625rem 1rem;border-bottom:1px solid var(--_comark-border)}",
+  ".csl-chat-title{flex:1;min-width:0;overflow:hidden;font-weight:600;white-space:nowrap;text-overflow:ellipsis}",
+  ".csl-chat-head>.csl-logo{margin-inline-start:auto}",
+  ".csl-request{flex:none;padding:0 .5rem;border:1px solid var(--_comark-border);border-radius:999px;color:var(--_comark-muted);font-size:.75rem;line-height:1.25rem}",
+  ".csl-messages{display:flex;flex-direction:column;gap:.125rem;margin:0;padding:1rem;list-style:none}",
+  ".csl-message{display:flex;align-items:flex-end;gap:.5rem;max-width:85%;margin:0;padding:0}",
+  ".csl-message[data-start]:not(:first-child){margin-top:.625rem}",
+  ".csl-message:not([data-me]){padding-inline-start:2.5rem}",
+  ".csl-message:not([data-me])[data-end]{padding-inline-start:0}",
+  ".csl-message[data-me]{align-self:flex-end;justify-content:flex-end}",
+  ".csl-message>.csl-avatar{width:2rem;height:2rem;font-size:.8125rem}",
+  ".csl-body{display:flex;flex-direction:column;align-items:flex-start;gap:.125rem;min-width:0}",
+  ".csl-message[data-me]>.csl-body{align-items:flex-end}",
+  ".csl-from{padding-inline:.75rem;color:var(--_comark-muted);font-size:.75rem;line-height:1rem}",
+  ".csl-bubble{max-width:100%;padding:.5rem .875rem;border-radius:1.125rem;background:var(--_comark-accent)}",
+  ".csl-message:not([data-me]):not([data-end])>.csl-body>.csl-bubble{border-end-start-radius:.375rem}",
+  ".csl-message:not([data-me]):not([data-start])>.csl-body>.csl-bubble{border-start-start-radius:.375rem}",
+  ".csl-message[data-me]:not([data-end])>.csl-body>.csl-bubble{border-end-end-radius:.375rem}",
+  ".csl-message[data-me]:not([data-start])>.csl-body>.csl-bubble{border-start-end-radius:.375rem}",
+  ".csl-message[data-me] .csl-bubble{background:var(--_comark-primary);color:var(--_comark-primary-foreground)}",
+  ".csl-bubble>.csl-text{margin:0}",
+  ".csl-message[data-me] .csl-text a{color:inherit}",
+  ".csl-message[data-me] .csl-text code{background:color-mix(in srgb,currentColor 15%,transparent)}",
+  ".csl-bubble>.csl-media{margin:.375rem -.5rem -.125rem;border-radius:.75rem}",
+  ".csl-bubble>.csl-media:first-child,.csl-bubble>.csl-sr+.csl-media{margin-top:-.125rem}",
+  ".csl-body>.csl-time{padding-inline:.75rem;color:var(--_comark-muted);font-size:.6875rem;line-height:1rem}",
   ".csl-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}",
 ].join("")}}`;

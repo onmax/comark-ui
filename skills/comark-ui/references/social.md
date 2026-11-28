@@ -31,6 +31,33 @@ Has anyone measured the old parser?
 - A `:::post` inside is the quoted post, drawn smaller and without counts. A post quotes one.
 - Write the post as it was: don't shorten its text or round its counts beyond what the platform shows.
 
+## Conversation
+
+Direct messages go in `::conversation`, one `:::message` per message:
+
+```md
+::conversation{me="Ada" platform="x" request}
+:::message{from="Grace" avatar="https://example.com/grace.png" time="2026-11-28T09:30:00Z"}
+Your docs theme breaks on Safari 27.1. Want the repro?
+:::
+
+:::message{from="Ada" time="2026-11-28T09:41:00Z"}
+Yes please!
+:::
+::
+```
+
+| Prop | What it does |
+| --- | --- |
+| `me` | The `from` of your own messages. They sit on the right in the primary color; everyone else's sit on the left by their avatar. |
+| `platform` | The logo in the header. Default `generic`. |
+| `title` | The header's title. Defaults to the others' names. |
+| `request` | Shows the "Message request" pill. |
+| `from`, `avatar`, `time` on `:::message` | Who sent it, their picture, and when, as an ISO date or instant. One message's `avatar` shows by all of that sender's. |
+
+- Every message needs `from`. Write the messages in the order they were sent; one sender's messages in a row are grouped.
+- A message's text is Markdown, and images in a paragraph of their own show in the bubble. Nothing but `:::message` blocks goes inside.
+
 ## Fetch
 
 With `social({ fetch: true })`, a post on X or Bluesky with a `url` is filled from the platform's public API while parsing. The built-in transport inlines pictures from known X and Bluesky image origins. Mastodon and other image hosts require a trusted `request` transport that checks every destination and leaves redirects to the plugin; never use unrestricted fetch with untrusted content. What's written wins. Threads and LinkedIn posts are written by hand. A post that can't be fetched renders what's written, with an issue.

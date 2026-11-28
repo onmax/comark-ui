@@ -206,6 +206,98 @@ describe("::post", () => {
   });
 });
 
+describe("::conversation", () => {
+  const chat = [
+    '::conversation{me="Ada" platform="x" request}',
+    ':::message{from="Grace" avatar="/grace.png" time="2026-11-28T09:30:00Z"}',
+    "Did it **ship**?",
+    ":::",
+    "",
+    ':::message{from="Grace"}',
+    "And the docs?",
+    ":::",
+    "",
+    ':::message{from="Ada" time="2026-11-28"}',
+    "It did.",
+    ":::",
+    "::",
+  ].join("\n");
+
+  it("draws the header, the request pill, and each side's messages", async () => {
+    const { html, meta } = await render(chat);
+    expect(meta.issues ?? []).toEqual([]);
+    expect(html).toContain(
+      '<div class="csl-chat" role="group" data-platform="x" data-request data-comark-frame data-not-typeset aria-label="Conversation with Grace on X">',
+    );
+    expect(html).toContain(
+      '<div class="csl-chat-head"><span class="csl-chat-title">Grace</span><span class="csl-request">Message request</span><span class="csl-logo" role="img" aria-label="X"></span></div>',
+    );
+    expect(html).toContain('<li class="csl-message" data-me="" data-start="" data-end="">');
+    expect(html).toContain(
+      '<div class="csl-bubble"><span class="csl-sr">Grace: </span><div class="csl-text"><p>Did it <strong>ship</strong>?</p></div></div>',
+    );
+    expect(html).toContain(
+      '<time class="csl-time" datetime="2026-11-28T09:30:00Z" title="November 28, 2026 at 9:30 AM">Nov 28, 9:30 AM</time>',
+    );
+  });
+
+  it("groups one sender's messages, with the avatar by the last", async () => {
+    const { html } = await render(chat);
+    expect(html).toContain('<li class="csl-message" data-start=""><div class="csl-body">');
+    expect(html).toContain(
+      '<li class="csl-message" data-end=""><img class="csl-avatar" src="/grace.png" alt="" width="32" height="32" data-zoom="false">',
+    );
+    expect(html).not.toContain("csl-from");
+  });
+
+  it("names each sender over their run in a group, and titles it", async () => {
+    const { html } = await render(
+      '::conversation{me="Ada"}\n:::message{from="Grace"}\nOne\n:::\n\n:::message{from="Linus"}\nTwo\n:::\n\n:::message{from="Linus"}\nThree\n:::\n::\n\n::conversation{title="Crew" platform="bluesky"}\n:::message{from="Ada"}\nHi\n:::\n::',
+    );
+    expect(html).toContain('aria-label="Conversation with Grace and Linus"');
+    expect(html).toContain('<span class="csl-chat-title">Grace and Linus</span>');
+    expect(html.match(/<span class="csl-from" aria-hidden="true">Linus<\/span>/g)).toHaveLength(1);
+    expect(html).toContain('<span class="csl-avatar" aria-hidden="true">L</span>');
+    expect(html).toContain('aria-label="Crew, a conversation on Bluesky"');
+    expect(html).toContain('<span class="csl-chat-title">Crew</span>');
+  });
+
+  it("puts everyone on the left without me", async () => {
+    const { html } = await render('::conversation\n:::message{from="Ada"}\nHi\n:::\n::');
+    expect(html).not.toContain("data-me");
+    expect(html).toContain('<span class="csl-avatar" aria-hidden="true">A</span>');
+  });
+
+  it("reports each problem, naming the block and the fix", async () => {
+    const { html, meta } = await render(
+      '::conversation{me="Ada" color="red" platform="myspace"}\n:::message{from="Grace" avatar="javascript:alert(1)" time="soon"}\nHi\n:::\n\nStray words\n\n:::message\nWho?\n:::\n::\n\n::conversation{me="Ada"}\n::\n\nAfter',
+    );
+    expect(meta.issues).toEqual([
+      "`::conversation` 1: `color` isn't a prop of `::conversation`, so it's ignored. Use `me`, `platform`, `title`, or `request`.",
+      '`::conversation` 1: `platform` is "myspace", which comark-social doesn\'t know, so the conversation shows a globe for its logo. Write `x`, `bluesky`, `mastodon`, `threads`, `linkedin`, or `generic`, or leave it out.',
+      "`::conversation` 1, message 1: `avatar` is \"javascript:alert(1)\", which isn't a picture's address, so the message shows the sender's initial. Write an https address, a path, or a `data:image/` URI.",
+      '`::conversation` 1, message 1: `time` is "soon", which isn\'t a date, so it shows as written. Write an ISO date such as 2026-11-28 or 2026-11-28T09:30:00Z.',
+      '`::conversation` 1, message 2 has no `from`, so it shows on the left with no name. Write who sent it, such as `from="Ada"`.',
+      "`::conversation` 1 holds a `p` outside its messages, and a conversation draws only its `:::message` blocks, so it's left out. Put the words in a `:::message`, or move them out of the conversation.",
+      '`::conversation` 2 holds no `:::message`, so nothing shows. Write a `:::message{from="…"}` for each message.',
+    ]);
+    expect(Object.values(meta.issueRules ?? {})).toEqual([
+      "comark/social/unknown-prop",
+      "comark/social/unknown-platform",
+      "comark/social/invalid-url",
+      "comark/social/invalid-time",
+      "comark/social/missing-sender",
+      "comark/social/conversation-content",
+      "comark/social/empty-conversation",
+    ]);
+    expect(html).not.toContain("javascript:");
+    expect(html).not.toContain("Stray words");
+    expect(html).toContain('<span class="csl-avatar" aria-hidden="true">?</span>');
+    expect(html.match(/class="csl-chat"/g)).toHaveLength(1);
+    expect(html).toContain("<p>After</p>");
+  });
+});
+
 describe("fetch", () => {
   it("keeps non-allowlisted status and image destinations off the default transport", async () => {
     await expect(fetchPost("https://mastodon.example/@ada/123")).rejects.toThrow(

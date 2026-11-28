@@ -1,6 +1,7 @@
 import type { ElementNode, Node } from "comark";
 import { defineComarkPlugin } from "comark";
 import { complete } from "./complete.ts";
+import { drawConversation, readConversation } from "./conversation.ts";
 import { drawPost, readPost, type Data, type Issue, type Look } from "./post.ts";
 import type { SocialRequest } from "./request.ts";
 import { isElement } from "../../../shared/nodes.ts";
@@ -44,9 +45,16 @@ export interface SocialOptions {
 export type PostAttributes = { platform?: string; label?: string; quote?: string };
 
 /**
+ * What a `::conversation` becomes: one card, named by `label`, holding a header and an `ol` of messages. `request`
+ * marks a message request.
+ */
+export type ConversationAttributes = { platform?: string; label?: string; request?: string };
+
+/**
  * Turns each `::post` into a static card for X, Bluesky, Mastodon, Threads, LinkedIn, or any other site, with the
- * platform's logo and counts. A `:::post` inside is the quoted post. With `fetch`, a post with a `url` is filled from
- * the platform's public API while parsing. Problems are added to `meta.issues`.
+ * platform's logo and counts. A `:::post` inside is the quoted post. Each `::conversation` becomes one card of its
+ * `:::message` blocks as chat bubbles. With `fetch`, a post with a `url` is filled from the platform's public API while
+ * parsing. Problems are added to `meta.issues`.
  */
 export default defineComarkPlugin<SocialOptions | void, SocialMeta>((options) => {
   const settings: SocialOptions = options ?? {};
@@ -64,32 +72,58 @@ export default defineComarkPlugin<SocialOptions | void, SocialMeta>((options) =>
         timeZone: settings.timeZone,
         now: settings.now,
       };
-      const issues: Issue[] = [];
-      const found: { nodes: Node[]; index: number; node: ElementNode }[] = [];
+      // Each block keeps its own issues, so they stay in the order of the blocks however the fetches finish.
+      const blocks: {
+        nodes: Node[];
+        index: number;
+        issues: Issue[];
+        draw: () => Promise<ElementNode | undefined>;
+      }[] = [];
       const names = new Map<ElementNode, string>();
+      let conversations = 0;
       const walk = (nodes: Node[], start: number, insidePost: boolean) => {
         for (let index = start; index < nodes.length; index++) {
           const node = nodes[index];
           if (!isElement(node)) continue;
+          const issues: Issue[] = [];
+          if (node[0] === "conversation" && !insidePost) {
+            const chat = readConversation(
+              node,
+              `\`::conversation\` ${++conversations}`,
+              data,
+              issues,
+            );
+            blocks.push({ nodes, index, issues, draw: async () => drawConversation(chat, look) });
+            continue;
+          }
           if (node[0] === "post") {
             names.set(node, `\`::post\` ${names.size + 1}`);
-            if (!insidePost) found.push({ nodes, index, node });
+            // Read once the walk is done, since a quoted post inside takes its number from the walk too.
+            if (!insidePost)
+              blocks.push({
+                nodes,
+                index,
+                issues,
+                draw: async () => {
+                  const written = readPost(node, (post) => names.get(post)!, data, issues);
+                  return drawPost(await complete(written, settings, issues), look);
+                },
+              });
           }
           // SAFETY: an element node is [tag, attributes, ...children], so its children start at index 2.
           walk(node as Node[], 2, insidePost || node[0] === "post");
         }
       };
       walk(tree.nodes, 0, false);
-      await Promise.all(
-        found.map(async (item) => {
-          const written = readPost(item.node, (node) => names.get(node)!, data, issues);
-          const post = await complete(written, settings, issues);
-          item.nodes[item.index] = drawPost(post, look) satisfies ElementNode;
-        }),
-      );
-      // Fetches finish in any order, so the issues are sorted back into the order of the blocks.
-      const order = (issue: Issue) => Number(/^`::post` (\d+)/.exec(issue.message)?.[1] ?? 0);
-      issues.sort((a, b) => order(a) - order(b));
+      const drawn = await Promise.all(blocks.map((block) => block.draw()));
+      // From the last block back, so dropping an empty conversation doesn't move the blocks after it in the same list.
+      for (let at = blocks.length - 1; at >= 0; at--) {
+        const { nodes, index } = blocks[at]!;
+        const node = drawn[at];
+        if (node) nodes[index] = node;
+        else nodes.splice(index, 1);
+      }
+      const issues = blocks.flatMap((block) => block.issues);
       tree.meta.issues = [...(tree.meta.issues ?? []), ...issues.map((issue) => issue.message)];
       tree.meta.issueRules = {
         ...tree.meta.issueRules,
