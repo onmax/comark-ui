@@ -240,6 +240,56 @@ for (const dir of ["ltr", "rtl"]) {
   });
 }
 
+for (const dir of ["ltr", "rtl"]) {
+  test(`with --cc-bleed, the last page lines up with the carousel, by arrow or by scrolling, in ${dir}`, async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await open(page, five, { dir });
+    const { root, track, count, next } = parts(page);
+    await root.evaluate((node) => node.style.setProperty("--cc-bleed", "120px"));
+    const edges = () =>
+      root.evaluate((node) => {
+        const box = node.getBoundingClientRect();
+        const slides = [...node.querySelectorAll(".cc-slide")].map((slide) =>
+          slide.getBoundingClientRect(),
+        );
+        const rtl = getComputedStyle(node).direction === "rtl";
+        // Distances from the carousel's start and end, in reading order.
+        const start = (rect: DOMRect) => (rtl ? box.right - rect.right : rect.left - box.left);
+        const end = (rect: DOMRect) => (rtl ? rect.left - box.left : box.right - rect.right);
+        return {
+          third: start(slides[2]!),
+          last: end(slides[4]!),
+          second: start(slides[1]!) + slides[1]!.width,
+        };
+      });
+    await next.click();
+    await next.click();
+    await expect(count).toHaveText("3–5 / 5");
+    await expect(next).toHaveAttribute("aria-disabled", "true");
+    // Within a pixel: a right-to-left track scrolls in whole pixels.
+    const lined = ({ third, last }: { third: number; last: number }) => {
+      expect(Math.abs(third)).toBeLessThan(1);
+      expect(Math.abs(last)).toBeLessThan(1);
+    };
+    const byArrow = await edges();
+    lined(byArrow);
+    // The slide before the page is wholly past the carousel's start, so no sliver of it shows.
+    expect(byArrow.second).toBeLessThan(1);
+    await track.evaluate((node) =>
+      node.scrollTo({
+        left:
+          (node.scrollWidth - node.clientWidth) *
+          (getComputedStyle(node).direction === "rtl" ? -1 : 1),
+        behavior: "instant",
+      }),
+    );
+    lined(await edges());
+    await expect(count).toHaveText("3–5 / 5");
+  });
+}
+
 test("bleed preserves percentage gaps and slide widths in a padded track", async ({ page }) => {
   await open(page, five, { style: ".cc{--cc-gap:10%}.cc-track{padding-inline:24px}" });
   const { root, track } = parts(page);

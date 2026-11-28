@@ -44,7 +44,12 @@ export function start(css: string): () => void {
   const rtl = (track: Element) => getComputedStyle(track).direction === "rtl";
   // Convert the rendered panel distances to scroll coordinates, even on a scaled page or in RTL.
   function geometry(track: HTMLElement, slides: HTMLElement[]) {
-    const width = track.clientWidth;
+    // With --cc-bleed the track overhangs the carousel's column, and a page is what fits in the column.
+    const overhang = Math.max(
+      0,
+      track.offsetWidth - (track.closest(".cc") as HTMLElement).clientWidth,
+    );
+    const width = track.clientWidth - overhang;
     const bounds = track.getBoundingClientRect();
     const scale = bounds.width / track.offsetWidth || 1;
     const direction = rtl(track) ? -1 : 1;
@@ -70,7 +75,7 @@ export function start(css: string): () => void {
     const panelEnd = starts.at(-1)! + panels.at(-1)!.width / scale;
     const end = Math.max(
       0,
-      Math.min(starts[lastStart]!, panelEnd - width, track.scrollWidth - width),
+      Math.min(starts[lastStart]!, panelEnd - width, track.scrollWidth - track.clientWidth),
     );
     const atEnd = end - scrolled <= 1;
     const stops = starts.slice(0, lastStart + 1).map((start) => Math.max(0, Math.min(start, end)));

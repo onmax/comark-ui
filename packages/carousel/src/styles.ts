@@ -3,6 +3,8 @@ import { scripted } from "../../../shared/scripted.ts";
 
 const inlineSizeUnit = "10000px";
 const inlineSizeRatio = `tan(atan2(100cqi,${inlineSizeUnit}))`;
+// How far the run reaches past the carousel's own column, which is --cc-bleed resolved, or 0.
+const overhang = `calc((${inlineSizeRatio} - var(--_cc-column-ratio)) * ${inlineSizeUnit})`;
 const photo =
   ".cc-grid>.cc-slide:has(>:is(img,a):nth-child(1 of :not(style,script)):nth-last-child(1 of :not(style,script))):has(>img,>a>img:only-child)";
 
@@ -19,11 +21,15 @@ export const css = `@layer comark{${[
   ".cc[data-carousel-columns='2']{--cc-columns:2}",
   ".cc[data-carousel-columns='3']{--cc-columns:3}",
   `.cc-run{--_cc-column-ratio:${inlineSizeRatio};container-type:inline-size;margin-inline-end:calc(-1 * max(0px,var(--cc-bleed,0px)))}`,
-  ".cc-track{position:relative;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory}",
-  `.cc-grid{margin-inline-end:calc((${inlineSizeRatio} - var(--_cc-column-ratio)) * ${inlineSizeUnit});display:grid;grid-auto-flow:column;grid-auto-columns:calc((100% - (var(--cc-columns) - 1) * var(--cc-gap,1rem)) / var(--cc-columns));gap:var(--cc-gap,1rem)}`,
+  `.cc-track{position:relative;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scroll-padding-inline-end:${overhang}}`,
+  `.cc-grid{margin-inline-end:${overhang};display:grid;grid-auto-flow:column;grid-auto-columns:calc((100% - (var(--cc-columns) - 1) * var(--cc-gap,1rem)) / var(--cc-columns));gap:var(--cc-gap,1rem)}`,
   // Every slide is a panel as tall as the tallest one, with its content at the top, so a slide's title stays put when
   // the next slide is taller. Only slides in a track: the zoomed copy stays bare.
   ".cc-grid>.cc-slide{min-width:0;scroll-snap-align:start;align-content:start;padding:var(--cc-padding,1rem);border-radius:var(--_comark-radius);background:var(--cc-surface,color-mix(in srgb,var(--_comark-foreground) 4%,transparent))}",
+  // With --cc-bleed, the track scrolls on past the last slide by the overhang, so the last page lines up with the
+  // column, as the first does, instead of ending at the track's edge with a sliver of the slide before it on the left.
+  ".cc-grid>.cc-slide:last-child{position:relative}",
+  `.cc-grid>.cc-slide:last-child::after{content:"";position:absolute;top:0;inset-inline-start:100%;width:${overhang};height:1px;pointer-events:none}`,
   // A page's unlayered block margins would open a band of the slide's surface around its content, and comark-code's
   // wrapper passes its block's margins through, so the trims are `!important` and skip a `style` or `script`.
   ".cc-slide>:nth-child(1 of :not(style,script)),.cc-slide>.ck:nth-child(1 of :not(style,script))>pre{margin-top:0!important}",
