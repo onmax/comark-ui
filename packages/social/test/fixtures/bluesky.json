@@ -1,0 +1,48 @@
+{
+  "posts": [
+    {
+      "uri": "at://did:plc:abc123/app.bsky.feed.post/3lxyz",
+      "author": {
+        "did": "did:plc:abc123",
+        "handle": "ada.bsky.social",
+        "displayName": "Ada",
+        "avatar": "https://cdn.bsky.example/ada.jpg"
+      },
+      "record": {
+        "text": "Read the notes at example.com/notes… and say hi",
+        "createdAt": "2026-11-12T10:24:00.000Z",
+        "facets": [
+          {
+            "index": { "byteStart": 18, "byteEnd": 38 },
+            "features": [
+              {
+                "$type": "app.bsky.richtext.facet#link",
+                "uri": "https://example.com/notes/2026/parser"
+              }
+            ]
+          }
+        ]
+      },
+      "embed": {
+        "$type": "app.bsky.embed.images#view",
+        "images": [
+          {
+            "thumb": "https://cdn.bsky.example/t1.jpg",
+            "fullsize": "https://cdn.bsky.example/f1.jpg",
+            "alt": "A diagram",
+            "aspectRatio": { "width": 4, "height": 3 }
+          },
+          {
+            "thumb": "https://cdn.bsky.example/t2.jpg",
+            "fullsize": "https://cdn.bsky.example/f2.jpg",
+            "alt": ""
+          }
+        ]
+      },
+      "replyCount": 3,
+      "repostCount": 5,
+      "quoteCount": 2,
+      "likeCount": 40
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "id": "113000000000000001",
+  "created_at": "2026-11-10T08:00:00.000Z",
+  "in_reply_to_id": null,
+  "url": "https://mastodon.example/@ada/113000000000000001",
+  "replies_count": 2,
+  "reblogs_count": 8,
+  "favourites_count": 21,
+  "content": "<p>Hello <span class=\"h-card\"><a href=\"https://other.example/@grace\" class=\"u-url mention\">@<span>grace</span></a></span> &amp; friends</p><p>New post: <a href=\"https://example.com/a/very/long/path/to/a/post\" rel=\"nofollow\"><span class=\"invisible\">https://</span><span class=\"ellipsis\">example.com/a/very/long</span><span class=\"invisible\">/path/to/a/post</span></a> <a href=\"https://mastodon.example/tags/rust\" class=\"mention hashtag\">#<span>rust</span></a></p>",
+  "account": {
+    "acct": "ada",
+    "username": "ada",
+    "display_name": "Ada",
+    "avatar": "https://mastodon.example/ada.png"
+  },
+  "media_attachments": [
+    {
+      "type": "video",
+      "url": "https://mastodon.example/v.mp4",
+      "preview_url": "https://mastodon.example/v.jpg",
+      "description": "A demo",
+      "meta": { "original": { "width": 640, "height": 360 } }
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+# Social posts
+
+comark-social draws a post from X, Bluesky, Mastodon, Threads, LinkedIn, or any site as a static card: the author, the text, the pictures, a quoted post, and the counts in the platform's order, with its logo. Use it to quote what someone posted, such as a bug report, a launch, or feedback, instead of a screenshot of the post or an embedded player. The card has no iframe and no script.
+
+## Syntax
+
+```md
+::post{url="https://bsky.app/profile/ada.bsky.social/post/3lxyz" author="Ada Lovelace" handle="ada.bsky.social" avatar="https://example.com/ada.png" time="2026-11-20T09:30:00Z" replies="3" reposts="1.2K" likes="40"}
+Shipped the new parser, thanks @grace.bsky.social #parsers
+
+![Parse time before and after](./chart.png)
+
+:::post{author="Grace Hopper" handle="grace.bsky.social" time="2026-11-19"}
+Has anyone measured the old parser?
+:::
+::
+```
+
+| Prop | What it does |
+| --- | --- |
+| `url` | The post's address. The logo links to it, and it picks the platform. |
+| `platform` | `x`, `bluesky`, `mastodon`, `threads`, `linkedin`, or `generic`, when `url` doesn't say or there is none. |
+| `author` | The name the platform shows. |
+| `handle` | The account, with or without its `@`. On LinkedIn and other sites, a headline such as a job title. |
+| `avatar` | The author's picture: an https address, a path, or a `data:image/` URI. Without one the card shows the initial. |
+| `time` | When it was posted, as an ISO date or instant. It shows as a short date with the full date on hover. |
+| `replies`, `reposts`, `quotes`, `likes`, `views`, `bookmarks` | Counts as `1234`, `1,234`, or `1.2K`. Each platform shows them in its order and words: Mastodon's `reposts` are boosts and its `likes` favourites, and LinkedIn's `likes` are reactions. |
+
+- The text is Markdown. A line break stays a line break, and `@handles` and `#tags` link to the platform.
+- Images in a paragraph of their own are the pictures, in a grid of up to four.
+- A `:::post` inside is the quoted post, drawn smaller and without counts. A post quotes one.
+- Write the post as it was: don't shorten its text or round its counts beyond what the platform shows.
+
+## Fetch
+
+With `social({ fetch: true })`, a post on X, Bluesky, or Mastodon with a `url` is filled from the platform's public API while parsing, and its avatar and pictures are inlined, so `::post{url="…"}` alone is enough. What's written wins. Threads and LinkedIn have no public API, so write those posts by hand. A post that can't be fetched renders what's written, with an issue.
+
+## Register
+
+- In `comark-ui`: on, with the options below under `social`. Fetching is off unless you pass `social: { fetch: true }`.
+- Alone: `pnpm add comark @comark/html comark-social`, then `createHtmlRenderer({ plugins: [social()], components })` with both from `comark-social/html`. `comark-social/vue`, `/react`, and `/svelte` render it too.
+
+`fetch` (default `false`) fills posts from their platform. `maxImageSize` (default 500 KB) is the largest picture a fetch inlines. `locale`, `timeZone`, and `now` set how the dates read. `fetchPost(url)` returns a post's data for a script of your own.

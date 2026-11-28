@@ -32,6 +32,7 @@ import qr from "./qr.ts";
 import shiki from "./shiki.ts";
 import quiz from "./quiz.ts";
 import properties from "./properties.ts";
+import social from "./social.ts";
 import sources from "./sources.ts";
 import metrics from "./metrics.ts";
 import steps from "./steps.ts";
@@ -88,4 +89,5 @@ export const catalog = {
   ...time,
   ...gitGraph,
   ...bundle,
+  ...social,
 } satisfies Record<string, RuleInfo>;

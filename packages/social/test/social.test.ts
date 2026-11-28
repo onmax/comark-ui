@@ -1,0 +1,353 @@
+import { readFile } from "node:fs/promises";
+import { renderHtmlFromDocument } from "@comark/html";
+import { parseMarkdown } from "comark";
+import chips, { components as chipComponents } from "comark-chips/html";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
+import social, { components, type SocialOptions } from "../src/html.ts";
+import { fetchPost } from "../src/index.ts";
+
+const fixture = async (name: string) =>
+  JSON.parse(await readFile(new URL(`fixtures/${name}.json`, import.meta.url), "utf8")) as unknown;
+const NOW = "2026-11-28T12:00:00Z";
+const PNG = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]);
+
+async function render(markdown: string, options: SocialOptions = {}) {
+  const document = await parseMarkdown(markdown, {
+    plugins: [social({ now: NOW, timeZone: "UTC", ...options })],
+  });
+  const html = await renderHtmlFromDocument(document, { components });
+  return {
+    html: html.replace(/<style[^>]*>.*?<\/style>/gs, "").replace(/\s*\n\s*/g, ""),
+    meta: document.meta,
+  };
+}
+
+type Answer = Response | (() => Response);
+const answers = new Map<string, Answer>();
+const requests: string[] = [];
+const json = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
+const image =
+  (bytes = PNG, type = "image/png") =>
+  () =>
+    new Response(bytes, { headers: { "content-type": type } });
+
+beforeEach(() => {
+  answers.clear();
+  requests.length = 0;
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (input: string | URL) => {
+      const url = String(input);
+      requests.push(url);
+      const answer = answers.get(url);
+      if (!answer) return new Response("not found", { status: 404 });
+      return typeof answer === "function" ? answer() : answer.clone();
+    }),
+  );
+});
+afterEach(() => vi.unstubAllGlobals());
+
+describe("::post", () => {
+  it("draws the header, the text with its line breaks, and the counts in X's order", async () => {
+    const { html, meta } = await render(
+      '::post{url="https://x.com/jack/status/20" author="jack" handle="jack" time="2006-03-21T20:50:14Z" likes="324.6K" :replies="19263" views="1,234" reposts="3M"}\njust setting up my twttr\nsecond line\n::',
+    );
+    expect(meta.issues ?? []).toEqual([]);
+    expect(html).toContain(
+      '<article class="csl" data-platform="x" data-comark-frame data-not-typeset aria-label="Post by jack on X">',
+    );
+    expect(html).toContain('<span class="csl-handle">@jack</span>');
+    expect(html).toContain(
+      '<time class="csl-time" datetime="2006-03-21T20:50:14Z" title="March 21, 2006 at 8:50 PM">Mar 21, 2006</time>',
+    );
+    expect(html).toContain(
+      '<a class="csl-logo" href="https://x.com/jack/status/20" aria-label="View on X">',
+    );
+    expect(html).toMatch(/just setting up my twttr<br\s*\/?>second line/);
+    const order = [...html.matchAll(/data-count="(\w+)"/g)].map((match) => match[1]);
+    expect(order).toEqual(["replies", "reposts", "likes", "views"]);
+    expect(html).toContain('title="324,600 likes"');
+    expect(html).toContain('<span aria-hidden="true">19.3K</span>');
+    expect(html).toContain('<span class="csl-sr">3,000,000 reposts</span>');
+  });
+
+  it("reads the platform from the address, and uses each platform's words and order", async () => {
+    const cases: [string, string, string[]][] = [
+      [
+        "https://bsky.app/profile/ada.bsky.social/post/3lxyz",
+        "bluesky",
+        ["replies", "reposts", "likes"],
+      ],
+      [
+        "https://mastodon.example/@ada/113000000000000001",
+        "mastodon",
+        ["replies", "reposts", "likes"],
+      ],
+      ["https://www.threads.com/@ada/post/C1", "threads", ["likes", "replies", "reposts"]],
+      [
+        "https://www.linkedin.com/posts/ada_activity-1",
+        "linkedin",
+        ["likes", "replies", "reposts"],
+      ],
+      ["https://blog.example/notes/1", "generic", ["replies", "reposts", "likes"]],
+    ];
+    for (const [url, platform, order] of cases) {
+      const { html } = await render(
+        `::post{url="${url}" author="Ada" likes="2" replies="1" reposts="3"}\nHi\n::`,
+      );
+      expect(html).toContain(`data-platform="${platform}"`);
+      expect([...html.matchAll(/data-count="(\w+)"/g)].map((match) => match[1])).toEqual(order);
+    }
+    const { html } = await render(
+      '::post{url="https://mastodon.example/@ada/1" author="Ada" reposts="1" likes="2"}\nHi\n::',
+    );
+    expect(html).toContain("1 boost");
+    expect(html).toContain("2 favourites");
+  });
+
+  it("links mentions and tags to the platform, keeps written links, and moves pictures into the grid", async () => {
+    const { html } = await render(
+      '::post{platform="bluesky" author="Ada"}\nHi @grace.bsky.social, see #parsers and [the notes](https://example.com/n)\n\n![One](https://example.com/1.png)\n![Two](https://example.com/2.png)\n::',
+    );
+    expect(html).toContain(
+      '<a href="https://bsky.app/profile/grace.bsky.social">@grace.bsky.social</a>',
+    );
+    expect(html).toContain('<a href="https://bsky.app/hashtag/parsers">#parsers</a>');
+    expect(html).toContain('<a href="https://example.com/n">the notes</a>');
+    expect(html).toMatch(
+      /<div class="csl-media" data-count="2"><img src="https:\/\/example.com\/1.png" alt="One"\s*\/?><img src="https:\/\/example.com\/2.png" alt="Two"\s*\/?><\/div>/,
+    );
+  });
+
+  it("draws a nested post as the quote, without counts", async () => {
+    const { html } = await render(
+      '::post{platform="x" author="Ada" likes="1"}\nThis.\n\n:::post{author="Grace" handle="grace" likes="50"}\nOriginal\n:::\n::',
+    );
+    expect(html).toContain(
+      '<article class="csl" data-platform="x" data-quote aria-label="Post by Grace on X">',
+    );
+    const quote = html.slice(html.indexOf("data-quote"));
+    expect(quote.slice(0, quote.indexOf("</article>"))).not.toContain("csl-counts");
+    expect(quote.indexOf("Original")).toBeLessThan(quote.indexOf('data-count="likes"'));
+  });
+
+  it("shows the author's initial without an avatar, and the avatar with one", async () => {
+    const plain = await render('::post{author="ada"}\nHi\n::');
+    expect(plain.html).toContain('<span class="csl-avatar" aria-hidden="true">A</span>');
+    expect(plain.html).toContain('<span class="csl-logo" role="img" aria-label="the web">');
+    const pictured = await render(
+      '::post{author="Ada" avatar="https://example.com/ada.png"}\nHi\n::',
+    );
+    expect(pictured.html).toMatch(
+      /<img class="csl-avatar" src="https:\/\/example.com\/ada.png" alt="" width="40" height="40" data-zoom="false"/,
+    );
+    expect(requests).toEqual([]);
+  });
+
+  it("keeps links and mentions plain where comark-chips runs", async () => {
+    const document = await parseMarkdown(
+      '::post{url="https://x.com/ada/status/1" author="Ada" handle="ada"}\nThanks @grace, see https://example.com\n::\n\nAfter the card, @grace',
+      { plugins: [social({ now: NOW }), chips({ download: false })] },
+    );
+    const html = await renderHtmlFromDocument(document, {
+      components: { ...components, ...chipComponents },
+    });
+    expect(html.slice(0, html.indexOf("After the card"))).not.toContain('class="cp');
+    expect(html).not.toContain("chip=");
+    expect(html).toContain('<a href="https://x.com/grace">@grace</a>');
+    expect(html).toContain('<a href="https://example.com">https://example.com</a>');
+    expect(html).toContain('<span class="csl-handle">@ada</span>');
+    expect(html).toContain('<a class="cp" href="https://github.com/grace"');
+  });
+
+  it("reports each problem, naming the block and the fix", async () => {
+    const { meta, html } = await render(
+      [
+        '::post{platform="tiktok" author="Ada" likes="lots" time="yesterday" url="ftp://x" color="red"}\nHi\n:::post{author="A"}\nOne\n:::\n:::post{author="B"}\nTwo\n:::\n::',
+        "::post\nNo one\n::",
+        '::post{author="Ada" avatar="javascript:alert(1)"}\nHi\n::',
+      ].join("\n\n"),
+    );
+    expect(meta.issues).toEqual([
+      expect.stringMatching(/^`::post` 1: `color` isn't a prop of `::post`/),
+      expect.stringMatching(
+        /^`::post` 1: `url` is "ftp:\/\/x", which isn't an http or https address/,
+      ),
+      expect.stringMatching(
+        /^`::post` 1: `platform` is "tiktok", which comark-social doesn't know/,
+      ),
+      expect.stringMatching(/^`::post` 1: `likes` is "lots", which isn't a count/),
+      expect.stringMatching(/^`::post` 1: `time` is "yesterday", which isn't a date/),
+      expect.stringMatching(/^`::post` 1 holds 2 `:::post` blocks/),
+      expect.stringMatching(/^`::post` 2 has no `author` or `handle`/),
+      expect.stringMatching(
+        /^`::post` 3: `avatar` is "javascript:alert\(1\)", which isn't a picture's address/,
+      ),
+    ]);
+    expect(Object.values(meta.issueRules ?? {})).toEqual([
+      "comark/social/unknown-prop",
+      "comark/social/invalid-url",
+      "comark/social/unknown-platform",
+      "comark/social/invalid-count",
+      "comark/social/invalid-time",
+      "comark/social/extra-quote",
+      "comark/social/missing-author",
+      "comark/social/invalid-url",
+    ]);
+    expect(html).toContain('<span class="csl-time">yesterday</span>');
+    expect(html).toContain("One");
+    expect(html).not.toContain("Two");
+  });
+
+  it("makes no request without the fetch option", async () => {
+    await render('::post{url="https://x.com/ada/status/1856000000000000000"}\n::');
+    expect(requests).toEqual([]);
+  });
+});
+
+describe("fetch", () => {
+  it("fills an X post from fxtwitter and inlines its avatar and pictures, with what's written winning", async () => {
+    answers.set(
+      "https://api.fxtwitter.com/i/status/1856000000000000000",
+      json(await fixture("fxtwitter")),
+    );
+    for (const url of [
+      "https://pbs.example/ada_200x200.jpg",
+      "https://pbs.example/chart.png",
+      "https://pbs.example/grace_200x200.jpg",
+    ])
+      answers.set(url, image());
+    const { html, meta } = await render(
+      '::post{url="https://x.com/ada/status/1856000000000000000" likes="2K"}\n::',
+      { fetch: true },
+    );
+    expect(meta.issues ?? []).toEqual([]);
+    expect(html).toContain('<span class="csl-name">Ada Lovelace</span>');
+    expect(html).toContain('<span class="csl-handle">@ada</span>');
+    expect(html).toContain('<img class="csl-avatar" src="data:image/png;base64,iVBORw0KGgo="');
+    expect(html).toMatch(
+      /Shipped the new parser today 🎉<br\s*\/?>It reads 2x faster, thanks <a href="https:\/\/x.com\/grace">@grace<\/a><\/p><p><a href="https:\/\/example.com\/blog\/parser">example.com\/blog\/parser<\/a> <a href="https:\/\/x.com\/hashtag\/compilers">#compilers<\/a><\/p>/,
+    );
+    expect(html).not.toContain("t.co");
+    expect(html).toContain(
+      '<img src="data:image/png;base64,iVBORw0KGgo=" alt="Parse time before and after" width="1200" height="675"',
+    );
+    expect(html).toContain('data-quote aria-label="Post by Grace Hopper on X"');
+    expect(html).toContain('<span class="csl-sr">2,000 likes</span>');
+    expect(html).toContain('<span class="csl-sr">34 reposts</span>');
+    expect(html).toContain('<span class="csl-sr">98,765 views</span>');
+  });
+
+  it("fills a Bluesky post, resolving the handle and putting full links back", async () => {
+    answers.set(
+      "https://public.api.bsky.app/xrpc/com.atproto.identity.resolveHandle?handle=ada.bsky.social",
+      json({ did: "did:plc:abc123" }),
+    );
+    answers.set(
+      `https://public.api.bsky.app/xrpc/app.bsky.feed.getPosts?uris=${encodeURIComponent("at://did:plc:abc123/app.bsky.feed.post/3lxyz")}`,
+      json(await fixture("bluesky")),
+    );
+    for (const url of [
+      "https://cdn.bsky.example/ada.jpg",
+      "https://cdn.bsky.example/f1.jpg",
+      "https://cdn.bsky.example/f2.jpg",
+    ])
+      answers.set(url, image());
+    const post = await fetchPost("https://bsky.app/profile/ada.bsky.social/post/3lxyz");
+    expect(post).toMatchObject({
+      platform: "bluesky",
+      url: "https://bsky.app/profile/ada.bsky.social/post/3lxyz",
+      author: "Ada",
+      handle: "@ada.bsky.social",
+      time: "2026-11-12T10:24:00.000Z",
+      text: "Read the notes at https://example.com/notes/2026/parser and say hi",
+      counts: { replies: 3, reposts: 7, likes: 40 },
+    });
+    const { html, meta } = await render(
+      '::post{url="https://bsky.app/profile/ada.bsky.social/post/3lxyz"}\n::',
+      { fetch: true },
+    );
+    expect(meta.issues ?? []).toEqual([]);
+    expect(html).toContain('data-platform="bluesky"');
+    expect(html).toContain(
+      '<a href="https://example.com/notes/2026/parser">example.com/notes/2026/parser</a>',
+    );
+    expect(html).toContain('<div class="csl-media" data-count="2">');
+  });
+
+  it("fills a Mastodon post from its server, reading its HTML into text", async () => {
+    answers.set(
+      "https://mastodon.example/api/v1/statuses/113000000000000001",
+      json(await fixture("mastodon")),
+    );
+    answers.set("https://mastodon.example/ada.png", image());
+    answers.set("https://mastodon.example/v.jpg", image());
+    const post = await fetchPost("https://mastodon.example/@ada/113000000000000001");
+    expect(post.text).toBe(
+      "Hello @grace@other.example & friends\n\nNew post: https://example.com/a/very/long/path/to/a/post #rust",
+    );
+    expect(post.handle).toBe("@ada@mastodon.example");
+    const { html } = await render(
+      '::post{url="https://mastodon.example/@ada/113000000000000001"}\n::',
+      {
+        fetch: true,
+      },
+    );
+    expect(html).toContain('<a href="https://other.example/@grace">@grace@other.example</a>');
+    expect(html).toContain('<a href="https://mastodon.example/tags/rust">#rust</a>');
+    expect(html).toContain(
+      '<a href="https://example.com/a/very/long/path/to/a/post">example.com/a/very/long/path/…</a>',
+    );
+    expect(html).toContain(
+      '<span class="csl-video"><img src="data:image/png;base64,iVBORw0KGgo=" alt="A demo"',
+    );
+  });
+
+  it("keeps a picture past the size cap at its address, with an issue", async () => {
+    answers.set(
+      "https://api.fxtwitter.com/i/status/1856000000000000000",
+      json(await fixture("fxtwitter")),
+    );
+    answers.set("https://pbs.example/ada_200x200.jpg", image());
+    answers.set("https://pbs.example/grace_200x200.jpg", image());
+    answers.set("https://pbs.example/chart.png", image(new Uint8Array(2000)));
+    const { html, meta } = await render(
+      '::post{url="https://x.com/ada/status/1856000000000000000"}\n::',
+      { fetch: true, maxImageSize: 1000 },
+    );
+    expect(html).toContain('<img src="https://pbs.example/chart.png"');
+    expect(meta.issues).toEqual([
+      expect.stringMatching(
+        /^`::post` 1: the picture at https:\/\/pbs.example\/chart.png is larger than 1 KB/,
+      ),
+    ]);
+    expect(meta.issueRules?.[meta.issues![0]!]).toBe("comark/social/large-media");
+  });
+
+  it("renders what's written when the fetch fails, with an issue", async () => {
+    const { html, meta } = await render(
+      '::post{url="https://x.com/ada/status/999" author="Ada"}\nWritten\n::',
+      { fetch: true },
+    );
+    expect(html).toContain("Written");
+    expect(meta.issues).toEqual([
+      expect.stringMatching(
+        /^`::post` 1: fetching https:\/\/x.com\/ada\/status\/999 from X failed \(the post doesn't exist or isn't public\)/,
+      ),
+    ]);
+    expect(meta.issueRules?.[meta.issues![0]!]).toBe("comark/social/fetch-failed");
+  });
+
+  it("doesn't fetch Threads, LinkedIn, or other sites", async () => {
+    const { meta } = await render(
+      '::post{url="https://www.threads.com/@ada/post/C1" author="Ada"}\nHi\n::',
+      { fetch: true },
+    );
+    expect(requests).toEqual([]);
+    expect(meta.issues ?? []).toEqual([]);
+    await expect(fetchPost("https://www.linkedin.com/posts/1")).rejects.toThrow(
+      "LinkedIn has no public API",
+    );
+  });
+});

@@ -34,6 +34,15 @@ describe("comark-github references", () => {
     expect(html).not.toContain("github.com");
   });
 
+  it("leaves everything in an element with references=false as written", async () => {
+    const html = await render(
+      "::div{references=false}\nAsk @onmax about #7\n::\n\nAsk @onmax",
+      "onmax/comark-ui",
+    );
+    expect(html).toContain('<div references="false">\n  Ask @onmax about #7\n</div>');
+    expect(html.match(/github\.com/g)).toHaveLength(1);
+  });
+
   it("finds references in nested inline content", async () => {
     const html = await render("- **Ask @onmax** about _#7_", "onmax/comark-ui");
     expect(html).toContain('<strong>Ask <a href="https://github.com/onmax">@onmax</a></strong>');

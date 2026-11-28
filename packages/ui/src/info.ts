@@ -20,6 +20,7 @@ import { componentInfo as magicMove } from "comark-magic-move/info";
 import { componentInfo as metrics } from "comark-metrics/info";
 import { componentInfo as outline } from "comark-outline/info";
 import { componentInfo as properties } from "comark-properties/info";
+import { componentInfo as social } from "comark-social/info";
 import { componentInfo as qr } from "comark-qr/info";
 import { componentInfo as quiz } from "comark-quiz/info";
 import { componentInfo as sources } from "comark-sources/info";
@@ -50,6 +51,7 @@ const INFO: [keyof PresetOptions, Record<string, ComponentInfo>][] = [
   ["fileTree", fileTree],
   ["fields", fields],
   ["properties", properties],
+  ["social", social],
   ["badge", badge],
   ["metrics", metrics],
   ["table", table],
