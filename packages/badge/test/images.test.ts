@@ -179,9 +179,13 @@ describe("image badges", () => {
     const fetch = vi
       .fn<typeof globalThis.fetch>()
       .mockImplementation(
-        async () =>
+        async (url) =>
           new Response(
-            JSON.stringify({ workflow_runs: [{ status: "completed", conclusion: "success" }] }),
+            JSON.stringify(
+              (url instanceof Request ? url.url : url.toString()).includes("/actions/")
+                ? { workflow_runs: [{ status: "completed", conclusion: "success" }] }
+                : { default_branch: "main" },
+            ),
           ),
       );
     vi.stubGlobal("fetch", fetch);
@@ -196,7 +200,7 @@ describe("image badges", () => {
     for (const svg of svgs) expect(svg).toContain("passing");
     expect(html).toContain('alt="build: onmax/drawn / ci.yml"');
     await render(markdown);
-    expect(fetch).toHaveBeenCalledOnce();
+    expect(fetch).toHaveBeenCalledTimes(2);
   });
   it("bounds successful cache entries while reusing recent results", async () => {
     const fetch = vi

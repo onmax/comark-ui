@@ -99,14 +99,33 @@ export async function resolveLive(
       value = `${new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 }).format(data.downloads)}/${spec.period === "month" ? "mo" : spec.period === "week" ? "wk" : "day"}`;
     } else {
       // The latest finished run, like GitHub's own badge, so a README doesn't read "pending" after every push.
-      const query = new URLSearchParams({ per_page: "1", status: "completed" });
-      if (spec.branch) query.set("branch", spec.branch);
-      const data = await json(
-        `https://api.github.com/repos/${spec.repository}/actions/workflows/${encodeURIComponent(spec.workflow)}/runs?${query}`,
-        request,
-        token,
-      );
-      const run = record(Array.isArray(data.workflow_runs) ? data.workflow_runs[0] : undefined);
+      const latest = async (branch?: string) => {
+        const query = new URLSearchParams({ per_page: "1", status: "completed" });
+        if (branch) query.set("branch", branch);
+        const data = await json(
+          `https://api.github.com/repos/${spec.repository}/actions/workflows/${encodeURIComponent(spec.workflow)}/runs?${query}`,
+          request,
+          token,
+        );
+        return record(Array.isArray(data.workflow_runs) ? data.workflow_runs[0] : undefined);
+      };
+      let run: Record<string, unknown>;
+      if (spec.branch) run = await latest(spec.branch);
+      else {
+        // Also like GitHub's badge: the default branch first, then any branch for a workflow that never runs there.
+        // Across branches, a release workflow that also runs on closed pull requests reads "skipped" after every merge.
+        const repository = await json(
+          `https://api.github.com/repos/${spec.repository}`,
+          request,
+          token,
+        );
+        if (token && repository.private !== false)
+          throw new Error("Workflow repository is not public");
+        if (typeof repository.default_branch !== "string" || !repository.default_branch)
+          throw new Error("Missing default branch");
+        run = await latest(repository.default_branch);
+        if (!run.status) run = await latest();
+      }
       // Check the run's repository in the same response: a broader token must never
       // turn this public endpoint into a private workflow status oracle.
       if (token && record(run.repository).private !== false)
