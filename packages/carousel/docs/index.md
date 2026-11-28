@@ -280,9 +280,10 @@ Set these on `.cc` or any ancestor, such as `:root`:
 | `--cc-padding` | `1rem` | The space inside each panel, halved on a narrow page |
 | `--cc-peek` | `3rem` | How much narrower than the column each slide is on a narrow page, so the next one shows at the edge. The gap takes part of it; `0px` turns the peek off |
 | `--cc-bleed` | `0px` | How far the slides run past the carousel's right edge (its end, in a right-to-left page), into the room beside the text. Negative values act like zero. The next slide shows there, while the counter and arrows stay under the column. Set it to the page's room, such as `var(--comark-wide-end)`, and the [side outline](/outline#beside-wide-blocks) keeps clear of the slides |
+| `--cc-ratio` | `4 / 3` | The shape of a slide that is one image. The photo fills it, cropped to fit; zooming shows the whole photo |
 | `--cc-button-size` | `2rem` | The arrows' width and height, at least `2.5rem` on touch screens |
 
-Each slide sits on a soft panel as tall as the tallest one, so slides of different heights line up. A slide that is one image sits in the middle of its panel. To drop the panel, set `--cc-surface: transparent` and `--cc-padding: 0`.
+Each slide sits on a soft panel as tall as the tallest one, so slides of different heights line up. A slide that is one image has no panel: the photo fills the slide at `--cc-ratio`, so photos of different shapes line up too. To drop the other panels, set `--cc-surface: transparent` and `--cc-padding: 0`.
 
 ### Classes and attributes
 

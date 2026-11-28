@@ -3,10 +3,12 @@ import { scripted } from "../../../shared/scripted.ts";
 
 const inlineSizeUnit = "10000px";
 const inlineSizeRatio = `tan(atan2(100cqi,${inlineSizeUnit}))`;
+const photo =
+  ".cc-grid>.cc-slide:has(>:is(img,a):nth-child(1 of :not(style,script)):nth-last-child(1 of :not(style,script))):has(>img,>a>img:only-child)";
 
 /**
  * The carousel styles. The script adds them to the page once. Theme the controls with the shared `--comark-*` tokens,
- * and set `--cc-gap`, `--cc-surface`, `--cc-padding`, `--cc-peek`, `--cc-bleed`, and `--cc-button-size` on `.cc` or any ancestor. The rules sit in
+ * and set `--cc-gap`, `--cc-surface`, `--cc-padding`, `--cc-peek`, `--cc-bleed`, `--cc-ratio`, and `--cc-button-size` on `.cc` or any ancestor. The rules sit in
  * the `comark` layer, so any unlayered rule of the host's wins.
  */
 export const css = `@layer comark{${[
@@ -28,9 +30,11 @@ export const css = `@layer comark{${[
   ".cc-slide>:nth-last-child(1 of :not(style,script)),.cc-slide>.ck:nth-last-child(1 of :not(style,script))>pre{margin-bottom:0!important}",
   // A slide that is one code block shows the block's own frame, not a second one around it.
   ".cc-grid>.cc-slide:has(>:is(pre,.ck):nth-child(1 of :not(style,script)):nth-last-child(1 of :not(style,script))){padding:0;background:none}",
-  // A slide that is one image has no title to keep in place, so a shorter image sits in the middle of the panel
-  // instead of over a band of empty surface.
-  ".cc-grid>.cc-slide:has(>:is(img,a):nth-child(1 of :not(style,script)):nth-last-child(1 of :not(style,script))):has(>img,>a>img:only-child){align-content:center}",
+  // A slide that is one image is the photo itself, with no panel around it: it fills the slide at one shape, cropped
+  // to fit, so photos of different shapes line up. The zoomed copy, outside the grid, shows the whole photo.
+  `${photo}{padding:0;background:none}`,
+  `${photo}>a{display:block}`,
+  `${photo}>img,${photo}>a>img{width:100%;aspect-ratio:var(--cc-ratio,4/3);object-fit:cover;border-radius:var(--_comark-radius)}`,
   ".cc-slide img{max-width:100%;height:auto}",
   // The parse plugin lifts an image, or a link around one, out of a paragraph of its own, so only an image that stands
   // alone is centered.
