@@ -176,14 +176,25 @@ describe("image badges", () => {
     expect(fetch).not.toHaveBeenCalled();
   });
   it("draws live badges from data fetched while parsing, once per process", async () => {
-    const fetch = vi
-      .fn<typeof globalThis.fetch>()
-      .mockImplementation(
-        async () =>
-          new Response(
-            JSON.stringify({ workflow_runs: [{ status: "completed", conclusion: "success" }] }),
+    const fetch = vi.fn<typeof globalThis.fetch>().mockImplementation(
+      async (url) =>
+        new Response(
+          JSON.stringify(
+            (url instanceof Request ? url.url : url.toString()).includes("/actions/")
+              ? {
+                  workflow_runs: [
+                    {
+                      status: "completed",
+                      conclusion: "success",
+                      head_branch: "main",
+                      head_repository: { full_name: "onmax/drawn" },
+                    },
+                  ],
+                }
+              : { default_branch: "main" },
           ),
-      );
+        ),
+    );
     vi.stubGlobal("fetch", fetch);
     const markdown =
       ':badge{source="github-actions" repository="onmax/drawn" workflow="ci.yml" label="build"}';
@@ -196,7 +207,7 @@ describe("image badges", () => {
     for (const svg of svgs) expect(svg).toContain("passing");
     expect(html).toContain('alt="build: onmax/drawn / ci.yml"');
     await render(markdown);
-    expect(fetch).toHaveBeenCalledOnce();
+    expect(fetch).toHaveBeenCalledTimes(2);
   });
   it("bounds successful cache entries while reusing recent results", async () => {
     const fetch = vi

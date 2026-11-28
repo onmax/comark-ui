@@ -131,7 +131,7 @@ Use the `workflow` prop to choose the workflow's YAML filename.
 
 ### Branch
 
-Use the `branch` prop to filter workflow runs to one branch. Without it, the badge shows the latest finished run across branches. A run in progress never shows. The badge keeps the last result until it finishes.
+Use the `branch` prop to filter workflow runs to one branch. Without it, the badge shows the latest finished run on the repository's own default branch. It falls back to the latest finished run across branches only when the workflow has no runs on the repository's default branch. A run in progress never shows: the badge keeps the last finished result, or shows unavailable if the first default-branch run has not finished.
 
 ```md
 :badge{source="github-actions" repository="onmax/comark-ui" workflow="ci.yaml" branch="main"}
@@ -298,7 +298,7 @@ Test from the client that failed. A badge request should return HTTP 200 with `C
 | `period` | `month` | npm downloads for the last `day`, `week`, or `month`. |
 | `repository` | — | Public GitHub repository as `owner/repo`. |
 | `workflow` | — | Workflow filename, such as `ci.yml`. |
-| `branch` | — | Optional workflow branch filter. |
+| `branch` | default branch | Optional workflow branch filter. |
 | `icon` | Source icon | `none`, `package`, `npm`, `npmx`, `nuxt`, `github`, `comark`, `shadcn`, or `check`. npm sources default to the preset's logo, and GitHub Actions to GitHub. The SVG embeds brand marks. |
 | `labelColor` | `neutral` | Semantic or six-digit hex color for the label background in the default preset's subtle, solid, and custom styles. |
 | `preset` | `default` | `default`, `npmx`, `nuxt`, `flat`, or `for-the-badge`. All but default ignore `style`, `labelColor`, and the custom style's props. |

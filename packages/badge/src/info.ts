@@ -35,7 +35,10 @@ export const componentInfo = {
         description: "A public GitHub repository as owner/repo, for GitHub Actions.",
       },
       workflow: { type: "string", description: "The workflow's file name, such as ci.yml." },
-      branch: { type: "string", description: "The branch whose workflow runs count." },
+      branch: {
+        type: "string",
+        description: "The branch whose workflow runs count. Without it, the default branch.",
+      },
       icon: {
         type: "string",
         options: ["none", "package", "npm", "npmx", "nuxt", "github", "comark", "shadcn", "check"],

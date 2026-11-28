@@ -5,6 +5,25 @@ const get = (query: string, method = "GET") =>
   new Request(`https://badges.example/badge.svg?${query}`, { method });
 const json = (value: unknown, status = 200) =>
   new Response(JSON.stringify(value), { status, headers: { "Content-Type": "application/json" } });
+const href = (url: RequestInfo | URL) => (url instanceof Request ? url.url : url.toString());
+// GitHub's API: repository metadata, or a page of the matching workflow runs.
+type WorkflowRun = Record<string, unknown>;
+const upstream = { head_branch: "main", head_repository: { full_name: "onmax/comark-ui" } };
+const fork = { ...upstream, head_repository: { full_name: "contributor/comark-ui" } };
+const github = (runs: Record<string, WorkflowRun[]>, repository: Record<string, unknown> = {}) =>
+  vi.fn<typeof globalThis.fetch>().mockImplementation(async (url) => {
+    const address = new URL(href(url));
+    if (!address.pathname.includes("/actions/"))
+      return json({ default_branch: "main", private: false, ...repository });
+    const { searchParams } = address;
+    const status = searchParams.get("status");
+    const page = Number(searchParams.get("page") ?? 1);
+    const size = Number(searchParams.get("per_page") ?? 30);
+    const matching = (runs[searchParams.get("branch") ?? "*"] ?? []).filter(
+      (run) => !status || run.status === status,
+    );
+    return json({ workflow_runs: matching.slice((page - 1) * size, page * size) });
+  });
 // A Cache API that every handler shares, as one Worker location's instances do.
 function sharedCache() {
   const stored = new Map<string, Response>();
@@ -176,6 +195,91 @@ describe("hosted badge handler", () => {
     );
   });
 
+  it("reads the default branch's latest run without a branch, so skipped pull request runs don't show", async () => {
+    const fetch = github({
+      main: [{ ...upstream, status: "completed", conclusion: "success" }],
+      "*": [{ status: "completed", conclusion: "skipped" }],
+    });
+    const response = await createBadgeHandler({ fetch })(
+      get("source=github-actions&repository=onmax/comark-ui&workflow=release.yaml"),
+    );
+    expect(await response.text()).toContain("passing");
+    expect(fetch.mock.calls.map(([url]) => url)).toEqual([
+      "https://api.github.com/repos/onmax/comark-ui",
+      "https://api.github.com/repos/onmax/comark-ui/actions/workflows/release.yaml/runs?branch=main&per_page=5&page=1",
+    ]);
+  });
+
+  it.each([
+    { kibPerRun: 15, status: "ok", value: "passing" },
+    { kibPerRun: 64, status: "unavailable", value: "unavailable" },
+  ])(
+    "returns $status for a default-branch page with $kibPerRun KiB per run",
+    async ({ kibPerRun, status, value }) => {
+      const fetch = github({
+        main: Array.from({ length: 5 }, () => ({
+          ...upstream,
+          status: "completed",
+          conclusion: "success",
+          head_commit: {
+            message: "Update workflow tests\n\n" + "Details ".repeat(kibPerRun * 128),
+          },
+        })),
+      });
+      const response = await createBadgeHandler({ fetch })(
+        get("source=github-actions&repository=onmax/comark-ui&workflow=release.yaml"),
+      );
+      expect(response.headers.get("X-Badge-Status")).toBe(status);
+      expect(await response.text()).toContain(value);
+    },
+  );
+
+  it("falls back to any branch for a workflow that never runs on the default branch", async () => {
+    const fetch = github({
+      main: [{ ...fork, status: "completed", conclusion: "action_required" }],
+      "*": [{ status: "completed", conclusion: "success" }],
+    });
+    const response = await createBadgeHandler({ fetch })(
+      get("source=github-actions&repository=onmax/comark-ui&workflow=pkg-pr-new.yml"),
+    );
+    expect(await response.text()).toContain("passing");
+    expect(fetch.mock.calls.at(-1)?.[0]).toBe(
+      "https://api.github.com/repos/onmax/comark-ui/actions/workflows/pkg-pr-new.yml/runs?per_page=1&status=completed",
+    );
+  });
+
+  it("finds the last completed upstream run past active and same-name fork runs", async () => {
+    const forkRun = { ...fork, status: "completed", conclusion: "action_required" };
+    const fetch = github({
+      main: [
+        { ...upstream, status: "in_progress" },
+        forkRun,
+        forkRun,
+        forkRun,
+        forkRun,
+        { ...upstream, status: "completed", conclusion: "success" },
+      ],
+      "*": [{ status: "completed", conclusion: "failure" }],
+    });
+    const response = await createBadgeHandler({ fetch })(
+      get("source=github-actions&repository=onmax/comark-ui&workflow=release.yaml"),
+    );
+    expect(await response.text()).toContain("passing");
+    expect(fetch.mock.calls.at(-1)?.[0]).toContain("branch=main&per_page=5&page=2");
+  });
+
+  it("does not fall back while the first upstream run is in progress", async () => {
+    const fetch = github({
+      main: [{ ...upstream, status: "in_progress" }],
+      "*": [{ status: "completed", conclusion: "success" }],
+    });
+    const response = await createBadgeHandler({ fetch })(
+      get("source=github-actions&repository=onmax/comark-ui&workflow=release.yaml"),
+    );
+    expect(response.headers.get("X-Badge-Status")).toBe("unavailable");
+    expect(fetch).toHaveBeenCalledTimes(2);
+  });
+
   it("shows unavailable instead of inventing a successful status, and retries failures", async () => {
     let time = 0;
     const fetch = vi
@@ -252,12 +356,13 @@ describe("hosted badge handler", () => {
   it.each([true, undefined, "false"])(
     "does not expose or share authenticated workflow results without public visibility (%s)",
     async (visibility) => {
-      const fetch = vi.fn<typeof globalThis.fetch>().mockImplementation(async () =>
-        json({
-          workflow_runs: [
+      const fetch = github(
+        {
+          main: [
             { status: "completed", conclusion: "success", repository: { private: visibility } },
           ],
-        }),
+        },
+        { private: visibility },
       );
       const cache = sharedCache();
       const query = "source=github-actions&repository=owner/private&workflow=ci.yml";
@@ -290,15 +395,18 @@ describe("hosted badge handler", () => {
   });
 
   it("sends the token to GitHub only", async () => {
-    const fetch = vi.fn<typeof globalThis.fetch>().mockImplementation(async (url) =>
-      typeof url === "string" && url.startsWith("https://api.github.com/")
-        ? json({
-            workflow_runs: [
-              { status: "completed", conclusion: "success", repository: { private: false } },
-            ],
-          })
-        : json({ latest: "1.0.0" }),
-    );
+    const runs = github({
+      main: [
+        { ...upstream, status: "completed", conclusion: "success", repository: { private: false } },
+      ],
+    });
+    const fetch = vi
+      .fn<typeof globalThis.fetch>()
+      .mockImplementation(async (url, init) =>
+        href(url).startsWith("https://api.github.com/")
+          ? runs(url, init)
+          : json({ latest: "1.0.0" }),
+      );
     const handle = createBadgeHandler({ fetch, token: "secret" });
     const response = await handle(
       get("source=github-actions&repository=onmax/comark-ui&workflow=ci.yml"),
@@ -308,6 +416,7 @@ describe("hosted badge handler", () => {
     const authorization = (call: number) =>
       new Headers(fetch.mock.calls[call]?.[1]?.headers).get("Authorization");
     expect(authorization(0)).toBe("Bearer secret");
-    expect(authorization(1)).toBeNull();
+    expect(authorization(1)).toBe("Bearer secret");
+    expect(authorization(2)).toBeNull();
   });
 });
