@@ -23,6 +23,8 @@ export type QuizLabels = {
   noHost: string;
   /** Under a poll once its `closes` date has passed or the host closes voting. */
   closed: string;
+  /** The pill on a poll option marked `{recommended}` with no text of its own. */
+  recommended: string;
 };
 
 export const DEFAULT_LABELS: QuizLabels = {
@@ -44,4 +46,5 @@ export const DEFAULT_LABELS: QuizLabels = {
   notYet: "Not yet",
   noHost: "Voting needs a host that collects votes.",
   closed: "Voting closed",
+  recommended: "Recommended",
 };

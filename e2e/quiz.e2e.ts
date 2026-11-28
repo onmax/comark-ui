@@ -64,6 +64,31 @@ Microtasks drain before the next task.
 
 const option = (page: Page, text: string) => page.locator(".cqz-option", { hasText: text });
 
+test("a long recommended pill wraps within the option label on a narrow screen", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+  const html = await render(`::poll{#db}
+Which database?
+
+- [ ] SQLite
+- [ ] Neon {recommended="This is our recommended choice for smaller projects"}
+::`);
+  await page.setContent(`<!doctype html><html lang="en"><body>${html}</body></html>`);
+  const label = page.locator('[data-recommended] [data-slot="label"]');
+  const bounds = await label.evaluate((element) => {
+    const pill = element.querySelector('[data-slot="recommended"]')!;
+    return {
+      pillRight: pill.getBoundingClientRect().right,
+      labelRight: element.getBoundingClientRect().right,
+      pillHeight: pill.getBoundingClientRect().height,
+      lineHeight: Number.parseFloat(getComputedStyle(pill).lineHeight),
+    };
+  });
+  expect(bounds.pillRight).toBeLessThanOrEqual(bounds.labelRight);
+  expect(bounds.pillHeight).toBeGreaterThan(bounds.lineHeight);
+});
+
 test("a right answer is marked, explained, and sent to the host", async ({ page }) => {
   await open(page, question);
   await expect

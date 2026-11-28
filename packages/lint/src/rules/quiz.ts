@@ -66,4 +66,8 @@ export default {
     code: "COMARK4016",
     title: "Keep quiz blocks out of each other",
   },
+  "comark/quiz/recommended-in-question": {
+    code: "COMARK4017",
+    title: "Mark a question's right option `[x]`, not `{recommended}`",
+  },
 } satisfies Record<`comark/quiz/${string}`, RuleInfo>;
