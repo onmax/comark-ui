@@ -26,9 +26,23 @@ just setting up my twttr
 ::
 ```
 
+Posts that reply to each other go in a `::thread`, one card with a rail between them and the last post larger:
+
+```md
+::thread
+:::post{platform="x" author="jack" handle="jack" likes="40"}
+a thread on twttr
+:::
+
+:::post{platform="x" author="jack" handle="jack" likes="12" views="9.1K"}
+it's getting faster
+:::
+::
+```
+
 The platform comes from `url`, or from `platform` (`x`, `bluesky`, `mastodon`, `threads`, `linkedin`, or `generic`). The card has no iframe and no script, and the page asks no one for anything but the pictures.
 
-With `social({ fetch: true })`, X and Bluesky posts are filled from their public APIs while parsing, and pictures from their known image origins are inlined. What's written wins. For Mastodon or other image origins, provide a trusted `request` transport that enforces egress policy on every API, image, and redirect request. Do not use an unrestricted transport for untrusted content. `fetchPost(url, { request })` returns the post data for a script of your own. Static rendering needs no transport.
+With `social({ fetch: true })`, X and Bluesky posts are filled from their public APIs while parsing, and pictures from their known image origins are inlined. What's written wins, and a `::thread{url}` with no posts is fetched up to its root, five posts at most. For Mastodon or other image origins, provide a trusted `request` transport that enforces egress policy on every API, image, and redirect request. Do not use an unrestricted transport for untrusted content. `fetchPost(url, { request })` returns the post data for a script of your own. Static rendering needs no transport.
 
 The plugin adds every problem to `meta.issues`, so a host can reject a document before publishing it. Each issue names the block and says how to fix it.
 

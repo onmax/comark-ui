@@ -1,6 +1,6 @@
 # Social posts
 
-comark-social draws a post from X, Bluesky, Mastodon, Threads, LinkedIn, or any site as a static card: the author, the text, the pictures, a quoted post, and the counts in the platform's order, with its logo. Use it to quote what someone posted, such as a bug report, a launch, or feedback, instead of a screenshot of the post or an embedded player. The card has no iframe and no script.
+comark-social draws a post, or a thread of them, from X, Bluesky, Mastodon, Threads, LinkedIn, or any site as a static card: the author, the text, the pictures, a quoted post, and the counts in the platform's order, with its logo. Use it to quote what someone posted, such as a bug report, a launch, or feedback, instead of a screenshot of the post or an embedded player. The card has no iframe and no script.
 
 ## Syntax
 
@@ -30,6 +30,28 @@ Has anyone measured the old parser?
 - Images in a paragraph of their own are the pictures, in a grid of up to four.
 - A `:::post` inside is the quoted post, drawn smaller and without counts. A post quotes one.
 - Write the post as it was: don't shorten its text or round its counts beyond what the platform shows.
+
+## Thread
+
+Put posts that reply to each other in a `::thread`, from the root down. It's one card with the posts joined by a rail and the platform's logo in the corner; each post's date links to it.
+
+```md
+::thread
+:::post{url="https://x.com/ada/status/1" author="Ada Lovelace" handle="ada" time="2026-11-20T09:30:00Z" likes="40"}
+A thread on the new parser.
+:::
+
+:::post{url="https://x.com/ada/status/2" author="Ada Lovelace" handle="ada" time="2026-11-20T09:31:00Z" likes="12" views="9.1K"}
+It's twice as fast on long documents.
+:::
+::
+```
+
+- A post with no `url` or `platform` takes the thread's platform, from the thread's `url` or the first post that has either.
+- The last post is the focal one: larger, with its full date and views under it. `:focal="false"` draws it like the others, for a thread that goes on.
+- With more than five posts above the last, all but the one it replies to fold behind "Show N earlier posts".
+- Anything but a `:::post` inside is left out, with an issue.
+- With `fetch`, `::thread{url="…"}` and no posts inside is fetched from that post up to the root, five posts at most.
 
 ## Fetch
 

@@ -28,6 +28,16 @@ const markdown = [
   "The original",
   ":::",
   "::",
+  "",
+  "::thread",
+  ':::post{url="https://x.com/ada/status/1" author="Ada" handle="ada" time="2026-11-20T09:30:00Z"}',
+  "First",
+  ":::",
+  "",
+  ':::post{url="https://x.com/ada/status/2" author="Ada" handle="ada" time="2026-11-20T09:31:00Z" views="12"}',
+  "Second",
+  ":::",
+  "::",
 ].join("\n");
 const source = (path: string) => fileURLToPath(new URL(path, import.meta.url));
 

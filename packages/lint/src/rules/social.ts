@@ -2,7 +2,10 @@ import type { RuleInfo } from "./types.ts";
 
 // comark-social's issues, COMARK4901 on.
 export default {
-  "comark/social/unknown-prop": { code: "COMARK4901", title: "Use only `::post`'s props" },
+  "comark/social/unknown-prop": {
+    code: "COMARK4901",
+    title: "Use only the props a post or thread reads",
+  },
   "comark/social/unknown-platform": {
     code: "COMARK4902",
     title: "Name a platform comark-social knows",
@@ -23,4 +26,9 @@ export default {
     code: "COMARK4909",
     title: "Keep a fetched picture under `maxImageSize`",
   },
+  "comark/social/thread-content": {
+    code: "COMARK4910",
+    title: "Write a thread's words in its posts",
+  },
+  "comark/social/empty-thread": { code: "COMARK4911", title: "Give every thread its posts" },
 } satisfies Record<`comark/social/${string}`, RuleInfo>;

@@ -15,6 +15,11 @@
       "ruleId": "typescript/strict/no-runtime-typeof",
       "file": "src/text.ts",
       "reason": "A Comark node is text when it's a string, so the text walk tells words from elements by their runtime type."
+    },
+    {
+      "ruleId": "typescript/strict/no-runtime-typeof",
+      "file": "src/thread.ts",
+      "reason": "A Comark node is text when it's a string, so the thread tells stray words from its posts by their runtime type."
     }
   ]
 }

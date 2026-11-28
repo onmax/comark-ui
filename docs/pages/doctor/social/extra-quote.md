@@ -1,4 +1,4 @@
-A `:::post` inside a `::post` is the post it quotes, and a post quotes one. A second `:::post` isn't shown, and neither is a post inside a quoted post. To show several posts, write each as its own `::post`.
+A `:::post` inside a `::post` is the post it quotes, and a post quotes one. A second `:::post` isn't shown, and neither is a post inside a quoted post. To show several posts, write each as its own `::post`, or put them in a `::thread` when each replies to the one before.
 
 ::incorrect
 ```md

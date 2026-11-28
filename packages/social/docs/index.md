@@ -1,7 +1,7 @@
 ---
 title: Social
-description: Posts from X, Bluesky, Mastodon, Threads, and LinkedIn as static cards, written in Markdown.
-keywords: social, post, tweet, X, Twitter, Bluesky, Mastodon, Threads, LinkedIn, quote post, static embed, social card, feedback
+description: Posts and threads from X, Bluesky, Mastodon, Threads, and LinkedIn as static cards, written in Markdown.
+keywords: social, post, thread, tweet, X, Twitter, Bluesky, Mastodon, Threads, LinkedIn, quote post, static embed, social card, feedback
 tagline: A post from X, Bluesky, Mastodon, Threads, LinkedIn, or any site, as a static card with its counts.
 group: Review blocks
 icon: message-circle
@@ -38,6 +38,24 @@ Reminder: the meetup moved to Thursday. Bring your laptop if you want help with 
 ::
 ```
 :::
+
+:::example{label="Thread"}
+```md
+::thread
+:::post{url="https://x.com/miraokafor/status/1856000000000000001" author="Mira Okafor" handle="miraokafor" time="2026-11-20T09:30:00Z" replies="12" reposts="40" likes="380"}
+We moved the docs to Comark this week. A thread on what changed.
+:::
+
+:::post{url="https://x.com/miraokafor/status/1856000000000000002" author="Mira Okafor" handle="miraokafor" time="2026-11-20T09:31:00Z" replies="3" reposts="8" likes="96"}
+The build went from 41s to 9s, mostly because the parser no longer runs twice per page.
+:::
+
+:::post{url="https://x.com/miraokafor/status/1856000000000000003" author="Mira Okafor" handle="miraokafor" time="2026-11-20T09:33:00Z" replies="9" reposts="21" likes="214" views="18K" bookmarks="30"}
+Next up: tables. They're the last thing we still render by hand.
+:::
+::
+```
+:::
 ::
 
 ## Features
@@ -46,6 +64,7 @@ Reminder: the meetup moved to Thursday. Bring your laptop if you want help with 
 - The counts in the platform's order and words: Mastodon's boosts and favourites, LinkedIn's reactions and comments.
 - No iframe, no script, and no request when the page opens, so a quoted post stays as it was even after it's deleted.
 - `@handles` and `#tags` link to the platform, a nested `:::post` is the quoted post, and images in a paragraph of their own are a grid.
+- A `::thread` joins posts that reply to each other with a rail, in one card, with the last post larger.
 - With the `fetch` option, `::post{url="…"}` alone is filled from X, Bluesky, or Mastodon while parsing, with its pictures inlined.
 - A screen reader hears "Post by Mira Okafor on X", the full date, and each count in words.
 
@@ -146,6 +165,30 @@ The sidebar flickers on Safari 27.1 when it opens.
 ```
 ::
 
+### Thread
+
+Put the `:::post` blocks of a thread inside `::thread`, from the root down. They share one card, joined by a rail, with the platform's logo in its corner, and each post's date links to the post. A post with no `url` or `platform` takes the thread's, from its `url` or the first post that has either, so the platform needs writing once. The last one is the focal post: larger, with its full date and views under it.
+
+::example
+```md
+::thread
+:::post{platform="bluesky" author="Theo Lin" handle="tlin.bsky.social" time="2026-11-21T14:05:00Z" likes="31"}
+Three things I learned porting our plugin to Comark.
+:::
+
+:::post{platform="bluesky" author="Theo Lin" handle="tlin.bsky.social" time="2026-11-21T14:06:00Z" likes="18"}
+1. A parse plugin should leave nodes a renderer can draw without thinking.
+:::
+
+:::post{platform="bluesky" author="Theo Lin" handle="tlin.bsky.social" time="2026-11-21T14:08:00Z" replies="2" likes="44" views="2.1K"}
+2. Never throw while rendering: put the problem in `meta.issues`.
+:::
+::
+```
+::
+
+Use `:focal="false"` to draw the last post like the others, for a thread that goes on past what you quote. With more than five posts above the last one, all but the post it replies to fold behind "Show N earlier posts".
+
 ## Examples
 
 ### Fill a post from its link
@@ -168,6 +211,17 @@ What you write wins over what's fetched, so you can correct a count or shorten t
 By default, server-side fetching is limited to the HTTPS origins `api.fxtwitter.com` and `public.api.bsky.app` for posts, and `pbs.twimg.com` and `cdn.bsky.app` for images. The same restrictions apply on redirects. Disallowed requests report an issue; a picture that cannot be inlined may still load in the reader's browser. Leave `fetch` off if parsing must make no requests.
 
 To fetch federated Mastodon posts or images from other origins, supply a trusted `request(url, init)` transport to `social()` or `fetchPost()`. It replaces the default allowlist and handles every API and image request, including each redirect hop. Honor `init.redirect: "manual"` and the abort signal; enforce your egress rules at connection time, using a trusted proxy or a transport that validates and pins the actual destination IP. A URL or DNS precheck alone does not prevent DNS rebinding. Do not use an unrestricted transport with untrusted Markdown or provider responses. Requests through a custom transport are not shared in the default cache.
+
+### Fetch a thread
+
+With `fetch`, give a `::thread` the last post's `url` and no posts. The parse follows each reply up to the root, five posts at most, and fills each one as it would a `::post`.
+
+```md
+::thread{url="https://bsky.app/profile/tlin.bsky.social/post/3lxyz"}
+::
+```
+
+When you write the posts, they're used as written and the `url` only links the logo.
 
 ### Quote feedback in a pull request
 
@@ -202,6 +256,13 @@ Links with a trailing slash 404 on 0.14.2.
 | `views` | — | Views. |
 | `bookmarks` | — | Bookmarks. |
 
+`::thread` takes two props:
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| `url` | — | The last post's address. With `fetch` and no posts inside, the thread is fetched from it up to the root. |
+| `focal` | `true` | Whether the last post shows larger, with its full date and views. |
+
 ### Options
 
 | Option | Default | Description |
@@ -230,7 +291,9 @@ The plugin adds these problems to `meta.issues`, as [Validation](/guide/validati
 - A `time` that isn't a date. It shows as written.
 - A post with no `author` or `handle`.
 - More than one `:::post` in a post, or a post inside a quoted post. Only the first quote shows.
-- With `fetch`, a post or a picture that couldn't be fetched, and a picture larger than `maxImageSize`.
+- Text or a block in a `::thread` outside its posts. It's left out.
+- A `::thread` with no posts, and no `url` it could fetch them from. It renders nothing.
+- With `fetch`, a post, a post a thread replies to, or a picture that couldn't be fetched, and a picture larger than `maxImageSize`.
 
 Each issue names the block and the fix, and has its own rule in [Doctor](/doctor):
 
@@ -256,11 +319,11 @@ import social, { components } from "comark-social/html";
 const render = createHtmlRenderer({ plugins: [social()], components });
 ```
 
-For Vue, React, or Svelte, import from `comark-social/vue`, `comark-social/react`, or `comark-social/svelte`. The components add the styles on mount. Import `comark-social/style.css` with your styles so a server-rendered page doesn't shift. Register it before comark-chips, which then leaves the card's links and handles alone. [Renderers](/guide/renderers) covers using it with other plugins.
+For Vue, React, or Svelte, import from `comark-social/vue`, `comark-social/react`, or `comark-social/svelte`. The components add the styles on mount. Import `comark-social/style.css` with your styles so a server-rendered page doesn't shift. Register it before comark-chips, which then leaves the card's links and handles alone, and after comark-details, which would otherwise turn a thread's folded posts into its own disclosure. [Renderers](/guide/renderers) covers using it with other plugins.
 
 ## Theme
 
-The post sits in a bordered card like [Cards](/cards), with the platform's logo in the text color, so it matches the page rather than the platform. The rules sit in a `comark` CSS layer, so any plain rule of yours wins.
+The post, or the whole thread, sits in a bordered card like [Cards](/cards), with the platform's logo in the text color, so it matches the page rather than the platform. The rules sit in a `comark` CSS layer, so any plain rule of yours wins.
 
 ### Shared tokens
 
@@ -271,9 +334,9 @@ The card reads these [shared tokens](/guide/theming):
 | `--comark-background` | The card |
 | `--comark-foreground` | The text and the logo |
 | `--comark-muted` | The handle, the date, and the counts |
-| `--comark-border` | The card's edge, the quoted post, and the gaps in the grid |
+| `--comark-border` | The card's edge, the quoted post, the gaps in the grid, and a thread's rail |
 | `--comark-accent` | The initial's circle, code, and a picture still loading |
-| `--comark-primary` | Links, `@handles`, and `#tags` |
+| `--comark-primary` | Links, `@handles`, `#tags`, and "Show N earlier posts" |
 | `--comark-ring` | The focus ring |
 | `--comark-radius` | The corners |
 | `--comark-font` | The text |
@@ -282,7 +345,10 @@ The card reads these [shared tokens](/guide/theming):
 
 | Class | Element |
 | --- | --- |
-| `.csl` | The card, an `<article>`; `[data-platform]` names the platform and `[data-quote]` marks a quoted post |
+| `.csl` | The card, an `<article>`; `[data-platform]` names the platform and `[data-quote]` marks a quoted post. In a thread, `[data-thread]` marks each post, `[data-focal]` the last, and `[data-rail]` each one the rail runs on from |
+| `.csl-thread` | A thread's card, with `[data-platform]` |
+| `.csl-earlier` | The `<details>` that holds a long thread's earlier posts |
+| `.csl-stamp`, `.csl-views` | The focal post's full date and views |
 | `.csl-head`, `.csl-avatar`, `.csl-who` | The header, the avatar or initial, and the name block |
 | `.csl-name`, `.csl-handle`, `.csl-time` | The author, the handle, and the date |
 | `.csl-logo` | The platform's logo, a link to the post when it has a `url` |

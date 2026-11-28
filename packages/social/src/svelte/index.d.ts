@@ -1,8 +1,9 @@
 import type { Component, Snippet } from "svelte";
-import type { PostAttributes } from "comark-social";
+import type { PostAttributes, ThreadAttributes } from "comark-social";
 
 export { default } from "comark-social";
-export type { PostAttributes, SocialMeta, SocialOptions } from "comark-social";
+export type { PostAttributes, SocialMeta, SocialOptions, ThreadAttributes } from "comark-social";
 
 export declare const Post: Component<PostAttributes & { children?: Snippet }>;
-export declare const components: { Post: typeof Post };
+export declare const Thread: Component<ThreadAttributes & { children?: Snippet }>;
+export declare const components: { Post: typeof Post; Thread: typeof Thread };

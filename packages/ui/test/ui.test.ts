@@ -127,6 +127,26 @@ describe("comark-ui", () => {
     expect(out).not.toContain("github.com");
   });
 
+  it("leaves the handles in a social thread as the platform shows them", async () => {
+    const out = await renderHtml(
+      '::thread\n:::post{platform="x" author="Ada" handle="ada"}\nAsk @grace\n:::\n\n:::post{platform="x" author="Grace" handle="grace"}\nDone, @ada\n:::\n::',
+    );
+    expect(out).toContain('<span class="csl-handle">@grace</span>');
+    expect(out).toContain('Done, <a href="https://x.com/ada">@ada</a>');
+    expect(out).not.toContain("github.com");
+  });
+
+  it("keeps a long social thread's fold its own, not a ::details disclosure", async () => {
+    const posts = Array.from(
+      { length: 8 },
+      (_, i) => `:::post{platform="x" author="Ada" handle="ada"}\nPost ${i + 1}\n:::`,
+    );
+    const out = await renderHtml(`::thread\n${posts.join("\n\n")}\n::`);
+    expect(out).toContain('<details class="csl-earlier">');
+    expect(out).toMatch(/ 6 earlier posts\s*<\/summary>/);
+    expect(out).not.toMatch(/>\s*Details\s*</);
+  });
+
   it("turns a plugin off, with its components", async () => {
     const { plugins, components } = html({ ...offline, zoom: false, github: { callouts: false } });
     expect(Object.keys(components)).not.toContain("zoom");
