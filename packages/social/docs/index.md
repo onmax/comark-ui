@@ -155,7 +155,7 @@ Mastodon calls them boosts and favourites.
 
 ### Pictures
 
-Put images in a paragraph of their own to show them in a grid under the text, up to four in view. With `fetch`, a video shows its thumbnail with a play badge.
+Put images in a paragraph of their own to show them in a grid under the text, up to four in view. A video shows its thumbnail with a play badge: with `fetch`, or when you write the thumbnail as `![Video](still.jpg){video}`.
 
 ::example
 ```md
@@ -300,6 +300,36 @@ Links with a trailing slash 404 on 0.14.2.
 ::
 ```
 
+### Write a post from a script
+
+When the page is rendered without fetching, as on Drop, fetch the post in your own script and write it with `postMarkdown()`. It returns the `::post` block with every prop quoted so Comark reads it back exactly, the text escaped so `{`, `[`, `:name`, `#`, and the rest stay text, and the quoted post as a `:::post` inside. The card it draws is the one `fetch` draws.
+
+```ts
+import { fetchPost, postMarkdown } from "comark-social";
+
+const post = await fetchPost("https://x.com/miraokafor/status/1856000000000000000");
+const markdown = await postMarkdown(post, {
+  // Save each picture with the document and write its path instead of the platform's address.
+  src: async (url, { kind, index }) => save(url, `${kind}-${index}`),
+});
+```
+
+`src` gets each picture's address and returns the address to write, or nothing to keep it. Here `save()` is your own function that downloads the picture next to the document and returns its path, such as `./avatar-0.jpg`. Use `colons` to write the post inside another block, such as `colons: 3` for a `:::post`. For text alone, such as a message you write into a block of your own, `textMarkdown(text)` escapes it the same way.
+
+For a thread, fetch each post up the replies with `replyTo`, then write them from the root down with `threadMarkdown()`. It takes the same options, plus `focal: false`.
+
+```ts
+import { fetchPost, threadMarkdown } from "comark-social";
+
+const posts = [];
+for (let next: string | undefined = "https://bsky.app/profile/tlin.bsky.social/post/3lxyz"; next && posts.length < 5; ) {
+  const post = await fetchPost(next);
+  posts.unshift(post);
+  next = post.replyTo;
+}
+const markdown = await threadMarkdown(posts);
+```
+
 ## API
 
 ### Props
@@ -359,6 +389,9 @@ Links with a trailing slash 404 on 0.14.2.
 | Function | Description |
 | --- | --- |
 | `fetchPost(url, { signal, request })` | Returns a post's `platform`, `url`, `author`, `handle`, `avatar`, `time`, `text`, `counts`, `media`, and `quote` from X, Bluesky, or Mastodon. Default requests without a caller-supplied signal are cached per process. It throws a `FetchPostError` for another platform or a failed request. |
+| `postMarkdown(post, { src, colons })` | Returns a promise of the `::post` Markdown for what `fetchPost()` returns, or the same shape written by hand: `platform`, `url`, `author`, `handle`, `avatar`, `time`, `text`, `counts`, `media` (`src`, `alt`, `width`, `height`, `video`), and `quote`. `src(url, { kind, index, post })` picks the address written for each avatar and picture. It writes up to four pictures, as the card shows. |
+| `threadMarkdown(posts, { src, colons, focal })` | Returns a promise of the `::thread` Markdown for its posts, root first, each written as `postMarkdown()` writes it one colon deeper. `focal: false` writes `focal="false"`. |
+| `textMarkdown(text)` | Returns plain text as Markdown Comark reads back as the same text, with its links shown as a post shows them. |
 
 ### Issues
 
