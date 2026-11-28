@@ -3,6 +3,7 @@ import { createHtmlRenderer } from "@comark/html";
 import { expect, type Locator, test } from "@playwright/test";
 import code, { components as codeComponents } from "../packages/code/src/html.ts";
 import { callouts, components as githubComponents } from "../packages/github/src/html.ts";
+import social, { components as socialComponents } from "../packages/social/src/html.ts";
 import { themeCss, themePresets } from "../docs/play-theme.ts";
 import { fixture } from "./helpers.ts";
 
@@ -15,6 +16,28 @@ const render = createHtmlRenderer({
   plugins: [code(), callouts()],
   components: { ...codeComponents, ...githubComponents },
 });
+
+for (const [name, css] of [
+  ["neutral", ""],
+  ["branded", ":root{--comark-primary:#2563eb;--comark-primary-foreground:#fff}"],
+] as const) {
+  test(`outgoing chat Markdown passes AA in the ${name} light theme`, async ({ page }) => {
+    const renderChat = createHtmlRenderer({ plugins: [social()], components: socialComponents });
+    await page.emulateMedia({ colorScheme: "light" });
+    await fixture(
+      page,
+      await renderChat(
+        '::conversation{me="Ada"}\n:::message{from="Ada"}\nTry `this`:\n\n> Quoted text\n\n```\nplain code\n```\n:::\n::',
+      ),
+      css,
+    );
+    const bubble = page.locator(".csl-message[data-me] .csl-bubble");
+    for (const target of ["blockquote", "pre code", "p > code"]) {
+      expect(await contrast(bubble.locator(target)), target).toBeGreaterThanOrEqual(4.5);
+    }
+    await expect(bubble.locator("pre code")).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  });
+}
 
 async function contrast(element: Locator) {
   return element.evaluate((node) => {

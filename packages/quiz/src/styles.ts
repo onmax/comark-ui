@@ -131,6 +131,16 @@ export const css = `@layer comark{${[
   ".cqz-hint-body{min-width:0;flex:1}",
   ".cqz-explain{margin-top:1rem;line-height:1.5;text-wrap:pretty;overflow-wrap:break-word}",
   ".cqz[data-state='correct']>.cqz-explain{margin-top:.5rem;padding-inline-start:1.375rem}",
+  ".cqz-note{margin-top:.75rem}",
+  ".cqz-note-field{display:grid;gap:.5rem;margin-top:.5rem}",
+  // 1rem keeps iOS from zooming into the field.
+  ".cqz-textarea{box-sizing:border-box;width:100%;min-height:4.75rem;margin:0;padding:.5rem .75rem;border:1px solid var(--_comark-border);border-radius:calc(var(--_comark-radius) - 2px);background:var(--_comark-background);color:var(--_comark-foreground);font:400 1rem/1.5 var(--_comark-font);resize:vertical;transition:border-color .15s var(--_cqz-ease),box-shadow .15s var(--_cqz-ease)}",
+  ".cqz-textarea::placeholder{color:var(--_comark-muted);opacity:1}",
+  ".cqz-textarea:focus-visible{outline:none;border-color:var(--_comark-ring);box-shadow:" +
+    ring +
+    "}",
+  ".cqz-note-actions{display:flex;justify-content:flex-end}",
+  ".cqz-mine{margin:-.25rem 0 0;padding:0 .75rem .75rem;padding-inline-start:2.5rem;color:var(--_comark-muted);line-height:1.5;white-space:pre-line;overflow-wrap:anywhere}",
   ".cqz-footer{display:flex;flex-wrap:wrap;align-items:center;column-gap:.75rem;row-gap:.25rem;margin-top:.75rem;color:var(--_comark-muted);font-variant-numeric:tabular-nums}",
   ".cqz-footer:not(:has(>:not(:empty,[hidden]))){display:none}",
   ".cqz-total{color:var(--_comark-foreground);font-weight:500}",

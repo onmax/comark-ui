@@ -24,6 +24,7 @@ import pele from "comark-pele";
 import * as metrics from "comark-metrics/vue";
 import * as outline from "comark-outline/vue";
 import * as properties from "comark-properties/vue";
+import * as social from "comark-social/vue";
 import * as qr from "comark-qr/vue";
 import * as sources from "comark-sources/vue";
 import * as steps from "comark-steps/vue";
@@ -91,6 +92,7 @@ export const components = {
   ...fileTree.components,
   ...fields.components,
   ...properties.components,
+  ...social.components,
   ...badge.components,
   ...media.components,
   ...metrics.components,
@@ -142,6 +144,7 @@ export default (options?: PresetOptions): Preset<Component> =>
       metrics,
       outline,
       properties,
+      social,
       qr,
       sources,
       steps,

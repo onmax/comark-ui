@@ -2,7 +2,12 @@ import type { Icons } from "./icons.ts";
 import type { QuizLabels } from "./labels.ts";
 
 /** One answer, as a host stores it and sends it back. */
-export type QuizAnswer = { choice: string[]; correct?: boolean | null };
+export type QuizAnswer = {
+  choice: string[];
+  correct?: boolean | null;
+  /** A poll's note. Left out, it keeps the note the page shows. */
+  note?: string;
+};
 
 /** What a host sends with `comark-quiz:state` on `document`, or passes to `window.__comarkQuiz.apply()`. */
 export type QuizState = {
@@ -20,6 +25,8 @@ export type QuizAnswerDetail = {
   correct: boolean | null;
   /** Whether it's the first answer to this block on this page view. */
   first: boolean;
+  /** On a poll with a note field, the reader's note, trimmed, or `""` for none; it replaces the note sent before. */
+  note?: string;
 };
 
 /** The detail of `comark-quiz:ready`, fired on `document` with the ids of the blocks on the page. */
@@ -33,7 +40,7 @@ declare global {
   }
 }
 
-type ScriptConfig = { labels: QuizLabels; icons: Icons };
+type ScriptConfig = { labels: QuizLabels; icons: Icons; noteLength: number };
 
 /**
  * Upgrades every `.cqz` block on the page, and any added later, from its no-script form into the interactive one,
@@ -70,6 +77,10 @@ export function script(config: ScriptConfig): void {
     local: boolean;
     // The choice both sides last agreed on, so a host echoing it back doesn't undo a retry.
     sent: string;
+    // The poll has a note field, the note the reader last sent, and whether the field is open.
+    noted: boolean;
+    note: string;
+    noting: boolean;
   };
 
   const html = document.documentElement;
@@ -78,7 +89,7 @@ export function script(config: ScriptConfig): void {
   const models = new WeakMap<Element, Model>();
   const all: Model[] = [];
   const fired = new Set<string>();
-  type Answer = { choice: string[]; correct: boolean | null };
+  type Answer = { choice: string[]; correct: boolean | null; note?: string };
   const results = new Map<string, { counts: Map<string, number>; total: number }>();
   const answers = new Map<string, Answer>();
   let voting = { open: true, notice: "" };
@@ -93,14 +104,22 @@ export function script(config: ScriptConfig): void {
       : // SAFETY: undefined, null, objects, and arrays returned above, so only a string, number, or boolean is left.
         String(value as string | number | boolean);
   const amount = (value: unknown) => Math.max(0, Number(str(value)) || 0);
+  const normalizeNote = (value: string) => {
+    const trimmed = value.trim();
+    const last = trimmed.codePointAt(config.noteLength - 1) ?? 0;
+    return trimmed.slice(0, config.noteLength - (last > 0xffff ? 1 : 0)).trimEnd();
+  };
   function toAnswer(value: unknown): Answer {
     const fields = new Map(entries(value));
     const choice = fields.get("choice");
     const correct = fields.get("correct");
-    return {
+    const note = fields.get("note");
+    const answer: Answer = {
       choice: Array.isArray(choice) ? choice.map(str).filter(Boolean) : [],
       correct: correct === true || correct === false ? correct : null,
     };
+    if (note !== undefined) answer.note = normalizeNote(str(note));
+    return answer;
   }
 
   const $ = <T extends Element = HTMLElement>(root: ParentNode, selector: string) =>
@@ -113,12 +132,14 @@ export function script(config: ScriptConfig): void {
   const part = (model: Model, selector: string) => own(model, selector)[0];
   // An answer as one string, to tell whether a host's copy differs from the one shown. An empty choice with `correct`
   // false is a question whose answer was shown; any other empty choice is no answer.
-  const signature = (answer: Answer) =>
-    answer.choice.length
+  const signature = (answer: Answer) => {
+    const choice = answer.choice.length
       ? answer.choice.toSorted().join("\n")
       : answer.correct === false
         ? "\n"
         : "";
+    return answer.note ? `${choice}\u0000${answer.note}` : choice;
+  };
   const count = (template: string, n: number) => {
     let shown = String(n);
     try {
@@ -281,9 +302,20 @@ export function script(config: ScriptConfig): void {
     }
   }
 
+  const pollClosed = (model: Model) => model.closes <= Date.now() || !voting.open;
+
+  function dismissNote(model: Model) {
+    model.noting = false;
+    model.prompted = false;
+  }
+
   function paintPoll(model: Model) {
     const { labels } = model;
-    const closed = model.closes <= Date.now() || !voting.open;
+    const closed = pollClosed(model);
+    if (closed) {
+      dismissNote(model);
+      model.changing = false;
+    }
     const voted = model.vote !== null && !model.changing;
     const open = hosted && !closed && (!voted || model.multiple);
     model.el.dataset.state = closed ? "closed" : voted ? "voted" : "idle";
@@ -314,8 +346,42 @@ export function script(config: ScriptConfig): void {
         ? labels.noHost
         : closed
           ? voting.notice || labels.closed
-          : voting.notice;
+          : model.prompted
+            ? labels.pickFirst
+            : voting.notice;
+    paintNote(model, closed);
     paintResults(model, voted || closed, labels.vote, labels.votes);
+  }
+
+  const field = (model: Model) => {
+    const el = part(model, ".cqz-textarea");
+    return el instanceof HTMLTextAreaElement ? el : undefined;
+  };
+
+  // The note field opens beside the vote while voting is open; the reader's own note shows under their first pick.
+  function paintNote(model: Model, closed: boolean) {
+    setBool(part(model, ".cqz-note"), "hidden", !hosted || closed);
+    const toggle = part(model, "[data-action='note']");
+    if (toggle) {
+      toggle.textContent = model.note ? model.labels.editNote : model.labels.addNote;
+      toggle.setAttribute("aria-expanded", String(model.noting));
+    }
+    setBool(part(model, ".cqz-note-field"), "hidden", !model.noting);
+    const mine = part(model, ".cqz-mine");
+    if (!mine) return;
+    for (const input of model.inputs)
+      if (input.getAttribute("aria-describedby") === mine.id)
+        input.removeAttribute("aria-describedby");
+    const at = model.keys.findIndex((key) => model.vote?.includes(key));
+    const option = model.options[at];
+    mine.hidden = !option || !model.note || model.changing;
+    if (mine.hidden || !option) return;
+    const said = document.createElement("span");
+    said.className = "cqz-sr";
+    said.textContent = `${model.labels.yourNote}: `;
+    mine.replaceChildren(said, model.note);
+    option.append(mine);
+    model.inputs[at]?.setAttribute("aria-describedby", mine.id);
   }
 
   function paintRecall(model: Model) {
@@ -387,12 +453,15 @@ export function script(config: ScriptConfig): void {
     model.revealed = false;
     model.grade = null;
     model.sent = "";
+    model.note = "";
+    model.noting = false;
   }
 
   function restore(model: Model, answer: Answer) {
     reset(model);
     const { choice } = answer;
     model.sent = signature(answer);
+    model.note = answer.note ?? "";
     if (model.kind === "recall") {
       const [first] = choice;
       model.revealed = first === "revealed" || first === "knew" || first === "missed";
@@ -420,16 +489,20 @@ export function script(config: ScriptConfig): void {
   function announce(model: Model, choice: string[], correct: boolean | null) {
     model.live = true;
     model.local = false;
-    model.sent = signature({ choice, correct });
+    const answer: Answer = { choice, correct };
+    if (model.noted) {
+      answer.note = model.note;
+      if (hosted) answers.set(model.id, answer);
+    }
+    model.sent = signature(answer);
     const detail: QuizAnswerDetail = {
       id: model.id,
       kind: model.kind,
-      choice,
-      correct,
+      ...answer,
       first: !fired.has(model.id),
     };
     fired.add(model.id);
-    save(model.id, { choice, correct });
+    save(model.id, answer);
     model.el.dispatchEvent(
       new CustomEvent("comark-quiz:answer", { bubbles: true, composed: true, detail }),
     );
@@ -528,6 +601,9 @@ export function script(config: ScriptConfig): void {
       live: false,
       local: false,
       sent: "",
+      noted: el.hasAttribute("data-note"),
+      note: "",
+      noting: false,
     };
     models.set(el, model);
     all.push(model);
@@ -607,10 +683,17 @@ export function script(config: ScriptConfig): void {
         total: amount(result.get("total")),
       });
     }
-    const sent = new Map(
-      entries(fields.get("answers")).map(([id, value]) => [id, toAnswer(value)]),
-    );
-    for (const [id, answer] of sent) answers.set(id, answer);
+    const sent = new Map<string, Answer>();
+    for (const [id, value] of entries(fields.get("answers"))) {
+      const answer = toAnswer(value);
+      // A host that doesn't keep notes leaves the one on the page alone, including on remount.
+      const previous = first
+        ? all.find((model) => model.id === id && model.local && model.el.isConnected)?.note
+        : answers.get(id)?.note;
+      if (answer.note === undefined && previous !== undefined) answer.note = previous;
+      sent.set(id, answer);
+      answers.set(id, answer);
+    }
     for (const model of all) {
       if (!model.el.isConnected) continue;
       const answer = sent.get(model.id);
@@ -687,13 +770,50 @@ export function script(config: ScriptConfig): void {
       model.grade = action;
       paint(model, false);
       announce(model, [action], action === "knew");
+    } else if (action === "note") {
+      const area = field(model);
+      if (model.noting) dismissNote(model);
+      else if (area) {
+        model.noting = true;
+        area.value = model.note;
+      }
+      paint(model, false);
+      focus(model.noting ? area : button);
+    } else if (action === "send") sendNote(model);
+  }
+
+  // Sending again replaces the note, with the vote it goes with.
+  function sendNote(model: Model) {
+    if (!hosted) return;
+    if (pollClosed(model)) {
+      paint(model, false);
+      return;
     }
+    if (!model.noting) return;
+    if (!model.vote) {
+      model.prompted = true;
+      paint(model, false);
+      focus(model.inputs[0]);
+      return;
+    }
+    model.note = normalizeNote(field(model)?.value ?? "");
+    dismissNote(model);
+    model.changing = false;
+    paint(model, false);
+    announce(model, model.vote, null);
+    focus(part(model, "[data-action='note']"));
   }
 
   function vote(model: Model) {
     const choice = model.keys.filter((_, at) => model.inputs[at]?.checked);
+    // A note being written goes with the vote.
+    if (model.noting) {
+      model.note = normalizeNote(field(model)?.value ?? "");
+      dismissNote(model);
+    }
     model.vote = choice.length ? choice : null;
     model.changing = false;
+    model.prompted = false;
     paint(model, false);
     announce(model, choice, null);
   }
@@ -703,7 +823,10 @@ export function script(config: ScriptConfig): void {
     const model = modelOf(event.target);
     if (!model) return;
     if (input) {
-      if (input.getAttribute("aria-disabled") === "true") event.preventDefault();
+      if (model.kind === "poll" && pollClosed(model)) {
+        event.preventDefault();
+        paint(model, false);
+      } else if (input.getAttribute("aria-disabled") === "true") event.preventDefault();
       else if (model.kind === "poll" && !input.disabled) vote(model);
       return;
     }
@@ -726,6 +849,22 @@ export function script(config: ScriptConfig): void {
   // Arrow keys would pick another radio, and so cast a vote or change an answer that's locked, so in a poll and in a
   // locked group they only move focus. Enter checks a question's answer or casts a vote.
   document.addEventListener("keydown", (event) => {
+    const area =
+      event.target instanceof HTMLTextAreaElement && event.target.classList.contains("cqz-textarea")
+        ? event.target
+        : null;
+    const noting = modelOf(area);
+    if (noting) {
+      if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault();
+        sendNote(noting);
+      } else if (event.key === "Escape") {
+        dismissNote(noting);
+        paint(noting, false);
+        focus(part(noting, "[data-action='note']"));
+      }
+      return;
+    }
     const input = inputOf(event.target);
     const model = modelOf(input);
     if (!input || !model || event.altKey || event.ctrlKey || event.metaKey) return;

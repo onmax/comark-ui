@@ -8,12 +8,19 @@ import { script } from "./script.ts";
 import { css } from "./styles.ts";
 import { attr, inlineScript } from "../../../shared/html.ts";
 
+// Long enough for a sentence or two of why, short enough for a host to store with each vote.
+const NOTE_LENGTH = 500;
+
 export { default, DEFAULT_LABELS } from "./index.ts";
 export type { QuizLabels, QuizMeta, QuizOptions } from "./index.ts";
 export type { QuizAnswer, QuizAnswerDetail, QuizReadyDetail, QuizState } from "./script.ts";
 
 // `<` is escaped, so no label can close the script early.
-const config = JSON.stringify({ labels: DEFAULT_LABELS, icons }).replaceAll("<", "\\u003c");
+const config = JSON.stringify({
+  labels: DEFAULT_LABELS,
+  icons,
+  noteLength: NOTE_LENGTH,
+}).replaceAll("<", "\\u003c");
 const inline = inlineScript(`(${script.toString()})(${config})`);
 
 /**
@@ -79,6 +86,7 @@ async function render(node: ElementNode, state: State) {
     `data-state="${closed ? "closed" : "idle"}"`,
     multiple ? "data-multiple" : "",
     closes ? `data-closes="${attr(closes)}"` : "",
+    kind === "poll" && attrs.note !== undefined ? "data-note" : "",
     extra ? `data-labels="${attr(JSON.stringify(extra))}"` : "",
   ]
     .filter(Boolean)
@@ -119,8 +127,25 @@ async function render(node: ElementNode, state: State) {
 
   if (kind === "poll") {
     const notice = closed ? text("closed") : text("noHost");
+    // SAFETY: the parse plugin writes `note` only as a string, on a poll that asks for one.
+    const asked = attrs.note as string | undefined;
+    const placeholder = attr(asked || labels.notePlaceholder);
+    // Only the script shows it, once a host collects votes, and moves the reader's own note under their vote.
+    const note =
+      asked === undefined
+        ? ""
+        : `<div class="cqz-note" data-slot="note" hidden>` +
+          button(
+            "note",
+            "link",
+            text("addNote"),
+            ` aria-expanded="false" aria-controls="${uid}-note"`,
+          ) +
+          `<div class="cqz-note-field" id="${uid}-note" hidden><textarea class="cqz-textarea" data-slot="note-field" rows="3" maxlength="${NOTE_LENGTH}" placeholder="${placeholder}" aria-label="${placeholder}" aria-keyshortcuts="Control+Enter Meta+Enter"></textarea>` +
+          `<div class="cqz-note-actions">${button("send", "default", text("sendNote"))}</div></div>` +
+          `<p class="cqz-mine" data-slot="mine" id="${uid}-mine" hidden></p></div>`;
     return (
-      `<div ${root}>${head}${list}${tail}` +
+      `<div ${root}>${head}${list}${note}${tail}` +
       `<div class="cqz-footer" data-slot="footer"><span class="cqz-total" data-slot="total" role="status"></span>${button("change", "link", text("changeVote"), " hidden")}<span class="cqz-notice" data-slot="notice">${notice}</span></div>${END}</div>`
     );
   }

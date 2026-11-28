@@ -88,6 +88,7 @@ Browse the [docs and live examples](https://comark-ui.onmax.me) for component sy
 | [`comark-mark`](./packages/mark) | `==highlighted text==` as `<mark>` and `^superscript^` as `<sup>`. |
 | [`comark-mathml`](./packages/math) | LaTeX math in place of Comark's own plugin: `$…$`, `$$…$$`, and `math` fences typeset to MathML while parsing, so pages ship no math script, fonts, or stylesheet. |
 | [`comark-properties`](./packages/properties) | Chosen frontmatter keys, such as status, pull request, author, date, and tags, as a properties box at the top of a document. |
+| [`comark-social`](./packages/social) | Posts from X, Bluesky, Mastodon, Threads, LinkedIn, or any site as static cards with the platform's logo and counts, and no iframe or script. |
 | [`comark-sources`](./packages/sources) | Numbered `:cite[2]` citations that link to a `::sources` list of links, each with a link back. |
 | [`comark-table`](./packages/table) | Tables from CSV, TSV, and JSON files or fences, read while parsing, with copy buttons and headers that sort. |
 | [`comark-steps`](./packages/steps) | Numbered steps from the headings of a tutorial or a numbered list, in Nuxt UI's `::steps` syntax, with no script. |

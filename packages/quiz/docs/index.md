@@ -267,6 +267,16 @@ Use the `multiple` prop to show checkboxes, so a reader can vote for several opt
 ::poll{#next-topics multiple}
 ```
 
+#### Note
+
+Use the `note` prop to let a reader add a note to their vote, such as why they picked it. An Add a note button opens a field beside the options. The note goes with the vote, or on its own once they've voted, and it shows under their pick. Write `note="Why this one?"` to put your own words in the field.
+
+```md
+::poll{#next-lesson note}
+```
+
+Only the reader and the host see a note. Other readers see the counts, as before. Sending again replaces the note, and an empty note takes it back. Like the vote, the field needs a host, so without one, or without the script, it doesn't show.
+
 #### Closes
 
 Use the `closes` prop to close voting on an ISO date. After it, the poll shows as closed.
@@ -378,6 +388,7 @@ Focus follows what the reader does:
 - After Check, focus goes to the first selected option in rendered order on a right answer, or to Try again on a wrong one.
 - Try again sends focus to the first option, and Show answer to the first right option.
 - Change vote sends focus to the reader's vote.
+- Add a note and Edit note send focus to the note field, and sending it or `Escape` sends focus back to the button. The reader's vote is described by their note.
 - On a recall card, Show answer sends focus to the answer.
 
 ### Keyboard interactions
@@ -389,6 +400,8 @@ Focus follows what the reader does:
 | `Enter` | On an option, checks a question's answer, or casts a poll's vote. |
 | `ArrowDown`, `ArrowRight` | Picks the next radio of a question. In a poll's radios, or in options locked after an answer, it moves focus to the next option without picking it, and wraps around. |
 | `ArrowUp`, `ArrowLeft` | Picks the previous radio of a question. In a poll's radios, or in locked options, it moves focus to the previous option without picking it. |
+
+In a poll's note field, `Ctrl+Enter` or `Cmd+Enter` sends the note, and `Escape` closes the field without sending it.
 
 In right-to-left text, `ArrowLeft` and `ArrowRight` swap.
 
@@ -412,6 +425,7 @@ In right-to-left text, `ArrowLeft` and `ArrowRight` swap.
 | `#id` | Derived from the prompt and options | The block's id, as for a question. |
 | `multiple` | `false` | Shows checkboxes, with percentages over voters. |
 | `closes` | — | An ISO date. After it, the poll shows as closed. |
+| `note` | — | Adds a note field sent with the vote. A value, as in `note="Why?"`, is the field's placeholder and name. |
 
 #### `::recall`
 
@@ -455,6 +469,11 @@ quiz({ labels: { check: "Comprobar", tryAgain: "Otra vez", showAnswer: "Ver resp
 | `noHost` | `"Voting needs a host that collects votes."` |
 | `closed` | `"Voting closed"` |
 | `recommended` | `"Recommended"`, the pill on a poll option marked `{recommended}` |
+| `addNote`, `editNote` | `"Add a note"`, `"Edit note"`, the button that opens a poll's note field |
+| `notePlaceholder` | `"Add a note to your vote"`, the field's placeholder and name when `note` has no value |
+| `sendNote` | `"Send note"` |
+| `yourNote` | `"Your note"`, read before the note under the reader's pick |
+| `pickFirst` | `"Pick an option to send your note"`, shown when a note is sent before a vote |
 
 Each label you leave out keeps its English default.
 
@@ -471,10 +490,12 @@ The server's HTML has what a host needs to check a posted answer: `data-quiz-id`
 | Event | Sent by | Detail |
 | --- | --- | --- |
 | `comark-quiz:ready` | The script, once the page's blocks are in, and again for blocks added later | `{ ids: string[] }` |
-| `comark-quiz:answer` | Each block, bubbling and crossing shadow roots | `{ id, kind, choice, correct, first }` |
+| `comark-quiz:answer` | Each block, bubbling and crossing shadow roots | `{ id, kind, choice, correct, first, note? }` |
 | `comark-quiz:state` | The host | `{ answers?, results?, voting? }` |
 
 An answer's `choice` holds option keys. A question sends one on every Check, and `choice: []` with `correct: false` on Show answer. A poll sends its choice on every vote, with `correct: null`. A recall card sends `["revealed"]`, then `["knew"]` or `["missed"]`. `first` is true for the first answer to a block on a page view.
+
+A poll with the `note` prop adds `note: string` to every answer it sends: the reader's note with its surrounding whitespace trimmed, up to 500 characters, with its line breaks kept, or `""` for none. The poll sends it with each vote, and again with the same `choice` when the reader sends or edits a note after voting. Each answer's `note` replaces the one before it, so a host stores the latest and treats `""` as no note. A poll without the prop sends no `note`.
 
 The state the host sends looks like this:
 
@@ -482,7 +503,10 @@ The state the host sends looks like this:
 document.dispatchEvent(
   new CustomEvent("comark-quiz:state", {
     detail: {
-      answers: { "event-loop-order": { choice: ["1x9k2ab"], correct: true } },
+      answers: {
+        "event-loop-order": { choice: ["1x9k2ab"], correct: true },
+        "next-lesson": { choice: ["7ym8b3"], note: "Workers would help my image resizer" },
+      },
       results: { "next-lesson": { counts: { "7ym8b3": 12, "1hxx01f": 30 }, total: 42 } },
       voting: { open: true, notice: "Votes close on Friday" },
     },
@@ -491,6 +515,7 @@ document.dispatchEvent(
 ```
 
 - **Answers** restore with no motion. An empty `choice` takes an answer back, except a question's `choice: []` with `correct: false`, which is a shown answer. Once the first state arrives, the script stops using `localStorage`.
+- **Notes** come back in a poll's answer as `note`, a string, which shows under the reader's pick and fills the field when they edit it. `note: ""` clears it. An answer with no `note` key leaves the note the page shows alone, so a host that doesn't store notes doesn't wipe one the reader just sent. Send a reader only their own note.
 - **Results** show after a question's right answer or Show answer, and after a poll's vote. A poll with `multiple` counts percentages over voters, so send the number of voters as `total`.
 - **Voting** opens polls. With `open: false`, polls show their results and `notice`, and send no votes. Questions and recall cards still work.
 
@@ -615,6 +640,8 @@ Every part has a `data-slot`, and the block and each option a `data-state`:
 | `[data-slot="verdict"]`, `[data-slot="percent"]`, `[data-slot="bar"]` | An option's label ("Your answer" or "Correct answer"), percent, and fill |
 | `[data-slot="actions"]`, `[data-slot="status"]` | The buttons, and the status line with the verdict and count of answers, read out after each check |
 | `[data-slot="hint"]`, `[data-slot="explain"]`, `[data-slot="answer"]` | The slots |
+| `[data-slot="note"]`, `[data-slot="note-field"]` | A poll's note area, with its Add a note button, and the `textarea` |
+| `[data-slot="mine"]` | The reader's own note, under their pick |
 | `[data-slot="footer"]`, `[data-slot="total"]`, `[data-slot="notice"]` | A poll's footer, with the vote count and the host's notice |
 | `[data-slot="reveal"]` | A recall card's answer, blurred until it's shown |
 

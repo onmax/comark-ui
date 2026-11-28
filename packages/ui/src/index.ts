@@ -30,6 +30,7 @@ import type { MediaOptions } from "comark-media";
 import type { OutlineOptions } from "comark-outline";
 import type { PeleConfig } from "comark-pele";
 import type { PropertiesOptions } from "comark-properties";
+import type { SocialOptions } from "comark-social";
 import type { QuizOptions } from "comark-quiz";
 import readingTime, { type ReadingTimeOptions } from "comark-reading-time";
 import type { TableOptions } from "comark-table";
@@ -117,6 +118,11 @@ export type PresetOptions = {
   fileTree?: FileTreeOptions | boolean;
   fields?: boolean;
   properties?: PropertiesOptions | boolean;
+  /**
+   * `::post` as a static card for X, Bluesky, Mastodon, Threads, LinkedIn, or any site. `{ fetch: true }` fills posts
+   * with a `url` from the platform while parsing; off by default, so parsing makes no request.
+   */
+  social?: SocialOptions | boolean;
   /** HTML only: Vue, React, and Svelte have no quiz components. */
   quiz?: QuizOptions | boolean;
   keys?: KeysOptions | boolean;
@@ -210,6 +216,7 @@ export type Renderer<C> = {
   fileTree: Part<C, FileTreeOptions>;
   fields: Part<C>;
   properties: Part<C, PropertiesOptions>;
+  social: Part<C, SocialOptions>;
   quiz?: Part<C, QuizOptions>;
   badge: Part<C, BadgeOptions>;
   magicMove: Part<C>;
@@ -284,6 +291,7 @@ const TAGS: [keyof PresetOptions, string[]][] = [
   ["metrics", words("dd div dt")],
   ["outline", words("a div li ul")],
   ["properties", words("dd div dt time")],
+  ["social", words("a br details div img li ol p span summary time")],
   [
     "quiz",
     words(
@@ -302,6 +310,7 @@ const TAGS: [keyof PresetOptions, string[]][] = [
 const BLOCKS: [keyof PresetOptions, string[]][] = [
   ["details", words("accordion-item collapsible details")],
   ["metrics", words("progress stats")],
+  ["social", words("message")],
   ["table", words("table")],
   ["tabs", words("code-group tabs-item")],
   ["time", words("time")],
@@ -346,6 +355,10 @@ export function preset<C>(renderer: Renderer<C>, options: PresetOptions = {}): P
   parse(figure, options.figure);
   parse(critic, options.critic);
   add(renderer.charts, options.charts);
+  // Before social, tests, and bundle, which draw native `details` that aren't `::details` blocks.
+  add(renderer.details, options.details, { iconResolver: icons, ...optionsOf(options.details) });
+  // Before chips, which leaves the links a post draws as links, since a post shows them as its platform does.
+  add(renderer.social, options.social);
   // Before chips, so the links in the box become chips like the document's own.
   add(renderer.properties, options.properties);
   add(renderer.chips, options.chips);
@@ -379,7 +392,6 @@ export function preset<C>(renderer: Renderer<C>, options: PresetOptions = {}): P
   add(renderer.icon, options.icon, icons);
   add(renderer.mark, options.mark);
   add(renderer.math, options.math);
-  add(renderer.details, options.details, { iconResolver: icons, ...optionsOf(options.details) });
   if (on(options.links)) {
     const links = optionsOf(options.links) ?? {};
     if (on(links.external)) plugins.push(renderer.links.external(optionsOf(links.external)));

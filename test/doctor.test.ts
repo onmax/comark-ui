@@ -24,6 +24,8 @@ const withoutExamples = new Set([
   "comark/critic/invalid-mode",
   "comark/diagrams/draw-failed",
   "comark/diagrams/server-unreachable",
+  "comark/social/fetch-failed",
+  "comark/social/large-media",
   "comark/table/read-failed",
   "comark/table/base-outside-root",
   "comark/xref/duplicate-label",

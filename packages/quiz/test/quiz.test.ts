@@ -281,6 +281,53 @@ describe("::poll", () => {
     expect(/data-quiz-id="([^"]+)"/.exec(marked.html)![1]).toBe("db");
   });
 
+  it("adds a note field, hidden until the script shows it, with {note}", async () => {
+    const { html, issues } = await run(poll("{#next-topic note}"));
+    expect(issues).toEqual([]);
+    expect(html).toContain('data-quiz-kind="poll" data-state="idle" data-note');
+    const note = /<div class="cqz-note" data-slot="note" hidden>.*?<\/p><\/div>/.exec(html)?.[0];
+    expect(note).toMatch(
+      /^<div class="cqz-note" data-slot="note" hidden><button type="button" class="cqz-button" data-variant="link" data-action="note" aria-expanded="false" aria-controls="([\w-]+)-note">Add a note<\/button><div class="cqz-note-field" id="\1-note" hidden><textarea class="cqz-textarea" data-slot="note-field" rows="3" maxlength="500" placeholder="Add a note to your vote" aria-label="Add a note to your vote" aria-keyshortcuts="Control\+Enter Meta\+Enter"><\/textarea><div class="cqz-note-actions"><button type="button" class="cqz-button" data-variant="default" data-action="send">Send note<\/button><\/div><\/div><p class="cqz-mine" data-slot="mine" id="\1-mine" hidden><\/p><\/div>$/,
+    );
+    // The field sits between the options and the footer, and is no option of its own.
+    expect(html.indexOf("cqz-note")).toBeGreaterThan(html.indexOf("</fieldset>"));
+    expect(html.indexOf("cqz-note")).toBeLessThan(html.indexOf("cqz-footer"));
+    expect(rows(html)).toHaveLength(3);
+  });
+
+  it("names the note field with the note prop's text, escaped", async () => {
+    const { html, issues } = await run(poll('{#next-topic note="Why <this> one?"}'));
+    expect(issues).toEqual([]);
+    expect(html).toContain(
+      'placeholder="Why &lt;this&gt; one?" aria-label="Why &lt;this&gt; one?"',
+    );
+  });
+
+  it('draws no note field without the prop, or with note="false"', async () => {
+    for (const props of ["{#next-topic}", '{#next-topic note="false"}']) {
+      const { html, issues } = await run(poll(props));
+      expect(issues).toEqual([]);
+      expect(html).not.toContain("cqz-note");
+      expect(html).not.toContain("data-note");
+    }
+  });
+
+  it("reports note on a question, where it isn't a prop", async () => {
+    const { issues, rules } = await run(question("{#event-loop note}"));
+    expect(issues).toHaveLength(1);
+    expect(issues[0]).toContain("`note` isn't a prop of `::question`");
+    expect(rules[issues[0]!]).toBe("comark/quiz/unknown-prop");
+  });
+
+  it("translates the note field's words with the labels option", async () => {
+    const { html } = await run(poll("{#next-topic note}"), {
+      labels: { addNote: "Añadir nota", notePlaceholder: "¿Por qué?", sendNote: "Enviar nota" },
+    });
+    expect(html).toContain(">Añadir nota</button>");
+    expect(html).toContain('placeholder="¿Por qué?"');
+    expect(html).toContain(">Enviar nota</button>");
+  });
+
   it("preserves line breaks and vote keys on a recommended option", async () => {
     const source = "::poll{#db}\nWhich?\n\n- [ ] SQLite\n- [ ] Neon\n  Runs on Postgres.";
     const plain = await run(`${source}\n::`);

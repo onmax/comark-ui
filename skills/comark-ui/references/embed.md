@@ -1,6 +1,6 @@
 # Players and link cards
 
-comark-embed turns `::embed` into the provider's player, with the link under it, for YouTube, Vimeo, Loom, Spotify, CodePen, StackBlitz, Figma, and X, and into a link card for any other https page. It reads the player's address from the link alone and fetches nothing. Use it for a screen recording of a bug, a design file, or a live reproduction.
+comark-embed turns `::embed` into the provider's player, with the link under it, for YouTube, Vimeo, Loom, Spotify, CodePen, StackBlitz, Figma, and X, and into a link card for any other https page. It reads the player's address from the link alone and fetches nothing. Use it for a screen recording of a bug, a design file, or a live reproduction. To quote a post from X or another social site as a card that loads nothing, use `::post` ([social](social.md)).
 
 ## Syntax
 
