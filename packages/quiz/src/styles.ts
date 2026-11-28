@@ -58,6 +58,8 @@ export const css = `@layer comark{${[
   ".cqz-indicator .cqz-icon{opacity:0;pointer-events:none}",
   ".cqz-label{grid-area:label;min-width:0;text-wrap:pretty;overflow-wrap:break-word}",
   ".cqz-label img{max-width:100%;height:auto}",
+  // shadcn/ui's secondary Badge, after the option's last word.
+  ".cqz-pill{display:inline-block;margin-inline-start:.5rem;padding:0 .5rem;border-radius:9999px;background:var(--_comark-accent);color:var(--_comark-foreground);font-size:.75rem;line-height:1.25rem;font-weight:500;white-space:nowrap;vertical-align:top}",
   ".cqz-verdict{grid-area:verdict;display:none;font-size:.75rem;line-height:1.25rem;font-weight:500;white-space:nowrap}",
   ".cqz-percent{grid-area:percent;display:none;min-width:2.25rem;font-weight:500;text-align:end;font-variant-numeric:tabular-nums;white-space:nowrap}",
   ".cqz-rationale{padding:0 .75rem .75rem;padding-inline-start:2.5rem;margin-top:-.25rem;color:var(--_comark-foreground);line-height:1.5;text-wrap:pretty;overflow-wrap:break-word}",

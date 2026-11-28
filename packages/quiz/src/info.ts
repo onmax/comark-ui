@@ -35,7 +35,8 @@ export const componentInfo = {
   poll: {
     kind: "block",
     label: "Poll",
-    description: "A prompt and a task list of options that collects votes and shows the results.",
+    description:
+      "A prompt and a task list of options that collects votes and shows the results. An option marked {recommended} goes first, with a pill.",
     props: {
       id,
       multiple: { type: "boolean", description: "Shows checkboxes." },

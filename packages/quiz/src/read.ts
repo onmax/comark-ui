@@ -89,6 +89,8 @@ type Option = {
   /** The option's own line as written, soft newlines included, which the checks read. */
   own: string;
   correct: boolean;
+  /** The pill's text for an option marked `{recommended}`: "" for the default label, or the author's. */
+  recommended?: string;
   label: Node[];
   rationale: Node[];
 };
@@ -145,6 +147,13 @@ function breakLines(nodes: Node[]): Node[] {
   });
 }
 
+// Comark puts the attributes after an item's text, `{recommended}` or `{recommended="Pick"}`, on its `li`.
+function recommendedOf(item: ElementNode): string | undefined {
+  const value = item[1].recommended ?? item[1][":recommended"];
+  if (value === undefined || isOff(value)) return undefined;
+  return isOn(value) ? "" : text(value).trim();
+}
+
 // The checkbox drops out. A tight item holds it beside the text, and a loose one, or one with a rationale, inside a `p`.
 function readOption(item: ElementNode): Omit<Option, "key"> | undefined {
   const children = childrenOf(item);
@@ -168,6 +177,7 @@ function readOption(item: ElementNode): Omit<Option, "key"> | undefined {
     text: words(label),
     own: textOf(label.filter(isInline)).trim(),
     correct: isCheckbox(first) && checked(first),
+    recommended: recommendedOf(item),
     label: breakLines(label),
     rationale: quotes.flatMap((node) => (isElement(node) ? childrenOf(node) : [])),
   };
@@ -209,6 +219,11 @@ function checkOptions(kind: Kind, name: string, options: Option[], walk: Walk) {
       `${name} marks ${quote(right[0]!.text)} \`[x]\`, but a poll has no right answer. Write every option as \`- [ ]\`, or make it a \`::question\`.`,
     );
   if (kind !== "question") return;
+  for (const option of options.filter((each) => each.recommended !== undefined))
+    problem(
+      "comark/quiz/recommended-in-question",
+      `${name}: the option ${quote(option.text)} is marked \`{recommended}\`, which gives the answer away, so the mark is dropped. Take it off and mark the right option \`[x]\`, or make it a \`::poll\`.`,
+    );
   if (!right.length)
     problem(
       "comark/quiz/no-correct-option",
@@ -376,10 +391,16 @@ function quiz(node: ElementNode, kind: Kind, walk: Walk): string {
   const multiple =
     kind !== "recall" &&
     (isOn(attrs.multiple) || (kind === "question" && options.filter((o) => o.correct).length > 1));
+  // A poll's pick goes on top, wherever the author wrote it.
   const order =
     kind === "question" && !isOff(attrs.shuffle)
       ? shuffle(options, [id, ...options.map((option) => option.key).sort()].join("\n"))
-      : options;
+      : kind === "poll"
+        ? [
+            ...options.filter((option) => option.recommended !== undefined),
+            ...options.filter((option) => option.recommended === undefined),
+          ]
+        : options;
 
   // Element ids and the radios' name come from the document and the block's place, so two documents on one page never
   // share them; the quiz id above is what hosts key answers by.
@@ -401,6 +422,8 @@ function quiz(node: ElementNode, kind: Kind, walk: Walk): string {
           if (option.rationale.length) parts.push(wrap("quiz-rationale", option.rationale));
           const row = wrap("quiz-option", parts, { key: option.key });
           if (kind === "question" && option.correct) row[1].correct = "true";
+          if (kind === "poll" && option.recommended !== undefined)
+            row[1].recommended = option.recommended;
           return row;
         }),
       ),

@@ -103,10 +103,13 @@ async function render(node: ElementNode, state: State) {
     const label = parts.find(
       (part): part is ElementNode => isElement(part) && part[0] === "quiz-label",
     );
+    // SAFETY: the parse plugin writes `recommended` only as a string, on a poll's options.
+    const recommended = option.recommended as string | undefined;
+    const pill = recommended === undefined ? "" : recommended || labels.recommended;
     return (
-      `<div class="cqz-option" data-slot="option" data-key="${key}" data-state="idle"${option.correct === "true" ? " data-correct" : ""}>` +
+      `<div class="cqz-option" data-slot="option" data-key="${key}" data-state="idle"${option.correct === "true" ? " data-correct" : ""}${pill ? ` data-recommended="${attr(pill)}"` : ""}>` +
       `<label class="cqz-choice"><span class="cqz-indicator" data-slot="indicator"><input class="cqz-input" type="${type}" name="${uid}" value="${key}"${kind === "poll" ? " disabled" : ""}>${marks[type]}</span>` +
-      `<span class="cqz-label" data-slot="label">${await flow(label)}</span><span class="cqz-verdict" data-slot="verdict"></span><span class="cqz-percent" data-slot="percent"></span></label>` +
+      `<span class="cqz-label" data-slot="label">${await flow(label)}${pill ? `<span class="cqz-pill" data-slot="recommended">${escapeHtml(pill)}</span>` : ""}</span><span class="cqz-verdict" data-slot="verdict"></span><span class="cqz-percent" data-slot="percent"></span></label>` +
       `<span class="cqz-bar" data-slot="bar" aria-hidden="true"></span></div>`
     );
   });

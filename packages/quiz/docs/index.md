@@ -238,6 +238,27 @@ What should the next lesson cover?
 > [!NOTE]
 > A poll needs a host that collects votes, such as [Drop](https://drop.vitehub.dev). Without one, its options show disabled.
 
+#### Recommended
+
+Write `{recommended}` after an option to mark your pick. It goes first, whatever order you wrote, with a Recommended pill after its text. Write `{recommended="Our pick"}` to say something else on the pill.
+
+::example
+```md
+::poll{#next-database}
+Which database should the next lesson use?
+
+- [ ] SQLite
+- [ ] Postgres {recommended}
+- [ ] MongoDB
+::
+```
+::
+
+The mark doesn't change the option's key, so adding or removing it keeps the votes.
+
+> [!NOTE]
+> A question gives its answer away with a pill, so `{recommended}` on a question's option adds an issue, and the plugin drops the mark.
+
 #### Multiple
 
 Use the `multiple` prop to show checkboxes, so a reader can vote for several options. Percentages count over voters.
@@ -433,6 +454,7 @@ quiz({ labels: { check: "Comprobar", tryAgain: "Otra vez", showAnswer: "Ver resp
 | `notYet` | `"Not yet"` |
 | `noHost` | `"Voting needs a host that collects votes."` |
 | `closed` | `"Voting closed"` |
+| `recommended` | `"Recommended"`, the pill on a poll option marked `{recommended}` |
 
 Each label you leave out keeps its English default.
 
@@ -442,7 +464,7 @@ With no host, each answer stays in the reader's browser, in `localStorage` under
 
 A host such as [Drop](https://drop.vitehub.dev) keeps the answers instead and sends back how everyone answered, through the [events](#events) on `document`.
 
-The server's HTML has what a host needs to check a posted answer: `data-quiz-id` and `data-quiz-kind` on each block, `data-key` on each option, and `data-correct` on a question's right options.
+The server's HTML has what a host needs to check a posted answer: `data-quiz-id` and `data-quiz-kind` on each block, `data-key` on each option, and `data-correct` on a question's right options. A poll's option marked `{recommended}` has `data-recommended`, with its pill's text as the value.
 
 ### Events
 
@@ -520,6 +542,7 @@ The plugin adds each problem to `meta.issues`, as [Validation](/guide/validation
 - a `#explain` or `#hint` swallowed by the text above it, when the blank line before it is missing
 - more than six options
 - a poll's `closes` that isn't a date
+- `{recommended}` on a question's option, which gives the answer away
 - a prop or slot the block doesn't have, and a block inside another
 
 ### Package
@@ -553,7 +576,7 @@ Each block is styled like shadcn/ui's Card and follows the shared tokens in [The
 | `--comark-foreground` | Text |
 | `--comark-muted` | The number, reasons, hints, and the counts |
 | `--comark-border` | The card, the options, and the line over the explanation |
-| `--comark-accent` | Hovered options and buttons, and a pressed grade |
+| `--comark-accent` | Hovered options and buttons, a pressed grade, and the Recommended pill |
 | `--comark-ring` | Focus rings |
 | `--comark-radius` | Corners, a little rounder on the card and less on the options |
 | `--comark-font` | All of it |
@@ -585,9 +608,10 @@ Every part has a `data-slot`, and the block and each option a `data-state`:
 | `[data-slot="root"]` | The block, `.cqz`, with `data-quiz-id`, `data-quiz-kind` (`question`, `poll`, or `recall`), `data-state`, and `data-results` once results show |
 | `[data-slot="number"]`, `[data-slot="prompt"]` | The number and the prompt |
 | `[data-slot="options"]` | The `fieldset` of options |
-| `[data-slot="option"]` | Each option, with `data-key`, `data-state`, `data-correct` on a question's right ones, and `data-leading` on a poll's most chosen |
+| `[data-slot="option"]` | Each option, with `data-key`, `data-state`, `data-correct` on a question's right ones, `data-recommended` on a poll's recommended ones, and `data-leading` on a poll's most chosen |
 | `[data-slot="indicator"]` | The radio or checkbox, and the icon that replaces it once answered |
 | `[data-slot="label"]`, `[data-slot="rationale"]` | An option's text and its reason |
+| `[data-slot="recommended"]` | The pill at the end of a recommended option's text |
 | `[data-slot="verdict"]`, `[data-slot="percent"]`, `[data-slot="bar"]` | An option's label ("Your answer" or "Correct answer"), percent, and fill |
 | `[data-slot="actions"]`, `[data-slot="status"]` | The buttons, and the status line with the verdict and count of answers, read out after each check |
 | `[data-slot="hint"]`, `[data-slot="explain"]`, `[data-slot="answer"]` | The slots |

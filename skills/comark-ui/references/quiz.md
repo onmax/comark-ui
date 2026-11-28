@@ -38,9 +38,10 @@ Promise callbacks are microtasks, and a timer's callback is a task.
 | Block | Props and slots |
 | --- | --- |
 | `::question` | `#id`, `multiple`, `shuffle="false"`, `number="false"`, slots `#hint` and `#explain`. |
-| `::poll` | `#id`, `multiple`, `closes` (an ISO date; after it the poll shows as closed). Options are never shuffled. |
+| `::poll` | `#id`, `multiple`, `closes` (an ISO date; after it the poll shows as closed). Options are never shuffled. `- [ ] Option {recommended}` (or `{recommended="Our pick"}`) puts that option first with a pill. |
 | `::recall` | `#id`, `number="false"`, and the required slot `#answer`. |
 
+- Use `{recommended}` only in a poll, to show your pick: on a question's option it gives the answer away, so the plugin reports it and drops it.
 - Mark a right option `[x]` and a wrong one `[ ]`. One right option makes radios and several make checkboxes; `multiple` forces checkboxes even with one. Mark no option in a poll.
 - Put a `>` line under an option to say why it is right or wrong. Give every wrong option a reason, since that is the lesson for a reader who picked it.
 - A newline inside an option's text is a line break, in questions and polls, and keeps the option's key. A wrong option that runs onto a second line with no `>` reason is reported, since that line is usually the reason missing its `>`.
