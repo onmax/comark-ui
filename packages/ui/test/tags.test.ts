@@ -83,6 +83,7 @@ describe("tags", () => {
         metrics: false,
         outline: false,
         properties: false,
+        social: false,
         table: false,
         tableLayout: false,
         tests: false,

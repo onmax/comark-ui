@@ -117,6 +117,16 @@ describe("comark-ui", () => {
     expect(out.match(/<a /g)).toHaveLength(1);
   });
 
+  it("leaves a social post's handles as the platform shows them, with no GitHub links", async () => {
+    const out = await renderHtml(
+      '::post{platform="bluesky" author="Theo" handle="tlin.bsky.social"}\nThanks @mira.bsky.social\n::\n\n::post{author="Ada" handle="@ada"}\nAsk @grace\n::',
+    );
+    expect(out).toContain('<span class="csl-handle">@tlin.bsky.social</span>');
+    expect(out).toContain('<span class="csl-handle">@ada</span>');
+    expect(out).toContain("Ask @grace");
+    expect(out).not.toContain("github.com");
+  });
+
   it("turns a plugin off, with its components", async () => {
     const { plugins, components } = html({ ...offline, zoom: false, github: { callouts: false } });
     expect(Object.keys(components)).not.toContain("zoom");

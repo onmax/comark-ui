@@ -15,6 +15,7 @@ export const packageOrder = [
   "bundle",
   "magic-move",
   "embed",
+  "social",
   "media",
   "metrics",
   "table",

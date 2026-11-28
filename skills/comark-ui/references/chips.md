@@ -15,7 +15,7 @@ Moves the build from [webpack](https://webpack.js.org) to [Vite](https://vite.de
 
 | Prop | On | What it does |
 | --- | --- | --- |
-| `chip=false` | a link | Keeps a plain link. |
+| `chip=false` | a link or a block | Keeps a plain link, or every link and `@user` in the block. |
 | `avatar="@user"` | a link or `:chip` | Shows that GitHub account's avatar. |
 | `avatar="provider:name"` | a link or `:chip` | Shows the account's avatar on any network unavatar.io knows, such as `bluesky:sindresorhus.com`. |
 | `avatar="https://…"` | a link or `:chip` | Shows this image, round like an avatar. |

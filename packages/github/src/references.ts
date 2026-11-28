@@ -2,6 +2,7 @@ import type { Node } from "comark";
 import { defineComarkPlugin } from "comark";
 import { type GitHubMeta, report } from "./meta.ts";
 import { isElement } from "../../../shared/nodes.ts";
+import { text } from "../../../shared/text.ts";
 
 export interface ReferencesOptions {
   /** The repository a bare `#123` points into, as `owner/name`. Without it, `#123` stays text. */
@@ -43,7 +44,8 @@ function walk(nodes: Node[], start: number, repo: string | undefined) {
       nodes.splice(index, 1, ...link(node, repo));
       continue;
     }
-    if (!isElement(node) || SKIP.has(node[0])) continue;
+    // `references="false"` keeps everything in an element as written, such as a comark-social post's handles.
+    if (!isElement(node) || SKIP.has(node[0]) || text(node[1].references) === "false") continue;
     // SAFETY: an element node is [tag, attributes, ...children], so its children start at index 2.
     walk(node as Node[], 2, repo);
   }

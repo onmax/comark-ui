@@ -107,6 +107,11 @@ describe("docs and playground registration", () => {
     ["metrics", ":progress{value=0.4}", 'class="cmt-progress"'],
     ["outline", "::toc\n::\n\n## Install", '<nav class="cto"'],
     ["properties", "---\nstatus: Ready\n---\n\nBody", '<span class="cfm-status">Ready</span>'],
+    [
+      "social",
+      '::post{platform="x" author="Ada" likes="3"}\nShipped it.\n::',
+      '<article class="csl" data-platform="x" data-comark-frame data-not-typeset aria-label="Post by Ada on X">',
+    ],
     ["qr", ':qr{value="https://example.com"}', 'aria-label="QR code: https://example.com"'],
     [
       "quiz",

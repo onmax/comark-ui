@@ -161,10 +161,14 @@ function collect(nodes: Node[], start: number, found: Map<ElementNode, string>) 
     if (!isElement(node)) continue;
     const [tag, attrs] = node;
     if (attrs.$?.html) continue;
+    // `chip="false"` keeps a link plain, and on any other element, everything in it, such as a comark-social post.
+    if (text(attrs.chip) === "false") {
+      delete attrs.chip;
+      continue;
+    }
     const href = text(attrs.href);
     if (tag === "a" && WEB.test(href)) {
-      if (text(attrs.chip) === "false") delete attrs.chip;
-      else if (!hasImage(childrenOf(node))) {
+      if (!hasImage(childrenOf(node))) {
         try {
           new URL(href);
         } catch {

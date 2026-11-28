@@ -142,6 +142,8 @@ Use a link to a post on `x.com` or `twitter.com`. X's own player grows to the po
 > [!NOTE]
 > X's player is always light, like the other players, whatever the page's theme.
 
+For a post that follows the page's theme, loads nothing from X, and stays after it's deleted, use [Social](/social)'s `::post` instead.
+
 ### Your own players
 
 Use the `player` option to play links your own site hosts, such as its screen recordings. It gets each link before the built-in providers and returns a player for the links it knows.

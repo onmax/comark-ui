@@ -51,6 +51,7 @@ Every plugin is on except `include`, which reads from disk. cast, table, and tes
 | [properties](/properties) | `comark-properties/html` | `comark-properties/vue` | `comark-properties/react` | `comark-properties/svelte` |
 | [qr](/qr) | `comark-qr/html` | `comark-qr/vue` | `comark-qr/react` | `comark-qr/svelte` |
 | [quiz](/quiz) | `comark-quiz/html` | | | |
+| [social](/social) | `comark-social/html` | `comark-social/vue` | `comark-social/react` | `comark-social/svelte` |
 | [sources](/sources) | `comark-sources/html` | `comark-sources/vue` | `comark-sources/react` | `comark-sources/svelte` |
 | [steps](/steps) | `comark-steps/html` | `comark-steps/vue` | `comark-steps/react` | `comark-steps/svelte` |
 | [table](/table) | `comark-table/html` | `comark-table/vue` | `comark-table/react` | `comark-table/svelte` |

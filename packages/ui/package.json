@@ -103,6 +103,7 @@
     "comark-qr": "workspace:^",
     "comark-quiz": "workspace:^",
     "comark-reading-time": "workspace:^",
+    "comark-social": "workspace:^",
     "comark-sources": "workspace:^",
     "comark-steps": "workspace:^",
     "comark-table": "workspace:^",

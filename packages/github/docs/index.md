@@ -185,7 +185,7 @@ Thanks @onmax: this fixes #51, and onmax/comark-ui#73 builds on it.
 | `owner/name#123` | `https://github.com/owner/name/issues/123` |
 
 > [!NOTE]
-> A reference must stand on its own, so `me@example.com`, `C#9`, and `@comark/html` stay text. So does anything in a link or in code. A bare `#123` needs the `repo` [option](#options).
+> A reference must stand on its own, so `me@example.com`, `C#9`, and `@comark/html` stay text. So does anything in a link, in code, or in a block with `references=false`, such as `::div{references=false}`. A bare `#123` needs the `repo` [option](#options).
 
 ### HTML
 
