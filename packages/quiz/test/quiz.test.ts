@@ -261,6 +261,17 @@ describe("::poll", () => {
     expect(translated.html).toContain('data-recommended="Recomendado"');
   });
 
+  it("reads {recommended} from a loose option's checkbox paragraph, not its rationale", async () => {
+    const { html, issues } = await run(
+      '::poll{#db}\nWhich database?\n\n- [ ] SQLite\n\n  > Runs locally. {recommended}\n- [ ] Neon {recommended="Our pick"}\n\n  > Runs on Postgres.\n::',
+    );
+    expect(issues).toEqual([]);
+    expect(rows(html).map((option) => option.label)).toEqual(["Neon", "SQLite"]);
+    expect(html).toContain('data-recommended="Our pick"');
+    expect(html).toContain('<span class="cqz-pill" data-slot="recommended">Our pick</span>');
+    expect(html.match(/data-recommended/g)).toHaveLength(1);
+  });
+
   it("keys a {recommended} option by its text alone", async () => {
     const plain = await run("::poll{#db}\nWhich?\n\n- [ ] Postgres\n- [ ] Neon\n::");
     const marked = await run("::poll{#db}\nWhich?\n\n- [ ] Postgres\n- [ ] Neon {recommended}\n::");
@@ -455,12 +466,17 @@ describe("issues", () => {
       expect(result.issues[0]).toContain(start);
     });
 
-  it("drops a {recommended} mark from a question", async () => {
-    const { html } = await run(
-      "::question{#q}\nPick.\n\n- [x] A {recommended}\n- [ ] B\n  > No.\n::",
-    );
-    expect(html).not.toMatch(/data-recommended|cqz-pill/);
-  });
+  it.each(["", "\n"])(
+    "reports and drops {recommended} from a question (blank line: %j)",
+    async (blank) => {
+      const result = await run(
+        `::question{#q}\nPick.\n\n- [x] A {recommended}\n${blank}  > Yes.\n- [ ] B\n  > No.\n::`,
+      );
+      expect(ruleOf(result)).toEqual(["comark/quiz/recommended-in-question"]);
+      const { html } = result;
+      expect(html).not.toMatch(/data-recommended|cqz-pill/);
+    },
+  );
 
   it("reports two blocks without ids that hash to one id, besides each missing id", async () => {
     const block = "::poll\nPick.\n\n- [ ] A\n- [ ] B\n::";

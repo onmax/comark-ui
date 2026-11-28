@@ -6,6 +6,7 @@ import quiz, {
   type QuizAnswerDetail,
   type QuizState,
 } from "../packages/quiz/src/html.ts";
+import time, { components as timeComponents } from "../packages/time/src/html.ts";
 
 const render = createHtmlRenderer({ plugins: [quiz()], components });
 // A host's listener, in the page before the blocks, so it hears the first `comark-quiz:ready` too.
@@ -62,6 +63,31 @@ Microtasks drain before the next task.
 ::`;
 
 const option = (page: Page, text: string) => page.locator(".cqz-option", { hasText: text });
+
+test("a long recommended pill wraps within the option label on a narrow screen", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+  const html = await render(`::poll{#db}
+Which database?
+
+- [ ] SQLite
+- [ ] Neon {recommended="This is our recommended choice for smaller projects"}
+::`);
+  await page.setContent(`<!doctype html><html lang="en"><body>${html}</body></html>`);
+  const label = page.locator('[data-recommended] [data-slot="label"]');
+  const bounds = await label.evaluate((element) => {
+    const pill = element.querySelector('[data-slot="recommended"]')!;
+    return {
+      pillRight: pill.getBoundingClientRect().right,
+      labelRight: element.getBoundingClientRect().right,
+      pillHeight: pill.getBoundingClientRect().height,
+      lineHeight: Number.parseFloat(getComputedStyle(pill).lineHeight),
+    };
+  });
+  expect(bounds.pillRight).toBeLessThanOrEqual(bounds.labelRight);
+  expect(bounds.pillHeight).toBeGreaterThan(bounds.lineHeight);
+});
 
 test("a right answer is marked, explained, and sent to the host", async ({ page }) => {
   await open(page, question);
@@ -154,6 +180,30 @@ test("Show answer marks every right option and opens each reason and the explana
     /.+/,
   );
   expect((await answers(page)).at(-1)).toMatchObject({ choice: [], correct: false, first: false });
+});
+
+test("revealing an inline time announces its label without its runtime or tooltip", async ({
+  page,
+}) => {
+  const now = "2026-11-28T12:00:00Z";
+  await page.clock.setFixedTime(new Date(now));
+  const renderWithTime = createHtmlRenderer({
+    plugins: [quiz(), time({ now, timeZone: "UTC", locale: "en" })],
+    components: { ...components, ...timeComponents },
+  });
+  const html = await renderWithTime(`::question{#date}
+Which date is next?
+
+- [x] :time[2026-11-30]
+- [ ] Yesterday
+  > Yesterday has already passed.
+::`);
+  await page.goto("/no-such-page");
+  await page.setContent(`<!doctype html><html lang="en"><body>${html}</body></html>`);
+  await page.getByRole("radio", { name: "Yesterday" }).check();
+  await page.getByRole("button", { name: "Check" }).click();
+  await page.getByRole("button", { name: "Show answer" }).click();
+  await expect(page.locator(".cqz-status .cqz-sr")).toHaveText("Correct answer: in 2 days");
 });
 
 test("arrow keys move the selection without checking it", async ({ page }) => {
@@ -553,6 +603,23 @@ test("state a host leaves before the script starts is applied when it does", asy
   await expect(page.locator(".cqz")).toHaveAttribute("data-state", "voted");
   await expect(page.getByRole("radio", { name: "Streams" })).toBeChecked();
   await expect(page.getByText("Voting needs a host that collects votes.")).toBeHidden();
+});
+
+test("restoring a revealed answer in a closed disclosure preserves its status text", async ({
+  page,
+}) => {
+  const html = await render(
+    "::question{#q}\nPick.\n\n- [x] **Right\n  on two lines**\n- [ ] Wrong\n  > No.\n::",
+  );
+  const state: QuizState = { answers: { q: { choice: [], correct: false } } };
+  await page.setContent(
+    `<!doctype html><script>window.__comarkQuizState=${JSON.stringify(state)}</script><details><summary>Question</summary>${html}</details>`,
+  );
+  await expect(page.locator(".cqz")).toHaveAttribute("data-state", "revealed");
+  await page.locator("summary").click();
+  await expect(page.locator(".cqz-status .cqz-sr")).toHaveText(
+    "Correct answer: Right on two lines",
+  );
 });
 
 test("with data-quiz-relay, a framed lesson posts its events to the parent and takes its state", async ({
