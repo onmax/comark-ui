@@ -327,6 +327,23 @@ test("state a host leaves before the script starts is applied when it does", asy
   await expect(page.getByText("Voting needs a host that collects votes.")).toBeHidden();
 });
 
+test("restoring a revealed answer in a closed disclosure preserves its status text", async ({
+  page,
+}) => {
+  const html = await render(
+    "::question{#q}\nPick.\n\n- [x] **Right\n  on two lines**\n- [ ] Wrong\n  > No.\n::",
+  );
+  const state: QuizState = { answers: { q: { choice: [], correct: false } } };
+  await page.setContent(
+    `<!doctype html><script>window.__comarkQuizState=${JSON.stringify(state)}</script><details><summary>Question</summary>${html}</details>`,
+  );
+  await expect(page.locator(".cqz")).toHaveAttribute("data-state", "revealed");
+  await page.locator("summary").click();
+  await expect(page.locator(".cqz-status .cqz-sr")).toHaveText(
+    "Correct answer: Right on two lines",
+  );
+});
+
 test("with data-quiz-relay, a framed lesson posts its events to the parent and takes its state", async ({
   page,
 }) => {
