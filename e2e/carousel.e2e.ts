@@ -236,6 +236,37 @@ test("on a narrow page the next slide peeks in, and the counter names one slide"
   await expect(next).toHaveAttribute("aria-disabled", "true");
 });
 
+for (const dir of ["ltr", "rtl"]) {
+  test(`with --cc-bleed, the slides run past the carousel's end at their size, and the controls stay under it in ${dir}`, async ({
+    page,
+  }) => {
+    await open(page, five, { dir });
+    const { root, track, count } = parts(page);
+    const slide = () =>
+      track
+        .locator(".cc-slide")
+        .first()
+        .evaluate((node) => node.getBoundingClientRect().width);
+    const size = await slide();
+    await root.evaluate((node) => node.style.setProperty("--cc-bleed", "120px"));
+    const [box, run, controls] = [
+      (await root.boundingBox())!,
+      (await track.boundingBox())!,
+      (await root.locator(":scope>.cc-controls").boundingBox())!,
+    ];
+    expect(await slide()).toBeCloseTo(size, 0);
+    expect(run.width).toBeCloseTo(box.width + 120, 0);
+    expect(dir === "ltr" ? run.x : run.x + run.width).toBeCloseTo(
+      dir === "ltr" ? box.x : box.x + box.width,
+      0,
+    );
+    expect(controls.x).toBeGreaterThanOrEqual(box.x - 0.5);
+    expect(controls.x + controls.width).toBeLessThanOrEqual(box.x + box.width + 0.5);
+    // The next slide only peeks in, so the counter still names three.
+    await expect(count).toHaveText("1–3 / 5");
+  });
+}
+
 test("Home and End go to the first and last slide", async ({ page }) => {
   await open(page, three);
   const { count, next, prev, root } = parts(page);

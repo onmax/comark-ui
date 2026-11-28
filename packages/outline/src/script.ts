@@ -90,10 +90,14 @@ export function start(): () => void {
 
     // Measured without the outline's column, so a block that only fits the column while it's kept still counts.
     reserve(false);
-    const column = text().width;
-    const wide = [...parent.children].filter(
-      (child) => child.hasAttribute("data-wide") && width(child) > column + 1,
-    );
+    const { end, width: column } = text();
+    // A wide block counts, and so does a part right inside a block that runs past the text, such as a carousel's
+    // slides running into the room beside it (comark-carousel's --cc-bleed). The outline itself doesn't.
+    const wide = [...parent.children].flatMap((child) => {
+      if (child === nav) return [];
+      if (child.hasAttribute("data-wide")) return width(child) > column + 1 ? [child] : [];
+      return [...child.children].filter((part) => part.getBoundingClientRect().right > end + 1);
+    });
     let spot = beside(wide, WIDTH);
     if (!spot && wide.length) {
       // A block with its own width, such as a diagram, matters more than the outline: keeping the column may narrow a

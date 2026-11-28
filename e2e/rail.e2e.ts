@@ -33,18 +33,25 @@ const sections = (extra = "") =>
     .filter(Boolean)
     .join("\n\n");
 
+const carousel = '::carousel{title="Tour" columns=3}\nOne\n\nTwo\n\nThree\n\nFour\n\nFive\n::';
+
 // A 46rem column, the way a review doc lays out its text. With `room`, the page gives wide blocks the room on each side
 // of it, and takes the outline's column off the room after it while the outline keeps one, as the outline page's docs
-// show.
-async function open(page: Page, width: number, { room = false, diagram = false } = {}) {
+// show. A carousel's slides run into the same room.
+async function open(
+  page: Page,
+  width: number,
+  { room = false, diagram = false, slides = false } = {},
+) {
   await page.setViewportSize({ width, height: 800 });
   const css = room
     ? "main{--comark-wide-start:calc((100vw - 100%) / 2 - 1.5rem);--comark-wide-end:calc((100vw - 100%) / 2 - 1.5rem)}" +
-      ":root[data-comark-rail] main{--comark-wide-end:calc((100vw - 100%) / 2 - 1.5rem - var(--comark-rail-width))}"
+      ":root[data-comark-rail] main{--comark-wide-end:calc((100vw - 100%) / 2 - 1.5rem - var(--comark-rail-width))}" +
+      "main>.cc{--cc-bleed:var(--comark-wide-end)}"
     : "";
   await page.setContent(
     `<!doctype html><meta charset="utf-8"><style>body{margin:0}main{width:46rem;margin:auto}${css}</style><main>${await render(
-      sections(diagram ? flowchart : ""),
+      sections(diagram ? flowchart : slides ? carousel : ""),
     )}</main>`,
   );
 }
@@ -124,6 +131,24 @@ test("beside a long diagram, the outline keeps a column right of it, and the dia
       getComputedStyle(document.documentElement).getPropertyValue("--comark-rail-width"),
     ),
   ).toBe("264px");
+});
+
+test("beside a carousel whose slides run into the room, the outline keeps a column right of the slides", async ({
+  page,
+}) => {
+  await open(page, 1440, { room: true, slides: true });
+  await expect(page.locator(".cto-rail")).toBeVisible();
+  expect(await reserved(page)).toBe(true);
+  const [main, track, nav, edge] = [
+    await box(page, "main"),
+    await box(page, ".cc-track"),
+    await box(page, ".cto-rail"),
+    await clientWidth(page),
+  ];
+  expect(track.right).toBeGreaterThan(main.right + 40);
+  expect(nav.left - track.right).toBeGreaterThanOrEqual(40);
+  expect(nav.left - track.right).toBeLessThanOrEqual(64);
+  expect(nav.right).toBeLessThanOrEqual(edge - 24);
 });
 
 test("where its column would narrow a diagram, the outline hides instead", async ({ page }) => {
