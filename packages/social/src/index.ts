@@ -11,6 +11,13 @@ export { fetchPost, FetchPostError } from "./fetch.ts";
 export type { FetchedMedia, FetchedPost, FetchPostOptions } from "./fetch.ts";
 export type { SocialRequest } from "./request.ts";
 export { COUNTS, PLATFORMS, type Count, type Platform } from "./platforms.ts";
+export { postMarkdown, textMarkdown, threadMarkdown } from "./markdown.ts";
+export type {
+  PostData,
+  PostMarkdownOptions,
+  PostPicture,
+  ThreadMarkdownOptions,
+} from "./markdown.ts";
 
 export type SocialMeta = {
   /** One readable sentence per problem with a post. Other plugins add theirs too. */

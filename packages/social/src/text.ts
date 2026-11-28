@@ -16,14 +16,14 @@ export type Linking = {
   host: string;
 };
 
-const URL_PATTERN = /https?:\/\/[^\s<>"]+[^\s<>".,;:!?)\]}'’”]/g;
+export const URL_PATTERN = /https?:\/\/[^\s<>"]+[^\s<>".,;:!?)\]}'’”]/g;
 const MENTION = /(^|[^\w@/.])@([A-Za-z0-9_](?:[\w.-]*[A-Za-z0-9_])?(?:@[\w-]+(?:\.[\w-]+)+)?)/g;
 const HASHTAG = /(^|[^\p{L}\p{N}_&/#])#(\p{L}[\p{L}\p{N}_]*)/gu;
 
 const link = (href: string, words: Node[]): ElementNode => ["a", { href }, ...words];
 
 // A link as the platforms show it: no scheme or `www.`, and cut after 30 characters.
-const display = (href: string) => {
+export const display = (href: string) => {
   const short = href.replace(/^https?:\/\/(www\.)?/, "");
   return short.length > 30 ? `${short.slice(0, 29)}…` : short;
 };
@@ -87,6 +87,26 @@ function inline(nodes: Node[], linking: Linking): Node[] {
   });
 }
 
+function writtenMedia(node: ElementNode): ElementNode {
+  const [tag, attrs, ...children] = node;
+  if (tag !== "img") return node;
+  const { ":video": boundVideo, video, ...rest } = attrs;
+  const boundAlt = rest[":alt"];
+  if (typeof boundAlt === "string" && boundAlt.startsWith('"')) {
+    try {
+      const alt: unknown = JSON.parse(boundAlt);
+      if (typeof alt === "string") {
+        delete rest[":alt"];
+        rest.alt = alt;
+      }
+    } catch {}
+  }
+  const image: ElementNode = [tag, rest, ...children];
+  return boundVideo !== undefined || video !== undefined
+    ? ["span", { class: "csl-video" }, image]
+    : image;
+}
+
 const blank = (node: Node) => typeof node === "string" && !node.trim();
 const isMedia = (node: Node) => isElement(node) && (node[0] === "img" || node[0] === "media");
 
@@ -102,7 +122,7 @@ export function readBody(nodes: Node[], linking: Linking): { text: Node[]; media
     const content = children.filter((child) => !blank(child));
     if (content.length && content.every(isMedia)) {
       // SAFETY: isMedia passed for every node, so each is an element.
-      media.push(...(content as ElementNode[]));
+      media.push(...(content as ElementNode[]).map(writtenMedia));
       return;
     }
     // Comark leaves the line breaks at a paragraph's ends, which would draw an empty line.
