@@ -31,8 +31,10 @@ export function start(css: string): () => void {
 
   // Only the carousel's own parts: a slide can hold another carousel, such as a `::compare`, with parts of its own.
   const parts = (root: Element) => {
-    const track = root.querySelector<HTMLElement>(":scope>.cc-track");
-    const slides = track ? [...track.querySelectorAll<HTMLElement>(":scope>.cc-slide")] : [];
+    const track = root.querySelector<HTMLElement>(":scope>.cc-run>.cc-track");
+    const slides = track
+      ? [...track.querySelectorAll<HTMLElement>(":scope>.cc-grid>.cc-slide")]
+      : [];
     const step = (by: number) =>
       root.querySelector<HTMLElement>(`:scope>.cc-controls [data-carousel-step='${by}']`);
     const count = root.querySelector(":scope>.cc-controls .cc-count");
@@ -150,8 +152,8 @@ export function start(css: string): () => void {
   });
   const observe = (node: Node) => {
     if (!(node instanceof Element)) return;
-    if (node.matches(".cc>.cc-track")) resized.observe(node);
-    for (const track of node.querySelectorAll(".cc>.cc-track")) resized.observe(track);
+    if (node.matches(".cc-track")) resized.observe(node);
+    for (const track of node.querySelectorAll(".cc-track")) resized.observe(track);
   };
   const watch = () => observe(document.documentElement);
   watch();

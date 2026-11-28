@@ -281,6 +281,15 @@ describe("::poll", () => {
     expect(/data-quiz-id="([^"]+)"/.exec(marked.html)![1]).toBe("db");
   });
 
+  it("preserves line breaks and vote keys on a recommended option", async () => {
+    const source = "::poll{#db}\nWhich?\n\n- [ ] SQLite\n- [ ] Neon\n  Runs on Postgres.";
+    const plain = await run(`${source}\n::`);
+    const marked = await run(`${source} {recommended}\n::`);
+    expect(marked.issues).toEqual([]);
+    expect(rows(marked.html)).toEqual(rows(plain.html).toReversed());
+    expect(marked.html).toMatch(/Neon<br\s*\/?\s*>Runs on Postgres\.<span class="cqz-pill"/);
+  });
+
   it("renders as closed once its closing date has passed", async () => {
     const { html } = await run(poll('{#next-topic closes="2020-01-01"}'));
     expect(html).toContain('data-state="closed" data-closes="2020-01-01"');

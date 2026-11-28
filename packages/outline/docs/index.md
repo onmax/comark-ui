@@ -168,6 +168,8 @@ main {
 
 When keeping the column would narrow a diagram, the outline hides instead, since the labels matter more. A before/after comparison fills whatever room it gets, so it makes room for the outline.
 
+A block whose part runs past the text counts as wide too, such as a carousel whose slides run into the room beside it. Give it the same room, as `--cc-bleed: var(--comark-wide-end)`, and the slides stop where the outline's column starts.
+
 ## Examples
 
 ### Long review documents
