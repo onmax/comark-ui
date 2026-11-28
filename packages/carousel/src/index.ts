@@ -71,6 +71,7 @@ const SLIDE_PROPS = ["title", "id", "class"];
 
 const unknownProps = (attrs: ElementNode[1], props: string[]) =>
   Object.keys(attrs)
+    .filter((key) => key !== "$")
     .map((key) => key.replace(/^:/, ""))
     .filter((prop) => !props.includes(prop));
 
@@ -79,17 +80,21 @@ interface Walk {
   issues: Issue[];
   carousels: number;
   strays: number;
+  authoredUnknownProps: WeakMap<ElementNode, string[]>;
 }
 
 function carousel(node: ElementNode, walk: Walk) {
   const attrs = resolveAttributes(node[1], walk.data, { parseJson: true });
   const title = text(attrs.title);
   const name = `carousel ${++walk.carousels}${title ? ` ("${title}")` : ""}`;
-  for (const prop of unknownProps(node[1], CAROUSEL_PROPS))
+  const unknown = walk.authoredUnknownProps.get(node) ?? unknownProps(node[1], CAROUSEL_PROPS);
+  walk.authoredUnknownProps.set(node, unknown);
+  for (const prop of unknown) {
     walk.issues.push({
       rule: "comark/carousel/unknown-prop",
       message: `${name}: \`${prop}\` isn't a prop of ::carousel, so it's ignored. Use \`title\`, \`columns\`, or \`zoom\`.`,
     });
+  }
   const content = childrenOf(node).filter(isContent);
   const explicit = content.some(isSlide);
   if (explicit)
@@ -106,12 +111,21 @@ function carousel(node: ElementNode, walk: Walk) {
       rule: "comark/carousel/empty-carousel",
       message: `${name} has no slides; put blocks or :::slide blocks inside it, or remove it.`,
     });
-  for (const [index, slide] of slides.entries())
-    for (const prop of unknownProps(slide[1], SLIDE_PROPS))
+  for (const [index, slide] of slides.entries()) {
+    let unknown = walk.authoredUnknownProps.get(slide);
+    if (!unknown) {
+      unknown = unknownProps(slide[1], SLIDE_PROPS);
+      walk.authoredUnknownProps.set(slide, unknown);
+      slide.splice(2, slide.length - 2, ...standalone(childrenOf(slide)));
+      delete slide[1][":photo"];
+      slide[1].photo = isPicture(only(slide));
+    }
+    for (const prop of unknown)
       walk.issues.push({
         rule: "comark/carousel/unknown-prop",
         message: `${name}, slide ${index + 1}: \`${prop}\` isn't a prop of :::slide, so it's ignored. Use \`title\`.`,
       });
+  }
   if (attrs.columns !== undefined && !COLUMNS.has(attrs.columns))
     walk.issues.push({
       rule: "comark/carousel/invalid-columns",
@@ -130,8 +144,6 @@ function carousel(node: ElementNode, walk: Walk) {
   }
   const zoom = attrs.zoom !== false && attrs.zoom !== "false";
   for (const [index, slide] of slides.entries()) {
-    slide.splice(2, slide.length - 2, ...standalone(childrenOf(slide)));
-    slide[1].photo = isPicture(only(slide));
     slide[1].index = String(index + 1);
     slide[1].count = String(slides.length);
     if (!zoom) slide[1].zoom = "false";
@@ -167,21 +179,28 @@ function normalize(nodes: Node[], walk: Walk, inCarousel = false) {
  * snap without a script; the script adds arrows, a counter, and keys, and zooms a slide with the others in a strip.
  * Problems, such as content outside every `:::slide`, are added to `meta.issues`.
  */
-export default defineComarkPlugin<void, CarouselMeta>(() => ({
-  name: "comark-carousel",
-  post(state) {
-    const { tree } = state;
-    const walk: Walk = {
-      data: { frontmatter: tree.frontmatter, meta: tree.meta, data: {}, props: {} },
-      issues: [],
-      carousels: 0,
-      strays: 0,
-    };
-    normalize(tree.nodes, walk);
-    tree.meta.issues = [...(tree.meta.issues ?? []), ...walk.issues.map((issue) => issue.message)];
-    tree.meta.issueRules = {
-      ...tree.meta.issueRules,
-      ...Object.fromEntries(walk.issues.map((issue) => [issue.message, issue.rule])),
-    };
-  },
-}));
+export default defineComarkPlugin<void, CarouselMeta>(() => {
+  const authoredUnknownProps = new WeakMap<ElementNode, string[]>();
+  return {
+    name: "comark-carousel",
+    post(state) {
+      const { tree } = state;
+      const walk: Walk = {
+        data: { frontmatter: tree.frontmatter, meta: tree.meta, data: {}, props: {} },
+        issues: [],
+        carousels: 0,
+        strays: 0,
+        authoredUnknownProps,
+      };
+      normalize(tree.nodes, walk);
+      tree.meta.issues = [
+        ...(tree.meta.issues ?? []),
+        ...walk.issues.map((issue) => issue.message),
+      ];
+      tree.meta.issueRules = {
+        ...tree.meta.issueRules,
+        ...Object.fromEntries(walk.issues.map((issue) => [issue.message, issue.rule])),
+      };
+    },
+  };
+});

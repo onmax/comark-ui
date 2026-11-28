@@ -1,7 +1,8 @@
-import { createHtmlRenderer } from "@comark/html";
-import { defineComarkPlugin, parseMarkdown } from "comark";
+import { createHtmlRenderer, renderHtmlFromDocument } from "@comark/html";
+import { createMarkdownParser, defineComarkPlugin, parseMarkdown } from "comark";
 import zoom, { components as zoomComponents } from "comark-zoom/html";
 import { describe, expect, it } from "vite-plus/test";
+import { external } from "../../links/src/index.ts";
 import carousel, { components } from "../src/html.ts";
 
 const render = (markdown: string) =>
@@ -68,6 +69,34 @@ describe("comark-carousel", () => {
     expect(
       html.match(/<div class="cc-slide"[^>]*>/g)?.map((slide) => slide.includes("data-cc-photo")),
     ).toEqual([true, true, false]);
+  });
+
+  it("keeps the photo decision when streaming reuses slides with decorated links", async () => {
+    const parse = createMarkdownParser({ plugins: [carousel(), external()] });
+    const markdown = `::carousel
+:::slide
+[![View](wide.svg)](https://example.com){target="_blank"}
+:::
+
+:::slide{:photo="true"}
+[![View](wide.svg) Caption](https://example.com){target="_blank"}
+:::
+::
+
+First paragraph.`;
+    const first = await parse(markdown, { streaming: true });
+    const firstHtml = await renderHtmlFromDocument(first, { components });
+    const photoSlides = (html: string) =>
+      html.match(/<div class="cc-slide"[^>]*>/g)?.map((slide) => slide.includes("data-cc-photo"));
+    expect(firstHtml).toContain("(opens in a new tab)");
+    expect(photoSlides(firstHtml)).toEqual([true, false]);
+
+    const next = await parse(`${markdown}\n\nAnother paragraph.`, { streaming: true });
+    expect(next.nodes[0]).toBe(first.nodes[0]);
+    expect(photoSlides(await renderHtmlFromDocument(next, { components }))).toEqual([true, false]);
+    expect(next.meta.issues).toEqual([
+      "carousel 1, slide 2: `photo` isn't a prop of :::slide, so it's ignored. Use `title`.",
+    ]);
   });
 
   it("keeps explicit slides and their titles", async () => {
