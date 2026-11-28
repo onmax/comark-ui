@@ -100,7 +100,24 @@ Which callback runs first once the current script ends?
 ::
 
 > [!NOTE]
-> A wrong option with no reason adds an issue, and so does an option that runs onto a second line, usually a reason missing its `>`.
+> A wrong option with no reason adds an issue. When its text runs onto a second line, the issue says that line is probably its reason missing its `>`.
+
+#### Lines
+
+Break an option's text onto a new line, and it shows on its own line, in questions and polls. The option's key reads the text as one line, so breaking an option keeps its saved answers.
+
+::example
+```md
+::poll{#next-lesson-lines}
+What should the next lesson cover?
+
+- [ ] Web Workers
+  Moving work off the main thread
+- [ ] Streams
+  Reading a response as it arrives
+::
+```
+::
 
 #### Id
 
@@ -323,7 +340,7 @@ After every task, before it renders or takes the next task :cite[1].
 
 ### Order and keys
 
-Every reader, and the page without its script, sees the same shuffled order. Reordering options keeps saved answers, but editing an option's words resets the answers that picked it.
+Every reader, and the page without its script, sees the same shuffled order. Reordering options, or breaking one onto two lines, keeps saved answers, but editing an option's words resets the answers that picked it.
 
 ### Hosting
 
@@ -499,7 +516,7 @@ The plugin adds each problem to `meta.issues`, as [Validation](/guide/validation
 - a right option much longer than the others, which gives it away
 - an option such as "All of the above" that points at other options by place, which the shuffle breaks
 - a wrong option with no `>` reason
-- an option that runs onto a second line, usually a reason missing its `>`
+- a wrong option with no reason that runs onto a second line, usually a reason missing its `>`
 - a `#explain` or `#hint` swallowed by the text above it, when the blank line before it is missing
 - more than six options
 - a poll's `closes` that isn't a date

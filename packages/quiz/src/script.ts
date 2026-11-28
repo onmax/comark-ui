@@ -224,7 +224,7 @@ export function script(config: ScriptConfig): void {
     const total = paintResults(model, done, labels.answer, labels.answers);
     const right = model.options.flatMap((option, at) =>
       model.correct.has(model.keys[at] ?? "")
-        ? [$(option, ".cqz-label")?.textContent?.trim() ?? ""]
+        ? [$(option, ".cqz-label")?.innerText.replace(/\s+/g, " ").trim() ?? ""]
         : [],
     );
     const said =

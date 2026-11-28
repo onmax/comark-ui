@@ -43,6 +43,7 @@ Promise callbacks are microtasks, and a timer's callback is a task.
 
 - Mark a right option `[x]` and a wrong one `[ ]`. One right option makes radios and several make checkboxes; `multiple` forces checkboxes even with one. Mark no option in a poll.
 - Put a `>` line under an option to say why it is right or wrong. Give every wrong option a reason, since that is the lesson for a reader who picked it.
+- A newline inside an option's text is a line break, in questions and polls, and keeps the option's key. A wrong option that runs onto a second line with no `>` reason is reported, since that line is usually the reason missing its `>`.
 - Leave a blank line before `#hint` and `#explain`. Without it, the text above swallows the slot, and the plugin reports it.
 - Give every block an `#id`. Hosts save answers by id. Without one the id derives from the prompt and options, changes when you reword them, and the plugin reports it. Keep the id when you reword the prompt.
 - Questions and recall cards share one count, so a lesson numbers them 1, 2, 3 down the page. Polls are not numbered.
