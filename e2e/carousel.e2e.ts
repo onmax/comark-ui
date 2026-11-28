@@ -324,6 +324,60 @@ test("bleed preserves percentage gaps and slide widths in a padded track", async
   expect((await track.boundingBox())!.width).toBeCloseTo((await root.boundingBox())!.width + 64, 0);
 });
 
+for (const dir of ["ltr", "rtl"]) {
+  test(`start bleed pages from the padded column's content edge in ${dir}`, async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await open(page, five, {
+      dir,
+      style: ".cc{padding-inline-start:144px;--cc-bleed-start:160px}",
+    });
+    const { count, next, prev } = parts(page);
+    await expect(count).toHaveText("1–3 / 5");
+    await next.click();
+    await expect(count).toHaveText("2–4 / 5");
+    await next.click();
+    await expect(count).toHaveText("3–5 / 5");
+    await prev.click();
+    await expect(count).toHaveText("2–4 / 5");
+  });
+}
+
+test("invalid nested start bleed does not inherit the outer run's bleed", async ({ page }) => {
+  await open(
+    page,
+    '::carousel{title="Outer"}\n:::slide\n::::carousel{title="Inner"}\nOne\n\nTwo\n::::\n:::\n\n:::slide\nThree\n:::\n::',
+    {
+      style:
+        '.cc[aria-label="Outer"]{--cc-bleed-start:80px}.cc[aria-label="Inner"]{--cc-bleed-start:20%}',
+    },
+  );
+  const overhang = async (title: string) => {
+    const { root, track } = parts(page, title);
+    return (await track.boundingBox())!.width - (await root.boundingBox())!.width;
+  };
+  expect(await overhang("Outer")).toBeCloseTo(80, 0);
+  expect(await overhang("Inner")).toBeCloseTo(0, 0);
+});
+
+test("a narrow track snaps to the last slide by native scrolling with end bleed", async ({
+  page,
+}) => {
+  await open(page, five, { width: "320px", style: ".cc{--cc-bleed:120px}" });
+  const { root, track, count } = parts(page);
+  await expect(count).toHaveText("1 / 5");
+  await track.evaluate((node) =>
+    node.scrollTo({ left: node.scrollWidth - node.clientWidth, behavior: "instant" }),
+  );
+  await expect(count).toHaveText("5 / 5");
+  await expect
+    .poll(async () => {
+      const column = (await root.boundingBox())!;
+      const last = (await track.locator(".cc-slide").last().boundingBox())!;
+      return Math.abs(last.x + last.width - column.x - column.width);
+    })
+    .toBeLessThan(1);
+});
+
 test("without bleed, two slides fit in a padded two-column track", async ({ page }) => {
   await open(page, '::carousel{title="Tour" columns=2}\nOne\n\nTwo\n::', {
     style: ".cc-track{padding-inline-start:48px}",

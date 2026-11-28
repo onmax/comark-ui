@@ -47,7 +47,12 @@ export function start(css: string): () => void {
     // With --cc-bleed or --cc-bleed-start the track overhangs the carousel's column: a page is what fits in the
     // column, and it rests lined up with the column's start.
     const column = track.closest(".cc") as HTMLElement;
-    const width = track.clientWidth - Math.max(0, track.offsetWidth - column.clientWidth);
+    const columnStyle = getComputedStyle(column);
+    const columnWidth =
+      column.clientWidth -
+      parseFloat(columnStyle.paddingLeft) -
+      parseFloat(columnStyle.paddingRight);
+    const width = track.clientWidth - Math.max(0, track.offsetWidth - columnWidth);
     const bounds = track.getBoundingClientRect();
     const scale = bounds.width / track.offsetWidth || 1;
     const direction = rtl(track) ? -1 : 1;
@@ -57,12 +62,7 @@ export function start(css: string): () => void {
         ? track.offsetWidth - track.clientWidth - track.clientLeft
         : track.clientLeft;
     const origin = direction === -1 ? bounds.right : bounds.left;
-    const columnBounds = column.getBoundingClientRect();
-    const lead = Math.max(
-      0,
-      (direction * ((direction === -1 ? columnBounds.right : columnBounds.left) - origin)) / scale -
-        inset,
-    );
+    const lead = parseFloat(getComputedStyle(track).scrollPaddingInlineStart) || 0;
     const panels = slides.map((slide) => slide.getBoundingClientRect());
     const first = panels[0]!;
     const starts = panels.map((panel) => {

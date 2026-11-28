@@ -18,7 +18,7 @@ const photo =
  */
 export const css = `@layer comark{${[
   '@property --_cc-column-ratio{syntax:"<number>";inherits:true;initial-value:0}',
-  '@property --_cc-start-ratio{syntax:"<number>";inherits:true;initial-value:0}',
+  '@property --_cc-local-start-ratio{syntax:"<number>";inherits:false;initial-value:0}',
   theme(".cc"),
   ":where(.cc){--cc-columns:1}",
   ".cc{position:relative;margin:1.5rem 0;container:cc/inline-size}",
@@ -28,7 +28,7 @@ export const css = `@layer comark{${[
   ".cc .cc{--cc-bleed:0px;--cc-bleed-start:0px}",
   // --cc-bleed-start is a length, read once here as a number so the grid can sit at the column's start; a percentage
   // would mean another width down there, so it reads as 0.
-  `.cc-run{--_cc-column-ratio:${inlineSizeRatio};--_cc-start-ratio:tan(atan2(max(0px,var(--cc-bleed-start,0px)),${inlineSizeUnit}));container-type:inline-size;margin-inline:calc(-1 * ${before}) calc(-1 * max(0px,var(--cc-bleed,0px)))}`,
+  `.cc-run{--_cc-column-ratio:${inlineSizeRatio};--_cc-local-start-ratio:tan(atan2(max(0px,var(--cc-bleed-start,0px)),${inlineSizeUnit}));--_cc-start-ratio:var(--_cc-local-start-ratio);container-type:inline-size;margin-inline:calc(-1 * ${before}) calc(-1 * max(0px,var(--cc-bleed,0px)))}`,
   // The slides scroll through the whole run, out to both of its edges, and come to rest lined up with the column.
   `.cc-track{position:relative;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scroll-padding-inline:${before} ${after}}`,
   `.cc-grid{margin-inline:${before} ${after};display:grid;grid-auto-flow:column;grid-auto-columns:calc((100% - (var(--cc-columns) - 1) * var(--cc-gap,1rem)) / var(--cc-columns));gap:var(--cc-gap,1rem)}`,
