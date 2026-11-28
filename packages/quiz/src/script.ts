@@ -185,6 +185,11 @@ export function script(config: ScriptConfig): void {
 
   function labelText(node: Node): string {
     if (node.nodeType === Node.TEXT_NODE) return node.textContent ?? "";
+    if (
+      node instanceof Element &&
+      node.matches('script, style, [hidden], [aria-hidden="true"], [role="tooltip"]')
+    )
+      return "";
     if (node instanceof HTMLBRElement) return " ";
     return Array.from(node.childNodes, labelText).join("");
   }
